@@ -5,6 +5,7 @@
 #include "itensor/itdata/itreal.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/itdata/itcplx.h"
+#include "itensor/itdata/itlazy.h"
 #include "itensor/indexset.h"
 #include "itensor/util/count.h"
 #include "itensor/tensor/contract.h"
@@ -13,53 +14,54 @@
 namespace itensor {
 
 Cplx 
-doTask(const GetElt<Index>& g, const ITReal& d)
+doTask(GetElt<Index> const& g, ITReal const& d)
     {
     return d[ind(g.is,g.inds)];
     }
 
 void
-doTask(const SetElt<Real,Index>& s, ITReal& d)
+doTask(SetElt<Real,Index> const& s, ITReal & d)
     {
     d[ind(s.is,s.inds)] = s.elt;
     }
 
 void
-doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManageStore& m)
+doTask(SetElt<Cplx,Index> const& s, ITReal const& d, ManageStore & m)
     {
     auto nd = m.makeNewData<ITCplx>(d);
     nd->set(ind(s.is,s.inds),s.elt);
     }
 
 void
-doTask(const FillReal& f, ITReal& d)
+doTask(FillReal const& f, ITReal & d)
     {
     std::fill(d.begin(),d.end(),f.r);
     }
 
 void
-doTask(const FillCplx& f, const ITReal& d, ManageStore& m)
+doTask(FillCplx const& f, ITReal const& d, ManageStore & m)
     {
     m.makeNewData<ITCplx>(d.size(),f.z);
     }
 
 void
-doTask(const MultCplx& M, const ITReal& d, ManageStore& m)
+doTask(MultCplx const& M, ITReal const& d, ManageStore & m)
     {
     auto nd = m.makeNewData<ITCplx>(d);
     (*nd) *= M.z;
     }
 
 void
-doTask(const MultReal& m, ITReal& d)
+doTask(MultReal const& m, ITReal & d)
     {
     //use BLAS algorithm?
     for(auto& elt : d) elt *= m.r;
     }
 
 Real
-doTask(NormNoScale, const ITReal& d) 
+doTask(NormNoScale, ITReal const& d) 
     { 
+    //println("In norm");
     Real nrm = 0;
     for(auto& elt : d) 
         nrm += elt*elt;
@@ -67,19 +69,20 @@ doTask(NormNoScale, const ITReal& d)
     }
 
 void
-doTask(Conj,const ITReal& d) { }
+doTask(Conj,ITReal const& d) { }
 
 void
-doTask(TakeReal, const ITReal& ) { }
+doTask(TakeReal, ITReal const& d) { }
 
 void
-doTask(TakeImag, const ITReal& d, ManageStore& m) 
+doTask(TakeImag, ITReal const& d, ManageStore & m) 
     { 
     m.makeNewData<ITReal>(d.size(),0);
     }
 
 void
-doTask(PrintIT<Index>& P, const ITReal& d)
+doTask(PrintIT<Index>& P, 
+       ITReal const& d)
     {
     P.printInfo(d,"Dense Real",doTask(NormNoScale{},d));
      
@@ -116,7 +119,7 @@ doTask(PrintIT<Index>& P, const ITReal& d)
     }
 
 Cplx
-doTask(SumEls<Index>, const ITReal& d) 
+doTask(SumEls<Index>, ITReal const& d) 
     { 
     Real sum = 0;
     for(const auto& elt : d)
@@ -125,27 +128,35 @@ doTask(SumEls<Index>, const ITReal& d)
     }
 
 void
-doTask(Write& W, const ITReal& d) 
+doTask(Write & W, ITReal const& d) 
     { 
     W.writeType(StorageType::ITReal,d); 
     }
 
 void
-doTask(Contract<Index>& C,
-       const ITReal& a1,
-       const ITReal& a2,
-       ManageStore& m)
+doTask(Contract<Index> & C,
+       ITReal const& a1,
+       ITReal const& a2,
+       ManageStore & m)
     {
+    //if(not C.needresult)
+    //    {
+    //    m.makeNewData<ITLazy>(C.Lis,m.parg1(),C.Ris,m.parg2());
+    //    return;
+    //    }
     Label Lind,
           Rind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
-    //Optimization TODO:
-    //  Test different scenarios where having sortInds=true or false
-    //  can improve performance. Having sorted inds can make adding
-    //  quicker and let contractloop run in parallel more often in principle.
-    bool sortInds = false; //whether to sort indices of result
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
-    
+    if(not C.Nis)
+        {
+        //Optimization TODO:
+        //  Test different scenarios where having sortInds=true or false
+        //  can improve performance. Having sorted inds can make adding
+        //  quicker and let contractloop run in parallel more often in principle.
+        bool sortInds = false; //whether to sort indices of result
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
+        }
+
     Label Nind(C.Nis.r(),0);
     for(auto i : count(C.Nis.r()))
         {
@@ -171,9 +182,9 @@ doTask(Contract<Index>& C,
     }
 
 void
-doTask(const PlusEQ<Index>& P,
-       ITReal& a1,
-       const ITReal& a2)
+doTask(PlusEQ<Index> const& P,
+       ITReal & a1,
+       ITReal const& a2)
     {
 #ifdef DEBUG
     if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
