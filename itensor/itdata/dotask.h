@@ -183,6 +183,10 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     ManageStore m_;
     Return ret_;
 
+    RegisterTask(const task_type& t)
+      : task_(t)
+        { }
+
     RegisterTask(task_type&& t)
       : task_(std::move(t))
         { }
@@ -190,6 +194,12 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     RegisterTask(task_type&& t,
                  ManageStore&& m)
       : task_(std::move(t)),
+        m_(std::move(m))
+        { }
+
+    RegisterTask(const task_type& t,
+                 ManageStore&& m)
+      : task_(t),
         m_(std::move(m))
         { }
 
