@@ -226,6 +226,7 @@ struct Contract
 
     iset_type Nis; //new IndexSet
     Real scalefac = NAN;
+    bool needresult = false;
 
     Contract(const iset_type& Lis_,
              const iset_type& Ris_)
@@ -233,14 +234,25 @@ struct Contract
         Ris(Ris_)
         { }
 
+    Contract(const iset_type& Lis_,
+             const iset_type& Ris_,
+             const iset_type& Nis_,
+             bool needresult_ = false)
+      : Lis(Lis_),
+        Ris(Ris_),
+        Nis(Nis_),
+        needresult(needresult_)
+        { }
+
     Contract(const Contract& other) = delete;
     Contract& operator=(const Contract& other) = delete;
 
-    Contract(Contract&& other):
-        Lis(other.Lis),
-        Ris(other.Ris),
+    Contract(Contract&& other)
+      : Lis(std::move(other.Lis)),
+        Ris(std::move(other.Ris)),
         Nis(std::move(other.Nis)),
-        scalefac(other.scalefac)
+        scalefac(other.scalefac),
+        needresult(other.needresult)
         { }
 
     template<typename Data>
