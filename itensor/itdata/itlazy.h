@@ -7,7 +7,6 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/itdata/itdata.h"
-#include "itensor/itdata/synchronized.h"
 
 namespace itensor {
 
@@ -17,16 +16,16 @@ class ITLazy
     struct IndSto
         {
         IndexSet i;
-        CPData s;
+        PData s;
         IndSto() { }
         IndSto(const IndexSet& i_,
-               const CPData& s_)
+               const PData& s_)
             : i(i_), s(s_) { }
         };
     using storage_type = std::vector<IndSto>;
     private:
     storage_type todo_;
-    mutable Synchronized<PData> result_;
+    PData result_;
     public:
 
     ITLazy() { }
@@ -46,67 +45,63 @@ class ITLazy
     storage_type&
     todo() { return todo_; }
 
+    const storage_type&
+    todo() const { return todo_; }
+
+    const IndexSet&
+    iset(size_t n) const { return todo_[n].i; }
+
+    PData&
+    store(size_t n) { return todo_[n].s; }
+
+    const PData&
+    store(size_t n) const { return todo_[n].s; }
+
     void
     addStore(const IndexSet& is,
-             const CPData& pstore)
+             const PData& pstore)
         {
         todo_.emplace_back(is,pstore);
+        }
+
+    void
+    addStore(const ITLazy& other)
+        {
+        todo_.insert(todo_.end(),other.todo_.begin(),other.todo_.end());
         }
 
     bool
     hasResult() const { return static_cast<bool>(result_); }
 
-    PData
-    result() const { return result_.get(); }
+    const PData&
+    result() const { return result_; }
 
     void
-    setResult(PData&& p) const { result_.set(std::move(p)); }
+    setResult(PData&& p) { result_ = std::move(p); }
 
     };
 
-PData inline
-evaluate(const ITLazy& L)
-    {
-    //0. Check if already evaluated
-    if(L.hasResult()) return L.result();
-    //1. Reorder intermediate indices
-    //2. Do chain of contractions
-    auto p = std::make_shared<ITWrap<ITReal>>(10,2);
-    L.setResult(std::move(p));
-    return L.result();
-    }
+bool
+hasResult(const ITLazy& Z);
 
-void inline
+PData
+evaluate(ITLazy& Z);
+
+void
 doTask(Contract<Index>& C,
        ITLazy& L,
-       const ITLazy& R)
-    {
-    }
+       const ITLazy& R);
 
-void inline
+void
 doTask(Contract<Index>& C,
        ITLazy& L,
-       const CPData& R,
-       ManageStore& m)
-    {
-    contractIS(C.Lis,C.Ris,C.Nis);
-    L.addStore(C.Nis,m.parg2());
-    }
+       const PData& R);
 
-
-void inline
+void
 doTask(Contract<Index>& C,
-       const CPData& R,
+       const PData& R,
        const ITLazy& L,
-       ManageStore& m)
-    {
-    //TODO: create new index set
-    //auto* pn = m.makeNewData(L);
-    Error("Need access to arg1 pointer");
-    //TODO: need to be able to access pointer
-    //      to arg1 here
-    //pn->addStore(new_indexset,m.parg1());
-    }
+       ManageStore& m);
 
 } //namespace itensor
 
