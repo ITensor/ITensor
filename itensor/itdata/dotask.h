@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include "itensor/itdata/itdata.h"
-#include "itensor/util/call_if.h"
 #include "itensor/util/print.h"
 
 namespace itensor {
