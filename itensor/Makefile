@@ -19,6 +19,7 @@ SOURCES+= itdata/itcplx.cc
 SOURCES+= itdata/itcombiner.cc 
 SOURCES+= itdata/itdiag.cc 
 SOURCES+= itdata/iqtreal.cc
+SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
