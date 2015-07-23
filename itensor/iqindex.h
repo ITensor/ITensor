@@ -38,18 +38,18 @@ class IQIndex : public Index
     IQIndex();
 
     template<typename... Rest>
-    IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Rest&... etc);
+    IQIndex(std::string const& name, 
+            Index const& i1, QN const& q1, 
+            Rest const&... etc);
 
     template<typename... Rest>
-    IQIndex(const std::string& name, 
+    IQIndex(std::string const& name, 
             Arrow dir,
-            const Index& i1, const QN& q1, 
-            const Rest&... etc);
+            Index const& i1, QN const& q1, 
+            Rest const&... etc);
 
-    IQIndex(const std::string& name, 
-            storage&& ind_qn, 
+    IQIndex(std::string const& name, 
+            storage && ind_qn, 
             Arrow dir = Out, 
             int plev = 0);
 
@@ -69,7 +69,7 @@ class IQIndex : public Index
     operator[](long i) const;
 
     //1-indexed
-    const QN& 
+    QN const& 
     qn(long i) const;
 
     Arrow 
