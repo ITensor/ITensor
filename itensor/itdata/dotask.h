@@ -151,20 +151,20 @@ class RegisterTask;
 
 template<typename NArgs, typename Task, typename Return>
 Task
-getReturnHelperImpl(choice<2>, RegisterTask<NArgs,Task,Return>& R)
+getReturnHelperImpl(choice<2>, RegisterTask<NArgs,Task,Return> & R)
     {
     return std::move(R.task_);
     }
 template<typename NArgs, typename Task, typename Return>
 auto
-getReturnHelperImpl(choice<1>, RegisterTask<NArgs,Task,Return>& R)
+getReturnHelperImpl(choice<1>, RegisterTask<NArgs,Task,Return> & R)
     -> std::enable_if_t<std::is_same<typename RegisterTask<NArgs,Task,Return>::return_type,Return>::value,Return>
     {
     return std::move(R.ret_);
     }
 template<typename NArgs, typename Task, typename Return>
 auto
-getReturnHelper(RegisterTask<NArgs,Task,Return>& R)
+getReturnHelper(RegisterTask<NArgs,Task,Return> & R)
     {
     return getReturnHelperImpl(select_overload{},R);
     }
@@ -756,7 +756,7 @@ doTask(Task&& t,
     ManageStore m(&(arg.p));
     detail::RegisterTask<detail::OneArg<CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
-    return std::move(r.getReturn());
+    return r.getReturn();
     }
 
 template<typename Task>
@@ -771,7 +771,7 @@ doTask(Task&& t,
     ManageStore m(&arg);
     detail::RegisterTask<detail::OneArg<PData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
-    return std::move(r.getReturn());
+    return r.getReturn();
     }
 
 template<typename Task>
@@ -788,7 +788,7 @@ doTask(Task&& t,
     ManageStore m(&(arg1.p),&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<CPData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
-    return std::move(r.getReturn());
+    return r.getReturn();
     }
 
 template<typename Task>
@@ -805,7 +805,7 @@ doTask(Task&& t,
     ManageStore m(&arg1,&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<PData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
-    return std::move(r.getReturn());
+    return r.getReturn();
     }
 
 
