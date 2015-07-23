@@ -557,25 +557,43 @@ maxM(const IndexSetT<IndexT>& iset)
 
 template<class IndexT, class ContainerT>
 void
-contractIS(const IndexSetT<IndexT>& Lis,
-           const ContainerT& Lind,
-           const IndexSetT<IndexT>& Ris,
-           const ContainerT& Rind,
-           IndexSetT<IndexT>& Nis,
+contractIS(IndexSetT<IndexT> const& Lis,
+           ContainerT const& Lind,
+           IndexSetT<IndexT> const& Ris,
+           ContainerT const& Rind,
+           IndexSetT<IndexT> & Nis,
+           ContainerT & Nind,
            bool sortResult)
     {
     long ncont = 0;
-    for(const auto& i : Lind) if(i < 0) ++ncont;
+    for(auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    typename IndexSetT<IndexT>::storage_type newind(nuniq);
+    using newind_t = typename IndexSetT<IndexT>::storage_type;
+    auto newind = newind_t(nuniq);
+    //Below we are "cheating" and using the .str
+    //field of each member of newind to hold the 
+    //labels which will go into Nind so they will
+    //be sorted along with the .ext members (the indices of Nis)
+    //These .str values will be overwritten by the
+    //IndexSetT constructor anyway
     long nn = 0;
     for(long j = 0; j < Lis.r(); ++j)
         {
-        if(Lind[j] > 0) newind[nn++].ext = Lis[j];
+        if(Lind[j] > 0) //uncontracted
+            {
+            newind[nn].ext = Lis[j];
+            newind[nn].str = Lind[j];
+            ++nn;
+            }
         }
     for(long j = 0; j < Ris.r(); ++j)
         {
-        if(Rind[j] > 0) newind[nn++].ext = Ris[j];
+        if(Rind[j] > 0) //uncontracted
+            {
+            newind[nn].ext = Ris[j];
+            newind[nn].str = Rind[j];
+            ++nn;
+            }
         }
     if(sortResult)
         {
@@ -583,20 +601,26 @@ contractIS(const IndexSetT<IndexT>& Lis,
         auto comp = [](const extstr& i1, const extstr& i2) { return i1.ext > i2.ext; };
         std::sort(newind.begin(),newind.end(),comp);
         }
+    Nind.resize(newind.size());
+    for(size_t j = 0; j < newind.size(); ++j)
+        {
+        Nind[j] = newind[j].str;
+        }
     Nis = IndexSetT<IndexT>(std::move(newind));
     }
 
 template<class IndexT>
 void
-contractIS(const IndexSetT<IndexT>& Lis,
-           const IndexSetT<IndexT>& Ris,
-           IndexSetT<IndexT>& Nis,
+contractIS(IndexSetT<IndexT> const& Lis,
+           IndexSetT<IndexT> const& Ris,
+           IndexSetT<IndexT> & Nis,
            bool sortResult)
     {
     Label Lind,
-          Rind;
+          Rind,
+          Nind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-    contractIS(Lis,Lind,Ris,Rind,Nis,sortResult);
+    contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
     }
 
 template <class IndexT>

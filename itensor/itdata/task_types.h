@@ -191,9 +191,9 @@ struct PlusEQ
         fac(fac_)
         { }
 
-    PlusEQ(const Permutation& P,
-           const iset_type& is1,
-           const iset_type& is2,
+    PlusEQ(Permutation const& P,
+           iset_type const& is1,
+           iset_type const& is2,
            Real fac_) :
         perm_(&P),
         is1_(&is1),
@@ -204,13 +204,13 @@ struct PlusEQ
     bool
     hasPerm() const { return bool(perm_); }
 
-    const Permutation&
+    Permutation const&
     perm() const { return *perm_; }
 
-    const iset_type&
+    iset_type const&
     is1() const { return *is1_; }
 
-    const iset_type&
+    iset_type const&
     is2() const { return *is2_; }
     };
 

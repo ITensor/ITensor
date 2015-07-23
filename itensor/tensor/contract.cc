@@ -59,8 +59,8 @@ printv(const autovector<T>& t)
 
 template<typename T>
 long 
-find_index(const vector<T>& v, 
-          const T& t)
+find_index(vector<T> const& v, 
+           T const& t)
     {
     using size_type = typename vector<T>::size_type;
     for(size_type i = 0; i < v.size(); ++i)
@@ -721,7 +721,7 @@ class CABqueue
 
 template<typename RangeT>
 void 
-contract(const CProps& p,
+contract(CProps const& p,
          TenRefc<RangeT> A, 
          TenRefc<RangeT> B, 
          TenRef<RangeT>  C)
@@ -854,9 +854,9 @@ contract(const CProps& p,
 
 template<typename RangeT>
 void 
-contract(TenRefc<RangeT> A, const Label& ai, 
-         TenRefc<RangeT> B, const Label& bi, 
-         TenRef<RangeT>  C, const Label& ci)
+contract(TenRefc<RangeT> A, Label const& ai, 
+         TenRefc<RangeT> B, Label const& bi, 
+         TenRef<RangeT>  C, Label const& ci)
     {
     if(ai.empty())
         {
@@ -879,13 +879,13 @@ contract(TenRefc<RangeT> A, const Label& ai,
 
 //Explicit template instantiations:
 template void 
-contract(TenRefc<Range>, const Label&, 
-         TenRefc<Range>, const Label&, 
-         TenRef<Range>,  const Label&);
+contract(TenRefc<Range>, Label const&, 
+         TenRefc<Range>, Label const&, 
+         TenRef<Range>,  Label const&);
 template void 
-contract(TenRefc<IndexSet>, const Label&, 
-         TenRefc<IndexSet>, const Label&, 
-         TenRef<IndexSet>,  const Label&);
+contract(TenRefc<IndexSet>, Label const&, 
+         TenRefc<IndexSet>, Label const&, 
+         TenRef<IndexSet>,  Label const&);
 
 
 struct MultInfo
@@ -897,9 +897,9 @@ struct MultInfo
     };
 
 MultInfo
-computeMultInfo(const Label& ai,
-                const Label& bi, 
-                const Label& ci)
+computeMultInfo(Label const& ai,
+                Label const& bi, 
+                Label const& ci)
     {
     MultInfo I;
     if(ai[1] == ci[1])
@@ -963,10 +963,10 @@ computeMultInfo(const Label& ai,
 
 template<typename RangeT>
 void 
-contractloop(TenRefc<RangeT> A, const Label& ai, 
-             TenRefc<RangeT> B, const Label& bi, 
-             TenRef<RangeT>  C, const Label& ci,
-             const Args& args)
+contractloop(TenRefc<RangeT> A, Label const& ai, 
+             TenRefc<RangeT> B, Label const& bi, 
+             TenRef<RangeT>  C, Label const& ci,
+             Args const& args)
     {
     if(ai.empty() || bi.empty())
         {
@@ -1097,15 +1097,42 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
     }
 template
 void 
-contractloop(TenRefc<Range> A, const Label& ai, 
-             TenRefc<Range> B, const Label& bi, 
-             TenRef<Range>  C, const Label& ci,
-             const Args& args);
+contractloop(TenRefc<Range> A, Label const& ai, 
+             TenRefc<Range> B, Label const& bi, 
+             TenRef<Range>  C, Label const& ci,
+             Args const& args);
 template
 void 
-contractloop(TenRefc<IndexSet> A, const Label& ai, 
-             TenRefc<IndexSet> B, const Label& bi, 
-             TenRef<IndexSet>  C, const Label& ci,
-             const Args& args);
+contractloop(TenRefc<IndexSet> A, Label const& ai, 
+             TenRefc<IndexSet> B, Label const& bi, 
+             TenRef<IndexSet>  C, Label const& ci,
+             Args const& args);
+
+
+////////////////////////////////////////
+
+//All indices of B contracted
+//(A can have some uncontracted indices)
+template<typename RangeT>
+void 
+contractDiagFull(VecRefc A,         Label const& ai, 
+                 TenRefc<RangeT> B, Label const& bi, 
+                 VecRef          C, Label const& ci)
+    {
+    Error("contractDiagFull not yet implemented");
+    }
+template
+void 
+contractDiagFull(VecRefc A,        Label const& ai, 
+                 TenRefc<Range> B, Label const& bi, 
+                 VecRef         C, Label const& ci);
+template
+void 
+contractDiagFull(VecRefc A,           Label const& ai, 
+                 TenRefc<IndexSet> B, Label const& bi, 
+                 VecRef            C, Label const& ci);
+
+////////////////////////////////////////////
+
 
 } //namespace itensor

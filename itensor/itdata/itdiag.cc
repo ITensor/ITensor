@@ -24,28 +24,16 @@ template Cplx doTask(const GetElt<Index>& g, const ITDiag<Real>& d);
 template Cplx doTask(const GetElt<Index>& g, const ITDiag<Cplx>& d);
 
 void
-diagDense(const ITDiag<Real>& d,
-          const IndexSet& dis,
-          const Label& dind,
-          const ITReal& t,
-          const IndexSet& tis,
-          const Label& tind,
-          IndexSet& Nis,
-          ManageStore& m,
-          bool RealonLeft)
+diagDense(ITDiag<Real> const& d,
+          IndexSet const& dis,
+          Label const& dind,
+          ITReal const& t,
+          IndexSet const& tis,
+          Label const& tind,
+          Label const& Nind,
+          IndexSet & Nis,
+          ManageStore & m)
     {
-    //if(area(tis)==1) //Dense tensor is a scalar
-    //    {
-    //    scalefac_ = R[0];
-    //    if(RealOnLeft) assignPointerRtoL();
-    //    return;
-    //    }
-    //if(area(dis)==1) //Diag tensor is a scalar
-    //    {
-    //    Error("Not implemented");
-    //    return;
-    //    }
-
     long t_cstride = 0; //total t-stride of contracted inds of t
     size_t ntu = 0; //number uncontracted inds of t
     assert(tind.size() == tis.size());
@@ -63,71 +51,25 @@ diagDense(const ITDiag<Real>& d,
         if(j >= 0) d_ustride += Nis.stride(i);
         }
 
-
     if(ntu > 0)
         {
-        vector<long> tstride(ntu,0),
-                     rstride(ntu,0);
-        detail::GCounter C(0,ntu,0);
-        size_t n = 0;
-        for(auto j : index(tind))
-            {
-            if(tind[j] > 0)
-                {
-#ifdef DEBUG
-                if(n >= ntu) Error("n out of range");
-#endif
-                C.setInd(n,0,tis.extent(j)-1);
-                tstride.at(n) = tis.stride(j);
-                auto k = findindex(Nis,tis[j]);
-#ifdef DEBUG
-                if(k < 0) Error("Index not found");
-#endif
-                rstride.at(n) = Nis.stride(k);
-                ++n;
-                }
-            }
         auto nd = m.makeNewData<ITReal>(area(Nis),0.);
-        auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
-        auto pt = MAKE_SAFE_PTR(t.data(),t.size());
-
+        auto Tref = makeTensorRef(t.data(),tis);
+        auto Nref = makeTensorRef(nd->data(),Nis);
         if(d.allSame())
             {
-            for(;C.notDone();++C)
-                {
-                size_t roffset = 0,
-                       toffset = 0;
-                for(auto i : count(ntu))
-                    {
-                    auto ii = C.i[i];
-                    toffset += ii*tstride[i];
-                    roffset += ii*rstride[i];
-                    }
-                for(auto J : count(d.length))
-                    {
-                    pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
-                    }
-                }
+            auto dfunc = [val=d.val](size_t j){ return val; };
+            contractDiagPartial(dfunc,d.length,dind,
+                                Tref,tind,
+                                Nref,Nind);
             }
         else
             {
             auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-            assert(d.size() == d.length);
-            for(;C.notDone();++C)
-                {
-                size_t roffset = 0,
-                       toffset = 0;
-                for(auto i : count(ntu))
-                    {
-                    auto ii = C.i.fast(i);
-                    toffset += ii*tstride[i];
-                    roffset += ii*rstride[i];
-                    }
-                for(auto J : count(d.length))
-                    {
-                    pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
-                    }
-                }
+            auto dfunc = [&pd](size_t j){ return pd[j]; };
+            contractDiagPartial(dfunc,d.length,dind,
+                                Tref,tind,
+                                Nref,Nind);
             }
         }
     else
@@ -176,28 +118,32 @@ diagDense(const ITDiag<Real>& d,
     }
 
 void
-doTask(Contract<Index>& C,
-       const ITReal& t,
-       const ITDiag<Real>& d,
-       ManageStore& m)
+doTask(Contract<Index> & C,
+       ITReal const& t,
+       ITDiag<Real> const& d,
+       ManageStore & m)
     { 
     Label Lind,
-          Rind;
+          Rind,
+          Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,true);
-    diagDense(d,C.Ris,Rind,t,C.Lis,Lind,C.Nis,m,true);
+    bool sortIndices = false;
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
+    diagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
     }
 void
-doTask(Contract<Index>& C,
-       const ITDiag<Real>& d,
-       const ITReal& t,
-       ManageStore& m)
+doTask(Contract<Index> & C,
+       ITDiag<Real> const& d,
+       ITReal const& t,
+       ManageStore & m)
     {
     Label Lind,
-          Rind;
+          Rind,
+          Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,true);
-    diagDense(d,C.Lis,Lind,t,C.Ris,Rind,C.Nis,m,false);
+    bool sortIndices = false;
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
+    diagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
     }
 
 void

@@ -24,6 +24,16 @@ calcDiv(const IQIndexSet& is, const IQTReal& D);
 QN
 calcDiv(const IQIndexSet& is, const Label& block_ind);
 
+// For a block index (0,1,...,Nblocks-1),
+// as in the offsets array of an IQTReal,
+// computes the zero-indexed location of
+// the given block (e.g. 5 -> {1,0,2})
+// storing the resulting indices in the 
+// container "ind". The jth index of ind
+// can range from 0 to is[j].nindex(), 
+// such that these indices correspond to
+// viewing the IQTReal storage as a 
+// "tensor of tensors"
 template<typename Container>
 void
 inverseBlockInd(long block,
@@ -48,16 +58,13 @@ class IQTReal
         {
         long block;
         long offset;
-        //BlockOffset(long b, long o) : block(b), offset(o) { }
-        //BlockOffset() { }
         };
 
     //////////////
-    //Data Members:
     std::vector<BlOf> offsets;
         //^ Block index / data offset pairs.
-        //Assumed that block indices are
-        //in increasing order.
+        //  Assumed that block indices are
+        //  in increasing order.
 
     std::vector<Real> data;
         //^ tensor data stored contiguously
@@ -65,21 +72,20 @@ class IQTReal
 
     IQTReal() { }
 
-    IQTReal(const IQIndexSet& is, 
-            const QN& div_);
-
+    IQTReal(IQIndexSet const& is, 
+            QN const& div_);
 
     explicit operator bool() const { return !data.empty(); }
 
     template<typename Indexable>
     const Real*
-    getBlock(const IQIndexSet& is,
-             const Indexable& block_ind) const;
+    getBlock(IQIndexSet const& is,
+             Indexable const& block_ind) const;
 
     template<typename Indexable>
     Real*
-    getBlock(const IndexSetT<IQIndex>& is,
-             const Indexable& block_ind)
+    getBlock(IndexSetT<IQIndex> const& is,
+             Indexable const& block_ind)
         {
         //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
         return const_cast<Real*>(static_cast<const IQTReal&>(*this).getBlock(is,block_ind));
@@ -87,13 +93,13 @@ class IQTReal
 
     template<typename Indexable>
     const Real*
-    getElt(const IndexSetT<IQIndex>& is,
-           const Indexable& ind) const;
+    getElt(IndexSetT<IQIndex> const& is,
+           Indexable const& ind) const;
 
     template<typename Indexable>
     Real*
-    getElt(const IndexSetT<IQIndex>& is,
-           const Indexable& ind)
+    getElt(IndexSetT<IQIndex> const& is,
+           Indexable const& ind)
         {
         return const_cast<Real*>(static_cast<const IQTReal&>(*this).getElt(is,ind));
         }
@@ -102,8 +108,8 @@ class IQTReal
     offsetOf(long blkind) const;
 
     long
-    updateOffsets(const IndexSetT<IQIndex>& is,
-                  const QN& div);
+    updateOffsets(IndexSetT<IQIndex> const& is,
+                  QN const& div);
 
     virtual
     ~IQTReal() { }
@@ -112,8 +118,8 @@ class IQTReal
 
 template<typename Indexable>
 const Real* IQTReal::
-getBlock(const IQIndexSet& is,
-         const Indexable& block_ind) const
+getBlock(IQIndexSet const& is,
+         Indexable const& block_ind) const
     {
     auto r = long(block_ind.size());
     if(r == 0) return data.data();
@@ -139,8 +145,8 @@ getBlock(const IQIndexSet& is,
 
 template<typename Indexable>
 const Real* IQTReal::
-getElt(const IQIndexSet& is,
-       const Indexable& ind) const
+getElt(IQIndexSet const& is,
+       Indexable const& ind) const
     {
     auto r = long(ind.size());
     if(r == 0) return data.data();
@@ -185,14 +191,14 @@ getElt(const IQIndexSet& is,
 
 
 void inline
-write(std::ostream& s, const IQTReal& dat)
+write(std::ostream & s, IQTReal const& dat)
     {
     itensor::write(s,dat.offsets);
     itensor::write(s,dat.data);
     }
 
 void inline
-read(std::istream& s, IQTReal& dat)
+read(std::istream & s, IQTReal & dat)
     {
     itensor::read(s,dat.offsets);
     itensor::read(s,dat.data);

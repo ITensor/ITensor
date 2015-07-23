@@ -73,37 +73,9 @@ doTask(Contract<Index>& C,
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
     //  quicker and let contractloop run in parallel more often in principle.
-    const bool sortInds = false; //whether to sort indices of result
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
-
-    //Scalar tensor cases
-    //if(area(C.Lis)==1)
-    //    {
-    //    auto nd = makeNewData<ITCplx>(a2);
-    //    (*nd) *= a1.get(0);
-    //    return;
-    //    }
-    //if(area(C.Ris)==1)
-    //    {
-    //    auto a1ref = modifyData(a1);
-    //    a1ref *= a2.get(0);
-    //    return;
-    //    }
-    
-    Label Nind(C.Nis.r(),0);
-    for(auto i : index(C.Nis))
-        {
-        auto j = findindex(C.Lis,C.Nis[i]);
-        if(j >= 0)
-            {
-            Nind[i] = Lind[j];
-            }
-        else
-            {
-            j = findindex(C.Ris,C.Nis[i]);
-            Nind[i] = Rind[j];
-            }
-        }
+    bool sortInds = false; //whether to sort indices of result
+    Label Nind;
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortInds);
 
     auto rsize = area(C.Nis);
     auto nd = m.makeNewData<ITCplx>(rsize,0.);
@@ -142,8 +114,9 @@ realCplx(const ITReal& R,
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
     //  quicker and let contractloop run in parallel more often in principle.
-    const bool sortInds = false; //whether to sort indices of result
-    contractIS(ris,rind,cis,cind,Nis,sortInds);
+    bool sortInds = false; //whether to sort indices of result
+    Label Nind;
+    contractIS(ris,rind,cis,cind,Nis,Nind,sortInds);
 
     auto rsize = area(Nis);
 
@@ -181,20 +154,6 @@ realCplx(const ITReal& R,
     //    return;
     //    }
     
-    Label Nind(Nis.r(),0);
-    for(auto i : count(Nis.r()))
-        {
-        auto j = findindex(ris,Nis[i]);
-        if(j >= 0)
-            {
-            Nind[i] = rind[j];
-            }
-        else
-            {
-            j = findindex(cis,Nis[i]);
-            Nind[i] = cind[j];
-            }
-        }
 
     auto nd = m.makeNewData<ITCplx>(rsize,0.);
 

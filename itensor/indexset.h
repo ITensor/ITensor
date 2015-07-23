@@ -292,12 +292,13 @@ contractIS(const IndexSetT<IndexT>& Lis,
 
 template<class IndexT, class ContainerT>
 void
-contractIS(const IndexSetT<IndexT>& Lis,
-          const ContainerT& Lind,
-          const IndexSetT<IndexT>& Ris,
-          const ContainerT& Rind,
-          IndexSetT<IndexT>& Nis,
-          bool sortResult = false);
+contractIS(IndexSetT<IndexT> const& Lis,
+           ContainerT const& Lind,
+           IndexSetT<IndexT> const& Ris,
+           ContainerT const& Rind,
+           IndexSetT<IndexT> & Nis,
+           ContainerT & Nind,
+           bool sortResult = false);
 
 template <class IndexT>
 std::ostream&

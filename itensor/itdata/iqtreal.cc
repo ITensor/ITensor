@@ -175,9 +175,9 @@ doTask(MultReal& M, IQTReal& d)
 
 
 void
-doTask(const PlusEQ<IQIndex>& P,
-       IQTReal& A,
-       const IQTReal& B)
+doTask(PlusEQ<IQIndex> const& P,
+       IQTReal & A,
+       IQTReal const& B)
     {
 #ifdef DEBUG
     if(A.data.size() != B.data.size()) Error("Mismatched sizes in plusEq");
@@ -193,7 +193,7 @@ doTask(const PlusEQ<IQIndex>& P,
               Bblock(r,0);
         Range Arange,
               Brange;
-        for(const auto& aio : A.offsets)
+        for(auto& aio : A.offsets)
             {
             inverseBlockInd(aio.block,P.is1(),Ablock);
             for(int i = 0; i < r; ++i)
@@ -212,15 +212,16 @@ doTask(const PlusEQ<IQIndex>& P,
 
 void
 doTask(Contract<IQIndex>& Con,
-       const IQTReal& A,
-       const IQTReal& B,
+       IQTReal const& A,
+       IQTReal const& B,
        ManageStore& m)
     {
     Label Lind,
           Rind;
     computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
     //compute new index set (Con.Nis):
-    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,true);
+    Label Cind;
+    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,true);
 
     auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
 
@@ -235,19 +236,16 @@ doTask(Contract<IQIndex>& Con,
     Label AtoB(rA,-1),
           AtoC(rA,-1),
           BtoC(rB,-1);
-    Label Cind(rC,0);
     for(auto ic : count(rC))
         {
         auto j = findindex(Con.Lis,Con.Nis[ic]);
         if(j >= 0)
             {
-            Cind[ic] = Lind[j];
             AtoC[j] = ic;
             }
         else
             {
             j = findindex(Con.Ris,Con.Nis[ic]);
-            Cind[ic] = Rind[j];
             BtoC[j] = ic;
             }
         }
@@ -266,7 +264,7 @@ doTask(Contract<IQIndex>& Con,
           Brange,
           Crange;
     //Loop over blocks of A (labeled by elements of A.offsets)
-    for(const auto& aio : A.offsets)
+    for(auto& aio : A.offsets)
         {
         //Reconstruct indices labeling this block of A, put into Ablock
         inverseBlockInd(aio.block,Con.Lis,Ablock);
@@ -308,11 +306,10 @@ doTask(Contract<IQIndex>& Con,
             //we are working with
             auto aref = makeTensorRef(A.data.data()+aio.offset,Arange),
                  bref = makeTensorRef(bblock,Brange);
-            auto cref= makeTensorRef(cblock,Crange);
+            auto cref = makeTensorRef(cblock,Crange);
 
-            //Compute aref*bref=cref
+            //Compute cref=aref*bref
             contract(aref,Lind,bref,Rind,cref,Cind);
-
             } //for couB
         } //for A.offsets
 

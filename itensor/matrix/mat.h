@@ -47,11 +47,9 @@ class MatrixRef
     MatrixRef(pointer pdata, 
               long nrows,
               long ncols)
-              //bool trans = false)
         :
         pdata_(pdata),
         ind_(nrows,ncols)
-        //ind_(trans ? MRange(ncols,nrows,nrows,1) : MRange(nrows,ncols))
         { }
 
 

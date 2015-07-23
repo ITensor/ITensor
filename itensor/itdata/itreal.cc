@@ -145,7 +145,8 @@ doTask(Contract<Index> & C,
     //    return;
     //    }
     Label Lind,
-          Rind;
+          Rind,
+          Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
     if(not C.Nis)
         {
@@ -154,21 +155,23 @@ doTask(Contract<Index> & C,
         //  can improve performance. Having sorted inds can make adding
         //  quicker and let contractloop run in parallel more often in principle.
         bool sortInds = false; //whether to sort indices of result
-        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortInds);
         }
-
-    Label Nind(C.Nis.r(),0);
-    for(auto i : count(C.Nis.r()))
+    else
         {
-        auto j = findindex(C.Lis,C.Nis[i]);
-        if(j >= 0)
+        Nind.resize(C.Nis.r());
+        for(auto i : count(C.Nis.r()))
             {
-            Nind[i] = Lind[j];
-            }
-        else
-            {
-            j = findindex(C.Ris,C.Nis[i]);
-            Nind[i] = Rind[j];
+            auto j = findindex(C.Lis,C.Nis[i]);
+            if(j >= 0)
+                {
+                Nind[i] = Lind[j];
+                }
+            else
+                {
+                j = findindex(C.Ris,C.Nis[i]);
+                Nind[i] = Rind[j];
+                }
             }
         }
     auto t1 = makeTensorRef(a1.data(),C.Lis),

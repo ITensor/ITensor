@@ -17,7 +17,8 @@ using Label = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
 inline std::ostream& 
 operator<<(std::ostream& s, const Label& A)
     {
-    for(auto& a : A) s<<" "<<a; s<<"\n";
+    for(auto& a : A) s << a << " "; 
+    s << "\n";
     return s;
     }
 
