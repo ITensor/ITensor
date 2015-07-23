@@ -60,20 +60,21 @@ diagTensor(Complex z,
 
 template<typename Container, typename... Inds>
 auto
-diagTensor(const Container& C, 
-           const Index& i1,
-           Inds&&... inds)
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
     //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
     //types (such as Container==int) that don't have a value_type member type
     -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
     { 
+    using size_type = decltype(C.size());
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
     //Compute min of all index dimensions
-    auto minm = i1.m();
+    size_type minm = i1.m();
     for(const auto& ind : is)
         if(ind.m() < minm) minm = ind.m();
-    if(C.size() != size_t(minm))
+    if(C.size() != minm)
         {
         Print(minm);
         Print(C.size());
