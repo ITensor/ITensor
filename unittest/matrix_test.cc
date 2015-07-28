@@ -376,7 +376,6 @@ SECTION("Sub Vector")
         CHECK_CLOSE(s(j),v(start-1+j));
         ++count;
         }
-    println("Done");
     CHECK(count == s.size());
 
     //Set elements of v through s
