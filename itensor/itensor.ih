@@ -71,10 +71,10 @@ diagTensor(Container const& C,
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
     //Compute min of all index dimensions
-    size_type minm = i1.m();
+    auto minm = i1.m();
     for(const auto& ind : is)
         if(ind.m() < minm) minm = ind.m();
-    if(C.size() != minm)
+    if(C.size() != size_type(minm))
         {
         Print(minm);
         Print(C.size());
