@@ -40,16 +40,16 @@ contractloop(Tensor<RangeT> const& A, Label const& ai,
 
 //All indices of B contracted
 //(A can have some uncontracted indices)
-template<typename RangeT>
+template<typename DiagElsA, typename RangeT>
 void 
-contractDiagFull(VecRefc A,         Label const& ai, 
+contractDiagFull(DiagElsA const& A, Label const& ai, 
                  TenRefc<RangeT> B, Label const& bi, 
                  VecRef          C, Label const& ci);
 
 //Some indices of B uncontracted
-template<typename RangeT>
+template<typename DiagElsA, typename RangeT>
 void 
-contractDiagPartial(VecRefc A,         Label const& ai, 
+contractDiagPartial(DiagElsA const& A, Label const& ai,
                     TenRefc<RangeT> B, Label const& bi, 
                     TenRef<RangeT>  C, Label const& ci);
 
@@ -173,16 +173,15 @@ computeLabels(Inds const& Lis,
     }
 
 //Some indices of B uncontracted
-//DiagElsA is a function object returning
-//diagonal elements of A; asize is # of these els
+//DiagElsA is any function object returning
+//diagonal elements of A (such as a VecRefc)
 template<typename DiagElsA, typename RangeT>
 void 
-contractDiagPartial(DiagElsA const& A, 
-                    size_t asize,
-                    Label const& ai,
+contractDiagPartial(DiagElsA const& A, Label const& ai,
                     TenRefc<RangeT> B, Label const& bi, 
                     TenRef<RangeT>  C, Label const& ci)
     {
+    using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
     int nbu = 0;          //# B uncont. inds.
     for(auto j = 0ul; j < bi.size(); ++j)
@@ -233,10 +232,37 @@ contractDiagPartial(DiagElsA const& A,
             boffset += ii*bstride[i];
             coffset += ii*cstride[i];
             }
-        for(auto J = 0ul; J < asize; ++J)
+        for(A_size_type J = 0; J < A.size(); ++J)
             {
-            pc[J*a_ustride+coffset] += A(J)*pb[J*b_cstride+boffset];
+            pc[J*a_ustride+coffset] += A(1+J)*pb[J*b_cstride+boffset];
             }
+        }
+    }
+
+template<typename DiagElsA, typename RangeT>
+void 
+contractDiagFull(DiagElsA const& A, Label const& ai, 
+                 TenRefc<RangeT> B, Label const& bi, 
+                 VecRef          C, Label const& ci)
+    {
+    using A_size_type = decltype(A.size());
+
+    long b_cstride = 0; //total stride of contracted inds of B
+    for(auto j = 0ul; j < bi.size(); ++j)
+        if(bi[j] < 0) b_cstride += B.stride(j);
+
+    auto pb = MAKE_SAFE_PTR(B.data(),B.size());
+    if(C.size() == 1)
+        {
+        auto *Cval = C.data();
+        for(A_size_type J = 0; J < A.size(); ++J)
+            *Cval += A(1+J)*pb[J*b_cstride];
+        }
+    else
+        {
+        auto pc = MAKE_SAFE_PTR(C.data(),C.size());
+        for(A_size_type J = 0; J < A.size(); ++J)
+            pc[J] += A(1+J)*pb[J*b_cstride];
         }
     }
 

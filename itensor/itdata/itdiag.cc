@@ -23,6 +23,20 @@ doTask(const GetElt<Index>& g, const ITDiag<T>& d)
 template Cplx doTask(const GetElt<Index>& g, const ITDiag<Real>& d);
 template Cplx doTask(const GetElt<Index>& g, const ITDiag<Cplx>& d);
 
+class UnifVecWrapper
+    {
+    Real val_;
+    size_t size_;
+    public:
+    UnifVecWrapper(Real v, size_t s) : val_(v), size_(s) { }
+
+    size_t
+    size() const { return size_; }
+
+    Real
+    operator()(size_t j) const { return val_; }
+    };
+
 void
 diagDense(ITDiag<Real> const& d,
           IndexSet const& dis,
@@ -34,86 +48,65 @@ diagDense(ITDiag<Real> const& d,
           IndexSet & Nis,
           ManageStore & m)
     {
-    long t_cstride = 0; //total t-stride of contracted inds of t
-    size_t ntu = 0; //number uncontracted inds of t
-    assert(tind.size() == tis.size());
-    for(auto j : index(tind))
-        {
-        //if index j is contracted, add its stride to t_cstride:
-        if(tind[j] < 0) t_cstride += tis.stride(j);
-        else            ++ntu;
-        }
+    bool t_has_uncontracted = false;
+    for(auto j : index(tind)) 
+        if(tind[j] >= 0)
+            {
+            t_has_uncontracted = true;
+            break;
+            }
 
-    long d_ustride = 0; //total result-stride of uncontracted inds of d
-    for(auto i : index(Nis))
-        {
-        auto j = findindex(dis,Nis[i]);
-        if(j >= 0) d_ustride += Nis.stride(i);
-        }
+    auto Tref = makeTensorRef(t.data(),tis);
 
-    if(ntu > 0)
+    if(t_has_uncontracted)
         {
         auto nd = m.makeNewData<ITReal>(area(Nis),0.);
-        auto Tref = makeTensorRef(t.data(),tis);
         auto Nref = makeTensorRef(nd->data(),Nis);
         if(d.allSame())
             {
-            auto dfunc = [val=d.val](size_t j){ return val; };
-            contractDiagPartial(dfunc,d.length,dind,
+            auto dref = UnifVecWrapper(d.val,d.length);
+            contractDiagPartial(dref,dind,
                                 Tref,tind,
                                 Nref,Nind);
             }
         else
             {
-            auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-            auto dfunc = [&pd](size_t j){ return pd[j]; };
-            contractDiagPartial(dfunc,d.length,dind,
+            auto dref = VecRefc(d.data(),d.size());
+            contractDiagPartial(dref,dind,
                                 Tref,tind,
                                 Nref,Nind);
             }
         }
-    else
+    else //all inds of t contracted with d
         {
-        //all of t's indices contracted with d
-        //result will be diagonal
-        if(d_ustride == 0) //all of d's inds contracted
+        long d_ustride = 0; //total result-stride of uncontracted inds of d
+        for(auto i : index(dind))
             {
-            // o scalar if all of d's inds contracted also
-            Real val = 0;
-            auto pt = MAKE_SAFE_PTR(t.data(),t.size());
-            if(d.allSame())
-                {
-                for(auto J : count(d.length))
-                    val += d.val*pt[J*t_cstride];
-                }
-            else
-                {
-                assert(d.length == d.size());
-                auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-                for(auto J : count(d.length))
-                    val += pd[J]*pt[J*t_cstride];
-                }
-            m.makeNewData<ITDiag<Real>>(1,val);
+            if(dind[i] >= 0) d_ustride += dis.stride(i);
             }
-        else //some of d's inds uncontracted
+
+        size_t nsize = (d_ustride==0) ? 1 : d.length;
+        ITDiag<Real>::storage_type nstore(nsize,0);
+        auto Nref = VecRef(nstore.data(),nsize);
+
+        if(d.allSame())
             {
-            // o element-wise product of d's data and t's diagonal
-            auto nd = m.makeNewData<ITDiag<Real>>(d.length);
-            auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
-            auto pt = MAKE_SAFE_PTR(t.data(),t.size());
-            if(d.allSame())
-                {
-                for(auto J : count(d.length))
-                    pr[J] += d.val*pt[J*t_cstride];
-                }
-            else
-                {
-                assert(d.length == d.size());
-                auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-                for(auto J : count(d.length))
-                    pr[J] += pd[J]*pt[J*t_cstride];
-                }
+            auto dref = UnifVecWrapper(d.val,d.length);
+            contractDiagFull(dref,dind,
+                             Tref,tind,
+                             Nref,Nind);
             }
+        else
+            {
+            auto dref = VecRefc(d.data(),d.size());
+            contractDiagFull(dref,dind,
+                             Tref,tind,
+                             Nref,Nind);
+            }
+        if(nsize==1)
+            m.makeNewData<ITDiag<Real>>(1,nstore.front());
+        else
+            m.makeNewData<ITDiag<Real>>(std::move(nstore));
         }
     }
 
