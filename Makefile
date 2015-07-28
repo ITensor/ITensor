@@ -13,7 +13,7 @@ itensor: configure
 	@echo
 	@echo Building ITensor library
 	@echo
-	cd itensor && make
+	@cd itensor && make
 
 configure:
 	@echo
@@ -21,11 +21,13 @@ configure:
 	@echo THIS_DIR=`pwd` > this_dir.mk
 
 clean:
-	cd itensor && make clean
-	cd sample && make clean
-	cd unittest && make clean
-	rm -f lib/*
-	rm -f this_dir.mk
+	@echo "Removing temporary build files"
+	@touch this_dir.mk
+	@cd itensor && make clean
+	@cd sample && make clean
+	@cd unittest && make clean
+	@rm -f lib/*
+	@rm -f this_dir.mk
 
 distclean: clean
-	rm -f this_dir.mk options.mk
+	@rm -f this_dir.mk options.mk

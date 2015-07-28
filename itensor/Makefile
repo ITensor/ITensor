@@ -41,36 +41,41 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 .SUFFIXES: .cc $(SUFFIXES)
 
 %.o: %.cc
-	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+	@echo "Compiling $< with optimizations"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling $< in debug mode"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 install: build debug
-	@echo $(OBJECTS)
 
 libitensor.a: $(OBJECTS)
-	ar rv $(ITENSOR_LIBDIR)/libitensor.a $(OBJECTS)
-	ranlib $(ITENSOR_LIBDIR)/libitensor.a
+	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor.a"
+	@ar r $(ITENSOR_LIBDIR)/libitensor.a $(OBJECTS)
+	@ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 libitensor-g.a: mkdebugdir $(GOBJECTS)
-	ar rv $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
-	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
+	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor-g.a"
+	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
+	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 build: libitensor.a
 
 debug: libitensor-g.a
 
 mkdebugdir:
-	mkdir -p .debug_objs
-	mkdir -p .debug_objs/util
-	mkdir -p .debug_objs/matrix
-	mkdir -p .debug_objs/tensor
-	mkdir -p .debug_objs/itdata
-	mkdir -p .debug_objs/mps
+	@mkdir -p .debug_objs
+	@mkdir -p .debug_objs/util
+	@mkdir -p .debug_objs/matrix
+	@mkdir -p .debug_objs/tensor
+	@mkdir -p .debug_objs/itdata
+	@mkdir -p .debug_objs/mps
 
 clean:	
-	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
+	@rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h util/readwrite.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h

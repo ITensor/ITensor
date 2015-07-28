@@ -65,6 +65,6 @@ mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
+	@rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
     idmrg idmrg-g
