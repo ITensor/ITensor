@@ -326,20 +326,23 @@ class IndexDim
     };
 
 template<typename Indexable>
-IndexDim<Indexable>
+auto
 make_indexdim(const IQIndexSet& is, const Indexable& ind) 
     { 
     return IndexDim<Indexable>(is,ind); 
     }
 
-template<typename BlockSparse, typename Callable>
+template<typename BlockSparseA, 
+         typename BlockSparseB,
+         typename BlockSparseC,
+         typename Callable>
 void
-loopContractedBlocks(BlockSparse const& A,
+loopContractedBlocks(BlockSparseA const& A,
                      IQIndexSet const& Ais,
-                     BlockSparse const& B,
+                     BlockSparseB const& B,
                      IQIndexSet const& Bis,
-                     BlockSparse & C,
-                     IQIndexSet & Cis,
+                     BlockSparseC & C,
+                     IQIndexSet const& Cis,
                      Callable & callback)
     {
     auto rA = Ais.r(),
@@ -380,9 +383,9 @@ loopContractedBlocks(BlockSparse const& A,
         inverseBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();
-        for(int ib = 0; ib < rB; ++ib)
+        for(decltype(rB) ib = 0; ib < rB; ++ib)
             couB.setInd(ib,0,Bis[ib].nindex()-1);
-        for(int iA = 0; iA < rA; ++iA)
+        for(decltype(rA) iA = 0; iA < rA; ++iA)
             {
             auto ival = Ablockind[iA];
             //Restrict couB to be fixed for indices of B contracted with A
@@ -401,7 +404,7 @@ loopContractedBlocks(BlockSparse const& A,
 
             //Finish making Cblockind and Bblockind
             Label Bblockind(rB,0);
-            for(int ib = 0; ib < rB; ++ib)
+            for(decltype(rB) ib = 0; ib < rB; ++ib)
                 {
                 if(BtoC[ib] != -1) Cblockind[BtoC[ib]] = couB.i[ib];
                 Bblockind[ib] = couB.i[ib];

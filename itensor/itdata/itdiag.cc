@@ -45,7 +45,7 @@ diagDense(ITDiag<Real> const& d,
           IndexSet const& tis,
           Label const& tind,
           Label const& Nind,
-          IndexSet & Nis,
+          IndexSet const& Nis,
           ManageStore & m)
     {
     bool t_has_uncontracted = false;

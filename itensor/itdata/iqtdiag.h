@@ -24,7 +24,7 @@ class IQTDiag
         //  Assumed that block indices are
         //  in increasing order.
 
-    std::vector<Real> data;
+    std::vector<Real> store;
         //^ *diagonal* tensor data stored contiguously
     //////////////
 
@@ -33,7 +33,13 @@ class IQTDiag
     IQTDiag(IQIndexSet const& is, 
             QN const& div_);
 
-    explicit operator bool() const { return !data.empty(); }
+    explicit operator bool() const { return !store.empty(); }
+
+    Real*
+    data() { return store.data(); }
+
+    const Real*
+    data() const { return store.data(); }
 
     long
     updateOffsets(IQIndexSet const& is,
@@ -45,14 +51,14 @@ void inline
 write(std::ostream & s, IQTDiag const& dat)
     {
     itensor::write(s,dat.offsets);
-    itensor::write(s,dat.data);
+    itensor::write(s,dat.store);
     }
 
 void inline
 read(std::istream & s, IQTDiag & dat)
     {
     itensor::read(s,dat.offsets);
-    itensor::read(s,dat.data);
+    itensor::read(s,dat.store);
     }
 
 QN
@@ -62,7 +68,7 @@ template<typename F>
 void
 doTask(ApplyIT<F> & A, IQTDiag & d)
     {
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         elt = A.f(elt);
     }
 
@@ -70,7 +76,7 @@ template<typename F>
 void
 doTask(VisitIT<F> & V, IQTDiag const& d)
     {
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         V.f(elt*V.scale_fac);
     }
 
@@ -78,7 +84,7 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real> & G, IQTDiag & d)
     {
-    std::generate(d.data.begin(),d.data.end(),G.f);
+    std::generate(d.store.begin(),d.store.end(),G.f);
     }
 
 template<typename F>

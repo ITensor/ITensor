@@ -17,7 +17,7 @@ IQTDiag(IQIndexSet const& is,
         QN const& div)
     {
     auto totalsize = updateOffsets(is,div);
-    data.assign(totalsize,0);
+    store.assign(totalsize,0);
     }
 
 long IQTDiag::
@@ -81,8 +81,83 @@ void
 doTask(MultReal & M, IQTDiag & d)
     {
     //use BLAS algorithm?
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         elt *= M.r;
+    }
+
+void
+blockDiagDense(IQTDiag const& D,
+               IQIndexSet const& Dis,
+               Label const& Dind,
+               IQTReal const& T,
+               IQIndexSet const& Tis,
+               Label const& Tind,
+               IQIndexSet const& Cis,
+               Label const& Cind,
+               ManageStore & m)
+    {
+#ifdef DEBUG
+    if(Dis.r() == 0) Error("IQTDiag rank 0 case not handled");
+#endif
+
+    bool T_has_uncontracted = false;
+    for(auto j : index(Tind)) 
+        if(Tind[j] >= 0)
+            {
+            T_has_uncontracted = true;
+            break;
+            }
+
+    auto Cdiv = doTask(CalcDiv{Dis},D)+doTask(CalcDiv{Tis},T);
+
+    if(T_has_uncontracted)
+        {
+        auto *nd = m.makeNewData<IQTReal>(Cis,Cdiv);
+        auto& C = *nd;
+
+        auto do_contract =
+            [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
+            (const Real *dblock, Label const& Dblockind,
+             const Real *tblock, Label const& Tblockind,
+                   Real *cblock, Label const& Cblockind)
+            {
+            Range Trange,
+                  Crange;
+            Trange.init(make_indexdim(Tis,Tblockind));
+            auto Tref = makeTensorRef(tblock,Trange);
+            Crange.init(make_indexdim(Cis,Cblockind));
+            auto Cref = makeTensorRef(cblock,Crange);
+
+            auto Ddim = make_indexdim(Dis,Dblockind);
+            auto Dminm = std::numeric_limits<size_t>::max();
+            for(decltype(Ddim.size()) j = 0; j < Ddim.size(); ++j)
+                {
+                Dminm = std::min(Dminm,Ddim[j]);
+                }
+
+            auto Dref = VecRefc(dblock,Dminm);
+
+            contractDiagPartial(Dref,Dind,
+                                Tref,Tind,
+                                Cref,Cind);
+            };
+
+        loopContractedBlocks(D,Dis,
+                             T,Tis,
+                             C,Cis,
+                             do_contract);
+        }
+    else
+        {
+        Error("Fully contracted IQTDiag*IQTReal not yet implemented");
+        //auto nd = m.makeNewData<IQTDiag>(Cis,Cdiv);
+        //auto& C = *nd;
+
+        //loopContractedBlocks(D,Dis,
+        //                     T,Tis,
+        //                     C,Cis,
+        //                     do_contract);
+        }
     }
 
 void
@@ -91,13 +166,32 @@ doTask(Contract<IQIndex>& Con,
        IQTReal const& B,
        ManageStore& m)
     {
+    Label Aind,
+          Bind,
+          Cind;
+    bool sortInds = false;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
+    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
+    blockDiagDense(A,Con.Lis,Aind,
+                   B,Con.Ris,Bind,
+                   Con.Nis,Cind,m);
     }
+
 void
 doTask(Contract<IQIndex>& Con,
        IQTReal const& A,
        IQTDiag const& B,
        ManageStore& m)
     {
+    Label Aind,
+          Bind,
+          Cind;
+    bool sortInds = false;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
+    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
+    blockDiagDense(B,Con.Ris,Bind,
+                   A,Con.Lis,Aind,
+                   Con.Nis,Cind,m);
     }
 
 void
@@ -109,7 +203,7 @@ doTask(NormNoScale,
        IQTDiag const& d) 
     { 
     Real nrm = 0;
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         {
         nrm += elt*elt;
         }
@@ -121,7 +215,7 @@ void
 doTask(PrintIT<IQIndex> & P, 
        IQTDiag const& d)
     {
-    P.s << "IQTDiag {" << d.offsets.size() << " blocks; Data size = " << d.data.size() << "}\n\n";
+    P.s << "IQTDiag {" << d.offsets.size() << " blocks; Data size = " << d.store.size() << "}\n\n";
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -130,7 +224,7 @@ doTask(PrintIT<IQIndex> & P,
     if(rank == 0) 
         {
         P.s << "  ";
-        P.printVal(scalefac*d.data.front());
+        P.printVal(scalefac*d.store.front());
         return;
         }
         
@@ -151,7 +245,7 @@ doTask(PrintIT<IQIndex> & P,
         auto os = io.offset;
         for(auto n : count(blockm))
             {
-            auto val = scalefac*d.data[os++];
+            auto val = scalefac*d.store[os++];
             if(std::norm(val) > Global::printScale())
                 {
                 if(!indices_printed)
