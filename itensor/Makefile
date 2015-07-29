@@ -19,6 +19,7 @@ SOURCES+= itdata/itcplx.cc
 SOURCES+= itdata/itcombiner.cc 
 SOURCES+= itdata/itdiag.cc 
 SOURCES+= itdata/iqtreal.cc
+SOURCES+= itdata/iqtdiag.cc
 SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
@@ -41,12 +42,12 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 .SUFFIXES: .cc $(SUFFIXES)
 
 %.o: %.cc
-	@echo "Compiling $< with optimizations"
+	@echo "Compiling itensor/$< with optimizations"
 	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
 	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc
-	@echo "Compiling $< in debug mode"
+	@echo "Compiling itensor/$< in debug mode"
 	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
 	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
@@ -106,6 +107,9 @@ itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/iqtreal.h
 itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/iqtdiag.h
+itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
