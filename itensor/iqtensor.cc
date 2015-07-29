@@ -238,7 +238,7 @@ doTask(ToITensor & T,
     {
     auto r = T.is.r();
     auto nd = ITReal(area(T.is),0);
-    auto *pd = d.data.data();
+    auto *pd = d.data();
     auto *pn = nd.data();
     vector<long> block(r,0);
     detail::GCounter C(r);
@@ -260,7 +260,7 @@ doTask(ToITensor & T,
             }
         }
     IndexSet::storage_type inds(r);
-    for(long j = 0; j < r; ++j) inds[j].ext = T.is[j];
+    for(decltype(r) j = 0; j < r; ++j) inds[j].ext = T.is[j];
     return ITensor(IndexSet{std::move(inds)},std::move(nd),T.scale);
     }
 

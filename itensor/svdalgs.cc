@@ -97,7 +97,7 @@ doTask(GetBlocks const& G,
         auto ncol = G.is[1][dblock[1]].m();
         R.i1 = dblock[0];
         R.i2 = dblock[1];
-        R.M = MatRefc(d.data.data()+dio.offset,nrow,ncol);
+        R.M = MatRefc(d.data()+dio.offset,nrow,ncol);
         }
     if(G.transpose) 
         {
