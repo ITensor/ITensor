@@ -16,14 +16,6 @@ using std::move;
 
 namespace itensor {
 
-IQTReal::BlOf
-make_blof(long b, long o)
-    {
-    IQTReal::BlOf B;
-    B.block = b;
-    B.offset = o;
-    return B;
-    }
 
 //function object for calling binaryFind
 //on offset vectors below
@@ -43,49 +35,37 @@ struct compBlock
     };
 
 QN
-calcDiv(const IQIndexSet& is, const Label& block_ind)
+calcDiv(IQIndexSet const& is, Label const& block_ind)
     {
     QN div;
     for(auto i : count(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
     return div;
     }
 
-//template<typename Container>
-//void
-//inverseBlockInd(long block,
-//                const IQIndexSet& is,
-//                Container& ind)
-//    {
-//    auto r = int(ind.size());
-//    assert(r == is.r());
-//    for(int j = 0; j < r-1; ++j)
-//        {
-//        ind[j] = block % is[j].nindex();
-//        block = (block-ind[j])/is[j].nindex();
-//        }
-//    ind[r-1] = block;
-//    }
-
 QN
-calcDiv(const IQIndexSet& is, const IQTReal& D)
+doTask(CalcDiv const& C,
+       IQTReal const& D)
     {
 #ifdef DEBUG
-    if(D.offsets.empty()) Error("Default constructed IQTReal in calcDiv");
+    if(D.offsets.empty()) Error("Default constructed IQTReal in doTask(CalcDiv,IQTReal)");
 #endif
-    QN div;
-    auto r = long(is.r());
-    if(r==0) return div;
-
     auto b = D.offsets.front().block;
-    for(long j = 0; j < r-1; ++j)
-        {
-        auto& J = is[j];
-        auto Ij = b % J.nindex();
-        div += J.dir()*J.qn(1+Ij);
-        b = (b-Ij)/J.nindex();
-        }
-    div += is[r-1].dir()*is[r-1].qn(1+b);
-    return div;
+    Label block_ind(C.is.r());
+    inverseBlockInd(b,C.is,block_ind);
+    return calcDiv(C.is,block_ind);
+
+    //auto r = long(is.r());
+    //if(r==0) return div;
+
+    //for(long j = 0; j < r-1; ++j)
+    //    {
+    //    auto& J = is[j];
+    //    auto Ij = b % J.nindex();
+    //    div += J.dir()*J.qn(1+Ij);
+    //    b = (b-Ij)/J.nindex();
+    //    }
+    //div += is[r-1].dir()*is[r-1].qn(1+b);
+    //return div;
     }
 
 IQTReal::
@@ -93,7 +73,7 @@ IQTReal(const IQIndexSet& is,
         const QN& div)
     {
     auto totalsize = updateOffsets(is,div);
-    data.assign(totalsize,0);
+    store.assign(totalsize,0);
     }
 
 long IQTReal::
@@ -169,7 +149,7 @@ void
 doTask(MultReal& M, IQTReal& d)
     {
     //use BLAS algorithm?
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         elt *= M.r;
     }
 
@@ -180,11 +160,11 @@ doTask(PlusEQ<IQIndex> const& P,
        IQTReal const& B)
     {
 #ifdef DEBUG
-    if(A.data.size() != B.data.size()) Error("Mismatched sizes in plusEq");
+    if(A.store.size() != B.store.size()) Error("Mismatched sizes in plusEq");
 #endif
     if(!P.hasPerm())
         {
-        daxpy_wrapper(A.data.size(),P.fac,B.data.data(),1,A.data.data(),1);
+        daxpy_wrapper(A.store.size(),P.fac,B.data(),1,A.data(),1);
         }
     else
         {
@@ -202,13 +182,14 @@ doTask(PlusEQ<IQIndex> const& P,
             Brange.init(make_indexdim(P.is2(),Bblock));
             auto* bblock = B.getBlock(P.is2(),Bblock);
 
-            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange);
+            auto aref = makeTensorRef(A.data()+aio.offset,Arange);
             auto bref = makeTensorRef(bblock,Brange);
             auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
             permute(bref,P.perm(),aref,add);
             }
         }
     }
+
 
 void
 doTask(Contract<IQIndex>& Con,
@@ -223,97 +204,45 @@ doTask(Contract<IQIndex>& Con,
     Label Cind;
     contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,true);
 
-    auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
+    auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
     auto nd = m.makeNewData<IQTReal>(Con.Nis,Cdiv);
     auto& C = *nd;
 
-    auto rA = Con.Lis.r(),
-         rB = Con.Ris.r(),
-         rC = Con.Nis.r();
-
-    Label AtoB(rA,-1),
-          AtoC(rA,-1),
-          BtoC(rB,-1);
-    for(auto ic : count(rC))
+    //Function to execute for each pair of
+    //contracted blocks of A and B
+    auto do_contract = 
+        [&Con,&Lind,&Rind,&Cind]
+        (const Real *ablock, Label const& Ablockind,
+         const Real *bblock, Label const& Bblockind,
+               Real *cblock, Label const& Cblockind)
         {
-        auto j = findindex(Con.Lis,Con.Nis[ic]);
-        if(j >= 0)
-            {
-            AtoC[j] = ic;
-            }
-        else
-            {
-            j = findindex(Con.Ris,Con.Nis[ic]);
-            BtoC[j] = ic;
-            }
-        }
-    for(int ia = 0; ia < rA; ++ia)
-    for(int ib = 0; ib < rB; ++ib)
-        if(Lind[ia] == Rind[ib])
-            {
-            AtoB[ia] = ib;
-            break;
-            }
+        Range Arange,
+              Brange,
+              Crange;
+        //Construct range objects for aref,bref,cref
+        //using IndexDim helper objects
+        Arange.init(make_indexdim(Con.Lis,Ablockind));
+        Brange.init(make_indexdim(Con.Ris,Bblockind));
+        Crange.init(make_indexdim(Con.Nis,Cblockind));
 
-    detail::GCounter couB(rB);
-    Label Ablock(rA,0),
-          Cblock(rC,0);
-    Range Arange,
-          Brange,
-          Crange;
-    //Loop over blocks of A (labeled by elements of A.offsets)
-    for(auto& aio : A.offsets)
-        {
-        //Reconstruct indices labeling this block of A, put into Ablock
-        inverseBlockInd(aio.block,Con.Lis,Ablock);
-        //Reset couB to run over indices of B (at first)
-        couB.reset();
-        for(int ib = 0; ib < rB; ++ib)
-            couB.setInd(ib,0,Con.Ris[ib].nindex()-1);
-        for(int iA = 0; iA < rA; ++iA)
-            {
-            auto ival = Ablock[iA];
-            //Restrict couB to be fixed for indices of B contracted with A
-            if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
-            //Begin computing elements of Cblock(=destination of this block-block contraction)
-            if(AtoC[iA] != -1) Cblock[AtoC[iA]] = ival;
-            }
-        //Loop over blocks of B which contract with current block of A
-        for(;couB.notDone(); ++couB)
-            {
-            //Check whether B contains non-zero block for this setting of couB
-            //TODO: check whether block is present by computing its QN flux,
-            //      should be faster than calling getBlock
-            auto* bblock = B.getBlock(Con.Ris,couB.i);
-            if(!bblock) continue;
+        //"Wire up" TensorRef's pointing to blocks of A,B, and C
+        //we are working with
+        auto aref = makeTensorRef(ablock,Arange),
+             bref = makeTensorRef(bblock,Brange);
+        auto cref = makeTensorRef(cblock,Crange);
 
-            //Finish making Cblock index array
-            for(int ib = 0; ib < rB; ++ib)
-                if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
+        //Compute cref=aref*bref
+        contract(aref,Lind,bref,Rind,cref,Cind);
+        };
 
-            auto* cblock = C.getBlock(Con.Nis,Cblock);
-            assert(cblock != nullptr);
+    loopContractedBlocks(A,Con.Lis,
+                         B,Con.Ris,
+                         C,Con.Nis,
+                         do_contract);
 
-            //Construct range objects for aref,bref,cref
-            //using IndexDim helper objects
-            Arange.init(make_indexdim(Con.Lis,Ablock));
-            Brange.init(make_indexdim(Con.Ris,couB.i));
-            Crange.init(make_indexdim(Con.Nis,Cblock));
-
-            //"Wire up" TensorRef's pointing to blocks of A,B, and C
-            //we are working with
-            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange),
-                 bref = makeTensorRef(bblock,Brange);
-            auto cref = makeTensorRef(cblock,Crange);
-
-            //Compute cref=aref*bref
-            contract(aref,Lind,bref,Rind,cref,Cind);
-            } //for couB
-        } //for A.offsets
-
-    Con.computeScalefac(C.data);
+    Con.computeScalefac(C.store);
     }
 
 void
@@ -333,7 +262,7 @@ permuteIQ(const Permutation& P,
         bind.at(P.dest(i)).ext = Ais[i];
         }
     Bis = IQIndexSet{move(bind)};
-    dB = IQTReal(Bis,calcDiv(Ais,dA));
+    dB = IQTReal(Bis,doTask(CalcDiv{Ais},dA));
     //if(Global::debug1())
     //    {
     //    println("Error is happening because IQIndexSet is sorting m==1 ind to the back, but Permute logic here thinks it's still in the same location.");
@@ -360,7 +289,7 @@ permuteIQ(const Permutation& P,
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto* bblock = dB.getBlock(Bis,Bblock);
-        auto aref = makeTensorRef(dA.data.data()+aio.offset,Arange);
+        auto aref = makeTensorRef(dA.data()+aio.offset,Arange);
         auto bref = makeTensorRef(bblock,Brange);
         permute(aref,P,bref);
         }
@@ -517,7 +446,7 @@ combine(const IQTReal& d,
             nd = d;
             p = &nd;
             }
-        auto div = calcDiv(dis,d);
+        auto div = doTask(CalcDiv{dis},d);
         p->updateOffsets(Nis,div);
         }
 
@@ -551,7 +480,7 @@ Real
 doTask(NormNoScale, const IQTReal& d) 
     { 
     Real nrm = 0;
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         {
         nrm += elt*elt;
         }
@@ -562,7 +491,7 @@ doTask(NormNoScale, const IQTReal& d)
 void
 doTask(PrintIT<IQIndex>& P, const IQTReal& d)
     {
-    P.s << "{Data size = " << d.data.size() << "}\n\n";
+    P.s << "IQTReal {" << d.offsets.size() << " blocks; Data size = " << d.store.size() << "}\n\n";
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -571,7 +500,7 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
     if(rank == 0) 
         {
         P.s << "  ";
-        P.printVal(scalefac*d.data.front());
+        P.printVal(scalefac*d.store.front());
         return;
         }
         
@@ -592,7 +521,7 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
             C.setInd(i,0,blockIndex(i).m()-1);
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
-            auto val = scalefac*d.data[os];
+            auto val = scalefac*d.store[os];
             if(std::norm(val) > Global::printScale())
                 {
                 if(!indices_printed)

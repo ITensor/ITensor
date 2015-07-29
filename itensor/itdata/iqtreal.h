@@ -19,9 +19,6 @@ class IQTReal;
 
 
 QN
-calcDiv(const IQIndexSet& is, const IQTReal& D);
-
-QN
 calcDiv(const IQIndexSet& is, const Label& block_ind);
 
 // For a block index (0,1,...,Nblocks-1),
@@ -66,7 +63,7 @@ class IQTReal
         //  Assumed that block indices are
         //  in increasing order.
 
-    std::vector<Real> data;
+    std::vector<Real> store;
         //^ tensor data stored contiguously
     //////////////
 
@@ -75,7 +72,13 @@ class IQTReal
     IQTReal(IQIndexSet const& is, 
             QN const& div_);
 
-    explicit operator bool() const { return !data.empty(); }
+    explicit operator bool() const { return !store.empty(); }
+
+    Real*
+    data() { return store.data(); }
+
+    const Real*
+    data() const { return store.data(); }
 
     template<typename Indexable>
     const Real*
@@ -111,9 +114,6 @@ class IQTReal
     updateOffsets(IndexSetT<IQIndex> const& is,
                   QN const& div);
 
-    virtual
-    ~IQTReal() { }
-
     };
 
 template<typename Indexable>
@@ -122,7 +122,7 @@ getBlock(IQIndexSet const& is,
          Indexable const& block_ind) const
     {
     auto r = long(block_ind.size());
-    if(r == 0) return data.data();
+    if(r == 0) return store.data();
 #ifdef DEBUG
     if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in get_block");
 #endif
@@ -138,7 +138,7 @@ getBlock(IQIndexSet const& is,
     auto boff = offsetOf(ii);
     if(boff >= 0)
         {
-        return data.data()+boff;
+        return store.data()+boff;
         }
     return nullptr;
     }
@@ -149,7 +149,7 @@ getElt(IQIndexSet const& is,
        Indexable const& ind) const
     {
     auto r = long(ind.size());
-    if(r == 0) return data.data();
+    if(r == 0) return store.data();
 #ifdef DEBUG
     if(is.r() != r) 
         {
@@ -182,9 +182,9 @@ getElt(IQIndexSet const& is,
     if(boff >= 0)
         {
 #ifdef DEBUG
-        if(size_t(boff+eoff) >= data.size()) Error("get_elt out of range");
+        if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
 #endif
-        return data.data()+boff+eoff;
+        return store.data()+boff+eoff;
         }
     return nullptr;
     }
@@ -194,53 +194,25 @@ void inline
 write(std::ostream & s, IQTReal const& dat)
     {
     itensor::write(s,dat.offsets);
-    itensor::write(s,dat.data);
+    itensor::write(s,dat.store);
     }
 
 void inline
 read(std::istream & s, IQTReal & dat)
     {
     itensor::read(s,dat.offsets);
-    itensor::read(s,dat.data);
+    itensor::read(s,dat.store);
     }
 
-//
-// Helper object for treating
-// IQTReal storage as a "tensor of tensors"
-//
-template<typename Indexable>
-class IndexDim
-    {
-    const IQIndexSet& is_;
-    const Indexable& ind_;
-    public:
 
-    IndexDim(const IQIndexSet& is,
-             const Indexable& ind)
-      : is_(is),
-        ind_(ind)
-        { }
-
-    size_t
-    size() const { return is_.r(); }
-
-    size_t
-    operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
-    };
-
-template<typename Indexable>
-IndexDim<Indexable>
-make_indexdim(const IQIndexSet& is, const Indexable& ind) 
-    { 
-    return IndexDim<Indexable>(is,ind); 
-    }
-
+QN
+doTask(CalcDiv const& C, IQTReal const& D);
 
 template <typename F>
 void
 doTask(ApplyIT<F>& A, IQTReal& d)
     {
-    for(auto& elt : d.data)
+    for(auto& elt : d.store)
         elt = A.f(elt);
     }
 
@@ -248,7 +220,7 @@ template <typename F>
 void
 doTask(VisitIT<F>& V, const IQTReal& d)
     {
-    for(const auto& elt : d.data)
+    for(const auto& elt : d.store)
         V.f(elt*V.scale_fac);
     }
 
@@ -256,7 +228,7 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real>& G, IQTReal& d)
     {
-    std::generate(d.data.begin(),d.data.end(),G.f);
+    std::generate(d.store.begin(),d.store.end(),G.f);
     }
 
 template<typename F>
@@ -319,6 +291,135 @@ doTask(PrintIT<IQIndex>& P, const ITCombiner& d);
 
 void
 doTask(Write& W, const IQTReal& d);
+
+IQTReal::BlOf inline
+make_blof(long b, long o)
+    {
+    IQTReal::BlOf B;
+    B.block = b;
+    B.offset = o;
+    return B;
+    }
+
+//
+// Helper object for treating
+// IQTReal storage as a "tensor of tensors"
+//
+template<typename Indexable>
+class IndexDim
+    {
+    const IQIndexSet& is_;
+    const Indexable& ind_;
+    public:
+
+    IndexDim(const IQIndexSet& is,
+             const Indexable& ind)
+      : is_(is),
+        ind_(ind)
+        { }
+
+    size_t
+    size() const { return is_.r(); }
+
+    size_t
+    operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
+    };
+
+template<typename Indexable>
+IndexDim<Indexable>
+make_indexdim(const IQIndexSet& is, const Indexable& ind) 
+    { 
+    return IndexDim<Indexable>(is,ind); 
+    }
+
+template<typename BlockSparse, typename Callable>
+void
+loopContractedBlocks(BlockSparse const& A,
+                     IQIndexSet const& Ais,
+                     BlockSparse const& B,
+                     IQIndexSet const& Bis,
+                     BlockSparse & C,
+                     IQIndexSet & Cis,
+                     Callable & callback)
+    {
+    auto rA = Ais.r(),
+         rB = Bis.r(),
+         rC = Cis.r();
+
+    Label AtoB(rA,-1),
+          AtoC(rA,-1),
+          BtoC(rB,-1);
+    for(decltype(rC) ic = 0; ic < rC; ++ic)
+        {
+        auto j = findindex(Ais,Cis[ic]);
+        if(j >= 0)
+            {
+            AtoC[j] = ic;
+            }
+        else
+            {
+            j = findindex(Bis,Cis[ic]);
+            BtoC[j] = ic;
+            }
+        }
+    for(int ia = 0; ia < rA; ++ia)
+    for(int ib = 0; ib < rB; ++ib)
+        if(Ais[ia] == Bis[ib])
+            {
+            AtoB[ia] = ib;
+            break;
+            }
+
+    detail::GCounter couB(rB);
+    Label Ablockind(rA,0),
+          Cblockind(rC,0);
+    //Loop over blocks of A (labeled by elements of A.offsets)
+    for(auto& aio : A.offsets)
+        {
+        //Reconstruct indices labeling this block of A, put into Ablock
+        inverseBlockInd(aio.block,Ais,Ablockind);
+        //Reset couB to run over indices of B (at first)
+        couB.reset();
+        for(int ib = 0; ib < rB; ++ib)
+            couB.setInd(ib,0,Bis[ib].nindex()-1);
+        for(int iA = 0; iA < rA; ++iA)
+            {
+            auto ival = Ablockind[iA];
+            //Restrict couB to be fixed for indices of B contracted with A
+            if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
+            //Begin computing elements of Cblock(=destination of this block-block contraction)
+            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
+            }
+        //Loop over blocks of B which contract with current block of A
+        for(;couB.notDone(); ++couB)
+            {
+            //Check whether B contains non-zero block for this setting of couB
+            //TODO: check whether block is present by computing its QN flux,
+            //      could be faster than calling getBlock
+            auto* bblock = B.getBlock(Bis,couB.i);
+            if(!bblock) continue;
+
+            //Finish making Cblockind and Bblockind
+            Label Bblockind(rB,0);
+            for(int ib = 0; ib < rB; ++ib)
+                {
+                if(BtoC[ib] != -1) Cblockind[BtoC[ib]] = couB.i[ib];
+                Bblockind[ib] = couB.i[ib];
+                }
+
+            auto* cblock = C.getBlock(Cis,Cblockind);
+            assert(cblock != nullptr);
+
+            auto* ablock = A.data()+aio.offset;
+            assert(ablock != nullptr);
+
+            callback(ablock,Ablockind,
+                     bblock,Bblockind,
+                     cblock,Cblockind);
+
+            } //for couB
+        } //for A.offsets
+    }
 
 } //namespace itensor
 
