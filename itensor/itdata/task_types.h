@@ -276,7 +276,8 @@ StorageType
     ITCombiner=3, 
     ITDiagReal=4, 
     ITDiagCplx=5,
-    IQTReal=6
+    IQTReal=6,
+    IQTDiag=7
     }; 
 
 class Write
@@ -348,6 +349,12 @@ SetElt(T elt_,
     detail::checkEltInd(is,inds);
 #endif
     }
+
+struct CalcDiv 
+    { 
+    IQIndexSet const& is;
+    CalcDiv(IQIndexSet const& is_) : is(is_) { }
+    };
 
 } //namespace itensor 
 

@@ -51,9 +51,6 @@ class ITDiag
         length(store.size())
         { }
 
-    virtual
-    ~ITDiag() { }
-
     bool
     allSame() const { return store.empty(); }
 

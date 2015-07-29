@@ -5,6 +5,7 @@
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/contract.h"
+#include "itensor/qn.h"
 #include "itensor/util/count.h"
 
 using std::vector;
@@ -169,6 +170,13 @@ void
 doTask(Write& W, const ITCombiner& d) 
     { 
     W.writeType(StorageType::ITCombiner,d); 
+    }
+
+QN 
+doTask(CalcDiv const& C, 
+       ITCombiner const& d)
+    {
+    return QN{};
     }
 
 } //namespace itensor

@@ -9,14 +9,13 @@
 
 namespace itensor {
 
+class QN;
+
 class ITCombiner
     {
     public:
 
     ITCombiner() { }
-
-    virtual
-    ~ITCombiner() { }
 
     };
 
@@ -55,6 +54,9 @@ doTask(PrintIT<Index>& P, const ITCombiner& d);
 
 void
 doTask(Write& W, const ITCombiner& d);
+
+QN 
+doTask(CalcDiv const& C, ITCombiner const& d);
 
 } //namespace itensor
 
