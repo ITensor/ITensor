@@ -70,32 +70,11 @@ SECTION("Boolean")
     CHECK(D);
     }
 
-//SECTION("Constructors")
-//    {
-//    Real f = Global::random();
-//    IQTensor rZ(f);
-//
-//    CHECK_EQUAL(rZ.r(),0);
-//    CHECK_CLOSE(norm(rZ),f);
-//    }
-
-//SECTION("ToReal")
-//    {
-//    Real f = Global::random();
-//    IQTensor T(f);
-//    PrintData(T);
-//    CHECK_CLOSE(T.real(),f);
-//    }
-
 SECTION("Contracting Product")
     {
     SECTION("Case 1")
         {
-        //Print(A.inds());
-        //Print(B.inds());
-        //SET_SCOPED(Global::debug1()) = true;
-        auto R = A*dag(B);
-        //Print(R.inds());
+        auto R = A * dag(B);
 
         CHECK(hasindex(R,S1));
         CHECK(hasindex(R,S2));
@@ -115,6 +94,29 @@ SECTION("Contracting Product")
                 }
             //printfln("val = %f, R.real(S1(%d),S2(%d))=%f",val,k1,k2,R.real(S1(k1),S2(k2)));
             CHECK_CLOSE(R.real(S1(k1),S2(k2)),val);
+            }
+        }
+
+    SECTION("Case 2")
+        {
+        auto R = A * dag(prime(B,L1));
+
+        CHECK(!hasindex(R,L2));
+        CHECK(hasindex(R,L1));
+        CHECK(hasindex(R,S1));
+        CHECK(hasindex(R,S2));
+
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int j1 = 1; j1 <= L1.m(); ++j1)
+        for(int j1p = 1; j1p <= L1.m(); ++j1p)
+            {
+            Real val = 0;
+            for(int j2 = 1; j2 <= L2.m(); ++j2)
+                {
+                val += A.real(L1(j1),S1(k1),L2(j2),S2(k2))*B.real(L1(j1p),L2(j2));
+                }
+            CHECK_CLOSE(R.real(prime(L1)(j1p),L1(j1),S1(k1),S2(k2)),val);
             }
         }
 
