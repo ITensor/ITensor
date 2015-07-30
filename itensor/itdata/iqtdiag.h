@@ -47,6 +47,63 @@ class IQTDiag
 
     };
 
+template<typename Indexable>
+const Real*
+getElt(IQTDiag const& D,
+       IQIndexSet const& is,
+       Indexable const& ind)
+    {
+    auto r = is.r();
+#ifdef DEBUG
+    if(is.r() != decltype(r)(ind.size())) 
+        {
+        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
+        Error("Wrong number of indices passed to getElt");
+        }
+#endif
+    if(r == 0) return D.data();
+    long bind = 0, //block index (total)
+         bstr = 1; //block stride so far
+    auto last_elt_subind = ind[0];
+    for(decltype(r) i = 0; i < r; ++i)
+        {
+        auto& I = is[i];
+        long block_subind = 0,
+             elt_subind = ind[i];
+        while(elt_subind >= I[block_subind].m()) //elt_subind 0-indexed
+            {
+            elt_subind -= I[block_subind].m();
+            ++block_subind;
+            }
+        if(i != 0 && elt_subind != last_elt_subind) return nullptr;
+
+        last_elt_subind = elt_subind;
+        bind += block_subind*bstr;
+        bstr *= I.nindex();
+        }
+    //Do a binary search (equal_range) to see
+    //if there is a block with block index "bind"
+    auto boff = offsetOf(D.offsets,bind);
+    if(boff != -1)
+        {
+        auto eoff = last_elt_subind;
+#ifdef DEBUG
+        if(size_t(boff+eoff) >= D.store.size()) Error("get_elt out of range");
+#endif
+        return D.data()+boff+eoff;
+        }
+    return nullptr;
+    }
+
+template<typename Indexable>
+Real*
+getElt(IQTDiag & D,
+       IndexSetT<IQIndex> const& is,
+       Indexable const& ind)
+    {
+    return const_cast<Real*>(getElt(D,is,ind));
+    }
+
 void inline
 write(std::ostream & s, IQTDiag const& dat)
     {
@@ -60,6 +117,9 @@ read(std::istream & s, IQTDiag & dat)
     itensor::read(s,dat.offsets);
     itensor::read(s,dat.store);
     }
+ 
+Cplx
+doTask(GetElt<IQIndex>& G, IQTDiag const& D);
 
 QN
 doTask(CalcDiv const& C, IQTDiag const& d);

@@ -65,6 +65,14 @@ updateOffsets(IQIndexSet const& is,
     return totalsize;
     }
 
+Cplx
+doTask(GetElt<IQIndex>& G, IQTDiag const& D)
+    {
+    auto* pelt = getElt(D,G.is,G.inds);
+    if(pelt) return *pelt;
+    return 0;
+    }
+
 QN
 doTask(CalcDiv const& C, IQTDiag const& d)
     {

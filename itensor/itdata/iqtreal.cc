@@ -121,10 +121,11 @@ updateOffsets(const IQIndexSet& is,
     return totalsize;
     }
 
-long IQTReal::
-offsetOf(long blkind) const
+long
+offsetOf(std::vector<IQTReal::BlOf> const& offsets,
+         long blockind)
     {
-    auto blk = detail::binaryFind(offsets,blkind,compBlock());
+    auto blk = detail::binaryFind(offsets,blockind,compBlock());
     if(blk) return blk->offset;
     return -1;
     }

@@ -104,90 +104,15 @@ class IQTReal
     getElt(IndexSetT<IQIndex> const& is,
            Indexable const& ind)
         {
-        return const_cast<Real*>(static_cast<const IQTReal&>(*this).getElt(is,ind));
+        const auto& cthis = *this;
+        return const_cast<Real*>(cthis.getElt(is,ind));
         }
-
-    long
-    offsetOf(long blkind) const;
 
     long
     updateOffsets(IndexSetT<IQIndex> const& is,
                   QN const& div);
 
     };
-
-template<typename Indexable>
-const Real* IQTReal::
-getBlock(IQIndexSet const& is,
-         Indexable const& block_ind) const
-    {
-    auto r = long(block_ind.size());
-    if(r == 0) return store.data();
-#ifdef DEBUG
-    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in get_block");
-#endif
-    long ii = 0;
-    for(auto i = r-1; i > 0; --i)
-        {
-        ii += block_ind[i];
-        ii *= is[i-1].nindex();
-        }
-    ii += block_ind[0];
-    //Do binary search to see if there
-    //is a block with block index ii
-    auto boff = offsetOf(ii);
-    if(boff >= 0)
-        {
-        return store.data()+boff;
-        }
-    return nullptr;
-    }
-
-template<typename Indexable>
-const Real* IQTReal::
-getElt(IQIndexSet const& is,
-       Indexable const& ind) const
-    {
-    auto r = long(ind.size());
-    if(r == 0) return store.data();
-#ifdef DEBUG
-    if(is.r() != r) 
-        {
-        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
-        Error("Mismatched size of IQIndexSet and elt_ind in get_block");
-        }
-#endif
-    long bind = 0, //block index (total)
-         bstr = 1, //block stride so far
-         eoff = 0, //element offset within block
-         estr = 1; //element stride
-    for(auto i = 0; i < r; ++i)
-        {
-        auto& I = is[i];
-        long block_subind = 0,
-             elt_subind = ind[i];
-        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
-            {
-            elt_subind -= I[block_subind].m();
-            ++block_subind;
-            }
-        bind += block_subind*bstr;
-        bstr *= I.nindex();
-        eoff += elt_subind*estr;
-        estr *= I[block_subind].m();
-        }
-    //Do a binary search (equal_range) to see
-    //if there is a block with block index "bind"
-    auto boff = offsetOf(bind);
-    if(boff >= 0)
-        {
-#ifdef DEBUG
-        if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
-#endif
-        return store.data()+boff+eoff;
-        }
-    return nullptr;
-    }
 
 
 void inline
@@ -300,6 +225,15 @@ make_blof(long b, long o)
     B.offset = o;
     return B;
     }
+
+// Does a binary search over offsets to see 
+// if they contain "blockind"
+// If so, return the corresponding data offset,
+// otherwise return -1
+long
+offsetOf(std::vector<IQTReal::BlOf> const& offsets,
+         long blockind);
+
 
 //
 // Helper object for treating
@@ -422,6 +356,80 @@ loopContractedBlocks(BlockSparseA const& A,
 
             } //for couB
         } //for A.offsets
+    }
+
+
+template<typename Indexable>
+const Real* IQTReal::
+getBlock(IQIndexSet const& is,
+         Indexable const& block_ind) const
+    {
+    auto r = long(block_ind.size());
+    if(r == 0) return store.data();
+#ifdef DEBUG
+    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in get_block");
+#endif
+    long ii = 0;
+    for(auto i = r-1; i > 0; --i)
+        {
+        ii += block_ind[i];
+        ii *= is[i-1].nindex();
+        }
+    ii += block_ind[0];
+    //Do binary search to see if there
+    //is a block with block index ii
+    auto boff = offsetOf(offsets,ii);
+    if(boff >= 0)
+        {
+        return store.data()+boff;
+        }
+    return nullptr;
+    }
+
+template<typename Indexable>
+const Real* IQTReal::
+getElt(IQIndexSet const& is,
+       Indexable const& ind) const
+    {
+    auto r = long(ind.size());
+    if(r == 0) return store.data();
+#ifdef DEBUG
+    if(is.r() != r) 
+        {
+        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
+        Error("Mismatched size of IQIndexSet and elt_ind in get_block");
+        }
+#endif
+    long bind = 0, //block index (total)
+         bstr = 1, //block stride so far
+         eoff = 0, //element offset within block
+         estr = 1; //element stride
+    for(auto i = 0; i < r; ++i)
+        {
+        auto& I = is[i];
+        long block_subind = 0,
+             elt_subind = ind[i];
+        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
+            {
+            elt_subind -= I[block_subind].m();
+            ++block_subind;
+            }
+        bind += block_subind*bstr;
+        bstr *= I.nindex();
+        eoff += elt_subind*estr;
+        estr *= I[block_subind].m();
+        }
+    //Do a binary search (equal_range) to see
+    //if there is a block with block index "bind"
+    auto boff = offsetOf(offsets,bind);
+    if(boff >= 0)
+        {
+#ifdef DEBUG
+        if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
+#endif
+        return store.data()+boff+eoff;
+        }
+    return nullptr;
     }
 
 } //namespace itensor
