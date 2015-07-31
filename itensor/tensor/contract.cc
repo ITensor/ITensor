@@ -57,38 +57,38 @@ printv(const autovector<T>& t)
 #define PRI(a) print(#a,": "); printv(a);
 #define PRIL(a,l) print(#a,": "); printv(a,l);
 
-template<typename T>
-long 
-find_index(vector<T> const& v, 
-           T const& t)
-    {
-    using size_type = typename vector<T>::size_type;
-    for(size_type i = 0; i < v.size(); ++i)
-        if(v[i] == t) return i;
-    return -1;
-    }
-
-template<typename T, size_t MaxSize>
-long 
-find_index(const VarArray<T,MaxSize>& v, 
-           const T& t)
-    {
-    using size_type = typename VarArray<T,MaxSize>::size_type;
-    for(size_type i = 0; i < v.size(); ++i)
-        if(v[i] == t) return i;
-    return -1;
-    }
-
-template<typename T, size_t MaxSize>
-long 
-find_index(const InfArray<T,MaxSize>& v, 
-           const T& t)
-    {
-    using size_type = typename InfArray<T,MaxSize>::size_type;
-    for(size_type i = 0; i < v.size(); ++i)
-        if(v[i] == t) return i;
-    return -1;
-    }
+//template<typename T>
+//long 
+//find_index(vector<T> const& v, 
+//           T const& t)
+//    {
+//    using size_type = typename vector<T>::size_type;
+//    for(size_type i = 0; i < v.size(); ++i)
+//        if(v[i] == t) return i;
+//    return -1;
+//    }
+//
+//template<typename T, size_t MaxSize>
+//long 
+//find_index(const VarArray<T,MaxSize>& v, 
+//           const T& t)
+//    {
+//    using size_type = typename VarArray<T,MaxSize>::size_type;
+//    for(size_type i = 0; i < v.size(); ++i)
+//        if(v[i] == t) return i;
+//    return -1;
+//    }
+//
+//template<typename T, size_t MaxSize>
+//long 
+//find_index(const InfArray<T,MaxSize>& v, 
+//           const T& t)
+//    {
+//    using size_type = typename InfArray<T,MaxSize>::size_type;
+//    for(size_type i = 0; i < v.size(); ++i)
+//        if(v[i] == t) return i;
+//    return -1;
+//    }
 
 //
 // small_map has an interface similar to std::map

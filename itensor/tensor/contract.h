@@ -75,15 +75,30 @@ computeLabels(Inds const& Lis,
 template<typename T>
 long 
 find_index(std::vector<T> const& v, 
-           T const& t);
+           T const& t)
+    {
+    for(decltype(v.size()) i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
 template<typename T, size_t MaxSize>
 long 
 find_index(VarArray<T,MaxSize> const& v, 
-           T const& t);
+           T const& t)
+    {
+    for(decltype(v.size()) i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
 template<typename T, size_t MaxSize>
 long 
 find_index(InfArray<T,MaxSize> const& v, 
-           T const& t);
+           T const& t)
+    {
+    for(decltype(v.size()) i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
 
 
 ///
