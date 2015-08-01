@@ -73,14 +73,15 @@ operator*(const IndexVal& iv, const IQTensor& T)
 
 //Compute divergence of IQTensor T
 QN
-div(const IQTensor& T);
+div(IQTensor const& T);
 
 IQTensor
-combiner(std::vector<IQIndex> inds, const Args& args = Global::args());
+combiner(std::vector<IQIndex> inds, Args const& args = Global::args());
 
 template<typename... Inds>
 IQTensor
-combiner(const IQIndex& i1, const Inds&... inds)
+combiner(IQIndex const& i1, 
+         Inds const&... inds)
     {
     return combiner(std::vector<IQIndex>{i1,inds...});
     }

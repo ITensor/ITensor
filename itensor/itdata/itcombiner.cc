@@ -5,7 +5,7 @@
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/qn.h"
+#include "itensor/iqindex.h"
 #include "itensor/util/count.h"
 
 using std::vector;
@@ -158,12 +158,18 @@ doTask(Contract<Index>& C,
     }
 
 bool
-doTask(CheckComplex, const ITCombiner& d) { return false; }
+doTask(CheckComplex, ITCombiner const& d) { return false; }
 
 void
-doTask(PrintIT<Index>& P, const ITCombiner& d)
+doTask(PrintIT<Index>& P, ITCombiner const& d)
     {
     P.printInfo(d,"Combiner");
+    }
+
+void
+doTask(PrintIT<IQIndex>& P, ITCombiner const& d)
+    {
+    P.s << "ITCombiner";
     }
 
 void

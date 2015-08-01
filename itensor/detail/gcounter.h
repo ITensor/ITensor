@@ -52,10 +52,10 @@ class GCounter	// General Counter
         ind(0)
         { }
 
-    // After constructing a GCounter g, calling g.setInd(j,s,e)
+    // After constructing a GCounter g, calling g.setRange(j,s,e)
     // lets g.i[j] = s,s+1,...,e when iterating g
     void 
-    setInd(long j, long s, long e)
+    setRange(long j, long s, long e)
         {
         first.ref(j) = s;
         last.ref(j) = e;

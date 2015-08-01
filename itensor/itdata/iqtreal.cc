@@ -90,7 +90,7 @@ updateOffsets(const IQIndexSet& is,
 
     detail::GCounter C(0,is.r()-1,0);
     for(int j = 0; j < is.r(); ++j) 
-        C.setInd(j,0,is[j].nindex()-1);
+        C.setRange(j,0,is[j].nindex()-1);
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
@@ -519,7 +519,7 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
         //Wire up GCounter with appropriate dims
         C.reset();
         for(int i = 0; i < rank; ++i)
-            C.setInd(i,0,blockIndex(i).m()-1);
+            C.setRange(i,0,blockIndex(i).m()-1);
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
             auto val = scalefac*d.store[os];
@@ -549,11 +549,6 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
         }
     }
 
-void
-doTask(PrintIT<IQIndex>& P, const ITCombiner& d)
-    {
-    P.s << "\n {ITCombiner storage}\n";
-    }
 
 void
 doTask(Write& W, const IQTReal& d)

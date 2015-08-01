@@ -22,18 +22,19 @@ namespace itensor {
 // (similar to summing against a Kronecker
 // delta tensor \delta_{J,n})
 inline ITensor& 
-operator*=(ITensor& T, const IndexVal& iv) { return T *= ITensor(iv); } 
+operator*=(ITensor & T, IndexVal const& iv) { return T *= ITensor(iv); } 
 ITensor inline
-operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
+operator*(ITensor T, IndexVal const& iv) { T *= iv; return T; }
 ITensor inline
-operator*(const IndexVal& iv, const ITensor& B) { ITensor A(iv); A *= B; return A; }
+operator*(IndexVal const& iv, ITensor const& B) { ITensor A(iv); A *= B; return A; }
 
 ITensor
-combiner(std::vector<Index> inds, const Args& args = Global::args());
+combiner(std::vector<Index> inds, Args const& args = Global::args());
 
 template<typename... Inds>
 ITensor
-combiner(const Index& i1, const Inds&... inds)
+combiner(Index const& i1, 
+         Inds const&... inds)
     {
     return combiner(std::vector<Index>{i1,inds...});
     }

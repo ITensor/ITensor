@@ -225,7 +225,7 @@ contractDiagPartial(DiagElsA const& A, Label const& ai,
 #ifdef DEBUG
             if(n >= nbu) Error("n out of range");
 #endif
-            GC.setInd(n,0,B.extent(j)-1);
+            GC.setRange(n,0,B.extent(j)-1);
             bstride[n] = B.stride(j);
             auto k = find_index(ci,bi[j]);
 #ifdef DEBUG

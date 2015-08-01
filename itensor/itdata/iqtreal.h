@@ -318,12 +318,12 @@ loopContractedBlocks(BlockSparseA const& A,
         //Reset couB to run over indices of B (at first)
         couB.reset();
         for(decltype(rB) ib = 0; ib < rB; ++ib)
-            couB.setInd(ib,0,Bis[ib].nindex()-1);
+            couB.setRange(ib,0,Bis[ib].nindex()-1);
         for(decltype(rA) iA = 0; iA < rA; ++iA)
             {
             auto ival = Ablockind[iA];
             //Restrict couB to be fixed for indices of B contracted with A
-            if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
+            if(AtoB[iA] != -1) couB.setRange(AtoB[iA],ival,ival);
             //Begin computing elements of Cblock(=destination of this block-block contraction)
             if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
             }

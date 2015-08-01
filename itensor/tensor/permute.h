@@ -95,10 +95,10 @@ permute(TensorRef<const T,R1> from,
 
     detail::GCounter c(0,r-1,0);
     for(size_type i = 0; i < r; ++i)
-        c.setInd(i,0,from.extent(i)-1);
+        c.setRange(i,0,from.extent(i)-1);
     //Leave bigind fixed to zero, will
     //increment manually in the loop below
-    c.setInd(bigind,0,0);
+    c.setRange(bigind,0,0);
 
     Label ti(r);
     for(; c.notDone(); ++c)

@@ -261,7 +261,7 @@ doTask(PrintIT<Index>& P, const ITCplx& d)
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(auto i : count(rank))
-        gc.setInd(i,0,P.is.extent(i)-1);
+        gc.setRange(i,0,P.is.extent(i)-1);
 
     for(; gc.notDone(); ++gc)
         {

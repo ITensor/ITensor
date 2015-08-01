@@ -1015,17 +1015,17 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     detail::GCounter couA(0,ra-1,0), 
                      couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
-    couA.setInd(0,0,0);
-    couA.setInd(1,0,0);
+    couA.setRange(0,0,0);
+    couA.setRange(1,0,0);
     //Let couA.i[j] (j >= 2) range from 0 to A.extent(j)-1
     for(int j = 2; j < ra; ++j)
-        couA.setInd(j,0,A.extent(j)-1);
+        couA.setRange(j,0,A.extent(j)-1);
 
     //Similarly for couB
-    couB.setInd(0,0,0);
-    couB.setInd(1,0,0);
+    couB.setRange(0,0,0);
+    couB.setRange(1,0,0);
     for(int j = 2; j < rb; ++j)
-        couB.setInd(j,0,B.extent(j)-1);
+        couB.setRange(j,0,B.extent(j)-1);
 
     Label aind(ra,0), 
           bind(rb,0), 
@@ -1042,7 +1042,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
         auto offA = ind(A,aind);
 
         //TODO: possible bug, shouldn't we
-        //      call couB.setInd to extend
+        //      call couB.setRange to extend
         //      ranges to 0...B.extent(j)-1
         //      for those which aren't restricted
         //      to ival below?
@@ -1052,7 +1052,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
             auto ival = couA.i[ia];
             if(p.contractedA(ia))
                 {
-                couB.setInd(p.AtoB(ia),ival,ival);
+                couB.setRange(p.AtoB(ia),ival,ival);
                 }
             else
                 {

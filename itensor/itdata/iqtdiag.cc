@@ -34,7 +34,7 @@ updateOffsets(IQIndexSet const& is,
 
     detail::GCounter C(0,is.r()-1,0);
     for(int j = 0; j < is.r(); ++j) 
-        C.setInd(j,0,is[j].nindex()-1);
+        C.setRange(j,0,is[j].nindex()-1);
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
