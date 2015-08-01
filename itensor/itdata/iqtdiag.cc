@@ -32,28 +32,28 @@ updateOffsets(IQIndexSet const& is,
         return 1;
         }
 
-    detail::GCounter C(0,is.r()-1,0);
-    for(int j = 0; j < is.r(); ++j) 
+    auto C = detail::GCounter(is.r());
+    for(auto j : count(is.r()))
         C.setRange(j,0,is[j].nindex()-1);
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
         {
         QN blockqn;
-        for(int j = 0; j < is.r(); ++j)
+        for(auto j : count(is.r()))
             {
             auto& J = is[j];
-            blockqn += J.qn(1+C.i[j])*J.dir();
+            blockqn += J.qn(1+C[j])*J.dir();
             }
         if(blockqn == div)
             {
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  minm = std::numeric_limits<long>::max();
-            for(int j = 0; j < is.r(); ++j)
+            for(auto j : count(is.r()))
                 {
                 auto& J = is[j];
-                auto i_j = C.i[j];
+                auto i_j = C[j];
                 ind += i_j*indstr;
                 indstr *= J.nindex();
                 minm = std::min(minm,J[i_j].m());
@@ -246,7 +246,6 @@ doTask(PrintIT<IQIndex> & P,
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
         inverseBlockInd(io.block,P.is,block);
-        //Wire up GCounter with appropriate dims
         auto blockm = blockIndex(0).m();
         for(auto i : count(1,rank)) blockm = std::min(blockm,blockIndex(i).m());
 

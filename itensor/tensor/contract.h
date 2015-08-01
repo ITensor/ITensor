@@ -216,9 +216,9 @@ contractDiagPartial(DiagElsA const& A, Label const& ai,
 
     Label bstride(nbu,0),
           cstride(nbu,0);
-    detail::GCounter GC(0,nbu,0);
+    detail::GCounter GC(nbu);
     int n = 0;
-    for(auto j = 0ul; j < bi.size(); ++j)
+    for(decltype(bi.size()) j = 0; j < bi.size(); ++j)
         {
         if(bi[j] > 0)
             {
@@ -243,7 +243,7 @@ contractDiagPartial(DiagElsA const& A, Label const& ai,
                boffset = 0;
         for(auto i = 0; i < nbu; ++i)
             {
-            auto ii = GC.i[i];
+            auto ii = GC[i];
             boffset += ii*bstride[i];
             coffset += ii*cstride[i];
             }

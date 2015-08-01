@@ -56,9 +56,9 @@ permute(const TenRefc<R1>& from,
 template<typename T, typename R1, typename R2, typename Callable>
 void 
 permute(TensorRef<const T,R1> from, 
-        const Permutation& P, 
+        Permutation const& P, 
         TensorRef<T,R2> to,
-        const Callable& func)
+        Callable const& func)
     {
     using size_type = decltype(P.size());
     auto r = P.size();
@@ -93,8 +93,8 @@ permute(TensorRef<const T,R1> from,
     auto stepfrom = from.stride(bigind);
     auto stepto = to.stride(P.dest(bigind));
 
-    detail::GCounter c(0,r-1,0);
-    for(size_type i = 0; i < r; ++i)
+    auto c = detail::GCounter(r);
+    for(decltype(r) i = 0; i < r; ++i)
         c.setRange(i,0,from.extent(i)-1);
     //Leave bigind fixed to zero, will
     //increment manually in the loop below
@@ -104,7 +104,7 @@ permute(TensorRef<const T,R1> from,
     for(; c.notDone(); ++c)
         {
         for(size_type j = 0; j < r; ++j)
-            ti[P.dest(j)] = c.i[j];
+            ti[P.dest(j)] = c[j];
 
         auto pto = MAKE_SAFE_PTR3(to.data(),ind(to,ti),to.size());
         auto pfrom = MAKE_SAFE_PTR3(from.data(),ind(from,c.i),from.size());

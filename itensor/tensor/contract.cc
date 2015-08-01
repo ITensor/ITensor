@@ -1012,8 +1012,8 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     auto Brow = B.extent(0), Bcol = B.extent(1);
     auto Crow = C.extent(0), Ccol = C.extent(1);
 
-    detail::GCounter couA(0,ra-1,0), 
-                     couB(0,rb-1,0);
+    detail::GCounter couA(ra), 
+                     couB(rb);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setRange(0,0,0);
     couA.setRange(1,0,0);
@@ -1037,7 +1037,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
         {
         for(int ia = 2; ia < ra; ++ia)
             {
-            aind[ia] = couA.i[ia];
+            aind[ia] = couA[ia];
             }
         auto offA = ind(A,aind);
 
@@ -1049,7 +1049,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
         couB.reset();
         for(int ia = 2; ia < ra; ++ia)
             {
-            auto ival = couA.i[ia];
+            auto ival = couA[ia];
             if(p.contractedA(ia))
                 {
                 couB.setRange(p.AtoB(ia),ival,ival);
@@ -1064,10 +1064,10 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
             {
             for(int ib = 2; ib < rb; ++ib)
                 {
-                bind[ib] = couB.i[ib];
+                bind[ib] = couB[ib];
                 if(p.BtoC(ib) != -1) 
                 if(!p.contractedB(ib))
-                    cind[p.BtoC(ib)] = couB.i[ib];
+                    cind[p.BtoC(ib)] = couB[ib];
                 }
 
             auto offB = ind(B,bind);

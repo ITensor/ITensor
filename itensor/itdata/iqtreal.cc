@@ -88,28 +88,29 @@ updateOffsets(const IQIndexSet& is,
         return 1;
         }
 
-    detail::GCounter C(0,is.r()-1,0);
-    for(int j = 0; j < is.r(); ++j) 
+    //Set up counter over all blocks
+    auto C = detail::GCounter(is.r());
+    for(auto j : count(is.r()))
         C.setRange(j,0,is[j].nindex()-1);
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
         {
         QN blockqn;
-        for(int j = 0; j < is.r(); ++j)
+        for(auto j : count(is.r()))
             {
             auto& J = is[j];
-            blockqn += J.qn(1+C.i[j])*J.dir();
+            blockqn += J.qn(1+C[j])*J.dir();
             }
         if(blockqn == div)
             {
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  totm = 1;   //accumulate area of Indices
-            for(int j = 0; j < is.r(); ++j)
+            for(auto j : count(is.r()))
                 {
                 auto& J = is[j];
-                auto i_j = C.i[j];
+                auto i_j = C[j];
                 ind += i_j*indstr;
                 indstr *= J.nindex();
                 totm *= J[i_j].m();
@@ -312,23 +313,22 @@ replaceInd(const IQIndexSet& is,
     }
 
 void
-combine(const IQTReal& d,
-        const IQIndexSet& dis,
-        const IQIndexSet& Cis,
-        IQIndexSet& Nis,
-        ManageStore& m,
+combine(IQTReal const& d,
+        IQIndexSet const& dis,
+        IQIndexSet const& Cis,
+        IQIndexSet & Nis,
+        ManageStore & m,
         bool own_data)
     {
     //cind is special "combined index"
-    const auto& cind = Cis[0];
+    auto const& cind = Cis[0];
     //check if d has combined index i.e. we are "uncombining"
     auto jc = findindex(dis,cind);
 
     Permutation P;
 
-    if(Cis.r() == 2)
+    if(Cis.r() == 2) //treat rank 2 combiner specially
         {
-        //rank 2 combiner is special: just replaces an IQIndex
         if(jc >= 0)
             {
             //Has cind, replace with Cis[1]
@@ -359,11 +359,11 @@ combine(const IQTReal& d,
             if(j != jc) P.setFromTo(j,ni++);
         jc = 0;
         }
-    else if(jc < 0)
+    else if(jc < 0) //we are combining, set up Permutation P
         {
         //check locations of Cis[1], Cis[2], ...
-        //Check if Cis[1],Cis[2],... are grouped together (contiguous)
-        //all at front, and in same order as on combiner
+        //Check if Cis[1],Cis[2],... are grouped together (contiguous);
+        //all at front; and in same order as on combiner
         bool front_contig = true;
         for(auto j = 0, c = 1; c < Cis.r() && j < dis.r(); ++j,++c)
             if(dis[j] != Cis[c])
@@ -401,11 +401,8 @@ combine(const IQTReal& d,
         }
 
     IQTReal nd;
-    if(P) 
-        {
-        permuteIQ(P,dis,d,Nis,nd);
-        }
-    auto& Pis = (P ? Nis : dis); //previous index set
+    if(P) permuteIQ(P,dis,d,Nis,nd);
+    auto& Pis = (P ? Nis : dis);
 
     if(jc == 0) //has cind at front, we are "uncombining"
         {
@@ -509,7 +506,7 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
     auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
-    detail::GCounter C(rank);
+    auto C = detail::GCounter(rank);
     for(const auto& io : d.offsets)
         {
         bool indices_printed = false;
@@ -539,7 +536,7 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
                 P.s << "(";
                 for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
                     {
-                    P.s << (1+C.i(ii));
+                    P.s << (1+C[ii]);
                     if(ii < C.i.maxi()) P.s << ",";
                     }
                 P.s << ") ";

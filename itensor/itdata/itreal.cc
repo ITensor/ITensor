@@ -96,7 +96,7 @@ doTask(PrintIT<Index>& P,
 
     if(!P.print_data) return;
 
-    auto gc = detail::GCounter(0,rank-1,0);
+    auto gc = detail::GCounter(rank);
     for(auto i : count(rank))
         gc.setRange(i,0,P.is.extent(i)-1);
 
@@ -108,7 +108,7 @@ doTask(PrintIT<Index>& P,
             P.s << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
                 {
-                P.s << (1+gc.i(ii));
+                P.s << (1+gc[ii]);
                 if(ii < gc.i.maxi()) P.s << ",";
                 }
             P.s << ") ";
