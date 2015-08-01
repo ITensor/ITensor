@@ -90,6 +90,9 @@ class GCounter	// General Counter
         return *this;
         }
 
+    long
+    operator[](long j) const { return i[j]; }
+
     bool 
     notDone()
         {
