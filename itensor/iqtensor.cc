@@ -7,6 +7,7 @@
 #include "itensor/tensor/contract.h"
 #include "itensor/iqtensor.h"
 #include "itensor/util/count.h"
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 
@@ -307,78 +308,40 @@ combiner(std::vector<IQIndex> inds,
     if(inds.empty()) Error("No indices passed to combiner");
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",inds.front().type());
-    auto r = inds.size();
+    auto cr = inds.size();
     auto dir = inds.front().dir();
 
-    //create combined index
-    auto C = detail::GCounter(r);
-    long nsubblocks = 1;
-    for(auto j : count(r))
-        {
+    struct QNm { QN q; long m = 1; };
+    auto qms = vector<QNm>{};
+
+    //set up counter over all possible blocks
+    //that can be formed out of "inds"
+    auto C = detail::GCounter(cr);
+    for(auto j : count(cr))
         C.setRange(j,1,inds[j].nindex());
-        nsubblocks *= inds[j].nindex();
-        }
-    //
-    // TODO: nsubblocks could get very large,
-    //       necessary for qms to be this big?
-    //
-    struct QNm { QN q; long m = 0; };
-    auto qms = vector<QNm>(nsubblocks);
-    for(auto& qm : qms)
-        {
-        assert(C.notDone());
-        qm.m = 1;
-        for(auto j : count(r))
-            {
-            qm.q += inds[j].qn(C.i[j]) * inds[j].dir();
-            qm.m *= inds[j].index(C.i[j]).m();
-            }
-        ++C;
-        }
-    //Sort qms by quantum number; there will be duplicates in general:
-    auto qnless = [](QNm const& qm1, QNm const& qm2) { return qm1.q < qm2.q; };
-    std::sort(qms.begin(),qms.end(),qnless);
 
-    //Count number of distinct flux sectors
-    auto currqn = qms.front().q;
-    long sectors = 1;
-    for(const auto& qm : qms)
+    for(; C.notDone(); ++C)
         {
-        if(qm.q != currqn)
+        QNm qm;
+        for(auto j : count(cr))
             {
-            ++sectors;
-            currqn = qm.q;
+            qm.q += inds[j].qn(C[j]) * inds[j].dir();
+            qm.m *= inds[j].index(C[j]).m();
             }
+        auto comp = [&qm](QNm const& x){ return x.q == qm.q; };
+        auto it = stdx::find_if(qms,comp);
+        if(it != qms.end()) it->m += qm.m;
+        else                qms.push_back(qm);
         }
-    auto indqn = IQIndex::storage(sectors);
 
-    currqn = qms.front().q;
-    long currm = 0,
-         count = 0;
-    for(const auto& qm : qms)
-        {
-        if(qm.q == currqn)
-            {
-            currm += qm.m;
-            }
-        else
-            {
-            indqn[count] = IndexQN(Index(nameint("C",count),currm,itype),currqn);
-            ++count;
-            currqn = qm.q;
-            currm = qm.m;
-            }
-        }
-    //Handle last element of indqn:
-    indqn[count] = IndexQN(Index(nameint("C",count),currm,itype),currqn);
+    //Build storage for combined IQIndex
+    auto indqn = IQIndex::storage(qms.size());
+    for(auto n : index(indqn))
+        indqn[n] = IndexQN(Index(nameint("c",n),qms[n].m,itype),qms[n].q);
 
-    //Create IQIndices of combiner
-    vector<IQIndex> newinds;
-    newinds.reserve(1+inds.size());
-    //Make new combined IQIndex and put at front of inds
+    auto newinds = stdx::reserve_vector<IQIndex>(1+inds.size());
     newinds.emplace_back(cname,std::move(indqn),dir);
-    //Put in rest of inds
-    for(const auto& I : inds) newinds.push_back(dag(I));
+    for(auto const& I : inds) newinds.push_back(dag(I));
 
     return IQTensor(IQIndexSet{std::move(newinds)},ITCombiner());
     }

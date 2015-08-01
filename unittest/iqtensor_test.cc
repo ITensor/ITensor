@@ -244,16 +244,40 @@ SECTION("ITensor Conversion")
 
 SECTION("Combiner")
     {
+    SECTION("Simple rank 2 combiner")
+        {
+        //Rank 2 combiner just replaces index
+        auto s = IQIndex("s",
+                         Index("s+1",2),QN(+1),
+                         Index("s_0",2),QN( 0),
+                         Index("s-1",2),QN(-1));
+        auto C = combiner(s);
+
+        auto T0 = randomTensor(QN(0),s,prime(s));
+        auto R0 = C * T0;
+        CHECK(norm(R0) == norm(T0));
+        CHECK(div(R0) == div(T0));
+
+        auto Tp1 = randomTensor(QN(+1),s,prime(s));
+        auto Rp1 = C * Tp1;
+        CHECK(norm(Rp1) == norm(Tp1));
+        CHECK(div(Rp1) == div(Tp1));
+
+        auto Tm1 = randomTensor(QN(-1),s,prime(s));
+        auto Rm1 = C * Tm1;
+        CHECK(norm(Rm1) == norm(Tm1));
+        CHECK(div(Rm1) == div(Tm1));
+        }
     SECTION("Combine / Uncombine 0 - No Permute")
         {
         auto T = randomTensor(QN(),L1,L2);
         auto C = combiner(L1);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
-        //check that ci exists
-        CHECK(ci);
-        //check that all elements of T accounted for in R
+        CHECK(ci); //check that ci was found
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -268,10 +292,10 @@ SECTION("Combiner")
         auto C = combiner(L1,L2);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
-        //check that ci exists
         CHECK(ci);
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -292,8 +316,9 @@ SECTION("Combiner")
         CHECK(hasindex(R,S1));
         CHECK(!hasindex(R,L1));
         CHECK(!hasindex(R,L2));
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         CHECK(!hasindex(R,ci));
         CHECK(hasindex(R,L1));
@@ -316,8 +341,9 @@ SECTION("Combiner")
         auto ci = commonIndex(R,C); //get combined index
         //check that ci exists
         CHECK(ci);
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -337,8 +363,9 @@ SECTION("Combiner")
         auto ci = commonIndex(R,C); //get combined index
         //check that ci exists
         CHECK(ci);
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -362,8 +389,9 @@ SECTION("Combiner")
         CHECK(!hasindex(R,S1));
         CHECK(!hasindex(R,L2));
         CHECK(hasindex(R,S2));
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R = dag(C)*R; //uncombine
         CHECK(!hasindex(R,ci));
         CHECK(hasindex(R,L1));
@@ -392,8 +420,9 @@ SECTION("Combiner")
         CHECK(hasindex(R,L2));
         CHECK(!hasindex(R,S1));
         CHECK(!hasindex(R,S2));
-        //check that all elements of T accounted for in R
         CHECK_CLOSE(norm(T),norm(R));
+        CHECK(div(T) == div(R));
+
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
