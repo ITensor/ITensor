@@ -5,10 +5,19 @@
 #ifndef __ITENSOR_STDX
 #define __ITENSOR_STDX
 
+#include <array>
 #include <vector>
 #include <algorithm>
 
 namespace stdx {
+
+template<typename... VArgs>
+auto
+make_array(VArgs&&... vargs)
+    -> std::array<std::common_type_t<VArgs...>,sizeof...(VArgs)>
+    {
+    return {{ std::forward<VArgs>(vargs)... }};
+    }
 
 template<typename T>
 std::vector<T>
