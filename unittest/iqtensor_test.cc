@@ -434,6 +434,86 @@ SECTION("Combiner")
             }
         }
 
+    SECTION("Fragmented IQIndex Combiner Test 1")
+        {
+        auto i1 = IQIndex("i1",
+                          Index("i1",2),QN(+1),
+                          Index("i1",2),QN(+0),
+                          Index("i1",2),QN(-1),
+                          Index("i1",2),QN(+2),
+                          Index("i1",2),QN(-2),
+                          Index("i1",2),QN(+0),
+                          Index("i1",2),QN(-1));
+
+        auto i2 = IQIndex("i2",
+                          Index("i2",2),QN(+1),
+                          Index("i2",4),QN(-1),
+                          Index("i2",2),QN(+0),
+                          Index("i2",3),QN(+2),
+                          Index("i2",2),QN(+0),
+                          Index("i2",2),QN(-1),
+                          Index("i2",3),QN(+1));
+
+        auto i3 = IQIndex("i3",
+                          Index("i3",3),QN(-1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",2),QN(+1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",4),QN(-1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",2),QN(+1));
+
+        auto flux = QN(-2);
+        auto T = randomTensor(flux,i1,prime(i3),i2,i3,prime(i2));
+        auto C = combiner(i1,i2,prime(i2));
+        auto R = C * T;
+        auto nT = dag(C) * R;
+
+        CHECK(div(T) == div(R));
+        CHECK(div(T) == div(nT));
+        CHECK(norm(T-nT) < 1E-11);
+        }
+
+    SECTION("Fragmented IQIndex Combiner Test 2")
+        {
+        auto i1 = IQIndex("i1",
+                          Index("i1",2),QN(+1),
+                          Index("i1",2),QN(+0),
+                          Index("i1",2),QN(-1),
+                          Index("i1",2),QN(+2),
+                          Index("i1",2),QN(-2),
+                          Index("i1",2),QN(+0),
+                          Index("i1",2),QN(-1));
+
+        auto i2 = IQIndex("i2",
+                          Index("i2",2),QN(+1),
+                          Index("i2",4),QN(-1),
+                          Index("i2",2),QN(+0),
+                          Index("i2",3),QN(+2),
+                          Index("i2",2),QN(+0),
+                          Index("i2",2),QN(-1),
+                          Index("i2",3),QN(+1));
+
+        auto i3 = IQIndex("i3",
+                          Index("i3",3),QN(-1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",2),QN(+1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",4),QN(-1),
+                          Index("i3",2),QN(+0),
+                          Index("i3",2),QN(+1));
+
+        auto flux = QN(-2);
+        auto T = randomTensor(flux,i1,prime(i3),i2,i3,prime(i2));
+        auto C = combiner(i3,i1);
+        auto R = C * T;
+        auto nT = dag(C) * R;
+
+        CHECK(div(T) == div(R));
+        CHECK(div(T) == div(nT));
+        CHECK(norm(T-nT) < 1E-11);
+        }
+
     }
 
 SECTION("Scalar")
