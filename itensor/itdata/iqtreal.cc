@@ -182,7 +182,7 @@ doTask(PlusEQ<IQIndex> const& P,
                 Bblock[i] = Ablock[P.perm().dest(i)];
             Arange.init(make_indexdim(P.is1(),Ablock));
             Brange.init(make_indexdim(P.is2(),Bblock));
-            auto* bblock = B.getBlock(P.is2(),Bblock);
+            auto* bblock = getBlock(B,P.is2(),Bblock);
 
             auto aref = makeTensorRef(A.data()+aio.offset,Arange);
             auto bref = makeTensorRef(bblock,Brange);
@@ -290,7 +290,7 @@ permuteIQ(const Permutation& P,
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
-        auto* bblock = dB.getBlock(Bis,Bblock);
+        auto* bblock = getBlock(dB,Bis,Bblock);
         auto aref = makeTensorRef(dA.data()+aio.offset,Arange);
         auto bref = makeTensorRef(bblock,Brange);
         permute(aref,P,bref);

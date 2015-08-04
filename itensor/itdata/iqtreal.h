@@ -82,20 +82,6 @@ class IQTReal
 
     template<typename Indexable>
     const Real*
-    getBlock(IQIndexSet const& is,
-             Indexable const& block_ind) const;
-
-    template<typename Indexable>
-    Real*
-    getBlock(IndexSetT<IQIndex> const& is,
-             Indexable const& block_ind)
-        {
-        //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
-        return const_cast<Real*>(static_cast<const IQTReal&>(*this).getBlock(is,block_ind));
-        }
-
-    template<typename Indexable>
-    const Real*
     getElt(IndexSetT<IQIndex> const& is,
            Indexable const& ind) const;
 
@@ -333,7 +319,7 @@ loopContractedBlocks(BlockSparseA const& A,
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by computing its QN flux,
             //      could be faster than calling getBlock
-            auto* bblock = B.getBlock(Bis,couB.i);
+            auto* bblock = getBlock(B,Bis,couB.i);
             if(!bblock) continue;
 
             //Finish making Cblockind and Bblockind
@@ -344,7 +330,7 @@ loopContractedBlocks(BlockSparseA const& A,
                 Bblockind[ib] = couB.i[ib];
                 }
 
-            auto* cblock = C.getBlock(Cis,Cblockind);
+            auto* cblock = getBlock(C,Cis,Cblockind);
             assert(cblock != nullptr);
 
             auto* ablock = A.data()+aio.offset;
@@ -358,16 +344,16 @@ loopContractedBlocks(BlockSparseA const& A,
         } //for A.offsets
     }
 
-
-template<typename Indexable>
-const Real* IQTReal::
-getBlock(IQIndexSet const& is,
-         Indexable const& block_ind) const
+template<typename BlockSparseStore, typename Indexable>
+const Real*
+getBlock(BlockSparseStore const& d,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
     {
     auto r = long(block_ind.size());
-    if(r == 0) return store.data();
+    if(r == 0) return d.data();
 #ifdef DEBUG
-    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in get_block");
+    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in getBlock");
 #endif
     long ii = 0;
     for(auto i = r-1; i > 0; --i)
@@ -378,13 +364,22 @@ getBlock(IQIndexSet const& is,
     ii += block_ind[0];
     //Do binary search to see if there
     //is a block with block index ii
-    auto boff = offsetOf(offsets,ii);
-    if(boff >= 0)
-        {
-        return store.data()+boff;
-        }
+    auto boff = offsetOf(d.offsets,ii);
+    if(boff >= 0) return d.data()+boff;
     return nullptr;
     }
+
+template<typename BlockSparseStore, typename Indexable>
+Real*
+getBlock(BlockSparseStore & d,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
+    {
+    auto const& cd = d;
+    //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
+    return const_cast<Real*>(getBlock(cd,is,block_ind));
+    }
+
 
 template<typename Indexable>
 const Real* IQTReal::

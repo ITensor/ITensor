@@ -151,7 +151,7 @@ struct AddITensor
     };
 
 void
-doTask(AddITensor& A, 
+doTask(AddITensor & A, 
        IQTReal & d, 
        ITReal const& t)
     {
@@ -159,7 +159,7 @@ doTask(AddITensor& A,
     if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
     Range drange;
     drange.init(make_indexdim(A.iqis,A.block_ind));
-    auto* dblock = d.getBlock(A.iqis,A.block_ind);
+    auto* dblock = getBlock(d,A.iqis,A.block_ind);
 
     auto dref = makeTensorRef(dblock,drange);
     auto tref = makeTensorRef(t.data(),A.is);

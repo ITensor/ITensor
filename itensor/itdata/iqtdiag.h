@@ -47,6 +47,7 @@ class IQTDiag
 
     };
 
+
 template<typename Indexable>
 const Real*
 getElt(IQTDiag const& D,
