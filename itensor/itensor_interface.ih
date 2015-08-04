@@ -46,7 +46,30 @@ allocReal(IQTensor& T, const Container& inds)
         }
     T.store() = newITData<IQTReal>(T.inds(),div);
     }
-}
+
+void inline
+checkArrows(IndexSet const& I1,
+            IndexSet const& I2)
+    {
+    //This space intentionally left blank
+    }
+
+void inline
+checkArrows(IQIndexSet const& I1,
+            IQIndexSet const& I2)
+    {
+    for(auto& j1 : I1)
+    for(auto& j2 : I2)
+    if(j1 == j2 && j1.dir() == j2.dir())
+        {
+        println("IQIndexSet 1 = \n",I1);
+        println("----------------------------------------");
+        println("IQIndexSet 2 = \n",I2);
+        println("----------------------------------------");
+        Error(format("Mismatched arrows for IQIndex %s",j1));
+        }
+    }
+} //namespace detail
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -178,18 +201,19 @@ set(Cplx val, IVals&&... ivs)
 
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
-operator*=(const ITensorT& R)
+operator*=(ITensorT const& R)
     {
     auto& L = *this;
 
-    if(!L || !R)
-        Error("Default constructed ITensor in product");
+    if(!L || !R) Error("Default constructed ITensor in product");
 
     if(&L == &R)
         {
         L = ITensorT(sqr(norm(L)));
         return L;
         }
+
+    if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 
     auto C = doTask(Contract<index_type>{L.inds(),R.inds()},
                     L.store(),
