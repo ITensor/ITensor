@@ -239,7 +239,7 @@ template<typename T>
 void
 doTask(PrintIT<Index>& P, const ITDiag<T>& d)
     {
-    constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
+    auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
               doTask(NormNoScale{},d));
 

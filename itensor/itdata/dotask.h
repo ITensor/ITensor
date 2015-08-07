@@ -25,7 +25,9 @@ struct choice : choice<I+1> { constexpr choice(){} };
 template<>
 struct choice<10> { constexpr choice(){} };
 
-struct select_overload : choice<1> { constexpr select_overload(){} };
+struct select_overload : choice<1> { };
+
+//struct otherwise{ otherwise(...){} };
 
 
 template<typename F,typename Ret>
@@ -740,7 +742,7 @@ template<typename T, typename... VArgs>
 PData
 newITData(VArgs&&... vargs)
     {
-    static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
+    //static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
     return std::make_shared<ITWrap<T>>(std::forward<VArgs>(vargs)...);
     }
 
