@@ -568,45 +568,45 @@ contractIS(IndexSetT<IndexT> const& Lis,
     long ncont = 0;
     for(auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    using newind_t = typename IndexSetT<IndexT>::storage_type;
-    auto newind = newind_t(nuniq);
+    auto newind = RangeBuilderT<IndexT>(nuniq);
     //Below we are "cheating" and using the .str
     //field of each member of newind to hold the 
     //labels which will go into Nind so they will
     //be sorted along with the .ext members (the indices of Nis)
-    //These .str values will be overwritten by the
+    //Later we will set them back to zero
     //IndexSetT constructor anyway
     long nn = 0;
-    for(long j = 0; j < Lis.r(); ++j)
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
         {
         if(Lind[j] > 0) //uncontracted
             {
-            newind[nn].ext = Lis[j];
-            newind[nn].str = Lind[j];
+            newind.setExtent(nn,Lis[j]);
+            newind.setStride(nn,Lind[j]);
             ++nn;
             }
         }
-    for(long j = 0; j < Ris.r(); ++j)
+    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
         {
         if(Rind[j] > 0) //uncontracted
             {
-            newind[nn].ext = Ris[j];
-            newind[nn].str = Rind[j];
+            newind.setExtent(nn,Ris[j]);
+            newind.setStride(nn,Rind[j]);
             ++nn;
             }
         }
     if(sortResult)
         {
-        using extstr = decltype(newind.front());
-        auto comp = [](const extstr& i1, const extstr& i2) { return i1.ext > i2.ext; };
-        std::sort(newind.begin(),newind.end(),comp);
+        using extstr = decltype(newind.store().front());
+        auto comp = [](extstr const& i1, extstr const& i2) { return i1.ext > i2.ext; };
+        std::sort(newind.store().begin(),newind.store().end(),comp);
         }
     Nind.resize(newind.size());
-    for(size_t j = 0; j < newind.size(); ++j)
+    for(decltype(newind.size()) j = 0; j < newind.size(); ++j)
         {
-        Nind[j] = newind[j].str;
+        Nind[j] = newind.stride(j);
         }
-    Nis = IndexSetT<IndexT>(std::move(newind));
+    Nis = IndexSetT<IndexT>(newind);
+    Nis.computeStrides();
     }
 
 template<class IndexT>
@@ -625,24 +625,26 @@ contractIS(IndexSetT<IndexT> const& Lis,
 
 template <class IndexT>
 std::ostream&
-operator<<(std::ostream& s, const IndexSetT<IndexT>& is)
+operator<<(std::ostream& s, IndexSetT<IndexT> const& is)
     {
     auto size = is.size();
     if(size > 0) s << is[0];
-    for(auto j = 1ul; j < size; ++j)
+    for(decltype(size) j = 1; j < size; ++j)
         {
-        s << "\n" << is[j];
+        s << "\n" << is[j] << "[" << is.stride(j) << "]";
         }
     return s;
     }
 
 template <> inline
 std::ostream&
-operator<<(std::ostream& s, const IndexSetT<Index>& is)
+operator<<(std::ostream& s, IndexSetT<Index> const& is)
     {
-    decltype(is.r()) i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
-    if(is.r() != 0) { s << is.index(i); } //print last one
+    for(decltype(is.r()) i = 1; i <= is.r(); ++i) 
+        { 
+        s << is.index(i) << "|" << is.stride(i-1);
+        if(i < is.r()) s << ", ";
+        } 
     return s;
     }
 

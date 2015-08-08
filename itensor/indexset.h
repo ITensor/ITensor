@@ -28,6 +28,9 @@ class IQIndex;
 using IndexSet = IndexSetT<Index>;
 using IQIndexSet = IndexSetT<IQIndex>;
 
+using IndexSetBuilder = RangeBuilderT<Index>;
+using IQIndexSetBuilder = RangeBuilderT<IQIndex>;
+
 //
 // When constructed from a collection of indices,
 // (as an explicit set of arguments or via
@@ -57,22 +60,24 @@ class IndexSetT
     // construct from 1 or more indices
     template <typename... Inds>
     explicit
-    IndexSetT(const index_type& i1, 
+    IndexSetT(index_type const& i1, 
               Inds&&... rest)
       : range_(i1,std::forward<Inds>(rest)...)
         { }
 
     explicit
-    IndexSetT(const std::vector<index_type>& ii) : range_(ii) { }
+    IndexSetT(std::vector<index_type> const& ii) : range_(ii) { }
 
     template<size_t N>
     explicit
-    IndexSetT(const std::array<index_type,N>& ii) : range_(ii) { }
+    IndexSetT(std::array<index_type,N> const& ii) : range_(ii) { }
 
     IndexSetT(std::initializer_list<index_type> ii) : range_(ii) { }
 
     explicit
-    IndexSetT(storage_type&& store) : range_(std::move(store)) { }
+    IndexSetT(RangeBuilderT<index_type> & builder) 
+      : range_(range_type(builder)) 
+        { }
 
     IndexSetT&
     operator=(storage_type&& store)
@@ -99,7 +104,7 @@ class IndexSetT
     empty() const { return range_.empty(); }
 
     // 0-indexed access
-    const index_type&
+    index_type const&
     operator[](size_type i) const 
         { 
 #ifdef DEBUG
@@ -109,7 +114,7 @@ class IndexSetT
         }
 
     // 1-indexed access
-    const index_type&
+    index_type const&
     index(size_type I) const 
         { 
 #ifdef DEBUG
@@ -118,10 +123,10 @@ class IndexSetT
         return range_[I-1].ext; 
         }
 
-    const index_type&
+    index_type const&
     front() const { return range_.front().ext; }
 
-    const index_type&
+    index_type const&
     back() const { return range_.back().ext; }
 
     iterator
@@ -156,6 +161,9 @@ class IndexSetT
 
     void
     write(std::ostream& s) const;
+
+    void
+    computeStrides() { range_.computeStrides(); }
     };
 
 //
@@ -285,10 +293,10 @@ maxM(const IndexSetT<IndexT>& iset);
 
 template<class IndexT>
 void
-contractIS(const IndexSetT<IndexT>& Lis,
-          const IndexSetT<IndexT>& Ris,
-          IndexSetT<IndexT>& Nis,
-          bool sortResult = false);
+contractIS(IndexSetT<IndexT> const& Lis,
+           IndexSetT<IndexT> const& Ris,
+           IndexSetT<IndexT> & Nis,
+           bool sortResult = false);
 
 template<class IndexT, class ContainerT>
 void
@@ -302,7 +310,7 @@ contractIS(IndexSetT<IndexT> const& Lis,
 
 template <class IndexT>
 std::ostream&
-operator<<(std::ostream& s, const IndexSetT<IndexT>& is);
+operator<<(std::ostream& s, IndexSetT<IndexT> const& is);
 
 } //namespace itensor
 
