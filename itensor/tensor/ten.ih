@@ -1,0 +1,39 @@
+//
+// Distributed under the ITensor Library License, Version 1.2.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_TEN_IH_
+#define __ITENSOR_TEN_IH_
+
+namespace itensor {
+
+template<typename V, typename R>
+std::ostream&
+operator<<(std::ostream& s, TenRef<V,R> const& T)
+    {
+    auto r = T.r();
+    if(r == 0)
+        {
+        s << T();
+        return s;
+        }
+    auto C = detail::GCounter(r);
+    for(decltype(r) j = 0; j < r; ++j)
+        C.setRange(j,0,T.extent(j)-1);
+    for(; C.notDone(); ++C)
+        {
+        s << "(";
+        for(decltype(r) j = 0; (j+1) < r; ++j)
+            s << C[j] << ",";
+        s << C[r-1] << ") " << T.el(C.i) << "\n";
+        }
+    return s;
+    }
+
+template<typename V, typename R>
+std::ostream&
+operator<<(std::ostream & s, Ten<V,R> const& T) { return operator<<(s,makeRef(T)); }
+
+} //namespace itensor
+
+#endif
