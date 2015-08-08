@@ -25,7 +25,7 @@ struct choice : choice<I+1> { constexpr choice(){} };
 template<>
 struct choice<10> { constexpr choice(){} };
 
-struct select_overload : choice<1> { };
+struct select_overload : choice<1> { constexpr select_overload(){} };
 
 //struct otherwise{ otherwise(...){} };
 

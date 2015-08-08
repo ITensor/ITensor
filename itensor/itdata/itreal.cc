@@ -174,11 +174,11 @@ doTask(Contract<Index> & C,
                 }
             }
         }
-    auto t1 = makeTensorRef(a1.data(),C.Lis),
-         t2 = makeTensorRef(a2.data(),C.Ris);
+    auto t1 = makeTenRef(a1.data(),C.Lis),
+         t2 = makeTenRef(a2.data(),C.Ris);
     auto rsize = area(C.Nis);
     auto nd = m.makeNewData<ITReal>(rsize,0.);
-    auto tr = makeTensorRef(nd->data(),C.Nis);
+    auto tr = makeTenRef(nd->data(),C.Nis);
     contractloop(t1,Lind,t2,Rind,tr,Nind);
 
     if(rsize > 1) C.computeScalefac(*nd);
@@ -198,8 +198,8 @@ doTask(PlusEQ<Index> const& P,
         }
     else
         {
-        auto ref1 = makeTensorRef(a1.data(),P.is1());
-        auto ref2 = makeTensorRef(a2.data(),P.is2());
+        auto ref1 = makeTenRef(a1.data(),P.is1());
+        auto ref2 = makeTenRef(a2.data(),P.is2());
         auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
         permute(ref2,P.perm(),ref1,add);
         }

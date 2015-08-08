@@ -39,19 +39,19 @@ combine(const ITReal& d,
     if(jc >= 0) //has cind
         {
         //dis has cind, replace with other inds
-        IndexSet::storage_type newind(dis.r()+Cis.r()-2);
+        auto newind = IndexSetBuilder(dis.r()+Cis.r()-2);
         long i = 0;
         for(auto j : count(dis.r()))
             if(j == jc)
                 {
                 for(size_t k = 1; k < Cis.size(); ++k)
-                    newind.at(i++).ext = Cis[k];
+                    newind.setExtent(i++,Cis[k]);
                 }
             else
                 {
-                newind.at(i++).ext = dis[j];
+                newind.setExtent(i++,dis[j]);
                 }
-        Nis = IndexSet(std::move(newind));
+        Nis = IndexSet(newind);
         }
     else
         {
@@ -83,14 +83,14 @@ combine(const ITReal& d,
 
         if(contig_sameord)
             {
-            IndexSet::storage_type newind(dis.r()+2-Cis.r());
+            auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
             for(int j = 0; j < J1; ++j) 
-                newind.at(i++).ext = dis[j];
-            newind.at(i++).ext = cind;
+                newind.setExtent(i++,dis[j]);
+            newind.setExtent(i++,cind);
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
-                newind.at(i++).ext = dis[j];
-            Nis = IndexSet(std::move(newind));
+                newind.setExtent(i++,dis[j]);
+            Nis = IndexSet(newind);
             }
         else
             {
@@ -115,25 +115,25 @@ combine(const ITReal& d,
                 P.setFromTo(j,ni++);
                 }
             //permute uncombined indices to back, keeping relative order:
-            Range::storage_type pdims(dis.r());
-            IndexSet::storage_type newind(dis.r()+2-Cis.r());
+            auto pdims = RangeBuilder(dis.r());
+            auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
-            newind[i++].ext = cind;
+            newind.setExtent(i++,cind);
             for(auto j : count(dis.r()))
                 {
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);
-                    newind.at(i++).ext = dis[j];
+                    newind.setExtent(i++,dis[j]);
                     }
-                pdims.at(P.dest(j)).ext = dis[j].m();
+                pdims.setExtent(P.dest(j),dis[j].m());
                 }
             assert(i==dis.r()+2-Cis.r());
-            Range rr(std::move(pdims));
-            Nis = IndexSet(std::move(newind));
+            auto rr = Range(pdims);
+            Nis = IndexSet(newind);
             auto nd = m.makeNewData<ITReal>(area(Nis));
-            auto tr = makeTensorRef(nd->data(),rr);
-            auto td = makeTensorRef(d.data(),dis);
+            auto tr = makeTenRef(nd->data(),rr);
+            auto td = makeTenRef(d.data(),dis);
             permute(td,P,tr);
             }
         }

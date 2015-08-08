@@ -184,8 +184,8 @@ doTask(PlusEQ<IQIndex> const& P,
             Brange.init(make_indexdim(P.is2(),Bblock));
             auto* bblock = getBlock(B,P.is2(),Bblock);
 
-            auto aref = makeTensorRef(A.data()+aio.offset,Arange);
-            auto bref = makeTensorRef(bblock,Brange);
+            auto aref = makeTenRef(A.data()+aio.offset,Arange);
+            auto bref = makeTenRef(bblock,Brange);
             auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
             permute(bref,P.perm(),aref,add);
             }
@@ -231,9 +231,9 @@ doTask(Contract<IQIndex>& Con,
 
         //"Wire up" TensorRef's pointing to blocks of A,B, and C
         //we are working with
-        auto aref = makeTensorRef(ablock,Arange),
-             bref = makeTensorRef(bblock,Brange);
-        auto cref = makeTensorRef(cblock,Crange);
+        auto aref = makeTenRef(ablock,Arange),
+             bref = makeTenRef(bblock,Brange);
+        auto cref = makeTenRef(cblock,Crange);
 
         //Compute cref=aref*bref
         contract(aref,Lind,bref,Rind,cref,Cind);
@@ -258,18 +258,13 @@ permuteIQ(const Permutation& P,
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
 #endif
     auto r = Ais.r();
-    IQIndexSet::storage_type bind(r);
+    auto bind = IQIndexSetBuilder(r);
     for(auto i : count(r))
         {
-        bind.at(P.dest(i)).ext = Ais[i];
+        bind.setExtent(P.dest(i),Ais[i]);
         }
-    Bis = IQIndexSet{move(bind)};
+    Bis = IQIndexSet(bind);
     dB = IQTReal(Bis,doTask(CalcDiv{Ais},dA));
-    //if(Global::debug1())
-    //    {
-    //    println("Error is happening because IQIndexSet is sorting m==1 ind to the back, but Permute logic here thinks it's still in the same location.");
-    //    EXIT
-    //    }
 
     Label Ablock(r,-1),
           Bblock(r,-1);
@@ -282,34 +277,47 @@ permuteIQ(const Permutation& P,
         inverseBlockInd(aio.block,Ais,Ablock);
         for(auto j : index(Ablock)) 
             Bblock.at(P.dest(j)) = Ablock[j];
-        if(Global::debug1())
-            {
-            println("Ablock =",Ablock);
-            println("Bblock =",Bblock);
-            }
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto* bblock = getBlock(dB,Bis,Bblock);
-        auto aref = makeTensorRef(dA.data()+aio.offset,Arange);
-        auto bref = makeTensorRef(bblock,Brange);
+        auto aref = makeTenRef(dA.data()+aio.offset,Arange);
+        auto bref = makeTenRef(bblock,Brange);
         permute(aref,P,bref);
         }
     }
 
-IQIndexSet::storage_type
+IQIndexSet
 replaceInd(const IQIndexSet& is,
            long loc,
            const IQIndex& replacement)
     {
-    IQIndexSet::storage_type newind(is.r());
+    auto newind = IQIndexSetBuilder(is.r());
     long i = 0;
     for(long j = 0; j < loc; ++j)
-        newind.at(i++).ext = is[j];
-    newind.at(i++).ext = replacement;
-    for(long j = loc+1; j < is.r(); ++j)
-        newind.at(i++).ext = is[j];
-    return newind;
+        newind.setExtent(i++,is[j]);
+    newind.setExtent(i++,replacement);
+    for(decltype(is.r()) j = loc+1; j < is.r(); ++j)
+        newind.setExtent(i++,is[j]);
+    return IQIndexSet(newind);
+    }
+
+void
+condense(IQIndexSet const& Cis,
+         IQIndexSet const& dis,
+         IQTReal & d)
+    {
+    auto r = dis.r();
+    auto is_cmb = InfArray<int,10ul>(r,0);
+    for(auto i : count(r))
+        if(hasindex(Cis,dis[i])) is_cmb[i] = 1;
+
+    //Loop over non-zero blocks
+    auto block = Label(r);
+    for(auto io : d.offsets)
+        {
+        inverseBlockInd(io.block,dis,block);
+        }
     }
 
 void
@@ -324,17 +332,28 @@ combine(IQTReal const& d,
     auto const& cind = Cis[0];
     //check if d has combined index i.e. we are "uncombining"
     auto jc = findindex(dis,cind);
+    auto combining = (jc < 0);
+    auto uncombining = not combining;
+
+    IQTReal* pd = nullptr;
+    //Call this if necessary to modify the data
+    auto setPtrData = [&]()
+        {
+        if(pd) return;
+        if(own_data) pd = m.modifyData(d);
+        else         pd = m.makeNewData<IQTReal>(d);
+        };
 
     Permutation P;
 
     if(Cis.r() == 2) //treat rank 2 combiner specially
         {
-        if(jc >= 0)
+        if(uncombining)
             {
             //Has cind, replace with Cis[1]
             Nis = replaceInd(dis,jc,Cis[1]);
             }
-        else //jc < 0
+        else //combining
             {
             //Has Cis[1], replace with cind
             auto ju = findindex(dis,Cis[1]);
@@ -350,7 +369,7 @@ combine(IQTReal const& d,
         if(!own_data) m.assignPointerRtoL();
         return;
         }
-    else if(jc > 0) //we are uncombining, but cind not at front
+    else if(uncombining && jc != 0) //we are uncombining, but cind not at front
         {
         P = Permutation(dis.r());
         P.setFromTo(jc,0);
@@ -359,7 +378,7 @@ combine(IQTReal const& d,
             if(j != jc) P.setFromTo(j,ni++);
         jc = 0;
         }
-    else if(jc < 0) //we are combining, set up Permutation P
+    else if(combining) //we are combining, set up Permutation P
         {
         //check locations of Cis[1], Cis[2], ...
         //Check if Cis[1],Cis[2],... are grouped together (contiguous);
@@ -400,55 +419,44 @@ combine(IQTReal const& d,
             }
         }
 
-    IQTReal nd;
-    if(P) permuteIQ(P,dis,d,Nis,nd);
+    if(P) 
+        {
+        setPtrData(); //sets pd
+        permuteIQ(P,dis,d,Nis,*pd);
+        }
+    //Pis means 'permuted' index set
     auto& Pis = (P ? Nis : dis);
 
-    if(jc == 0) //has cind at front, we are "uncombining"
+    if(uncombining)
         {
         auto newr = Pis.r()+Cis.r()-2;
         auto offset = Cis.r()-1;
-        IQIndexSet::storage_type newind(newr);
+        auto newind = IQIndexSetBuilder(newr);
         for(auto j : count(offset))
-            newind.at(j).ext = Cis[1+j];
+            newind.setExtent(j,Cis[1+j]);
         for(auto j : count(Pis.r()-1))
-            newind.at(offset+j).ext = Pis[1+j];
-        Nis = move(newind);
+            newind.setExtent(offset+j,Pis[1+j]);
+        Nis = IQIndexSet(newind);
         }
-    else //we are "combining"
+    else //combining
         {
         auto newr = Pis.r()-Cis.r()+2;
-        auto offset = Cis.r()-2;
-        IQIndexSet::storage_type newind(newr);
-        newind.front().ext = cind;
-        for(auto j : count(1,newr))
-            newind.at(j).ext = Pis[offset+j];
-        Nis = move(newind);
+        auto newind = IQIndexSetBuilder(newr);
+        newind.setExtent(0,cind);
+        for(auto j : count(1,newr)) newind.setExtent(j,Pis[Cis.r()-2+j]);
+        setPtrData();
+        condense(Cis,Pis,*pd);
+        Nis = IQIndexSet(newind);
         }
 
     //Only need to modify d if Cis.r() > 2.
     //If Cis.r()==2 just swapping one index for another
     if(Cis.r() > 2)
         {
-        IQTReal* p = nullptr;
-        if(nd)
-            {
-            p = &nd;
-            }
-        else if(own_data) 
-            {
-            p = m.modifyData(d);
-            }
-        else
-            {
-            nd = d;
-            p = &nd;
-            }
+        setPtrData();
         auto div = doTask(CalcDiv{dis},d);
-        p->updateOffsets(Nis,div);
+        pd->updateOffsets(Nis,div);
         }
-
-    if(nd) m.makeNewData<IQTReal>(move(nd));
     }
 
 void
@@ -513,9 +521,17 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
         inverseBlockInd(io.block,P.is,block);
+
+        Label boff(rank,0);
+        for(auto i : count(rank))
+            {
+            for(auto j : count(block[i]))
+                boff[i] += P.is[i][j].m();
+            }
+
         //Wire up GCounter with appropriate dims
         C.reset();
-        for(int i = 0; i < rank; ++i)
+        for(decltype(rank) i = 0; i < rank; ++i)
             C.setRange(i,0,blockIndex(i).m()-1);
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
@@ -534,12 +550,21 @@ doTask(PrintIT<IQIndex>& P, const IQTReal& d)
                     P.s << "\n";
                     }
                 P.s << "(";
-                for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
+                for(auto ii : count(rank))
                     {
-                    P.s << (1+C[ii]);
-                    if(ii < C.i.maxi()) P.s << ",";
+                    P.s << (1+boff[ii]+C[ii]);
+                    if(1+ii != rank) P.s << ",";
                     }
                 P.s << ") ";
+
+                //P.s << "[";
+                //for(auto ii : count(rank))
+                //    {
+                //    P.s << (1+C[ii]);
+                //    if(1+ii != rank) P.s << ",";
+                //    }
+                //P.s << "] ";
+
                 P.printVal(val);
                 }
             }

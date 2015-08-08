@@ -39,7 +39,7 @@ class MatrixRef
                                         Matrix<value_type>>;
     private:
     pointer pdata_ = nullptr;
-    MRange ind_;
+    MRange range_;
     public:
 
     MatrixRef() { }
@@ -49,28 +49,28 @@ class MatrixRef
               long ncols)
         :
         pdata_(pdata),
-        ind_(nrows,ncols)
+        range_(nrows,ncols)
         { }
 
 
     MatrixRef(pointer pdata, 
-              const MRange& ind)
+              MRange const& ind)
         :
         pdata_(pdata),
-        ind_(ind)
+        range_(ind)
         { }
 
     MatrixRef(pointer pdata, 
-            long offset,
-            long nrows,
-            long ncols,
-            bool trans)
+              long offset,
+              long nrows,
+              long ncols,
+              bool trans)
         : MatrixRef(pdata+offset,nrows,ncols,trans)
         { }
 
     MatrixRef(pointer pdata, 
               long offset,
-              const MRange& ind)
+              MRange const& ind)
         : MatrixRef(pdata+offset,ind)
         { }
 
@@ -84,58 +84,58 @@ class MatrixRef
     MatrixRef&
     operator=(mat_type&& M) = delete;
 
-    operator MatrixRef<const T>() const { return MatrixRef<const T>(pdata_,ind_); }
+    operator MatrixRef<const T>() const { return MatrixRef<const T>(pdata_,range_); }
 
     explicit operator bool() const { return bool(pdata_); }
 
     long
-    Nrows() const { return ind_.rn; }
+    Nrows() const { return range_.rn; }
     long
-    Ncols() const { return ind_.cn; }
+    Ncols() const { return range_.cn; }
     long
-    rowStride() const { return ind_.rs; }
+    rowStride() const { return range_.rs; }
     long
-    colStride() const { return ind_.cs; }
+    colStride() const { return range_.cs; }
 
     size_type
-    size() const { return ind_.area(); }
+    size() const { return range_.area(); }
 
-    const MRange&
-    ind() const { return ind_; }
-
-    bool
-    contiguous() const { return isContiguous(ind_); }
+    MRange const&
+    range() const { return range_; }
 
     bool
-    transposed() const { return isTransposed(ind_); }
+    contiguous() const { return isContiguous(range_); }
+
+    bool
+    transposed() const { return isTransposed(range_); }
 
     pointer
     data() const { return pdata_; }
 
     reference
-    operator()(long i, long j) const { return pdata_[ind_.index(i,j)]; }
+    operator()(long i, long j) const { return pdata_[range_.index(i,j)]; }
 
     iterator 
-    begin() const { return iterator(pdata_,ind_); }
+    begin() const { return iterator(pdata_,range_); }
 
     iterator 
-    end() const { return iterator(ind_); }
+    end() const { return iterator(range_); }
 
     const_iterator 
-    cbegin() const { return const_iterator(pdata_,ind_); }
+    cbegin() const { return const_iterator(pdata_,range_); }
 
     const_iterator 
-    cend() const { return const_iterator(ind_); }
+    cend() const { return const_iterator(range_); }
 
     void
     clear()
         {
         pdata_ = nullptr;
-        ind_ = MRange();
+        range_ = MRange();
         }
 
     void
-    applyTrans() { ind_ = MRange(ind_.cn,ind_.cs,ind_.rn,ind_.rs); }
+    applyTrans() { range_ = MRange(range_.cn,range_.cs,range_.rn,range_.rs); }
 
     private:
     void
@@ -198,7 +198,7 @@ class Matrix
     using reference = std::add_lvalue_reference_t<T>;
     using size_type = long;
     public:
-    MRange ind_;
+    MRange range_;
     storage_type data_;
     public:
 
@@ -207,7 +207,7 @@ class Matrix
     Matrix(long nrows,
            long ncols) 
         : 
-        ind_(nrows,ncols),
+        range_(nrows,ncols),
         data_(nrows*ncols,0) 
         { }
 
@@ -215,7 +215,7 @@ class Matrix
            long ncols,
            value_type val)
         : 
-        ind_(nrows,ncols),
+        range_(nrows,ncols),
         data_(nrows*ncols,val) 
         { }
 
@@ -247,16 +247,16 @@ class Matrix
     size() const { return data_.size(); }
 
     long
-    Nrows() const { return ind_.rn; }
+    Nrows() const { return range_.rn; }
     long
-    Ncols() const { return ind_.cn; }
+    Ncols() const { return range_.cn; }
     long
-    rowStride() const { return ind_.rs; }
+    rowStride() const { return range_.rs; }
     long
-    colStride() const { return ind_.cs; }
+    colStride() const { return range_.cs; }
 
     const MRange&
-    ind() const { return ind_; }
+    range() const { return range_; }
 
     bool
     contiguous() const { return true; }
@@ -268,9 +268,9 @@ class Matrix
     operator()(long i, long j)
         { 
 #ifdef DEBUG
-        return data_.at(ind_.index(i,j)); 
+        return data_.at(range_.index(i,j)); 
 #else
-        return data_[ind_.index(i,j)]; 
+        return data_[range_.index(i,j)]; 
 #endif
         }
 
@@ -278,9 +278,9 @@ class Matrix
     operator()(long i, long j) const
         { 
 #ifdef DEBUG
-        return data_.at(ind_.index(i,j)); 
+        return data_.at(range_.index(i,j)); 
 #else
-        return data_[ind_.index(i,j)]; 
+        return data_[range_.index(i,j)]; 
 #endif
         }
 
@@ -337,8 +337,8 @@ class Matrix
     resize(long nrows,
            long ncols)
         {
-        ind_ = MRange(nrows,ncols);
-        data_.resize(ind_.area(),0);
+        range_ = MRange(nrows,ncols);
+        data_.resize(range_.area(),0);
         }
 
     //Reducing number of columns does not affect
@@ -349,14 +349,14 @@ class Matrix
 #ifdef DEBUG
         if(newcols > Ncols()) throw std::runtime_error("newcols must be less than current Ncols()");
 #endif
-        ind_ = MRange(Nrows(),newcols);
-        data_.resize(ind_.area());
+        range_ = MRange(Nrows(),newcols);
+        data_.resize(range_.area());
         }
 
     void
     clear() 
         { 
-        ind_ = MRange();
+        range_ = MRange();
         data_.clear(); 
         }
 
@@ -365,7 +365,7 @@ class Matrix
     void
     assignFromRef(const MatrixRef<const value_type>& other)
         {
-        ind_ = MRange(other.Nrows(),other.Ncols());
+        range_ = MRange(other.Nrows(),other.Ncols());
         //Copy data from other contiguously into data_
         data_ = storage_type(other.cbegin(),other.cend());
         }
@@ -374,14 +374,14 @@ class Matrix
     assignFromMat(const Matrix& other)
         {
         if(&other == this) return;
-        ind_ = other.ind_;
+        range_ = other.range_;
         data_ = other.data_;
         }
 
     void
     moveFromMat(Matrix&& other)
         {
-        ind_ = other.ind_;
+        range_ = other.range_;
         data_ = std::move(other.data_);
         other.clear();
         }
@@ -392,7 +392,7 @@ void MatrixRef<T>::
 pointTo(mat_type& M)
     {
     pdata_ = M.data();
-    ind_ = M.ind();
+    range_ = M.range();
     }
 
 //
@@ -632,7 +632,7 @@ std::ostream&
 operator<<(std::ostream& s, MatRefc M);
 
 inline std::ostream&
-operator<<(std::ostream& s, const Mat& M) { return operator<<(s,makeRef(M)); }
+operator<<(std::ostream& s, Mat const& M) { return operator<<(s,makeRef(M)); }
 
 template<typename... CtrArgs>
 Mat

@@ -34,7 +34,7 @@ calcDiv(const IQIndexSet& is, const Label& block_ind);
 template<typename Container>
 void
 inverseBlockInd(long block,
-                const IQIndexSet& is,
+                IQIndexSet const& is,
                 Container& ind)
     {
     auto r = int(ind.size());

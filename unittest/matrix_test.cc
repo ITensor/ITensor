@@ -1200,7 +1200,7 @@ SECTION("Transpose")
     auto nr = 10,
          nc = 15;
     auto A = randomMat(nr,nc);
-    auto At = transpose(MatRef(A.data(),A.ind()));
+    auto At = transpose(MatRef(A.data(),A.range()));
     CHECK(At.transposed());
 
     for(auto i : count1(nr))

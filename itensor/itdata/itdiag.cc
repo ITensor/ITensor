@@ -56,12 +56,12 @@ diagDense(ITDiag<Real> const& d,
             break;
             }
 
-    auto Tref = makeTensorRef(t.data(),tis);
+    auto Tref = makeTenRef(t.data(),tis);
 
     if(t_has_uncontracted)
         {
         auto nd = m.makeNewData<ITReal>(area(Nis),0.);
-        auto Nref = makeTensorRef(nd->data(),Nis);
+        auto Nref = makeTenRef(nd->data(),Nis);
         if(d.allSame())
             {
             auto dref = UnifVecWrapper(d.val,d.length);
@@ -86,7 +86,7 @@ diagDense(ITDiag<Real> const& d,
             }
 
         size_t nsize = (d_ustride==0) ? 1 : d.length;
-        ITDiag<Real>::storage_type nstore(nsize,0);
+        auto nstore = ITDiag<Real>::storage_type(nsize,0);
         auto Nref = VecRef(nstore.data(),nsize);
 
         if(d.allSame())

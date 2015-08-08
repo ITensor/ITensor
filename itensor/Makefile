@@ -89,7 +89,7 @@ GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
 matrix/algs.o: $(GDEPHEADERS)
 .debug_objs/matrix/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/permutation.h \
-tensor/permute.h tensor/contract.h
+tensor/permute.h tensor/contract.h indexset.ih indexset.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
 ITDEPHEADERS= itdata/itreal.h

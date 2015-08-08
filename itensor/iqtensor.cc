@@ -161,8 +161,8 @@ doTask(AddITensor & A,
     drange.init(make_indexdim(A.iqis,A.block_ind));
     auto* dblock = getBlock(d,A.iqis,A.block_ind);
 
-    auto dref = makeTensorRef(dblock,drange);
-    auto tref = makeTensorRef(t.data(),A.is);
+    auto dref = makeTenRef(dblock,drange);
+    auto tref = makeTenRef(t.data(),A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
     permute(tref,A.P,dref,add);
     }
@@ -261,9 +261,9 @@ doTask(ToITensor & T,
             pn[ind(T.is,C.i)] = pd[io.offset+C.ind];
             }
         }
-    IndexSet::storage_type inds(r);
-    for(decltype(r) j = 0; j < r; ++j) inds[j].ext = T.is[j];
-    return ITensor(IndexSet{std::move(inds)},std::move(nd),T.scale);
+    auto inds = IndexSetBuilder(r);
+    for(decltype(r) j = 0; j < r; ++j) inds.setExtent(j,T.is[j]);
+    return ITensor(IndexSet{inds},std::move(nd),T.scale);
     }
 
 //template<typename D>
@@ -286,9 +286,9 @@ toITensor(IQTensor const& T)
     if(!T.store()) 
         {
         if(T.r()==0) return ITensor{};
-        IndexSet::storage_type inds(T.r());
-        for(long j = 0; j < T.r(); ++j) inds[j].ext = T.inds()[j];
-        return ITensor(IndexSet{std::move(inds)});
+        auto inds = IndexSetBuilder(T.r());
+        for(decltype(T.r()) j = 0; j < T.r(); ++j) inds.setExtent(j,T.inds()[j]);
+        return ITensor(IndexSet{inds});
         }
     //Main case for allocated IQTensors
     return doTask(ToITensor{T.inds(),T.scale()},T.store());
@@ -328,8 +328,8 @@ combiner(std::vector<IQIndex> inds,
             qm.q += inds[j].qn(C[j]) * inds[j].dir();
             qm.m *= inds[j].index(C[j]).m();
             }
-        auto comp = [&qm](QNm const& x){ return x.q == qm.q; };
-        auto it = stdx::find_if(qms,comp);
+        auto q_equals = [&qm](QNm const& x){ return x.q == qm.q; };
+        auto it = stdx::find_if(qms,q_equals);
         if(it != qms.end()) it->m += qm.m;
         else                qms.push_back(qm);
         }

@@ -37,10 +37,10 @@ evaluate(ITLazy& Z)
     auto P = Z.store(0);
     IndexSet Ais = Z.iset(0);
     IndexSet Cis;
-    IndexSet::storage_type cis;
+    IndexSetBuilder cis;
 
     auto N = long(Z.todo().size());
-    for(long n = 0; n < N-2; ++n)
+    for(decltype(N) n = 0; n < N-2; ++n)
         {
         contA.fill(0);
         contB.fill(0);
@@ -49,8 +49,8 @@ evaluate(ITLazy& Z)
         auto& Nis = Z.iset(n+2);
 
         long ncont = 0;
-        for(size_t na = 0; na < Ais.size(); ++na)
-        for(size_t nb = 0; nb < Bis.size(); ++nb)
+        for(decltype(Ais.size()) na = 0; na < Ais.size(); ++na)
+        for(decltype(Bis.size()) nb = 0; nb < Bis.size(); ++nb)
             if(Ais[na] == Bis[nb])
                 {
                 ++ncont;
@@ -78,32 +78,32 @@ evaluate(ITLazy& Z)
             for(size_t na = 0; na < Ais.size(); ++na)
                 if(In == Ais[na])
                     {
-                    cis[cn++].ext = In;
+                    cis.setExtent(cn++,In);
                     contA[na] = cn;
                     break;
                     }
-            for(size_t nb = 0; nb < Bis.size(); ++nb)
+            for(decltype(Bis.size()) nb = 0; nb < Bis.size(); ++nb)
                 if(In == Bis[nb])
                     {
-                    cis[cn++].ext = In;
+                    cis.setExtent(cn++,In);
                     contB[nb] = cn;
                     break;
                     }
             }
 
-        for(size_t na = 0; na < Ais.size(); ++na)
+        for(decltype(Ais.size()) na = 0; na < Ais.size(); ++na)
             if(contA[na] == 0)
                 {
-                cis[cn++].ext = Ais[na];
+                cis.setExtent(cn++,Ais[na]);
                 }
 
-        for(size_t nb = 0; nb < Bis.size(); ++nb)
+        for(decltype(Bis.size()) nb = 0; nb < Bis.size(); ++nb)
             if(contB[nb] == 0)
                 {
-                cis[cn++].ext = Bis[nb];
+                cis.setExtent(cn++,Bis[nb]);
                 }
 
-        Cis = IndexSet{std::move(cis)};
+        Cis = IndexSet(cis);
 
         println("Ais = ",Ais);
         println("Bis = ",Bis);

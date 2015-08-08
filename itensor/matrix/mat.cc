@@ -40,7 +40,7 @@ operator&=(const MatRef& a, MatRefc b)
         throw std::runtime_error("mismatched sizes in MatRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
-    if(a.ind()==b.ind() && b.contiguous())
+    if(a.range()==b.range() && b.contiguous())
         {
         apply(a,b.data(),assign);
         }
@@ -97,7 +97,7 @@ operator+=(const MatRef& a, MatRefc b)
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
         throw std::runtime_error("MatRef +=: mismatched sizes");
 #endif
-    if(b.ind()==a.ind() && b.contiguous())
+    if(b.range()==a.range() && b.contiguous())
         {
         call_daxpy(a,b,+1);
         }
@@ -115,7 +115,7 @@ operator-=(const MatRef& a, MatRefc b)
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
         throw std::runtime_error("MatRef +=: mismatched sizes");
 #endif
-    if(b.ind()==a.ind() && b.contiguous())
+    if(b.range()==a.range() && b.contiguous())
         {
         call_daxpy(a,b,-1);
         }
