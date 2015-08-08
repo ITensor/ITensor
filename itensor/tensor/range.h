@@ -70,14 +70,14 @@ class RangeT
         }
 
     explicit
-    RangeT(const std::vector<extent_type>& v)
+    RangeT(std::vector<extent_type> const& v)
         {
         init(v);
         }
 
     template<size_t size>
     explicit
-    RangeT(const std::array<extent_type,size>& a)
+    RangeT(std::array<extent_type,size> const& a)
         {
         init(a);
         }
@@ -86,7 +86,8 @@ class RangeT
 
     //Most efficient way to construct range is by
     //providing a storage_type object with ext's
-    //already set - strides will be computed automatically
+    //already set - if strides are not 
+    //specified they will be computed automatically
     explicit
     RangeT(storage_type&& store)
       : store_(std::move(store))
@@ -111,13 +112,13 @@ class RangeT
     size_type
     r() const { return store_.size(); }
 
-    const value_type&
+    value_type const&
     operator[](size_type i) const { return store_[i]; }
 
     value_type&
     operator[](size_type i) { return store_[i]; }
 
-    const value_type&
+    value_type const&
     at(size_type i) const { return store_.at(i); }
 
     value_type&
@@ -135,13 +136,13 @@ class RangeT
     extent_type&
     front() { return store_.front().ext; }
 
-    const value_type&
+    value_type const&
     front() const { return store_.front(); }
 
     value_type&
     back() { return store_.back(); }
 
-    const value_type&
+    value_type const&
     back() const { return store_.back(); }
 
     value_type*
@@ -150,7 +151,7 @@ class RangeT
     const value_type*
     data() const { return store_.data(); }
 
-    const storage_type&
+    storage_type const&
     store() const { return store_; }
 
     void
@@ -169,13 +170,17 @@ class RangeT
     void
     resize(size_type nsize) { store_.resize(nsize); }
 
+    //
+    //Compute strides if they are zero, 
+    //otherwise leave them set as they are
+    //
     void 
     computeStrides()
         {
         size_type str = 1;
         for(auto& i : store_)
             {
-            i.str = str;
+            if(i.str == 0) i.str = str;
             str *= static_cast<size_type>(i.ext);
             }
         }
@@ -194,10 +199,10 @@ class IListAdapter
     size_t
     size() const { return ilist_.size(); }
 
-    T&
+    T &
     operator[](size_t j) { return *(ilist_.begin()+j); }
 
-    const T&
+    T const&
     operator[](size_t j) const { return *(ilist_.begin()+j); }
     };
 
@@ -206,7 +211,7 @@ class IListAdapter
 template<typename extent_type>
 template<typename Indexable>
 void RangeT<extent_type>::
-init(const Indexable& v)
+init(Indexable const& v)
     {
     store_.resize(v.size());
     size_type str = 1;
@@ -228,7 +233,7 @@ init(std::initializer_list<extent_type> il)
 
 template<typename extent_type>
 std::ostream&
-operator<<(std::ostream& s, const RangeT<extent_type>& r)
+operator<<(std::ostream& s, RangeT<extent_type> const& r)
     {
     s << "dims: ";
     for(Range::size_type i = 0; i < r.r(); ++i) s << r.dim(i) << " ";
@@ -323,8 +328,8 @@ struct ComputeInd
     {
     using size_type = typename RangeT::size_type;
 
-    const RangeT& r;
-    ComputeInd(const RangeT& r_) : r(r_) { }
+    RangeT const& r;
+    ComputeInd(RangeT const& r_) : r(r_) { }
 
     template<typename... Inds>
     size_type
@@ -353,59 +358,58 @@ struct ComputeInd
 
 template<typename RangeT, typename U>
 size_t
-ind(const RangeT& r, const std::vector<U>& inds)
+ind(RangeT const& r, std::vector<U> const& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
 size_t
-ind(const RangeT& r, const std::array<U,size>& inds)
+ind(RangeT const& r, std::array<U,size> const& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
 size_t
-ind(const RangeT& r, const VarArray<U,size>& inds)
+ind(RangeT const& r, VarArray<U,size> const& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
 size_t
-ind(const RangeT& r, const InfArray<U,size>& inds)
+ind(RangeT const& r, InfArray<U,size> const& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U>
 size_t
-ind(const RangeT& r, const autovector<U>& inds)
+ind(RangeT const& r, autovector<U> const& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT>
 size_t
-ind(const RangeT& r, size_t i0)
+ind(RangeT const& r, size_t i0)
     {
     return detail::ComputeInd<RangeT>(r)(i0);
     }
 
 template<typename RangeT, typename... Inds>
 size_t
-ind(const RangeT& r, size_t i0, size_t i1, Inds... inds)
+ind(RangeT const& r, size_t i0, size_t i1, Inds... inds)
     {
     return detail::ComputeInd<RangeT>(r)(i0,i1,inds...);
     }
 
 template<typename RangeT>
 size_t
-area(const RangeT& r)
+area(RangeT const& r)
     { 
     if(r.r()==0) return 1ul;
-    //TODO: this won't work if we allow Ranges to be constructed for slicing
     auto last = r.r()-1;
     auto A = r.extent(last)*r.stride(last);
     return A;
