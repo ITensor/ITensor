@@ -48,11 +48,11 @@ class TenRef
     public:
     using iterator = T*;
     using const_iterator = const T*;
-    using value_type = std::remove_const_t<T>;
+    using value_type = std::decay_t<T>;
     using pointer = T*;
     using reference = T&;
     using size_type = long;
-    using range_type = RangeT;
+    using range_type = std::remove_const_t<RangeT>;
     using tensor_type = std::conditional_t<std::is_const<T>::value,
                                            const Ten<value_type,range_type>,
                                            Ten<value_type,range_type>>;
@@ -221,7 +221,7 @@ auto
 makeTenRef(T* p,
            const RangeT* prange)
     {
-    return TenRef<T,RangeT>(p,prange);
+    return TenRef<T,std::decay_t<RangeT>>(p,prange);
     }
 
 template<typename T, typename RangeT>
@@ -229,7 +229,7 @@ auto
 makeTenRef(T* p,
            RangeT & range)
     {
-    return TenRef<T,RangeT>(p,&range);
+    return TenRef<T,std::decay_t<RangeT>>(p,&range);
     }
 
 template<typename T, typename RangeT,
@@ -238,7 +238,7 @@ auto
 makeTenRef(T* p,
            RangeT && range)
     {
-    return TenRef<T,RangeT>(p,std::move(range));
+    return TenRef<T,std::decay_t<RangeT>>(p,std::move(range));
     }
 
 template<typename T, typename RangeT>
