@@ -17,7 +17,11 @@ namespace itensor {
 template<typename extent_type_>
 class RangeT;
 
+template<typename extent_type_>
+class RangeBuilderT;
+
 using Range = RangeT<size_t>;
+using RangeBuilder = RangeBuilderT<size_t>;
 
 //Storage type for RangeT
 template<typename extent_type>
@@ -82,26 +86,12 @@ class RangeT
         init(a);
         }
 
-    RangeT(std::initializer_list<extent_type> ii) { init(ii); }
-
-    //Most efficient way to construct range is by
-    //providing a storage_type object with ext's
-    //already set - if strides are not 
-    //specified they will be computed automatically
     explicit
     RangeT(storage_type&& store)
       : store_(std::move(store))
-        { 
-        computeStrides();
-        }
+        { }
 
-    RangeT&
-    operator=(storage_type&& store)
-        {
-        store_ = std::move(store);
-        computeStrides();
-        return *this;
-        }
+    RangeT(std::initializer_list<extent_type> ii) { init(ii); }
 
     size_type
     extent(size_type i) const { return static_cast<size_type>(store_[i].ext); }
@@ -170,17 +160,14 @@ class RangeT
     void
     resize(size_type nsize) { store_.resize(nsize); }
 
-    //
-    //Compute strides if they are zero, 
-    //otherwise leave them set as they are
-    //
+    //Compute strides from extents
     void 
     computeStrides()
         {
         size_type str = 1;
         for(auto& i : store_)
             {
-            if(i.str == 0) i.str = str;
+            i.str = str;
             str *= static_cast<size_type>(i.ext);
             }
         }
@@ -236,27 +223,12 @@ std::ostream&
 operator<<(std::ostream& s, RangeT<extent_type> const& r)
     {
     s << "dims: ";
-    for(Range::size_type i = 0; i < r.r(); ++i) s << r.dim(i) << " ";
+    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.extent(i) << " ";
     s << "strs: ";
-    for(Range::size_type i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
+    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
     return s;
     }
 
-//template<typename extent_type>
-//void
-//write(std::ostream& s, const ExtStr<extent_type>& xs)
-//    {
-//    itensor::write(s,xs.ext);
-//    itensor::write(s,xs.str);
-//    }
-//
-//template<typename extent_type>
-//void
-//read(std::istream& s, ExtStr<extent_type>& xs)
-//    {
-//    itensor::read(s,xs.ext);
-//    itensor::read(s,xs.str);
-//    }
 
 template<typename extent_type>
 void
@@ -274,6 +246,69 @@ read(std::istream& s, RangeT<extent_type>& r)
     itensor::read(s,store);
     r = RangeT<extent_type>(std::move(store));
     }
+
+
+template<typename extent_type_>
+class RangeBuilderT
+    {
+    public:
+    using extent_type = extent_type_;
+    using range_type = RangeT<extent_type>;
+    using size_type = typename range_type::size_type;
+    using storage_type = typename range_type::storage_type;
+    using value_type = typename storage_type::value_type;
+    private:
+    storage_type store_;
+    bool auto_compute_strides_ = true;
+    public:
+
+    RangeBuilderT() { }
+
+    RangeBuilderT(size_type size)
+      : store_(size)
+        { }
+
+    explicit
+    operator range_type()
+        {
+        auto res = range_type{std::move(store_)};
+        if(auto_compute_strides_) res.computeStrides();
+        return res;
+        }
+
+    size_type
+    size() const { return store_.size(); }
+
+    void
+    resize(size_type newsize) { store_.resize(newsize); }
+
+    extent_type const&
+    extent(size_type j) const { return store_[j].ext; }
+
+    size_type
+    stride(size_type j) const { return store_[j].str; }
+
+    storage_type &
+    store() { return store_; }
+
+    storage_type const&
+    store() const { return store_; }
+
+    void
+    setExtent(size_type j, extent_type const& e)
+        {
+        store_[j].ext = e;
+        }
+
+    void
+    setStride(size_type j, size_type s)
+        {
+        auto_compute_strides_ = false;
+        store_[j].str = s;
+        }
+    };
+
+
 
 //class RangeRef
 //    {
