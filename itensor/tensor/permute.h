@@ -16,37 +16,37 @@ namespace itensor {
 
 template<typename R1, typename R2>
 void 
-permute(const TenRefc<R1>& from, 
-        const Permutation& P, 
-        const TenRef<R2>& to);
+permute(RTenRefc<R1> const& from, 
+        Permutation  const& P, 
+        RTenRef<R2>  const& to);
 
 template<typename R>
 void 
-permute(const TenRefc<R>& from, 
-        const Permutation& P, 
-        Ten& to);
+permute(RTenRefc<R> const& from, 
+        Permutation const& P, 
+        Tensor& to);
 
 template<typename R>
-Ten 
-permute(const TenRefc<R>& from, 
-        const Permutation& P);
+Tensor
+permute(RTenRefc<R> const& from, 
+        Permutation const& P);
 
 //Callable is any function func(Real& x, Real y)
 //default is func = [](Real& x, Real y) { x = y; };
 template<typename T, typename R1, typename R2, typename Callable>
 void 
-permute(TensorRef<const T,R1> from, 
-        const Permutation& P, 
-        TensorRef<T,R2> to,
-        const Callable& func);
+permute(TenRef<const T,R1> from, 
+        Permutation const& P, 
+        TenRef<T,R2> to,
+        Callable const& func);
 
 template<typename R1, typename R2, typename Callable>
 void 
-permute(const TenRefc<R1>& from, 
-        const Label& fL, 
-        const TenRef<R2>& to,
-        const Label& tL, 
-        const Callable& func);
+permute(RTenRefc<R1> const& from, 
+        Label const& fL, 
+        RTenRef<R2> const& to,
+        Label const& tL, 
+        Callable const& func);
 
 ///
 /// Implementations
@@ -55,9 +55,9 @@ permute(const TenRefc<R1>& from,
 
 template<typename T, typename R1, typename R2, typename Callable>
 void 
-permute(TensorRef<const T,R1> from, 
+permute(TenRef<const T,R1> from, 
         Permutation const& P, 
-        TensorRef<T,R2> to,
+        TenRef<T,R2> to,
         Callable const& func)
     {
     using size_type = decltype(P.size());
@@ -66,7 +66,7 @@ permute(TensorRef<const T,R1> from,
     if(r != from.r()) throw std::runtime_error("Mismatched Permutation size in permute");
     if(to.r() != from.r()) throw std::runtime_error("Mismatched tensor ranks in permute");
     if(to.size() != from.size()) throw std::runtime_error("Mismatched storage sizes in permute");
-    for(size_type j = 0; j < r; ++j)
+    for(decltype(r) j = 0; j < r; ++j)
         {
         if(to.extent(P.dest(j)) != from.extent(j))
             throw std::runtime_error("Incompatible extents in permute");
@@ -83,7 +83,7 @@ permute(TensorRef<const T,R1> from,
     //size "bigsize" and position "bigind"
     size_type bigind = 0, 
               bigsize = from.extent(0);
-    for(size_type j = 1; j < r; ++j)
+    for(decltype(r) j = 1; j < r; ++j)
         if(bigsize < from.extent(j))
             {
             bigsize = from.extent(j); 
@@ -100,15 +100,17 @@ permute(TensorRef<const T,R1> from,
     //increment manually in the loop below
     c.setRange(bigind,0,0);
 
-    Label ti(r);
+    auto ti = Label(r);
     for(; c.notDone(); ++c)
         {
-        for(size_type j = 0; j < r; ++j)
+        for(decltype(r) j = 0; j < r; ++j)
             ti[P.dest(j)] = c[j];
 
+        //effectively pto = to.data() + ind(to,ti);
         auto pto = MAKE_SAFE_PTR3(to.data(),ind(to,ti),to.size());
+        //effectively pfrom = from.data() + ind(from,c.i);
         auto pfrom = MAKE_SAFE_PTR3(from.data(),ind(from,c.i),from.size());
-        for(size_type b = 0; b < bigsize; ++b)
+        for(decltype(bigsize) b = 0; b < bigsize; ++b)
             {
             //func defaults to (*pto = *pfrom) but can also 
             //be operations such as (*pto += *pfrom)
@@ -130,44 +132,44 @@ plusEq(T& r1, T r2) { r1 += r2; }
 
 template<typename R1, typename R2>
 void 
-permute(const TenRefc<R1>& from, 
-        const Permutation& P, 
-        const TenRef<R2>& to)
+permute(RTenRefc<R1> const& from, 
+        Permutation const& P, 
+        RTenRef<R2> const& to)
     {
     permute(from,P,to,detail::assign<Real>);
     }
 
 template<typename R>
 void 
-permute(const TenRefc<R>& from, 
-        const Permutation& P, 
-        Ten& to)
+permute(RTenRefc<R> const& from, 
+        Permutation const& P, 
+        Tensor& to)
     {
     permute(from,P,makeRef(to));
     }
 
 template<typename R>
-Ten 
-permute(const TenRefc<R>& from, 
-        const Permutation& P)
+Tensor
+permute(RTenRefc<R> const& from, 
+        Permutation const& P)
     {
-    Range::storage_type rstore(from.r());
-    for(size_t j = 0; j < rstore.size(); ++j)
+    auto rb = RangeBuilder(from.r());
+    for(decltype(rb.size()) j = 0; j < rb.size(); ++j)
         {
-        rstore[P.dest(j)].ext = from.extent(j);
+        rb.setExtent(P.dest(j),from.extent(j));
         }
-    auto to = Ten(Range(std::move(rstore)));
+    auto to = Tensor{Range(rb)};
     permute(from,P,makeRef(to));
     return to;
     }
 
 template<typename R1, typename R2, typename Callable>
 void 
-permute(const TenRefc<R1>& from, 
-        const Label& fL, 
-        const TenRef<R2>& to,
-        const Label& tL, 
-        const Callable& func)
+permute(RTenRefc<R1> const& from, 
+        Label const& fL, 
+        RTenRef<R2> const& to,
+        Label const& tL, 
+        Callable const& func)
     {
 #ifdef DEBUG
     if(fL.size() != tL.size()) throw std::runtime_error("Mismatched sizes in permute");
@@ -177,17 +179,17 @@ permute(const TenRefc<R1>& from,
         *to.data() = *from.data();
         return;
         }
-    Permutation P(fL.size());
+    auto P = Permutation(fL.size());
     calc_permutation(fL,tL,P);
     permute(from,P,to,func);
     }
 
 template<typename R1, typename R2>
 void 
-permute(const TenRefc<R1>& from, 
-        const Label& fL, 
-        const TenRef<R2>& to,
-        const Label& tL)
+permute(RTenRefc<R1> const& from, 
+        Label const& fL, 
+        RTenRef<R2> const& to,
+        Label const& tL)
     {
     permute(from,fL,to,tL,detail::assign<Real>);
     }

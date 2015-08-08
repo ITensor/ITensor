@@ -221,9 +221,9 @@ struct CProps
 
     template<typename RangeT>
     void
-    compute(TenRefc<RangeT> A,
-            TenRefc<RangeT> B,
-            TenRefc<RangeT> C)
+    compute(RTenRefc<RangeT> A,
+            RTenRefc<RangeT> B,
+            RTenRefc<RangeT> C)
         {
         // Optimizations TODO
         //
@@ -511,25 +511,25 @@ struct CProps
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange.at(c++).ext = A.extent(i);
+                        newCrange[c++].ext = A.extent(i);
                 }
             else
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange.at(c++).ext = newArange.extent(i);
+                        newCrange[c++].ext = newArange.extent(i);
                 }
             if(!permuteB_)
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange.at(c++).ext = B.extent(j);
+                        newCrange[c++].ext = B.extent(j);
                 }
             else
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange.at(c++).ext = newBrange.extent(j);
+                        newCrange[c++].ext = newBrange.extent(j);
                 }
             newCrange.computeStrides();
             }
@@ -722,9 +722,9 @@ class CABqueue
 template<typename RangeT>
 void 
 contract(CProps const& p,
-         TenRefc<RangeT> A, 
-         TenRefc<RangeT> B, 
-         TenRef<RangeT>  C)
+         RTenRefc<RangeT> A, 
+         RTenRefc<RangeT> B, 
+         RTenRef<RangeT>  C)
     {
     //println();
     //println("------------------------------------------");
@@ -750,7 +750,7 @@ contract(CProps const& p,
     if(p.permuteA())
         {
         //println("Calling permute A");
-        auto tref = makeTensorRef(alloc[0],p.newArange);
+        auto tref = makeTenRef(alloc[0],p.newArange);
         permute(A,p.PA,tref);
         aref = MatRefc(tref.data(),p.dmid,p.dleft);
         aref.applyTrans();
@@ -774,7 +774,7 @@ contract(CProps const& p,
     if(p.permuteB())
         {
         //println("Calling permute B");
-        auto tref = makeTensorRef(alloc[1],p.newBrange);
+        auto tref = makeTenRef(alloc[1],p.newBrange);
         permute(B,p.PB,tref);
         bref = MatRefc(tref.data(),p.dmid,p.dright);
         }
@@ -805,10 +805,10 @@ contract(CProps const& p,
 #endif
 
     MatRef cref;
-    TenRef<decltype(p.newCrange)> newC;
+    RTenRef<decltype(p.newCrange)> newC;
     if(p.permuteC())
         {
-        newC = makeTensorRef(alloc[2],p.newCrange);
+        newC = makeTenRef(alloc[2],p.newCrange);
         cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
         }
     else
@@ -854,9 +854,9 @@ contract(CProps const& p,
 
 template<typename RangeT>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci)
+contract(RTenRefc<RangeT> A, Label const& ai, 
+         RTenRefc<RangeT> B, Label const& bi, 
+         RTenRef<RangeT>  C, Label const& ci)
     {
     if(ai.empty())
         {
@@ -879,13 +879,13 @@ contract(TenRefc<RangeT> A, Label const& ai,
 
 //Explicit template instantiations:
 template void 
-contract(TenRefc<Range>, Label const&, 
-         TenRefc<Range>, Label const&, 
-         TenRef<Range>,  Label const&);
+contract(RTenRefc<Range>, Label const&, 
+         RTenRefc<Range>, Label const&, 
+         RTenRef<Range>,  Label const&);
 template void 
-contract(TenRefc<IndexSet>, Label const&, 
-         TenRefc<IndexSet>, Label const&, 
-         TenRef<IndexSet>,  Label const&);
+contract(RTenRefc<IndexSet>, Label const&, 
+         RTenRefc<IndexSet>, Label const&, 
+         RTenRef<IndexSet>,  Label const&);
 
 
 struct MultInfo
@@ -963,9 +963,9 @@ computeMultInfo(Label const& ai,
 
 template<typename RangeT>
 void 
-contractloop(TenRefc<RangeT> A, Label const& ai, 
-             TenRefc<RangeT> B, Label const& bi, 
-             TenRef<RangeT>  C, Label const& ci,
+contractloop(RTenRefc<RangeT> A, Label const& ai, 
+             RTenRefc<RangeT> B, Label const& bi, 
+             RTenRef<RangeT>  C, Label const& ci,
              Args const& args)
     {
     if(ai.empty() || bi.empty())
@@ -1097,15 +1097,15 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     }
 template
 void 
-contractloop(TenRefc<Range> A, Label const& ai, 
-             TenRefc<Range> B, Label const& bi, 
-             TenRef<Range>  C, Label const& ci,
+contractloop(RTenRefc<Range> A, Label const& ai, 
+             RTenRefc<Range> B, Label const& bi, 
+             RTenRef<Range>  C, Label const& ci,
              Args const& args);
 template
 void 
-contractloop(TenRefc<IndexSet> A, Label const& ai, 
-             TenRefc<IndexSet> B, Label const& bi, 
-             TenRef<IndexSet>  C, Label const& ci,
+contractloop(RTenRefc<IndexSet> A, Label const& ai, 
+             RTenRefc<IndexSet> B, Label const& bi, 
+             RTenRef<IndexSet>  C, Label const& ci,
              Args const& args);
 
 
@@ -1116,7 +1116,7 @@ contractloop(TenRefc<IndexSet> A, Label const& ai,
 template<typename RangeT>
 void 
 contractDiagFull(VecRefc A,         Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
+                 RTenRefc<RangeT> B, Label const& bi, 
                  VecRef          C, Label const& ci)
     {
     Error("contractDiagFull not yet implemented");
@@ -1124,12 +1124,12 @@ contractDiagFull(VecRefc A,         Label const& ai,
 template
 void 
 contractDiagFull(VecRefc A,        Label const& ai, 
-                 TenRefc<Range> B, Label const& bi, 
+                 RTenRefc<Range> B, Label const& bi, 
                  VecRef         C, Label const& ci);
 template
 void 
 contractDiagFull(VecRefc A,           Label const& ai, 
-                 TenRefc<IndexSet> B, Label const& bi, 
+                 RTenRefc<IndexSet> B, Label const& bi, 
                  VecRef            C, Label const& ci);
 
 ////////////////////////////////////////////

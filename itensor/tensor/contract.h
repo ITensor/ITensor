@@ -13,28 +13,28 @@ namespace itensor {
 
 template<typename RangeT>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci);
+contract(RTenRefc<RangeT> A, Label const& ai, 
+         RTenRefc<RangeT> B, Label const& bi, 
+         RTenRef<RangeT>  C, Label const& ci);
 
 template<typename RangeT>
 void 
-contract(Tensor<RangeT> const& A, Label const& ai, 
-         Tensor<RangeT> const& B, Label const& bi, 
-         Tensor<RangeT>      & C, Label const& ci);
+contract(RTen<RangeT> const& A, Label const& ai, 
+         RTen<RangeT> const& B, Label const& bi, 
+         RTen<RangeT>      & C, Label const& ci);
 
 template<typename RangeT>
 void 
-contractloop(TenRefc<RangeT> A, Label const& ai, 
-             TenRefc<RangeT> B, Label const& bi, 
-             TenRef<RangeT>  C, Label const& ci,
+contractloop(RTenRefc<RangeT> A, Label const& ai, 
+             RTenRefc<RangeT> B, Label const& bi, 
+             RTenRef<RangeT>  C, Label const& ci,
              Args const& args = Global::args());
 
 template<typename RangeT>
 void 
-contractloop(Tensor<RangeT> const& A, Label const& ai, 
-             Tensor<RangeT> const& B, Label const& bi, 
-             Tensor<RangeT>      & C, Label const& ci,
+contractloop(RTen<RangeT> const& A, Label const& ai, 
+             RTen<RangeT> const& B, Label const& bi, 
+             RTen<RangeT>      & C, Label const& ci,
              Args const& args = Global::args());
 
 
@@ -43,15 +43,15 @@ contractloop(Tensor<RangeT> const& A, Label const& ai,
 template<typename DiagElsA, typename RangeT>
 void 
 contractDiagFull(DiagElsA const& A, Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
+                 RTenRefc<RangeT> B, Label const& bi, 
                  VecRef          C, Label const& ci);
 
 //Some indices of B uncontracted
 template<typename DiagElsA, typename RangeT>
 void 
-contractDiagPartial(DiagElsA const& A, Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci);
+contractDiagPartial(DiagElsA const& A,  Label const& ai,
+                    RTenRefc<RangeT> B, Label const& bi, 
+                    RTenRef<RangeT>  C, Label const& ci);
 
 template<typename Inds, typename Func>
 long
@@ -107,18 +107,18 @@ find_index(InfArray<T,MaxSize> const& v,
 
 template<typename RangeT>
 void 
-contract(Tensor<RangeT> const& A, Label const& ai, 
-         Tensor<RangeT> const& B, Label const& bi, 
-         Tensor<RangeT>      & C, Label const& ci)
+contract(RTen<RangeT> const& A, Label const& ai, 
+         RTen<RangeT> const& B, Label const& bi, 
+         RTen<RangeT>      & C, Label const& ci)
     {
     contract(makeRef(A),ai,makeRef(B),bi,makeRef(C),ci);
     }
 
 template<typename RangeT>
 void 
-contractloop(Tensor<RangeT> const& A, Label const& ai, 
-             Tensor<RangeT> const& B, Label const& bi, 
-             Tensor<RangeT>      & C, Label const& ci,
+contractloop(RTen<RangeT> const& A, Label const& ai, 
+             RTen<RangeT> const& B, Label const& bi, 
+             RTen<RangeT>      & C, Label const& ci,
              Args const& args)
     {
     contractloop(makeRefc(A),ai,makeRefc(B),bi,makeRef(C),ci,args);
@@ -192,9 +192,9 @@ computeLabels(Inds const& Lis,
 //diagonal elements of A (such as a VecRefc)
 template<typename DiagElsA, typename RangeT>
 void 
-contractDiagPartial(DiagElsA const& A, Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci)
+contractDiagPartial(DiagElsA const& A,  Label const& ai,
+                    RTenRefc<RangeT> B, Label const& bi, 
+                    RTenRef<RangeT>  C, Label const& ci)
     {
     using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
@@ -256,9 +256,9 @@ contractDiagPartial(DiagElsA const& A, Label const& ai,
 
 template<typename DiagElsA, typename RangeT>
 void 
-contractDiagFull(DiagElsA const& A, Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VecRef          C, Label const& ci)
+contractDiagFull(DiagElsA const& A,  Label const& ai, 
+                 RTenRefc<RangeT> B, Label const& bi, 
+                 VecRef          C,  Label const& ci)
     {
     using A_size_type = decltype(A.size());
 

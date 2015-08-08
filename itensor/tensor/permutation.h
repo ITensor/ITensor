@@ -97,9 +97,9 @@ permute(const Permutation& P,
 template <typename Set1,
           typename Set2>
 void
-calc_permutation(const Set1& s1,
-                 const Set2& s2,
-                 Permutation& P)
+calc_permutation(Set1 const& s1,
+                 Set2 const& s2,
+                 Permutation & P)
     {
     using size_type1 = decltype(s1.size());
     using size_type2 = decltype(s2.size());
