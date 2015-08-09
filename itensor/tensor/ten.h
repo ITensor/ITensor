@@ -197,8 +197,7 @@ class TenRef
     void
     clear() { pdata_ = nullptr; prange_ = nullptr; }
 
-    //Currently assuming TenRefs point to contiguous data:
-
+    //These assume TenRefs point to contiguous data:
     iterator
     begin() const { return pdata_; }
 
