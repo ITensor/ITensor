@@ -30,24 +30,24 @@ struct MRange
     };
 
 bool inline
-operator==(const MRange& a, const MRange& b)
+operator==(MRange const& a, MRange const& b)
     {
     return (a.rn==b.rn && a.rs==b.rs && a.cn==b.cn && a.cs==b.cs);
     }
 bool inline
-operator!=(const MRange& a, const MRange& b) { return !operator==(a,b); }
+operator!=(MRange const& a, MRange const& b) { return !operator==(a,b); }
 
 bool inline
-isTransposed(const MRange& i) { return (i.rs==i.cn && i.cs==1); }
+isTransposed(MRange const& i) { return (i.rs==i.cn && i.cs==1); }
 
 bool inline
-isNormal(const MRange& i) { return (i.rs==1 && i.cs==i.rn); }
+isNormal(MRange const& i) { return (i.rs==1 && i.cs==i.rn); }
 
 bool inline
-isContiguous(const MRange& i) { return isNormal(i) || isTransposed(i); }
+isContiguous(MRange const& i) { return isNormal(i) || isTransposed(i); }
 
 inline std::ostream&
-operator<<(std::ostream& s, const MRange& mr)
+operator<<(std::ostream& s, MRange const& mr)
     {
     s << "(rn="<< mr.rn <<",rs="<< mr.rs <<",cn="<< mr.cn <<",cs="<< mr.cs << ")";
     return s;
