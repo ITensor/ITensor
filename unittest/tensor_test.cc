@@ -4,39 +4,50 @@
 
 using namespace itensor;
 
-//template<size_t n>
-//struct choice : choice<n+1>
-//    {
-//    constexpr choice(){}
-//    };
-//
-//template<>
-//struct choice<10>
-//    {
-//    constexpr choice(){}
-//    };
-//
-//struct select_overload : choice<1> { };
-//
-//auto
-//checkCompilesImpl(choice<1>,TensorRefc ct)
-//    -> std::conditional_t<std::is_void<decltype(ct(4,0) = 5.1)>::value,bool,bool>
-//    {
-//    return true;
-//    }
-//
-//bool
-//checkCompilesImpl(choice<2>,TensorRefc ct)
-//    {
-//    return false;
-//    }
-//
-//template<typename... VArgs>
-//bool
-//checkCompiles(VArgs&&... vargs) { return checkCompilesImpl(select_overload{},std::forward<VArgs>(vargs)...); }
 
 TEST_CASE("Tensor and TensorRef")
 {
+
+SECTION("Range")
+    {
+    SECTION("RangeBuilder")
+        {
+        auto r = 3;
+        auto B = RangeBuilder(r);
+        B.setExtent(0,4);
+        B.setExtent(1,3);
+        B.setExtent(2,2);
+
+        SECTION("Basics")
+            {
+            CHECK(B);
+            auto R = Range(B);
+            CHECK((not B));
+            CHECK(R.r() == r);
+            }
+        SECTION("Auto Strides")
+            {
+            auto R = Range(B);
+            CHECK(R.stride(0) == 1);
+            CHECK(R.stride(1) == 4);
+            CHECK(R.stride(2) == 12);
+            CHECK(isContiguous(R));
+            }
+
+        SECTION("Manual Strides")
+            {
+            B.setStride(0,6);
+            B.setStride(1,2);
+            B.setStride(2,1);
+            auto R = Range(B);
+            CHECK(R.stride(0) == 6);
+            CHECK(R.stride(1) == 2);
+            CHECK(R.stride(2) == 1);
+            CHECK(isContiguous(R));
+            }
+        }
+
+    } // Range
 
 SECTION("TensorRef")
     {
