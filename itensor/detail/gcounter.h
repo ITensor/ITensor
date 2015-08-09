@@ -73,13 +73,13 @@ class GCounter	// General Counter
     GCounter& 
     operator++()
         {
-        long mi = first.mini(), 
+        ++ind;
+        auto mi = first.mini(), 
              ma = first.maxi();
         ++i[mi];
-        ++ind;
         if(i[mi] > last[mi])
             {
-            for(int j = mi+1; j <= ma; ++j)
+            for(auto j = mi+1; j <= ma; ++j)
                 {
                 i[j-1] = first[j-1];
                 ++i[j];
