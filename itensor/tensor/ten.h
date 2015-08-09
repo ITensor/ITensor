@@ -5,9 +5,7 @@
 #ifndef __ITENSOR_TEN_H_
 #define __ITENSOR_TEN_H_
 
-#include "itensor/types.h"
-#include "itensor/tensor/range.h"
-#include "itensor/detail/gcounter.h"
+#include "itensor/tensor/teniter.h"
 
 namespace itensor {
 
@@ -46,9 +44,9 @@ template<typename T, typename RangeT>
 class TenRef
     { 
     public:
-    using iterator = T*;
-    using const_iterator = const T*;
     using value_type = std::decay_t<T>;
+    using iterator = TenIter<value_type*,RangeT>;
+    using const_iterator = TenIter<const value_type*,RangeT>;
     using pointer = T*;
     using reference = T&;
     using size_type = long;
@@ -197,18 +195,17 @@ class TenRef
     void
     clear() { pdata_ = nullptr; prange_ = nullptr; }
 
-    //These assume TenRefs point to contiguous data:
     iterator
-    begin() const { return pdata_; }
+    begin() const { return iterator(pdata_,*prange_); }
 
     iterator
-    end() const { return pdata_+size(); }
+    end() const { return iterator::makeEnd(*prange_); }
 
     const_iterator
-    cbegin() const { return pdata_; }
+    cbegin() const { return const_iterator(pdata_,*prange_); }
 
     const_iterator
-    cend() const { return pdata_+size(); }
+    cend() const { return const_iterator::makeEnd(*prange_); }
 
     private:
     void
@@ -372,6 +369,14 @@ class Ten
 #endif
         return data_[ind(range_,std::forward<Inds>(ii)...)]; 
         }
+
+    template<typename Indices>
+    reference
+    el(Indices const& ii) { return data_[ind(range_,ii)]; }
+
+    template<typename Indices>
+    const_reference
+    el(Indices const& ii) const { return data_[ind(range_,ii)]; }
 
     iterator
     begin() { return data_.begin(); }

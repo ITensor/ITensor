@@ -9,7 +9,7 @@ namespace itensor {
 
 template<typename V, typename R>
 std::ostream&
-operator<<(std::ostream& s, TenRef<V,R> const& T)
+operator<<(std::ostream & s, TenRef<V,R> const& T)
     {
     auto r = T.r();
     if(r == 0)
@@ -17,15 +17,12 @@ operator<<(std::ostream& s, TenRef<V,R> const& T)
         s << T();
         return s;
         }
-    auto C = detail::GCounter(r);
-    for(decltype(r) j = 0; j < r; ++j)
-        C.setRange(j,0,T.extent(j)-1);
-    for(; C.notDone(); ++C)
+    for(auto& i : T.range())
         {
         s << "(";
-        for(decltype(r) j = 0; (j+1) < r; ++j)
-            s << C[j] << ",";
-        s << C[r-1] << ") " << T.el(C.i) << "\n";
+        for(decltype(r) n = 0; (n+1) < r; ++n)
+            s << i[n] << ",";
+        s << i[r-1] << ") " << T.el(i) << "\n";
         }
     return s;
     }
