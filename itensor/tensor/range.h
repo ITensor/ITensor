@@ -11,6 +11,7 @@
 #include "itensor/util/autovector.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/infarray.h"
+#include "itensor/tensor/rangeiter.h"
 
 namespace itensor {
 
@@ -57,6 +58,8 @@ class RangeT
     using value_type = ExtStr<extent_type>;
     using size_type = typename value_type::size_type;
     using storage_type = InfArray<value_type,8ul>;
+    using iterator = RangeIter<RangeT>;
+    using const_iterator = iterator;
     private:
     storage_type store_;
     public:
@@ -125,18 +128,6 @@ class RangeT
     bool
     empty() const { return store_.empty(); }
 
-    //extent_type &
-    //front() { return store_.front().ext; }
-
-    //extent_type const&
-    //front() const { return store_.front(); }
-
-    //extent_type &
-    //back() { return store_.back(); }
-
-    //extent_type const&
-    //back() const { return store_.back(); }
-
     value_type*
     data() { return store_.data(); }
 
@@ -161,6 +152,12 @@ class RangeT
 
     void
     resize(size_type nsize) { store_.resize(nsize); }
+
+    iterator
+    begin() const { return RangeIter<RangeT>(*this); }
+
+    iterator
+    end() const { return RangeIter<RangeT>::makeEnd(*this); }
 
     //Compute strides from extents
     void 
@@ -265,6 +262,8 @@ class RangeBuilderT
         return res;
         }
 
+    operator bool() const { return !store_.empty(); }
+
     size_type
     size() const { return store_.size(); }
 
@@ -310,6 +309,10 @@ namespace detail {
                   ri = 0;
         for(auto& ii : inds)
             {
+#ifdef DEBUG
+            if(ri >= size_type(r.r()))
+                Error("Container-Range mismatch in ind(...)");
+#endif
             I += r.stride(ri) * ii;
             ++ri;
             }
@@ -348,6 +351,13 @@ namespace detail {
         };
 
 } //namespace detail
+
+template<typename RangeT, typename Iterable>
+auto
+ind(RangeT const& r, Iterable const& inds)
+    {
+    return detail::indIterable(r,inds);
+    }
 
 template<typename RangeT, typename U>
 auto
@@ -416,28 +426,30 @@ area(RangeT const& R)
 //all possible outputs of ind(R,...) yields
 //the set {0,1,...,area(R)-1} (though 
 //in no particular order)
-//For this to be true, sufficient that:
-// o the smallest stride == 1
-// o the max possible output of ind(R,...)
-//   equals (area(R)-1)
+//For this to be true, sufficient that
+//the max possible output of ind(R,...)
+//equals (area(R)-1)
+//
+//Proof:
+// Ranges always start at ind(R,{0,0,0...})=0;
+// area(R) gives the number of outputs;
+// IF the max output is area(R)-1 and
+// there are area(R) outputs, the only
+// set fulfilling this is {0,1,...,area(R)-1})
 //
 template<typename RangeT>
 bool
 isContiguous(RangeT const& R)
     {
-    if(R.r() == 0) return true;
     using size_type = typename RangeT::size_type;
-    size_type min_str = std::numeric_limits<size_type>::max(),
-              max_ind = 0,
+    size_type max_ind = 0,
               area = 1;
     for(decltype(R.r()) n = 0; n < R.r(); ++n)
         {
-        min_str = std::min(min_str,R.stride(n));
         max_ind += R.stride(n)*(R.extent(n)-1);
         area *= R.extent(n);
         }
-    if(min_str == 1 && (1+max_ind) == area) return true;
-    return false;
+    return (1+max_ind) == area;
     }
 
 
