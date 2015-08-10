@@ -11,18 +11,14 @@ template<typename V, typename R>
 std::ostream&
 operator<<(std::ostream & s, TenRef<V,R> const& T)
     {
-    auto r = T.r();
-    if(r == 0)
+    if(T.r() == 0)
         {
         s << T();
         return s;
         }
     for(auto& i : T.range())
         {
-        s << "(";
-        for(decltype(r) n = 0; (n+1) < r; ++n)
-            s << i[n] << ",";
-        s << i[r-1] << ") " << T.el(i) << "\n";
+        s << "(" << i.ind() << ") " << T(i) << "\n";
         }
     return s;
     }

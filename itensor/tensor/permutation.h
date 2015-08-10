@@ -18,6 +18,8 @@ struct Permutation
     using storage = InfArray<long,11ul>;
     //using storage = VarArray<long,31ul>;
     using size_type = long;
+    using iterator = storage::iterator;
+    using const_iterator = storage::const_iterator;
     private: 
     storage store_;
     public:
@@ -49,6 +51,12 @@ struct Permutation
 
     const storage& 
     store() const { return store_; }
+
+    const_iterator
+    begin() const { return store_.begin(); }
+
+    const_iterator
+    end() const { return store_.end(); }
 
     };
 

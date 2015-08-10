@@ -15,8 +15,7 @@ subTensorImpl(Ten_ && T,
               C1 const& start,
               C2 const& stop)
     {
-    using range_type = typename std::decay<Ten_>::type::range_type;
-    using rstorage_type = typename range_type::storage_type;
+    using range_type = decltype(T.range());
     using stop_type = decltype(*stop.begin());
     auto r = T.r();
 #ifdef DEBUG
@@ -31,16 +30,16 @@ subTensorImpl(Ten_ && T,
         }
 #endif
     size_t offset = 0;
-    auto rstore = rstorage_type(r);
+    auto rb = RangeBuilderT<range_type>(r);
     auto st = start.begin();
     auto sp = stop.begin();
     for(decltype(r) j = 0; j < r; ++j, ++st, ++sp) 
         {
         offset += T.stride(j) * (*st);
-        rstore[j].str = T.stride(j);
-        rstore[j].ext = (*sp)-(*st);
+        rb.setStride(j,T.stride(j));
+        rb.setExtent(j,(*sp)-(*st));
         }
-    return makeTenRef(T.data()+offset,range_type{std::move(rstore)});
+    return makeTenRef(T.data()+offset,rb.build());
     }
 
 template<typename Ten_, typename C1, typename C2>
@@ -61,6 +60,41 @@ subTensor(Ten_ && T,
     return subTensorImpl(std::forward<Ten_>(T),start,stop);
     }
 
+/////////////////////////////
+/////////////////////////////
+
+template<typename Ten_, typename Perm_>
+auto
+permuteImpl(Ten_ && T,
+            Perm_ const& P)
+    {
+    using range_type = decltype(T.range());
+    auto rb = RangeBuilderT<range_type>(T.r());
+    size_t n = 0;
+    for(auto& dest : P)
+        {
+        rb.setExtent(n,T.extent(dest));
+        rb.setStride(n,T.stride(dest));
+        ++n;
+        }
+    return makeTenRef(T.data(),rb.build());
+    }
+
+template<typename Ten_, typename Perm_>
+auto
+permute(Ten_ && T,
+        Perm_ const& P)
+    {
+    return permuteImpl(std::forward<Ten_>(T),P);
+    }
+
+template<typename Ten_>
+auto
+permute(Ten_ && T,
+        std::initializer_list<size_t> P)
+    {
+    return permuteImpl(std::forward<Ten_>(T),P);
+    }
 
 } //namespace itensor
 

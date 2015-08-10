@@ -6,6 +6,7 @@
 #define __ITENSOR_TEN_H_
 
 #include "itensor/tensor/teniter.h"
+#include "itensor/tensor/range.h"
 
 namespace itensor {
 
@@ -39,6 +40,9 @@ using TensorRefc = RTenRefc<Range>;
 //using CTensorRef  = TenRef<Cplx,Range>;
 //using CTensorRefc  = TenRef<const Cplx,Range>;
 
+
+template<typename Expression, typename ReturnValue>
+using IfCompilesReturns = ReturnValue;
 
 template<typename T, typename RangeT>
 class TenRef
@@ -189,8 +193,10 @@ class TenRef
         }
 
     template<typename Indices>
-    reference
-    el(Indices const& ii) const { return pdata_[ind(*prange_,ii)]; }
+    auto
+    operator()(Indices const& ii) const 
+      -> IfCompilesReturns<decltype(ii.begin()), reference>
+        { return pdata_[ind(*prange_,ii)]; }
 
     void
     clear() { pdata_ = nullptr; prange_ = nullptr; }
@@ -371,12 +377,16 @@ class Ten
         }
 
     template<typename Indices>
-    reference
-    el(Indices const& ii) { return data_[ind(range_,ii)]; }
+    auto
+    operator()(Indices const& ii) 
+      -> IfCompilesReturns<decltype(ii.begin()), reference>
+        { return data_[ind(range_,ii)]; }
 
     template<typename Indices>
-    const_reference
-    el(Indices const& ii) const { return data_[ind(range_,ii)]; }
+    auto
+    operator()(Indices const& ii) const 
+      -> IfCompilesReturns<decltype(ii.begin()), const_reference>
+        { return data_[ind(range_,ii)]; }
 
     iterator
     begin() { return data_.begin(); }
