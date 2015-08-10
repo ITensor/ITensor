@@ -5,12 +5,7 @@
 #ifndef __ITENSOR_RANGE_H
 #define __ITENSOR_RANGE_H
 
-#include <array>
-#include <vector>
 #include "itensor/util/readwrite.h"
-#include "itensor/util/autovector.h"
-#include "itensor/util/vararray.h"
-#include "itensor/util/infarray.h"
 #include "itensor/tensor/rangeiter.h"
 
 namespace itensor {
@@ -22,7 +17,7 @@ template<typename extent_type>
 class RangeBuilderT;
 
 using Range = RangeT<size_t>;
-using RangeBuilder = RangeBuilderT<size_t>;
+using RangeBuilder = RangeBuilderT<Range>;
 
 //Storage type for RangeT
 template<typename extent_type>
@@ -145,7 +140,7 @@ class RangeT
 
     template<typename Indexable>
     void 
-    init(const Indexable& v);
+    init(Indexable const& v);
 
     void 
     init(std::initializer_list<extent_type> il);
@@ -218,7 +213,7 @@ operator<<(std::ostream& s, RangeT<extent_type> const& r)
 
 template<typename extent_type>
 void
-write(std::ostream& s, const RangeT<extent_type>& r)
+write(std::ostream& s, RangeT<extent_type> const& r)
     {
     itensor::write(s,r.store());
     }
@@ -234,12 +229,12 @@ read(std::istream& s, RangeT<extent_type>& r)
     }
 
 
-template<typename extent_type_>
+template<typename range_type_>
 class RangeBuilderT
     {
     public:
-    using extent_type = extent_type_;
-    using range_type = RangeT<extent_type>;
+    using range_type = typename std::decay<range_type_>::type;
+    using extent_type = typename range_type::extent_type;
     using size_type = typename range_type::size_type;
     using storage_type = typename range_type::storage_type;
     using value_type = typename storage_type::value_type;
@@ -254,8 +249,10 @@ class RangeBuilderT
       : store_(size)
         { }
 
-    explicit
-    operator range_type()
+    //"build" and return the range
+    //store_ will be moved into the newly created range
+    range_type
+    build()
         {
         auto res = range_type{std::move(store_)};
         if(auto_compute_strides_) res.computeStrides();
@@ -311,7 +308,7 @@ namespace detail {
             {
 #ifdef DEBUG
             if(ri >= size_type(r.r()))
-                Error("Container-Range mismatch in ind(...)");
+                Error("Container-Range size mismatch in ind(...)");
 #endif
             I += r.stride(ri) * ii;
             ++ri;
@@ -352,60 +349,24 @@ namespace detail {
 
 } //namespace detail
 
+template<typename A, typename B>
+using IfACompilesReturnB = B;
+
 template<typename RangeT, typename Iterable>
 auto
 ind(RangeT const& r, Iterable const& inds)
+    //Constrain this template to only work for inds that have a begin() method
+    -> IfACompilesReturnB<decltype(inds.begin()),decltype(r.extent(0))>
+    //...if so make the return type to be decltype(r.extent(0))
     {
     return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT, typename U>
-auto
-ind(RangeT const& r, std::vector<U> const& inds)
-    {
-    return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT, typename U, size_t size>
-auto
-ind(RangeT const& r, std::array<U,size> const& inds)
-    {
-    return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT, typename U, size_t size>
-auto
-ind(RangeT const& r, VarArray<U,size> const& inds)
-    {
-    return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT, typename U, size_t size>
-auto
-ind(RangeT const& r, InfArray<U,size> const& inds)
-    {
-    return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT, typename U>
-auto
-ind(RangeT const& r, autovector<U> const& inds)
-    {
-    return detail::indIterable(r,inds);
-    }
-
-template<typename RangeT>
-auto
-ind(RangeT const& r, size_t i0)
-    {
-    return detail::ComputeInd<RangeT>(r)(i0);
     }
 
 template<typename RangeT, typename... Inds>
 auto
-ind(RangeT const& r, size_t i0, size_t i1, Inds... inds)
+ind(RangeT const& r, size_t i0, Inds... inds)
     {
-    return detail::ComputeInd<RangeT>(r)(i0,i1,inds...);
+    return detail::ComputeInd<RangeT>(r)(i0,inds...);
     }
 
 template<typename RangeT>

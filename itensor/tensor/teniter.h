@@ -9,7 +9,7 @@
 
 namespace itensor {
 
-template<class T, class RangeT = Range> 
+template<class T, class RangeT>
 class TenIter
     { 
     public:

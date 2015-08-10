@@ -6,7 +6,7 @@
 #define __ITENSOR_RANGEITER_H_
 
 #include <iterator> 
-#include "range.h"
+#include "itensor/tensor/types.h"
 
 namespace itensor {
 
@@ -18,8 +18,6 @@ class RangeIter
     using size_type = typename range_type::size_type;
     using value_type = size_type;
     using reference = size_type &;
-    //using difference_type = typename std::iterator_traits<value_type>::difference_type;
-    //using pointer = typename std::iterator_traits<value_type>::pointer;
     using iterator_category = std::forward_iterator_tag;
     using ind_type = InfArray<size_type,8ul>;
     using const_ind_iterator = typename ind_type::const_iterator;
@@ -104,13 +102,14 @@ class RangeIter
     void
     increment()
         {
+        using rextent = decltype(range().extent(0));
 #ifdef DEBUG
         if(range().r() == 0) Error("Can't increment RangeIter made from rank 0 range");
 #endif
         auto r = range().r();
         ind_[0] += 1;
         val_ += range().stride(0);
-        if(ind_[0] == range().extent(0))
+        if(rextent(ind_[0]) == range().extent(0))
             {
             for(decltype(r) n = 1; n < r; ++n)
                 {
@@ -118,7 +117,7 @@ class RangeIter
                 val_ -= range().extent(n-1)*range().stride(n-1);
                 ind_[n] += 1;
                 val_ += range().stride(n);
-                if(ind_[n] < range().extent(n)) return;
+                if(rextent(ind_[n]) < range().extent(n)) return;
                 }
             //will only reach this line when totally done
             val_ = std::numeric_limits<value_type>::max();

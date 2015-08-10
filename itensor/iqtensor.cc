@@ -263,7 +263,7 @@ doTask(ToITensor & T,
         }
     auto inds = IndexSetBuilder(r);
     for(decltype(r) j = 0; j < r; ++j) inds.setExtent(j,T.is[j]);
-    return ITensor(IndexSet{inds},std::move(nd),T.scale);
+    return ITensor(inds.build(),std::move(nd),T.scale);
     }
 
 //template<typename D>
@@ -288,7 +288,7 @@ toITensor(IQTensor const& T)
         if(T.r()==0) return ITensor{};
         auto inds = IndexSetBuilder(T.r());
         for(decltype(T.r()) j = 0; j < T.r(); ++j) inds.setExtent(j,T.inds()[j]);
-        return ITensor(IndexSet{inds});
+        return ITensor(inds.build());
         }
     //Main case for allocated IQTensors
     return doTask(ToITensor{T.inds(),T.scale()},T.store());

@@ -28,8 +28,8 @@ class IQIndex;
 using IndexSet = IndexSetT<Index>;
 using IQIndexSet = IndexSetT<IQIndex>;
 
-using IndexSetBuilder = RangeBuilderT<Index>;
-using IQIndexSetBuilder = RangeBuilderT<IQIndex>;
+using IndexSetBuilder = RangeBuilderT<IndexSet>;
+using IQIndexSetBuilder = RangeBuilderT<IQIndexSet>;
 
 //
 // When constructed from a collection of indices,
@@ -44,6 +44,7 @@ class IndexSetT
     {
     public:
     using index_type = index_type_;
+    using extent_type = index_type;
     using range_type = RangeT<index_type>;
     using size_type = typename range_type::size_type;
     using storage_type = typename range_type::storage_type;
@@ -75,8 +76,8 @@ class IndexSetT
     IndexSetT(std::initializer_list<index_type> ii) : range_(ii) { }
 
     explicit
-    IndexSetT(RangeBuilderT<index_type> & builder) 
-      : range_(range_type(builder)) 
+    IndexSetT(storage_type && store) 
+      : range_(std::move(store)) 
         { }
 
     IndexSetT&

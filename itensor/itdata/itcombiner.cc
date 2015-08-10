@@ -51,7 +51,7 @@ combine(const ITReal& d,
                 {
                 newind.setExtent(i++,dis[j]);
                 }
-        Nis = IndexSet(newind);
+        Nis = newind.build();
         }
     else
         {
@@ -90,7 +90,7 @@ combine(const ITReal& d,
             newind.setExtent(i++,cind);
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
                 newind.setExtent(i++,dis[j]);
-            Nis = IndexSet(newind);
+            Nis = newind.build();
             }
         else
             {
@@ -129,8 +129,8 @@ combine(const ITReal& d,
                 pdims.setExtent(P.dest(j),dis[j].m());
                 }
             assert(i==dis.r()+2-Cis.r());
-            auto rr = Range(pdims);
-            Nis = IndexSet(newind);
+            auto rr = pdims.build();
+            Nis = newind.build();
             auto nd = m.makeNewData<ITReal>(area(Nis));
             auto tr = makeTenRef(nd->data(),rr);
             auto td = makeTenRef(d.data(),dis);

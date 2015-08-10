@@ -103,7 +103,7 @@ evaluate(ITLazy& Z)
                 cis.setExtent(cn++,Bis[nb]);
                 }
 
-        Cis = IndexSet(cis);
+        Cis = cis.build();
 
         println("Ais = ",Ais);
         println("Bis = ",Bis);

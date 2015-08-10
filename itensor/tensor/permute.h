@@ -158,7 +158,7 @@ permute(RTenRefc<R> const& from,
         {
         rb.setExtent(P.dest(j),from.extent(j));
         }
-    auto to = Tensor{Range(rb)};
+    auto to = Tensor{rb.build()};
     permute(from,P,makeRef(to));
     return to;
     }

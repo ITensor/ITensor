@@ -568,7 +568,7 @@ contractIS(IndexSetT<IndexT> const& Lis,
     long ncont = 0;
     for(auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    auto newind = RangeBuilderT<IndexT>(nuniq);
+    auto newind = RangeBuilderT<IndexSetT<IndexT>>(nuniq);
     //Below we are "cheating" and using the .str
     //field of each member of newind to hold the 
     //labels which will go into Nind so they will
@@ -605,7 +605,7 @@ contractIS(IndexSetT<IndexT> const& Lis,
         {
         Nind[j] = newind.stride(j);
         }
-    Nis = IndexSetT<IndexT>(newind);
+    Nis = newind.build();
     Nis.computeStrides();
     }
 

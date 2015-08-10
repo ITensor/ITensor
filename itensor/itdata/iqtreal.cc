@@ -263,7 +263,7 @@ permuteIQ(const Permutation& P,
         {
         bind.setExtent(P.dest(i),Ais[i]);
         }
-    Bis = IQIndexSet(bind);
+    Bis = bind.build();
     dB = IQTReal(Bis,doTask(CalcDiv{Ais},dA));
 
     Label Ablock(r,-1),
@@ -299,7 +299,7 @@ replaceInd(const IQIndexSet& is,
     newind.setExtent(i++,replacement);
     for(decltype(is.r()) j = loc+1; j < is.r(); ++j)
         newind.setExtent(i++,is[j]);
-    return IQIndexSet(newind);
+    return newind.build();
     }
 
 void
@@ -436,7 +436,7 @@ combine(IQTReal const& d,
             newind.setExtent(j,Cis[1+j]);
         for(auto j : count(Pis.r()-1))
             newind.setExtent(offset+j,Pis[1+j]);
-        Nis = IQIndexSet(newind);
+        Nis = newind.build();
         }
     else //combining
         {
@@ -446,7 +446,7 @@ combine(IQTReal const& d,
         for(auto j : count(1,newr)) newind.setExtent(j,Pis[Cis.r()-2+j]);
         setPtrData();
         condense(Cis,Pis,*pd);
-        Nis = IQIndexSet(newind);
+        Nis = newind.build();
         }
 
     //Only need to modify d if Cis.r() > 2.
