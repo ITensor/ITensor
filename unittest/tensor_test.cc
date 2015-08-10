@@ -1,6 +1,9 @@
 #include "test.h"
 #include "itensor/util/print.h"
-#include "itensor/tensor/ten.h"
+#include "itensor/util/count.h"
+#include "itensor/detail/algs.h"
+#include "itensor/tensor/permutation.h"
+#include "itensor/tensor/sliceten.h"
 
 using namespace itensor;
 
@@ -21,13 +24,13 @@ SECTION("Range")
         SECTION("Basics")
             {
             CHECK(B);
-            auto R = Range(B);
+            auto R = B.build();
             CHECK((not B));
             CHECK(R.r() == r);
             }
         SECTION("Auto Strides")
             {
-            auto R = Range(B);
+            auto R = B.build();
             CHECK(R.stride(0) == 1);
             CHECK(R.stride(1) == 4);
             CHECK(R.stride(2) == 12);
@@ -39,7 +42,7 @@ SECTION("Range")
             B.setStride(0,6);
             B.setStride(1,2);
             B.setStride(2,1);
-            auto R = Range(B);
+            auto R = B.build();
             CHECK(R.stride(0) == 6);
             CHECK(R.stride(1) == 2);
             CHECK(R.stride(2) == 1);
@@ -188,5 +191,161 @@ SECTION("Tensor")
             CHECK_CLOSE(t(4,1),52);
             }
         }
-    }
+    } // Tensor
+
+SECTION("Slicing")
+    {
+    SECTION("Permute")
+        {
+        auto T = Tensor(4,2,3);
+        for(auto& el : T) el = detail::quickran();
+
+        SECTION("Case 1")
+            {
+            auto PT = permute(T,{0,2,1});
+            for(auto i0 : count(T.extent(0)))
+            for(auto i1 : count(T.extent(1)))
+            for(auto i2 : count(T.extent(2)))
+                {
+                CHECK_CLOSE(T(i0,i1,i2), PT(i0,i2,i1));
+                }
+            }
+
+        SECTION("Case 1.5")
+            {
+            auto P = Permutation(3);
+            P.setFromTo(0,0);
+            P.setFromTo(1,2);
+            P.setFromTo(2,1);
+            auto PT = permute(T,P);
+            for(auto i0 : count(T.extent(0)))
+            for(auto i1 : count(T.extent(1)))
+            for(auto i2 : count(T.extent(2)))
+                {
+                CHECK_CLOSE(T(i0,i1,i2), PT(i0,i2,i1));
+                }
+            }
+
+        SECTION("Case 2")
+            {
+            auto PT = permute(T,{2,0,1});
+            for(auto& i : T.range())
+                {
+                CHECK_CLOSE(T(i), PT(i[2],i[0],i[1]));
+                }
+            }
+
+        SECTION("Case 3")
+            {
+            auto PT = permute(T,{2,1,0});
+            for(auto& i : T.range())
+                {
+                CHECK_CLOSE(T(i), PT(i[2],i[1],i[0]));
+                }
+            }
+
+        SECTION("Case 4")
+            {
+            auto PT = permute(T,{1,2,0});
+            for(auto& i : T.range())
+                {
+                CHECK_CLOSE(T(i), PT(i[1],i[2],i[0]));
+                }
+            }
+
+        }
+
+    SECTION("Sub Tensor")
+        {
+        auto T = Tensor(7,3,8,6);
+        for(auto& el : T) el = detail::quickran();
+
+        SECTION("Case 1")
+            {
+            Label start = {0,0,0,0},
+                  stop  = {7,3,8,6};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                CHECK_CLOSE(S(i),T(i));
+                }
+            }
+
+        SECTION("Case 2")
+            {
+            Label start = {1,0,1,0},
+                  stop  = {7,3,8,6};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                }
+            }
+
+        SECTION("Case 3")
+            {
+            Label start = {1,0,1,0},
+                  stop  = {7,3,8,6};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                }
+            }
+
+        SECTION("Case 4")
+            {
+            Label start = {2,1,1,2},
+                  stop  = {4,3,4,5};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                }
+            }
+
+        SECTION("Case 5")
+            {
+            Label start = {6,2,7,5},
+                  stop  = {7,3,8,6};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                }
+            }
+
+        SECTION("Case 6")
+            {
+            Label start = {5,1,6,4},
+                  stop  = {6,2,7,5};
+            auto S = subTensor(T,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), T(start[0]+i[0],
+                                    start[1]+i[1],
+                                    start[2]+i[2],
+                                    start[3]+i[3]));
+                }
+            }
+
+        }
+
+    } // Slicing
 }
