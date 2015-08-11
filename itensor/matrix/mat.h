@@ -60,13 +60,13 @@ class MatrixRef
         range_(ind)
         { }
 
-    MatrixRef(pointer pdata, 
-              long offset,
-              long nrows,
-              long ncols,
-              bool trans)
-        : MatrixRef(pdata+offset,nrows,ncols,trans)
-        { }
+    //MatrixRef(pointer pdata, 
+    //          long offset,
+    //          long nrows,
+    //          long ncols,
+    //          bool trans)
+    //    : MatrixRef(pdata+offset,nrows,ncols,trans)
+    //    { }
 
     MatrixRef(pointer pdata, 
               long offset,
@@ -617,13 +617,13 @@ norm(const Mat& M) { return norm(makeRef(M)); }
 //
 
 void inline
-operator&=(MatRef a, const Mat& b) { a &= makeRef(b); }
+operator&=(MatRef a, Mat const& b) { a &= makeRef(b); }
 
 void inline
-operator+=(MatRef a, const Mat& b) { a += makeRef(b); }
+operator+=(MatRef a, Mat const& b) { a += makeRef(b); }
 
 void inline
-operator-=(MatRef a, const Mat& b) { a -= makeRef(b); }
+operator-=(MatRef a, Mat const& b) { a -= makeRef(b); }
 
 void
 randomize(MatRef M);
