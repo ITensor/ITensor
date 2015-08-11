@@ -187,7 +187,7 @@ doTask(PlusEQ<IQIndex> const& P,
             auto aref = makeTenRef(A.data()+aio.offset,Arange);
             auto bref = makeTenRef(bblock,Brange);
             auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
-            permute(bref,P.perm(),aref,add);
+            do_permute(bref,P.perm(),aref,add);
             }
         }
     }
@@ -270,7 +270,6 @@ permuteIQ(const Permutation& P,
           Bblock(r,-1);
     Range Arange,
           Brange;
-    if(Global::debug1()) println("P = ",P);
     for(auto aio : dA.offsets)
         {
         //Compute bi, new block index of blk
@@ -283,7 +282,7 @@ permuteIQ(const Permutation& P,
         auto* bblock = getBlock(dB,Bis,Bblock);
         auto aref = makeTenRef(dA.data()+aio.offset,Arange);
         auto bref = makeTenRef(bblock,Brange);
-        permute(aref,P,bref);
+        do_permute(aref,P,bref);
         }
     }
 

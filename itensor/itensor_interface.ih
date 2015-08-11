@@ -243,7 +243,7 @@ operator+=(const ITensorT& R)
 
     using permutation = typename PlusEQ<index_type>::permutation;
 
-    permutation P(L.inds().size());
+    auto P = permutation(L.inds().size());
 #ifdef DEBUG
     try {
         calc_permutation(R.inds(),L.inds(),P);

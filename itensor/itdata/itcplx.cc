@@ -45,19 +45,19 @@ fill(const Complex& z)
 Cplx
 doTask(const GetElt<Index>& g, const ITCplx& d)
     {
-    return d.get(ind(g.is,g.inds));
+    return d.get(offset(g.is,g.inds));
     }
 
 void
 doTask(const SetElt<Real,Index>& s, ITCplx& d)
     {
-    d.set(ind(s.is,s.inds),s.elt);
+    d.set(offset(s.is,s.inds),s.elt);
     }
 
 void
 doTask(const SetElt<Cplx,Index>& s, ITCplx& d)
     {
-    d.set(ind(s.is,s.inds),s.elt);
+    d.set(offset(s.is,s.inds),s.elt);
     }
 
 void
@@ -265,7 +265,7 @@ doTask(PrintIT<Index>& P, const ITCplx& d)
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = P.scalefac*d.get(ind(P.is,gc.i));
+        auto val = P.scalefac*d.get(offset(P.is,gc.i));
         if(std::norm(val) > Global::printScale())
             {
             P.s << "(";

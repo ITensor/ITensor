@@ -2,11 +2,12 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/util/count.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/contract.h"
+#include "itensor/tensor/sliceten.h"
 #include "itensor/iqindex.h"
-#include "itensor/util/count.h"
 
 using std::vector;
 
@@ -34,9 +35,9 @@ combine(const ITReal& d,
     {
     //TODO: try to make use of Lind,Rind label vectors
     //      to simplify combine logic
-    const auto& cind = Cis[0];
+    auto const& cind = Cis[0];
     auto jc = findindex(dis,cind);
-    if(jc >= 0) //has cind
+    if(jc >= 0) //has cind, uncombining
         {
         //dis has cind, replace with other inds
         auto newind = IndexSetBuilder(dis.r()+Cis.r()-2);
@@ -53,7 +54,7 @@ combine(const ITReal& d,
                 }
         Nis = newind.build();
         }
-    else
+    else //combining
         {
         //dis doesn't have cind, replace
         //Cis[1], Cis[2], ... with cind
@@ -68,8 +69,8 @@ combine(const ITReal& d,
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
         //and in same order as on combiner
         bool contig_sameord = true;
-        int c = 2;
-        for(int j = J1+1; c < Cis.r() && j < dis.r(); ++j,++c)
+        decltype(Cis.r()) c = 2;
+        for(auto j = J1+1; c < Cis.r() && j < dis.r(); ++j,++c)
             if(dis[j] != Cis[c])
                 {
                 contig_sameord = false;
@@ -77,27 +78,23 @@ combine(const ITReal& d,
                 }
         if(c != Cis.r()) contig_sameord = false;
 
-        //printfln("%s:",contig_sameord?"Contig":"Not Contig");
-        //println("  dis = ",dis);
-        //println("  Cis = ",Cis);
-
         if(contig_sameord)
             {
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
-            for(int j = 0; j < J1; ++j) 
+            for(auto j : count(J1))
                 newind.setExtent(i++,dis[j]);
             newind.setExtent(i++,cind);
-            for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
+            for(auto j : count(J1+Cis.r()-1, dis.r()))
                 newind.setExtent(i++,dis[j]);
             Nis = newind.build();
             }
         else
             {
-            Permutation P(dis.r());
+            auto P = Permutation(dis.r());
             //Set P destination values to -1 to mark
             //indices that need to be assigned destinations:
-            for(int i = 0; i < P.size(); ++i) P.setFromTo(i,-1);
+            for(auto i : index(P)) P.setFromTo(i,-1);
 
             //permute combined indices to the front, in same
             //order as in Cis:
@@ -115,26 +112,19 @@ combine(const ITReal& d,
                 P.setFromTo(j,ni++);
                 }
             //permute uncombined indices to back, keeping relative order:
-            auto pdims = RangeBuilder(dis.r());
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
             newind.setExtent(i++,cind);
             for(auto j : count(dis.r()))
-                {
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);
                     newind.setExtent(i++,dis[j]);
                     }
-                pdims.setExtent(P.dest(j),dis[j].m());
-                }
-            assert(i==dis.r()+2-Cis.r());
-            auto rr = pdims.build();
             Nis = newind.build();
-            auto nd = m.makeNewData<ITReal>(area(Nis));
-            auto tr = makeTenRef(nd->data(),rr);
-            auto td = makeTenRef(d.data(),dis);
-            permute(td,P,tr);
+            auto tfrom = makeTenRef(d.data(),dis);
+            auto to = Tensor(permute(tfrom,P));
+            m.makeNewData<ITReal>(to.begin(),to.end());
             }
         }
     }

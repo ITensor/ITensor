@@ -16,20 +16,20 @@ namespace itensor {
 Cplx 
 doTask(GetElt<Index> const& g, ITReal const& d)
     {
-    return d[ind(g.is,g.inds)];
+    return d[offset(g.is,g.inds)];
     }
 
 void
 doTask(SetElt<Real,Index> const& s, ITReal & d)
     {
-    d[ind(s.is,s.inds)] = s.elt;
+    d[offset(s.is,s.inds)] = s.elt;
     }
 
 void
 doTask(SetElt<Cplx,Index> const& s, ITReal const& d, ManageStore & m)
     {
     auto nd = m.makeNewData<ITCplx>(d);
-    nd->set(ind(s.is,s.inds),s.elt);
+    nd->set(offset(s.is,s.inds),s.elt);
     }
 
 void
@@ -102,7 +102,7 @@ doTask(PrintIT<Index>& P,
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = P.scalefac*d[ind(P.is,gc.i)];
+        auto val = P.scalefac*d[offset(P.is,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
             P.s << "(";
@@ -201,7 +201,7 @@ doTask(PlusEQ<Index> const& P,
         auto ref1 = makeTenRef(a1.data(),P.is1());
         auto ref2 = makeTenRef(a2.data(),P.is2());
         auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
-        permute(ref2,P.perm(),ref1,add);
+        do_permute(ref2,P.perm(),ref1,add);
         }
     }
 

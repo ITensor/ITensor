@@ -164,7 +164,7 @@ doTask(AddITensor & A,
     auto dref = makeTenRef(dblock,drange);
     auto tref = makeTenRef(t.data(),A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
-    permute(tref,A.P,dref,add);
+    do_permute(tref,A.P,dref,add);
     }
 
 
@@ -258,7 +258,7 @@ doTask(ToITensor & T,
         //to rewrite the following code more efficiently
         for(; C.notDone(); ++C)
             {
-            pn[ind(T.is,C.i)] = pd[io.offset+C.ind];
+            pn[offset(T.is,C.i)] = pd[io.offset+C.ind];
             }
         }
     auto inds = IndexSetBuilder(r);
