@@ -240,6 +240,7 @@ class RangeBuilderT
     using value_type = typename storage_type::value_type;
     private:
     storage_type store_;
+    size_t n_ = 0;
     bool auto_compute_strides_ = true;
     public:
 
@@ -280,6 +281,23 @@ class RangeBuilderT
     store() const { return store_; }
 
     void
+    nextExtent(extent_type const& e)
+        {
+        store_[n_].ext = e;
+        ++n_;
+        }
+
+    void
+    nextExtStr(extent_type const& ext,
+               size_type str)
+        {
+        store_[n_].ext = ext;
+        store_[n_].str = str;
+        auto_compute_strides_ = false;
+        ++n_;
+        }
+
+    void
     setExtent(size_type j, extent_type const& e)
         {
         store_[j].ext = e;
@@ -288,18 +306,34 @@ class RangeBuilderT
     void
     setStride(size_type j, size_type s)
         {
-        auto_compute_strides_ = false;
         store_[j].str = s;
+        auto_compute_strides_ = false;
+        }
+
+    void
+    setExtStr(size_type j, 
+              extent_type const& ext,
+              size_type str)
+        {
+        store_[j].ext = ext;
+        store_[j].str = str;
+        auto_compute_strides_ = false;
+        }
+
+    void
+    sortByExtent()
+        {
+        auto comp = [](value_type const& i1, value_type const& i2) { return i1.ext > i2.ext; };
+        std::sort(store_.begin(),store_.end(),comp);
+        auto_compute_strides_ = true;
         }
     };
-
-
 
 namespace detail {
 
     template<typename RangeT, typename Iterable>
     auto
-    indIterable(RangeT const& r, Iterable const& inds)
+    offsetIterable(RangeT const& r, Iterable const& inds)
         {
         using size_type = typename RangeT::size_type;
         size_type I  = 0, 
@@ -308,7 +342,7 @@ namespace detail {
             {
 #ifdef DEBUG
             if(ri >= size_type(r.r()))
-                Error("Container-Range size mismatch in ind(...)");
+                Error("Container-Range size mismatch in offset(...)");
 #endif
             I += r.stride(ri) * ii;
             ++ri;
@@ -317,31 +351,32 @@ namespace detail {
         }
 
     template<typename RangeT>
-    struct ComputeInd
+    struct ComputeOffset
         {
         using size_type = typename RangeT::size_type;
 
         RangeT const& r;
-        ComputeInd(RangeT const& r_) : r(r_) { }
+        ComputeOffset(RangeT const& r_) : r(r_) { }
 
         template<typename... Inds>
         size_type
         operator()(size_type first, Inds... rest) const 
             { 
-            return ind__<0>(first,rest...);
+            return off<0>(first,rest...);
             }
 
         private:
+
         template <size_type i, typename... Inds>
         size_type
-        ind__(size_type first, Inds... rest) const
+        off(size_type first, Inds... rest) const
             {
-            return first*r.stride(i) + ind__<i+1>(rest...);
+            return first*r.stride(i) + off<i+1>(rest...);
             }
 
         template <size_type i>
         size_type
-        ind__(size_type first) const
+        off(size_type first) const
             {
             return first*r.stride(i);
             }
@@ -354,19 +389,19 @@ using IfACompilesReturnB = B;
 
 template<typename RangeT, typename Iterable>
 auto
-ind(RangeT const& r, Iterable const& inds)
+offset(RangeT const& r, Iterable const& inds)
     //Constrain this template to only work for inds that have a begin() method
     -> IfACompilesReturnB<decltype(inds.begin()),decltype(r.extent(0))>
     //...if so make the return type to be decltype(r.extent(0))
     {
-    return detail::indIterable(r,inds);
+    return detail::offsetIterable(r,inds);
     }
 
 template<typename RangeT, typename... Inds>
 auto
-ind(RangeT const& r, size_t i0, Inds... inds)
+offset(RangeT const& r, size_t i0, Inds... inds)
     {
-    return detail::ComputeInd<RangeT>(r)(i0,inds...);
+    return detail::ComputeOffset<RangeT>(r)(i0,inds...);
     }
 
 template<typename RangeT>
@@ -384,15 +419,15 @@ area(RangeT const& R)
 
 //
 //A range R is contiguous if collecting
-//all possible outputs of ind(R,...) yields
+//all possible outputs of offset(R,...) yields
 //the set {0,1,...,area(R)-1} (though 
 //in no particular order)
 //For this to be true, sufficient that
-//the max possible output of ind(R,...)
+//the max possible output of offset(R,...)
 //equals (area(R)-1)
 //
 //Proof:
-// Ranges always start at ind(R,{0,0,0...})=0;
+// Ranges always start at offset(R,{0,0,0...})=0;
 // area(R) gives the number of outputs;
 // IF the max output is area(R)-1 and
 // there are area(R) outputs, the only
@@ -403,14 +438,14 @@ bool
 isContiguous(RangeT const& R)
     {
     using size_type = typename RangeT::size_type;
-    size_type max_ind = 0,
+    size_type max_offset = 0,
               area = 1;
     for(decltype(R.r()) n = 0; n < R.r(); ++n)
         {
-        max_ind += R.stride(n)*(R.extent(n)-1);
+        max_offset += R.stride(n)*(R.extent(n)-1);
         area *= R.extent(n);
         }
-    return (1+max_ind) == area;
+    return (1+max_offset) == area;
     }
 
 

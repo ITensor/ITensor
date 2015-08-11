@@ -33,8 +33,7 @@ class TenIter
         { }  
 
     reference 
-    operator*() { return *(p_+it_.val()); }  
-
+    operator*() { return *(p_+it_.offset()); }  
 
     TenIter& 
     operator++() { increment(); return *this; } 
@@ -47,6 +46,9 @@ class TenIter
 
     range_type const&
     range() const { return it_.range(); }
+
+    bool
+    notDone() const { return it_.notDone(); }
 
     bool
     operator!=(TenIter const& other) const { return it_!=other.it_; }
