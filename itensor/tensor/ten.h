@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_TEN_H_
 #define __ITENSOR_TEN_H_
 
+#include "itensor/util/stdx.h"
 #include "itensor/tensor/teniter.h"
 #include "itensor/tensor/range.h"
 
@@ -40,17 +41,13 @@ using TensorRefc = RTenRefc<Range>;
 //using CTensorRef  = TenRef<Cplx,Range>;
 //using CTensorRefc  = TenRef<const Cplx,Range>;
 
-
-template<typename Expression, typename ReturnValue>
-using IfCompilesReturns = ReturnValue;
-
 template<typename T, typename RangeT>
 class TenRef
     { 
     public:
     using value_type = std::decay_t<T>;
-    using iterator = TenIter<value_type*,RangeT>;
-    using const_iterator = TenIter<const value_type*,RangeT>;
+    using iterator = TenIter<T*,RangeT>;
+    using const_iterator = TenIter<const T*,RangeT>;
     using pointer = T*;
     using reference = T&;
     using size_type = long;
@@ -70,8 +67,7 @@ class TenRef
            range_type const& range)
       : pdata_(pdat),
         prange_(&range)
-        { 
-        }
+        { }
 
     TenRef(pointer pdat,
            range_type && range)
@@ -87,27 +83,13 @@ class TenRef
         prange_(prange)
         { }
 
-
     TenRef(TenRef const& t)
         {
         operator=(t);
         }
 
     TenRef&
-    operator=(TenRef const& t)
-        {
-        pdata_ = t.pdata_;
-        if(t.ownRange())
-            {
-            range_ = t.range_;
-            prange_ = &range_;
-            }
-        else
-            {
-            prange_ = t.prange_;
-            }
-        return *this;
-        }
+    operator=(TenRef const& t);
 
     TenRef(TenRef && t)
         {
@@ -115,20 +97,7 @@ class TenRef
         }
 
     TenRef&
-    operator=(TenRef && t)
-        {
-        pdata_ = t.pdata_;
-        if(t.ownRange())
-            {
-            range_ = std::move(t.range_);
-            prange_ = &range_;
-            }
-        else
-            {
-            prange_ = t.prange_;
-            }
-        return *this;
-        }
+    operator=(TenRef && t);
 
     TenRef(tensor_type& t) { pointTo(t); }
 
@@ -140,14 +109,7 @@ class TenRef
     TenRef&
     operator=(tensor_type&& t) = delete;
 
-    operator TenRef<const value_type,range_type>() const 
-        { 
-        if(ownRange())
-            {
-            return TenRef<const value_type,range_type>(data(),range_type{range_}); 
-            }
-        return TenRef<const value_type,range_type>(data(),&range()); 
-        }
+    operator TenRef<const value_type,range_type>() const;
 
     bool
     ownRange() const { return prange_ == &range_; }
@@ -174,29 +136,15 @@ class TenRef
     data() const { return pdata_; }
     
     reference
-    operator()() const 
-        { 
-#ifdef DEBUG
-        if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 TenRef");
-#endif
-        return *pdata_; 
-        }
+    operator()() const;
 
     template <typename... Inds>
     reference
-    operator()(Inds&&... ii) const 
-        { 
-#ifdef DEBUG
-        if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to TenRef");
-#endif
-        return pdata_[ind(*prange_,std::forward<Inds>(ii)...)]; 
-        }
+    operator()(Inds&&... ii) const;
 
     template<typename Indices>
-    auto
-    operator()(Indices const& ii) const 
-      -> IfCompilesReturns<decltype(ii.begin()), reference>
-        { return pdata_[ind(*prange_,ii)]; }
+    reference
+    operator()(Indices const& ii) const;
 
     void
     clear() { pdata_ = nullptr; prange_ = nullptr; }
@@ -217,6 +165,16 @@ class TenRef
     void
     pointTo(tensor_type& t);
     };
+
+//Assign to referenced data
+template<typename T, typename R1, typename R2>
+void
+operator&=(TenRef<T,R1> const& a, TenRef<const T,R2> b);
+
+//Assign to referenced data
+template<typename T, typename R1, typename R2>
+void
+operator&=(TenRef<T,R1> const& a, Ten<T,R2> const& t);
 
 template<typename T, typename RangeT>
 auto
@@ -284,7 +242,7 @@ class Ten
         }
 
     Ten(range_type && range,
-        storage_type&& data)
+        storage_type && data)
       : range_(std::move(range)),
         data_(std::move(data))
         { 
@@ -311,7 +269,7 @@ class Ten
 
     template<typename R>
     explicit
-    Ten(const TenRef<value_type,R>& ref) { assignFromRef(ref); }
+    Ten(TenRef<value_type,R> const& ref) { assignFromRef(ref); }
 
     template<typename R>
     Ten&
@@ -339,54 +297,26 @@ class Ten
     range() const { return range_; }
 
     const_reference
-    operator()() const 
-        { 
-#ifdef DEBUG
-        if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
-#endif
-        return *data_; 
-        }
+    operator()() const;
 
     template <typename... Inds>
     const_reference
-    operator()(Inds&&... ii) const 
-        { 
-#ifdef DEBUG
-        if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
-#endif
-        return data_[ind(range_,std::forward<Inds>(ii)...)]; 
-        }
+    operator()(Inds&&... ii) const;
 
     reference
-    operator()()
-        { 
-#ifdef DEBUG
-        if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
-#endif
-        return *data_; 
-        }
+    operator()();
 
     template <typename... Inds>
     reference
-    operator()(Inds&&... ii)
-        { 
-#ifdef DEBUG
-        if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
-#endif
-        return data_[ind(range_,std::forward<Inds>(ii)...)]; 
-        }
+    operator()(Inds&&... ii);
 
     template<typename Indices>
-    auto
-    operator()(Indices const& ii) 
-      -> IfCompilesReturns<decltype(ii.begin()), reference>
-        { return data_[ind(range_,ii)]; }
+    reference
+    operator()(Indices const& ii);
 
     template<typename Indices>
-    auto
-    operator()(Indices const& ii) const 
-      -> IfCompilesReturns<decltype(ii.begin()), const_reference>
-        { return data_[ind(range_,ii)]; }
+    const_reference
+    operator()(Indices const& ii) const;
 
     iterator
     begin() { return data_.begin(); }
@@ -428,17 +358,20 @@ class Ten
         {
         auto len = area(range_);
 #ifdef DEBUG
-        if(len == 0) throw std::runtime_error("Zero area in tensor");
+        if(!isContiguous(range_))
+            throw std::runtime_error("Tensor can only be constructed from contiguous range");
+        if(len == 0) 
+            throw std::runtime_error("Zero area in tensor");
 #endif
         data_.assign(len,0.);
         }
 
     template<typename R>
     void
-    assignFromRef(TenRef<const value_type,R> const& other)
+    assignFromRef(TenRef<const value_type,R> const& ref)
         {
-        //Copy data from other contiguously into data_
-        data_ = storage_type(other.cbegin(),other.cend());
+        //TODO: use (optimized) TenRef &= instead ?
+        data_.assign(ref.begin(),ref.end());
         }
 
     void
@@ -457,16 +390,6 @@ class Ten
         other.clear();
         }
     };
-
-template<typename T, typename R>
-void TenRef<T,R>::
-pointTo(tensor_type& t)
-    {
-    pdata_ = t.data();
-    prange_ = &t.range();
-    range_.clear();
-    }
-
 
 //
 // makeRef functions

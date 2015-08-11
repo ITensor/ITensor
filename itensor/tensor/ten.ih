@@ -7,6 +7,248 @@
 
 namespace itensor {
 
+template<typename T, typename R>
+TenRef<T,R>& TenRef<T,R>::
+operator=(TenRef const& t)
+    {
+    pdata_ = t.pdata_;
+    if(t.ownRange())
+        {
+        range_ = t.range_;
+        prange_ = &range_;
+        }
+    else
+        {
+        prange_ = t.prange_;
+        }
+    return *this;
+    }
+
+template<typename T, typename R>
+TenRef<T,R>& TenRef<T,R>::
+operator=(TenRef && t)
+    {
+    pdata_ = t.pdata_;
+    if(t.ownRange())
+        {
+        range_ = std::move(t.range_);
+        prange_ = &range_;
+        }
+    else
+        {
+        prange_ = t.prange_;
+        }
+    return *this;
+    }
+
+template<typename T, typename R>
+TenRef<T,R>::
+operator TenRef<const value_type,range_type>() const 
+    { 
+    if(ownRange())
+        {
+        return TenRef<const value_type,range_type>(data(),range_type{range_}); 
+        }
+    return TenRef<const value_type,range_type>(data(),&range()); 
+    }
+
+template<typename T, typename R>
+auto TenRef<T,R>::
+operator()() const -> reference
+    { 
+#ifdef DEBUG
+    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 TenRef");
+#endif
+    return *pdata_; 
+    }
+
+
+template<typename T, typename R>
+template <typename... Inds>
+auto TenRef<T,R>::
+operator()(Inds&&... ii) const -> reference
+    { 
+#ifdef DEBUG
+    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to TenRef");
+#endif
+    return pdata_[offset(*prange_,std::forward<Inds>(ii)...)]; 
+    }
+
+template<typename T, typename R>
+template<typename Indices>
+auto TenRef<T,R>::
+operator()(Indices const& ii) const 
+  -> stdx::if_compiles_return<decltype(ii.begin()), reference>
+    { return pdata_[offset(*prange_,ii)]; }
+
+template<typename T, typename R>
+void TenRef<T,R>::
+pointTo(tensor_type& t)
+    {
+    pdata_ = t.data();
+    prange_ = &t.range();
+    range_.clear();
+    }
+
+template<typename T1, typename R1, typename T2, typename R2>
+void
+checkCompatible(TenRef<T1,R1> const& A, 
+                TenRef<T2,R2> const& B,
+                std::string methodName = "")
+    {
+    auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
+    if(A.r() != B.r()) Error(format("Mismatched tensor ranks %s",methodstr));
+    for(decltype(A.r()) n = 0; n < A.r(); ++n)
+        if(A.extent(n) != B.extent(n))
+            {
+            printfln("A.extent(%d)=%d  B.extent(%d)=%d",n,A.extent(n),n,B.extent(n));
+            Error(format("Mismatched tensor extent %s",methodstr));
+            }
+    }
+
+
+template<typename T, typename R1, typename R2>
+void
+assignContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+    {
+#ifdef DEBUG
+    checkCompatible(to,from,"assignContig");
+#endif 
+    using size_type = decltype(from.extent(0));
+    auto r = to.r();
+    if(r == 0)
+        {
+        *to.data() = *from.data();
+        return;
+        }
+
+    //find size and location of largest index of from
+    size_type bigind = 0, 
+              bigsize = from.extent(0);
+    for(decltype(r) j = 1; j < r; ++j)
+        if(bigsize < from.extent(j))
+            {
+            bigsize = from.extent(j); 
+            bigind = j;
+            }
+
+    auto stepfrom = from.stride(bigind);
+    auto stepto = to.stride(bigind);
+
+    auto RB = RangeBuilder(r);
+    for(decltype(r) i = 0; i < r; ++i)
+        RB.setExtent(i,from.extent(i));
+    //Leave bigind fixed to zero, will
+    //increment manually in the loop below
+    RB.setExtent(bigind,1);
+
+    for(auto& i : RB.build())
+        {
+        //effectively pto = to.data() + offset(to,i);
+        auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.size());
+        //effectively pfrom = from.data() + offset(from,i);
+        auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.size());
+        for(decltype(bigsize) b = 0; b < bigsize; ++b)
+            {
+            *pto = *pfrom;
+            pto += stepto;
+            pfrom += stepfrom;
+            }
+        }
+    }
+
+template<typename T, typename R1, typename R2>
+void
+assignNonContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+    {
+#ifdef DEBUG
+    checkCompatible(to,from,"assignNonContig");
+#endif 
+    auto ti = to.begin();
+    auto fi = from.begin();
+    for(; ti.notDone(); ++ti, ++fi) *ti = *fi;
+    }
+
+//Assign to referenced data
+template<typename T, typename R1, typename R2>
+void
+operator&=(TenRef<T,R1> const& a, TenRef<const T,R2> b)
+    {
+    if(isContiguous(b.range()) && isContiguous(b.range()))
+        {
+        assignContig(a,b);
+        }
+    else
+        {
+        assignNonContig(a,b);
+        }
+    }
+
+//Assign to referenced data
+template<typename T, typename R1, typename R2>
+void
+operator&=(TenRef<T,R1> const& a, Ten<T,R2> const& b)
+    {
+    if(isContiguous(a)) assignContig(a,makeRef(b));
+    else                assignNonContig(a,makeRef(b));
+    }
+
+template<typename T, typename R>
+auto Ten<T,R>::
+operator()() const -> const_reference
+    { 
+#ifdef DEBUG
+    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
+#endif
+    return *data_; 
+    }
+
+template<typename T, typename R>
+template <typename... Inds>
+auto Ten<T,R>::
+operator()(Inds&&... ii) const -> const_reference
+    { 
+#ifdef DEBUG
+    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
+#endif
+    return data_[offset(range_,std::forward<Inds>(ii)...)]; 
+    }
+
+template<typename T, typename R>
+auto Ten<T,R>::
+operator()() -> reference
+    { 
+#ifdef DEBUG
+    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
+#endif
+    return *data_; 
+    }
+
+template<typename T, typename R>
+template <typename... Inds>
+auto Ten<T,R>::
+operator()(Inds&&... ii) -> reference
+    { 
+#ifdef DEBUG
+    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
+#endif
+    return data_[offset(range_,std::forward<Inds>(ii)...)]; 
+    }
+
+template<typename T, typename R>
+template <typename Indices>
+auto Ten<T,R>::
+operator()(Indices const& ii) 
+  -> stdx::if_compiles_return<decltype(ii.begin()), reference>
+    { return data_[offset(range_,ii)]; }
+
+template<typename T, typename R>
+template <typename Indices>
+auto Ten<T,R>::
+operator()(Indices const& ii) const 
+  -> stdx::if_compiles_return<decltype(ii.begin()), const_reference>
+    { return data_[offset(range_,ii)]; }
+
 template<typename V, typename R>
 std::ostream&
 operator<<(std::ostream & s, TenRef<V,R> const& T)
@@ -18,7 +260,7 @@ operator<<(std::ostream & s, TenRef<V,R> const& T)
         }
     for(auto& i : T.range())
         {
-        s << "(" << i.ind() << ") " << T(i) << "\n";
+        s << "(" << i.index() << ") " << T(i) << "\n";
         }
     return s;
     }
