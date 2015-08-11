@@ -17,9 +17,9 @@ SECTION("Range")
         {
         auto r = 3;
         auto B = RangeBuilder(r);
-        B.setExtent(0,4);
-        B.setExtent(1,3);
-        B.setExtent(2,2);
+        B.nextExtent(4);
+        B.nextExtent(3);
+        B.nextExtent(2);
 
         SECTION("Basics")
             {
@@ -202,12 +202,12 @@ SECTION("Slicing")
 
         SECTION("Case 1")
             {
-            auto PT = permute(T,{0,2,1});
+            auto PT = permute(T,Label{0,2,1});
             for(auto i0 : count(T.extent(0)))
             for(auto i1 : count(T.extent(1)))
             for(auto i2 : count(T.extent(2)))
                 {
-                CHECK_CLOSE(T(i0,i1,i2), PT(i0,i2,i1));
+                CHECK_CLOSE(PT(i0,i1,i2), T(i0,i2,i1));
                 }
             }
 
@@ -222,34 +222,34 @@ SECTION("Slicing")
             for(auto i1 : count(T.extent(1)))
             for(auto i2 : count(T.extent(2)))
                 {
-                CHECK_CLOSE(T(i0,i1,i2), PT(i0,i2,i1));
+                CHECK_CLOSE(PT(i0,i1,i2), T(i0,i2,i1));
                 }
             }
 
         SECTION("Case 2")
             {
-            auto PT = permute(T,{2,0,1});
+            auto PT = permute(T,Label{2,0,1});
             for(auto& i : T.range())
                 {
-                CHECK_CLOSE(T(i), PT(i[2],i[0],i[1]));
+                CHECK_CLOSE(PT(i), T(i[2],i[0],i[1]));
                 }
             }
 
         SECTION("Case 3")
             {
-            auto PT = permute(T,{2,1,0});
+            auto PT = permute(T,Label{2,1,0});
             for(auto& i : T.range())
                 {
-                CHECK_CLOSE(T(i), PT(i[2],i[1],i[0]));
+                CHECK_CLOSE(PT(i), T(i[2],i[1],i[0]));
                 }
             }
 
         SECTION("Case 4")
             {
-            auto PT = permute(T,{1,2,0});
+            auto PT = permute(T,Label{1,2,0});
             for(auto& i : T.range())
                 {
-                CHECK_CLOSE(T(i), PT(i[1],i[2],i[0]));
+                CHECK_CLOSE(PT(i), T(i[1],i[2],i[0]));
                 }
             }
 

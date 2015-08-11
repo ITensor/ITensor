@@ -1245,6 +1245,54 @@ SECTION("Combiner")
         CHECK(hasindex(R,b));
         CHECK_CLOSE(T.real(a(1),b(1),c(1)),R.real(ci(1),b(1)));
         }
+
+    SECTION("Three Index")
+        {
+        Index i("i",4),
+              j("j",2),
+              k("k",3);
+
+        auto T = randomTensor(i,j,k);
+        auto C = combiner(i,k);
+        auto R = C * T;
+
+        CHECK_CLOSE(norm(R),norm(T));
+
+        auto TT = C * R;
+
+        for(auto ii : count1(i.m()))
+        for(auto ij : count1(j.m()))
+        for(auto ik : count1(k.m()))
+            {
+            CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik)), T.real(i(ii),j(ij),k(ik)));
+            }
+        }
+
+    SECTION("Four Index")
+        {
+        Index i("i",2),
+              j("j",3),
+              k("k",4),
+              l("l",5),
+              m("m",6);
+
+        auto T = randomTensor(i,j,k,l,m);
+        auto C = combiner(i,k,m);
+        auto R = C * T;
+
+        CHECK_CLOSE(norm(R),norm(T));
+
+        auto TT = C * R;
+
+        for(auto ii : count1(i.m()))
+        for(auto ij : count1(j.m()))
+        for(auto ik : count1(k.m()))
+        for(auto il : count1(l.m()))
+        for(auto im : count1(m.m()))
+            {
+            CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
+            }
+        }
     }
 
 SECTION("Norm")
