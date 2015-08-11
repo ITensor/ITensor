@@ -5,15 +5,37 @@
 #ifndef __ITENSOR_SLICETEN_H_
 #define __ITENSOR_SLICETEN_H_
 
-#include "ten.h"
+#include "itensor/tensor/ten.h"
+#include "itensor/tensor/slicerange.h"
 
 namespace itensor {
 
 template<typename Ten_, typename C1, typename C2>
 auto
-subTensorImpl(Ten_ && T,
-              C1 const& start,
-              C2 const& stop)
+subTensor(Ten_ && T,
+          C1 const& start,
+          C2 const& stop);
+
+template<typename T, typename R, typename Perm_>
+auto
+permute(TenRef<T,R> const& t,
+        Perm_ const& P);
+
+template<typename T, typename R, typename Perm_>
+auto
+permute(Ten<T,R> const& t,
+        Perm_ const& P);
+
+
+///
+/// Implementations
+/// 
+
+template<typename Ten_, typename C1, typename C2>
+auto
+subTensor(Ten_ && T,
+          C1 const& start,
+          C2 const& stop)
     {
     using range_type = decltype(T.range());
     using stop_type = decltype(*stop.begin());
@@ -36,64 +58,29 @@ subTensorImpl(Ten_ && T,
     for(decltype(r) j = 0; j < r; ++j, ++st, ++sp) 
         {
         offset += T.stride(j) * (*st);
-        rb.setStride(j,T.stride(j));
-        rb.setExtent(j,(*sp)-(*st));
+        rb.setExtStr(j,(*sp)-(*st),T.stride(j));
         }
     return makeTenRef(T.data()+offset,rb.build());
     }
 
-template<typename Ten_, typename C1, typename C2>
-auto
-subTensor(Ten_ && T,
-          C1 const& start,
-          C2 const& stop)
-    {
-    return subTensorImpl(std::forward<Ten_>(T),start,stop);
-    }
-
-template<typename Ten_>
-auto
-subTensor(Ten_ && T,
-          std::initializer_list<size_t> start,
-          std::initializer_list<size_t> stop)
-    {
-    return subTensorImpl(std::forward<Ten_>(T),start,stop);
-    }
 
 /////////////////////////////
 /////////////////////////////
 
-template<typename Ten_, typename Perm_>
+template<typename T, typename R, typename Perm_>
 auto
-permuteImpl(Ten_ && T,
-            Perm_ const& P)
-    {
-    using range_type = decltype(T.range());
-    auto rb = RangeBuilderT<range_type>(T.r());
-    size_t n = 0;
-    for(auto& dest : P)
-        {
-        rb.setExtent(n,T.extent(dest));
-        rb.setStride(n,T.stride(dest));
-        ++n;
-        }
-    return makeTenRef(T.data(),rb.build());
-    }
-
-template<typename Ten_, typename Perm_>
-auto
-permute(Ten_ && T,
+permute(TenRef<T,R> const& t,
         Perm_ const& P)
     {
-    return permuteImpl(std::forward<Ten_>(T),P);
+    return makeTenRef(t.data(),permuteRange(t.range(),P));
     }
 
-template<typename Ten_>
+template<typename T, typename R, typename Perm_>
 auto
-permute(Ten_ && T,
-        std::initializer_list<size_t> P)
+permute(Ten<T,R> const& t,
+        Perm_ const& P)
     {
-    return permuteImpl(std::forward<Ten_>(T),P);
+    return permute(makeRef(t),P);
     }
 
 } //namespace itensor
