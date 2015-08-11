@@ -16,7 +16,6 @@ namespace itensor {
 struct Permutation
     {
     using storage = InfArray<long,11ul>;
-    //using storage = VarArray<long,31ul>;
     using size_type = long;
     using iterator = storage::iterator;
     using const_iterator = storage::const_iterator;
@@ -49,7 +48,7 @@ struct Permutation
     long
     operator[](size_type j) const { return store_[j]; }
 
-    const storage& 
+    storage const& 
     store() const { return store_; }
 
     const_iterator
@@ -62,8 +61,7 @@ struct Permutation
 
 inline Permutation::
 Permutation(size_type size) 
-    : 
-    store_(size)
+  : store_(size)
     { 
     for(size_type n = 0; n < size; ++n)
         store_[n] = n;
@@ -71,18 +69,18 @@ Permutation(size_type size)
 
 
 Permutation inline
-inverse(const Permutation& P)
+inverse(Permutation const& P)
     {
-    Permutation inv(P.size());
-    for(Permutation::size_type n = 0; n < P.size(); ++n) 
+    auto inv = Permutation(P.size());
+    for(decltype(P.size()) n = 0; n < P.size(); ++n) 
         inv.setFromTo(P.dest(n),n);
     return inv;
     }
 
 bool inline
-isTrivial(const Permutation& P)
+isTrivial(Permutation const& P)
     {
-    for(Permutation::size_type n = 0; n < P.size(); ++n) 
+    for(decltype(P.size()) n = 0; n < P.size(); ++n) 
         {
         if(P.dest(n) != n) return false;
         }
@@ -91,12 +89,11 @@ isTrivial(const Permutation& P)
 
 template<typename Container>
 void
-permute(const Permutation& P,
-        const Container& from,
-        Container& to)
+permute(Permutation const& P,
+        Container const& from,
+        Container & to)
     {
-    using size_type = typename Container::size_type;
-    for(size_type i = 0; i < from.size(); ++i)
+    for(decltype(from.size()) i = 0; i < from.size(); ++i)
         {
         to[P.dest(i)] = from[i];
         }
@@ -109,12 +106,10 @@ calc_permutation(Set1 const& s1,
                  Set2 const& s2,
                  Permutation & P)
     {
-    using size_type1 = decltype(s1.size());
-    using size_type2 = decltype(s2.size());
-    for(size_type2 i2 = 0; i2 < s2.size(); ++i2)
+    for(decltype(s2.size()) i2 = 0; i2 < s2.size(); ++i2)
         {
         auto& v2 = s2[i2];
-        size_type1 i1 = 0;
+        decltype(s1.size()) i1 = 0;
         for(; i1 < s1.size(); ++i1)
             {
             if(v2 == s1[i1])
@@ -131,9 +126,9 @@ calc_permutation(Set1 const& s1,
     }
 
 inline std::ostream& 
-operator<<(std::ostream& s, const Permutation& P)
+operator<<(std::ostream & s, Permutation const& P)
     {
-    for(Permutation::size_type i = 0; i < P.size(); ++i) 
+    for(decltype(P.size()) i = 0; i < P.size(); ++i) 
         s << "(" << i << "," << P.dest(i) << ")";
     return s;
     }
