@@ -11,6 +11,9 @@
 
 namespace stdx {
 
+template<typename Expression, typename ReturnValue>
+using if_compiles_return = ReturnValue;
+
 template<typename... VArgs>
 auto
 make_array(VArgs&&... vargs)
