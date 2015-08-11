@@ -575,31 +575,17 @@ contractIS(IndexSetT<IndexT> const& Lis,
     //be sorted along with the .ext members (the indices of Nis)
     //Later we will set them back to zero
     //IndexSetT constructor anyway
-    long nn = 0;
     for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
         {
         if(Lind[j] > 0) //uncontracted
-            {
-            newind.setExtent(nn,Lis[j]);
-            newind.setStride(nn,Lind[j]);
-            ++nn;
-            }
+            newind.nextExtStr(Lis[j],Lind[j]);
         }
     for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
         {
         if(Rind[j] > 0) //uncontracted
-            {
-            newind.setExtent(nn,Ris[j]);
-            newind.setStride(nn,Rind[j]);
-            ++nn;
-            }
+            newind.nextExtStr(Ris[j],Rind[j]);
         }
-    if(sortResult)
-        {
-        using extstr = decltype(newind.store().front());
-        auto comp = [](extstr const& i1, extstr const& i2) { return i1.ext > i2.ext; };
-        std::sort(newind.store().begin(),newind.store().end(),comp);
-        }
+    if(sortResult) newind.sortByExtent();
     Nind.resize(newind.size());
     for(decltype(newind.size()) j = 0; j < newind.size(); ++j)
         {
@@ -642,7 +628,7 @@ operator<<(std::ostream& s, IndexSetT<Index> const& is)
     {
     for(decltype(is.r()) i = 1; i <= is.r(); ++i) 
         { 
-        s << is.index(i) << "|" << is.stride(i-1);
+        s << is.index(i);
         if(i < is.r()) s << ", ";
         } 
     return s;
