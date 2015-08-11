@@ -4,10 +4,12 @@
 
 #include "itensor/util/multalloc.h"
 #include "itensor/util/cputime.h"
-#include "itensor/matrix/mat.h"
-#include "itensor/tensor/contract.h"
 #include "itensor/detail/algs.h"
 #include "itensor/detail/gcounter.h"
+#include "itensor/matrix/mat.h"
+#include "itensor/tensor/permute.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/tensor/sliceten.h"
 #include "itensor/indexset.h"
 
 using std::vector;
@@ -149,9 +151,9 @@ struct CProps
           newBrange,
           newCrange;
     
-    CProps(const Label& ai_, 
-           const Label& bi_, 
-           const Label& ci_) 
+    CProps(Label const& ai_, 
+           Label const& bi_, 
+           Label const& ci_) 
         : 
         ai(ai_),bi(bi_),ci(ci_),
         Acstart(ai_.size()),
@@ -160,9 +162,9 @@ struct CProps
         Bustart(bi_.size())
         { }
 
-    CProps(const CProps&) = delete;
+    CProps(CProps const&) = delete;
 
-    CProps& operator=(const CProps&) = delete;
+    CProps& operator=(CProps const&) = delete;
 
     bool
     contractedA(int i) const { return AtoC_[i] < 0; }
@@ -388,20 +390,18 @@ struct CProps
                     }
                 if(newi == ra) break;
                 }
-            //Compute newArange
+
             //Also update Austart,Acstart
-            newArange.resize(ra);
             Acstart = ra;
             Austart = ra;
-            for(int i = 0; i < ra; ++i)
+            for(decltype(ra) i = 0; i < ra; ++i)
                 {
-                newArange[PA.dest(i)].ext = A.extent(i);
                 if(contractedA(i))
                     Acstart = std::min(i,Acstart);
                 else
                     Austart = std::min(i,Austart);
                 }
-            newArange.computeStrides();
+            newArange = permuteExtents(A.range(),PA);
             }
 
         if(permuteB_)
@@ -448,18 +448,16 @@ struct CProps
                     }
                 if(newi == rb) break;
                 }
-            newBrange.resize(rb);
             Bcstart = rb;
             Bustart = rb;
             for(int i = 0; i < rb; ++i)
                 {
-                newBrange[PB.dest(i)].ext = B.extent(i);
                 if(contractedB(i))
                     Bcstart = std::min(i,Bcstart);
                 else
                     Bustart = std::min(i,Bustart);
                 }
-            newBrange.computeStrides();
+            newBrange = permuteExtents(B.range(),PB);
             }
 
         if(permuteA_ || permuteB_)
@@ -504,34 +502,32 @@ struct CProps
 
         if(permuteC_)
             {
-            newCrange.resize(rc);
-            int c = 0;
-
+            auto Rb = RangeBuilder(rc);
             if(!permuteA_)
                 {
-                for(int i = 0; i < ra; ++i)
+                for(decltype(ra) i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange[c++].ext = A.extent(i);
+                        Rb.nextExtent(A.extent(i));
                 }
             else
                 {
-                for(int i = 0; i < ra; ++i)
+                for(decltype(ra) i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange[c++].ext = newArange.extent(i);
+                        Rb.nextExtent(newArange.extent(i));
                 }
             if(!permuteB_)
                 {
-                for(int j = 0; j < rb; ++j)
+                for(decltype(rb) j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange[c++].ext = B.extent(j);
+                        Rb.nextExtent(B.extent(j));
                 }
             else
                 {
-                for(int j = 0; j < rb; ++j)
+                for(decltype(rb) j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange[c++].ext = newBrange.extent(j);
+                        Rb.nextExtent(newBrange.extent(j));
                 }
-            newCrange.computeStrides();
+            newCrange = Rb.build();
             }
         }
 
@@ -751,7 +747,7 @@ contract(CProps const& p,
         {
         //println("Calling permute A");
         auto tref = makeTenRef(alloc[0],p.newArange);
-        permute(A,p.PA,tref);
+        tref &= permute(A,p.PA);
         aref = MatRefc(tref.data(),p.dmid,p.dleft);
         aref.applyTrans();
         }
@@ -775,7 +771,7 @@ contract(CProps const& p,
         {
         //println("Calling permute B");
         auto tref = makeTenRef(alloc[1],p.newBrange);
-        permute(B,p.PB,tref);
+        tref &= permute(B,p.PB);
         bref = MatRefc(tref.data(),p.dmid,p.dright);
         }
     else
@@ -805,7 +801,7 @@ contract(CProps const& p,
 #endif
 
     MatRef cref;
-    RTenRef<decltype(p.newCrange)> newC;
+    TensorRef newC;
     if(p.permuteC())
         {
         newC = makeTenRef(alloc[2],p.newCrange);
@@ -835,7 +831,6 @@ contract(CProps const& p,
     //(e.g. when result is a scalar)
     multAdd(aref,bref,cref);
 
-
     //println("Matrix multiply done, took ",cpu.sincemark());
 
     if(p.permuteC())
@@ -845,7 +840,8 @@ contract(CProps const& p,
 #endif
         //cpu_time cpuC; 
         //if(Global::debug1()) printfln("Permuting C, P = %s, isTrivial = %s",p.PC,isTrivial(p.PC));
-        permute(makeRefc(newC),p.PC,C,detail::plusEq<Real>);
+        //TODO: replace this with C += permute(newC,p.PC) [maybe inverse(p.PC)]
+        do_permute(makeRefc(newC),p.PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
         }
     //println("------------------------------------------");
@@ -860,14 +856,14 @@ contract(RTenRefc<RangeT> A, Label const& ai,
     {
     if(ai.empty())
         {
-        permute(B,bi,C,ci);
+        do_permute(B,bi,C,ci);
         auto val = *A.data();
         for(auto& el : C) el *= val;
         return;
         }
     else if(bi.empty())
         {
-        permute(A,ai,C,ci);
+        do_permute(A,ai,C,ci);
         auto val = *B.data();
         for(auto& el : C) el *= val;
         return;
@@ -1039,7 +1035,7 @@ contractloop(RTenRefc<RangeT> A, Label const& ai,
             {
             aind[ia] = couA[ia];
             }
-        auto offA = ind(A,aind);
+        auto offA = offset(A,aind);
 
         //TODO: possible bug, shouldn't we
         //      call couB.setRange to extend
@@ -1070,8 +1066,8 @@ contractloop(RTenRefc<RangeT> A, Label const& ai,
                     cind[p.BtoC(ib)] = couB[ib];
                 }
 
-            auto offB = ind(B,bind);
-            auto offC = ind(C,cind);
+            auto offB = offset(B,bind);
+            auto offC = offset(C,cind);
 
             auto sA = MatRefc(A.data()+offA,Arow,Acol);
             if(nfo.tA) sA.applyTrans();
