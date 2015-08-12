@@ -300,15 +300,15 @@ replaceInd(IQIndexSet const& is,
     return newind.build();
     }
 
-void
+IQTReal
 condense(IQIndexSet const& dis,
          IQIndexSet const& Nis,
          IQIndex    const& cind,
-         IQTReal         & d)
+         IQTReal    const& d)
     {
     auto dr = dis.r();
     auto nr = Nis.r();
-    auto ncomb = dis.r()-Nis.r()+1;
+    auto ncomb = dr-nr+1;
 
     auto nd = IQTReal(Nis,doTask(CalcDiv{dis},d));
 
@@ -362,8 +362,7 @@ condense(IQIndexSet const& dis,
 
         sector_start[n] += cdim;
         }
-
-    swap(d,nd);
+    return nd;
     }
 
 void
@@ -376,10 +375,113 @@ combine(IQTReal     const& d,
     {
     //cind is special "combined index"
     auto const& cind = Cis[0];
-    //check if d has combined index i.e. we are "uncombining"
+
+    //check locations of Cis[1], Cis[2], ...
+    //Check if Cis[1],Cis[2],... are grouped together (contiguous);
+    //all at front; and in same order as on combiner
+    bool front_contig = true;
+    for(auto j = 0, c = 1; c < Cis.r() && j < dis.r(); ++j,++c)
+        if(dis[j] != Cis[c])
+            {
+            front_contig = false;
+            break;
+            }
+
+    Permutation P;
+
+    if(!front_contig) //if !front_contig, need to permute
+        {
+        P = Permutation(dis.r());
+        //Set P destination values to -1 to mark
+        //indices that need to be assigned destinations:
+        for(auto i : index(P)) P.setFromTo(i,-1);
+
+        //permute combined indices to the front, in same
+        //order as in Cis:
+        long ni = 0;
+        for(auto c : count(1,Cis.r()))
+            {
+            auto j = findindex(dis,Cis[c]);
+            if(j < 0) 
+                {
+                println("IQIndexSet of regular IQTensor =\n",dis);
+                println("IQIndexSet of combiner/delta =\n",Cis);
+                println("Missing IQIndex: ",Cis[c]);
+                Error("IQCombiner: missing IQIndex");
+                }
+            P.setFromTo(j,ni++);
+            }
+        for(auto j : index(P))
+            if(P.dest(j) == -1) P.setFromTo(j,ni++);
+        }
+
+    IQTReal *pd = nullptr; //permuted data
+    auto *Pis = &dis;      //permuted index set
+    IQIndexSet Pis_;
+    if(P) 
+        {
+        if(own_data) pd = m.modifyData(d);
+        else         pd = m.makeNewData<IQTReal>(d);
+        permuteIQ(P,dis,d,Pis_,*pd);
+        Pis = &Pis_;
+        }
+
+    auto newr = Pis->r()-Cis.r()+2;
+    auto newind = IQIndexSetBuilder(newr);
+    newind.setExtent(0,cind);
+    for(auto j : count(1,newr)) newind.setExtent(j,(*Pis)[Cis.r()-2+j]);
+    Nis = newind.build();
+
+    if(pd)
+        {
+        auto nd = condense(*Pis,Nis,Cis[0],*pd);
+        swap(*pd,nd);
+        }
+    else
+        {
+        auto nd = condense(*Pis,Nis,Cis[0],d);
+        m.makeNewData<IQTReal>(std::move(nd));
+        }
+    }
+
+void
+combReplaceIndex(IQIndexSet  const& dis,
+                 IQIndexSet  const& Cis,
+                 IQIndexSet       & Nis)
+    {
+    auto jc = findindex(dis,Cis[0]);
+
+    if(jc >= 0) //uncombining
+        {
+        //Has Cis[0], replace with Cis[1]
+        Nis = replaceInd(dis,jc,Cis[1]);
+        }
+    else //combining
+        {
+        //Has Cis[1], replace with cind
+        auto ju = findindex(dis,Cis[1]);
+        if(ju < 0)
+            {
+            println("IQIndexSet of regular IQTensor =\n",dis);
+            println("IQIndexSet of combiner/delta =\n",Cis);
+            println("Missing IQIndex: ",Cis[1]);
+            Error("IQCombiner: missing IQIndex");
+            }
+        Nis = replaceInd(dis,ju,Cis[0]);
+        }
+    }
+
+void
+uncombine(IQTReal     const& d,
+          IQIndexSet  const& dis,
+          IQIndexSet  const& Cis,
+          IQIndexSet       & Nis,
+          ManageStore      & m,
+          bool              own_data)
+    {
+    //cind is special "combined index"
+    auto const& cind = Cis[0];
     auto jc = findindex(dis,cind);
-    auto combining = (jc < 0);
-    auto uncombining = not combining;
 
     IQTReal* pd = nullptr;
     //Call this if necessary to modify the data
@@ -392,30 +494,7 @@ combine(IQTReal     const& d,
 
     Permutation P;
 
-    if(Cis.r() == 2) //treat rank 2 combiner specially
-        {
-        if(uncombining)
-            {
-            //Has cind, replace with Cis[1]
-            Nis = replaceInd(dis,jc,Cis[1]);
-            }
-        else //combining
-            {
-            //Has Cis[1], replace with cind
-            auto ju = findindex(dis,Cis[1]);
-            if(ju < 0)
-                {
-                println("IQIndexSet of regular IQTensor =\n",dis);
-                println("IQIndexSet of combiner/delta =\n",Cis);
-                println("Missing IQIndex: ",Cis[1]);
-                Error("IQCombiner: missing IQIndex");
-                }
-            Nis = replaceInd(dis,ju,cind);
-            }
-        if(!own_data) m.assignPointerRtoL();
-        return;
-        }
-    else if(uncombining && jc != 0) //we are uncombining, but cind not at front
+    if(jc != 0) //cind not at front
         {
         P = Permutation(dis.r());
         P.setFromTo(jc,0);
@@ -423,46 +502,6 @@ combine(IQTReal     const& d,
         for(auto j : count(dis.r()))
             if(j != jc) P.setFromTo(j,ni++);
         jc = 0;
-        }
-    else if(combining) //we are combining, set up Permutation P
-        {
-        //check locations of Cis[1], Cis[2], ...
-        //Check if Cis[1],Cis[2],... are grouped together (contiguous);
-        //all at front; and in same order as on combiner
-        bool front_contig = true;
-        for(auto j = 0, c = 1; c < Cis.r() && j < dis.r(); ++j,++c)
-            if(dis[j] != Cis[c])
-                {
-                front_contig = false;
-                break;
-                }
-        if(!front_contig) //if !front_contig, need to permute
-            {
-            P = Permutation(dis.r());
-            //Set P destination values to -1 to mark
-            //indices that need to be assigned destinations:
-            for(auto i : index(P)) P.setFromTo(i,-1);
-
-            //permute combined indices to the front, in same
-            //order as in Cis:
-            long ni = 0;
-            for(auto c : count(1,Cis.r()))
-                {
-                auto j = findindex(dis,Cis[c]);
-                if(j < 0) 
-                    {
-                    println("IQIndexSet of regular IQTensor =\n",dis);
-                    println("IQIndexSet of combiner/delta =\n",Cis);
-                    println("Missing IQIndex: ",Cis[c]);
-                    Error("IQCombiner: missing IQIndex");
-                    }
-                P.setFromTo(j,ni++);
-                }
-            for(auto j : index(P))
-                {
-                if(P.dest(j) == -1) P.setFromTo(j,ni++);
-                }
-            }
         }
 
     if(P) 
@@ -473,36 +512,18 @@ combine(IQTReal     const& d,
     //Pis means 'permuted' index set
     auto& Pis = (P ? Nis : dis);
 
-    if(uncombining)
-        {
-        auto newr = Pis.r()+Cis.r()-2;
-        auto offset = Cis.r()-1;
-        auto newind = IQIndexSetBuilder(newr);
-        for(auto j : count(offset))
-            newind.setExtent(j,Cis[1+j]);
-        for(auto j : count(Pis.r()-1))
-            newind.setExtent(offset+j,Pis[1+j]);
-        Nis = newind.build();
+    auto newr = Pis.r()+Cis.r()-2;
+    auto offset = Cis.r()-1;
+    auto newind = IQIndexSetBuilder(newr);
+    for(auto j : count(offset))
+        newind.setExtent(j,Cis[1+j]);
+    for(auto j : count(Pis.r()-1))
+        newind.setExtent(offset+j,Pis[1+j]);
+    Nis = newind.build();
 
-        //Only need to modify d if Cis.r() > 2.
-        //If Cis.r()==2 just swapping one index for another
-        if(Cis.r() > 2)
-            {
-            copyDataSetpd();
-            auto div = doTask(CalcDiv{dis},d);
-            pd->updateOffsets(Nis,div);
-            }
-        }
-    else //combining
-        {
-        auto newr = Pis.r()-Cis.r()+2;
-        auto newind = IQIndexSetBuilder(newr);
-        newind.setExtent(0,cind);
-        for(auto j : count(1,newr)) newind.setExtent(j,Pis[Cis.r()-2+j]);
-        copyDataSetpd();
-        Nis = newind.build();
-        condense(Pis,Nis,Cis[0],*pd);
-        }
+    copyDataSetpd();
+    auto div = doTask(CalcDiv{dis},d);
+    pd->updateOffsets(Nis,div);
     }
 
 void
@@ -511,7 +532,12 @@ doTask(Contract<IQIndex>      & C,
        ITCombiner        const& cmb,
        ManageStore            & m)
     {
-    combine(d,C.Lis,C.Ris,C.Nis,m,true);
+    if(C.Ris.r()==2)
+        combReplaceIndex(C.Lis,C.Ris,C.Nis);
+    else if(hasindex(C.Lis,C.Ris[0]))
+        uncombine(d,C.Lis,C.Ris,C.Nis,m,true);
+    else
+        combine(d,C.Lis,C.Ris,C.Nis,m,true);
     }
 
 void
@@ -520,7 +546,19 @@ doTask(Contract<IQIndex>      & C,
        IQTReal           const& d,
        ManageStore            & m)
     { 
-    combine(d,C.Ris,C.Lis,C.Nis,m,false);
+    if(C.Lis.r()==2)
+        {
+        combReplaceIndex(C.Ris,C.Lis,C.Nis);
+        m.assignPointerRtoL();
+        }
+    else if(hasindex(C.Ris,C.Lis[0]))
+        {
+        uncombine(d,C.Ris,C.Lis,C.Nis,m,false);
+        }
+    else
+        {
+        combine(d,C.Ris,C.Lis,C.Nis,m,false);
+        }
     }
 
 
