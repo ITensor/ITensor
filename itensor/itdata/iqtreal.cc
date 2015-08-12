@@ -2,14 +2,13 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/itdata/iqtreal.h"
-#include "itensor/itdata/itdata.h"
-#include "itensor/iqindex.h"
+#include "itensor/util/count.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/detail/algs.h"
 #include "itensor/matrix/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/util/count.h"
+#include "itensor/tensor/sliceten.h"
+#include "itensor/itdata/iqtreal.h"
 
 using std::vector;
 using std::move;
@@ -184,8 +183,8 @@ doTask(PlusEQ<IQIndex> const& P,
             Brange.init(make_indexdim(P.is2(),Bblock));
             auto* bblock = getBlock(B,P.is2(),Bblock);
 
-            auto aref = makeTenRef(A.data()+aio.offset,Arange);
-            auto bref = makeTenRef(bblock,Brange);
+            auto aref = makeTenRef(A.data()+aio.offset,&Arange);
+            auto bref = makeTenRef(bblock,&Brange);
             auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
             do_permute(bref,P.perm(),aref,add);
             }
@@ -231,9 +230,9 @@ doTask(Contract<IQIndex>& Con,
 
         //"Wire up" TensorRef's pointing to blocks of A,B, and C
         //we are working with
-        auto aref = makeTenRef(ablock,Arange),
-             bref = makeTenRef(bblock,Brange);
-        auto cref = makeTenRef(cblock,Crange);
+        auto aref = makeTenRef(ablock,&Arange),
+             bref = makeTenRef(bblock,&Brange);
+        auto cref = makeTenRef(cblock,&Crange);
 
         //Compute cref=aref*bref
         contract(aref,Lind,bref,Rind,cref,Cind);
@@ -280,16 +279,16 @@ permuteIQ(const Permutation& P,
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto* bblock = getBlock(dB,Bis,Bblock);
-        auto aref = makeTenRef(dA.data()+aio.offset,Arange);
-        auto bref = makeTenRef(bblock,Brange);
+        auto aref = makeTenRef(dA.data()+aio.offset,&Arange);
+        auto bref = makeTenRef(bblock,&Brange);
         do_permute(aref,P,bref);
         }
     }
 
 IQIndexSet
-replaceInd(const IQIndexSet& is,
-           long loc,
-           const IQIndex& replacement)
+replaceInd(IQIndexSet const& is,
+           long              loc,
+           IQIndex    const& replacement)
     {
     auto newind = IQIndexSetBuilder(is.r());
     long i = 0;
@@ -302,30 +301,78 @@ replaceInd(const IQIndexSet& is,
     }
 
 void
-condense(IQIndexSet const& Cis,
-         IQIndexSet const& dis,
-         IQTReal & d)
+condense(IQIndexSet const& dis,
+         IQIndexSet const& Nis,
+         IQIndex    const& cind,
+         IQTReal         & d)
     {
-    auto r = dis.r();
-    auto is_cmb = InfArray<int,10ul>(r,0);
-    for(auto i : count(r))
-        if(hasindex(Cis,dis[i])) is_cmb[i] = 1;
+    auto dr = dis.r();
+    auto nr = Nis.r();
+    auto ncomb = dis.r()-Nis.r()+1;
 
-    //Loop over non-zero blocks
-    auto block = Label(r);
-    for(auto io : d.offsets)
+    auto nd = IQTReal(Nis,doTask(CalcDiv{dis},d));
+
+    auto sector_start = Label(cind.nindex(),0);
+
+    auto dtoN = Label(dr,-1);
+    for(auto i : count(dr)) dtoN[i] = findindex(Nis,dis[i]);
+
+    auto drange = Range(dr),
+         nrange = Range(nr);
+    auto dblock = Label(dr),
+         nblock = Label(nr);
+    for(auto io : d.offsets) //loop over non-zero blocks
         {
-        inverseBlockInd(io.block,dis,block);
+        inverseBlockInd(io.block,dis,dblock);
+        drange.init(make_indexdim(dis,dblock));
+
+        //QN of combined indices for this block
+        auto cqn = QN();
+        auto cdim = 1;
+        for(auto i : count(dr)) 
+            {
+            if(dtoN[i] == -1)
+                {
+                cqn += dis[i].qn(1+dblock[i]);
+                cdim *= dis[i][dblock[i]].m();
+                }
+            else
+                {
+                nblock[dtoN[i]] = dblock[i];
+                }
+            }
+
+        long n = 0;
+        for(; n < cind.nindex(); ++n)
+            if(cind.qn(1+n) == cqn) 
+                {
+                nblock[0] = n;
+                break;
+                }
+        assert(n == nblock[0]);
+
+        nrange.init(make_indexdim(Nis,nblock));
+        auto nref = makeTenRef(getBlock(nd,Nis,nblock),&nrange);
+        auto nsub = subIndex(nref,0,sector_start[n],sector_start[n]+cdim);
+
+        auto dref = makeTenRef(d.data()+io.offset,&drange);
+        auto dgrp = groupInds(dref,0,ncomb);
+
+        nsub &= dgrp;
+
+        sector_start[n] += cdim;
         }
+
+    swap(d,nd);
     }
 
 void
-combine(IQTReal const& d,
-        IQIndexSet const& dis,
-        IQIndexSet const& Cis,
-        IQIndexSet & Nis,
-        ManageStore & m,
-        bool own_data)
+combine(IQTReal     const& d,
+        IQIndexSet  const& dis,
+        IQIndexSet  const& Cis,
+        IQIndexSet       & Nis,
+        ManageStore      & m,
+        bool              own_data)
     {
     //cind is special "combined index"
     auto const& cind = Cis[0];
@@ -336,7 +383,7 @@ combine(IQTReal const& d,
 
     IQTReal* pd = nullptr;
     //Call this if necessary to modify the data
-    auto setPtrData = [&]()
+    auto copyDataSetpd = [&]()
         {
         if(pd) return;
         if(own_data) pd = m.modifyData(d);
@@ -420,7 +467,7 @@ combine(IQTReal const& d,
 
     if(P) 
         {
-        setPtrData(); //sets pd
+        copyDataSetpd(); //sets pd
         permuteIQ(P,dis,d,Nis,*pd);
         }
     //Pis means 'permuted' index set
@@ -436,6 +483,15 @@ combine(IQTReal const& d,
         for(auto j : count(Pis.r()-1))
             newind.setExtent(offset+j,Pis[1+j]);
         Nis = newind.build();
+
+        //Only need to modify d if Cis.r() > 2.
+        //If Cis.r()==2 just swapping one index for another
+        if(Cis.r() > 2)
+            {
+            copyDataSetpd();
+            auto div = doTask(CalcDiv{dis},d);
+            pd->updateOffsets(Nis,div);
+            }
         }
     else //combining
         {
@@ -443,46 +499,37 @@ combine(IQTReal const& d,
         auto newind = IQIndexSetBuilder(newr);
         newind.setExtent(0,cind);
         for(auto j : count(1,newr)) newind.setExtent(j,Pis[Cis.r()-2+j]);
-        setPtrData();
-        condense(Cis,Pis,*pd);
+        copyDataSetpd();
         Nis = newind.build();
-        }
-
-    //Only need to modify d if Cis.r() > 2.
-    //If Cis.r()==2 just swapping one index for another
-    if(Cis.r() > 2)
-        {
-        setPtrData();
-        auto div = doTask(CalcDiv{dis},d);
-        pd->updateOffsets(Nis,div);
+        condense(Pis,Nis,Cis[0],*pd);
         }
     }
 
 void
-doTask(Contract<IQIndex>& C,
-       const IQTReal& d,
-       const ITCombiner& cmb,
-       ManageStore& m)
+doTask(Contract<IQIndex>      & C,
+       IQTReal           const& d,
+       ITCombiner        const& cmb,
+       ManageStore            & m)
     {
     combine(d,C.Lis,C.Ris,C.Nis,m,true);
     }
 
 void
-doTask(Contract<IQIndex>& C,
-       const ITCombiner& cmb,
-       const IQTReal& d,
-       ManageStore& m)
+doTask(Contract<IQIndex>      & C,
+       ITCombiner        const& cmb,
+       IQTReal           const& d,
+       ManageStore            & m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m,false);
     }
 
 
 void
-doTask(Conj, const IQTReal& d) { }
+doTask(Conj, IQTReal const& d) { }
 
 
 Real
-doTask(NormNoScale, const IQTReal& d) 
+doTask(NormNoScale, IQTReal const& d) 
     { 
     Real nrm = 0;
     for(auto& elt : d.store)
@@ -494,7 +541,7 @@ doTask(NormNoScale, const IQTReal& d)
 
 
 void
-doTask(PrintIT<IQIndex>& P, const IQTReal& d)
+doTask(PrintIT<IQIndex>& P, IQTReal const& d)
     {
     P.s << "IQTReal {" << d.offsets.size() << " blocks; Data size = " << d.store.size() << "}\n\n";
     Real scalefac = 1.0;
