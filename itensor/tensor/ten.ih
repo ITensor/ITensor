@@ -109,7 +109,8 @@ checkCompatible(TenRef<T1,R1> const& A,
 
 template<typename T, typename R1, typename R2>
 void
-assignContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+assign(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+ // ^ was assignContig
     {
 #ifdef DEBUG
     checkCompatible(to,from,"assignContig");
@@ -144,10 +145,10 @@ assignContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
 
     for(auto& i : RB.build())
         {
-        //effectively pto = to.data() + offset(to,i);
-        auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.size());
-        //effectively pfrom = from.data() + offset(from,i);
-        auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.size());
+        //auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.size());
+        auto pto = to.data()+offset(to,i);
+        //auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.size());
+        auto pfrom = from.data()+offset(from,i);
         for(decltype(bigsize) b = 0; b < bigsize; ++b)
             {
             *pto = *pfrom;
@@ -157,40 +158,36 @@ assignContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
         }
     }
 
-template<typename T, typename R1, typename R2>
-void
-assignNonContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+//template<typename T, typename R1, typename R2>
+//void
+//assignNonContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
+//    {
+//#ifdef DEBUG
+//    checkCompatible(to,from,"assignNonContig");
+//#endif 
+//    auto ti = to.begin();
+//    auto fi = from.begin();
+//    for(; ti.notDone(); ++ti, ++fi) *ti = *fi;
+//    }
+
+//Assign to referenced data
+void inline
+operator&=(TensorRef const& a, TensorRefc b)
     {
-#ifdef DEBUG
-    checkCompatible(to,from,"assignNonContig");
-#endif 
-    auto ti = to.begin();
-    auto fi = from.begin();
-    for(; ti.notDone(); ++ti, ++fi) *ti = *fi;
+    //if(isContiguous(a.range()) && isContiguous(b.range()))
+    //    assignContig(a,b);
+    //else
+    //    assignNonContig(a,b);
+    assign(a,b);
     }
 
 //Assign to referenced data
-template<typename T, typename R1, typename R2>
-void
-operator&=(TenRef<T,R1> const& a, TenRef<const T,R2> b)
+void inline
+operator&=(TensorRef const& a, Tensor const& b)
     {
-    if(isContiguous(b.range()) && isContiguous(b.range()))
-        {
-        assignContig(a,b);
-        }
-    else
-        {
-        assignNonContig(a,b);
-        }
-    }
-
-//Assign to referenced data
-template<typename T, typename R1, typename R2>
-void
-operator&=(TenRef<T,R1> const& a, Ten<T,R2> const& b)
-    {
-    if(isContiguous(a)) assignContig(a,makeRef(b));
-    else                assignNonContig(a,makeRef(b));
+    //if(isContiguous(a)) assignContig(a,makeRef(b));
+    //else                assignNonContig(a,makeRef(b));
+    assign(a,makeRef(b));
     }
 
 template<typename T, typename R>

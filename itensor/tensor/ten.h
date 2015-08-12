@@ -167,14 +167,12 @@ class TenRef
     };
 
 //Assign to referenced data
-template<typename T, typename R1, typename R2>
-void
-operator&=(TenRef<T,R1> const& a, TenRef<const T,R2> b);
+void 
+operator&=(TensorRef const& a, TensorRefc b);
 
 //Assign to referenced data
-template<typename T, typename R1, typename R2>
 void
-operator&=(TenRef<T,R1> const& a, Ten<T,R2> const& t);
+operator&=(TensorRef const& a, Tensor const& t);
 
 template<typename T, typename RangeT>
 auto
