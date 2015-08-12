@@ -746,7 +746,7 @@ contract(CProps const& p,
     if(p.permuteA())
         {
         //println("Calling permute A");
-        auto tref = makeTenRef(alloc[0],p.newArange);
+        auto tref = makeTenRef(alloc[0],&p.newArange);
         tref &= permute(A,p.PA);
         aref = MatRefc(tref.data(),p.dmid,p.dleft);
         aref.applyTrans();
@@ -770,7 +770,7 @@ contract(CProps const& p,
     if(p.permuteB())
         {
         //println("Calling permute B");
-        auto tref = makeTenRef(alloc[1],p.newBrange);
+        auto tref = makeTenRef(alloc[1],&p.newBrange);
         tref &= permute(B,p.PB);
         bref = MatRefc(tref.data(),p.dmid,p.dright);
         }
@@ -804,7 +804,7 @@ contract(CProps const& p,
     TensorRef newC;
     if(p.permuteC())
         {
-        newC = makeTenRef(alloc[2],p.newCrange);
+        newC = makeTenRef(alloc[2],&p.newCrange);
         cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
         }
     else

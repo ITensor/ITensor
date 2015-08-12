@@ -181,24 +181,21 @@ auto
 makeTenRef(T* p,
            const RangeT* prange)
     {
-    return TenRef<T,std::decay_t<RangeT>>(p,prange);
-    }
-
-template<typename T, typename RangeT>
-auto
-makeTenRef(T* p,
-           RangeT & range)
-    {
-    return TenRef<T,std::decay_t<RangeT>>(p,&range);
+    using R = std::decay_t<std::remove_pointer_t<RangeT>>;
+    //static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
+    return TenRef<T,R>(p,prange);
     }
 
 template<typename T, typename RangeT,
-         class = std::enable_if_t<std::is_rvalue_reference<RangeT&&>::value>>
+         class = std::enable_if_t<std::is_rvalue_reference<RangeT&&>::value
+                               && !std::is_pointer<RangeT>::value> >
 auto
 makeTenRef(T* p,
            RangeT && range)
     {
-    return TenRef<T,std::decay_t<RangeT>>(p,std::move(range));
+    using R = std::decay_t<RangeT>;
+    static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
+    return TenRef<T,R>(p,std::move(range));
     }
 
 template<typename T, typename RangeT>
@@ -399,9 +396,9 @@ template<typename T, typename R>
 auto
 makeRef(TenRef<T,R> & t) { return t; }
 
-template<typename T, typename R>
-auto
-makeRef(TenRef<const T,R> & t) { return t; }
+//template<typename T, typename R>
+//auto
+//makeRef(TenRef<const T,R> & t) { return t; }
 
 template<typename T, typename R>
 auto

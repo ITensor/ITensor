@@ -161,8 +161,8 @@ doTask(AddITensor & A,
     drange.init(make_indexdim(A.iqis,A.block_ind));
     auto* dblock = getBlock(d,A.iqis,A.block_ind);
 
-    auto dref = makeTenRef(dblock,drange);
-    auto tref = makeTenRef(t.data(),A.is);
+    auto dref = makeTenRef(dblock,&drange);
+    auto tref = makeTenRef(t.data(),&A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
     do_permute(tref,A.P,dref,add);
     }

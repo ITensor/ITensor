@@ -132,9 +132,9 @@ blockDiagDense(IQTDiag const& D,
             Range Trange,
                   Crange;
             Trange.init(make_indexdim(Tis,Tblockind));
-            auto Tref = makeTenRef(tblock,Trange);
+            auto Tref = makeTenRef(tblock,&Trange);
             Crange.init(make_indexdim(Cis,Cblockind));
-            auto Cref = makeTenRef(cblock,Crange);
+            auto Cref = makeTenRef(cblock,&Crange);
 
             auto Ddim = make_indexdim(Dis,Dblockind);
             auto Dminm = std::numeric_limits<size_t>::max();

@@ -19,7 +19,7 @@ class IQTReal;
 
 
 QN
-calcDiv(const IQIndexSet& is, const Label& block_ind);
+calcDiv(IQIndexSet const& is, Label const& block_ind);
 
 // For a block index (0,1,...,Nblocks-1),
 // as in the offsets array of an IQTReal,
@@ -115,6 +115,13 @@ read(std::istream & s, IQTReal & dat)
     itensor::read(s,dat.store);
     }
 
+void inline
+swap(IQTReal & d1,
+     IQTReal & d2)
+    {
+    d1.offsets.swap(d2.offsets);
+    d1.store.swap(d2.store);
+    }
 
 QN
 doTask(CalcDiv const& C, IQTReal const& D);
@@ -228,12 +235,12 @@ offsetOf(std::vector<IQTReal::BlOf> const& offsets,
 template<typename Indexable>
 class IndexDim
     {
-    const IQIndexSet& is_;
-    const Indexable& ind_;
+    IQIndexSet const& is_;
+    Indexable const& ind_;
     public:
 
-    IndexDim(const IQIndexSet& is,
-             const Indexable& ind)
+    IndexDim(IQIndexSet const& is,
+             Indexable const& ind)
       : is_(is),
         ind_(ind)
         { }
@@ -247,7 +254,7 @@ class IndexDim
 
 template<typename Indexable>
 auto
-make_indexdim(const IQIndexSet& is, const Indexable& ind) 
+make_indexdim(IQIndexSet const& is, Indexable const& ind) 
     { 
     return IndexDim<Indexable>(is,ind); 
     }

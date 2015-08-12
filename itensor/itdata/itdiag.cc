@@ -56,12 +56,12 @@ diagDense(ITDiag<Real> const& d,
             break;
             }
 
-    auto Tref = makeTenRef(t.data(),tis);
+    auto Tref = makeTenRef(t.data(),&tis);
 
     if(t_has_uncontracted)
         {
         auto nd = m.makeNewData<ITReal>(area(Nis),0.);
-        auto Nref = makeTenRef(nd->data(),Nis);
+        auto Nref = makeTenRef(nd->data(),&Nis);
         if(d.allSame())
             {
             auto dref = UnifVecWrapper(d.val,d.length);

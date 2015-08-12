@@ -122,7 +122,7 @@ combine(const ITReal& d,
                     newind.setExtent(i++,dis[j]);
                     }
             Nis = newind.build();
-            auto tfrom = makeTenRef(d.data(),dis);
+            auto tfrom = makeTenRef(d.data(),&dis);
             auto to = Tensor(permute(tfrom,P));
             m.makeNewData<ITReal>(to.begin(),to.end());
             }

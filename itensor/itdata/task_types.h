@@ -221,9 +221,8 @@ struct Contract
     using index_type = IndexT;
     using iset_type = IndexSetT<IndexT>;
 
-    const iset_type &Lis,
-                    &Ris;
-
+    iset_type const& Lis;
+    iset_type const& Ris;
     iset_type Nis; //new IndexSet
     Real scalefac = NAN;
     bool needresult = false;

@@ -133,10 +133,7 @@ class RangeT
     store() const { return store_; }
 
     void
-    swap(RangeT& other)
-        {
-        store_.swap(other.store_);
-        }
+    swap(RangeT& other) { store_.swap(other.store_); }
 
     template<typename Indexable>
     void 
