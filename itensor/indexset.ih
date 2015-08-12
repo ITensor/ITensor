@@ -617,7 +617,7 @@ operator<<(std::ostream& s, IndexSetT<IndexT> const& is)
     if(size > 0) s << is[0];
     for(decltype(size) j = 1; j < size; ++j)
         {
-        s << "\n" << is[j] << "[" << is.stride(j) << "]";
+        s << "\n" << is[j];
         }
     return s;
     }

@@ -247,8 +247,8 @@ dir(const IndexSetT<IndexT>& is, const IndexT& I);
 
 
 template <class IndexT>
-const IndexT&
-finddir(const IndexSetT<IndexT>& iset, Arrow dir);
+IndexT const&
+finddir(IndexSetT<IndexT> const& iset, Arrow dir);
 
 //
 // Given IndexSetT<IndexT> iset and IndexT I,
@@ -257,12 +257,13 @@ finddir(const IndexSetT<IndexT>& iset, Arrow dir);
 //
 template <class IndexT>
 long
-findindex(const IndexSetT<IndexT>& iset, 
-          const IndexT& I);
+findindex(IndexSetT<IndexT> const& iset, 
+          IndexT const& I);
 
 template <class IndexT>
-const IndexT&
-findtype(const IndexSetT<IndexT>& iset, IndexType t);
+IndexT const&
+findtype(IndexSetT<IndexT> const& iset, 
+         IndexType t);
 
 //
 // Compute the permutation P taking an IndexSetT iset
