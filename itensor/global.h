@@ -62,9 +62,13 @@ enum Printdat { ShowData, HideData };
 
 #define PrintEither(X,Y) \
     {\
-    const bool savep = Global::printdat();\
+    bool savep = Global::printdat();\
     Global::printdat() = Y; \
-    std::cout << "\n" << #X << " =\n" << X << std::endl; \
+    auto pre = format("%s = ",#X); \
+    auto str = format("%s",X); \
+    std::cout << pre; \
+    if(pre.size() + str.size() > 60) std::cout << "\n"; \
+    std::cout << str << std::endl; \
     Global::printdat() = savep;\
     }
 #define Print(X)    PrintEither(X,false)
