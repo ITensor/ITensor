@@ -50,6 +50,7 @@ class Index
     // Returns the prime level
     int 
     primeLevel() const { return primelevel_; }
+
     // Sets the prime level to a specified value.
     Index& 
     primeLevel(int plev);
@@ -65,6 +66,10 @@ class Index
     // Returns the name of this Index with primes removed
     const std::string&
     rawname() const { return sname_; }
+
+    // Unique id of this Index (as a string)
+    std::string
+    id() const;
 
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const { return valid(); }
@@ -144,9 +149,6 @@ class Index
     // Read Index from binary input stream.
     Index& 
     read(std::istream& s);
-
-    std::string
-    id() const;
 
     //
     // Static Index instances
