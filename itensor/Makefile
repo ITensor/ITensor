@@ -21,7 +21,7 @@ SOURCES+= mpo.cc
 SOURCES+= tevol.cc
 SOURCES+= autompo.cc
 
-HEADERS=global.h real.h permutation.h index.h \
+HEADERS=global.h real.h permutation.h indextype.h index.h \
         indexset.h counter.h simplematrix.h itensor.h \
         qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
@@ -101,7 +101,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=real.h global.h index.h permutation.h
+DEPHEADERS=real.h global.h indextype.h index.h permutation.h
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h

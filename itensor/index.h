@@ -5,10 +5,9 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "global.h"
+#include "indextype.h"
 
 namespace itensor {
-
-enum IndexType { Link, Site, All };
 
 //Forward declarations
 class IndexVal;
