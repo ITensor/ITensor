@@ -81,7 +81,12 @@ add(const std::string& op,
     int i,
     Real x)
     {
-    ops.emplace_back(op,i,x);
+    //The following ensures operators remain
+    //in site order within the vector "ops"
+    auto it = ops.begin();
+    while(it != ops.end() && it->i < i) ++it;
+    if(it!= ops.end() && it->i == i) Error("AutoMPO: operators must be placed on distinct sites");
+    ops.emplace(it,op,i,x);
     }
 
 bool HTerm::
