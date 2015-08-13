@@ -1,4 +1,4 @@
-set (HEADERS tinyformat.h print.h global.h real.h permutation.h index.h 
+set (HEADERS tinyformat.h print.h global.h real.h permutation.h indextype.h index.h 
         indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h 
         condenser.h combiner.h qcounter.h iqcombiner.h 
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h 

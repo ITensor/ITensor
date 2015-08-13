@@ -25,7 +25,7 @@ else()
  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
-option (CXX11 OFF)
+option (CXX11 "Automatically set C++11" ON)
 if (CXX11) 
     # enable C++11 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
