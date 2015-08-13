@@ -24,30 +24,38 @@ GOBJECTS= $(patsubst %.o,.debug_objs/%.o, $(OBJECTS))
 .SUFFIXES: .cc $(SUFFIXES)
 
 .cc.o:	$*.cc
-	$(CCCOM) -c $(CCFLAGS) $<
+	@echo "Compiling utilities/$< with optimizations"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling utilities/$< in debug mode"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 install: headerscopy libutilities.a libutilities-g.a
-	cp libutilities.a libutilities-g.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libutilities.a
-	ranlib $(ITENSOR_LIBDIR)/libutilities-g.a
+	@cp libutilities.a libutilities-g.a $(ITENSOR_LIBDIR)
+	@ranlib $(ITENSOR_LIBDIR)/libutilities.a
+	@ranlib $(ITENSOR_LIBDIR)/libutilities-g.a
 
 libutilities.a:	$(OBJECTS) $(HEADERS)
-	ar rv libutilities.a $(OBJECTS)
-	ranlib libutilities.a
+	@echo "Building static library libutilities.a"
+	@ar r libutilities.a $(OBJECTS)
+	@ranlib libutilities.a
 
 libutilities-g.a: mkdebugdir $(GOBJECTS) $(HEADERS)
-	ar rv libutilities-g.a $(GOBJECTS)
-	ranlib libutilities-g.a
+	@echo "Building static library libutilities-g.a"
+	@ar r libutilities-g.a $(GOBJECTS)
+	@ranlib libutilities-g.a
 
 headerscopy:	
-	cp $(HEADERS) $(ITENSOR_INCLUDEDIR)
+	@echo "Copying header files to $(ITENSOR_INCLUDEDIR)"
+	@cp $(HEADERS) $(ITENSOR_INCLUDEDIR)
 
 mkdebugdir:
-	mkdir -p .debug_objs
+	@mkdir -p .debug_objs
 
 clean:	
-	rm -f *.o libutilities.a libutilities-g.a
-	rm -fr .debug_objs
+	@echo "Cleaning build files in folder utilities/"
+	@rm -f *.o libutilities.a libutilities-g.a
+	@rm -fr .debug_objs

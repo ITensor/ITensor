@@ -32,31 +32,37 @@ LIBGFILE= libmatrix-g.a
 .SUFFIXES: .cc $(SUFFIXES)
 
 %.o: %.cc
-	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+	@echo "Compiling utilities/$< with optimizations"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling utilities/$< in debug mode"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 install: libmatrix-g.a libmatrix.a
-	cp libmatrix.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libmatrix.a
-	ranlib ./libmatrix.a
-	cp libmatrix-g.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libmatrix-g.a
-	ranlib ./libmatrix-g.a
-	cp *.h $(ITENSOR_INCLUDEDIR)
+	@cp libmatrix.a $(ITENSOR_LIBDIR)
+	@ranlib $(ITENSOR_LIBDIR)/libmatrix.a
+	@ranlib ./libmatrix.a
+	@cp libmatrix-g.a $(ITENSOR_LIBDIR)
+	@ranlib $(ITENSOR_LIBDIR)/libmatrix-g.a
+	@ranlib ./libmatrix-g.a
+	@cp *.h $(ITENSOR_INCLUDEDIR)
 
 libmatrix.a: $(OBJECTS) $(HEADERS)
-	ar rv libmatrix.a $(OBJECTS)
-	touch libmatrix.a
+	@echo "Building static library libmatrix.a"
+	@ar r libmatrix.a $(OBJECTS)
+	@touch libmatrix.a
 
 
 libmatrix-g.a: mkgdir $(GOBJECTS) $(HEADERS)
-	ar rv libmatrix-g.a $(GOBJECTS)
-	touch libmatrix-g.a
+	@echo "Building static library libmatrix-g.a"
+	@ar r libmatrix-g.a $(GOBJECTS)
+	@touch libmatrix-g.a
 
 mkgdir:
-	mkdir -p .debug_objs
+	@mkdir -p .debug_objs
 
 timeit:	timeit.o $(LIBFILE)
 	$(CCCOM) $(CCFLAGS) -o timeit timeit.o $(ITENSOR_LIBFLAGS)
@@ -78,10 +84,11 @@ testmat:	.debug_objs/testmat.o $(LIBGFILE)
 	$(CCCOM) $(CCGFLAGS) -o testmat .debug_objs/testmat.o $(ITENSOR_LIBGFLAGS)
 
 clean:	
-	rm -f *.o libmatrix.a libmatrix-g.a
-	rm -fr .debug_objs
-	rm -f test testsparse testsparse2 testsparse3 davidtest pbf testmat timeit
-	rm -f subtest *.tar *.tar.gz
+	@echo "Cleaning build files in folder matrix/"
+	@rm -f *.o libmatrix.a libmatrix-g.a
+	@rm -fr .debug_objs
+	@rm -f test testsparse testsparse2 testsparse3 davidtest pbf testmat timeit
+	@rm -f subtest *.tar *.tar.gz
 
 conjugate_gradient.o: matrix.h bigmatrix.h
 sparseref.o: sparseref.h

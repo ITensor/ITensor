@@ -51,55 +51,66 @@ INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 .SUFFIXES: .cc $(SUFFIXES)
 
 $(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/detail
-	cp $^ $(ITENSOR_INCLUDEDIR)/detail
+	@mkdir -p $(ITENSOR_INCLUDEDIR)/detail
+	@cp $^ $(ITENSOR_INCLUDEDIR)/detail
 
 $(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/hams
-	cp $^ $(ITENSOR_INCLUDEDIR)/hams
+	@mkdir -p $(ITENSOR_INCLUDEDIR)/hams
+	@cp $^ $(ITENSOR_INCLUDEDIR)/hams
 
 $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/sites
-	cp $^ $(ITENSOR_INCLUDEDIR)/sites
+	@mkdir -p $(ITENSOR_INCLUDEDIR)/sites
+	@cp $^ $(ITENSOR_INCLUDEDIR)/sites
 
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
-	cp $^ $(ITENSOR_INCLUDEDIR)
+	@cp $^ $(ITENSOR_INCLUDEDIR)
 
 %.o: %.cc
-	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+	@echo "Compiling itensor/$< with optimizations"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling itensor/$< in debug mode"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 install: installo installg
 
 libitensor.a: $(OBJECTS)
-	ar rv libitensor.a $(OBJECTS)
-	ranlib libitensor.a
+	@echo "Building static library libitensor.a"
+	@ar r libitensor.a $(OBJECTS)
+	@ranlib libitensor.a
 
 libitensor-g.a: mkdebugdir $(GOBJECTS)
-	ar rv libitensor-g.a $(GOBJECTS)
-	ranlib libitensor-g.a
+	@echo "Building static library libitensor-g.a"
+	@ar r libitensor-g.a $(GOBJECTS)
+	@ranlib libitensor-g.a
 
 headerscopy: $(INCLUDE_HEADERS)
-	cp core.h $(ITENSOR_INCLUDEDIR)
+	@echo "Copying header files to $(ITENSOR_INCLUDEDIR)"
+	@cp core.h $(ITENSOR_INCLUDEDIR)
 
 libs: libitensor.a 
-	cp libitensor.a $(ITENSOR_LIBDIR)
+	@echo "Copying libitensor.a to $(ITENSOR_LIBDIR)"
+	@cp libitensor.a $(ITENSOR_LIBDIR)
 
 installo: headerscopy libitensor.a
-	cp libitensor.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libitensor.a
+	@echo "Copying libitensor.a to $(ITENSOR_LIBDIR)"
+	@cp libitensor.a $(ITENSOR_LIBDIR)
+	@ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 installg: headerscopy libitensor-g.a
-	cp libitensor-g.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
+	@echo "Copying libitensor-g.a to $(ITENSOR_LIBDIR)"
+	@cp libitensor-g.a $(ITENSOR_LIBDIR)
+	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 mkdebugdir:
-	mkdir -p .debug_objs
+	@mkdir -p .debug_objs
 
 clean:	
-	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
+	@echo "Cleaning build files in folder itensor/"
+	@rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
 DEPHEADERS=real.h global.h indextype.h index.h permutation.h
 index.o: $(DEPHEADERS)

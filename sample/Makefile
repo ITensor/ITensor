@@ -18,10 +18,14 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 #Rules ------------------
 
 %.o: %.cc $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+	@echo "Compiling sample/$< with optimizations [executable is named $(*F)]"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling sample/$< in debug mode [excutable is named $(*F)-g]"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 #Targets -----------------
 
@@ -32,45 +36,46 @@ debug: dmrg-g iqdmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g idmrg-g
 all: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard idmrg
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 
 dmrg-g: mkdebugdir .debug_objs/dmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg.o -o dmrg-g $(LIBGFLAGS)
+	@$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg.o -o dmrg-g $(LIBGFLAGS)
 
 iqdmrg: iqdmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
 
 iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
+	@$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
 
 dmrg_table: dmrg_table.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) dmrg_table.o -o dmrg_table $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) dmrg_table.o -o dmrg_table $(LIBFLAGS)
 
 dmrg_table-g: mkdebugdir .debug_objs/dmrg_table.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg_table.o -o dmrg_table-g $(LIBGFLAGS)
+	@$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg_table.o -o dmrg_table-g $(LIBGFLAGS)
 
 dmrgj1j2: dmrgj1j2.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) dmrgj1j2.o -o dmrgj1j2 $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) dmrgj1j2.o -o dmrgj1j2 $(LIBFLAGS)
 
 dmrgj1j2-g: mkdebugdir .debug_objs/dmrgj1j2.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) .debug_objs/dmrgj1j2.o -o dmrgj1j2-g $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) .debug_objs/dmrgj1j2.o -o dmrgj1j2-g $(LIBFLAGS)
 
 exthubbard: exthubbard.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) exthubbard.o -o exthubbard $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) exthubbard.o -o exthubbard $(LIBFLAGS)
 
 exthubbard-g: mkdebugdir .debug_objs/exthubbard.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) .debug_objs/exthubbard.o -o exthubbard-g $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) .debug_objs/exthubbard.o -o exthubbard-g $(LIBFLAGS)
 
 idmrg: idmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) idmrg.o -o idmrg $(LIBFLAGS)
+	@$(CCCOM) $(CCFLAGS) idmrg.o -o idmrg $(LIBFLAGS)
 
 idmrg-g: mkdebugdir .debug_objs/idmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/idmrg.o -o idmrg-g $(LIBGFLAGS)
+	@$(CCCOM) $(CCGFLAGS) .debug_objs/idmrg.o -o idmrg-g $(LIBGFLAGS)
 
 mkdebugdir:
-	mkdir -p .debug_objs
+	@mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
+	@echo "Cleaning build files in folder sample/"
+	@rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
     idmrg idmrg-g

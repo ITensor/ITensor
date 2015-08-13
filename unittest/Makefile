@@ -43,10 +43,14 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 #Rules ------------------
 
 %.o: %.cc $(ITENSOR_LIBS)
-	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+	@echo "Compiling utilities/$< with optimizations"
+	$(eval COMMAND = $(CCCOM) -c $(CCFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 .debug_objs/%.o: %.cc $(ITENSOR_GLIBS)
-	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+	@echo "Compiling utilities/$< in debug mode"
+	$(eval COMMAND = $(CCCOM) -c $(CCGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
 
 #Targets -----------------
 
@@ -63,19 +67,19 @@ debug: test-g
 
 #build: test
 
-
 #test: test.o $(ITENSOR_LIBS) $(OBJECTS)
 #	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o test $(LIBFLAGS)
 
 test-g: mkdebugdir .debug_objs/test.o $(ITENSOR_GLIBS) $(GOBJECTS)
-	$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o test-g $(LIBGFLAGS)
+	@$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o test-g $(LIBGFLAGS)
 
 
 mkdebugdir:
-	mkdir -p .debug_objs
+	@mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs test test-g
+	@echo "Cleaning build files in folder unittest/"
+	@rm -fr *.o .debug_objs test test-g
 
 LIBHEADERS=$(ITENSOR_INCLUDEDIR)/matrix.h
 matrix_test.o: $(LIBHEADERS)
