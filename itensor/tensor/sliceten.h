@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_SLICETEN_H_
 #define __ITENSOR_SLICETEN_H_
 
+#include "itensor/util/count.h"
 #include "itensor/tensor/ten.h"
 #include "itensor/tensor/slicerange.h"
 
@@ -19,12 +20,12 @@ subTensor(Ten_ && T,
 template<typename T, typename R, typename Perm_>
 auto
 permute(TenRef<T,R> const& t,
-        Perm_ const& P);
+        Perm_       const& P);
 
-template<typename T, typename R, typename Perm_>
+template<typename Perm_>
 auto
-permute(Ten<T,R> const& t,
-        Perm_ const& P);
+permute(Tensor const& t,
+        Perm_  const& P);
 
 
 ///
@@ -78,36 +79,70 @@ subIndex(Ten_ && T,
     return makeTenRef(T.data()+T.stride(ind)*start,std::move(R));
     }
 
+Range inline
+groupIndsRange(Range const& R,
+               size_t istart,
+               size_t iend)
+    {
+    if(not isContiguous(R)) Error("groupInds requires contiguous range");
+    auto ngroup = iend-istart;
+    size_t nr = R.r()-ngroup+1;
+    auto rb = RangeBuilder(nr);
+    for(size_t j = 0; j < istart; ++j) rb.nextExtent(R.extent(j));
+    auto group_ext = 1;
+    for(size_t j = istart; j < iend; ++j) group_ext *= R.extent(j);
+    rb.nextExtent(group_ext);
+    for(size_t j = iend; j < size_t(R.r()); ++j) rb.nextExtent(R.extent(j));
+    return rb.build();
+    }
+
 template<typename Ten_>
 auto
 groupInds(Ten_ && T,
           size_t istart,
           size_t iend)
     {
-    if(not isContiguous(T.range())) Error("groupInds requires contiguous range");
-    auto ngroup = iend-istart;
-    size_t nr = T.r()-ngroup+1;
-    auto rb = RangeBuilder(nr);
-    for(size_t j = 0; j < istart; ++j) rb.nextExtent(T.extent(j));
-    auto group_ext = 1;
-    for(size_t j = istart; j < iend; ++j) group_ext *= T.extent(j);
-    rb.nextExtent(group_ext);
-    for(size_t j = iend; j < size_t(T.r()); ++j) rb.nextExtent(T.extent(j));
-    return makeTenRef(T.data(),rb.build());
+    return makeTenRef(T.data(),groupIndsRange(T.range(),istart,iend));
+    }
+
+template<typename Ten_, typename Inds_>
+Tensor
+groupInds(Ten_      && T,
+          Inds_ const& inds)
+    {
+    //Does permute followed by contiguous groupInds; returns a Tensor
+    using value_t = decltype(inds[0]);
+    auto r = T.r();
+    auto P = Label(r);
+    auto inds_has = [&inds](value_t j) -> long
+        { 
+        for(auto n : index(inds)) if(j==inds[n]) return true;
+        return false;
+        };
+    size_t tofront = 0,
+           toback = inds.size();
+    for(decltype(r) j = 0; j < r; ++j)
+        {
+        if(inds_has(j)) P[j] = tofront++;
+        else            P[j] = toback++;
+        }
+    auto PT = Tensor{permute(T,P)};
+    if(inds.size() <= 1) return PT;
+    return Tensor{std::move(PT.store()),groupIndsRange(PT.range(),0,inds.size())};
     }
 
 template<typename T, typename R, typename Perm_>
 auto
 permute(TenRef<T,R> const& t,
-        Perm_ const& P)
+        Perm_       const& P)
     {
     return makeTenRef(t.data(),permuteRange(t.range(),P));
     }
 
-template<typename T, typename R, typename Perm_>
+template<typename Perm_>
 auto
-permute(Ten<T,R> const& t,
-        Perm_ const& P)
+permute(Tensor const& t,
+        Perm_  const& P)
     {
     return permute(makeRef(t),P);
     }
