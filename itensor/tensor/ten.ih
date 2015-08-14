@@ -190,19 +190,17 @@ operator&=(TensorRef const& a, Tensor const& b)
     assign(a,makeRef(b));
     }
 
-template<typename T, typename R>
-auto Ten<T,R>::
-operator()() const -> const_reference
+auto inline Tensor::
+operator()() const -> value_type
     { 
 #ifdef DEBUG
     if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
 #endif
-    return *data_; 
+    return data_.front();
     }
 
-template<typename T, typename R>
 template <typename... Inds>
-auto Ten<T,R>::
+auto Tensor::
 operator()(Inds&&... ii) const -> const_reference
     { 
 #ifdef DEBUG
@@ -211,19 +209,17 @@ operator()(Inds&&... ii) const -> const_reference
     return data_[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename T, typename R>
-auto Ten<T,R>::
+auto inline Tensor::
 operator()() -> reference
     { 
 #ifdef DEBUG
     if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
 #endif
-    return *data_; 
+    return data_.front(); 
     }
 
-template<typename T, typename R>
 template <typename... Inds>
-auto Ten<T,R>::
+auto Tensor::
 operator()(Inds&&... ii) -> reference
     { 
 #ifdef DEBUG
@@ -232,29 +228,31 @@ operator()(Inds&&... ii) -> reference
     return data_[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename T, typename R>
 template <typename Indices>
-auto Ten<T,R>::
+auto Tensor::
 operator()(Indices const& ii) 
   -> stdx::if_compiles_return<decltype(ii.begin()), reference>
     { return data_[offset(range_,ii)]; }
 
-template<typename T, typename R>
 template <typename Indices>
-auto Ten<T,R>::
+auto Tensor::
 operator()(Indices const& ii) const 
   -> stdx::if_compiles_return<decltype(ii.begin()), const_reference>
-    { return data_[offset(range_,ii)]; }
+    { return const_reference(data_[offset(range_,ii)]); }
 
-template<typename V, typename R>
+template<typename Ten_>
 std::ostream&
-operator<<(std::ostream & s, TenRef<V,R> const& T)
+printTensor(std::ostream & s, 
+            Ten_ const& T, 
+            const char* typestr)
     {
+    if(not T) return s << "(empty " << typestr << ")";
     if(T.r() == 0)
         {
-        s << T();
+        s << typestr << " " << T();
         return s;
         }
+    s << typestr << "\n";
     for(auto& i : T.range())
         {
         s << "(" << i.index() << ") " << T(i) << "\n";
@@ -264,7 +262,16 @@ operator<<(std::ostream & s, TenRef<V,R> const& T)
 
 template<typename V, typename R>
 std::ostream&
-operator<<(std::ostream & s, Ten<V,R> const& T) { return operator<<(s,makeRef(T)); }
+operator<<(std::ostream & s, TenRef<V,R> const& T)
+    {
+    return printTensor(s,T,"TenRef");
+    }
+
+inline std::ostream&
+operator<<(std::ostream & s, Tensor const& T) 
+    { 
+    return printTensor(s,T,"Tensor");
+    }
 
 } //namespace itensor
 

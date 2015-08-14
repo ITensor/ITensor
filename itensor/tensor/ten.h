@@ -11,21 +11,18 @@
 
 namespace itensor {
 
-template<typename T, typename RangeT>
-class Ten;
+class Tensor;
+
 template<typename T, typename RangeT>
 class TenRef;
 
 //Specialize to Real elements
-template<typename RangeT>
-using RTen     = Ten<Real,RangeT>;
 template<typename RangeT>
 using RTenRef  = TenRef<Real,RangeT>;
 template<typename RangeT>
 using RTenRefc = TenRef<const Real,RangeT>;
 
 //Specialize to Real elements, RangeT=Range
-using Tensor     = RTen<Range>;
 using TensorRef  = RTenRef<Range>;
 using TensorRefc = RTenRefc<Range>;
 
@@ -53,8 +50,8 @@ class TenRef
     using size_type = long;
     using range_type = std::remove_const_t<RangeT>;
     using tensor_type = std::conditional_t<std::is_const<T>::value,
-                                           const Ten<value_type,range_type>,
-                                           Ten<value_type,range_type>>;
+                                           const Tensor,
+                                           Tensor>;
     private:
     pointer pdata_ = nullptr;
     const range_type* prange_ = nullptr;
@@ -196,82 +193,57 @@ makeTenRef(T* p,
     return TenRef<T,R>(p,std::move(range));
     }
 
-template<typename T, typename RangeT>
-class Ten
+class Tensor
     {
     public:
-    using storage_type = std::vector<T>;
+    using storage_type = std::vector<Real>;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
-    using value_type = std::remove_const_t<T>;
+    using value_type = Real;
     using pointer = std::add_pointer_t<value_type>;
     using const_pointer = std::add_pointer_t<const value_type>;
     using reference = std::add_lvalue_reference_t<value_type>;
     using const_reference = const reference;
     using size_type = long;
-    using range_type = RangeT;
+    using range_type = Range;
     public:
     range_type range_;
     storage_type data_;
     public:
 
-    Ten() { }
+    Tensor() { }
 
     template<typename... Dims>
-    Ten(size_type d0, Dims&&... rest)
+    Tensor(size_type d0, Dims&&... rest)
       : range_(d0,std::forward<Dims>(rest)...)
         {
         init();
         }
 
-    Ten(range_type const& range)
-      : range_(range)
-        {
-        init();
-        }
-
-    Ten(range_type && range)
-      : range_(std::move(range))
-        {
-        init();
-        }
-
-    Ten(range_type && range,
-        storage_type && data)
+    Tensor(storage_type && store,
+           range_type && range) 
       : range_(std::move(range)),
-        data_(std::move(data))
+        data_(std::move(store))
         { 
 #ifdef DEBUG
-        auto len = area(range_);
-        if(len==0) throw std::runtime_error("Zero area in Ten");
-        if(data_.size() != size_t(len)) throw std::runtime_error("Wrong size of input data");
+        if(!isContiguous(range_)) Error("Tensor required to have contiguous range");
 #endif
         }
 
-    Ten(Ten const& other) { assignFrom(other); }
-
-    Ten(Ten && other) { moveFrom(std::move(other)); }
-
-    Ten&
-    operator=(Ten const& other) { assignFrom(other); return *this; }
-
-    Ten& 
-    operator=(Ten && other) { moveFrom(std::move(other)); return *this; }
+    template<typename R>
+    explicit
+    Tensor(TenRef<const value_type,R> const& ref) { assignFromRef(ref); }
 
     template<typename R>
     explicit
-    Ten(TenRef<const value_type,R> const& ref) { assignFromRef(ref); }
+    Tensor(TenRef<value_type,R> const& ref) { assignFromRef(ref); }
 
     template<typename R>
-    explicit
-    Ten(TenRef<value_type,R> const& ref) { assignFromRef(ref); }
-
-    template<typename R>
-    Ten&
+    Tensor&
     operator=(TenRef<const value_type,R> const& ref) { assignFromRef(ref); return *this; }
 
     template<typename R>
-    Ten&
+    Tensor&
     operator=(TenRef<value_type,R> const& ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
@@ -291,7 +263,7 @@ class Ten
     range_type const&
     range() const { return range_; }
 
-    const_reference
+    value_type
     operator()() const;
 
     template <typename... Inds>
@@ -365,25 +337,14 @@ class Ten
     void
     assignFromRef(TenRef<const value_type,R> const& ref)
         {
+        auto rb = RangeBuilder(ref.r());
+        for(decltype(ref.r()) n = 0; n < ref.r(); ++n)
+            rb.nextExtent(ref.extent(n));
+        range_ = rb.build();
         //TODO: use (optimized) TenRef &= instead ?
         data_.assign(ref.begin(),ref.end());
         }
 
-    void
-    assignFrom(Ten const& other)
-        {
-        if(&other == this) return;
-        range_ = other.range_;
-        data_ = other.data_;
-        }
-
-    void
-    moveFrom(Ten && other)
-        {
-        range_ = std::move(other.range_);
-        data_ = std::move(other.data_);
-        other.clear();
-        }
     };
 
 //
@@ -394,23 +355,17 @@ template<typename T, typename R>
 auto
 makeRef(TenRef<T,R> & t) { return t; }
 
-//template<typename T, typename R>
-//auto
-//makeRef(TenRef<const T,R> & t) { return t; }
+TensorRef inline
+makeRef(Tensor & t) { return TensorRef(t); }
 
-template<typename T, typename R>
-auto
-makeRef(Ten<T,R> & t) { return TenRef<T,R>(t); }
+TensorRefc inline
+makeRef(Tensor const& t) { return TensorRefc(t); }
 
-template<typename T, typename R>
-auto
-makeRef(Ten<T,R> const& t) { return TenRef<const T,R>(t); }
-
-//This version of makeRef intended to fail,
+//This version of makeRef intended to fail instantiation,
 //forbids explicitly making TenRefs to temporaries
-template<typename T, typename R, typename... Rest>
+template<typename Ten_, typename... VArgs>
 auto
-makeRef(Ten<T,R> && t, Rest&&... args) { return TenRef<T,R>(std::move(t)); }
+makeRef(Ten_ && t, VArgs&&... vargs) { return TenRef<Real,Range>(std::move(t)); }
 
 template<typename T, typename R>
 auto
@@ -420,27 +375,24 @@ template<typename T, typename R>
 auto
 makeRefc(TenRef<const T,R> & t) { return t; }
 
-template<typename T, typename R>
-auto
-makeRefc(Ten<T,R> & t) { return TenRef<const T,R>(t); }
+auto inline
+makeRefc(Tensor & t) { return TensorRefc(t); }
 
-template<typename T, typename R>
-auto
-makeRefc(Ten<T,R> const& t) { return TenRef<const T,R>(t); }
+auto inline
+makeRefc(Tensor const& t) { return TensorRefc(t); }
 
-//This version of makeRefc intended to fail,
+//This version of makeRefc intended to fail instantiation,
 //forbids explicitly making TenRefs to temporaries
-template<typename T, typename R, typename... Rest>
+template<typename Ten_, typename... VArgs>
 auto
-makeRefc(Ten<T,R> && t, Rest&&... args) { return TenRef<const T,R>(std::move(t)); }
+makeRefc(Ten_ && t, VArgs&&... args) { return TensorRefc(std::move(t)); }
 
 template<typename V, typename R>
 std::ostream&
 operator<<(std::ostream & s, TenRef<V,R> const& T);
 
-template<typename V, typename R>
-std::ostream&
-operator<<(std::ostream & s, Ten<V,R> const& T);
+inline std::ostream&
+operator<<(std::ostream & s, Tensor const& T);
 
 } //namespace itensor
 

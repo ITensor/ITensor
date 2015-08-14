@@ -17,11 +17,10 @@ contract(RTenRefc<RangeT> A, Label const& ai,
          RTenRefc<RangeT> B, Label const& bi, 
          RTenRef<RangeT>  C, Label const& ci);
 
-template<typename RangeT>
 void 
-contract(RTen<RangeT> const& A, Label const& ai, 
-         RTen<RangeT> const& B, Label const& bi, 
-         RTen<RangeT>      & C, Label const& ci);
+contract(Tensor const& A, Label const& ai, 
+         Tensor const& B, Label const& bi, 
+         Tensor      & C, Label const& ci);
 
 template<typename RangeT>
 void 
@@ -32,9 +31,9 @@ contractloop(RTenRefc<RangeT> A, Label const& ai,
 
 template<typename RangeT>
 void 
-contractloop(RTen<RangeT> const& A, Label const& ai, 
-             RTen<RangeT> const& B, Label const& bi, 
-             RTen<RangeT>      & C, Label const& ci,
+contractloop(Tensor const& A, Label const& ai, 
+             Tensor const& B, Label const& bi, 
+             Tensor      & C, Label const& ci,
              Args const& args = Global::args());
 
 
@@ -105,20 +104,18 @@ find_index(InfArray<T,MaxSize> const& v,
 /// Implementations
 ///
 
-template<typename RangeT>
-void 
-contract(RTen<RangeT> const& A, Label const& ai, 
-         RTen<RangeT> const& B, Label const& bi, 
-         RTen<RangeT>      & C, Label const& ci)
+void inline
+contract(Tensor const& A, Label const& ai, 
+         Tensor const& B, Label const& bi, 
+         Tensor      & C, Label const& ci)
     {
     contract(makeRef(A),ai,makeRef(B),bi,makeRef(C),ci);
     }
 
-template<typename RangeT>
-void 
-contractloop(RTen<RangeT> const& A, Label const& ai, 
-             RTen<RangeT> const& B, Label const& bi, 
-             RTen<RangeT>      & C, Label const& ci,
+void inline
+contractloop(Tensor const& A, Label const& ai, 
+             Tensor const& B, Label const& bi, 
+             Tensor      & C, Label const& ci,
              Args const& args)
     {
     contractloop(makeRefc(A),ai,makeRefc(B),bi,makeRef(C),ci,args);
