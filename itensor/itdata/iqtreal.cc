@@ -300,23 +300,58 @@ replaceInd(IQIndexSet const& is,
     return newind.build();
     }
 
-IQTReal
-condense(IQIndexSet const& dis,
-         IQIndexSet const& Nis,
-         IQIndex    const& cind,
-         IQTReal    const& d)
+void
+combine(IQTReal     const& d,
+        IQIndexSet  const& dis,
+        IQIndexSet  const& Cis,
+        IQIndexSet       & Nis,
+        ManageStore      & m)
     {
+#ifdef DEBUG
+    for(auto i : count(1,Cis.r()))
+        {
+        auto jc = findindex(dis,Cis[i]);
+        if(jc == -1)
+            {
+            printfln("Indices of tensor = \n%s\n------",dis);
+            printfln("Extra index = \n%s",Cis[i]);
+            Error("Combiner has extra index not found on other tensor");
+            }
+        }
+#endif
+
+    auto const& cind = Cis[0];
     auto dr = dis.r();
-    auto nr = Nis.r();
+    auto nr = dr-Cis.r()+2;
     auto ncomb = dr-nr+1;
 
-    auto nd = IQTReal(Nis,doTask(CalcDiv{dis},d));
+    //dotoN is -1 if index of d not in new set,
+    //otherwise gives location of new index:
+    auto dtoN = Label(dr,-1);
+    //indices to be combined:
+    auto to_comb = Label(ncomb,-1);
+    size_t nc = 0, //<- num combined
+           nu = 0; //<- num uncombined
+    for(auto i : count(dr)) 
+        {
+        auto jc = findindex(Cis,dis[i]);
+        if(jc == -1) //uncombined index
+            dtoN[i] = 1+(nu++);
+        else         //combined index
+            to_comb[nc++] = i;
+        }
+    assert(nc+nu==decltype(nc)(dr));
+
+    //Create new IQIndexSet
+    auto newind = IQIndexSetBuilder(nr);
+    newind.nextExtent(cind);
+    for(auto i : count(dr)) if(dtoN[i]!=-1) newind.nextExtent(dis[i]);
+    Nis = newind.build();
+
+    //Allocate new data
+    auto& nd = *m.makeNewData<IQTReal>(Nis,doTask(CalcDiv{dis},d));
 
     auto sector_start = Label(cind.nindex(),0);
-
-    auto dtoN = Label(dr,-1);
-    for(auto i : count(dr)) dtoN[i] = findindex(Nis,dis[i]);
-
     auto drange = Range(dr),
          nrange = Range(nr);
     auto dblock = Label(dr),
@@ -328,6 +363,7 @@ condense(IQIndexSet const& dis,
 
         //QN of combined indices for this block
         auto cqn = QN();
+        //total dimension of combined indices for this block
         auto cdim = 1;
         for(auto i : count(dr)) 
             {
@@ -338,10 +374,15 @@ condense(IQIndexSet const& dis,
                 }
             else
                 {
+                //Set nblock to match 
+                //uncombined indices
                 nblock[dtoN[i]] = dblock[i];
                 }
             }
 
+        //Determine which index (n) of cind
+        //has same QN as combined indices,
+        //set nblock[0] to this
         long n = 0;
         for(; n < cind.nindex(); ++n)
             if(cind.qn(1+n) == cqn) 
@@ -349,98 +390,23 @@ condense(IQIndexSet const& dis,
                 nblock[0] = n;
                 break;
                 }
-        assert(n == nblock[0]);
 
+        //Get full block of new storage
         nrange.init(make_indexdim(Nis,nblock));
         auto nref = makeTenRef(getBlock(nd,Nis,nblock),&nrange);
+        //Do tensor slicing to get subblock where data will go
         auto nsub = subIndex(nref,0,sector_start[n],sector_start[n]+cdim);
 
+        //Get current block
         auto dref = makeTenRef(d.data()+io.offset,&drange);
-        auto dgrp = groupInds(dref,0,ncomb);
+        //Call groupInds on current block permutes combined
+        //inds to front, then groups them into a single ind
+        auto dgrp = groupInds(dref,to_comb);
 
+        //Copy the data
         nsub &= dgrp;
 
         sector_start[n] += cdim;
-        }
-    return nd;
-    }
-
-void
-combine(IQTReal     const& d,
-        IQIndexSet  const& dis,
-        IQIndexSet  const& Cis,
-        IQIndexSet       & Nis,
-        ManageStore      & m,
-        bool              own_data)
-    {
-    //cind is special "combined index"
-    auto const& cind = Cis[0];
-
-    //check locations of Cis[1], Cis[2], ...
-    //Check if Cis[1],Cis[2],... are grouped together (contiguous);
-    //all at front; and in same order as on combiner
-    bool front_contig = true;
-    for(auto j = 0, c = 1; c < Cis.r() && j < dis.r(); ++j,++c)
-        if(dis[j] != Cis[c])
-            {
-            front_contig = false;
-            break;
-            }
-
-    Permutation P;
-
-    if(!front_contig) //if !front_contig, need to permute
-        {
-        P = Permutation(dis.r());
-        //Set P destination values to -1 to mark
-        //indices that need to be assigned destinations:
-        for(auto i : index(P)) P.setFromTo(i,-1);
-
-        //permute combined indices to the front, in same
-        //order as in Cis:
-        long ni = 0;
-        for(auto c : count(1,Cis.r()))
-            {
-            auto j = findindex(dis,Cis[c]);
-            if(j < 0) 
-                {
-                println("IQIndexSet of regular IQTensor =\n",dis);
-                println("IQIndexSet of combiner/delta =\n",Cis);
-                println("Missing IQIndex: ",Cis[c]);
-                Error("IQCombiner: missing IQIndex");
-                }
-            P.setFromTo(j,ni++);
-            }
-        for(auto j : index(P))
-            if(P.dest(j) == -1) P.setFromTo(j,ni++);
-        }
-
-    IQTReal *pd = nullptr; //permuted data
-    auto *Pis = &dis;      //permuted index set
-    IQIndexSet Pis_;
-    if(P) 
-        {
-        if(own_data) pd = m.modifyData(d);
-        else         pd = m.makeNewData<IQTReal>(d);
-        permuteIQ(P,dis,d,Pis_,*pd);
-        Pis = &Pis_;
-        }
-
-    auto newr = Pis->r()-Cis.r()+2;
-    auto newind = IQIndexSetBuilder(newr);
-    newind.setExtent(0,cind);
-    for(auto j : count(1,newr)) newind.setExtent(j,(*Pis)[Cis.r()-2+j]);
-    Nis = newind.build();
-
-    if(pd)
-        {
-        auto nd = condense(*Pis,Nis,Cis[0],*pd);
-        swap(*pd,nd);
-        }
-    else
-        {
-        auto nd = condense(*Pis,Nis,Cis[0],d);
-        m.makeNewData<IQTReal>(std::move(nd));
         }
     }
 
@@ -537,7 +503,7 @@ doTask(Contract<IQIndex>      & C,
     else if(hasindex(C.Lis,C.Ris[0]))
         uncombine(d,C.Lis,C.Ris,C.Nis,m,true);
     else
-        combine(d,C.Lis,C.Ris,C.Nis,m,true);
+        combine(d,C.Lis,C.Ris,C.Nis,m);
     }
 
 void
@@ -557,7 +523,7 @@ doTask(Contract<IQIndex>      & C,
         }
     else
         {
-        combine(d,C.Ris,C.Lis,C.Nis,m,false);
+        combine(d,C.Ris,C.Lis,C.Nis,m);
         }
     }
 
