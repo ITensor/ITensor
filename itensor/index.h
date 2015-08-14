@@ -81,7 +81,7 @@ class Index
     rawname() const { return std::string(name_.c_str()); }
 
     // Evaluates to false if Index is default constructed.
-    explicit operator bool() const { return (type_!=NullInd); }
+    explicit operator bool() const;
 
     // (Explicitly) convertible to integer types
     explicit operator int() const { return m(); }

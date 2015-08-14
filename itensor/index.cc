@@ -2,7 +2,6 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include <array>
 #include "itensor/index.h"
 #include "itensor/util/readwrite.h"
 
@@ -52,6 +51,8 @@ nameint(const string& f, int n)
 string Index::
 name() const  { return putprimes(name_.c_str(),primelevel_); }
 
+Index::
+operator bool() const { return (id_!=0); }
 
 
 Index& Index::
