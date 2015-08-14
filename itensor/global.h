@@ -68,7 +68,7 @@ enum Printdat { ShowData, HideData };
     auto str = format("%s",X); \
     std::cout << pre; \
     if(pre.size() + str.size() > 60) std::cout << "\n"; \
-    std::cout << str << std::endl; \
+    std::cout << str << "\n" << std::endl; \
     Global::printdat() = savep;\
     }
 #define Print(X)    PrintEither(X,false)
