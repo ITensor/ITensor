@@ -1,4 +1,4 @@
-#include "core.h"
+#include "itensor.h"
 #include "myclass.h"
 
 using std::cout;
@@ -6,8 +6,7 @@ using std::endl;
 using std::string;
 using namespace itensor;
 
-int 
-main(int argc, char* argv[])
+int main()
     {
 
     //
@@ -17,17 +16,17 @@ main(int argc, char* argv[])
     //to demonstrate how to create extra code
     //in separate files to add to your project
     //
-    MyClass m("m",5);
+    auto m = MyClass("m",5);
     println(m);
 
 
     //
     // Construct and print an ITensor
     //
-    Index a("A",5),
-          b("B",4);
+    auto a = Index("A",5);
+    auto b = Index("B",4);
 
-    ITensor T(a,b);
+    auto T = ITensor(a,b);
     T.randomize();
 
     //The %f formatting flag below tells printfln to

@@ -2,18 +2,16 @@
 
 MyClass::
 MyClass()
-    :
-    i_(0)
+  : i_(0)
     { } 
 
 MyClass::
 MyClass(std::string name, int i)
-    :
-    i_(i),
+  : i_(i),
     name_(name)
     { }
 
-const std::string& MyClass::
+std::string const& MyClass::
 name() const
     {
     return name_;
@@ -26,10 +24,9 @@ value() const
     }
 
 std::ostream&
-operator<<(std::ostream& s, const MyClass& m)
+operator<<(std::ostream& s, MyClass const& m)
     {
     s << "MyClass(" << m.name() << "," << m.value() << ")";
     return s;
     }
-
 
