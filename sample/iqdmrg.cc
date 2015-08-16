@@ -1,20 +1,18 @@
-#include "core.h"
+#include "dmrg.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
 #include "autompo.h"
 
 using namespace itensor;
 
-int 
-main(int argc, char* argv[])
+int main()
     {
+    //
+    // Initialize the sites making up the Hilbert space
+    //
     int N = 100;
-
-    //
-    // Initialize the site degrees of freedom.
-    //
-    //SpinHalf sites(N); //make a chain of N spin 1/2's
-    SpinOne sites(N); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
@@ -25,7 +23,7 @@ main(int argc, char* argv[])
     // which automatically tracks quantum
     // number information.
     //
-    AutoMPO ampo(sites);
+    auto ampo = AutoMPO(sites);
     for(int j = 1; j < N; ++j)
         {
         ampo += 0.5,"S+",j,"S-",j+1;
@@ -35,9 +33,8 @@ main(int argc, char* argv[])
     auto H = IQMPO(ampo);
 
     // Set the initial wavefunction matrix product state
-    // to be a Neel state.
-    //
-    InitState initState(sites);
+    // to be a classical Neel state
+    auto initState = InitState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
@@ -46,13 +43,10 @@ main(int argc, char* argv[])
             initState.set(i,"Dn");
         }
 
-    IQMPS psi(initState);
-
-    //
-    // psiHphi calculates matrix elements of MPO's with respect to MPS's
-    // psiHphi(psi,H,psi) = <psi|H|psi>
-    //
-    printfln("Initial energy = %.5f", psiHphi(psi,H,psi) );
+    //Because we made the initial state an
+    //IQMPS with total Sz=0, DMRG will keep
+    //it in this same quantum number sector
+    auto psi = IQMPS(initState);
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -60,11 +54,12 @@ main(int argc, char* argv[])
     // Here less than 5 cutoff values are provided, for example,
     // so all remaining sweeps will use the last one given (= 1E-10).
     //
-    Sweeps sweeps(5);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
-    sweeps.niter() = 2;
-    sweeps.noise() = 1E-7,1E-8,0.0;
+    //Here we use the "noise" feature to aid
+    //convergence during the first two sweeps
+    sweeps.noise() = 1E-7,1E-8,0;
     println(sweeps);
 
     //
@@ -76,6 +71,7 @@ main(int argc, char* argv[])
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",energy);
+
     printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
 
     println("\nTotal QN of Ground State = ",totalQN(psi));
