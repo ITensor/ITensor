@@ -35,7 +35,8 @@ HEADERS=global.h real.h permutation.h indextype.h index.h \
         sites/tj.h sites/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h
+        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h \
+        lattice/latticebond.h lattice/square.h lattice/triangular.h
 
 
 
@@ -57,6 +58,10 @@ $(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
 $(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/hams
 	@cp $^ $(ITENSOR_INCLUDEDIR)/hams
+
+$(ITENSOR_INCLUDEDIR)/lattice/%.h: lattice/%.h
+	@mkdir -p $(ITENSOR_INCLUDEDIR)/lattice
+	@cp $^ $(ITENSOR_INCLUDEDIR)/lattice
 
 $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/sites
