@@ -9,7 +9,7 @@
 
 namespace itensor {
 
-Lattice inline
+LatticeGraph inline
 triangularLattice(int Nx, 
                   int Ny,
                   const Args& args = Global::args())
@@ -17,7 +17,7 @@ triangularLattice(int Nx,
     auto yperiodic = args.getBool("YPeriodic",true);
     auto N = Nx*Ny;
     auto Nbond = 3*N-2*Ny + (yperiodic ? 0 : -2*Nx+1);
-    Lattice latt; 
+    LatticeGraph latt; 
     latt.reserve(Nbond);
 
     for(int n = 1; n <= N; ++n)
