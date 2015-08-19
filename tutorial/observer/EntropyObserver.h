@@ -41,17 +41,23 @@ measure(const Args& args)
     {
     auto& psi = Parent::psi();
     auto N = psi.N();
-    auto b = args.getInt("AtBond",1);
+    auto b = args.getInt("AtBond");
     auto sw = args.getInt("Sweep");
     auto ha = args.getInt("HalfSweep");
 
-    auto A1 = psi.A(b);
-    auto A2 = psi.A(b+1);
-    auto wf = A1*A2;
+    auto wf = psi.A(b)*psi.A(b+1);
 
+    auto U = psi.A(b);
+    auto V = psi.A(b+1);
     ITensor D;
-    auto spectrum = svd(wf,A1,D,A2);
+    auto spectrum = svd(wf,U,D,V);
 
+    //
+    // Change the code below to compute
+    // the von Neumann or Renyi entropy
+    // and print this out
+    // (along with the bond number b defined above)
+    //
     print("Eigs: ");
     for(auto eig : spectrum.eigsKept())
         {
@@ -60,9 +66,7 @@ measure(const Args& args)
     println();
     println();
     PAUSE
-
     }
-
 
 
 } //namespace itensor
