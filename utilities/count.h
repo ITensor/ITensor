@@ -51,21 +51,21 @@ class CountHelper
 
 template <typename T> constexpr
 auto
-count(T end)
+count(T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(0,end);
     }
 
 template <typename ST, typename T> constexpr
 auto
-count(ST start, T end)
+count(ST start, T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(T(start),end);
     }
  
 template <typename C> constexpr
 auto
-index(C const& container) 
+index(C const& container)  -> detail::CountHelper<T>
     -> detail::CountHelper<decltype(container.size())>
     {
     using size_type = decltype(container.size());
@@ -74,14 +74,14 @@ index(C const& container)
 
 template <typename T> constexpr
 auto
-count1(T end)
+count1(T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(1,1+end);
     }
 
 template <typename ST, typename T> constexpr
 auto
-count1(ST start, T end)
+count1(ST start, T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(start,1+end);
     }
