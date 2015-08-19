@@ -156,14 +156,20 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITensor& D, ITensor& V,
          const Args& args)
     {
-    const Real thresh = args.getReal("SVDThreshold",1E-4);
-    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
-    const int maxm = args.getInt("Maxm",MAX_M);
-    const int minm = args.getInt("Minm",1);
-    const bool do_truncate = args.getBool("Truncate",true);
-    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    const bool cplx = A.isComplex();
+    auto thresh = args.getReal("SVDThreshold",1E-4);
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto maxm = args.getInt("Maxm",MAX_M);
+    auto minm = args.getInt("Minm",1);
+    auto do_truncate = args.getBool("Truncate",true);
+    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto cplx = A.isComplex();
+
+    auto lname = args.getString("LeftIndexName","ul");
+    auto rname = args.getString("RightIndexName","vl");
+    auto itype = getIndexType(args,"IndexType",Link);
+    auto litype = getIndexType(args,"LeftIndexType",itype);
+    auto ritype = getIndexType(args,"RightIndexType",itype);
 
     if(A.r() != 2)
         {
@@ -245,7 +251,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         cout << endl;
         }
     
-    Index uL("ul",m,Link),vL("vl",m,Link);
+    Index uL(lname,m,litype),
+          vL(rname,m,ritype);
 
     D = ITensor(uL,vL,DD);
     D *= A.scale();
@@ -316,6 +323,12 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     auto doRelCutoff = args.getBool("DoRelCutoff",false);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto logrefNorm = args.getReal("LogRefNorm",0.);
+
+    auto lname = args.getString("LeftIndexName","ul");
+    auto rname = args.getString("RightIndexName","vl");
+    auto itype = getIndexType(args,"IndexType",Link);
+    auto litype = getIndexType(args,"LeftIndexType",itype);
+    auto ritype = getIndexType(args,"RightIndexType",itype);
 
     if(A.r() != 2)
         {
@@ -551,10 +564,10 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         if(!hasindex(uI,*ui))
             swap(ui,vi);
 
-        Index l("l",this_m);
+        Index l("l",this_m,litype);
         Liq.push_back(IndexQN(l,qn(uI,*ui)));
 
-        Index r("r",this_m);
+        Index r("r",this_m,ritype);
         Riq.push_back(IndexQN(r,qn(vI,*vi)));
 
         Dblock.push_back(ITensor(l,r,thisD.SubVector(1,this_m)));
@@ -574,7 +587,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     if(Liq.size() == 0)
         throw ResultIsZero("Liq.size() == 0");
 
-    IQIndex L("L",Liq,uI.dir()), R("R",Riq,vI.dir());
+    IQIndex L(lname,Liq,uI.dir()), 
+            R(rname,Riq,vI.dir());
 
     D = IQTensor(L,R);
     U = IQTensor(uI,dag(L));
