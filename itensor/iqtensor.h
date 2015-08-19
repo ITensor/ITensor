@@ -434,6 +434,9 @@ mapElems(const Callable& f)
     return *this;
     }
 
+Real inline
+norm(const IQTensor& t) { return t.norm(); }
+
 Real
 sumels(const IQTensor& T);
 
