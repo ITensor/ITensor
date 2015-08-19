@@ -26,7 +26,7 @@ struct OrderSecond
 Spectrum::
 Spectrum(const Args& args) 
     :
-    truncerr_(NAN)
+    truncerr_(0)
     { 
     computeTruncerr(args);
     }
