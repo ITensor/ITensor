@@ -137,6 +137,8 @@ class Args
         static Args gos_;
         return gos_;
         }
+    static Args&
+    global() { return Global(); }
 
     private:
 
