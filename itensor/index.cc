@@ -286,5 +286,22 @@ operator<<(std::ostream& s, const IndexVal& iv)
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
 
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name)
+    {
+    if(!args.defined(name)) Error(format("Name %s not found in Args",name));
+    return IndexType(args.getString(name).c_str());
+    }
+
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name, 
+             IndexType default_val)
+    {
+    if(!args.defined(name)) return default_val; 
+    return IndexType(args.getString(name).c_str());
+    }
+
 } //namespace itensor
 

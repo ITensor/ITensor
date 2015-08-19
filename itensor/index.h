@@ -316,6 +316,15 @@ operator<(const Index& other) const
 IndexVal inline Index::
 operator()(int i) const { return IndexVal(*this,i); }
 
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name);
+
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name, 
+             IndexType default_val);
+
 } //namespace itensor
 
 #endif
