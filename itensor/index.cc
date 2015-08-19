@@ -29,11 +29,11 @@ putprimes(string s, int plev)
     return str.str();
     }
 
-string static
-nameindex(IndexType const& it, int plev)
-    { 
-    return putprimes(it.c_str(),plev); 
-    }
+//string static
+//nameindex(IndexType const& it, int plev)
+//    { 
+//    return putprimes(it.c_str(),plev); 
+//    }
 
 string 
 nameint(const string& f, int n)
@@ -219,9 +219,21 @@ id() const
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
-    if(t.name() != "" && t.name() != " ") s << t.name();
-    return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << (t.id_ % 10000) << "):" << t.m();
+    s << t.name() << "(" << t.m() << ","
+      << t.type().c_str() << "){" << (t.id_ % 1000) << "}";
+    return s;
+
+    //s << putprimes("",t.primeLevel()) << "(";
+    //s << "(";
+    //if(t.name() != "" && t.name() != " ") s << t.name();
+    //s << "," << t.m() << "," << t.type().c_str() << ")";
+    //s << "{" << (t.id_% 1000) << "}";
+    //return s;
+
+    //if(t.name() != "" && t.name() != " ") s << "Index(" << t.name();
+    //s << "," << nameindex(t.type(),t.primeLevel()) 
+    //      << "," << (t.id_ % 10000) << "):" << t.m();
+    //return s;
     }
 
 IndexVal::
