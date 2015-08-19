@@ -65,7 +65,7 @@ count(ST start, T end) -> detail::CountHelper<T>
  
 template <typename C> constexpr
 auto
-index(C const& container)  -> detail::CountHelper<T>
+index(C const& container)
     -> detail::CountHelper<decltype(container.size())>
     {
     using size_type = decltype(container.size());
