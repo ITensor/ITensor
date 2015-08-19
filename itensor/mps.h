@@ -95,6 +95,13 @@ class MPSt
     const Tensor& 
     A(int i) const;
 
+    void
+    setA(int i, Tensor const& T);
+
+    void
+    setA(int i, Tensor && T);
+
+
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
     Tensor& 
@@ -328,8 +335,22 @@ class InitState
 
 //
 // MPSt
-// Template Methods
+// Template/Inline Methods
 //
+
+template <class Tensor>
+void inline MPSt<Tensor>::
+setA(int i, Tensor const& T)
+    {
+    Anc(i) = T;
+    }
+
+template <class Tensor>
+void inline MPSt<Tensor>::
+setA(int i, Tensor && T)
+    {
+    Anc(i) = std::move(T);
+    }
 
 template <class Tensor>
 template <class BigMatrixT>

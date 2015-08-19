@@ -672,17 +672,17 @@ ITensor inline
 operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 
 template <class Tensor, class IndexT>
-bool inline
+bool 
 operator==(const IndexSet<IndexT>& is, const Tensor& t)
     { return is == t.indices(); }
 
 template <class Tensor, class IndexT>
-bool inline
+bool 
 operator==(const Tensor& t, const IndexSet<IndexT>& is)
     { return t.indices() == is; }
 
 template <class Tensor, class IndexT>
-bool inline
+bool 
 operator<(const Tensor& t, const IndexSet<IndexT>& is)
     { return t.indices() < is; }
 
