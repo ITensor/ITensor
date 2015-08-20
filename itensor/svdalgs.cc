@@ -203,7 +203,6 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
 
     //Truncate
 
-    Spectrum spec;
 
     int m = DD.Length();
     Real terr = 0;
@@ -226,7 +225,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         printfln("doRelCutoff = %s",(doRelCutoff?"true":"false"));
         printfln("absoluteCutoff = %s",(absoluteCutoff?"true":"false"));
         printfln("Kept m=%d states in svdRank2 line 169", m);
-        printfln("svdtruncerr = %.3E",spec.truncerr());
+        printfln("svdtruncerr = %.3E",terr);
 
         int stop = min(10,DD.Length());
         Vector Ds = DD.SubVector(1,stop);
@@ -741,9 +740,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         if(DD(1) < 0) DD *= -1; //DEBUG
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
-    Spectrum spec;
-    spec.truncerr(svdtruncerr);
-    const int m = DD.Length();
+    auto m = DD.Length();
 
 #ifdef DEBUG
     if(m > maxm)
@@ -795,6 +792,8 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         println("Scale not a finite Real, omitting from returned spectrum.");
         }
 
+    Spectrum spec;
+    spec.truncerr(svdtruncerr);
     spec.eigsKept(DD);
 
     return spec;
@@ -968,8 +967,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
         svdtruncerr = truncate(alleig,m,docut,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
-    Spectrum spec;
-    spec.truncerr(svdtruncerr);
 
     if(args.getBool("ShowEigs",false))
         {
