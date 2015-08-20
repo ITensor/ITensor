@@ -42,8 +42,10 @@ static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;
 
 
-static const Complex Complex_1 = Complex(1,0);
-static const Complex Complex_i = Complex(0,1);
+static const Cplx Complex_1 = Cplx(1,0);
+static const Cplx Complex_i = Cplx(0,1);
+static const Cplx Cplx_1 = Cplx(1,0);
+static const Cplx Cplx_i = Cplx(0,1);
 
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses
@@ -81,10 +83,10 @@ static const Complex Complex_i = Complex(0,1);
 
 enum Printdat { ShowData, HideData };
 
-#define PrintEither(X,Y) \
+#define PrintEither(X,D) \
     {\
     bool savep = Global::printdat();\
-    Global::printdat() = Y; \
+    Global::printdat() = D; \
     auto pre = format("%s = ",#X); \
     auto str = format("%s",X); \
     std::cout << pre; \
