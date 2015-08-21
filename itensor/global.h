@@ -17,6 +17,7 @@
 #include <string.h>
 #include <cstring>
 #include "real.h"
+#include "timers.h"
 
 #if defined(_MSC_VER)
 #include <process.h>
