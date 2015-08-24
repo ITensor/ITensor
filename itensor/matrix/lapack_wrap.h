@@ -79,6 +79,12 @@ namespace itensor {
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
 
+#ifdef PLATFORM_macos
+LAPACK_REAL cblas_dnrm2(LAPACK_INT N, LAPACK_REAL *X, LAPACK_INT incX);
+#else
+LAPACK_REAL F77NAME(dnrm2)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx);
+#endif
+
 
 #ifdef PLATFORM_macos
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
@@ -225,6 +231,23 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
     auto Xnc = const_cast<LAPACK_REAL*>(X);
     F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
 #endif
+    }
+
+//
+// dnrm2
+//
+LAPACK_REAL inline
+dnrm2_wrapper(LAPACK_INT N,
+              const LAPACK_REAL* X,
+              LAPACK_INT incx = 1)
+    {
+#ifdef PLATFORM_macos
+    return cblas_dnrm2(N,X,incx);
+#else
+    auto *Xnc = const_cast<LAPACK_REAL*>(X);
+    return F77NAME(dnrm2)(&N,Xnc,&incx);
+#endif
+    return -1;
     }
 
 //

@@ -8,6 +8,7 @@
 //#include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/print.h"
+#include "itensor/matrix/lapack_wrap.h"
 #include "itensor/tensor/permute.h"
 #include "itensor/real.h"
 #include "itensor/indexset.h"
@@ -254,15 +255,25 @@ struct Contract
         needresult(other.needresult)
         { }
 
-    template<typename Data>
+    template<typename Storage>
     void
-    computeScalefac(Data& dat)
+    computeScalefac(Storage& dat)
         {
-        scalefac = 0;
-        for(auto elt : dat) scalefac += elt*elt;
-        scalefac = std::sqrt(scalefac);
-        if(scalefac == 0) return;
-        for(auto& elt : dat) elt /= scalefac;
+        //
+        // TODO: better design would be to create 
+        //       is to require each data type to
+        //       an operator*= or similar
+        //       Then, within e.g. ITReal make
+        //       a TensorRef T and call norm(T)
+        //       and T *= 1./scalefac
+        //       Have TensorRef use dnrm2 and dscal
+        scalefac = doTask(NormNoScale{},dat);
+        if(std::fabs(scalefac) < 1E-11) 
+            {
+            scalefac = NAN;
+            return;
+            }
+        doTask(MultReal{1./scalefac},dat);
         }
     };
 
@@ -276,7 +287,8 @@ StorageType
     ITDiagReal=4, 
     ITDiagCplx=5,
     IQTReal=6,
-    IQTDiag=7
+    IQTCombiner=7,
+    IQTDiag=8
     }; 
 
 class Write

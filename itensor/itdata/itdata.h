@@ -8,6 +8,7 @@
 #include <memory>
 #include "itensor/types.h"
 #include "itensor/util/error.h"
+#include "itensor/util/timers.h"
 #include "itensor/itdata/storage_types.h"
 
 namespace itensor {

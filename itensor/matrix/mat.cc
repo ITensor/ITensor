@@ -5,6 +5,7 @@
 #include <limits>
 #include "itensor/matrix/lapack_wrap.h"
 #include "itensor/matrix/mat.h"
+#include "itensor/util/timers.h"
 #include "itensor/detail/algs.h"
 
 namespace itensor {
@@ -132,11 +133,7 @@ norm(MatRefc M)
     Real nrm = 0;
     if(M.contiguous())
         {
-        auto end = M.data()+M.size();
-        for(auto it = M.data(); it != end; ++it) 
-            {
-            nrm += (*it)*(*it);
-            }
+        nrm = dnrm2_wrapper(M.size(),M.data());
         }
     else
         {

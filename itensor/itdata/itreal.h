@@ -36,7 +36,9 @@ class ITReal
 
     ITReal(size_t size) : store(size) { }
 
-    ITReal(size_t size, Real val) : store(size,val) { }
+    ITReal(size_t size, Real val) 
+      : store(size,val)
+        { }
 
     template<typename InputIterator>
     ITReal(InputIterator b, InputIterator e) : store(b,e) { }

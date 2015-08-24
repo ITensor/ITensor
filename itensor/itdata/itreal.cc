@@ -54,18 +54,13 @@ doTask(MultCplx const& M, ITReal const& d, ManageStore & m)
 void
 doTask(MultReal const& m, ITReal & d)
     {
-    //use BLAS algorithm?
-    for(auto& elt : d) elt *= m.r;
+    dscal_wrapper(d.size(),m.r,d.data());
     }
 
 Real
 doTask(NormNoScale, ITReal const& d) 
     { 
-    //println("In norm");
-    Real nrm = 0;
-    for(auto& elt : d) 
-        nrm += elt*elt;
-    return std::sqrt(nrm);
+    return std::sqrt(dnrm2_wrapper(d.size(),d.data()));
     }
 
 void
@@ -122,8 +117,7 @@ Cplx
 doTask(SumEls<Index>, ITReal const& d) 
     { 
     Real sum = 0;
-    for(const auto& elt : d)
-        sum += elt;
+    for(auto& elt : d) sum += elt;
     return sum;
     }
 
@@ -174,14 +168,22 @@ doTask(Contract<Index> & C,
                 }
             }
         }
-    auto t1 = makeTenRef(a1.data(),&C.Lis),
-         t2 = makeTenRef(a2.data(),&C.Ris);
+    auto t1 = makeTenRef(a1.data(),a1.size(),&C.Lis),
+         t2 = makeTenRef(a2.data(),a2.size(),&C.Ris);
     auto rsize = area(C.Nis);
+    START_TIMER(4)
     auto nd = m.makeNewData<ITReal>(rsize,0.);
-    auto tr = makeTenRef(nd->data(),&(C.Nis));
-    contractloop(t1,Lind,t2,Rind,tr,Nind);
+    STOP_TIMER(4)
+    auto tr = makeTenRef(nd->data(),nd->size(),&(C.Nis));
 
+    START_TIMER(2)
+    //contractloop(t1,Lind,t2,Rind,tr,Nind);
+    contract(t1,Lind,t2,Rind,tr,Nind);
+    STOP_TIMER(2)
+
+    START_TIMER(3)
     if(rsize > 1) C.computeScalefac(*nd);
+    STOP_TIMER(3)
     }
 
 void
@@ -198,8 +200,8 @@ doTask(PlusEQ<Index> const& P,
         }
     else
         {
-        auto ref1 = makeTenRef(a1.data(),&P.is1());
-        auto ref2 = makeTenRef(a2.data(),&P.is2());
+        auto ref1 = makeTenRef(a1.data(),a1.size(),&P.is1());
+        auto ref2 = makeTenRef(a2.data(),a2.size(),&P.is2());
         auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
         do_permute(ref2,P.perm(),ref1,add);
         }
