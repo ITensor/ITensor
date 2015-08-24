@@ -14,7 +14,6 @@
 namespace itensor {
 
 class ManageStore;
-class ITCombiner;
 class IQTReal;
 
 
@@ -33,7 +32,7 @@ calcDiv(IQIndexSet const& is, Label const& block_ind);
 // "tensor of tensors"
 template<typename Container>
 void
-inverseBlockInd(long block,
+computeBlockInd(long block,
                 IQIndexSet const& is,
                 Container& ind)
     {
@@ -79,6 +78,9 @@ class IQTReal
 
     const Real*
     data() const { return store.data(); }
+
+    size_t
+    size() const { return store.size(); }
 
     template<typename Indexable>
     const Real*
@@ -167,7 +169,7 @@ doTask(SetElt<Real,IQIndex>& S, IQTReal& d);
 //doTask(SetElt<Cplx,IQIndex>& S, IQTReal& d);
 
 void
-doTask(MultReal& M, IQTReal& d);
+doTask(MultReal const& M, IQTReal& d);
 
 void
 doTask(const PlusEQ<IQIndex>& P,
@@ -181,18 +183,6 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& mp);
 
 void
-doTask(Contract<IQIndex>& C,
-       const IQTReal& d,
-       const ITCombiner& cmb,
-       ManageStore& m);
-
-void
-doTask(Contract<IQIndex>& C,
-       const ITCombiner& cmb,
-       const IQTReal& d,
-       ManageStore& m);
-
-void
 doTask(Conj, const IQTReal& d);
 
 bool inline
@@ -203,9 +193,6 @@ doTask(NormNoScale, const IQTReal& d);
 
 void
 doTask(PrintIT<IQIndex>& P, const IQTReal& d);
-
-void
-doTask(PrintIT<IQIndex>& P, const ITCombiner& d);
 
 void
 doTask(Write& W, const IQTReal& d);
@@ -307,7 +294,7 @@ loopContractedBlocks(BlockSparseA const& A,
     for(auto& aio : A.offsets)
         {
         //Reconstruct indices labeling this block of A, put into Ablock
-        inverseBlockInd(aio.block,Ais,Ablockind);
+        computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();
         for(decltype(rB) ib = 0; ib < rB; ++ib)
@@ -326,7 +313,7 @@ loopContractedBlocks(BlockSparseA const& A,
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by computing its QN flux,
             //      could be faster than calling getBlock
-            auto* bblock = getBlock(B,Bis,couB.i);
+            auto bblock = getBlock(B,Bis,couB.i);
             if(!bblock) continue;
 
             //Finish making Cblockind and Bblockind
@@ -337,11 +324,11 @@ loopContractedBlocks(BlockSparseA const& A,
                 Bblockind[ib] = couB.i[ib];
                 }
 
-            auto* cblock = getBlock(C,Cis,Cblockind);
-            assert(cblock != nullptr);
+            auto cblock = getBlock(C,Cis,Cblockind);
+            assert(cblock);
 
-            auto* ablock = A.data()+aio.offset;
-            assert(ablock != nullptr);
+            auto ablock = cData(A.data(),aio.offset,A.size());
+            assert(ablock);
 
             callback(ablock,Ablockind,
                      bblock,Bblockind,
@@ -352,13 +339,13 @@ loopContractedBlocks(BlockSparseA const& A,
     }
 
 template<typename BlockSparseStore, typename Indexable>
-const Real*
+cData
 getBlock(BlockSparseStore const& d,
          IQIndexSet const& is,
          Indexable const& block_ind)
     {
     auto r = long(block_ind.size());
-    if(r == 0) return d.data();
+    if(r == 0) return cData(d.data(),d.size());
 #ifdef DEBUG
     if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in getBlock");
 #endif
@@ -372,19 +359,19 @@ getBlock(BlockSparseStore const& d,
     //Do binary search to see if there
     //is a block with block index ii
     auto boff = offsetOf(d.offsets,ii);
-    if(boff >= 0) return d.data()+boff;
-    return nullptr;
+    if(boff >= 0) return cData(d.data(),boff,d.size());
+    return cData{};
     }
 
 template<typename BlockSparseStore, typename Indexable>
-Real*
+Data
 getBlock(BlockSparseStore & d,
          IQIndexSet const& is,
          Indexable const& block_ind)
     {
     auto const& cd = d;
     //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
-    return const_cast<Real*>(getBlock(cd,is,block_ind));
+    return getBlock(cd,is,block_ind).cast_away_const();
     }
 
 

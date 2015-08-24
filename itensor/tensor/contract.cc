@@ -746,7 +746,7 @@ contract(CProps const& p,
     if(p.permuteA())
         {
         //println("Calling permute A");
-        auto tref = makeTenRef(alloc[0],&p.newArange);
+        auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
         tref &= permute(A,p.PA);
         aref = MatRefc(tref.data(),p.dmid,p.dleft);
         aref.applyTrans();
@@ -770,7 +770,7 @@ contract(CProps const& p,
     if(p.permuteB())
         {
         //println("Calling permute B");
-        auto tref = makeTenRef(alloc[1],&p.newBrange);
+        auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
         tref &= permute(B,p.PB);
         bref = MatRefc(tref.data(),p.dmid,p.dright);
         }
@@ -804,7 +804,7 @@ contract(CProps const& p,
     TensorRef newC;
     if(p.permuteC())
         {
-        newC = makeTenRef(alloc[2],&p.newCrange);
+        newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
         cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
         }
     else
@@ -829,7 +829,9 @@ contract(CProps const& p,
     //Important that this be multAdd for block-sparse case
     //where multiple contractions can get added to same block
     //(e.g. when result is a scalar)
+    START_TIMER(11)
     multAdd(aref,bref,cref);
+    STOP_TIMER(11)
 
     //println("Matrix multiply done, took ",cpu.sincemark());
 

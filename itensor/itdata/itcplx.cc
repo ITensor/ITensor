@@ -80,12 +80,12 @@ doTask(Contract<Index>& C,
     auto rsize = area(C.Nis);
     auto nd = m.makeNewData<ITCplx>(rsize,0.);
 
-    auto t1r = makeTenRef(a1.rstart(),&C.Lis),
-         t1i = makeTenRef(a1.istart(),&C.Lis),
-         t2r = makeTenRef(a2.rstart(),&C.Ris),
-         t2i = makeTenRef(a2.istart(),&C.Ris);
-    auto trr = makeTenRef(nd->rstart(),&C.Nis),
-         tri = makeTenRef(nd->istart(),&C.Nis);
+    auto t1r = makeTenRef(a1.rstart(),a1.csize(),&C.Lis),
+         t1i = makeTenRef(a1.istart(),a1.csize(),&C.Lis),
+         t2r = makeTenRef(a2.rstart(),a2.csize(),&C.Ris),
+         t2i = makeTenRef(a2.istart(),a2.csize(),&C.Ris);
+    auto trr = makeTenRef(nd->rstart(),nd->csize(),&C.Nis),
+         tri = makeTenRef(nd->istart(),nd->csize(),&C.Nis);
 
     contractloop(t1i,Lind,t2i,Rind,trr,Nind);
     for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
@@ -157,11 +157,11 @@ realCplx(const ITReal& R,
 
     auto nd = m.makeNewData<ITCplx>(rsize,0.);
 
-    auto t1 = makeTenRef(R.data(),&ris),
-         t2r = makeTenRef(C.rstart(),&cis),
-         t2i = makeTenRef(C.istart(),&cis);
-    auto trr = makeTenRef(nd->rstart(),&Nis),
-         tri = makeTenRef(nd->istart(),&Nis);
+    auto t1 = makeTenRef(R.data(),R.size(),&ris),
+         t2r = makeTenRef(C.rstart(),C.csize(),&cis),
+         t2i = makeTenRef(C.istart(),C.csize(),&cis);
+    auto trr = makeTenRef(nd->rstart(),nd->csize(),&Nis),
+         tri = makeTenRef(nd->istart(),nd->csize(),&Nis);
 
     contractloop(t1,rind,t2r,cind,trr,Nind);
     contractloop(t1,rind,t2i,cind,tri,Nind);

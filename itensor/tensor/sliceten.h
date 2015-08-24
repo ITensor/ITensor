@@ -61,7 +61,7 @@ subTensor(Ten_ && T,
         offset += T.stride(j) * (*st);
         rb.setExtStr(j,(*sp)-(*st),T.stride(j));
         }
-    return makeTenRef(T.data()+offset,rb.build());
+    return makeTenRef(T.store()+offset,rb.build());
     }
 
 template<typename Ten_>
@@ -76,7 +76,7 @@ subIndex(Ten_ && T,
 #endif
     auto R = T.range();
     R[ind].ext = stop-start;
-    return makeTenRef(T.data()+T.stride(ind)*start,std::move(R));
+    return makeTenRef(T.store()+T.stride(ind)*start,std::move(R));
     }
 
 Range inline
@@ -102,7 +102,7 @@ groupInds(Ten_ && T,
           size_t istart,
           size_t iend)
     {
-    return makeTenRef(T.data(),groupIndsRange(T.range(),istart,iend));
+    return makeTenRef(T.store(),groupIndsRange(T.range(),istart,iend));
     }
 
 template<typename Ten_, typename Inds_>
@@ -136,7 +136,7 @@ auto
 permute(TenRef<T,R> const& t,
         Perm_       const& P)
     {
-    return makeTenRef(t.data(),permuteRange(t.range(),P));
+    return makeTenRef(t.store(),permuteRange(t.range(),P));
     }
 
 template<typename Perm_>

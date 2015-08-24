@@ -81,7 +81,7 @@ doTask(CalcDiv const& C, IQTDiag const& d)
 #endif
     auto b = d.offsets.front().block;
     Label block_ind(C.is.r());
-    inverseBlockInd(b,C.is,block_ind);
+    computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
 
@@ -125,9 +125,9 @@ blockDiagDense(IQTDiag const& D,
 
         auto do_contract =
             [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
-            (const Real *dblock, Label const& Dblockind,
-             const Real *tblock, Label const& Tblockind,
-                   Real *cblock, Label const& Cblockind)
+            (cData dblock, Label const& Dblockind,
+             cData tblock, Label const& Tblockind,
+             Data  cblock, Label const& Cblockind)
             {
             Range Trange,
                   Crange;
@@ -143,7 +143,7 @@ blockDiagDense(IQTDiag const& D,
                 Dminm = std::min(Dminm,Ddim[j]);
                 }
 
-            auto Dref = VecRefc(dblock,Dminm);
+            auto Dref = VecRefc(dblock.data(),Dminm);
 
             contractDiagPartial(Dref,Dind,
                                 Tref,Tind,
@@ -242,13 +242,11 @@ doTask(PrintIT<IQIndex> & P,
     Range brange;
     for(auto& io : d.offsets)
         {
-        bool indices_printed = false;
-        //Determine block indices (where in the IQIndex space
-        //this non-zero block is located)
-        inverseBlockInd(io.block,P.is,block);
+        computeBlockInd(io.block,P.is,block);
         auto blockm = blockIndex(0).m();
         for(auto i : count(1,rank)) blockm = std::min(blockm,blockIndex(i).m());
 
+        bool indices_printed = false;
         auto os = io.offset;
         for(auto n : count(blockm))
             {

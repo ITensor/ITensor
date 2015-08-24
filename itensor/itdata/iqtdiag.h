@@ -41,6 +41,9 @@ class IQTDiag
     const Real*
     data() const { return store.data(); }
 
+    size_t
+    size() const { return store.size(); }
+
     long
     updateOffsets(IQIndexSet const& is,
                   QN const& div);

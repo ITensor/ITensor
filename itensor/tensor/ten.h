@@ -52,31 +52,32 @@ class TenRef
     using tensor_type = std::conditional_t<std::is_const<T>::value,
                                            const Tensor,
                                            Tensor>;
+    using storage_type = DataRange<T>;
     private:
-    pointer pdata_ = nullptr;
+    storage_type d_;
     const range_type* prange_ = nullptr;
     range_type range_;
     public:
 
     TenRef() { }
 
-    TenRef(pointer pdat,
+    TenRef(storage_type dat,
            range_type const& range)
-      : pdata_(pdat),
+      : d_(dat),
         prange_(&range)
         { }
 
-    TenRef(pointer pdat,
+    TenRef(storage_type dat,
            range_type && range)
-      : pdata_(pdat),
+      : d_(dat),
         range_(std::move(range))
         { 
         prange_ = &range_;
         }
 
-    TenRef(pointer pdat,
+    TenRef(storage_type dat,
            const range_type* prange)
-      : pdata_(pdat),
+      : d_(dat),
         prange_(prange)
         { }
 
@@ -117,7 +118,7 @@ class TenRef
     size_type 
     size() const { return area(*prange_); }
 
-    explicit operator bool() const { return bool(pdata_);}
+    explicit operator bool() const { return bool(d_.data());}
 
     size_type
     extent(size_type i) const { return prange_->extent(i); }
@@ -128,9 +129,19 @@ class TenRef
     range_type const&
     range() const { return *prange_; }
 
+    storage_type const&
+    store() const { return d_; }
+
     // direct access to data
     pointer
-    data() const { return pdata_; }
+    data() const { return d_.data(); }
+
+    // maximum offset safe to
+    // add to data() pointer
+    // (can be greater than max
+    //  offset of range())
+    size_t
+    maxOffset() const { return d_.size(); }
     
     reference
     operator()() const;
@@ -144,16 +155,16 @@ class TenRef
     operator()(Indices const& ii) const;
 
     void
-    clear() { pdata_ = nullptr; prange_ = nullptr; }
+    clear() { d_.clear(); prange_ = nullptr; }
 
     iterator
-    begin() const { return iterator(pdata_,*prange_); }
+    begin() const { return iterator(d_,*prange_); }
 
     iterator
     end() const { return iterator::makeEnd(*prange_); }
 
     const_iterator
-    cbegin() const { return const_iterator(pdata_,*prange_); }
+    cbegin() const { return const_iterator(d_,*prange_); }
 
     const_iterator
     cend() const { return const_iterator::makeEnd(*prange_); }
@@ -174,11 +185,11 @@ operator&=(TensorRef const& a, Tensor const& t);
 template<typename T, typename RangeT>
 auto
 makeTenRef(T* p,
+           size_t max_size,
            const RangeT* prange)
     {
     using R = std::decay_t<std::remove_pointer_t<RangeT>>;
-    //static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
-    return TenRef<T,R>(p,prange);
+    return TenRef<T,R>({p,max_size},prange);
     }
 
 template<typename T, typename RangeT,
@@ -186,11 +197,58 @@ template<typename T, typename RangeT,
                                && !std::is_pointer<RangeT>::value> >
 auto
 makeTenRef(T* p,
+           size_t max_size,
            RangeT && range)
     {
     using R = std::decay_t<RangeT>;
     static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
-    return TenRef<T,R>(p,std::move(range));
+    return TenRef<T,R>({p,max_size},std::move(range));
+    }
+
+template<typename T, typename RangeT>
+auto
+makeTenRef(T* p,
+           size_t offset,
+           size_t max_size,
+           const RangeT* prange)
+    {
+    using R = std::decay_t<std::remove_pointer_t<RangeT>>;
+    return TenRef<T,R>({p,offset,max_size},prange);
+    }
+
+template<typename T, typename RangeT,
+         class = std::enable_if_t<std::is_rvalue_reference<RangeT&&>::value
+                               && !std::is_pointer<RangeT>::value> >
+auto
+makeTenRef(T* p,
+           size_t offset,
+           size_t max_size,
+           RangeT && range)
+    {
+    using R = std::decay_t<RangeT>;
+    static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
+    return TenRef<T,R>({p,offset,max_size},std::move(range));
+    }
+
+template<typename T, typename RangeT>
+auto
+makeTenRef(DataRange<T> const& store,
+           const RangeT* prange)
+    {
+    using R = std::decay_t<std::remove_pointer_t<RangeT>>;
+    return TenRef<T,R>(store,prange);
+    }
+
+template<typename T, typename RangeT,
+         class = std::enable_if_t<std::is_rvalue_reference<RangeT&&>::value
+                               && !std::is_pointer<RangeT>::value> >
+auto
+makeTenRef(DataRange<T> const& store,
+           RangeT && range)
+    {
+    using R = std::decay_t<RangeT>;
+    static_assert(!std::is_pointer<R>::value,"Error: RangeT is of pointer type");
+    return TenRef<T,R>(store,std::move(range));
     }
 
 class Tensor
@@ -363,9 +421,20 @@ makeRef(Tensor const& t) { return TensorRefc(t); }
 
 //This version of makeRef intended to fail instantiation,
 //forbids explicitly making TenRefs to temporaries
-template<typename Ten_, typename... VArgs>
-auto
-makeRef(Ten_ && t, VArgs&&... vargs) { return TenRef<Real,Range>(std::move(t)); }
+//TODO: this is causing code to fail to compile for some reason,
+//      but it's important to have
+//template<typename... VArgs>
+//auto
+//makeRef(Tensor && t, VArgs&&... vargs) { return TenRef<Real,Range>(std::move(t)); }
+
+template<typename... VArgs>
+TensorRefc
+makeRef(Tensor && t, VArgs&&... vargs) 
+    { 
+    throw std::runtime_error("Cannot call makeRef on temporary (rvalue) Tensor");
+    //static_assert(false,"Cannot call makeRef on temporary (rvalue) Tensor");
+    return TensorRefc{}; 
+    }
 
 template<typename T, typename R>
 auto

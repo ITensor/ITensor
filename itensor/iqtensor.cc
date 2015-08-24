@@ -159,10 +159,10 @@ doTask(AddITensor & A,
     if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
     Range drange;
     drange.init(make_indexdim(A.iqis,A.block_ind));
-    auto* dblock = getBlock(d,A.iqis,A.block_ind);
+    auto dblock = getBlock(d,A.iqis,A.block_ind);
 
     auto dref = makeTenRef(dblock,&drange);
-    auto tref = makeTenRef(t.data(),&A.is);
+    auto tref = makeTenRef(t.data(),t.size(),&A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
     do_permute(tref,A.P,dref,add);
     }
@@ -246,7 +246,7 @@ doTask(ToITensor & T,
     detail::GCounter C(r);
     for(auto& io : d.offsets)
         {
-        inverseBlockInd(io.block,T.is,block);
+        computeBlockInd(io.block,T.is,block);
         for(long j = 0; j < r; ++j)
             {
             long start = 0;
@@ -311,43 +311,51 @@ combiner(std::vector<IQIndex> inds,
     auto cr = inds.size();
     auto dir = inds.front().dir();
 
+    auto C = IQTCombiner{inds};
+
+    //Build the combined IQIndex,
+    //saving information about
+    //how we're doing it in C
     struct QNm { QN q; long m = 1; };
     auto qms = vector<QNm>{};
-
-    //set up counter over all possible blocks
-    //that can be formed out of "inds"
-    auto C = detail::GCounter(cr);
-    for(auto j : count(cr))
-        C.setRange(j,1,inds[j].nindex());
-
-    for(; C.notDone(); ++C)
+    for(auto I : C.range())
         {
         QNm qm;
         for(auto j : count(cr))
             {
-            qm.q += inds[j].qn(C[j]) * inds[j].dir();
-            qm.m *= inds[j].index(C[j]).m();
+            qm.q += inds[j].qn(1+I[j]) * inds[j].dir();
+            qm.m *= inds[j].index(1+I[j]).m();
             }
-        auto q_equals = [&qm](QNm const& x){ return x.q == qm.q; };
-        auto it = stdx::find_if(qms,q_equals);
-        if(it != qms.end()) it->m += qm.m;
-        else                qms.push_back(qm);
+
+        size_t n = 0;
+        for(; n < qms.size(); ++n) if(qms[n].q==qm.q) break;
+
+        if(n < qms.size())
+            {
+            C.setBlockRange(I,n,qms[n].m,qm.m);
+            qms[n].m += qm.m;
+            }
+        else 
+            {
+            C.setBlockRange(I,n,0,qm.m);
+            qms.push_back(qm);
+            }
         }
 
-    //Build storage for combined IQIndex
-    auto indqn = IQIndex::storage(qms.size());
-    for(auto n : index(indqn))
-        indqn[n] = IndexQN(Index(nameint("c",n),qms[n].m,itype),qms[n].q);
+    auto cstore = IQIndex::storage(qms.size());
+    for(auto n : index(qms))
+        cstore[n] = IndexQN(Index(nameint("c",n),qms[n].m,itype),qms[n].q);
 
     auto newinds = stdx::reserve_vector<IQIndex>(1+inds.size());
-    newinds.emplace_back(cname,std::move(indqn),dir);
-    for(auto const& I : inds) newinds.push_back(dag(I));
+    newinds.emplace_back(cname,std::move(cstore),dir);
+    for(auto& I : inds) newinds.push_back(dag(I));
 
-    return IQTensor(IQIndexSet{std::move(newinds)},ITCombiner());
+    return IQTensor{IQIndexSet{std::move(newinds)},std::move(C)};
     }
 
 IQIndex
-findIQInd(const IQTensor& T, const Index& i)
+findIQInd(IQTensor const& T, 
+          Index    const& i)
     {
     for(const IQIndex& J : T.inds())
         if(hasindex(J,i)) return J;
@@ -359,7 +367,8 @@ findIQInd(const IQTensor& T, const Index& i)
 
 
 Arrow
-dir(const IQTensor& T, const IQIndex& I)
+dir(IQTensor const& T, 
+    IQIndex  const& I)
 	{
     for(const IQIndex& J : T.inds())
         if(I == J) return J.dir();

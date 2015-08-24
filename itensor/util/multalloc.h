@@ -66,7 +66,7 @@ class MultAlloc
         SizeOff() { }
         SizeOff(size_type s, size_type o) : size(s), offset(o) { }
         };
-    size_t arrsize_ = 0;
+    size_type arrsize_ = 0;
     std::array<SizeOff,MaxNAlloc> sos_;
     std::vector<T> v_;
     //T* p_ = nullptr;
@@ -89,7 +89,10 @@ class MultAlloc
     size() const { return arrsize_; }
 
     size_type
-    size(size_t i) const
+    data_size() const { return v_.size(); }
+
+    size_type
+    size(size_type i) const
         {
         CHECK_IND(i) 
         return sos_[i].size;
@@ -125,7 +128,7 @@ class MultAlloc
         }
 
     pointer
-    operator[](size_t i)
+    operator[](size_type i)
         { 
         CHECK_IND(i) 
         CHECK_ALLOCATED
@@ -138,12 +141,12 @@ class MultAlloc
 
     private:
     void
-    check_ind(size_t i) const
+    check_ind(size_type i) const
         {
         if(i >= arrsize_) throw std::out_of_range("index out of range in MultAlloc");
         }
     void
-    check_size(size_t i) const
+    check_size(size_type i) const
         {
         if(sos_[i].size==0) throw std::out_of_range("attempted to access size zero element of MultAlloc");
         }

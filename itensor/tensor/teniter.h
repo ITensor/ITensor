@@ -9,31 +9,35 @@
 
 namespace itensor {
 
-template<class T, class RangeT>
+template<class Ptr, class RangeT>
 class TenIter
     { 
     public:
-    using value_type = typename std::iterator_traits<T>::value_type;
-    using reference = typename std::iterator_traits<T>::reference;
-    using difference_type = typename std::iterator_traits<T>::difference_type;
-    using pointer = typename std::iterator_traits<T>::pointer;
+    using value_type = typename std::iterator_traits<Ptr>::value_type;
+    using reference = typename std::iterator_traits<Ptr>::reference;
+    using difference_type = typename std::iterator_traits<Ptr>::difference_type;
+    using pointer = typename std::iterator_traits<Ptr>::pointer;
     using iterator_category = std::forward_iterator_tag;
     using range_type = RangeT;
     using range_iter = RangeIter<RangeT>;
+    using storage_type = DataRange<typename std::remove_pointer<Ptr>::type>;
     private:
-    pointer p_; 
+    storage_type d_;
     range_iter it_;
     public: 
 
-    TenIter() : p_(nullptr) { }
+    TenIter() { }
 
-    TenIter(pointer p, range_type const& r) 
-      : p_(p), 
+    TenIter(storage_type d, range_type const& r) 
+      : d_(d), 
         it_(r) 
         { }  
 
     reference 
-    operator*() { return *(p_+it_.offset()); }  
+    operator*() 
+        { 
+        return d_[it_.offset()];
+        }
 
     TenIter& 
     operator++() { increment(); return *this; } 
@@ -41,8 +45,8 @@ class TenIter
     TenIter 
     operator++(int) { auto ct = *this; ct.increment(); return ct; } 
 
-    pointer
-    data() const { return p_; }
+    //pointer
+    //data() const { return p_; }
 
     range_type const&
     range() const { return it_.range(); }
