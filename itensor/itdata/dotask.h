@@ -8,27 +8,13 @@
 #include <cassert>
 #include "itensor/itdata/itdata.h"
 #include "itensor/util/print.h"
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 
 ///////////////////
 
 namespace detail {
-
-//Some definitions to help simplify
-//template overload selection
-//(credit to R. Martinho Fernandes)
-
-template<unsigned I>
-struct choice : choice<I+1> { constexpr choice(){} };
-
-template<>
-struct choice<10> { constexpr choice(){} };
-
-struct select_overload : choice<1> { constexpr select_overload(){} };
-
-//struct otherwise{ otherwise(...){} };
-
 
 template<typename F,typename Ret>
 struct ApplyFunc
@@ -59,14 +45,14 @@ struct ApplyFunc<F,void>
 
 template<typename F, typename R, typename Storage>
 void
-applyFunc_impl(choice<3>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
+applyFunc_impl(stdx::choice<3>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
     {
     throw ITError("applyFunc: function object has no operator() method for storage type");
     }
 
 template<typename F, typename R, typename Storage>
 auto
-applyFunc_impl(choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
+applyFunc_impl(stdx::choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
     -> decltype(A.f(s), void())
     {
     Storage& ncs = m.modifyData();
@@ -75,7 +61,7 @@ applyFunc_impl(choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
 
 template<typename F, typename R, typename Storage>
 auto
-applyFunc_impl(choice<1>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
+applyFunc_impl(stdx::choice<1>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     -> decltype(A.f(s), void())
     {
     A(s);
@@ -87,7 +73,7 @@ template<typename F, typename R, typename Storage>
 void
 doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     { 
-    detail::applyFunc_impl(detail::select_overload{},A,s,m);
+    detail::applyFunc_impl(stdx::select_overload{},A,s,m);
     }
 
 
@@ -153,13 +139,13 @@ class RegisterTask;
 
 template<typename NArgs, typename Task, typename Return>
 Task
-getReturnHelperImpl(choice<2>, RegisterTask<NArgs,Task,Return> & R)
+getReturnHelperImpl(stdx::choice<2>, RegisterTask<NArgs,Task,Return> & R)
     {
     return std::move(R.task_);
     }
 template<typename NArgs, typename Task, typename Return>
 auto
-getReturnHelperImpl(choice<1>, RegisterTask<NArgs,Task,Return> & R)
+getReturnHelperImpl(stdx::choice<1>, RegisterTask<NArgs,Task,Return> & R)
     -> std::enable_if_t<std::is_same<typename RegisterTask<NArgs,Task,Return>::return_type,Return>::value,Return>
     {
     return std::move(R.ret_);
@@ -168,7 +154,7 @@ template<typename NArgs, typename Task, typename Return>
 auto
 getReturnHelper(RegisterTask<NArgs,Task,Return> & R)
     {
-    return getReturnHelperImpl(select_overload{},R);
+    return getReturnHelperImpl(stdx::select_overload{},R);
     }
 
 
@@ -243,18 +229,15 @@ class CallWrap : public FuncT<CallWrap<RT,Task,D1,Return,PType1,PType2>,StorageT
 template<typename Ret>
 using RetOrNone = std::conditional_t<std::is_void<Ret>::value,NoneType,Ret>;
 
-template<typename T, typename Ret>
-using ReturnIfExists = std::conditional_t<std::is_void<T>::value,Ret,Ret>;
-
 template<typename Task, typename Storage>
 NoneType
-testRetImpl(choice<3>, Task& t, Storage& s, ManageStore& m)
+testRetImpl(stdx::choice<3>, Task& t, Storage& s, ManageStore& m)
     {
     return NoneType{};
     }
 template<typename Task, typename Storage>
 auto 
-testRetImpl(choice<2>, Task& t, Storage& s, ManageStore& m)
+testRetImpl(stdx::choice<2>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s))>;
@@ -262,7 +245,7 @@ testRetImpl(choice<2>, Task& t, Storage& s, ManageStore& m)
     }
 template<typename Task, typename Storage>
 auto 
-testRetImpl(choice<1>, Task& t, Storage& s, ManageStore& m)
+testRetImpl(stdx::choice<1>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s,m))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s,m))>;
@@ -280,7 +263,7 @@ struct TestRet
     auto
     operator()()
         {
-        return testRetImpl(select_overload{},t,s,m);
+        return testRetImpl(stdx::select_overload{},t,s,m);
         }
     };
 
@@ -320,52 +303,56 @@ class FixRet<Ret,void>
 
 /////////////
 
-template <typename Ret, typename Task, typename Storage>
+template <typename Task, typename Storage, typename Ret>
 void
-callDoTask_Impl(choice<3>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+callDoTask_Impl(stdx::choice<3>, Task& t, Storage& s, ManageStore& m, Ret& ret)
     {
+    static_assert(containsType<StorageTypes,std::decay_t<Storage>>{},"Data type not in list of registered storage types");
     throw ITError("1 parameter doTask not defined for specified task or data type [1]");
     }
-template <typename Ret,typename Task, typename Storage>
+template <typename Task, typename Storage, typename Ret>
 auto 
-callDoTask_Impl(choice<2>, Task& t, Storage& s, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,s)),void>
+callDoTask_Impl(stdx::choice<2>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+    -> stdx::if_compiles_return<decltype(doTask(t,s)),void>
     {
+    static_assert(containsType<StorageTypes,std::decay_t<Storage>>{},"Data type not in list of registered storage types");
     FixRet<Ret,decltype(doTask(t,s))>{ret}(t,s);
     }
-template <typename Ret, typename Task, typename Storage>
+template <typename Task, typename Storage, typename Ret>
 auto 
-callDoTask_Impl(choice<1>, Task& t, Storage& s, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,s,m)),void>
+callDoTask_Impl(stdx::choice<1>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+    -> stdx::if_compiles_return<decltype(doTask(t,s,m)),void>
     {
+    static_assert(containsType<StorageTypes,std::decay_t<Storage>>{},"Data type not in list of registered storage types");
     FixRet<Ret,decltype(doTask(t,s,m))>{ret}(t,s,m);
     }
-template<typename Return, typename Storage, typename Task>
+template<typename Task, typename Storage, typename Return>
 void
 callDoTask(Task& t, Storage& s, ManageStore& m, Return& ret)
     {
-    callDoTask_Impl<Return,Task,Storage>(select_overload{},t,s,m,ret);
+    static_assert(containsType<StorageTypes,std::decay_t<Storage>>{},"Data type not in list of registered storage types");
+    callDoTask_Impl<Task,Storage,Return>(stdx::select_overload{},t,s,m,ret);
     }
 
 /////////////////////////////////////////////////////
 
 template <typename Ret, typename Task, typename D1, typename D2>
 void
-callDoTask_Impl(choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+callDoTask_Impl(stdx::choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
     {
     throw ITError("2 parameter doTask not defined for specified task or data type [2]");
     }
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2)),void>
+callDoTask_Impl(stdx::choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    -> stdx::if_compiles_return<decltype(doTask(t,d1,d2)),void>
     {
     FixRet<Ret,decltype(doTask(t,d1,d2))>{ret}(t,d1,d2);
     }
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2,m)),void>
+callDoTask_Impl(stdx::choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    -> stdx::if_compiles_return<decltype(doTask(t,d1,d2,m)),void>
     {
     FixRet<Ret,decltype(doTask(t,d1,d2,m))>{ret}(t,d1,d2,m);
     }
@@ -373,28 +360,28 @@ template<typename Ret, typename Task, typename D1, typename D2>
 void
 callDoTask(Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
     {
-    callDoTask_Impl<Ret,Task,D1,D2>(select_overload{},t,d1,d2,m,ret);
+    callDoTask_Impl<Ret,Task,D1,D2>(stdx::select_overload{},t,d1,d2,m,ret);
     }
 
 /////////////////////
 
 template<typename Task, typename D>
 std::false_type
-testDTImpl(choice<3>, Task& t, D& d, ManageStore& m)
+testDTImpl(stdx::choice<3>, Task& t, D& d, ManageStore& m)
     {
     return std::false_type{};
     }
 template<typename Task, typename D>
 auto 
-testDTImpl(choice<2>, Task& t, D& d, ManageStore& m)
-    -> ReturnIfExists<decltype(doTask(t,d)),std::true_type>
+testDTImpl(stdx::choice<2>, Task& t, D& d, ManageStore& m)
+    -> stdx::if_compiles_return<decltype(doTask(t,d)),std::true_type>
     {
     return std::true_type{};
     }
 template<typename Task, typename D>
 auto 
-testDTImpl(choice<1>, Task& t, D& d, ManageStore& m)
-    -> ReturnIfExists<decltype(doTask(t,d,m)),std::true_type>
+testDTImpl(stdx::choice<1>, Task& t, D& d, ManageStore& m)
+    -> stdx::if_compiles_return<decltype(doTask(t,d,m)),std::true_type>
     {
     return std::true_type{};
     }
@@ -404,7 +391,7 @@ struct HasDTHelper
     Task* t;
     Storage* s;
     ManageStore* m;
-    auto operator()() { return testDTImpl(select_overload{},*t,*s,*m); }
+    auto operator()() { return testDTImpl(stdx::select_overload{},*t,*s,*m); }
     };
 template<typename Task, typename Storage>
 struct HasConstDoTask
@@ -437,21 +424,21 @@ struct HasDoTask
 
 template<typename Task, typename D1, typename D2>
 std::false_type
-testDTImpl(choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m)
+testDTImpl(stdx::choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
     return std::false_type{};
     }
 template<typename Task, typename D1, typename D2>
 auto 
-testDTImpl(choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2)),std::true_type>
+testDTImpl(stdx::choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m)
+    -> stdx::if_compiles_return<decltype(doTask(t,d1,d2)),std::true_type>
     {
     return std::true_type{};
     }
 template<typename Task, typename D1, typename D2>
 auto 
-testDTImpl(choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2,m)),std::true_type>
+testDTImpl(stdx::choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m)
+    -> stdx::if_compiles_return<decltype(doTask(t,d1,d2,m)),std::true_type>
     {
     return std::true_type{};
     }
@@ -462,7 +449,7 @@ struct HasDTHelper2Arg
     D1* d1;
     D2* d2;
     ManageStore* m;
-    auto operator()() { return testDTImpl(select_overload{},*t,*d1,*d2,*m); }
+    auto operator()() { return testDTImpl(stdx::select_overload{},*t,*d1,*d2,*m); }
     };
 template<typename Task, typename D1, typename D2>
 struct HasConstDoTask2Arg
@@ -495,14 +482,14 @@ struct HasDoTask2Arg
 
 template<typename D>
 auto 
-testEvalImpl(choice<2>, D& d)
+testEvalImpl(stdx::choice<2>, D& d)
     {
     return std::false_type{};
     }
 template<typename D>
 auto 
-testEvalImpl(choice<1>, D& d)
-    -> ReturnIfExists<decltype(evaluate(d)),std::true_type>
+testEvalImpl(stdx::choice<1>, D& d)
+    -> stdx::if_compiles_return<decltype(evaluate(d)),std::true_type>
     {
     return std::true_type{};
     }
@@ -512,7 +499,7 @@ struct HasEvaluate
     struct Test 
         {
         Storage* s;
-        auto operator()() { return testEvalImpl(select_overload{},*s); }
+        auto operator()() { return testEvalImpl(stdx::select_overload{},*s); }
         };
     bool constexpr static
     result() { return std::result_of_t<Test()>{}; }
@@ -522,15 +509,15 @@ struct HasEvaluate
 
 template<typename D>
 PData
-callEvaluateImpl(choice<2>, D& d)
+callEvaluateImpl(stdx::choice<2>, D& d)
     {
     throw std::runtime_error("No doTask overload found for task/storage type");
     return PData{};
     }
 template<typename D>
 auto
-callEvaluateImpl(choice<1>, D& d)
-    -> ReturnIfExists<decltype(evaluate(d)),PData>
+callEvaluateImpl(stdx::choice<1>, D& d)
+    -> stdx::if_compiles_return<decltype(evaluate(d)),PData>
     {
     return evaluate(d);
     }
@@ -538,21 +525,21 @@ template<typename D>
 PData
 callEvaluate(D& d)
     {
-    return callEvaluateImpl(select_overload{},d);
+    return callEvaluateImpl(stdx::select_overload{},d);
     }
 
 /////////////
 
 template<typename D>
 bool constexpr
-checkHasResultImpl(choice<2>, const D& d)
+checkHasResultImpl(stdx::choice<2>, const D& d)
     {
     return true;
     }
 template<typename D>
 auto
-checkHasResultImpl(choice<1>, const D& d)
-    -> ReturnIfExists<decltype(hasResult(d)),bool>
+checkHasResultImpl(stdx::choice<1>, const D& d)
+    -> stdx::if_compiles_return<decltype(hasResult(d)),bool>
     {
     return hasResult(d);
     }
@@ -560,7 +547,7 @@ template<typename D>
 bool constexpr
 checkHasResult(const D& d)
     {
-    return checkHasResultImpl(select_overload{},d);
+    return checkHasResultImpl(stdx::select_overload{},d);
     }
 
 /////////////
@@ -756,7 +743,7 @@ doTask(Task&& t,
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
     ManageStore m(&(arg.p));
-    detail::RegisterTask<detail::OneArg<CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
+    detail::RegisterTask<detail::OneArg<CPData>,Task,Ret> r{std::forward<Task>(t),std::move(m)};
     arg->plugInto(r);
     return r.getReturn();
     }
