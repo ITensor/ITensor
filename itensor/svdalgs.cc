@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
+#include "itensor/util/stdx.h"
 #include "itensor/matrix/algs.h"
 #include "itensor/svdalgs.h"
 
@@ -92,7 +93,7 @@ doTask(GetBlocks const& G,
     for(auto& dio : d.offsets)
         {
         auto& R = res[n++];
-        inverseBlockInd(dio.block,G.is,dblock);
+        computeBlockInd(dio.block,G.is,dblock);
         auto nrow = G.is[0][dblock[0]].m();
         auto ncol = G.is[1][dblock[1]].m();
         R.i1 = dblock[0];
@@ -198,11 +199,11 @@ showEigs(Vec const& P,
     if(std::fabs(orderMag) < 5 && scale.isFiniteReal())
         {
         Ps *= sqr(scale.real0());
-        print("Denmat eigs: ");
+        print("Denmat evals: ");
         }
     else
         {
-        printf("Denmat eigs (not including log(scale) = %.2f)",scale.logNum());
+        printf("Denmat evals (not including log(scale) = %.2f)",scale.logNum());
         }
 
     for(int j = 1; j <= stop; ++j)
@@ -345,6 +346,8 @@ svdRank2(IQTensor A,
          IQTensor & V,
          Args const& args)
     {
+    PrintData(A);
+    println("In svdRank2, norm(A) = ",norm(A));
     auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
     auto northpass = args.getReal("SVDNOrthPass",2);
@@ -356,10 +359,7 @@ svdRank2(IQTensor A,
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
 
-    if(A.r() != 2)
-        {
-        Error("A must be matrix-like");
-        }
+    if(A.r() != 2) Error("A must be matrix-like");
 
     auto blocks = doTask(GetBlocks{A.inds(),uI,vI},A.store());
 
@@ -381,22 +381,22 @@ svdRank2(IQTensor A,
 
     //TODO: allocate dvecs in a single allocation
     //      make dvecs a vector<VecRef>
-    vector<Vec> dvecs(Nblock);
+    auto dvecs = vector<Vec>(Nblock);
 
-    vector<Real> alleig;
-    alleig.reserve(std::min(uI.m(),vI.m()));
+    auto alleig = stdx::reserve_vector<Real>(std::min(uI.m(),vI.m()));
 
     if(uI.m() == 0) throw ResultIsZero("uI.m() == 0");
     if(vI.m() == 0) throw ResultIsZero("vI.m() == 0");
 
-    for(auto b = 0ul; b < Nblock; ++b)
+    for(decltype(Nblock) b = 0; b < Nblock; ++b)
         {
         auto& M = blocks[b].M;
         auto& UU = Umats.at(b);
         auto& VV = Vmats.at(b);
         auto& d =  dvecs.at(b);
 
-        printfln("b=%d SVD'ing a %dx%d",b,M.Nrows(),M.Ncols());
+        printfln("Block %d = \n%s",b,M);
+
         if(!cplx)
             {
             SVD(M,UU,d,VV,thresh,northpass);
@@ -426,17 +426,16 @@ svdRank2(IQTensor A,
         //Store the squared singular values
         //(denmat eigenvalues) in alleig
         for(auto& val : d) alleig.push_back(val);
-
-        println("d = ",d);
         }
 
+
     auto DDstore = alleig;
-    Vec DD(std::move(DDstore));
+    auto DD = Vec(std::move(DDstore));
 
     //Sort all eigenvalues from largest to smallest
     //irrespective of quantum numbers
     Vec probs;
-    if(do_truncate || show_eigs) 
+    if(do_truncate or show_eigs) 
         {
         for(auto& val : alleig) val = val*val;
         std::sort(alleig.begin(),alleig.end(),std::greater<Real>{});
@@ -459,8 +458,7 @@ svdRank2(IQTensor A,
     Liq.reserve(Nblock);
     Riq.reserve(Nblock);
 
-    long total_m = 0;
-    for(auto b = 0ul; b < Nblock; ++b)
+    for(decltype(Nblock) b = 0; b < Nblock; ++b)
         {
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
@@ -468,7 +466,6 @@ svdRank2(IQTensor A,
         long this_m = 1;
         while(this_m <= d.size() && sqr(d(this_m)) > docut) 
             {
-            ++total_m;
             if(d(this_m) < 0) d(this_m) = 0;
             ++this_m;
             }
@@ -483,31 +480,32 @@ svdRank2(IQTensor A,
 
         if(this_m == 0) 
             { 
+            d.clear();
             B.M.clear();
             ++b; 
             continue; 
             }
 
-        Index l("l",this_m);
-        Liq.push_back(IndexQN(l,uI.qn(1+B.i1)));
+        d.resize(this_m);
 
-        Index r("r",this_m);
-        Riq.push_back(IndexQN(r,vI.qn(1+B.i2)));
+        Liq.emplace_back(Index("l",this_m),uI.qn(1+B.i1));
+        Riq.emplace_back(Index("r",this_m),vI.qn(1+B.i2));
         }
     
     IQIndex L("L",std::move(Liq),uI.dir()), 
             R("R",std::move(Riq),vI.dir());
 
     IQIndexSet Uis(uI,dag(L)),
+               Dis(L,R),
                Vis(vI,dag(R));
 
     IQTReal Ustore(Uis,QN()),
             Vstore(Vis,QN());
 
+    IQTDiag Dstore(Dis,div(A));
+
     long n = 0;
-    Label uind(2,0),
-          vind(2,0);
-    for(auto b = 0ul; b < Nblock; ++b)
+    for(decltype(Nblock) b = 0; b < Nblock; ++b)
         {
         auto& B = blocks[b];
         auto& UU = Umats.at(b);
@@ -517,22 +515,20 @@ svdRank2(IQTensor A,
         //to this_m==0 case above
         if(not B.M) continue;
 
-        uind[0] = B.i1;
-        uind[1] = n;
-        vind[0] = B.i2;
-        vind[1] = n;
-        println("uind = ",uind);
-        println("vind = ",vind);
-        auto* pU = Ustore.getBlock(Uis,uind);
-        auto* pV = Vstore.getBlock(Vis,vind);
-        auto MU = MatRef(pU,uI[B.i1].m(),L[n].m());
-        auto MV = MatRef(pV,vI[B.i2].m(),R[n].m());
-        printfln("MU is %dx%d",MU.Nrows(),MU.Ncols());
-        printfln("UU is %dx%d",UU.Nrows(),UU.Ncols());
-        printfln("MV is %dx%d",MV.Nrows(),MV.Ncols());
-        printfln("VV is %dx%d",VV.Nrows(),VV.Ncols());
-        MU &= UU;
-        MV &= VV;
+        auto uind = stdx::make_array(B.i1,n);
+        auto pU = getBlock(Ustore,Uis,uind);
+        auto Uref = MatRef(pU.data(),uI[B.i1].m(),L[n].m());
+        Uref &= UU;
+
+        auto dind = stdx::make_array(n,n);
+        auto pD = getBlock(Dstore,Dis,dind);
+        auto Dref = VecRef(pD.data(),d.size());
+        Dref &= d;
+
+        auto vind = stdx::make_array(B.i2,n);
+        auto pV = getBlock(Vstore,Vis,vind);
+        auto Vref = MatRef(pV.data(),vI[B.i2].m(),R[n].m());
+        Vref &= VV;
 
         ///////DEBUG
         Mat D(d.size(),d.size());
@@ -541,11 +537,12 @@ svdRank2(IQTensor A,
             D(n,n) = d(n);
             }
         D *= A.scale().real0();
-        auto AA = MU * D * transpose(MV);
-        Print(MU);
+        auto AA = Uref * D * transpose(Vref);
+        Print(Uref);
         Print(D);
-        Print(MV);
-        Print(AA);
+        Print(Vref);
+        printfln("Check %d = \n%s",b,AA);
+        printfln("Diff %d = %.10f",b,norm(AA-B.M));
         ///////DEBUG
 
         ++n;
@@ -555,8 +552,12 @@ svdRank2(IQTensor A,
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
 
     U = IQTensor(Uis,std::move(Ustore));
-    D = IQTensor({L,R},ITDiag<Real>{DD.begin(),DD.end()},A.scale()*signfix);
+    D = IQTensor({L,R},std::move(Dstore),A.scale()*signfix);
     V = IQTensor(Vis,std::move(Vstore));
+
+    PrintData(U*D*V);
+    printfln("Norm check: norm(A-U*D*V) = %.10f",norm(A-U*D*V));
+    println("In svdRank2, norm(U*D*V) = ",norm(U*D*V));
 
     //Originally eigs were found without including scale
     //so put the scale back in

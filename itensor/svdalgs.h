@@ -160,7 +160,10 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
 template<class Tensor>
 Spectrum 
-svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
+svd(Tensor AA, 
+    Tensor & U, 
+    Tensor & D, 
+    Tensor & V, 
     Args args)
     {
     using IndexT = typename Tensor::index_type;
