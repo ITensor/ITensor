@@ -1253,22 +1253,71 @@ SECTION("Combiner")
               k("k",3);
 
         auto T = randomTensor(i,j,k);
-        auto C = combiner(i,k);
-        auto R = C * T;
 
-        CHECK_CLOSE(norm(R),norm(T));
-
-        auto TT = C * R;
-
-        for(auto ii : count1(i.m()))
-        for(auto ij : count1(j.m()))
-        for(auto ik : count1(k.m()))
+        SECTION("Combine 1st,2nd")
             {
-            CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik)), T.real(i(ii),j(ij),k(ik)));
+            auto C = combiner(i,j);
+            auto R = C * T;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : count1(i.m()))
+            for(auto j_ : count1(j.m()))
+            for(auto k_ : count1(k.m()))
+                {
+                auto ci_ = i_ + i.m()*(j_-1);
+                CHECK_CLOSE(R.real(ci(ci_),k(k_)), T.real(i(i_),j(j_),k(k_)));
+                }
             }
+
+        SECTION("Combine 1st,3rd")
+            {
+            auto C = combiner(i,k);
+            auto R = C * T;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : count1(i.m()))
+            for(auto j_ : count1(j.m()))
+            for(auto k_ : count1(k.m()))
+                {
+                auto ci_ = i_ + i.m()*(k_-1);
+                CHECK_CLOSE(R.real(ci(ci_),j(j_)), T.real(i(i_),j(j_),k(k_)));
+                }
+            }
+
+        SECTION("Combine 2nd,3rd")
+            {
+            auto C = combiner(k,j);
+            auto R = T * C;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : count1(i.m()))
+            for(auto j_ : count1(j.m()))
+            for(auto k_ : count1(k.m()))
+                {
+                auto ci_ = k_ + k.m()*(j_-1);
+                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                }
+            }
+
+
+        //Uncombine back:
+        //auto TT = C * R;
+
+        //for(auto ii : count1(i.m()))
+        //for(auto ij : count1(j.m()))
+        //for(auto ik : count1(k.m()))
+        //    {
+        //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik)), T.real(i(ii),j(ij),k(ik)));
+        //    }
         }
 
-    SECTION("Four Index")
+    SECTION("Five Index")
         {
         Index i("i",2),
               j("j",3),
@@ -1277,21 +1326,58 @@ SECTION("Combiner")
               m("m",6);
 
         auto T = randomTensor(i,j,k,l,m);
-        auto C = combiner(i,k,m);
-        auto R = C * T;
 
-        CHECK_CLOSE(norm(R),norm(T));
-
-        auto TT = C * R;
-
-        for(auto ii : count1(i.m()))
-        for(auto ij : count1(j.m()))
-        for(auto ik : count1(k.m()))
-        for(auto il : count1(l.m()))
-        for(auto im : count1(m.m()))
+        SECTION("Combine 1,3,5")
             {
-            CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
+            auto C = combiner(i,k,m);
+            auto R = C * T;
+            auto ci = commonIndex(R,C);
+            Print(ci);
+
+            CHECK_CLOSE(norm(R),norm(T));
+            
+            for(auto i_ : count1(i.m()))
+            for(auto j_ : count1(j.m()))
+            for(auto k_ : count1(k.m()))
+            for(auto l_ : count1(l.m()))
+            for(auto m_ : count1(m.m()))
+                {
+                auto ci_ = i_+i.m()*((k_-1)+k.m()*(m_-1));
+                CHECK_CLOSE(R.real(ci(ci_),j(j_),l(l_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
+                }
             }
+
+        SECTION("Combine 2,3,4")
+            {
+            auto C = combiner(k,j,l);
+            auto R = C * T;
+            auto ci = commonIndex(R,C);
+            Print(ci);
+
+            CHECK_CLOSE(norm(R),norm(T));
+            
+            for(auto i_ : count1(i.m()))
+            for(auto j_ : count1(j.m()))
+            for(auto k_ : count1(k.m()))
+            for(auto l_ : count1(l.m()))
+            for(auto m_ : count1(m.m()))
+                {
+                auto ci_ = k_+k.m()*((j_-1)+j.m()*(l_-1));
+                CHECK_CLOSE(R.real(ci(ci_),i(i_),m(m_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
+                }
+            }
+
+        //Uncombine back:
+        //auto TT = C * R;
+
+        //for(auto ii : count1(i.m()))
+        //for(auto ij : count1(j.m()))
+        //for(auto ik : count1(k.m()))
+        //for(auto il : count1(l.m()))
+        //for(auto im : count1(m.m()))
+        //    {
+        //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
+        //    }
         }
     }
 
