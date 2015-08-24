@@ -32,6 +32,8 @@ class ITCombiner;
 
 class IQTReal;
 
+class IQTCombiner;
+
 class IQTDiag;
 
 class ITLazy;
@@ -47,6 +49,7 @@ ITDiag<Real>,
 ITDiag<Cplx>,
 ITCombiner,
 IQTReal,
+IQTCombiner,
 IQTDiag,
 ITLazy
 //-----------
@@ -61,6 +64,7 @@ ITLazy
 #include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/iqtcombiner.h"
 #include "itensor/itdata/iqtdiag.h"
 #include "itensor/itdata/itlazy.h"
 #endif
