@@ -86,7 +86,7 @@ ostream&
 operator<<(ostream & s, const ITensor& t)
     {
     s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
-    if(!t) 
+    if(!t.store()) 
         {
         s << "{Zero / Not yet allocated}\n";
         }
