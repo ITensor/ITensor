@@ -117,6 +117,12 @@ class RangeT
     size_type
     size() const { return store_.size(); }
 
+    value_type const&
+    front() const { return store_.front(); }
+
+    value_type const&
+    back() const { return store_.back(); }
+
     void
     clear() { return store_.clear(); }
 
