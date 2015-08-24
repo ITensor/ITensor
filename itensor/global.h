@@ -16,6 +16,7 @@
 #include "itensor/util/error.h"
 #include "itensor/util/args.h"
 #include "itensor/real.h"
+#include "itensor/util/timers.h"
 
 namespace itensor {
 
@@ -60,20 +61,6 @@ static const Complex Cplx_i = Complex(0,1);
 
 enum Printdat { ShowData, HideData };
 
-#define PrintEither(X,Y) \
-    {\
-    bool savep = Global::printdat();\
-    Global::printdat() = Y; \
-    auto pre = format("%s = ",#X); \
-    auto str = format("%s",X); \
-    std::cout << pre; \
-    if(pre.size() + str.size() > 60) std::cout << "\n"; \
-    std::cout << str << "\n" << std::endl; \
-    Global::printdat() = savep;\
-    }
-#define Print(X)    PrintEither(X,false)
-#define PrintDat(X) PrintEither(X,true)
-#define PrintData(X) PrintEither(X,true)
 
 class Global
     {
@@ -175,6 +162,24 @@ class Global
         }
     };
 
+template<typename T>
+void
+PrintEither(bool pdat,
+            const char* tok,
+            T const& X)
+    {
+    bool savep = Global::printdat();
+    Global::printdat() = pdat;
+    auto pre = format("%s = ",tok);
+    auto str = format("%s",X);
+    std::cout << pre;
+    if(pre.size() + str.size() > 60) std::cout << "\n";
+    std::cout << str << std::endl;
+    Global::printdat() = savep;
+    }
+#define Print(X)     PrintEither(false,#X,X)
+#define PrintDat(X)  PrintEither(true,#X,X)
+#define PrintData(X) PrintEither(true,#X,X)
 
 } //namespace itensor
 
