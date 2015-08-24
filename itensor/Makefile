@@ -19,6 +19,7 @@ SOURCES+= itdata/itcplx.cc
 SOURCES+= itdata/itcombiner.cc 
 SOURCES+= itdata/itdiag.cc 
 SOURCES+= itdata/iqtreal.cc
+SOURCES+= itdata/iqtcombiner.cc 
 SOURCES+= itdata/iqtdiag.cc
 SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
@@ -88,8 +89,8 @@ matrix/mat.o: $(GDEPHEADERS)
 GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
 matrix/algs.o: $(GDEPHEADERS)
 .debug_objs/matrix/algs.o: $(GDEPHEADERS)
-GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/permutation.h \
-tensor/permute.h tensor/contract.h indexset.ih indexset.h
+GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/ten.ih tensor/permutation.h \
+tensor/permute.h tensor/contract.h itdata/task_types.h indexset.ih indexset.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
 ITDEPHEADERS= itdata/itreal.h
@@ -107,16 +108,19 @@ itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/iqtreal.h
 itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/iqtcombiner.h
+itdata/iqtcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/iqtcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/iqtdiag.h
 itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS= index.h
+ITDEPHEADERS+= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset.ih indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itdata/task_types.h itensor_interface.h itensor_interface.ih \
+ITDEPHEADERS+= itensor_interface.h itensor_interface.ih \
 itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
