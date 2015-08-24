@@ -121,9 +121,9 @@ read(std::istream& s)
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
-    if(t.name() != "" && t.name() != " ") s << t.name();
-    return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << (t.id() % 10000) << "):" << t.m();
+    s << t.name() << "(" << t.m() << ","
+      << t.type().c_str() << "){" << (t.id() % 1000) << "}";
+    return s;
     }
 
 IndexVal::
