@@ -110,9 +110,9 @@ class ITensorT
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage
     //from Real to Complex unless val.imag()!=0 
-    template<typename... IVals>
+    template<typename... VArgs>
     void
-    set(Cplx val, IVals&&... ivs);
+    set(VArgs&&... vargs);
 
     //
     // Index Prime Level Methods
