@@ -9,7 +9,7 @@
 #include "itensor/util/stdx.h"
 #include "itensor/util/print.h"
 
-//#define COLLECT_TIMES
+#define COLLECT_TIMES
 
 #ifdef COLLECT_TIMES
 #define SCOPED_TIMER(N) auto scoped_timer_instance0_ = ScopedTimer(N);
@@ -139,17 +139,17 @@ std::ostream&
 operator<<(std::ostream& s, Timers<NTimer> const& T)
     {
     auto tot = T.total();
-    s << "---------------------------------------------------\n";
-    s << format("Timers:                 Total Time = %.3f  %% Total",tot);
+    s << "-----------------------------------------------------\n";
+    s << format("Timers:                  Total Time = %.4f  %% Total",tot);
     for(decltype(T.size()) n = 0; n < T.size(); ++n)
         {
         if(T.count(n) == 0) continue;
         auto avg = T.avgTime(n);
         auto time = T.time(n);
         auto pct = 100*(time/tot);
-        s << format("\nSection %2d, Average = %.3f, Total = %.3f [%5.1f%%]",n,avg,time,pct);
+        s << format("\nSection %2d, Average = %.4f, Total = %.4f [%5.1f%%]",n,avg,time,pct);
         }
-    s << "\n---------------------------------------------------";
+    s << "\n-----------------------------------------------------";
     return s;
     }
 
