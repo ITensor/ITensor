@@ -173,7 +173,14 @@ PrintEither(bool pdat,
     auto pre = format("%s = ",tok);
     auto str = format("%s",X);
     std::cout << pre;
-    if(pre.size() + str.size() > 60) std::cout << "\n";
+    bool has_newline = false;
+    for(auto c : str)
+        if(c == '\n')
+            {
+            has_newline = true;
+            break;
+            }
+    if(has_newline || (pre.size() + str.size() > 60)) std::cout << "\n";
     std::cout << str << std::endl;
     Global::printdat() = savep;
     }
