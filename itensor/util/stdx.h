@@ -20,6 +20,17 @@ namespace stdx {
 template<typename Expression, typename ReturnValue>
 using if_compiles_return = ReturnValue;
 
+//Helper type for making static_assert always fail,
+//but only if a given template is instantiated
+//(unlike std::false_type, this type depends on
+//the typename T so will not be evaluated until
+//the template is instantiated)
+template<typename T, typename... Rest>
+struct false_regardless_of : public std::false_type
+    {
+    using ignored_type = T;
+    };
+
 //
 //Dummy argument types to simplify
 //template overload precedence.

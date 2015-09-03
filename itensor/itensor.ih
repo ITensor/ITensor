@@ -43,7 +43,7 @@ ITensorT(const IndexVal& iv1,
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
     store_ = newITData<ITReal>(area(is_),0.);
-    set(1.,iv1,rest...);
+    set(iv1,rest...,1.);
     }
 
 template<typename... Inds>
