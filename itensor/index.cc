@@ -158,26 +158,26 @@ operator==(const IndexVal& other) const
 
 
 string
-showm(const Index& I) { return nameint("m=",I.m()); }
+showm(Index const& I) { return nameint("m=",I.m()); }
 
 std::ostream& 
-operator<<(std::ostream& s, const IndexVal& iv)
+operator<<(std::ostream& s, IndexVal const& iv)
     { 
-    const Index& ii = iv.index;
-    return s << "IndexVal: val = " << iv.val << ", ind = " << ii << "\n"; 
+    return s << "IndexVal: val = " << iv.val 
+             << ", ind = " << iv.index;
     }
 
 void
-add(Args& args, 
-    const Args::Name& name, 
-    IndexType it) 
+add(Args            & args, 
+    Args::Name const& name, 
+    IndexType         it) 
     { 
     args.add(name,it.c_str()); 
     }
 
 IndexType
-getIndexType(const Args& args, 
-             const Args::Name& name)
+getIndexType(Args       const& args, 
+             Args::Name const& name)
     {
     if(!args.defined(name)) Error(format("Name %s not found in Args",name));
     return IndexType(args.getString(name).c_str());
