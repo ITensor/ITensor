@@ -202,12 +202,15 @@ doTask(Contract<IQIndex>& Con,
     computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
     //compute new index set (Con.Nis):
     Label Cind;
-    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,true);
+    const bool sortResult = false;
+    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
 
     auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
+    START_TIMER(33)
     auto nd = m.makeNewData<IQTReal>(Con.Nis,Cdiv);
+    STOP_TIMER(33)
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -234,15 +237,21 @@ doTask(Contract<IQIndex>& Con,
         auto cref = makeTenRef(cblock,&Crange);
 
         //Compute cref=aref*bref
+        START_TIMER(2)
         contract(aref,Lind,bref,Rind,cref,Cind);
+        STOP_TIMER(2)
         };
 
+    START_TIMER(20)
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          do_contract);
+    STOP_TIMER(20)
 
-    Con.computeScalefac(C);
+    //START_TIMER(21)
+    //Con.computeScalefac(C);
+    //STOP_TIMER(21)
     }
 
 void
@@ -252,12 +261,7 @@ doTask(Conj, IQTReal const& d) { }
 Real
 doTask(NormNoScale, IQTReal const& d) 
     { 
-    Real nrm = 0;
-    for(auto& elt : d.store)
-        {
-        nrm += elt*elt;
-        }
-    return std::sqrt(nrm);
+    return std::sqrt(dnrm2_wrapper(d.size(),d.data()));
     }
 
 
