@@ -98,17 +98,19 @@ dir(const IQTensor& T, const Index& i) { return findIQInd(T,i).dir(); }
 Arrow
 dir(const IQTensor& T, const IQIndex& i);
 
-//template <typename... Inds>
-//IQTensor
-//randomTensor(const IQIndex& i1, Inds&&... inds)
-//    {
-//    return randomize(IQTensor(i1,std::forward<Inds>(inds)...));
-//    }
-template <typename... IndVals>
+template <typename... Inds>
 IQTensor
-randomTensor(const IQIndexVal& iv1, IndVals&&... ivs)
+randomTensor(IQIndex const& i1, Inds&&... inds)
     {
-    return randomize(IQTensor(iv1,std::forward<IndVals>(ivs)...));
+    static_assert(stdx::false_regardless_of<Inds...>::value,"Must provide a QN or IQIndexVals to IQIndex version of randomTensor");
+    return IQTensor{};
+    }
+template <typename... IQIndVals>
+IQTensor
+randomTensor(IQIndexVal const& iv1, 
+             IQIndVals&&... ivs)
+    {
+    return randomize(IQTensor(iv1,std::forward<IQIndVals>(ivs)...));
     }
 template <typename... Inds>
 IQTensor
