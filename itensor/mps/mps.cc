@@ -429,7 +429,7 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     { 
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i) 
-        A_[i].set(1,initState(i));
+        A_[i].set(initState(i),1);
     }
 template
 void MPSt<ITensor>::

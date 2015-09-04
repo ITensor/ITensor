@@ -143,52 +143,52 @@ getOp(int i, const String& opname, const Args& args) const
 
     if(opname == "Sz")
         {
-        Op.set(+0.5,Up,UpP);
-        Op.set(-0.5,Dn,DnP);
+        Op.set(Up,UpP,+0.5);
+        Op.set(Dn,DnP,-0.5);
         }
     else
     if(opname == "Sx")
         {
-        Op.set(+0.5,Up,DnP);
-        Op.set(+0.5,Dn,UpP);
+        Op.set(Up,DnP,+0.5);
+        Op.set(Dn,UpP,+0.5);
         }
     else
     if(opname == "ISy")
         {
-        Op.set(-0.5,Up,DnP);
-        Op.set(+0.5,Dn,UpP);
+        Op.set(Up,DnP,-0.5);
+        Op.set(Dn,UpP,+0.5);
         }
     else
     if(opname == "Sy")
         {
-        Op.set(+0.5*Cplx_i,Up,DnP);
-        Op.set(-0.5*Cplx_i,Dn,UpP);
+        Op.set(Up,DnP,+0.5*Cplx_i);
+        Op.set(Dn,UpP,-0.5*Cplx_i);
         }
     else
     if(opname == "Sp" || opname == "S+")
         {
-        Op.set(1,Dn,UpP);
+        Op.set(Dn,UpP,1);
         }
     else
     if(opname == "Sm" || opname == "S-")
         {
-        Op.set(1,Up,DnP);
+        Op.set(Up,DnP,1);
         }
     else
     if(opname == "projUp")
         {
-        Op.set(1,Up,UpP);
+        Op.set(Up,UpP,1);
         }
     else
     if(opname == "projDn")
         {
-        Op.set(1,Dn,DnP);
+        Op.set(Dn,DnP,1);
         }
     else
     if(opname == "S2")
         {
-        Op.set(0.75,Up,UpP);
-        Op.set(0.75,Dn,DnP);
+        Op.set(Up,UpP,0.75);
+        Op.set(Dn,DnP,0.75);
         }
     else
         {

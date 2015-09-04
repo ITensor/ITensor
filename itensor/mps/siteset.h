@@ -146,7 +146,7 @@ op(const String& opname, int i,
         IQTensor id_(s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
-            id_.set(1,s(j),sP(j));
+            id_.set(s(j),sP(j),1);
             }
         return id_;
         }

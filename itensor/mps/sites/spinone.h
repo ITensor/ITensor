@@ -158,13 +158,13 @@ getOp(int i, const String& opname, const Args& opts) const
         {
         if(s.m() == 2)
             {
-            Op.set(+0.5,Up,UpP);
-            Op.set(-0.5,Dn,DnP);
+            Op.set(Up,UpP,+0.5);
+            Op.set(Dn,DnP,-0.5);
             }
         else
             {
-            Op.set(+1.0,Up,UpP);
-            Op.set(-1.0,Dn,DnP);
+            Op.set(Up,UpP,+1.0);
+            Op.set(Dn,DnP,-1.0);
             }
         }
     else
@@ -172,15 +172,15 @@ getOp(int i, const String& opname, const Args& opts) const
         {
         if(s.m() == 2)
             {
-            Op.set(+0.5,Up,DnP);
-            Op.set(+0.5,Dn,UpP);
+            Op.set(Up,DnP,+0.5);
+            Op.set(Dn,UpP,+0.5);
             }
         else
             {
-            Op.set(ISqrt2,Up,Z0P); 
-            Op.set(ISqrt2,Z0,UpP);
-            Op.set(ISqrt2,Z0,DnP); 
-            Op.set(ISqrt2,Dn,Z0P);
+            Op.set(Up,Z0P,ISqrt2); 
+            Op.set(Z0,UpP,ISqrt2);
+            Op.set(Z0,DnP,ISqrt2); 
+            Op.set(Dn,Z0P,ISqrt2);
             }
         }
     else
@@ -188,15 +188,15 @@ getOp(int i, const String& opname, const Args& opts) const
         {
         if(s.m() == 2)
             {
-            Op.set(-0.5,Up,DnP);
-            Op.set(+0.5,Dn,UpP);
+            Op.set(Up,DnP,-0.5);
+            Op.set(Dn,UpP,+0.5);
             }
         else
             {
-            Op.set(+ISqrt2,Up,Z0P); 
-            Op.set(-ISqrt2,Z0,UpP);
-            Op.set(+ISqrt2,Z0,DnP); 
-            Op.set(-ISqrt2,Dn,Z0P);
+            Op.set(Up,Z0P,+ISqrt2); 
+            Op.set(Z0,UpP,-ISqrt2);
+            Op.set(Z0,DnP,+ISqrt2); 
+            Op.set(Dn,Z0P,-ISqrt2);
             }
         }
     else
@@ -204,12 +204,12 @@ getOp(int i, const String& opname, const Args& opts) const
         {
         if(s.m() == 2)
             {
-            Op.set(1,Dn,UpP);
+            Op.set(Dn,UpP,1);
             }
         else
             {
-            Op.set(Sqrt2,Dn,Z0P);  
-            Op.set(Sqrt2,Z0,UpP);
+            Op.set(Dn,Z0P,Sqrt2);  
+            Op.set(Z0,UpP,Sqrt2);
             }
         }
     else
@@ -217,91 +217,91 @@ getOp(int i, const String& opname, const Args& opts) const
         {
         if(s.m() == 2)
             {
-            Op.set(1,Up,DnP);
+            Op.set(Up,DnP,1);
             }
         else
             {
-            Op.set(Sqrt2,Up,Z0P);
-            Op.set(Sqrt2,Z0,DnP);
+            Op.set(Up,Z0P,Sqrt2);
+            Op.set(Z0,DnP,Sqrt2);
             }
         }
     else
     if(opname == "Sz2")
         {
         if(s.m() == 2) Error("Sz^2 only non-trivial for S=1 sites");
-        Op.set(1,Up,UpP); 
-        Op.set(1,Dn,DnP);
+        Op.set(Up,UpP,1); 
+        Op.set(Dn,DnP,1);
         }
     else
     if(opname == "Sx2")
         {
         if(s.m() == 2) Error("Sx^2 only non-trivial for S=1 sites");
-        Op.set(0.5,Up,UpP); 
-        Op.set(0.5,Up,DnP);
-        Op.set(1.0, Z0,Z0P);
-        Op.set(0.5,Dn,DnP); 
-        Op.set(0.5,Dn,UpP);
+        Op.set(Up,UpP,0.5); 
+        Op.set(Up,DnP,0.5);
+        Op.set(Z0,Z0P,1.0);
+        Op.set(Dn,DnP,0.5); 
+        Op.set(Dn,UpP,0.5);
         }
     else
     if(opname == "Sy2")
         {
         if(s.m() == 2) Error("Sy^2 only non-trivial for S=1 sites");
-        Op.set(0.5,Up,UpP); 
-        Op.set(-0.5,Up,DnP);
-        Op.set(1,Z0,Z0P);
-        Op.set(+0.5,Dn,DnP); 
-        Op.set(-0.5,Dn,UpP);
+        Op.set(Up,UpP,+0.5); 
+        Op.set(Up,DnP,-0.5);
+        Op.set(Z0,Z0P,1);
+        Op.set(Dn,DnP,+0.5); 
+        Op.set(Dn,UpP,-0.5);
         }
     else
     if(opname == "projUp")
         {
-        Op.set(1,Up,UpP);
+        Op.set(Up,UpP,1);
         }
     else
     if(opname == "projZ0")
         {
         if(s.m() == 2) Error("Can only form projZ0 for S=1 sites");
-        Op.set(1,Z0,Z0P);
+        Op.set(Z0,Z0P,1);
         }
     else
     if(opname == "projDn")
         {
-        Op.set(1,Dn,DnP);
+        Op.set(Dn,DnP,1);
         }
     else
     if(opname == "XUp")
         {
         //m = +1 state along x axis
         Op = IQTensor(s);
-        Op.set(0.5,Up);
-        Op.set(ISqrt2,Z0);
-        Op.set(0.5,Dn);
+        Op.set(Up,0.5);
+        Op.set(Z0,ISqrt2);
+        Op.set(Dn,0.5);
         }
     else
     if(opname == "XZ0")
         {
         //m = 0 state along x axis
         Op = IQTensor(s);
-        Op.set(ISqrt2,Up);
-        Op.set(-ISqrt2,Dn);
+        Op.set(Up,+ISqrt2);
+        Op.set(Dn,-ISqrt2);
         }
     else
     if(opname == "XDn")
         {
         //m = -1 state along x axis
         Op = IQTensor(s);
-        Op.set(0.5,Up);
-        Op.set(-ISqrt2,Z0);
-        Op.set(0.5,Dn);
+        Op.set(Up,0.5);
+        Op.set(Z0,-ISqrt2);
+        Op.set(Dn,0.5);
         }
     else
     if(opname == "S2")
         {
         auto ssp1 = (s.m()==2 ? 0.75 : 2.);
-        Op.set(ssp1,Up,UpP); 
-        Op.set(ssp1,Dn,DnP);
+        Op.set(Up,UpP,ssp1); 
+        Op.set(Dn,DnP,ssp1);
         if(s.m() > 2)
-            Op.set(ssp1,Z0,Z0P);
+            Op.set(Z0,Z0P,ssp1);
         }
     else
         {
