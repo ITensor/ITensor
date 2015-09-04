@@ -19,12 +19,11 @@ class CountHelper
     constexpr
     CountHelper(size_type b,
                 size_type e)
-        : 
-        curr_(b),
+      : curr_(b),
         end_(e)
         { }
 
-    const size_type&
+    size_type const&
     operator*() const { return curr_; }
 
     CountHelper& 
@@ -35,7 +34,7 @@ class CountHelper
         }
 
     bool
-    operator!=(const CountHelper& other) const
+    operator!=(CountHelper const& other) const
         {
         return curr_ != other.curr_;
         }
@@ -51,18 +50,32 @@ class CountHelper
 
 template <typename T> constexpr
 auto
-count(T end)
+count(T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(0,end);
     }
 
 template <typename ST, typename T> constexpr
 auto
-count(ST start, T end)
+count(ST start, T end) -> detail::CountHelper<T>
     {
     return detail::CountHelper<T>(T(start),end);
     }
- 
+
+template <typename T> constexpr
+auto
+count1(T end) -> detail::CountHelper<T>
+    {
+    return detail::CountHelper<T>(1,1+end);
+    }
+
+template <typename ST, typename T> constexpr
+auto
+count1(ST start, T end) -> detail::CountHelper<T>
+    {
+    return detail::CountHelper<T>(start,1+end);
+    }
+
 template <typename C> constexpr
 auto
 index(C const& container) 
@@ -72,18 +85,13 @@ index(C const& container)
     return detail::CountHelper<size_type>(0,container.size());
     }
 
-template <typename T> constexpr
+template <typename C> constexpr
 auto
-count1(T end)
+index1(C const& container) 
+    -> detail::CountHelper<decltype(container.size())>
     {
-    return detail::CountHelper<T>(1,1+end);
-    }
-
-template <typename ST, typename T> constexpr
-auto
-count1(ST start, T end)
-    {
-    return detail::CountHelper<T>(start,1+end);
+    using size_type = decltype(container.size());
+    return detail::CountHelper<size_type>(1,1+container.size());
     }
 
 }
