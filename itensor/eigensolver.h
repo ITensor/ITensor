@@ -4,8 +4,9 @@
 //
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
-#include "iqtensor.h"
-#include "matrix/algs.h"
+#include "itensor/util/count.h"
+#include "itensor/iqtensor.h"
+#include "itensor/matrix/algs.h"
 
 
 namespace itensor {
@@ -313,6 +314,7 @@ complexDavidson(const BigMatrixT& A,
             //printfln("ii=%d, full q = \n%f",ii,q);
             }
 
+
         //Step C of Davidson (1975)
         //Check convergence
         qnorm = norm(q);
@@ -386,26 +388,26 @@ complexDavidson(const BigMatrixT& A,
         int Npass = 1;
         std::vector<Complex> Vq(ni);
 
-        int count = 0;
-        for(int pass = 1; pass <= Npass; ++pass)
+
+        int step = 0;
+        for(auto pass : count1(Npass))
             {
-            ++count;
-            for(int k = 0; k < ni; ++k)
+            ++step;
+            for(auto k : count(ni))
                 {
                 Vq[k] = (dag(V[k])*q).cplx();
                 }
 
-            for(int k = 0; k < ni; ++k)
+            for(auto k : count(ni))
                 {
                 q += (-Vq[k].real())*V[k];
-                if(Vq[k].imag() != 0)
+                if(std::fabs(Vq[k].imag()) > 1E-13)
                     {
                     q += (-Vq[k].imag()*Cplx_i)*V[k];
                     }
                 }
 
             auto qnrm = norm(q);
-
             if(qnrm < 1E-10)
                 {
                 //Orthogonalization failure,
@@ -425,11 +427,11 @@ complexDavidson(const BigMatrixT& A,
                     goto done;
                     }
 
-                if(count > Npass * 3)
+                if(step > Npass * 3)
                     {
                     // Maybe the size of the matrix is only 1?
                     if(debug_level_ >= 3)
-                        println("Breaking out of Davidson: count too big");
+                        println("Breaking out of Davidson: orthog step too big");
                     goto done;
                     }
 
@@ -486,7 +488,6 @@ complexDavidson(const BigMatrixT& A,
         row(MrefI,ni+1) &= newColI;
         row(MrefI,ni+1) *= -1;
 
-        //println("MrefR = \n",MrefR);
 
         if(!complex_diag && norm(newColI) > errgoal_)
             {
