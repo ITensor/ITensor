@@ -19,7 +19,7 @@ doTask(GetElt<IQIndex> const& g, IQTCombiner const& c)
     return Cplx(1.,0.);
     }
 
-void inline
+void 
 doTask(Write& W, IQTCombiner const& d)
     { W.writeType(StorageType::IQTCombiner,d);}
 
