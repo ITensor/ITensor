@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <vector>
 #include "itensor/util/print.h"
+#include "itensor/util/timers.h"
 #include "itensor/types.h"
 #include "itensor/matrix/strideiter.h"
 

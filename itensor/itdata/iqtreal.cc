@@ -261,7 +261,7 @@ doTask(Conj, IQTReal const& d) { }
 Real
 doTask(NormNoScale, IQTReal const& d) 
     { 
-    return std::sqrt(dnrm2_wrapper(d.size(),d.data()));
+    return dnrm2_wrapper(d.size(),d.data());
     }
 
 

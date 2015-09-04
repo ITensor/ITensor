@@ -3,9 +3,10 @@
 //    (See accompanying LICENSE file.)
 //
 #include <limits>
+#include "itensor/util/count.h"
+#include "itensor/util/timers.h"
 #include "itensor/matrix/lapack_wrap.h"
 #include "itensor/matrix/mat.h"
-#include "itensor/util/timers.h"
 #include "itensor/detail/algs.h"
 
 namespace itensor {
@@ -130,15 +131,12 @@ operator-=(const MatRef& a, MatRefc b)
 Real
 norm(MatRefc M)
     {
-    Real nrm = 0;
     if(M.contiguous())
         {
-        nrm = dnrm2_wrapper(M.size(),M.data());
+        return dnrm2_wrapper(M.size(),M.data());
         }
-    else
-        {
-        for(auto& el : M) nrm += el*el;
-        }
+    Real nrm = 0;
+    for(auto& el : M) nrm += el*el;
     return std::sqrt(nrm);
     }
 

@@ -60,7 +60,7 @@ doTask(MultReal const& m, ITReal & d)
 Real
 doTask(NormNoScale, ITReal const& d) 
     { 
-    return std::sqrt(dnrm2_wrapper(d.size(),d.data()));
+    return dnrm2_wrapper(d.size(),d.data());
     }
 
 void
