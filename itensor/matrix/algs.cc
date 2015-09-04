@@ -35,18 +35,34 @@ diagSymmetric(MatRefc const& M,
         throw std::runtime_error("diagSymmetric: U should have same dims as M");
     if(d.size() != N)
         throw std::runtime_error("diagSymmetric: d size should be linear size of M");
-    if(!U.contiguous())
+    if(!isContiguous(U))
         throw std::runtime_error("diagSymmetric: U must be contiguous");
     if(!d.contiguous())
         throw std::runtime_error("diagSymmetric: d must be contiguous");
 #endif
 
     //Set U = -M so eigenvalues will be sorted from largest to smallest
-    daxpy_wrapper(M.size(),-1,M.data(),1,U.data(),1);
+    if(isContiguous(M) && isContiguous(U))
+        {
+        daxpy_wrapper(M.size(),-1,M.data(),1,U.data(),1);
+        }
+    else
+        {
+        auto pM = M.cbegin();
+        for(auto& el : U) 
+            { 
+            el = -(*pM); 
+            ++pM; 
+            }
+        }
 
     LAPACK_INT info = 0;
     dsyev_wrapper('V','U',N,U.data(),d.data(),info);
-    if(info != 0) throw std::runtime_error("Error condition in diagSymmetric");
+    if(info != 0) 
+        {
+        println("M = \n",M);
+        throw std::runtime_error("Error condition in diagSymmetric");
+        }
 
     //Correct the signs of the eigenvalues:
     d *= -1;

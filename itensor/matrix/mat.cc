@@ -42,7 +42,7 @@ operator&=(const MatRef& a, MatRefc b)
         throw std::runtime_error("mismatched sizes in MatRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
-    if(a.range()==b.range() && b.contiguous())
+    if(a.range()==b.range() && isContiguous(b))
         {
         apply(a,b.data(),assign);
         }
@@ -55,7 +55,7 @@ operator&=(const MatRef& a, MatRefc b)
 void 
 operator*=(const MatRef& a, Real fac)
     {
-    if(a.contiguous())
+    if(isContiguous(a))
         {
 #ifdef DEBUG
         if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
@@ -99,7 +99,7 @@ operator+=(const MatRef& a, MatRefc b)
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
         throw std::runtime_error("MatRef +=: mismatched sizes");
 #endif
-    if(b.range()==a.range() && b.contiguous())
+    if(b.range()==a.range() && isContiguous(b))
         {
         call_daxpy(a,b,+1);
         }
@@ -117,7 +117,7 @@ operator-=(const MatRef& a, MatRefc b)
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
         throw std::runtime_error("MatRef +=: mismatched sizes");
 #endif
-    if(b.range()==a.range() && b.contiguous())
+    if(b.range()==a.range() && isContiguous(b))
         {
         call_daxpy(a,b,-1);
         }
@@ -131,7 +131,7 @@ operator-=(const MatRef& a, MatRefc b)
 Real
 norm(MatRefc M)
     {
-    if(M.contiguous())
+    if(isContiguous(M))
         {
         return dnrm2_wrapper(M.size(),M.data());
         }
@@ -172,7 +172,7 @@ call_dgemm(MatRefc A,
            Real beta)
     {
 #ifdef DEBUG
-    if(!(A.contiguous() && B.contiguous() && C.contiguous())) 
+    if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
         throw std::runtime_error("multiplication of non-contiguous MatRefs not currently supported");
 #endif
     if(C.transposed())
@@ -227,7 +227,7 @@ call_dgemv(const MatRefc& M,
            bool fromleft)
     {
 #ifdef DEBUG
-    if(!M.contiguous())
+    if(!isContiguous(M))
         throw std::runtime_error("multiplication of non-contiguous matrixref by vector not currently supported");
 #endif
     auto trans = fromleft;

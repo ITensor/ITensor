@@ -103,8 +103,6 @@ class MatrixRef
     MRange const&
     range() const { return range_; }
 
-    bool
-    contiguous() const { return isContiguous(range_); }
 
     bool
     transposed() const { return isTransposed(range_); }
@@ -141,6 +139,10 @@ class MatrixRef
     void
     pointTo(mat_type& M);
     };
+
+template<typename T>
+bool 
+isContiguous(MatrixRef<T> const& M) { return isContiguous(M.range()); }
 
 
 void
