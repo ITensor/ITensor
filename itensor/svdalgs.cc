@@ -224,7 +224,6 @@ svdRank2(ITensor A,
          const Args& args)
     {
     auto thresh = args.getReal("SVDThreshold",1E-3);
-    auto northpass = args.getReal("SVDNOrthPass",2);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
@@ -250,7 +249,8 @@ svdRank2(ITensor A,
     if(!cplx)
         {
         auto M = toMatRefc(A,ui,vi);
-        SVD(M,UU,DD,VV,thresh,northpass);
+        SCOPED_TIMER(6)
+        SVD(M,UU,DD,VV,thresh);
         }
     else
         {
@@ -263,7 +263,7 @@ svdRank2(ITensor A,
         //Are.toMatrix11NoScale(ui,vi,Mre);
         //Aim.toMatrix11NoScale(ui,vi,Mim);
 
-        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh,northpass);
+        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
         }
 
     //
@@ -350,7 +350,6 @@ svdRank2(IQTensor A,
     println("In svdRank2, norm(A) = ",norm(A));
     auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
-    auto northpass = args.getReal("SVDNOrthPass",2);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
@@ -399,7 +398,7 @@ svdRank2(IQTensor A,
 
         if(!cplx)
             {
-            SVD(M,UU,d,VV,thresh,northpass);
+            SVD(M,UU,d,VV,thresh);
             }
         else
             {

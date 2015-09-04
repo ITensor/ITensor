@@ -18,9 +18,9 @@ namespace itensor {
 //
 
 void
-diagSymmetric(const MatRefc& M,
-              const MatRef& U,
-              const VecRef& d)
+diagSymmetric(MatRefc const& M,
+              MatRef  const& U,
+              VecRef  const& d)
     {
     LAPACK_INT N = M.Ncols();
     if(N < 1) throw std::runtime_error("diagSymmetric: 0 dimensional matrix");
@@ -42,12 +42,7 @@ diagSymmetric(const MatRefc& M,
 #endif
 
     //Set U = -M so eigenvalues will be sorted from largest to smallest
-    auto pM = M.cbegin();
-    for(auto& el : U) 
-        { 
-        el = -(*pM); 
-        ++pM; 
-        }
+    daxpy_wrapper(M.size(),-1,M.data(),1,U.data(),1);
 
     LAPACK_INT info = 0;
     dsyev_wrapper('V','U',N,U.data(),d.data(),info);
@@ -133,10 +128,13 @@ orthog(MatRef M, long num, long numpass)
 //#define CHKSVD
 
 void 
-checksvd(const MatRefc& A, const MatRefc& U, const VecRefc& D, const MatRefc& V)
+checksvd(MatRefc const& A, 
+         MatRefc const& U, 
+         VecRefc const& D, 
+         MatRefc const& V)
     {
     Mat Ach(U);
-    for(long i = 1; i <= D.size(); ++i) column(Ach,i) *= D(i);
+    for(auto i : count1(D.size())) column(Ach,i) *= D(i);
     Ach = Ach * transpose(V);
     Ach -= A;
     printfln("relative error with sqrt in low level svd is %.5E",norm(Ach)/norm(A));
@@ -147,15 +145,14 @@ SVDRef(const MatRefc& M,
        const MatRef& U, 
        const VecRef& D, 
        const MatRef& V,
-       Real thresh,
-       Real northpass)
+       Real thresh)
     {
     auto Mr = M.Nrows(), 
          Mc = M.Ncols();
 
     if(Mr > Mc)
         {
-        SVDRef(transpose(M),V,D,U,thresh,northpass);
+        SVDRef(transpose(M),V,D,U,thresh);
 #ifdef CHKSVD
         checksvd(M,U,D,V);
 #endif
@@ -180,14 +177,13 @@ SVDRef(const MatRefc& M,
     for(auto& el : D) // el = sqrt(fabs(el));
         {
         //This formula zeroes out any negative evals,
-        //smaller error than taking their abs value
+        //smaller error than using their abs value
         el = sqrt((fabs(el)+el)/2);
         }
 
     //Put result of Mt*U==(V*D) in V storage
     mult(transpose(M),U,V);
-    //Orthogonalize cols of V*D to obtain V
-    orthog(V,Mr,northpass); //2 is the number of orthog passes
+    for(auto c : index1(D)) column(V,c) /= D(c);
 
     long start = 2;
     auto D1t = D(1)*thresh;
@@ -195,6 +191,7 @@ SVDRef(const MatRefc& M,
         {
         if(D(start) < D1t) break;
         }
+
 
     if(start >= (Mr-1)) 
         {
@@ -223,7 +220,7 @@ SVDRef(const MatRefc& M,
     auto d = subVector(D,start,Mr);
     Mat u(n,n),
         v(n,n);
-    SVDRef(b,u,d,v,thresh,northpass);
+    SVDRef(b,u,d,v,thresh);
 
     auto Uu = move(mv);
     mult(columns(U,start,Mr),u,Uu);
@@ -243,8 +240,7 @@ SVD(const MatRefc& M,
     Mat& U, 
     Vec& D, 
     Mat& V,
-    Real thresh,
-    Real northpass)
+    Real thresh)
     {
     auto Mr = M.Nrows(),
          Mc = M.Ncols();
@@ -252,7 +248,7 @@ SVD(const MatRefc& M,
     U.resize(Mr,nsv);
     V.resize(Mc,nsv);
     D.resize(nsv);
-    SVDRef(M,U,D,V,thresh,northpass);
+    SVDRef(M,U,D,V,thresh);
     }
 
 } //namespace itensor
