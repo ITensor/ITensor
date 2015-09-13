@@ -3,7 +3,6 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/matrix/vec.h"
-#include "itensor/matrix/lapack_wrap.h"
 #include <limits>
 #include "itensor/detail/algs.h"
 
@@ -21,9 +20,9 @@ namespace itensor {
 
 template<typename Func, typename Iter>
 void
-apply(VecRef& v,
+apply(VectorRef& v,
       Iter it,
-      const Func& f)
+      Func const& f)
     {
     for(auto& el : v) 
         {
@@ -32,26 +31,26 @@ apply(VecRef& v,
         }
     }
 
-VecRef
-operator&=(VecRef a, VecRefc b)
+VectorRef
+operator&=(VectorRef a, VectorRefc b)
     {
 #ifdef DEBUG
-    if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VecRef operator&=");
+    if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VectorRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
-    if(b.contiguous()) apply(a,b.data(),assign);
-    else               apply(a,b.cbegin(),assign);
+    if(isContiguous(b)) apply(a,b.data(),assign);
+    else                apply(a,b.cbegin(),assign);
     return a;
     }
 
-VecRef 
-operator*=(VecRef a, Real fac)
+VectorRef 
+operator*=(VectorRef a, Real fac)
     {
-    if(a.contiguous())
+    if(isContiguous(a))
         {
 #ifdef DEBUG
         if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
-            throw std::runtime_error("VecRef overflow of size beyond LAPACK_INT range");
+            throw std::runtime_error("VectorRef overflow of size beyond LAPACK_INT range");
 #endif
         dscal_wrapper(a.size(),fac,a.data());
         return a;
@@ -60,15 +59,15 @@ operator*=(VecRef a, Real fac)
     return a;
     }
 
-VecRef 
-operator/=(VecRef a, Real fac)
+VectorRef 
+operator/=(VectorRef a, Real fac)
     {
-    if(fac == 0) throw std::runtime_error("VecRef /=: divide by zero");
+    if(fac == 0) throw std::runtime_error("VectorRef /=: divide by zero");
     return operator*=(a,1./fac);
     }
 
 void
-call_daxpy(VecRef& A, const VecRefc& B, Real alpha_)
+call_daxpy(VectorRef& A, const VectorRefc& B, Real alpha_)
     {
     LAPACK_REAL alpha = alpha_;
     LAPACK_INT inc = 1;
@@ -80,17 +79,17 @@ call_daxpy(VecRef& A, const VecRefc& B, Real alpha_)
     daxpy_wrapper(size,alpha,B.data(),inc,A.data(),inc);
     }
 
-VecRef
-operator+=(VecRef a, VecRefc b)
+VectorRef
+operator+=(VectorRef a, VectorRefc b)
     {
 #ifdef DEBUG
-    if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
+    if(a.size()!=b.size()) throw std::runtime_error("VectorRef +=: mismatched sizes");
 #endif
     auto pluseq = [](Real& x, Real y) { x += y; };
-    if(b.contiguous())
+    if(isContiguous(b))
         {
-        if(a.contiguous()) call_daxpy(a,b,+1);
-        else               apply(a,b.data(),pluseq);
+        if(isContiguous(a)) call_daxpy(a,b,+1);
+        else                apply(a,b.data(),pluseq);
         }
     else
         {
@@ -99,17 +98,17 @@ operator+=(VecRef a, VecRefc b)
     return a;
     }
 
-VecRef
-operator-=(VecRef a, VecRefc b)
+VectorRef
+operator-=(VectorRef a, VectorRefc b)
     {
 #ifdef DEBUG
-    if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
+    if(a.size()!=b.size()) throw std::runtime_error("VectorRef +=: mismatched sizes");
 #endif
     auto minuseq = [](Real& x, Real y) { x -= y; };
-    if(b.contiguous())
+    if(isContiguous(b))
         {
-        if(a.contiguous()) call_daxpy(a,b,-1);
-        else               apply(a,b.data(),minuseq);
+        if(isContiguous(a)) call_daxpy(a,b,-1);
+        else                apply(a,b.data(),minuseq);
         }
     else
         {
@@ -118,37 +117,34 @@ operator-=(VecRef a, VecRefc b)
     return a;
     }
 
+template<>
 std::ostream&
-operator<<(std::ostream& s, VecRefc v)
+operator<<(std::ostream& s, VectorRefc const& v)
     {
-    for(const auto& el : v)
-        {
-        s << el << " ";
-        }
+    for(auto& el : v) s << el << " ";
     return s;
     }
 
+template<>
 Real
-norm(VecRefc v)
+norm(VectorRefc const& v)
     {
-    Real nrm = 0;
-    for(auto& el : v) nrm += el*el;
-    return std::sqrt(nrm);
+    return dnrm2_wrapper(v.size(),v.data(),stride(v)); 
     }
 
 Real
-operator*(VecRefc a, VecRefc b)
+operator*(VectorRefc a, VectorRefc b)
     {
 #ifdef DEBUG
-    if(a.size() != b.size()) throw std::runtime_error("VecRef dot product: mismatched sizes");
+    if(a.size() != b.size()) throw std::runtime_error("VectorRef dot product: mismatched sizes");
     if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
-        throw std::runtime_error("VecRef dot product: overflow of size beyond LAPACK_INT range");
+        throw std::runtime_error("VectorRef dot product: overflow of size beyond LAPACK_INT range");
 #endif
-    return ddot_wrapper(a.size(),a.data(),a.stride(),b.data(),b.stride());
+    return ddot_wrapper(a.size(),a.data(),stride(a),b.data(),stride(b));
     }
 
 void
-randomize(VecRef v)
+randomize(VectorRef v)
     {
     for(auto& el : v) el = detail::quickran();
     }
@@ -164,20 +160,27 @@ randomize(VecRef v)
 //
 
 
-Vec
+Vector
 randomVec(long size)
     {
-    Vec v(size);
+    Vector v(size);
     randomize(v);
     return v;
     }
 
 Real
-sumels(VecRefc v)
+sumels(VectorRefc v)
     {
     Real tot = 0;
     for(auto& el : v) tot += el;
     return tot;
+    }
+
+void
+resize(Vector & v,
+       size_t newsize)
+    {
+    v.resize(VecRange(newsize));
     }
 
 

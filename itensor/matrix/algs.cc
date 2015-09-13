@@ -18,26 +18,26 @@ namespace itensor {
 //
 
 void
-diagSymmetric(MatRefc const& M,
-              MatRef  const& U,
-              VecRef  const& d)
+diagSymmetric(MatrixRefc const& M,
+              MatrixRef  const& U,
+              VectorRef  const& d)
     {
-    LAPACK_INT N = M.Ncols();
+    auto N = ncols(M);
     if(N < 1) throw std::runtime_error("diagSymmetric: 0 dimensional matrix");
-    if(N != M.Nrows())
+    if(N != nrows(M))
         {
-        printfln("M is %dx%d",M.Nrows(),M.Ncols());
+        printfln("M is %dx%d",nrows(M),ncols(M));
         throw std::runtime_error("diagSymmetric: Input Matrix must be square");
         }
 
 #ifdef DEBUG
-    if(!(U.Nrows()== N && U.Ncols() == N)) 
+    if(!(nrows(U) == N && ncols(U) == N)) 
         throw std::runtime_error("diagSymmetric: U should have same dims as M");
     if(d.size() != N)
         throw std::runtime_error("diagSymmetric: d size should be linear size of M");
     if(!isContiguous(U))
         throw std::runtime_error("diagSymmetric: U must be contiguous");
-    if(!d.contiguous())
+    if(!isContiguous(d))
         throw std::runtime_error("diagSymmetric: d must be contiguous");
 #endif
 
@@ -69,12 +69,12 @@ diagSymmetric(MatRefc const& M,
     }
 
 void
-diagSymmetric(MatRefc M,
-              Mat& U,
-              Vec& d)
+diagSymmetric(MatrixRefc M,
+              Matrix & U,
+              Vector & d)
     {
-    U.resize(M.Nrows(),M.Ncols());
-    d.resize(M.Nrows());
+    resize(U,nrows(M),ncols(M));
+    resize(d,nrows(M));
     auto Uref = makeRef(U);
     auto dref = makeRef(d);
     diagSymmetric(M,Uref,dref);
@@ -85,28 +85,28 @@ diagSymmetric(MatRefc M,
 //
 
 void 
-orthog(MatRef M, long num, long numpass)
+orthog(MatrixRef M, size_t num, size_t numpass)
     {
-    if(num == -1) num = M.Ncols();
+    if(num == 0) num = ncols(M);
 #ifdef DEBUG
-    //if(num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
-    //    throw std::runtime_error("orthog: Ncols() > M.Nrows()");
+    //if(num > nrows(M) || (num == 0 && ncols(M) > nrows(M)))
+    //    throw std::runtime_error("orthog: ncols() > nrows()");
 #endif
 
-    long nkeep = -1;// Orthogonalize to at most the column dim 
-    if (num > 0 && num <= M.Ncols() && num <= M.Nrows())
+    size_t nkeep = -1;// Orthogonalize to at most the column dim 
+    if (num > 0 && num <= ncols(M) && num <= nrows(M))
         {
         nkeep = num;
         }
     else
         {
-        nkeep = std::min(M.Nrows(), M.Ncols());
+        nkeep = std::min(nrows(M), ncols(M));
         }
 
-    Vec dots(nkeep);
-    MatRef Mcols;
-    VecRef dotsref, 
-           coli;
+    Vector dots(nkeep);
+    MatrixRef Mcols;
+    VectorRef dotsref, 
+              coli;
     for(auto i : count1(nkeep))
         {
         coli = column(M,i);
@@ -123,8 +123,10 @@ orthog(MatRef M, long num, long numpass)
         dotsref = subVector(dots,1,i-1);
         for(auto pass : count1(numpass))
             {
-            dotsref &= transpose(Mcols) * coli;
-            coli -= Mcols * dotsref;
+            // does dotsref &= transpose(Mcols) * coli:
+            mult(transpose(Mcols),coli,dotsref);
+            // does coli -= Mcols * dotsref:
+            multSub(Mcols,dotsref,coli);
             nrm = norm(coli);
             if(nrm < 1E-3) --pass; //orthog is suspect
             if(nrm < 1E-10) // What if a subspace was zero in all vectors?
@@ -144,12 +146,12 @@ orthog(MatRef M, long num, long numpass)
 //#define CHKSVD
 
 void 
-checksvd(MatRefc const& A, 
-         MatRefc const& U, 
-         VecRefc const& D, 
-         MatRefc const& V)
+checksvd(MatrixRefc const& A, 
+         MatrixRefc const& U, 
+         VectorRefc const& D, 
+         MatrixRefc const& V)
     {
-    Mat Ach(U);
+    Matrix Ach(U);
     for(auto i : count1(D.size())) column(Ach,i) *= D(i);
     Ach = Ach * transpose(V);
     Ach -= A;
@@ -157,14 +159,14 @@ checksvd(MatRefc const& A,
     }
 
 void
-SVDRef(const MatRefc& M,
-       const MatRef& U, 
-       const VecRef& D, 
-       const MatRef& V,
+SVDRef(MatrixRefc const& M,
+       MatrixRef  const& U, 
+       VectorRef  const& D, 
+       MatrixRef  const& V,
        Real thresh)
     {
-    auto Mr = M.Nrows(), 
-         Mc = M.Ncols();
+    auto Mr = nrows(M), 
+         Mc = ncols(M);
 
     if(Mr > Mc)
         {
@@ -176,16 +178,16 @@ SVDRef(const MatRefc& M,
         }
 
 #ifdef DEBUG
-    if(!(U.Nrows()==Mr && U.Ncols()==Mr)) 
+    if(!(nrows(U)==Mr && ncols(U)==Mr)) 
         throw std::runtime_error("SVD (ref version), wrong size of U");
-    if(!(V.Nrows()==Mc && V.Ncols()==Mr)) 
+    if(!(nrows(V)==Mc && ncols(V)==Mr)) 
         throw std::runtime_error("SVD (ref version), wrong size of V");
     if(D.size()!=Mr)
         throw std::runtime_error("SVD (ref version), wrong size of D");
 #endif
 
     //Form 'density matrix' rho
-    Mat rho = M * transpose(M);
+    auto rho = M * transpose(M);
 
     //Diagonalize rho: evals are squares of singular vals
     diagSymmetric(rho,U,D);
@@ -199,9 +201,12 @@ SVDRef(const MatRefc& M,
 
     //Put result of Mt*U==(V*D) in V storage
     mult(transpose(M),U,V);
-    for(auto c : index1(D)) column(V,c) /= D(c);
+    for(auto c : index1(D)) 
+        {
+        if(D(c) > 0) column(V,c) /= D(c);
+        }
 
-    long start = 2;
+    size_t start = 2;
     auto D1t = D(1)*thresh;
     for(; start < Mr; ++start)
         {
@@ -225,17 +230,17 @@ SVDRef(const MatRefc& M,
     auto n = Mr-start+1;
 
     //reuse storage of rho to hold mv=M*columns(V,start,Mr)
-    Mat mv = move(rho);
-    mv.resize(Mr,n);
+    auto mv = move(rho);
+    reduceCols(mv,n);
     mult(M,columns(V,start,Mr),mv);
 
     //b should be close to diagonal
     //but may not be perfect - fix it up below
-    Mat b = rows(transpose(U),start,Mr)*mv;
+    auto b = rows(transpose(U),start,Mr)*mv;
    
     auto d = subVector(D,start,Mr);
-    Mat u(n,n),
-        v(n,n);
+    Matrix u(n,n),
+           v(n,n);
     SVDRef(b,u,d,v,thresh);
 
     auto Uu = move(mv);
@@ -252,18 +257,18 @@ SVDRef(const MatRefc& M,
     }
 
 void
-SVD(const MatRefc& M,
-    Mat& U, 
-    Vec& D, 
-    Mat& V,
+SVD(MatrixRefc const& M,
+    Matrix & U, 
+    Vector & D, 
+    Matrix & V,
     Real thresh)
     {
-    auto Mr = M.Nrows(),
-         Mc = M.Ncols();
+    auto Mr = nrows(M),
+         Mc = ncols(M);
     auto nsv = std::min(Mr,Mc);
-    U.resize(Mr,nsv);
-    V.resize(Mc,nsv);
-    D.resize(nsv);
+    resize(U,Mr,nsv);
+    resize(V,Mc,nsv);
+    resize(D,nsv);
     SVDRef(M,U,D,V,thresh);
     }
 

@@ -30,43 +30,44 @@ namespace itensor {
 //
 
 //void
-//diagSymmetric(const MatRefc& M,
-//              MatRef&  U,
-//              VecRef&  d);
+//diagSymmetric(const MatrixRefc& M,
+//              MatrixRef&  U,
+//              VectorRef&  d);
 
 void
-diagSymmetric(MatRefc M,
-              Mat& U,
-              Vec& d);
+diagSymmetric(MatrixRefc M,
+              Matrix& U,
+              Vector& d);
 
 //orthogonalize the first num columns of a matrixref M,
 //optionally repeating numpass times to reduce roundoff errors
+//if num == 0, orthogonalizes all columns
 void 
-orthog(MatRef M, long num = -1, long numpass = 2);
+orthog(MatrixRef M, size_t num = 0, size_t numpass = 2);
 
 //Compute U,D,V such that 
 //A == U*D*transpose(V), schematically
 void
-SVDRefs(const MatRefc& A,
-        const MatRef&  U, 
-        const VecRef&  D, 
-        const MatRef&  V,
-        Real thresh = 1E-3);
+SVDRef(MatrixRefc const& M,
+       MatrixRef  const& U, 
+       VectorRef  const& D, 
+       MatrixRef  const& V,
+       Real thresh = 1E-3);
 
 //Compute U,D,V such that 
 //A == U*D*transpose(V), schematically
 void
-SVD(const MatRefc& A,
-    Mat& U, 
-    Vec& D, 
-    Mat& V,
+SVD(MatrixRefc const& A,
+    Matrix & U, 
+    Vector & D, 
+    Matrix & V,
     Real thresh = 1E-3);
 
 void 
-checksvd(MatRefc const& A, 
-         MatRefc const& U, 
-         VecRefc const& D, 
-         MatRefc const& V);
+checksvd(MatrixRefc const& A, 
+         MatrixRefc const& U, 
+         VectorRefc const& D, 
+         MatrixRefc const& V);
 }
 
 #endif

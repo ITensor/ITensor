@@ -6,8 +6,8 @@
 #define __ITENSOR_SLICETEN_H_
 
 #include "itensor/util/count.h"
-#include "itensor/tensor/ten.h"
-#include "itensor/tensor/slicerange.h"
+#include "itensor/matrix/ten.h"
+#include "itensor/matrix/slicerange.h"
 
 namespace itensor {
 
@@ -53,6 +53,9 @@ subTensor(Ten_ && T,
           C1 const& start,
           C2 const& stop)
     {
+    static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subTensor");
+    static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subTensor");
+    static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subTensor");
     using range_type = decltype(T.range());
     using stop_type = decltype(*stop.begin());
     auto r = T.r();
@@ -74,9 +77,9 @@ subTensor(Ten_ && T,
     for(decltype(r) j = 0; j < r; ++j, ++st, ++sp) 
         {
         offset += T.stride(j) * (*st);
-        rb.setExtStr(j,(*sp)-(*st),T.stride(j));
+        rb.setIndStr(j,(*sp)-(*st),T.stride(j));
         }
-    return makeTenRef(makeRef(T).store()+offset,rb.build());
+    return makeTenRef(makeRef(std::forward<Ten_>(T)).store()+offset,rb.build());
     }
 
 template<typename Ten_>
@@ -86,12 +89,15 @@ subIndex(Ten_ && T,
          size_t start,
          size_t stop)
     {
+    static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subIndex");
+    static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subIndex");
+    static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subIndex");
 #ifdef DEBUG
     if(ind >= size_t(T.r())) throw std::runtime_error("subIndex: index out of range");
 #endif
     auto R = T.range();
-    R[ind].ext = stop-start;
-    return makeTenRef(T.store()+T.stride(ind)*start,std::move(R));
+    R[ind].ind = stop-start;
+    return makeTenRef(makeRef(std::forward<Ten_>(T)).store()+T.stride(ind)*start,std::move(R));
     }
 
 Range inline
@@ -103,11 +109,11 @@ groupIndsRange(Range const& R,
     auto ngroup = iend-istart;
     size_t nr = R.r()-ngroup+1;
     auto rb = RangeBuilder(nr);
-    for(size_t j = 0; j < istart; ++j) rb.nextExtent(R.extent(j));
+    for(decltype(istart) j = 0; j < istart; ++j) rb.nextIndex(R.extent(j));
     auto group_ext = 1;
-    for(size_t j = istart; j < iend; ++j) group_ext *= R.extent(j);
-    rb.nextExtent(group_ext);
-    for(size_t j = iend; j < size_t(R.r()); ++j) rb.nextExtent(R.extent(j));
+    for(auto j = istart; j < iend; ++j) group_ext *= R.extent(j);
+    rb.nextIndex(group_ext);
+    for(auto j = iend; j < size_t(R.r()); ++j) rb.nextIndex(R.extent(j));
     return rb.build();
     }
 
@@ -117,7 +123,7 @@ groupInds(Ten_ && T,
           size_t istart,
           size_t iend)
     {
-    return makeTenRef(T.store(),groupIndsRange(T.range(),istart,iend));
+    return makeRef(std::forward<Ten_>(T),groupIndsRange(T.range(),istart,iend));
     }
 
 template<typename Ten_, typename Inds_>
@@ -151,7 +157,7 @@ ref_type<Ten_>
 permute(Ten_  && t,
         Perm_ const& P)
     {
-    return makeTenRef(makeRef(t).store(),permuteRange(t.range(),P));
+    return makeRef(std::forward<Ten_>(t),permuteRange(t.range(),P));
     }
 
 

@@ -76,7 +76,7 @@ pointTo(tensor_type const& t)
     {
     d_ = storage_type(t.data(),t.size());
     prange_ = &t.range();
-    range_.clear();
+    range_ = range_type{};
     }
 
 template<typename R1, typename R2>
@@ -127,10 +127,10 @@ assign(TenRef<R1> const& to, TenRefc<R2> const& from)
 
     auto RB = RangeBuilder(r);
     for(decltype(r) i = 0; i < r; ++i)
-        RB.setExtent(i,from.extent(i));
+        RB.setIndex(i,from.extent(i));
     //Leave bigind fixed to zero, will
     //increment manually in the loop below
-    RB.setExtent(bigind,1);
+    RB.setIndex(bigind,1);
 
     for(auto& i : RB.build())
         {
@@ -179,7 +179,8 @@ operator&=(TenRef<R> const& a, Tensor const& b)
     assign(a,makeRef(b));
     }
 
-auto inline Tensor::
+template<typename R>
+auto inline Ten<R>::
 operator()() const -> value_type
     { 
 #ifdef DEBUG
@@ -188,8 +189,9 @@ operator()() const -> value_type
     return data_.front();
     }
 
+template<typename R>
 template <typename... Inds>
-auto Tensor::
+auto Ten<R>::
 operator()(Inds&&... ii) const -> const_reference
     { 
 #ifdef DEBUG
@@ -198,7 +200,8 @@ operator()(Inds&&... ii) const -> const_reference
     return data_[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-auto inline Tensor::
+template<typename R>
+auto inline Ten<R>::
 operator()() -> reference
     { 
 #ifdef DEBUG
@@ -207,8 +210,9 @@ operator()() -> reference
     return data_.front(); 
     }
 
+template<typename R>
 template <typename... Inds>
-auto Tensor::
+auto Ten<R>::
 operator()(Inds&&... ii) -> reference
     { 
 #ifdef DEBUG
@@ -217,17 +221,32 @@ operator()(Inds&&... ii) -> reference
     return data_[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
+template<typename R>
 template <typename Indices>
-auto Tensor::
+auto Ten<R>::
 operator()(Indices const& ii) 
   -> stdx::if_compiles_return<decltype(ii.begin()), reference>
     { return data_[offset(range_,ii)]; }
 
+template<typename R>
 template <typename Indices>
-auto Tensor::
+auto Ten<R>::
 operator()(Indices const& ii) const 
   -> stdx::if_compiles_return<decltype(ii.begin()), const_reference>
     { return const_reference(data_[offset(range_,ii)]); }
+
+template<typename R>
+Real
+norm(TenRefc<R> const& t)
+    {
+    if(isContiguous(t))
+        {
+        return dnrm2_wrapper(t.size(),t.data());
+        }
+    Real nrm = 0;
+    for(auto& el : t) nrm += el*el;
+    return std::sqrt(nrm);
+    }
 
 template<typename R>
 std::ostream&
@@ -266,7 +285,7 @@ operator<<(std::ostream & s, TenRefc<R> const& T)
 inline std::ostream&
 operator<<(std::ostream & s, Tensor const& T) 
     { 
-    return printTensor(s,makeRef(T),"Tensor");
+    return printTensor(s,makeRefc(T),"Tensor");
     }
 
 } //namespace itensor

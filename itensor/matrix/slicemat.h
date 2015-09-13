@@ -13,69 +13,76 @@ template<typename Mat_>
 auto
 transpose(Mat_&& M)
     {
-    return makeRef(std::forward<Mat_>(M),MRange(M.Ncols(),M.colStride(),M.Nrows(),M.rowStride()));
+    return makeRef(std::forward<Mat_>(M),transpose(M.range()));
     }
 
 template<typename Mat_>
 auto
 subMatrix(Mat_&& M,
-          long rstart,
-          long rstop,
-          long cstart,
-          long cstop)
+          size_t rstart,
+          size_t rstop,
+          size_t cstart,
+          size_t cstop)
     {
+    static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subMatrix");
 #ifdef DEBUG
-    if(rstop > M.Nrows() || rstart > rstop) throw std::runtime_error("subMatrix invalid row start and stop");
-    if(cstop > M.Ncols() || cstart > cstop) throw std::runtime_error("subMatrix invalid col start and stop");
+    if(rstop > nrows(M) || rstart > rstop) throw std::runtime_error("subMatrix invalid row start and stop");
+    if(cstop > ncols(M) || cstart > cstop) throw std::runtime_error("subMatrix invalid col start and stop");
 #endif
-    auto offset = M.rowStride()*(rstart-1)+M.colStride()*(cstart-1);
-    auto subind = MRange(rstop-rstart+1,M.rowStride(),cstop-cstart+1,M.colStride());
-    return makeRef(std::forward<Mat_>(M),offset,subind);
+    auto offset = rowStride(M)*(rstart-1)+colStride(M)*(cstart-1);
+    auto subrange = MatRange(rstop-rstart+1,rowStride(M),cstop-cstart+1,colStride(M));
+    return makeRef(std::forward<Mat_>(M).store()+offset,std::move(subrange));
     }
 
 template<typename Mat_>
 auto
 rows(Mat_&& M,
-     long rstart,
-     long rstop)
+     size_t rstart,
+     size_t rstop)
     {
-    return subMatrix(std::forward<Mat_>(M),rstart,rstop,1,M.Nrows());
+    return subMatrix(std::forward<Mat_>(M),rstart,rstop,1,nrows(M));
     }
 
 template<typename Mat_>
 auto
 columns(Mat_&& M,
-        long cstart,
-        long cstop)
+        size_t cstart,
+        size_t cstop)
     {
-    return subMatrix(std::forward<Mat_>(M),1,M.Nrows(),cstart,cstop);
+    return subMatrix(std::forward<Mat_>(M),1,nrows(M),cstart,cstop);
     }
 
 template<typename Mat_>
 auto
 diagonal(Mat_&& M)
     {
-    return makeVecRef(std::forward<Mat_>(M),std::min(M.Nrows(),M.Ncols()),M.rowStride()+M.colStride());
+    static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to diagonal(M)");
+    auto drange = VecRange(std::min(nrows(M),ncols(M)),rowStride(M)+colStride(M));
+    return makeRef(std::forward<Mat_>(M).store(),std::move(drange));
     }
 
 template<typename Mat_>
 auto
-row(Mat_&& M, long j)
+row(Mat_&& M, size_t j)
     {
+    static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to row(M,n)");
 #ifdef DEBUG
-    if(j < 1 || j > M.Nrows()) throw std::runtime_error("invalid row index");
+    if(j < 1 || j > nrows(M)) throw std::runtime_error("invalid row index");
 #endif
-    return makeVecRef(std::forward<Mat_>(M),(j-1)*M.rowStride(),M.Ncols(),M.colStride());
+    auto offset = (j-1)*rowStride(M);
+    return makeRef(std::forward<Mat_>(M).store()+offset,VecRange(ncols(M),colStride(M)));
     }
 
 template<typename Mat_>
 auto
-column(Mat_&& M, long j)
+column(Mat_&& M, size_t j)
     {
+    static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to column(M,n)");
 #ifdef DEBUG
-    if(j < 1 || j > M.Ncols()) throw std::runtime_error("invalid column index");
+    if(j < 1 || j > ncols(M)) throw std::runtime_error("invalid column index");
 #endif
-    return makeVecRef(std::forward<Mat_>(M),(j-1)*M.colStride(),M.Nrows(),M.rowStride());
+    auto offset = (j-1)*colStride(M);
+    return makeRef(std::forward<Mat_>(M).store()+offset,VecRange(nrows(M),rowStride(M)));
     }
 
 

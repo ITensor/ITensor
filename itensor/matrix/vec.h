@@ -2,484 +2,212 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_VEC_H_
-#define __ITENSOR_VEC_H_
+#ifndef __ITENSOR_MATRIX_VEC_H_
+#define __ITENSOR_MATRIX_VEC_H_
 
-#ifdef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
-#undef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
-#endif
-#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
-
-#include <stdexcept>
-#include <vector>
-#include "itensor/util/print.h"
-#include "itensor/util/timers.h"
-#include "itensor/types.h"
-#include "itensor/matrix/strideiter.h"
+#include "itensor/matrix/vecrange.h"
+#include "itensor/matrix/ten.h"
 
 namespace itensor {
 
-template<typename T>
-class Vector;
+using Vector     = Ten<VecRange>;
+using VectorRef  = TenRef<VecRange>;
+using VectorRefc = TenRefc<VecRange>;
 
-template<typename T>
-class VectorRef;
+auto inline
+stride(VectorRefc const& v) { return v.stride(1); }
 
-using Vec = Vector<Real>;
-using VecRef = VectorRef<Real>;
-using VecRefc = VectorRef<const Real>;
+auto inline
+stride(Vector const& v) { return v.stride(1); }
 
-//using CVec = Vector<Complex>;
-//using CVecRef = VectorRef<Complex>;
-//using CVecRefc = VectorRef<const Complex>;
+VectorRef
+operator*=(VectorRef v, Real fac);
 
-template<typename T>
-class VectorRef
-    {
-    public:
-    using iterator = stride_iter<T*>;
-    using const_iterator = stride_iter<const T*>;
-    using value_type = std::remove_const_t<T>;
-    using pointer = T*;
-    using reference = T&;
-    using size_type = long;
-    using vec_type = std::conditional_t<std::is_const<T>::value,
-                                        const Vector<value_type>,
-                                        Vector<value_type>>;
-    private:
-    pointer pdata_ = nullptr;
-    size_type strd_ = 1;
-    size_type size_ = 0;
-    public:
+VectorRef
+operator/=(VectorRef v, Real fac);
 
-    VectorRef() { }
+VectorRef
+operator+=(VectorRef a, VectorRefc b);
 
-    VectorRef(pointer pdata, 
-              long size,
-              long stride = 1)
-        :
-        pdata_(pdata),
-        strd_(stride),
-        size_(size)
-        { }
-
-    VectorRef(pointer pdata,
-              long offset,
-              long size,
-              long stride)
-        : VectorRef(pdata+offset,size,stride)
-        { }
-
-    VectorRef(vec_type& v) { pointTo(v); }
-    
-    VectorRef&
-    operator=(vec_type& v) { pointTo(v); return *this; }
-
-    VectorRef(vec_type&& v) = delete;
-
-    VectorRef&
-    operator=(vec_type&& v) = delete;
-
-    operator VectorRef<const value_type>() const { return VectorRef<const T>(pdata_,size_,strd_); }
-
-    explicit operator bool() const { return bool(pdata_); }
-
-    size_type
-    size() const { return size_; }
-
-    size_type
-    stride() const { return strd_; }
-
-    bool
-    contiguous() const { return strd_ == 1; }
-
-    reference
-    operator()(long i) const 
-        { 
-#ifdef DEBUG
-        if(i > size_ || i < 1) throw std::runtime_error("VectorRef: out of range");
-#endif
-        return pdata_[(i-1)*strd_]; 
-        }
-
-
-    iterator 
-    begin() const { return iterator(pdata_,strd_); }
-
-    iterator 
-    end() const { return iterator(pdata_+size_*strd_,strd_); }
-
-    const_iterator 
-    cbegin() const { return const_iterator(pdata_,strd_); }
-
-    const_iterator 
-    cend() const { return const_iterator(pdata_+size_*strd_,strd_); }
-
-    pointer
-    data() const { return pdata_; }
-
-    void
-    clear()
-        {
-        pdata_ = nullptr;
-        strd_ = 1;
-        size_ = 0;
-        }
-
-    private:
-    void
-    pointTo(vec_type& v);
-    };
-
-VecRef
-operator*=(VecRef v, Real fac);
-
-VecRef
-operator/=(VecRef v, Real fac);
-
-VecRef
-operator+=(VecRef a, VecRefc b);
-
-VecRef
-operator-=(VecRef a, VecRefc b);
+VectorRef
+operator-=(VectorRef a, VectorRefc b);
 
 //Copy data referenced by b to memory referenced by a
-VecRef
-operator&=(VecRef a, VecRefc b);
+VectorRef
+operator&=(VectorRef a, VectorRefc b);
 
 //Dot product
 Real
-operator*(VecRefc a, VecRefc b);
+operator*(VectorRefc a, VectorRefc b);
 
-template<typename T>
-class Vector
-    {
-    public:
-    using storage_type = std::vector<T>;
-    using iterator = typename storage_type::iterator;
-    using const_iterator = typename storage_type::const_iterator;
-    using value_type = std::remove_const_t<T>;
-    using pointer = std::add_pointer_t<T>;
-    using reference = std::add_lvalue_reference_t<T>;
-    using size_type = long;
-    public:
-    storage_type data_;
-    public:
+inline Vector&
+operator*=(Vector & v, Real fac) { makeRef(v) *= fac; return v; }
 
-    Vector() { }
+inline Vector&
+operator/=(Vector & v, Real fac) { makeRef(v) /= fac; return v; }
 
-    explicit
-    Vector(long size) : data_(size) { }
+inline Vector& 
+operator+=(Vector & v, Vector const& other) { makeRef(v) += makeRef(other); return v; }
 
-    Vector(long size, value_type val) : data_(size,val) { }
+inline Vector&
+operator-=(Vector & v, Vector const& other) { makeRef(v) -= makeRef(other); return v; }
 
-    explicit
-    Vector(storage_type&& data) : data_(std::move(data)) { }
+inline Vector&
+operator+=(Vector & v, VectorRefc other) {  makeRef(v) += other; return v; }
 
-    Vector(const Vector& other) { assignFromVec(other); }
+inline Vector&
+operator-=(Vector & v, VectorRefc other) { makeRef(v) -= other; return v; }
 
-    Vector(Vector&& other) { moveFromVec(std::move(other)); }
+Vector inline
+operator*(Vector A, Real fac) { A *= fac; return A; }
 
-    explicit
-    Vector(const VectorRef<const value_type>& ref) { assignFromRef(ref); }
-    explicit
-    Vector(const VectorRef<value_type>& ref) { assignFromRef(ref); }
+Vector inline
+operator*(Real fac, Vector A) { A *= fac; return A; }
 
-    Vector&
-    operator=(const Vector& other) { assignFromVec(other); return *this; }
+Vector inline
+operator/(Vector A, Real fac) { A /= fac; return A; }
 
-    Vector& 
-    operator=(Vector&& other) { moveFromVec(std::move(other)); return *this; }
-
-    Vector&
-    operator=(const VectorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
-    Vector&
-    operator=(const VectorRef<value_type>& ref) { assignFromRef(ref); return *this; }
-
-    explicit operator bool() const { return !data_.empty(); }
-
-    size_type
-    size() const { return data_.size(); }
-
-    reference
-    operator()(long i) 
-        { 
-#ifdef DEBUG
-        return data_.at(i-1); 
-#else
-        return data_[i-1]; 
-#endif
-        }
-
-    value_type
-    operator()(long i) const 
-        { 
-#ifdef DEBUG
-        return data_.at(i-1); 
-#else
-        return data_[i-1]; 
-#endif
-        }
-
-    Vector&
-    operator*=(Real fac);
-
-    Vector&
-    operator/=(Real fac);
-
-    Vector&
-    operator+=(const Vector& other);
-
-    Vector&
-    operator-=(const Vector& other);
-
-    Vector&
-    operator+=(VectorRef<const T> other);
-
-    Vector&
-    operator-=(VectorRef<const T> other);
-
-    iterator
-    begin() { return data_.begin(); }
-
-    iterator
-    end() { return data_.end(); }
-
-    const_iterator
-    begin() const { return data_.cbegin(); }
-
-    const_iterator
-    end() const { return data_.cend(); }
-
-    const_iterator
-    cbegin() const { return data_.cbegin(); }
-
-    const_iterator
-    cend() const { return data_.cend(); }
-
-    T*
-    data() { return data_.data(); }
-
-    const T*
-    data() const { return data_.data(); }
-
-    storage_type&
-    store() { return data_; }
-
-    const storage_type&
-    store() const { return data_; }
-
-    //Essentially no cost when resizing downward
-    void
-    resize(long size) { data_.resize(size,0); }
-
-    void
-    clear() { data_.clear(); }
-
-    private:
-
-    void
-    assignFromRef(const VectorRef<const value_type>& other)
-        {
-        //Copy data from other contiguously into data_
-        data_ = storage_type(other.cbegin(),other.cend());
-        }
-
-    void
-    assignFromVec(const Vector& other)
-        {
-        if(&other == this) return;
-        data_ = other.data_;
-        }
-
-    void
-    moveFromVec(Vector&& other)
-        {
-        data_ = std::move(other.data_);
-        other.clear();
-        }
-
-    };
-
-template<typename T>
-void VectorRef<T>::
-pointTo(vec_type& v)
-    {
-    pdata_ = v.data();
-    size_ = v.size();
-    strd_ = 1;
+Vector inline
+operator+(VectorRefc A, VectorRefc B)
+    { 
+    Vector res(A);
+    res += B;
+    return res;
     }
 
-//
-// makeRef functions
-//
-
-template<typename T>
-auto
-makeRef(VectorRef<T>& v) { return v; }
-
-template<typename T>
-auto
-makeRef(VectorRef<const T>& v) { return v; }
-
-template<typename T>
-auto
-makeRef(Vector<T>& v) { return VectorRef<T>(v); }
-
-template<typename T>
-auto
-makeRef(const Vector<T>& v) { return VectorRef<const T>(v); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
-makeRef(const VectorRef<T>& v, Arg&& arg, Rest&&... args) 
-    { return VectorRef<T>(v.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
-makeRef(Vector<T>& v, Arg&& arg, Rest&&... args) 
-    { return VectorRef<T>(v.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
-makeRef(const Vector<T>& v, Arg&& arg, Rest&&... args) 
-    { return VectorRef<const T>(v.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-
-//This version of makeRef intended to fail,
-//forbids explicitly making VectorRef's to temporaries
-template<typename T, typename... Rest>
-auto
-makeRef(Vector<T>&& v, Rest&&... args) { return VectorRef<T>(std::move(v)); }
-
-
-//
-// Finish defining Vector operators
-//
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator*=(Real fac) { makeRef(*this) *= fac; return *this; }
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator/=(Real fac) { makeRef(*this) /= fac; return *this; }
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator+=(const Vector<T>& other) { makeRef(*this) += makeRef(other); return *this; }
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator-=(const Vector<T>& other) { makeRef(*this) -= makeRef(other); return *this; }
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator+=(VectorRef<const T> other) {  makeRef(*this) += other; return *this; }
-
-template<typename T>
-Vector<T>& Vector<T>::
-operator-=(VectorRef<const T> other) { makeRef(*this) -= other; return *this; }
-
-template<typename T>
-Vector<T>
-operator*(Vector<T> A, Real fac) { A *= fac; return A; }
-
-template<typename T>
-Vector<T>
-operator*(Real fac, Vector<T> A) { A *= fac; return A; }
-
-template<typename T>
-Vector<T>
-operator/(Vector<T> A, Real fac) { A /= fac; return A; }
-
-Vec inline
-operator+(VecRefc A, VecRefc B)
+Vector inline
+operator+(VectorRefc A, Vector&& B) 
     { 
-    Vec res(A);
-    res += B; 
-    return res; 
+    Vector res(std::move(B));
+    res += A;
+    return res;
     }
 
-Vec inline
-operator+(VecRefc A, Vec&& B) 
+Vector inline
+operator+(Vector&& A, VectorRefc B) 
     { 
-    Vec res(std::move(B)); 
-    res += A; 
-    return res; 
+    Vector res(std::move(A));
+    res += B;
+    return res;
     }
 
-Vec inline
-operator+(Vec&& A, VecRefc B) 
+Vector inline
+operator-(VectorRefc A, VectorRefc B)
     { 
-    Vec res(std::move(A)); 
-    res += B; 
-    return res; 
+    Vector res(A);
+    res -= B;
+    return res;
     }
 
-Vec inline
-operator-(VecRefc A, VecRefc B)
+Vector inline
+operator-(VectorRefc A, Vector&& B) 
     { 
-    Vec res(A);
-    res -= B; 
-    return res; 
-    }
-
-Vec inline
-operator-(VecRefc A, Vec&& B) 
-    { 
-    Vec res(std::move(B)); 
+    Vector res(std::move(B)); 
     res *= -1;
     res += A; 
     return res; 
     }
 
-Vec inline
-operator-(Vec&& A, VecRefc B) 
+Vector inline
+operator-(Vector&& A, VectorRefc B) 
     { 
-    Vec res(std::move(A)); 
+    Vector res(std::move(A)); 
     res -= B; 
     return res; 
     }
 
+template<>
 Real
-norm(VecRefc v);
-
-//Real inline
-//norm(const Vec& v) { return norm(makeRef(v)); }
+norm(VectorRefc const& v);
 
 void
-randomize(VecRef v);
+randomize(VectorRef v);
 
-Vec
+Vector
 randomVec(long size);
 
 Real
-sumels(VecRefc v);
+sumels(VectorRefc v);
+
+void 
+resize(Vector & v, size_t newsize);
 
 
 //
-// These versions of op-assign to VecRef can
-// work safely for temporary Vec's since
+// These versions of op-assign to VectorRef can
+// work safely for temporary Vectors since
 // const references extend lifetime of rvalues
 //
 
 void inline
-operator&=(VecRef a, const Vec& b) { a &= makeRef(b); }
+operator&=(VectorRef a, Vector const& b) { a &= makeRef(b); }
+                                 
+void inline                      
+operator+=(VectorRef a, Vector const& b) { a += makeRef(b); }
+                                 
+void inline                      
+operator-=(VectorRef a, Vector const& b) { a -= makeRef(b); }
 
-void inline
-operator+=(VecRef a, const Vec& b) { a += makeRef(b); }
 
-void inline
-operator-=(VecRef a, const Vec& b) { a -= makeRef(b); }
-
-
+template<>
 std::ostream&
-operator<<(std::ostream& s, VecRefc v);
+operator<<(std::ostream& s, VectorRefc const& v);
+
+template<> inline
+std::ostream&
+operator<<(std::ostream& s, VectorRef const& v) { return operator<<(s,makeRefc(v)); }
 
 inline std::ostream&
-operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeRef(v)); }
+operator<<(std::ostream& s, Vector const& v) { return operator<<(s,makeRefc(v)); }
 
+//
+// makeVecRef functions
+//
+
+auto inline
+makeVecRef(Real* p,
+           size_t size)
+    {
+    return VectorRef({p,size},VecRange(size));
+    }
+
+auto inline
+makeVecRef(const Real* p,
+           size_t size)
+    {
+    return VectorRefc({p,size},VecRange(size));
+    }
+
+auto inline
+makeVecRefc(const Real* p,
+            size_t size)
+    {
+    return makeVecRef(p,size);
+    }
+
+auto inline
+makeVecRef(Real* p,
+           size_t size,
+           size_t stride)
+    {
+    return VectorRef({p,size*stride},VecRange(size,stride));
+    }
+
+auto inline
+makeVecRef(const Real* p,
+           size_t size,
+           size_t stride)
+    {
+    return VectorRefc({p,size*stride},VecRange(size,stride));
+    }
+
+auto inline
+makeVecRefc(const Real* p,
+            size_t size,
+            size_t stride)
+    {
+    return makeVecRef(p,size);
+    }
 
 //
 // Vector slicing operations
@@ -489,10 +217,12 @@ operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeRef(v)); }
 template<typename Vec_>
 auto
 subVector(Vec_&& v,
-          long start,
-          long stop)
+          size_t start,
+          size_t stop)
     {
-    return makeRef(std::forward<Vec_>(v),start-1,stop-start+1,1);
+    static_assert(!std::is_same<Vec_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subVector");
+    auto offset = start-1;
+    return makeRef(std::forward<Vec_>(v).store()+offset,VecRange(stop-start+1));
     }
 
 } //namespace itensor

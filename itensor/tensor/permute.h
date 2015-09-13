@@ -16,49 +16,49 @@ namespace itensor {
 
 template<typename R1, typename R2>
 void 
-do_permute(RTenRefc<R1> const& from, 
-        Permutation  const& P, 
-        RTenRef<R2>  const& to);
+do_permute(TenRefc<R1> const& from, 
+           Permutation  const& P, 
+           TenRef<R2>  const& to);
 
 template<typename R>
 void 
-do_permute(RTenRefc<R> const& from, 
-        Permutation const& P, 
-        Tensor& to);
+do_permute(TenRefc<R> const& from, 
+           Permutation const& P, 
+           Tensor& to);
 
 template<typename R>
 Tensor
-do_permute(RTenRefc<R> const& from, 
-        Permutation const& P);
+do_permute(TenRefc<R> const& from, 
+           Permutation const& P);
 
 //Callable is any function func(Real& x, Real y)
 //default is func = [](Real& x, Real y) { x = y; };
-template<typename T, typename R1, typename R2, typename Callable>
+template<typename R1, typename R2, typename Callable>
 void 
-do_permute(TenRef<const T,R1> from, 
-        Permutation const& P, 
-        TenRef<T,R2> to,
-        Callable const& func);
+do_permute(TenRefc<R1> from, 
+           Permutation const& P, 
+           TenRef<R2> to,
+           Callable const& func);
 
 template<typename R1, typename R2, typename Callable>
 void 
-do_permute(RTenRefc<R1> const& from, 
-        Label const& fL, 
-        RTenRef<R2> const& to,
-        Label const& tL, 
-        Callable const& func);
+do_permute(TenRefc<R1> const& from, 
+           Label const& fL, 
+           TenRef<R2> const& to,
+           Label const& tL, 
+           Callable const& func);
 
 ///
 /// Implementations
 ///
 
 
-template<typename T, typename R1, typename R2, typename Callable>
+template<typename R1, typename R2, typename Callable>
 void 
-do_permute(TenRef<const T,R1> from, 
-        Permutation const& P, 
-        TenRef<T,R2> to,
-        Callable const& func)
+do_permute(TenRefc<R1> from, 
+           Permutation const& P, 
+           TenRef<R2> to,
+           Callable const& func)
     {
     using size_type = decltype(P.size());
     auto r = P.size();
@@ -132,18 +132,18 @@ plusEq(T& r1, T r2) { r1 += r2; }
 
 template<typename R1, typename R2>
 void 
-do_permute(RTenRefc<R1> const& from, 
-        Permutation const& P, 
-        RTenRef<R2> const& to)
+do_permute(TenRefc<R1> const& from, 
+           Permutation const& P, 
+           TenRef<R2> const& to)
     {
     do_permute(from,P,to,detail::assign<Real>);
     }
 
 template<typename R>
 void 
-do_permute(RTenRefc<R> const& from, 
-        Permutation const& P, 
-        Tensor& to)
+do_permute(TenRefc<R> const& from, 
+           Permutation const& P, 
+           Tensor& to)
     {
     do_permute(from,P,makeRef(to));
     }
@@ -158,11 +158,11 @@ do_permute(RTenRefc<R> const& from,
 
 template<typename R1, typename R2, typename Callable>
 void 
-do_permute(RTenRefc<R1> const& from, 
-        Label const& fL, 
-        RTenRef<R2> const& to,
-        Label const& tL, 
-        Callable const& func)
+do_permute(TenRefc<R1> const& from, 
+           Label const& fL, 
+           TenRef<R2> const& to,
+           Label const& tL, 
+           Callable const& func)
     {
 #ifdef DEBUG
     if(fL.size() != tL.size()) throw std::runtime_error("Mismatched sizes in do_permute");
@@ -179,10 +179,10 @@ do_permute(RTenRefc<R1> const& from,
 
 template<typename R1, typename R2>
 void 
-do_permute(RTenRefc<R1> const& from, 
-        Label const& fL, 
-        RTenRef<R2> const& to,
-        Label const& tL)
+do_permute(TenRefc<R1> const& from, 
+           Label const& fL, 
+           TenRef<R2> const& to,
+           Label const& tL)
     {
     do_permute(from,fL,to,tL,detail::assign<Real>);
     }

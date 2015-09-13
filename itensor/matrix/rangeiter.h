@@ -6,7 +6,7 @@
 #define __ITENSOR_RANGEITER_H_
 
 #include <iterator> 
-#include "itensor/tensor/types.h"
+#include "itensor/matrix/types.h"
 
 namespace itensor {
 

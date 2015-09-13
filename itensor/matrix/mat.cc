@@ -7,23 +7,14 @@
 #include "itensor/util/timers.h"
 #include "itensor/matrix/lapack_wrap.h"
 #include "itensor/matrix/mat.h"
+#include "itensor/matrix/slicemat.h"
 #include "itensor/detail/algs.h"
 
 namespace itensor {
 
-//
-//
-//  .      .    __    _______   ____    .____  .____
-//  |\    /|   /  \      |     |    |   |      |    
-//  | \  / |  |____|     |     |___/    |___   |--- 
-//  |  \/  |  |    |     |     |   \    |      |    
-//  |      |  |    |     |     |    |   |____  |    
-//
-//
-
 template<typename Func, typename Iter>
 void
-apply(const MatRef& v,
+apply(const MatrixRef& v,
       Iter it,
       const Func& f)
     {
@@ -35,11 +26,11 @@ apply(const MatRef& v,
     }
 
 void 
-operator&=(const MatRef& a, MatRefc b)
+operator&=(MatrixRef const& a, MatrixRefc const& b)
     {
 #ifdef DEBUG
-    if(!(b.Nrows()==a.Nrows() && b.Ncols()==a.Ncols())) 
-        throw std::runtime_error("mismatched sizes in MatRef operator&=");
+    if(!(nrows(b)==nrows(a) && ncols(b)==ncols(a))) 
+        throw std::runtime_error("mismatched sizes in MatrixRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
     if(a.range()==b.range() && isContiguous(b))
@@ -53,39 +44,39 @@ operator&=(const MatRef& a, MatRefc b)
     }
 
 void 
-operator*=(const MatRef& a, Real fac)
+operator*=(MatrixRef const& A, Real fac)
     {
-    if(isContiguous(a))
+    if(isContiguous(A))
         {
 #ifdef DEBUG
-        if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
-            throw std::runtime_error("MatRef overflow of size beyond LAPACK_INT range");
+        if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+            throw std::runtime_error("MatrixRef overflow of size beyond LAPACK_INT range");
 #endif
-        dscal_wrapper(a.size(),fac,a.data());
+        dscal_wrapper(A.size(),fac,A.data());
         }
     else
         {
-        for(auto& el : a) el *= fac;
+        for(auto& el : A) el *= fac;
         }
     }
 
 void 
-operator/=(const MatRef& a, Real fac)
+operator/=(MatrixRef const& A, Real fac)
     {
-    if(fac == 0) throw std::runtime_error("MatRef /=: divide by zero");
-    operator*=(a,1./fac);
+    if(fac == 0) throw std::runtime_error("MatrixRef /=: divide by zero");
+    operator*=(A,1./fac);
     }
 
 template<typename MatT1, typename MatT2>
 void
-call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
+call_daxpy(MatT1& A, MatT2 const& B, Real alpha_)
     {
     LAPACK_REAL alpha = alpha_;
     LAPACK_INT inc = 1;
     LAPACK_INT size = A.size();
 #ifdef DEBUG
     if(A.size() != B.size())
-        throw std::runtime_error("mismatched sizes in MatRef/Mat call_daxpy");
+        throw std::runtime_error("mismatched sizes in MatrixRef/Matrix call_daxpy");
     if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
         throw std::runtime_error("overflow of size beyond LAPACK_INT range");
 #endif
@@ -93,135 +84,145 @@ call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     }
 
 void
-operator+=(const MatRef& a, MatRefc b)
+operator+=(MatrixRef const& A, MatrixRefc const& B)
     {
 #ifdef DEBUG
-    if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
-        throw std::runtime_error("MatRef +=: mismatched sizes");
+    if(!(ncols(A)==ncols(B) && nrows(A)==nrows(B))) 
+        throw std::runtime_error("MatrixRef +=: mismatched sizes");
 #endif
-    if(b.range()==a.range() && isContiguous(b))
+    if(B.range()==A.range() && isContiguous(B))
         {
-        call_daxpy(a,b,+1);
+        call_daxpy(A,B,+1);
         }
     else
         {
         auto pluseq = [](Real& x, Real y) { x += y; };
-        apply(a,b.cbegin(),pluseq);
+        apply(A,B.cbegin(),pluseq);
         }
     }
 
 void
-operator-=(const MatRef& a, MatRefc b)
+operator-=(MatrixRef const& A, MatrixRefc const& B)
     {
 #ifdef DEBUG
-    if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
-        throw std::runtime_error("MatRef +=: mismatched sizes");
+    if(!(ncols(A)==ncols(B) && nrows(A)==nrows(B))) 
+        throw std::runtime_error("MatrixRef +=: mismatched sizes");
 #endif
-    if(b.range()==a.range() && isContiguous(b))
+    if(B.range()==A.range() && isContiguous(B))
         {
-        call_daxpy(a,b,-1);
+        call_daxpy(A,B,-1);
         }
     else
         {
         auto minuseq = [](Real& x, Real y) { x -= y; };
-        apply(a,b.cbegin(),minuseq);
+        apply(A,B.cbegin(),minuseq);
         }
-    }
-
-Real
-norm(MatRefc M)
-    {
-    if(isContiguous(M))
-        {
-        return dnrm2_wrapper(M.size(),M.data());
-        }
-    Real nrm = 0;
-    for(auto& el : M) nrm += el*el;
-    return std::sqrt(nrm);
     }
 
 void
-randomize(MatRef M)
+randomize(MatrixRef const& M)
+    {
+    for(auto& el : M) el = detail::quickran();
+    }
+
+void
+randomize(Matrix & M)
     {
     for(auto& el : M) el = detail::quickran();
     }
 
 
+template<>
 std::ostream&
-operator<<(std::ostream& s, MatRefc M)
+operator<<(std::ostream& s, MatrixRefc const& M)
     {
-    for(long r = 1; r <= M.Nrows(); ++r)
+    for(decltype(nrows(M)) r = 1; r <= nrows(M); ++r)
         {
         s << "|";
-        for(long c = 1; c <= M.Ncols(); ++c)
+        for(decltype(ncols(M)) c = 1; c <= ncols(M); ++c)
             {
             s << M(r,c);
-            s << (c == M.Ncols() ? "|" : " ");
+            s << (c == ncols(M) ? "|" : " ");
             }
-        if(r < M.Nrows()) s << "\n";
+        if(r < nrows(M)) s << "\n";
         }
     return s;
     }
 
 // C = alpha*A*B + beta*C
 void
-call_dgemm(MatRefc A, 
-           MatRefc B, 
-           MatRef  C,
+call_dgemm(MatrixRefc A, 
+           MatrixRefc B, 
+           MatrixRef  C,
            Real alpha,
            Real beta)
     {
 #ifdef DEBUG
     if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
-        throw std::runtime_error("multiplication of non-contiguous MatRefs not currently supported");
+        throw std::runtime_error("multiplication of non-contiguous MatrixRefs not currently supported");
 #endif
-    if(C.transposed())
+    if(isTransposed(C))
         {
         //Do C = Bt*At instead of Ct=A*B
         //Recall that C.data() points to elements of C, not C.t()
         //regardless of whether C.transpose()==true or false
         std::swap(A,B);
-        A.applyTrans();
-        B.applyTrans();
-        C.applyTrans();
+        A = transpose(A);
+        B = transpose(B);
+        C = transpose(C);
         }
 
 #ifdef DEBUG
-    if(A.Ncols() != B.Nrows())
+    if(ncols(A) != nrows(B))
         throw std::runtime_error("matrices A, B incompatible");
-    if(A.Nrows() != C.Nrows() || B.Ncols() != C.Ncols())
+    if(nrows(A) != nrows(C) || ncols(B) != ncols(C))
         {
-        printfln("A is %dx%d",A.Nrows(),A.Ncols());
-        printfln("B is %dx%d",B.Nrows(),B.Ncols());
-        printfln("C is %dx%d",C.Nrows(),C.Ncols());
+        printfln("A is %dx%d",nrows(A),ncols(A));
+        printfln("B is %dx%d",nrows(B),ncols(B));
+        printfln("C is %dx%d",nrows(C),ncols(C));
         throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
         }
 #endif
-    dgemm_wrapper(A.transposed(),B.transposed(),
-                  A.Nrows(),B.Ncols(),A.Ncols(),
+    dgemm_wrapper(isTransposed(A),isTransposed(B),
+                  nrows(A),ncols(B),ncols(A),
                   alpha,A.data(),B.data(),beta,C.data());
     }
 
 void
-mult(MatRefc A, 
-     MatRefc B, 
-     MatRef  C)
+mult(MatrixRefc A, 
+     MatrixRefc B, 
+     MatrixRef  C)
     {
     call_dgemm(A,B,C,1.,0.);
     }
 
 void
-multAdd(MatRefc A, 
-        MatRefc B, 
-        MatRef  C)
+multAdd(MatrixRefc A, 
+        MatrixRefc B, 
+        MatrixRef  C)
     {
     call_dgemm(A,B,C,1.,1.);
     }
 
 void
-call_dgemv(const MatRefc& M,
-           const VecRefc& x, 
-           VecRef& y,
+reduceCols(Matrix & M, size_t new_ncols)
+    {
+#ifdef DEBUG
+    if(new_ncols > ncols(M)) throw std::runtime_error("new ncols > old ncols in reduceCols");
+#endif
+    M.resize(MatRange(nrows(M),new_ncols));
+    }
+
+void
+resize(Matrix & M, size_t nrows, size_t ncols)
+    {
+    M.resize(MatRange(nrows,ncols));
+    }
+
+void
+call_dgemv(const MatrixRefc& M,
+           const VectorRefc& x, 
+           VectorRef& y,
            Real alpha,
            Real beta,
            bool fromleft)
@@ -231,31 +232,185 @@ call_dgemv(const MatRefc& M,
         throw std::runtime_error("multiplication of non-contiguous matrixref by vector not currently supported");
 #endif
     auto trans = fromleft;
-    LAPACK_INT m = M.Nrows(),
-               n = M.Ncols();
-    if(M.transposed())
+    LAPACK_INT m = nrows(M),
+               n = ncols(M);
+    if(isTransposed(M))
         {
         trans = !fromleft;
-        m = M.Ncols();
-        n = M.Nrows();
+        m = ncols(M);
+        n = nrows(M);
         }
-    dgemv_wrapper(trans,alpha,beta,m,n,M.data(),x.data(),x.stride(),y.data(),y.stride());
+    dgemv_wrapper(trans,alpha,beta,m,n,M.data(),x.data(),stride(x),y.data(),stride(y));
     }
 
 void
-mult(MatRefc M,
-     VecRefc x,
-     VecRef y,
+mult(MatrixRefc M,
+     VectorRefc x,
+     VectorRef y,
      bool fromleft)
     {
 #ifdef DEBUG
-    if(fromleft ? M.Nrows()!=x.size() : M.Ncols()!=x.size()) 
+    if(fromleft ? nrows(M)!=x.size() : ncols(M)!=x.size()) 
         throw std::runtime_error("matrix vector mult: mismatched sizes");
-    if(fromleft ? M.Ncols()!=y.size() : M.Nrows()!=y.size())
+    if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
         throw std::runtime_error("matrix vector mult: wrong size for result (y) vec");
 #endif
     call_dgemv(M,x,y,1,0,fromleft);
     }
 
+void
+multAdd(MatrixRefc M,
+        VectorRefc x,
+        VectorRef y,
+        bool fromleft)
+    {
+#ifdef DEBUG
+    if(fromleft ? nrows(M)!=x.size() : ncols(M)!=x.size()) 
+        throw std::runtime_error("multAdd: mismatched sizes");
+    if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
+        throw std::runtime_error("multAdd: wrong size for result (y) vec");
+#endif
+    call_dgemv(M,x,y,1,1,fromleft);
+    }
+
+void
+multSub(MatrixRefc M,
+        VectorRefc x,
+        VectorRef y,
+        bool fromleft)
+    {
+#ifdef DEBUG
+    if(fromleft ? nrows(M)!=x.size() : ncols(M)!=x.size()) 
+        throw std::runtime_error("multSub: mismatched sizes");
+    if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
+        throw std::runtime_error("multSub: wrong size for result (y) vec");
+#endif
+    call_dgemv(M,x,y,-1,1,fromleft);
+    }
+
+Matrix 
+operator*(MatrixRefc const& A, Real fac)
+    { 
+    Matrix res(A);
+    res *= fac; 
+    return res; 
+    }
+
+Matrix 
+operator*(Real fac, MatrixRefc const& A)
+    { 
+    Matrix res(A);
+    res *= fac; 
+    return res; 
+    }
+
+Matrix 
+operator*(Matrix && A, Real fac)
+    { 
+    Matrix res(std::move(A));
+    res *= fac; 
+    return res; 
+    }
+
+Matrix 
+operator*(Real fac, Matrix && A)
+    { 
+    Matrix res(std::move(A));
+    res *= fac; 
+    return res; 
+    }
+
+Matrix 
+operator/(MatrixRefc const& A, Real fac)
+    { 
+    Matrix res(A);
+    res *= 1./fac; 
+    return res; 
+    }
+
+Matrix 
+operator/(Matrix && A, Real fac)
+    { 
+    Matrix res(std::move(A));
+    res *= 1./fac; 
+    return res; 
+    }
+
+Matrix 
+operator+(MatrixRefc const& A, MatrixRefc const& B)
+    { 
+    Matrix res(A);
+    res += B; 
+    return res; 
+    }
+
+Matrix 
+operator+(MatrixRefc const& A, Matrix && B) 
+    { 
+    Matrix res(std::move(B)); 
+    res += A; 
+    return res; 
+    }
+
+Matrix 
+operator+(Matrix && A, MatrixRefc const& B) 
+    { 
+    Matrix res(std::move(A)); 
+    res += B; 
+    return res; 
+    }
+
+Matrix 
+operator-(MatrixRefc const& A, MatrixRefc const& B)
+    { 
+    Matrix res(A);
+    res -= B; 
+    return res; 
+    }
+
+Matrix 
+operator-(MatrixRefc const& A, Matrix && B) 
+    { 
+    Matrix res(std::move(B)); 
+    res *= -1;
+    res += A; 
+    return res; 
+    }
+
+Matrix 
+operator-(Matrix && A, MatrixRefc const& B) 
+    { 
+    Matrix res(std::move(A)); 
+    res -= B; 
+    return res; 
+    }
+
+Matrix 
+matrixMult(MatrixRefc const& A,
+           MatrixRefc const& B)
+    {
+    Matrix C(nrows(A),ncols(B));
+    call_dgemm(A,B,C,1.,0.);
+    return C;
+    }
+
+Vector
+operator*(MatrixRefc const& A,
+          VectorRefc const& v)
+    {
+    Vector res(nrows(A));
+    mult(A,v,res);
+    return res;
+    }
+
+Vector
+operator*(VectorRefc const& v,
+          MatrixRefc const& A)
+    {
+    Vector res(ncols(A));
+    bool fromleft = true;
+    mult(A,v,res,fromleft);
+    return res;
+    }
 
 } //namespace itensor
