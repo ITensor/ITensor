@@ -192,6 +192,34 @@ randomMat(CtrArgs&&... args)
     return M;
     }
 
+//
+// makeMatRef functions
+//
+
+auto inline
+makeMatRef(Real* p,
+           size_t nrows,
+           size_t ncols)
+    {
+    return MatrixRef({p,nrows*ncols},MatRange{nrows,ncols});
+    }
+
+auto inline
+makeMatRef(const Real* p,
+           size_t nrows,
+           size_t ncols)
+    {
+    return MatrixRefc({p,nrows*ncols},MatRange{nrows,ncols});
+    }
+
+auto inline
+makeMatRefc(const Real* p,
+            size_t nrows,
+            size_t ncols)
+    {
+    return MatrixRefc({p,nrows*ncols},MatRange{nrows,ncols});
+    }
+
 } //namespace itensor
 
 #endif

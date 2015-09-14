@@ -14,9 +14,9 @@ namespace itensor {
 
 template<typename Func, typename Iter>
 void
-apply(const MatrixRef& v,
+apply(MatrixRef const& v,
       Iter it,
-      const Func& f)
+      Func const& f)
     {
     for(auto& el : v) 
         {
