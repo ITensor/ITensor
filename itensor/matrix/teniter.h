@@ -19,7 +19,7 @@ class TenIter
     using pointer = typename std::iterator_traits<Ptr>::pointer;
     using iterator_category = std::forward_iterator_tag;
     using range_type = RangeT;
-    using range_iter = typename range_type::iterator;
+    using range_iter = typename range_type::const_iterator;
     using storage_type = DataRange<typename std::remove_pointer<Ptr>::type>;
     private:
     storage_type d_;

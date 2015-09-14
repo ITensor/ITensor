@@ -16,6 +16,7 @@ struct MatRange
     public:
     using size_type = size_t;
     using iterator = MatRangeIter;
+    using const_iterator = MatRangeIter;
     size_type rn = 0, //number of rows
               rs = 0, //row stride
               cn = 0, //number of cols

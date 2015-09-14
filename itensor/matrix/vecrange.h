@@ -18,6 +18,7 @@ class VecRange
     public:
     using size_type = size_t;
     using iterator = VecRangeIter;
+    using const_iterator = VecRangeIter;
     private:
     size_type ext_ = 0,
               stride_ = 1;
