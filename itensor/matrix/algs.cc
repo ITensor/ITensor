@@ -44,7 +44,14 @@ diagSymmetric(MatrixRefc const& M,
     //Set U = -M so eigenvalues will be sorted from largest to smallest
     if(isContiguous(M) && isContiguous(U))
         {
-        daxpy_wrapper(M.size(),-1,M.data(),1,U.data(),1);
+        auto m = M.data();
+        auto u = U.data();
+        for(decltype(M.size()) j = 0; j < M.size(); ++j)
+            {
+            *u = -(*m);
+            ++u; 
+            ++m;
+            }
         }
     else
         {

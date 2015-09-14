@@ -46,7 +46,8 @@ void
 orthog(MatrixRef M, size_t num = 0, size_t numpass = 2);
 
 //Compute U,D,V such that 
-//A == U*D*transpose(V), schematically
+//norm(A-U*DD*transpose(V)) < epsilon
+//where DD is matrix with D on diagonal
 void
 SVDRef(MatrixRefc const& M,
        MatrixRef  const& U, 
@@ -55,7 +56,8 @@ SVDRef(MatrixRefc const& M,
        Real thresh = 1E-3);
 
 //Compute U,D,V such that 
-//A == U*D*transpose(V), schematically
+//norm(A-U*D*transpose(V)) < epsilon
+//where DD is matrix with D on diagonal
 void
 SVD(MatrixRefc const& A,
     Matrix & U, 
@@ -68,6 +70,7 @@ checksvd(MatrixRefc const& A,
          MatrixRefc const& U, 
          VectorRefc const& D, 
          MatrixRefc const& V);
-}
+
+} //namespace itensor
 
 #endif
