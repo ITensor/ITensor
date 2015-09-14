@@ -10,11 +10,11 @@
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/types.h"
 #include "itensor/tensor/permutation.h"
-#include "itensor/indexset_iter.h"
 #include "itensor/index.h"
 
 
 namespace itensor {
+
 
 template<class IndexT>
 class IndexSetT;
@@ -39,21 +39,24 @@ using IQIndexSetBuilder = RangeBuilderT<IQIndexSet>;
 // keeps the indices in the order given.
 //
 
+template<typename index_type_> 
+class IndexSetIter;
+
 template <class index_type_>
-class IndexSetT
+class IndexSetT : public RangeT<index_type_>
     {
     public:
     using index_type = index_type_;
     using extent_type = index_type;
     using range_type = RangeT<index_type>;
+    using parent = RangeT<index_type>;
     using size_type = typename range_type::size_type;
     using storage_type = typename range_type::storage_type;
     using value_type = index_type;
     using iterator = IndexSetIter<index_type>;
     using const_iterator = IndexSetIter<const index_type>;
     using indexval_type = typename index_type::indexval_type;
-    private:
-    range_type range_;
+
     public:
 
     IndexSetT() { }
@@ -63,55 +66,49 @@ class IndexSetT
     explicit
     IndexSetT(index_type const& i1, 
               Inds&&... rest)
-      : range_(i1,std::forward<Inds>(rest)...)
+      : parent(i1,std::forward<Inds>(rest)...)
         { }
 
     explicit
-    IndexSetT(std::vector<index_type> const& ii) : range_(ii) { }
+    IndexSetT(std::vector<index_type> const& ii) : parent(ii) { }
 
     template<size_t N>
     explicit
-    IndexSetT(std::array<index_type,N> const& ii) : range_(ii) { }
+    IndexSetT(std::array<index_type,N> const& ii) : parent(ii) { }
 
-    IndexSetT(std::initializer_list<index_type> ii) : range_(ii) { }
+    IndexSetT(std::initializer_list<index_type> ii) : parent(ii) { }
 
     explicit
     IndexSetT(storage_type && store) 
-      : range_(std::move(store)) 
+      : parent(std::move(store)) 
         { }
 
     IndexSetT&
     operator=(storage_type&& store)
         {
-        range_ = std::move(store);
+        parent::operator=(std::move(store));
         return *this;
         }
     
-    explicit operator bool() const { return !range_.empty(); }
+    explicit operator bool() const { return !parent::empty(); }
 
     long
-    extent(size_type i) const { return range_.extent(i); }
+    extent(size_type i) const { return parent::extent(i); }
 
     size_type
-    stride(size_type i) const { return range_.stride(i); }
+    stride(size_type i) const { return parent::stride(i); }
 
     long
-    r() const { return range_.r(); }
+    r() const { return parent::r(); }
     
-    size_t
-    size() const { return range_.r(); }
-
-    bool
-    empty() const { return range_.empty(); }
-
     // 0-indexed access
     index_type const&
     operator[](size_type i) const 
         { 
 #ifdef DEBUG
-        if(i >= size()) Error("IndexSetT[i] arg out of range");
+        if(i >= parent::size()) Error("IndexSetT[i] arg out of range");
 #endif
-        return range_[i].ext; 
+        return parent::operator[](i).ind; 
         }
 
     // 1-indexed access
@@ -119,28 +116,28 @@ class IndexSetT
     index(size_type I) const 
         { 
 #ifdef DEBUG
-        if(I < 1 || I > size()) Error("IndexSetT.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) Error("IndexSetT.index(i) arg out of range");
 #endif
-        return range_[I-1].ext; 
+        return parent::operator[](I-1).ind; 
         }
 
     index_type const&
-    front() const { return range_.front().ext; }
+    front() const { return parent::front().ind; }
 
     index_type const&
-    back() const { return range_.back().ext; }
+    back() const { return parent::back().ind; }
 
     iterator
-    begin() { return iterator{range_.data()}; }
+    begin() { return iterator{*this}; }
 
     iterator
-    end() { return iterator{range_.data()+range_.size()}; }
+    end() { return iterator::makeEnd(*this); }
 
     const_iterator
-    begin() const { return const_iterator{range_.data()}; }
+    begin() const { return const_iterator{*this}; }
 
     const_iterator
-    end() const { return const_iterator{range_.data()+range_.size()}; }
+    end() const { return const_iterator::makeEnd(*this); }
 
     const_iterator
     cbegin() const { return begin(); }
@@ -149,10 +146,7 @@ class IndexSetT
     cend() const { return end(); }
 
     void
-    swap(IndexSetT& other) { range_.swap(other.range_); }
-
-    void
-    clear() { range_.clear(); }
+    swap(IndexSetT& other) { parent::swap(other); }
 
     void
     dag() { for(auto& J : *this) J.dag(); }
@@ -162,9 +156,6 @@ class IndexSetT
 
     void
     write(std::ostream& s) const;
-
-    void
-    computeStrides() { range_.computeStrides(); }
     };
 
 //
@@ -313,6 +304,145 @@ contractIS(IndexSetT<IndexT> const& Lis,
 template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, IndexSetT<IndexT> const& is);
+
+template<typename index_type_> 
+class IndexSetIter
+    { 
+    public:
+    using index_type = std::remove_const_t<index_type_>;
+    using value_type = index_type;
+    using reference = index_type_&;
+    using difference_type = std::ptrdiff_t;
+    using pointer = index_type_*;
+    using iterator_category = std::random_access_iterator_tag;
+    using indexset_type = std::conditional_t<std::is_const<index_type_>::value,
+                                             const IndexSetT<index_type>,
+                                             IndexSetT<index_type>>;
+    using range_ptr = typename RangeT<index_type>::value_type*;
+    using const_range_ptr = const typename RangeT<index_type>::value_type*;
+    using data_ptr = std::conditional_t<std::is_const<index_type_>::value,
+                                      const_range_ptr,
+                                      range_ptr>;
+    private:
+    size_t off_ = 0;
+    data_ptr p_; 
+    public: 
+
+    IndexSetIter() : p_(nullptr) { }
+
+    explicit
+    IndexSetIter(indexset_type & is) : p_(is.data()) { }
+
+    const data_ptr
+    data() const { return p_; }
+
+    size_t
+    offset() const { return off_; }
+
+    IndexSetIter& 
+    operator++() 
+        { 
+        ++off_; 
+        return *this; 
+        } 
+
+    IndexSetIter 
+    operator++(int) 
+        { 
+        auto tmp = *this; //save copy of this
+        ++off_; 
+        return tmp; 
+        } 
+
+    IndexSetIter& 
+    operator+=(difference_type x) 
+        { 
+        off_ += x;
+        return *this; 
+        } 
+
+    IndexSetIter& 
+    operator--( ) 
+        { 
+        --off_;
+        return *this; 
+        } 
+
+    IndexSetIter 
+    operator--(int) 
+        { 
+        auto tmp = *this; //save copy of this
+        --off_;
+        return tmp; 
+        } 
+
+    IndexSetIter& 
+    operator-=(difference_type x) 
+        { 
+        off_ -= x;
+        return *this; 
+        } 
+
+    reference 
+    operator[](difference_type n) { return p_[n].ind; } 
+
+    reference 
+    operator*() { return p_[off_].ind; }  
+
+    pointer 
+    operator->() { return &(p_[off_].ind); }
+
+    IndexSetIter static
+    makeEnd(indexset_type & is)
+        {
+        IndexSetIter end;
+        end.p_ = is.data()+is.size();
+        end.off_ = is.size();
+        return end;
+        }
+    }; 
+
+template <typename T>
+bool 
+operator==(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
+    { 
+    return x.data() == y.data(); 
+    } 
+
+template <typename T>
+bool 
+operator!=(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
+    { 
+    return x.data() != y.data(); 
+    } 
+
+template <typename T>
+bool 
+operator<(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
+    { 
+    return x.data() < y.data(); 
+    } 
+
+template <typename T>
+typename IndexSetIter<T>::difference_type 
+operator-(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
+    { 
+    return x.data() - y.data();
+    } 
+
+template <typename T>
+IndexSetIter<T> 
+operator+(const IndexSetIter<T>& x, typename IndexSetIter<T>::difference_type d) 
+    { 
+    return x += d;
+    } 
+
+template <typename T>
+IndexSetIter<T> 
+operator+(typename IndexSetIter<T>::difference_type d, const IndexSetIter<T>& x) 
+    { 
+    return x += d;
+    } 
 
 } //namespace itensor
 
