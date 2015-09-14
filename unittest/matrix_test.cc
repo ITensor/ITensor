@@ -2,7 +2,7 @@
 
 #include "itensor/util/autovector.h"
 #include "itensor/util/count.h"
-#include "itensor/matrix/vec.h"
+#include "itensor/matrix/algs.h"
 #include "itensor/global.h"
 
 using namespace itensor;
@@ -413,924 +413,923 @@ SECTION("Test Resize")
 }
 
 
-//TEST_CASE("Test MatRef")
-//{
-//
-//SECTION("Constructors")
-//    {
-//    SECTION("Regular Constructor")
+TEST_CASE("Test MatrixRef")
+{
+
+SECTION("Constructors")
+    {
+    SECTION("Regular Constructor")
+        {
+        auto Ar = 3,
+             Ac = 4;
+        auto data = randomData(1,Ar*Ac);
+        CHECK(data.size() == Ar*Ac);
+        auto A = makeMatRef(data.begin(),Ar,Ac);
+
+        for(auto c : count1(Ac))
+        for(auto r : count1(Ar))
+            {
+            CHECK_CLOSE(A(r,c),data[1+(r-1)+Ar*(c-1)]);
+            }
+        }
+
+//    SECTION("Transpose Constructor")
 //        {
 //        auto Ar = 3,
 //             Ac = 4;
 //        auto data = randomData(1,Ar*Ac);
 //        CHECK(data.size() == Ar*Ac);
-//        auto A = MatRef(data.begin(),Ar,Ac);
+//
+//        //auto MC = MatrixRef(data.begin(),Ar,Ac,true);
+//        //printfln("MC: %s (%d,%d,%d,%d)",MC.data(),MC.ind().rn,MC.ind().rs,MC.ind().cn,MC.ind().cs);
+//
+//        //auto MA = MatrixRef(data.begin(),Ar,Ac);
+//        //MA.applyTrans();
+//        //printfln("MA: %s (%d,%d,%d,%d)",MA.data(),MA.ind().rn,MA.ind().rs,MA.ind().cn,MA.ind().cs);
+//
+//        //auto MR = MatrixRefc(data.begin(),Ar,Ac);
+//        //MR = MatrixRefc(MR.data(),MR.Nrows(),MR.Ncols(),true);
+//        //printfln("MR: %s (%d,%d,%d,%d)",MR.data(),MR.ind().rn,MR.ind().rs,MR.ind().cn,MR.ind().cs);
+//
+//        auto A = MatrixRef(data.begin(),Ar,Ac,true);
+//        CHECK(A.transposed());
+//        for(auto r : count1(Ar))
+//        for(auto c : count1(Ac))
+//            {
+//            CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
+//            }
+//
+//        auto A2 = MatrixRef(data.begin(),Ar,Ac);
+//        A2.applyTrans();
+//        CHECK(A2.transposed());
 //
 //        for(auto r : count1(Ar))
 //        for(auto c : count1(Ac))
 //            {
-//            CHECK_CLOSE(A(r,c),data[r+Ar*(c-1)]);
+//            CHECK_CLOSE(A2(c,r),data[r+Ar*(c-1)]);
 //            }
 //        }
-////    SECTION("Transpose Constructor")
-////        {
-////        auto Ar = 3,
-////             Ac = 4;
-////        auto data = randomData(1,Ar*Ac);
-////        CHECK(data.size() == Ar*Ac);
-////
-////        //auto MC = MatRef(data.begin(),Ar,Ac,true);
-////        //printfln("MC: %s (%d,%d,%d,%d)",MC.data(),MC.ind().rn,MC.ind().rs,MC.ind().cn,MC.ind().cs);
-////
-////        //auto MA = MatRef(data.begin(),Ar,Ac);
-////        //MA.applyTrans();
-////        //printfln("MA: %s (%d,%d,%d,%d)",MA.data(),MA.ind().rn,MA.ind().rs,MA.ind().cn,MA.ind().cs);
-////
-////        //auto MR = MatRefc(data.begin(),Ar,Ac);
-////        //MR = MatRefc(MR.data(),MR.Nrows(),MR.Ncols(),true);
-////        //printfln("MR: %s (%d,%d,%d,%d)",MR.data(),MR.ind().rn,MR.ind().rs,MR.ind().cn,MR.ind().cs);
-////
-////        auto A = MatRef(data.begin(),Ar,Ac,true);
-////        CHECK(A.transposed());
-////        for(auto r : count1(Ar))
-////        for(auto c : count1(Ac))
-////            {
-////            CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
-////            }
-////
-////        auto A2 = MatRef(data.begin(),Ar,Ac);
-////        A2.applyTrans();
-////        CHECK(A2.transposed());
-////
-////        for(auto r : count1(Ar))
-////        for(auto c : count1(Ac))
-////            {
-////            CHECK_CLOSE(A2(c,r),data[r+Ar*(c-1)]);
-////            }
-////        }
-//    }
-//
-//SECTION("Automatic Conversion")
-//    {
-//    auto N = 10;
-//    auto data1 = randomData(1,N*N);
-//    auto data2 = randomData(1,N*N);
-//    auto mr1 = MatRef(data1.begin(),N,N);
-//    auto cmr2 = MatRefc(data2.begin(),N,N);
-//
-//    //Assigning to MatRefc from MatRef is ok
-//    cmr2 = mr1;
-//    CHECK(cmr2.data() == mr1.data());
-//
-//    //Constructing VectorRefc from VectorRef is ok
-//    MatRefc cref(mr1);
-//    CHECK(cref.data() == mr1.data());
-//
-//    //This is not allowed - no conversion
-//    //from MatRefc back to MatRef
-//    //mr1 = cmr2;
-//    }
-//
-//SECTION("Test makeRef")
-//    {
-//    auto N = 10;
-//    auto data = randomData(1,N*N);
-//
-//    MatRef Mr(data.begin(),N,N);
-//    MatRefc cMr(data.begin(),N,N);
-//    Mat M(N,N);
-//    const Mat& cM = M;
-//
-//    auto ref1 = makeRef(Mr);
-//    CHECK(ref1.data() == data.begin());
-//
-//    auto ref2 = makeRef(cMr);
-//    CHECK(ref2.data() == data.begin());
-//    CHECK((std::is_same<decltype(ref2),MatRefc>::value));
-//
-//    auto ref3 = makeRef(M);
-//    CHECK(ref3.data() == M.data());
-//    CHECK((std::is_same<decltype(ref3),MatRef>::value));
-//
-//    auto ref4 = makeRef(cM);
-//    CHECK(ref4.data() == cM.data());
-//    CHECK((std::is_same<decltype(ref4),MatRefc>::value));
-//
-//    //Not allowed to make ref of temporary:
-//    //auto ref5 = makeRef(Mat(N,N)); //not allowed
-//    //auto ref6 = makeRef(std::move(M)); //not allowed
-//
-//    //std::vector<Real> data1(N*N);
-//    //makeRef(data1); //not allowed
-//    }
-//
-//
-//
-//SECTION("Test += -= operators")
-//    {
-//    auto N = 5;
-//    auto dataA = randomData(1,N*N);
-//    auto dataB = randomData(1,N*N);
-//    auto origdataA = dataA;
-//
-//    auto A = MatRef(dataA.begin(),N,N);
-//    auto origA = MatRefc(origdataA.cbegin(),N,N);
-//    auto B = MatRefc(dataB.cbegin(),N,N);
-//    auto At = transpose(MatRef(dataA.begin(),N,N));
-//    auto Bt = transpose(MatRefc(dataB.cbegin(),N,N));
-//
-//    A += B;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
-//        }
-//
-//    dataA = origdataA;
-//    At += Bt;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
-//        }
-//
-//    dataA = origdataA;
-//    At += B;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
-//        }
-//
-//    dataA = origdataA;
-//    A -= Bt;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
-//        }
-//    }
-//
-//
-////SECTION("Test addition of refs to same data")
-////    {
-////    auto N = 4;
-////    auto M = randomMat(N,N);
-////    auto origM = M;
-////    matrixref& Mr1 = M;
-////    const matrixref& Mr2 = M;
-////
-////    Mr1 += Mr2;
-////    for(auto r : count1(N)) 
-////    for(auto c : count1(N)) 
-////        CHECK_CLOSE(M(r,c),2*origM(r,c));
-////
-////    Mr1 -= Mr2;
-////    for(auto& el : M) CHECK(el < 1E-10);
-////    }
-//
-//SECTION("Test MatRef mult")
-//    {
-//    SECTION("Case 1")
-//        {
-//        auto Ar = 3,
-//             K  = 4,
-//             Bc = 5;
-//        auto dataA = randomData(1,Ar*K);
-//        auto dataB = randomData(1,K*Bc);
-//        auto dataC = autovector<Real>(1,Ar*Bc);
-//
-//        auto A = MatRef(dataA.begin(),Ar,K);
-//        auto B = MatRef(dataB.begin(),K,Bc);
-//        auto C = MatRef(dataC.begin(),Ar,Bc);
-//
-//        mult(A,B,C);
-//        for(auto r : count1(C.Nrows()))
-//        for(auto c : count1(C.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += A(r,k)*B(k,c);
-//            CHECK_CLOSE(C(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 2")
-//        {
-//        auto Ac = 3,
-//             K  = 4,
-//             Bc = 5;
-//        auto dataA = randomData(1,K*Ac);
-//        auto dataB = randomData(1,K*Bc);
-//        auto dataC = autovector<Real>(1,Ac*Bc);
-//
-//        auto A = MatRef(dataA.begin(),K,Ac);
-//        auto B = MatRef(dataB.begin(),K,Bc);
-//        auto C = MatRef(dataC.begin(),Ac,Bc);
-//
-//        auto At = transpose(A);
-//        mult(At,B,C);
-//        for(auto r : count1(C.Nrows()))
-//        for(auto c : count1(C.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += At(r,k)*B(k,c);
-//            CHECK_CLOSE(C(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 3")
-//        {
-//        auto Ar = 3,
-//             K =  4,
-//             Br = 5;
-//        auto dataA = randomData(1,Ar*K);
-//        auto dataB = randomData(1,Br*K);
-//        auto dataC = autovector<Real>(1,Ar*Br);
-//
-//        auto A = MatRef(dataA.begin(),Ar,K);
-//        auto B = MatRef(dataB.begin(),Br,K);
-//        auto C = MatRef(dataC.begin(),Ar,Br);
-//
-//        auto Bt = transpose(B);
-//        mult(A,Bt,C);
-//        for(auto r : count1(C.Nrows()))
-//        for(auto c : count1(C.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
-//            CHECK_CLOSE(C(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 4")
-//        {
-//        auto Ac = 3,
-//             K =  4,
-//             Br = 5;
-//        auto dataA = randomData(1,K*Ac);
-//        auto dataB = randomData(1,Br*K);
-//        auto dataC = autovector<Real>(1,Ac*Br);
-//
-//        auto A = MatRef(dataA.begin(),K,Ac);
-//        auto B = MatRef(dataB.begin(),Br,K);
-//        auto C = MatRef(dataC.begin(),Ac,Br);
-//
-//        auto At = transpose(A);
-//        auto Bt = transpose(B);
-//        mult(At,Bt,C);
-//        for(auto r : count1(C.Nrows()))
-//        for(auto c : count1(C.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
-//            CHECK_CLOSE(C(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 5")
-//        {
-//        auto Ar = 3,
-//             K =  4,
-//             Bc = 5;
-//        auto dataA = randomData(1,Ar*K);
-//        auto dataB = randomData(1,K*Bc);
-//        auto dataC = autovector<Real>(1,Ar*Bc);
-//
-//        auto A = MatRef(dataA.begin(),Ar,K);
-//        auto B = MatRef(dataB.begin(),K,Bc);
-//        auto C = MatRef(dataC.begin(),Bc,Ar);
-//
-//        auto Ct = transpose(C);
-//        mult(A,B,Ct);
-//        for(auto r : count1(Ct.Nrows()))
-//        for(auto c : count1(Ct.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += A(r,k)*B(k,c);
-//            CHECK_CLOSE(Ct(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 6")
-//        {
-//        auto Ac = 3,
-//             K =  4,
-//             Bc = 5;
-//        auto dataA = randomData(1,K*Ac);
-//        auto dataB = randomData(1,K*Bc);
-//        auto dataC = autovector<Real>(1,Bc*Ac);
-//
-//        auto A = MatRef(dataA.begin(),K,Ac);
-//        auto B = MatRef(dataB.begin(),K,Bc);
-//        auto C = MatRef(dataC.begin(),Bc,Ac);
-//
-//        auto At = transpose(A);
-//        auto Ct = transpose(C);
-//        mult(At,B,Ct);
-//        for(auto r : count1(Ct.Nrows()))
-//        for(auto c : count1(Ct.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += At(r,k)*B(k,c);
-//            CHECK_CLOSE(Ct(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 7")
-//        {
-//        auto Ar = 3,
-//             K =  4,
-//             Br = 5;
-//        auto dataA = randomData(1,Ar*K);
-//        auto dataB = randomData(1,Br*K);
-//        auto dataC = autovector<Real>(1,Br*Ar);
-//
-//        auto A = MatRef(dataA.begin(),Ar,K);
-//        auto B = MatRef(dataB.begin(),Br,K);
-//        auto C = MatRef(dataC.begin(),Br,Ar);
-//
-//        auto Bt = transpose(B);
-//        auto Ct = transpose(C);
-//        mult(A,Bt,Ct);
-//        for(auto r : count1(Ct.Nrows()))
-//        for(auto c : count1(Ct.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
-//            CHECK_CLOSE(Ct(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Case 8")
-//        {
-//        auto Ac = 3,
-//             K =  4,
-//             Br = 5;
-//        auto dataA = randomData(1,K*Ac);
-//        auto dataB = randomData(1,Br*K);
-//        auto dataC = autovector<Real>(1,Br*Ac);
-//
-//        auto A = MatRef(dataA.begin(),K,Ac);
-//        auto B = MatRef(dataB.begin(),Br,K);
-//        auto C = MatRef(dataC.begin(),Br,Ac);
-//
-//        auto At = transpose(A);
-//        auto Bt = transpose(B);
-//        auto Ct = transpose(C);
-//        mult(At,Bt,Ct);
-//        for(auto r : count1(Ct.Nrows()))
-//        for(auto c : count1(Ct.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
-//            CHECK_CLOSE(Ct(r,c),val);
-//            }
-//        }
-//
-//    SECTION("Multipy with self")
-//        {
-//        auto N = 8;
-//        auto dataA = randomData(1,N*N);
-//        auto dataC = randomData(1,N*N);
-//
-//        auto A = MatRef(dataA.begin(),N,N);
-//        auto C = MatRef(dataC.begin(),N,N);
-//
-//        mult(A,A,C);
-//        for(auto r : count1(C.Nrows()))
-//        for(auto c : count1(C.Ncols()))
-//            {
-//            Real val = 0;
-//            for(auto k : count1(N)) val += A(r,k)*A(k,c);
-//            CHECK_CLOSE(C(r,c),val);
-//            }
-//        }
-//    }
-//
-//SECTION("Test multAdd")
-//    {
-//    auto Ar = 3,
-//         K  = 4,
-//         Bc = 5;
-//    auto dataA = randomData(1,Ar*K);
-//    auto dataB = randomData(1,K*Bc);
-//    auto dataC = autovector<Real>(1,Ar*Bc);
-//
-//    auto A = MatRef(dataA.begin(),Ar,K);
-//    auto B = MatRef(dataB.begin(),K,Bc);
-//    auto C = MatRef(dataC.begin(),Ar,Bc);
-//
-//    //Save a copy of C's original data in order
-//    //to explicitly carry out multAdd alg. below
-//    auto orig_dataC = dataC;
-//    auto origC = MatRef(orig_dataC.begin(),Ar,Bc);
-//
-//    multAdd(A,B,C);
-//    for(auto r : count1(C.Nrows()))
-//    for(auto c : count1(C.Ncols()))
-//        {
-//        Real val = 0;
-//        for(auto k : count1(K)) val += A(r,k)*B(k,c) + origC(r,c);
-//        CHECK_CLOSE(C(r,c),val);
-//        }
-//    }
-//
-//
-//} //Test MatRef
-//
-//
-//TEST_CASE("Test Mat")
-//{
-//SECTION("Constructors")
-//    {
-//    SECTION("Constructor Basics")
-//        {
-//        auto Ar = 3,
-//             Ac = 4;
-//        auto A = Mat(Ar,Ac);
-//        CHECK(A.Nrows() == Ar);
-//        CHECK(A.Ncols() == Ac);
-//        CHECK(A);
-//
-//        Mat B;
-//        CHECK(!B);
-//        }
-//
-//    SECTION("Regular Constructor")
-//        {
-//        auto Ar = 3,
-//             Ac = 4;
-//        auto A = randomMat(Ar,Ac);
-//
-//        const auto *data = A.data();
-//        for(auto r : count(Ar))
-//        for(auto c : count(Ac))
-//            {
-//            CHECK_CLOSE(A(1+r,1+c),data[r+Ar*c]);
-//            }
-//        }
-//    }
-//
-//SECTION("Assign from ref")
+    }
+
+SECTION("Automatic Conversion")
+    {
+    auto N = 10;
+    auto data1 = randomData(1,N*N);
+    auto data2 = randomData(1,N*N);
+    auto mr1 = makeMatRef(data1.begin(),N,N);
+    auto cmr2 = makeMatRefc(data2.begin(),N,N);
+
+    //Assigning to MatrixRefc from MatrixRef is ok
+    cmr2 = mr1;
+    CHECK(cmr2.data() == mr1.data());
+
+    //Constructing VectorRefc from VectorRef is ok
+    MatrixRefc cref(mr1);
+    CHECK(cref.data() == mr1.data());
+
+    //This is not allowed - no conversion
+    //from MatrixRefc back to MatrixRef
+    //mr1 = cmr2;
+    }
+
+SECTION("Test makeRef")
+    {
+    auto N = 10;
+    auto data = randomData(1,N*N);
+
+    auto Mr = makeMatRef(data.begin(),N,N);
+    auto cMr = makeMatRefc(data.begin(),N,N);
+    Matrix M(N,N);
+    const auto& cM = M;
+
+    auto ref1 = makeRef(Mr);
+    CHECK(ref1.data() == data.begin());
+
+    auto ref2 = makeRef(cMr);
+    CHECK(ref2.data() == data.begin());
+    CHECK((std::is_same<decltype(ref2),MatrixRefc>::value));
+
+    auto ref3 = makeRef(M);
+    CHECK(ref3.data() == M.data());
+    CHECK((std::is_same<decltype(ref3),MatrixRef>::value));
+
+    auto ref4 = makeRef(cM);
+    CHECK(ref4.data() == cM.data());
+    CHECK((std::is_same<decltype(ref4),MatrixRefc>::value));
+
+    //Not allowed to make ref of temporary:
+    //auto ref5 = makeRef(Matrix(N,N)); //not allowed
+    //auto ref6 = makeRef(std::move(M)); //not allowed
+    }
+
+
+
+SECTION("Test += -= operators")
+    {
+    auto N = 5;
+    auto dataA = randomData(1,N*N);
+    auto dataB = randomData(1,N*N);
+    auto origdataA = dataA;
+
+    auto A = makeMatRef(dataA.begin(),N,N);
+    auto origA = makeMatRefc(origdataA.cbegin(),N,N);
+    auto B = makeMatRefc(dataB.cbegin(),N,N);
+    auto At = transpose(makeMatRef(dataA.begin(),N,N));
+    auto Bt = transpose(makeMatRefc(dataB.cbegin(),N,N));
+
+    A += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    A -= Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
+        }
+    }
+
+
+//SECTION("Test addition of refs to same data")
 //    {
 //    auto N = 4;
-//    auto M1 = randomMat(N,N);
-//    auto M2 = randomMat(N,N);
-//
-//    auto M1t = transpose(M1);
-//    M2 = M1t;
-//
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        CHECK_CLOSE(M2(r,c),M1t(r,c));
-//
-//    auto M1tt = transpose(transpose(M1));
-//    M2 = M1tt;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        CHECK_CLOSE(M2(r,c),M1tt(r,c));
-//    }
-//
-//SECTION("Test Mat multiplication")
-//    {
-//    auto Ar = 3,
-//         K  = 4,
-//         Bc = 5;
-//
-//    //Multiply matrices A*B, store in matrix C
-//    auto A = Mat(Ar,K);
-//    auto B = Mat(K,Bc);
-//    auto C = Mat(Ar,Bc);
-//    mult(A,B,C);
-//    for(auto r : count1(C.Nrows()))
-//    for(auto c : count1(C.Ncols()))
-//        {
-//        Real val = 0;
-//        for(auto k : count1(K)) val += A(r,k)*B(k,c);
-//        CHECK_CLOSE(C(r,c),val);
-//        }
-//
-//
-//    //Store result in a matrixref instead
-//    auto dataC = autovector<Real>(1,Ar*Bc);
-//    auto Cref = MatRef(dataC.begin(),Ar,Bc);
-//    mult(A,B,Cref);
-//    for(auto r : count1(C.Nrows()))
-//    for(auto c : count1(C.Ncols()))
-//        {
-//        Real val = 0;
-//        for(auto k : count1(K)) val += A(r,k)*B(k,c);
-//        CHECK_CLOSE(Cref(r,c),val);
-//        }
-//
-//    //Use operator*
-//    auto R = A*B;
-//    for(auto r : count1(C.Nrows()))
-//    for(auto c : count1(C.Ncols()))
-//        {
-//        Real val = 0;
-//        for(auto k : count1(K)) val += A(r,k)*B(k,c);
-//        CHECK_CLOSE(R(r,c),val);
-//        }
-//    }
-//
-//
-//SECTION("Addition / Subtraction")
-//    {
-//    auto Nr = 4,
-//         Nc = 5;
-//    auto A = randomMat(Nr,Nc);
-//    auto B = randomMat(Nr,Nc);
-//
-//    auto C = A;
-//    C += B;
-//    for(auto r : count1(Nr))
-//    for(auto c : count1(Nc))
-//        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
-//
-//    C = A;
-//    C -= B;
-//    for(auto r : count1(Nr))
-//    for(auto c : count1(Nc))
-//        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
-//
-//    auto D = B;
-//    C = A + std::move(D);
-//    CHECK(!D);
-//    CHECK(B);
-//    for(auto r : count1(Nr))
-//    for(auto c : count1(Nc))
-//        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
-//
-//    D = B;
-//    CHECK(D);
-//    C = A - std::move(D);
-//    CHECK(!D);
-//    CHECK(B);
-//    for(auto r : count1(Nr))
-//    for(auto c : count1(Nc))
-//        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
-//    }
-//
-//SECTION("Scalar multiply, divide")
-//    {
-//    auto N = 10;
-//    auto A = randomMat(N,N);
-//    auto origA = A;
-//    auto fac = Global::random();
-//
-//    A *= fac;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
-//
-//    A = origA;
-//    A /= fac;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        CHECK_CLOSE(A(r,c),origA(r,c)/fac);
-//
-//    A = origA;
-//    auto At = transpose(A);
-//    At *= fac;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
-//
-//    A = origA;
-//    auto S = subMatrix(A,1,N/2,1,N/2);
-//    S *= fac;
-//    for(auto r : count1(N/2))
-//    for(auto c : count1(N/2))
-//        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
-//    }
-//
-//SECTION("Matrix-vector product")
-//    {
-//    SECTION("Square case")
-//        {
-//        auto N = 10;
-//        auto M = randomMat(N,N);
-//        auto x = randomVec(N);
-//
-//        auto y = M*x;
-//        for(auto r : count1(N))
-//            {
-//            Real val = 0;
-//            for(auto c : count1(N)) val += M(r,c)*x(c);
-//            CHECK_CLOSE(y(r),val);
-//            }
-//
-//        y = transpose(M)*x;
-//        for(auto r : count1(N))
-//            {
-//            Real val = 0;
-//            for(auto c : count1(N)) val += M(c,r)*x(c);
-//            CHECK_CLOSE(y(r),val);
-//            }
-//
-//        y = x*M;
-//        for(auto c : count1(N))
-//            {
-//            Real val = 0;
-//            for(auto r : count1(N)) val += x(r)*M(r,c);
-//            CHECK_CLOSE(y(c),val);
-//            }
-//
-//        y = x*transpose(M);
-//        for(auto c : count1(N))
-//            {
-//            Real val = 0;
-//            for(auto r : count1(N)) val += x(r)*M(c,r);
-//            CHECK_CLOSE(y(c),val);
-//            }
-//
-//        //Check a case where vector is strided
-//        auto d = diagonal(M);
-//        y = M*d;
-//        for(auto r : count1(N))
-//            {
-//            Real val = 0;
-//            for(auto c : count1(N)) val += M(r,c)*M(c,c);
-//            CHECK_CLOSE(y(r),val);
-//            }
-//        } //Square case
-//
-//    SECTION("Rectangular case")
-//        {
-//        auto Ar = 5,
-//             Ac = 10;
-//        auto A = randomMat(Ar,Ac);
-//        auto vR = randomVec(Ac);
-//        auto vL = randomVec(Ar);
-//
-//        auto res = A*vR;
-//        for(auto r : count1(Ar))
-//            {
-//            Real val = 0;
-//            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
-//            CHECK_CLOSE(res(r),val);
-//            }
-//
-//        res = vL*A;
-//        for(auto c : count1(Ac))
-//            {
-//            Real val = 0;
-//            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
-//            CHECK_CLOSE(res(c),val);
-//            }
-//
-//        res = transpose(A)*vL;
-//        for(auto c : count1(Ac))
-//            {
-//            Real val = 0;
-//            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
-//            CHECK_CLOSE(res(c),val);
-//            }
-//
-//        res = vR*transpose(A);
-//        for(auto r : count1(Ar))
-//            {
-//            Real val = 0;
-//            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
-//            CHECK_CLOSE(res(r),val);
-//            }
-//
-//        } //Rectangular case
-//    }
-//
-//SECTION("Test reduceColsTo")
-//    {
-//    auto Nr = 10,
-//         Nc = 10;
-//    auto M = randomMat(Nr,Nc);
+//    auto M = randomMat(N,N);
 //    auto origM = M;
+//    matrixref& Mr1 = M;
+//    const matrixref& Mr2 = M;
 //
-//    M.reduceColsTo(Nc/2);
-//    for(auto r : count1(Nr))
-//    for(auto c : count1(Nc/2))
-//        {
-//        CHECK_CLOSE(M(r,c),origM(r,c));
-//        }
+//    Mr1 += Mr2;
+//    for(auto r : count1(N)) 
+//    for(auto c : count1(N)) 
+//        CHECK_CLOSE(M(r,c),2*origM(r,c));
+//
+//    Mr1 -= Mr2;
+//    for(auto& el : M) CHECK(el < 1E-10);
 //    }
-//
-//} // Test matrix
-//
-//
-//TEST_CASE("Test slicing")
-//{
-//
-//
-//SECTION("Diagonal")
-//    {
-//    auto A = randomMat(4,4);
-//    auto d = diagonal(A);
-//    long i = 1;
-//    for(const auto& el : d)
-//        {
-//        CHECK_CLOSE(el,A(i,i));
-//        ++i;
-//        }
-//
-//    //Set diag els of A to 100 through d
-//    for(auto& el : d) el = 100;
-//
-//    for(auto j : count1(d.size()))
-//        {
-//        CHECK_CLOSE(100,A(j,j));
-//        }
-//
-//    A = randomMat(5,10);
-//    d = diagonal(A);
-//    i = 1;
-//    for(const auto& el : d)
-//        {
-//        CHECK_CLOSE(el,A(i,i));
-//        ++i;
-//        }
-//
-//    A = randomMat(10,5);
-//    d = diagonal(A);
-//    i = 1;
-//    for(const auto& el : d)
-//        {
-//        CHECK_CLOSE(el,A(i,i));
-//        ++i;
-//        }
-//    for(auto j : count1(d.size()))
-//        {
-//        CHECK_CLOSE(d(j),A(j,j));
-//        }
-//    }
-//
-//SECTION("Row / Col Slicing")
-//    {
-//    auto N = 10;
-//    auto A = randomMat(N,N);
-//
-//    for(auto r : count1(N))
-//        {
-//        auto R = row(A,r);
-//        for(auto c : count1(N))
-//            CHECK_CLOSE(A(r,c),R(c));
-//        }
-//
-//    for(auto c : count1(N))
-//        {
-//        auto C = column(A,c);
-//        for(auto r : count1(N))
-//            CHECK_CLOSE(A(r,c),C(r));
-//        }
-//
-//    auto S = transpose(subMatrix(A,1,N/2,1,N/2));
-//    for(auto c : count1(N/2))
-//        {
-//        auto C = column(S,c);
-//        for(auto r : count1(N/2))
-//            CHECK_CLOSE(S(r,c),C(r));
-//        }
-//    }
-//
-//SECTION("Transpose")
-//    {
-//    auto nr = 10,
-//         nc = 15;
-//    auto A = randomMat(nr,nc);
-//    auto At = transpose(MatRef(A.data(),A.range()));
-//    CHECK(At.transposed());
-//
-//    for(auto i : count1(nr))
-//    for(auto j : count1(nc))
-//        {
-//        CHECK_CLOSE(A(i,j),At(j,i));
-//        }
-//
-//    auto B = randomMat(nc,nr);
-//    transpose(B) &= A;
-//    for(auto i : count1(nc))
-//    for(auto j : count1(nr))
-//        {
-//        CHECK_CLOSE(B(i,j),A(j,i));
-//        }
-//    }
-//
-//
-//SECTION("Sub Matrix")
-//    {
-//    auto nr = 10,
-//         nc = 15;
-//    auto A = randomMat(nr,nc);
-//
-//    auto rstart = 1,
-//         rstop = 3,
-//         cstart = 1,
-//         cstop = 4;
-//    auto S = subMatrix(A,rstart,rstop,cstart,cstop);
-//    for(auto r : count1(S.Nrows()))
-//    for(auto c : count1(S.Ncols()))
-//        {
-//        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
-//        }
-//
-//    rstart = 2;
-//    cstart = 3;
-//    auto At = transpose(A);
-//    CHECK(At.transposed());
-//    S = subMatrix(At,rstart,rstop,cstart,cstop);
-//    for(auto r : count1(S.Nrows()))
-//    for(auto c : count1(S.Ncols()))
-//        {
-//        CHECK_CLOSE(S(r,c),At(rstart-1+r,cstart-1+c));
-//        }
-//
-//    rstart = 3;
-//    rstop = 8;
-//    cstart = 5;
-//    cstop = 10;
-//    S = subMatrix(A,rstart,rstop,cstart,cstop);
-//    for(auto r : count1(S.Nrows()))
-//    for(auto c : count1(S.Ncols()))
-//        {
-//        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
-//        }
-//
-//    }
-//} //Test slicing
-//
-//
-//TEST_CASE("Matrix Algorithms and Decompositions")
-//{
-//SECTION("diagSymmetric")
-//    {
-//    auto N = 10;
-//    auto M = randomMat(N,N);
-//    //Symmetrize:
-//    M = M+transpose(M);
-//
-//    Mat U;
-//    Vector d;
-//    diagSymmetric(M,U,d);
-//
-//    auto D = Mat(N,N);
-//    diagonal(D) &= d;
-//    auto R = U*D*transpose(U);
-//
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        CHECK_CLOSE(R(r,c),M(r,c));
-//        }
-//    CHECK(norm(R-M) < 1E-12*norm(M));
-//    }
-//
-//SECTION("Orthogonalize")
-//    {
-//    auto N = 4;
-//    auto M = randomMat(N,N);
-//
-//    orthog(M);
-//
-//    auto R = transpose(M)*M;
-//    for(auto r : count1(N))
-//    for(auto c : count1(N))
-//        {
-//        if(r == c) CHECK_CLOSE(R(r,c),1);
-//        else       CHECK(R(r,c) < 1E-12);
-//        }
-//    }
-//
-//SECTION("Singular Value Decomp")
-//    {
-//    Mat U,V,D;
-//    Vector d;
-//
-//    auto dMat = 
-//        [](const Vec& d) 
-//        { 
-//        Mat D(d.size(),d.size()); 
-//        diagonal(D) &= d; 
-//        return D; 
-//        };
-//
-//    auto Nr = 10,
-//         Nc = 8;
-//    auto M = randomMat(Nr,Nc);
-//    SVD(M,U,d,V);
-//    auto R = U*dMat(d)*transpose(V);
-//    CHECK((norm(R-M)/norm(M)) < 1E-13);
-//
-//    Nr = 10;
-//    Nc = 10;
-//    M = randomMat(Nr,Nc);
-//    SVD(M,U,d,V);
-//    R = U*dMat(d)*transpose(V);
-//    CHECK((norm(R-M)/norm(M)) < 1E-13);
-//
-//    Nr = 10;
-//    Nc = 20;
-//    M = randomMat(Nr,Nc);
-//    SVD(M,U,d,V);
-//    R = U*dMat(d)*transpose(V);
-//    CHECK((norm(R-M)/norm(M)) < 1E-13);
-//    }
-//}
+
+SECTION("Test MatrixRef mult")
+    {
+    SECTION("Case 1")
+        {
+        auto Ar = 3,
+             K  = 4,
+             Bc = 5;
+        auto dataA = randomData(1,Ar*K);
+        auto dataB = randomData(1,K*Bc);
+        auto dataC = autovector<Real>(1,Ar*Bc);
+
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Ar,Bc);
+
+        mult(A,B,C);
+        for(auto r : count1(nrows(C)))
+        for(auto c : count1(ncols(C)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += A(r,k)*B(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
+
+    SECTION("Case 2")
+        {
+        auto Ac = 3,
+             K  = 4,
+             Bc = 5;
+        auto dataA = randomData(1,K*Ac);
+        auto dataB = randomData(1,K*Bc);
+        auto dataC = autovector<Real>(1,Ac*Bc);
+
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Ac,Bc);
+
+        auto At = transpose(A);
+        mult(At,B,C);
+        for(auto r : count1(nrows(C)))
+        for(auto c : count1(ncols(C)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += At(r,k)*B(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
+
+    SECTION("Case 3")
+        {
+        auto Ar = 3,
+             K =  4,
+             Br = 5;
+        auto dataA = randomData(1,Ar*K);
+        auto dataB = randomData(1,Br*K);
+        auto dataC = autovector<Real>(1,Ar*Br);
+
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Ar,Br);
+
+        auto Bt = transpose(B);
+        mult(A,Bt,C);
+        for(auto r : count1(nrows(C)))
+        for(auto c : count1(ncols(C)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
+
+    SECTION("Case 4")
+        {
+        auto Ac = 3,
+             K =  4,
+             Br = 5;
+        auto dataA = randomData(1,K*Ac);
+        auto dataB = randomData(1,Br*K);
+        auto dataC = autovector<Real>(1,Ac*Br);
+
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Ac,Br);
+
+        auto At = transpose(A);
+        auto Bt = transpose(B);
+        mult(At,Bt,C);
+        for(auto r : count1(nrows(C)))
+        for(auto c : count1(ncols(C)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
+
+    SECTION("Case 5")
+        {
+        auto Ar = 3,
+             K =  4,
+             Bc = 5;
+        auto dataA = randomData(1,Ar*K);
+        auto dataB = randomData(1,K*Bc);
+        auto dataC = autovector<Real>(1,Ar*Bc);
+
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Bc,Ar);
+
+        auto Ct = transpose(C);
+        mult(A,B,Ct);
+        for(auto r : count1(nrows(Ct)))
+        for(auto c : count1(ncols(Ct)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += A(r,k)*B(k,c);
+            CHECK_CLOSE(Ct(r,c),val);
+            }
+        }
+
+    SECTION("Case 6")
+        {
+        auto Ac = 3,
+             K =  4,
+             Bc = 5;
+        auto dataA = randomData(1,K*Ac);
+        auto dataB = randomData(1,K*Bc);
+        auto dataC = autovector<Real>(1,Bc*Ac);
+
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Bc,Ac);
+
+        auto At = transpose(A);
+        auto Ct = transpose(C);
+        mult(At,B,Ct);
+        for(auto r : count1(nrows(Ct)))
+        for(auto c : count1(ncols(Ct)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += At(r,k)*B(k,c);
+            CHECK_CLOSE(Ct(r,c),val);
+            }
+        }
+
+    SECTION("Case 7")
+        {
+        auto Ar = 3,
+             K =  4,
+             Br = 5;
+        auto dataA = randomData(1,Ar*K);
+        auto dataB = randomData(1,Br*K);
+        auto dataC = autovector<Real>(1,Br*Ar);
+
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Br,Ar);
+
+        auto Bt = transpose(B);
+        auto Ct = transpose(C);
+        mult(A,Bt,Ct);
+        for(auto r : count1(nrows(Ct)))
+        for(auto c : count1(ncols(Ct)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
+            CHECK_CLOSE(Ct(r,c),val);
+            }
+        }
+
+    SECTION("Case 8")
+        {
+        auto Ac = 3,
+             K =  4,
+             Br = 5;
+        auto dataA = randomData(1,K*Ac);
+        auto dataB = randomData(1,Br*K);
+        auto dataC = autovector<Real>(1,Br*Ac);
+
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Br,Ac);
+
+        auto At = transpose(A);
+        auto Bt = transpose(B);
+        auto Ct = transpose(C);
+        mult(At,Bt,Ct);
+        for(auto r : count1(nrows(Ct)))
+        for(auto c : count1(ncols(Ct)))
+            {
+            Real val = 0;
+            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
+            CHECK_CLOSE(Ct(r,c),val);
+            }
+        }
+
+    SECTION("Multipy with self")
+        {
+        auto N = 8;
+        auto dataA = randomData(1,N*N);
+        auto dataC = randomData(1,N*N);
+
+        auto A = makeMatRef(dataA.begin(),N,N);
+        auto C = makeMatRef(dataC.begin(),N,N);
+
+        mult(A,A,C);
+        for(auto r : count1(nrows(C)))
+        for(auto c : count1(ncols(C)))
+            {
+            Real val = 0;
+            for(auto k : count1(N)) val += A(r,k)*A(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
+    }
+
+SECTION("Test multAdd")
+    {
+    auto Ar = 3,
+         K  = 4,
+         Bc = 5;
+    auto dataA = randomData(1,Ar*K);
+    auto dataB = randomData(1,K*Bc);
+    auto dataC = autovector<Real>(1,Ar*Bc);
+
+    auto A = makeMatRef(dataA.begin(),Ar,K);
+    auto B = makeMatRef(dataB.begin(),K,Bc);
+    auto C = makeMatRef(dataC.begin(),Ar,Bc);
+
+    //Save a copy of C's original data in order
+    //to explicitly carry out multAdd alg. below
+    auto orig_dataC = dataC;
+    auto origC = makeMatRef(orig_dataC.begin(),Ar,Bc);
+
+    multAdd(A,B,C);
+    for(auto r : count1(nrows(C)))
+    for(auto c : count1(ncols(C)))
+        {
+        Real val = 0;
+        for(auto k : count1(K)) val += A(r,k)*B(k,c) + origC(r,c);
+        CHECK_CLOSE(C(r,c),val);
+        }
+    }
+
+
+} //Test MatrixRef
+
+
+TEST_CASE("Test Matrix")
+{
+SECTION("Constructors")
+    {
+    SECTION("Constructor Basics")
+        {
+        auto Ar = 3,
+             Ac = 4;
+        auto A = Matrix(Ar,Ac);
+        CHECK(nrows(A) == Ar);
+        CHECK(ncols(A) == Ac);
+        CHECK(A);
+
+        Matrix B;
+        CHECK(!B);
+        }
+
+    SECTION("Regular Constructor")
+        {
+        auto Ar = 3,
+             Ac = 4;
+        auto A = randomMat(Ar,Ac);
+
+        const auto *data = A.data();
+        for(auto r : count(Ar))
+        for(auto c : count(Ac))
+            {
+            CHECK_CLOSE(A(1+r,1+c),data[r+Ar*c]);
+            }
+        }
+    }
+
+SECTION("Assign from ref")
+    {
+    auto N = 4;
+    auto M1 = randomMat(N,N);
+    auto M2 = randomMat(N,N);
+
+    auto M1t = transpose(M1);
+    M2 = M1t;
+
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(M2(r,c),M1t(r,c));
+
+    auto M1tt = transpose(transpose(M1));
+    M2 = M1tt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(M2(r,c),M1tt(r,c));
+    }
+
+SECTION("Test Matrix multiplication")
+    {
+    auto Ar = 3,
+         K  = 4,
+         Bc = 5;
+
+    //Multiply matrices A*B, store in matrix C
+    auto A = Matrix(Ar,K);
+    auto B = Matrix(K,Bc);
+    auto C = Matrix(Ar,Bc);
+    mult(A,B,C);
+    for(auto r : count1(nrows(C)))
+    for(auto c : count1(ncols(C)))
+        {
+        Real val = 0;
+        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+        CHECK_CLOSE(C(r,c),val);
+        }
+
+
+    //Store result in a matrixref instead
+    auto dataC = autovector<Real>(1,Ar*Bc);
+    auto Cref = makeMatRef(dataC.begin(),Ar,Bc);
+    mult(A,B,Cref);
+    for(auto r : count1(nrows(C)))
+    for(auto c : count1(ncols(C)))
+        {
+        Real val = 0;
+        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+        CHECK_CLOSE(Cref(r,c),val);
+        }
+
+    //Use operator*
+    auto R = A*B;
+    for(auto r : count1(nrows(C)))
+    for(auto c : count1(ncols(C)))
+        {
+        Real val = 0;
+        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+        CHECK_CLOSE(R(r,c),val);
+        }
+    }
+
+
+SECTION("Addition / Subtraction")
+    {
+    auto Nr = 4,
+         Nc = 5;
+    auto A = randomMat(Nr,Nc);
+    auto B = randomMat(Nr,Nc);
+
+    auto C = A;
+    C += B;
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
+
+    C = A;
+    C -= B;
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
+
+    auto D = B;
+    C = A + std::move(D);
+    CHECK(!D);
+    CHECK(B);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
+
+    D = B;
+    CHECK(D);
+    C = A - std::move(D);
+    CHECK(!D);
+    CHECK(B);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
+    }
+
+SECTION("Scalar multiply, divide")
+    {
+    auto N = 10;
+    auto A = randomMat(N,N);
+    auto origA = A;
+    auto fac = Global::random();
+
+    A *= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
+
+    A = origA;
+    A /= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)/fac);
+
+    A = origA;
+    auto At = transpose(A);
+    At *= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
+
+    A = origA;
+    auto S = subMatrix(A,1,N/2,1,N/2);
+    S *= fac;
+    for(auto r : count1(N/2))
+    for(auto c : count1(N/2))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
+    }
+
+SECTION("Matrix-vector product")
+    {
+    SECTION("Square case")
+        {
+        auto N = 10;
+        auto M = randomMat(N,N);
+        auto x = randomVec(N);
+
+        auto y = M*x;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(r,c)*x(c);
+            CHECK_CLOSE(y(r),val);
+            }
+
+        y = transpose(M)*x;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(c,r)*x(c);
+            CHECK_CLOSE(y(r),val);
+            }
+
+        y = x*M;
+        for(auto c : count1(N))
+            {
+            Real val = 0;
+            for(auto r : count1(N)) val += x(r)*M(r,c);
+            CHECK_CLOSE(y(c),val);
+            }
+
+        y = x*transpose(M);
+        for(auto c : count1(N))
+            {
+            Real val = 0;
+            for(auto r : count1(N)) val += x(r)*M(c,r);
+            CHECK_CLOSE(y(c),val);
+            }
+
+        //Check a case where vector is strided
+        auto d = diagonal(M);
+        y = M*d;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(r,c)*M(c,c);
+            CHECK_CLOSE(y(r),val);
+            }
+        } //Square case
+
+    SECTION("Rectangular case")
+        {
+        auto Ar = 5,
+             Ac = 10;
+        auto A = randomMat(Ar,Ac);
+        auto vR = randomVec(Ac);
+        auto vL = randomVec(Ar);
+
+        auto res = A*vR;
+        for(auto r : count1(Ar))
+            {
+            Real val = 0;
+            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
+            CHECK_CLOSE(res(r),val);
+            }
+
+        res = vL*A;
+        for(auto c : count1(Ac))
+            {
+            Real val = 0;
+            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
+            CHECK_CLOSE(res(c),val);
+            }
+
+        res = transpose(A)*vL;
+        for(auto c : count1(Ac))
+            {
+            Real val = 0;
+            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
+            CHECK_CLOSE(res(c),val);
+            }
+
+        res = vR*transpose(A);
+        for(auto r : count1(Ar))
+            {
+            Real val = 0;
+            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
+            CHECK_CLOSE(res(r),val);
+            }
+
+        } //Rectangular case
+    }
+
+SECTION("Test reduceColsTo")
+    {
+    auto Nr = 10,
+         Nc = 10;
+    auto M = randomMat(Nr,Nc);
+    auto origM = M;
+
+    reduceCols(M,Nc/2);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc/2))
+        {
+        CHECK_CLOSE(M(r,c),origM(r,c));
+        }
+    }
+
+} // Test matrix
+
+
+TEST_CASE("Test slicing")
+{
+
+
+SECTION("Diagonal")
+    {
+    auto A = randomMat(4,4);
+    auto d = diagonal(A);
+    long i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+
+    //Set diag els of A to 100 through d
+    for(auto& el : d) el = 100;
+
+    for(auto j : count1(d.size()))
+        {
+        CHECK_CLOSE(100,A(j,j));
+        }
+
+    A = randomMat(5,10);
+    d = diagonal(A);
+    i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+
+    A = randomMat(10,5);
+    d = diagonal(A);
+    i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+    for(auto j : count1(d.size()))
+        {
+        CHECK_CLOSE(d(j),A(j,j));
+        }
+    }
+
+SECTION("Row / Col Slicing")
+    {
+    auto N = 10;
+    auto A = randomMat(N,N);
+
+    for(auto r : count1(N))
+        {
+        auto R = row(A,r);
+        for(auto c : count1(N))
+            CHECK_CLOSE(A(r,c),R(c));
+        }
+
+    for(auto c : count1(N))
+        {
+        auto C = column(A,c);
+        for(auto r : count1(N))
+            CHECK_CLOSE(A(r,c),C(r));
+        }
+
+    auto S = transpose(subMatrix(A,1,N/2,1,N/2));
+    for(auto c : count1(N/2))
+        {
+        auto C = column(S,c);
+        for(auto r : count1(N/2))
+            CHECK_CLOSE(S(r,c),C(r));
+        }
+    }
+
+SECTION("Transpose")
+    {
+    auto nr = 10,
+         nc = 15;
+    auto A = randomMat(nr,nc);
+    auto At = transpose(A);
+    CHECK(!isTransposed(A));
+    CHECK(isTransposed(At));
+
+    for(auto i : count1(nr))
+    for(auto j : count1(nc))
+        {
+        CHECK_CLOSE(A(i,j),At(j,i));
+        }
+
+    auto B = randomMat(nc,nr);
+    transpose(B) &= A;
+    for(auto i : count1(nc))
+    for(auto j : count1(nr))
+        {
+        CHECK_CLOSE(B(i,j),A(j,i));
+        }
+    }
+
+
+SECTION("Sub Matrix")
+    {
+    auto nr = 10,
+         nc = 15;
+    auto A = randomMat(nr,nc);
+
+    auto rstart = 1,
+         rstop = 3,
+         cstart = 1,
+         cstop = 4;
+    auto S = subMatrix(A,rstart,rstop,cstart,cstop);
+    for(auto r : count1(nrows(S)))
+    for(auto c : count1(ncols(S)))
+        {
+        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
+        }
+
+    rstart = 2;
+    cstart = 3;
+    auto At = transpose(A);
+    CHECK(isTransposed(At));
+    S = subMatrix(At,rstart,rstop,cstart,cstop);
+    for(auto r : count1(nrows(S)))
+    for(auto c : count1(ncols(S)))
+        {
+        CHECK_CLOSE(S(r,c),At(rstart-1+r,cstart-1+c));
+        }
+
+    rstart = 3;
+    rstop = 8;
+    cstart = 5;
+    cstop = 10;
+    S = subMatrix(A,rstart,rstop,cstart,cstop);
+    for(auto r : count1(nrows(S)))
+    for(auto c : count1(ncols(S)))
+        {
+        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
+        }
+
+    }
+} //Test slicing
+
+
+TEST_CASE("Matrix Algorithms and Decompositions")
+{
+SECTION("diagSymmetric")
+    {
+    auto N = 10;
+    auto M = randomMat(N,N);
+    //Symmetrize:
+    M = M+transpose(M);
+
+    Matrix U;
+    Vector d;
+    diagSymmetric(M,U,d);
+
+    auto D = Matrix(N,N);
+    diagonal(D) &= d;
+    auto R = U*D*transpose(U);
+
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(R(r,c),M(r,c));
+        }
+    CHECK(norm(R-M) < 1E-12*norm(M));
+    }
+
+SECTION("Orthogonalize")
+    {
+    auto N = 4;
+    auto M = randomMat(N,N);
+
+    orthog(M);
+
+    auto R = transpose(M)*M;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        if(r == c) CHECK_CLOSE(R(r,c),1);
+        else       CHECK(R(r,c) < 1E-12);
+        }
+    }
+
+SECTION("Singular Value Decomp")
+    {
+    Matrix U,V,D;
+    Vector d;
+
+    auto dMat = 
+        [](Vector const& d) 
+        { 
+        Matrix D(d.size(),d.size()); 
+        diagonal(D) &= d; 
+        return D; 
+        };
+
+    auto Nr = 10,
+         Nc = 8;
+    auto M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    auto R = U*dMat(d)*transpose(V);
+    CHECK((norm(R-M)/norm(M)) < 1E-13);
+
+    Nr = 10;
+    Nc = 10;
+    M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    auto R2 = U*dMat(d)*transpose(V);
+    CHECK((norm(R2-M)/norm(M)) < 1E-13);
+
+    Nr = 10;
+    Nc = 20;
+    M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    auto R3 = U*dMat(d)*transpose(V);
+    CHECK((norm(R3-M)/norm(M)) < 1E-13);
+    }
+} //Test matrix algorithms

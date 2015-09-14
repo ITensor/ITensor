@@ -83,7 +83,7 @@ GDEPHEADERS=real.h global.h index.h util/readwrite.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
 matrix/vec.o: $(GDEPHEADERS)
 .debug_objs/matrix/vec.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/mrange.h matrix/matiter.h matrix/mat.h
+GDEPHEADERS+= matrix/matrange.h  matrix/mat.h
 matrix/mat.o: $(GDEPHEADERS)
 .debug_objs/matrix/mat.o: $(GDEPHEADERS)
 GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
