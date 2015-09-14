@@ -339,11 +339,11 @@ class RangeBuilderT
 
 namespace detail {
 
-    template<typename RangeT, typename Iterable>
+    template<typename index_type, typename Iterable>
     auto
-    offsetIterable(RangeT const& r, Iterable const& inds)
+    offsetIterable(RangeT<index_type> const& r, Iterable const& inds)
         {
-        using size_type = typename RangeT::size_type;
+        using size_type = decltype(r.size());
         size_type I  = 0, 
                   ri = 1;
         for(auto& ii : inds)
@@ -358,13 +358,14 @@ namespace detail {
         return I;
         }
 
-    template<typename RangeT>
+    template<typename index_type>
     struct ComputeOffset
         {
-        using size_type = typename RangeT::size_type;
+        using range_type = RangeT<index_type>;
+        using size_type = typename range_type::size_type;
 
-        RangeT const& r;
-        ComputeOffset(RangeT const& r_) : r(r_) { }
+        range_type const& r;
+        ComputeOffset(range_type const& r_) : r(r_) { }
 
         template<typename... Inds>
         size_type
@@ -394,9 +395,9 @@ namespace detail {
 
 
 //1-indexed
-template<typename RangeT, typename Iterable>
+template<typename index_type, typename Iterable>
 auto
-offset(RangeT const& r, Iterable const& inds)
+offset(RangeT<index_type> const& r, Iterable const& inds)
     //Constrain this template to only work for inds that have a begin() method
     -> stdx::if_compiles_return<decltype(inds.begin()),decltype(r.extent(1))>
     //...if so make the return type to be decltype(r.extent(1))
@@ -405,18 +406,18 @@ offset(RangeT const& r, Iterable const& inds)
     }
 
 //1-indexed
-template<typename RangeT, typename... Inds>
+template<typename index_type, typename... Inds>
 auto
-offset(RangeT const& r, size_t i1, Inds... inds)
+offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
     {
-    return detail::ComputeOffset<RangeT>(r)(i1,inds...);
+    return detail::ComputeOffset<index_type>(r)(i1,inds...);
     }
 
-template<typename RangeT>
+template<typename index_type>
 auto
-area(RangeT const& R)
+area(RangeT<index_type> const& R)
     { 
-    using size_type = typename RangeT::size_type;
+    using size_type = decltype(R.size());
     size_type A = 1;
     for(decltype(R.r()) n = 1; n <= R.r(); ++n)
         {
@@ -454,11 +455,11 @@ normalRange(RangeT<index_type> const& R)
 // there are area(R) outputs, the only
 // set fulfilling this is {0,1,...,area(R)-1})
 //
-template<typename RangeT>
+template<typename index_type>
 bool
-isContiguous(RangeT const& R)
+isContiguous(RangeT<index_type> const& R)
     {
-    using size_type = typename RangeT::size_type;
+    using size_type = decltype(R.size());
     size_type max_offset = 0,
               area = 1;
     for(decltype(R.r()) n = 1; n <= R.r(); ++n)
