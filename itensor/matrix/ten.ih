@@ -134,8 +134,8 @@ assign(TenRef<R1> const& to, TenRefc<R2> const& from)
 
     for(auto& i : RB.build())
         {
-        auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.maxOffset());
-        auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.maxOffset());
+        auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.store().size());
+        auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.store().size());
         for(decltype(bigsize) b = 0; b < bigsize; ++b)
             {
             *pto = *pfrom;

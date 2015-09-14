@@ -114,7 +114,7 @@ orthog(MatrixRef M, size_t num, size_t numpass)
     MatrixRef Mcols;
     VectorRef dotsref, 
               coli;
-    for(auto i : count1(nkeep))
+    for(auto i : count(nkeep))
         {
         coli = column(M,i);
         auto nrm = norm(coli);
@@ -124,10 +124,10 @@ orthog(MatrixRef M, size_t num, size_t numpass)
             nrm = norm(coli);
             }
         coli /= nrm;
-        if(i == 1) continue;
+        if(i == 0) continue;
 
-        Mcols = columns(M,1,i-1);
-        dotsref = subVector(dots,1,i-1);
+        Mcols = columns(M,0,i);
+        dotsref = subVector(dots,0,i);
         for(auto pass : count1(numpass))
             {
             // does dotsref &= transpose(Mcols) * coli:
@@ -208,13 +208,13 @@ SVDRef(MatrixRefc const& M,
 
     //Put result of Mt*U==(V*D) in V storage
     mult(transpose(M),U,V);
-    for(auto c : index1(D)) 
+    for(auto c : index(D)) 
         {
         if(D(c) > 0) column(V,c) /= D(c);
         }
 
     size_t start = 2;
-    auto D1t = D(1)*thresh;
+    auto D1t = D(0)*thresh;
     for(; start < Mr; ++start)
         {
         if(D(start) < D1t) break;
@@ -234,7 +234,7 @@ SVDRef(MatrixRefc const& M,
     //for greater final accuracy
     //
 
-    auto n = Mr-start+1;
+    auto n = Mr-start;
 
     //reuse storage of rho to hold mv=M*columns(V,start,Mr)
     auto mv = move(rho);

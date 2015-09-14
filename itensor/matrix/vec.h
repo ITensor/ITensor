@@ -15,10 +15,10 @@ using VectorRef  = TenRef<VecRange>;
 using VectorRefc = TenRefc<VecRange>;
 
 auto inline
-stride(VectorRefc const& v) { return v.stride(1); }
+stride(VectorRefc const& v) { return v.stride(0); }
 
 auto inline
-stride(Vector const& v) { return v.stride(1); }
+stride(Vector const& v) { return v.stride(0); }
 
 VectorRef
 operator*=(VectorRef v, Real fac);
@@ -221,8 +221,8 @@ subVector(Vec_&& v,
           size_t stop)
     {
     static_assert(!std::is_same<Vec_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subVector");
-    auto offset = start-1;
-    return makeRef(std::forward<Vec_>(v).store()+offset,VecRange(stop-start+1));
+    auto offset = start;
+    return makeRef(std::forward<Vec_>(v).store()+offset,VecRange(stop-start));
     }
 
 } //namespace itensor

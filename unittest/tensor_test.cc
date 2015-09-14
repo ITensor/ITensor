@@ -2,8 +2,8 @@
 #include "itensor/util/print.h"
 #include "itensor/util/count.h"
 #include "itensor/detail/algs.h"
-#include "itensor/tensor/permutation.h"
-#include "itensor/tensor/sliceten.h"
+#include "itensor/matrix/permutation.h"
+#include "itensor/matrix/sliceten.h"
 
 using namespace itensor;
 
@@ -17,9 +17,9 @@ SECTION("Range")
         {
         auto r = 3;
         auto B = RangeBuilder(r);
-        B.nextExtent(4);
-        B.nextExtent(3);
-        B.nextExtent(2);
+        B.nextIndex(4);
+        B.nextIndex(3);
+        B.nextIndex(2);
 
         SECTION("Basics")
             {
@@ -60,19 +60,19 @@ SECTION("TensorRef")
 
     SECTION("Owns range")
         {
-        auto t = makeTenRef(v.data(),std::move(ind));
+        auto t = makeTenRef(v.data(),v.size(),std::move(ind));
         CHECK(t.ownRange() == true);
         }
 
     SECTION("Doesn't own range")
         {
-        auto t = makeTenRef(v.data(),ind);
+        auto t = makeTenRef(v.data(),v.size(),&ind);
         CHECK(t.ownRange() == false);
         }
 
     SECTION("Constructor Basics")
         {
-        auto t = makeTenRef(v.data(),ind);
+        auto t = makeTenRef(v.data(),v.size(),&ind);
 
         CHECK(t);
         CHECK(t.r() == 2);
@@ -83,7 +83,7 @@ SECTION("TensorRef")
 
     SECTION("Non-const Element Access")
         {
-        auto t = makeTenRef(v.data(),ind);
+        auto t = makeTenRef(v.data(),v.size(),&ind);
 
         CHECK_CLOSE(t(0,0),11);
         CHECK_CLOSE(t(0,1),12);
@@ -101,10 +101,10 @@ SECTION("TensorRef")
     SECTION("Const Element Access")
         {
         const auto* cv = v.data();
-        auto ct = makeTenRef(cv,ind);
+        auto ct = makeTenRef(cv,v.size(),&ind);
         CHECK_CLOSE(ct(4,0),51);
-        static_assert(std::is_same<decltype(ct(4,0)),const Real&>::value,
-                      "Type of ct(4,0) is not const Real&");
+        static_assert(std::is_same<decltype(ct(5,1)),const Real&>::value,
+                      "Type of ct(5,1) is not const Real&");
         }
     }
 
@@ -131,7 +131,7 @@ SECTION("Tensor")
             CHECK_CLOSE(s(0),0);
             CHECK_CLOSE(s(1),0);
             //...
-            CHECK_CLOSE(s(m0-1),0);
+            CHECK_CLOSE(s(m0),0);
             }
 
         SECTION("Case 2")
@@ -168,10 +168,10 @@ SECTION("Tensor")
         {
         auto ind = Range{5,2};
         auto v = Tensor::storage_type({11,21,31,41,51,
-                                    12,22,32,42,52});
+                                       12,22,32,42,52});
         SECTION("Move in Data")
             {
-            auto t = Tensor(std::move(ind),std::move(v));
+            auto t = Tensor(std::move(v),std::move(ind));
 
             //Check that ind and v got moved
             CHECK(ind.empty());
@@ -217,6 +217,8 @@ SECTION("Slicing")
             P.setFromTo(0,0);
             P.setFromTo(1,2);
             P.setFromTo(2,1);
+            //println("P=",P);
+            //print("P="); for(auto el : P) print(el," "); println();
             auto PT = permute(T,P);
             for(auto i0 : count(T.extent(0)))
             for(auto i1 : count(T.extent(1)))
@@ -229,7 +231,7 @@ SECTION("Slicing")
         SECTION("Case 2")
             {
             auto PT = permute(T,Label{2,0,1});
-            for(auto& i : T.range())
+            for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[2],i[0],i[1]));
                 }
@@ -238,7 +240,7 @@ SECTION("Slicing")
         SECTION("Case 3")
             {
             auto PT = permute(T,Label{2,1,0});
-            for(auto& i : T.range())
+            for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[2],i[1],i[0]));
                 }
@@ -247,7 +249,7 @@ SECTION("Slicing")
         SECTION("Case 4")
             {
             auto PT = permute(T,Label{1,2,0});
-            for(auto& i : T.range())
+            for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[1],i[2],i[0]));
                 }
@@ -319,7 +321,7 @@ SECTION("Slicing")
 
         SECTION("Case 5")
             {
-            Label start = {6,2,7,5},
+            Label start = {5,2,7,5},
                   stop  = {7,3,8,6};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -333,7 +335,7 @@ SECTION("Slicing")
 
         SECTION("Case 6")
             {
-            Label start = {5,1,6,4},
+            Label start = {5,1,5,4},
                   stop  = {6,2,7,5};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())

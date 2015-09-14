@@ -48,7 +48,7 @@ class VecRange
     extent(size_type i) const 
         { 
 #ifdef DEBUG
-        if(i != 1) Error("i out of range in VecRange::extent(i)");
+        if(i != 0) Error("i out of range in VecRange::extent(i)");
 #endif
         return ext_; 
         }
@@ -57,7 +57,7 @@ class VecRange
     stride(size_type i) const 
         {
 #ifdef DEBUG
-        if(i != 1) Error("i out of range in VecRange::stride(i)");
+        if(i != 0) Error("i out of range in VecRange::stride(i)");
 #endif
         return stride_; 
         }
@@ -80,11 +80,11 @@ normalRange(VecRange const& vr)
     return VecRange{vr.extent()};
     }
 
-//1-indexed
+//0-indexed
 auto inline
 offset(VecRange const& vr, VecRange::size_type ind)
     {
-    return vr.stride()*(ind-1);
+    return vr.stride()*ind;
     }
 
 auto inline
@@ -107,17 +107,15 @@ operator<<(std::ostream& s, VecRange const& vr)
     }
 
 
-
 class VecRangeIter
     { 
     public:
     using size_type = size_t;
     using offset_type = size_type;
-    using ind_type = offset_type;
     using iterator_category = std::forward_iterator_tag;
     using range_type = VecRange;
     private:
-    ind_type ind_ = 1;
+    offset_type off_ = 0;
     size_type stride_ = 0; 
     public: 
 
@@ -129,48 +127,38 @@ class VecRangeIter
     explicit
     VecRangeIter(range_type const& vr) : stride_(vr.stride()) { }  
 
-    //VecRangeIter(offset_type off, size_type stride) : ind_(off+1), stride_(stride) { }  
-
     offset_type
-    offset() const { return ind_-1; }
-
-    ind_type
-    index() const { return ind_; }
+    offset() const { return off_; }
 
     size_type
     stride() const { return stride_; }
 
     VecRangeIter& 
-    operator++() { ind_ += stride_; return *this; } 
+    operator++() { off_ += stride_; return *this; } 
 
     VecRangeIter 
-    operator++(int) { auto old = *this; ind_ += stride_; return old; } 
+    operator++(int) { auto old = *this; off_ += stride_; return old; } 
 
     VecRangeIter& 
-    operator+=(size_type x) { ind_ += x * stride_; return *this; } 
+    operator+=(size_type x) { off_ += x * stride_; return *this; } 
 
     VecRangeIter& 
-    operator--() { ind_ -= stride_; return *this; } 
+    operator--() { off_ -= stride_; return *this; } 
 
     VecRangeIter 
-    operator--(int) { auto old = *this; ind_ -= stride_; return old; } 
+    operator--(int) { auto old = *this; off_ -= stride_; return old; } 
 
     VecRangeIter& 
-    operator-=(size_type x) { ind_ -= x * stride_; return *this; } 
+    operator-=(size_type x) { off_ -= x * stride_; return *this; } 
 
     VecRangeIter const& 
     operator*() { return *this; }  
-
-    //const ind_type*
-    //begin() const { return &ind_; }
-    //const ind_type*
-    //end() const { auto b = begin(); ++b; return b; }
 
     VecRangeIter static
     makeEnd(range_type const& r)
         {
         VecRangeIter end;
-        end.ind_ = 1+r.stride()*r.extent();
+        end.off_ = r.stride()*r.extent();
         end.stride_ = r.stride();
         return end;
         }

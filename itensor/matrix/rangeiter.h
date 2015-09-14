@@ -19,7 +19,7 @@ class RangeIter
     using offset_type = size_type;
     using reference = size_type &;
     using iterator_category = std::forward_iterator_tag;
-    using ind_type = InfArray<size_type,8ul>;
+    using ind_type = InfArray<size_type,11ul>;
     using const_ind_iterator = typename ind_type::const_iterator;
     private:
     const range_type *prange_ = nullptr; 
@@ -105,8 +105,8 @@ class RangeIter
             {
             for(decltype(r) n = 1; n < r; ++n)
                 {
-                ind_[n-1] = 0;
-                off_ -= range().extent(n-1)*range().stride(n-1);
+                ind_[n-1] = 1;
+                off_ -= range().extent(n)*range().stride(n);
                 ind_[n] += 1;
                 off_ += range().stride(n);
                 if(rextent(ind_[n]) < range().extent(n)) return;

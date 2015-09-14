@@ -7,6 +7,7 @@
 
 #include "itensor/util/count.h"
 #include "itensor/matrix/ten.h"
+#include "itensor/matrix/slicemat.h"
 #include "itensor/matrix/slicerange.h"
 
 namespace itensor {
@@ -32,6 +33,7 @@ groupInds(Ten_ && T,
           size_t iend);
 
 //group non-contiguous indices
+//allocates a new Tensor to hold result
 template<typename Ten_, typename Inds_>
 Tensor
 groupInds(Ten_      && T,
@@ -48,10 +50,10 @@ permute(Ten_  const& t,
 /// 
 
 template<typename Ten_, typename C1, typename C2>
-ref_type<Ten_>
+auto
 subTensor(Ten_ && T,
           C1 const& start,
-          C2 const& stop)
+          C2 const& stop) -> ref_type<Ten_>
     {
     static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subTensor");
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subTensor");
@@ -79,15 +81,15 @@ subTensor(Ten_ && T,
         offset += T.stride(j) * (*st);
         rb.setIndStr(j,(*sp)-(*st),T.stride(j));
         }
-    return makeTenRef(makeRef(std::forward<Ten_>(T)).store()+offset,rb.build());
+    return makeRef(T.store()+offset,rb.build());
     }
 
 template<typename Ten_>
-ref_type<Ten_>
+auto
 subIndex(Ten_ && T,
          size_t ind,
          size_t start,
-         size_t stop)
+         size_t stop) -> ref_type<Ten_>
     {
     static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subIndex");
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subIndex");
@@ -97,39 +99,23 @@ subIndex(Ten_ && T,
 #endif
     auto R = T.range();
     R[ind].ind = stop-start;
-    return makeTenRef(makeRef(std::forward<Ten_>(T)).store()+T.stride(ind)*start,std::move(R));
+    return makeRef(T.store()+T.stride(ind)*start,std::move(R));
     }
 
-Range inline
-groupIndsRange(Range const& R,
-               size_t istart,
-               size_t iend)
-    {
-    if(not isContiguous(R)) Error("groupInds requires contiguous range");
-    auto ngroup = iend-istart;
-    size_t nr = R.r()-ngroup+1;
-    auto rb = RangeBuilder(nr);
-    for(decltype(istart) j = 0; j < istart; ++j) rb.nextIndex(R.extent(j));
-    auto group_ext = 1;
-    for(auto j = istart; j < iend; ++j) group_ext *= R.extent(j);
-    rb.nextIndex(group_ext);
-    for(auto j = iend; j < size_t(R.r()); ++j) rb.nextIndex(R.extent(j));
-    return rb.build();
-    }
 
 template<typename Ten_>
-ref_type<Ten_>
+auto
 groupInds(Ten_ && T,
           size_t istart,
-          size_t iend)
+          size_t iend) -> ref_type<Ten_>
     {
-    return makeRef(std::forward<Ten_>(T),groupIndsRange(T.range(),istart,iend));
+    return makeRef(T.store(),groupIndsRange(T.range(),istart,iend));
     }
 
 template<typename Ten_, typename Inds_>
-Tensor
+auto
 groupInds(Ten_      && T,
-          Inds_ const& inds)
+          Inds_ const& inds) -> Tensor
     {
     //Does permute followed by contiguous groupInds; returns a Tensor
     using value_t = decltype(inds[0]);
@@ -153,11 +139,11 @@ groupInds(Ten_      && T,
     }
 
 template<typename Ten_, typename Perm_>
-ref_type<Ten_>
+auto
 permute(Ten_  && t,
-        Perm_ const& P)
+        Perm_ const& P) -> ref_type<Ten_>
     {
-    return makeRef(std::forward<Ten_>(t),permuteRange(t.range(),P));
+    return makeRef(t.store(),permuteRange(t.range(),P));
     }
 
 

@@ -7,24 +7,24 @@
 
 #include "itensor/util/stdx.h"
 #include "itensor/util/readwrite.h"
-#include "itensor/tensor/rangeiter.h"
+#include "itensor/matrix/rangeiter.h"
 
 namespace itensor {
 
-template<typename extent_type>
+template<typename index_type>
 class RangeT;
 
-template<typename extent_type>
+template<typename index_type>
 class RangeBuilderT;
 
-using Range = RangeT<size_t>;
+using Range = RangeT<unsigned long>;
 using RangeBuilder = RangeBuilderT<Range>;
 
 //Storage type for RangeT
 template<typename index_type>
 struct IndStr
     {
-    using size_type = size_t;
+    using size_type = unsigned long;
     index_type  ind = index_type{}; //convertible to size_type
     size_type   str = 0; //stride
 
@@ -53,7 +53,7 @@ class RangeT
     using index_type = index_type_;
     using value_type = IndStr<index_type>;
     using size_type = typename value_type::size_type;
-    using storage_type = InfArray<value_type,8ul>;
+    using storage_type = InfArray<value_type,11ul>;
     using iterator = RangeIter<RangeT>;
     using const_iterator = iterator;
     private:
@@ -92,22 +92,18 @@ class RangeT
 
     RangeT(std::initializer_list<index_type> ii) { init(ii); }
 
-    //1-indexed
     size_type
-    extent(size_type i) const { return static_cast<size_type>(store_[i-1].ind); }
+    extent(size_type i) const { return static_cast<size_type>(store_[i].ind); }
 
-    //1-indexed
     size_type
-    stride(size_type i) const { return store_[i-1].str; }
+    stride(size_type i) const { return store_[i].str; }
 
     size_type
     r() const { return store_.size(); }
 
-    //0-indexed
     value_type const&
     operator[](size_type i) const { return store_[i]; }
 
-    //0-indexed
     value_type &
     operator[](size_type i) { return store_[i]; }
 
@@ -210,9 +206,9 @@ std::ostream&
 operator<<(std::ostream& s, RangeT<index_type> const& r)
     {
     s << "exts: ";
-    for(decltype(r.r()) i = 1; i <= r.r(); ++i) s << r.extent(i) << " ";
+    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.extent(i) << " ";
     s << "strs: ";
-    for(decltype(r.r()) i = 1; i <= r.r(); ++i) s << r.stride(i) << " ";
+    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
     return s;
     }
 
@@ -274,13 +270,11 @@ class RangeBuilderT
     void
     resize(size_type newsize) { store_.resize(newsize); }
 
-    //1-indexed
     size_type const&
-    extent(size_type j) const { return static_cast<size_type>(store_[j-1].ind); }
+    extent(size_type j) const { return static_cast<size_type>(store_[j].ind); }
 
-    //1-indexed
     size_type
-    stride(size_type j) const { return store_[j-1].str; }
+    stride(size_type j) const { return store_[j].str; }
 
     storage_type &
     store() { return store_; }
@@ -345,14 +339,14 @@ namespace detail {
         {
         using size_type = decltype(r.size());
         size_type I  = 0, 
-                  ri = 1;
+                  ri = 0;
         for(auto& ii : inds)
             {
 #ifdef DEBUG
-            if(ri > size_type(r.r()))
+            if(ri >= size_type(r.r()))
                 Error("Container-Range size mismatch in offset(...)");
 #endif
-            I += r.stride(ri) * (ii-1);
+            I += r.stride(ri)*ii;
             ++ri;
             }
         return I;
@@ -380,32 +374,32 @@ namespace detail {
         size_type
         off(size_type first, Inds... rest) const
             {
-            return (first-1)*r.stride(i) + off<i+1>(rest...);
+            return first*r.stride(i) + off<i+1>(rest...);
             }
 
         template <size_type i>
         size_type
-        off(size_type first) const
+        off(size_type ind) const
             {
-            return (first-1)*r.stride(i);
+            return ind*r.stride(i);
             }
         };
 
 } //namespace detail
 
 
-//1-indexed
+//0-indexed
 template<typename index_type, typename Iterable>
 auto
 offset(RangeT<index_type> const& r, Iterable const& inds)
     //Constrain this template to only work for inds that have a begin() method
-    -> stdx::if_compiles_return<decltype(inds.begin()),decltype(r.extent(1))>
+    -> stdx::if_compiles_return<decltype(inds.begin()),decltype(r.extent(0))>
     //...if so make the return type to be decltype(r.extent(1))
     {
     return detail::offsetIterable(r,inds);
     }
 
-//1-indexed
+//0-indexed
 template<typename index_type, typename... Inds>
 auto
 offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
@@ -419,7 +413,7 @@ area(RangeT<index_type> const& R)
     { 
     using size_type = decltype(R.size());
     size_type A = 1;
-    for(decltype(R.r()) n = 1; n <= R.r(); ++n)
+    for(decltype(R.r()) n = 0; n < R.r(); ++n)
         {
         A *= R.extent(n);
         }
@@ -433,7 +427,7 @@ Range
 normalRange(RangeT<index_type> const& R)
     {
     auto rb = RangeBuilder(R.r());
-    for(decltype(R.r()) n = 1; n <= R.r(); ++n)
+    for(decltype(R.r()) n = 0; n < R.r(); ++n)
         rb.nextIndex(R.extent(n));
     return rb.build();
     }
@@ -462,7 +456,7 @@ isContiguous(RangeT<index_type> const& R)
     using size_type = decltype(R.size());
     size_type max_offset = 0,
               area = 1;
-    for(decltype(R.r()) n = 1; n <= R.r(); ++n)
+    for(decltype(R.r()) n = 0; n < R.r(); ++n)
         {
         max_offset += R.stride(n)*(R.extent(n)-1);
         area *= R.extent(n);

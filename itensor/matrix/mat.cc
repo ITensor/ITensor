@@ -136,10 +136,10 @@ template<>
 std::ostream&
 operator<<(std::ostream& s, MatrixRefc const& M)
     {
-    for(decltype(nrows(M)) r = 1; r <= nrows(M); ++r)
+    for(auto r : count(nrows(M)))
         {
         s << "|";
-        for(decltype(ncols(M)) c = 1; c <= ncols(M); ++c)
+        for(auto c : count(ncols(M)))
             {
             s << M(r,c);
             s << (c == ncols(M) ? "|" : " ");

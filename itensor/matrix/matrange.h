@@ -36,18 +36,16 @@ struct MatRange
         : rn(rn_),rs(rs_),cn(cn_),cs(cs_) 
         { }
 
-    //1-indexed
     size_type
     extent(size_type i) const
         {
-        return (i==1 ? rn : cn);
+        return (i==0 ? rn : cn);
         }
 
-    //1-indexed
     size_type
     stride(size_type i) const
         {
-        return (i==1 ? rs : cs);
+        return (i==0 ? rs : cs);
         }
 
     size_type
@@ -75,16 +73,16 @@ transpose(MatRange const& mr)
     return MatRange{mr.cn,mr.cs,mr.rn,mr.rs};
     }
 
-//1-indexed
+//0-indexed
 auto inline
 offset(MatRange const& mr, 
        size_t i1,
        size_t i2)
     {
-    return (i1-1)*mr.rs+(i2-1)*mr.cs;
+    return i1*mr.rs+i2*mr.cs;
     }
 
-//1-indexed
+//0-indexed
 template<typename Iterable>
 auto
 offset(MatRange const& mr, Iterable const& inds)

@@ -125,13 +125,6 @@ class TenRefc
     pointer
     data() const { return d_.data(); }
 
-    //// maximum offset safe to
-    //// add to data() pointer
-    //// (can be greater than max
-    ////  offset of range())
-    //size_t
-    //maxOffset() const { return d_.size(); }
-    
     reference
     operator()() const;
 
@@ -654,6 +647,16 @@ isContiguous(TenRefc<R> const& t) { return isContiguous(t.range()); }
 template<typename R>
 bool
 isContiguous(Ten<R> const& t) { return isContiguous(t.range()); }
+
+template<typename R, typename... VArgs>
+auto
+offset(TenRefc<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
+    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
+
+template<typename R, typename... VArgs>
+auto
+offset(Ten<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
+    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
 
 template<typename R>
 std::ostream&
