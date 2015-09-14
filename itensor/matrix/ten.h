@@ -606,19 +606,9 @@ makeRef(Ten<R> const& t, Arg&& arg, Rest&&... rest)
 //forbids explicitly making TenRefs to temporaries
 template<typename R, typename... VArgs>
 auto
-makeRef(TenRefc<R> && t, VArgs&&... args) 
-    { 
-    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRef on temporary/rvalue");
-    return TenRefc<R>{};
-    }
-
-//This version of makeRef intended to fail instantiation,
-//forbids explicitly making TenRefs to temporaries
-template<typename R, typename... VArgs>
-auto
 makeRef(Ten<R> && t, VArgs&&... args) 
     { 
-    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRef on temporary/rvalue");
+    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRef on temporary/rvalue Ten<R>");
     return TenRefc<R>{};
     }
 
@@ -643,19 +633,9 @@ makeRefc(Ten<R> const& t) { return TenRefc<R>{t}; }
 //forbids explicitly making TenRefs to temporaries
 template<typename R, typename... VArgs>
 auto
-makeRefc(TenRefc<R> && t, VArgs&&... args) 
-    { 
-    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRefc on temporary/rvalue");
-    return TenRefc<R>{};
-    }
-
-//This version of makeRefc intended to fail instantiation,
-//forbids explicitly making TenRefs to temporaries
-template<typename R, typename... VArgs>
-auto
 makeRefc(Ten<R> && t, VArgs&&... args) 
     { 
-    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRefc on temporary/rvalue");
+    static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRefc on temporary/rvalue Ten<R>");
     return TenRefc<R>{};
     }
 
@@ -666,6 +646,14 @@ norm(TenRefc<R> const& t);
 template<typename R>
 Real
 norm(Ten<R> const& t) { return norm(makeRefc(t)); }
+
+template<typename R>
+bool
+isContiguous(TenRefc<R> const& t) { return isContiguous(t.range()); }
+
+template<typename R>
+bool
+isContiguous(Ten<R> const& t) { return isContiguous(t.range()); }
 
 template<typename R>
 std::ostream&
