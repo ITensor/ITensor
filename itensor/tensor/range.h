@@ -7,7 +7,7 @@
 
 #include "itensor/util/stdx.h"
 #include "itensor/util/readwrite.h"
-#include "itensor/matrix/rangeiter.h"
+#include "itensor/tensor/rangeiter.h"
 
 namespace itensor {
 

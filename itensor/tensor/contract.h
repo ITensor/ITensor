@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_CONTRACT_H
 #define __ITENSOR_CONTRACT_H
 
-#include "itensor/matrix/vec.h"
-#include "itensor/matrix/permute.h"
+#include "itensor/tensor/vec.h"
+#include "itensor/tensor/permute.h"
 #include "itensor/global.h"
 
 namespace itensor {

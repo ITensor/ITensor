@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_MATRIX_VEC_H_
 #define __ITENSOR_MATRIX_VEC_H_
 
-#include "itensor/matrix/vecrange.h"
-#include "itensor/matrix/ten.h"
+#include "itensor/tensor/vecrange.h"
+#include "itensor/tensor/ten.h"
 
 namespace itensor {
 

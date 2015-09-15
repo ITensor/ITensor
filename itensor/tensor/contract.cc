@@ -6,11 +6,11 @@
 #include "itensor/util/cputime.h"
 #include "itensor/detail/algs.h"
 #include "itensor/detail/gcounter.h"
-#include "itensor/matrix/mat.h"
-#include "itensor/matrix/permute.h"
-#include "itensor/matrix/contract.h"
-#include "itensor/matrix/slicemat.h"
-#include "itensor/matrix/sliceten.h"
+#include "itensor/tensor/mat.h"
+#include "itensor/tensor/permute.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/tensor/slicemat.h"
+#include "itensor/tensor/sliceten.h"
 #include "itensor/indexset.h"
 
 using std::vector;

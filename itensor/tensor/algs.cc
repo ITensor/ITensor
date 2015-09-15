@@ -4,8 +4,8 @@
 //
 #include <limits>
 #include <stdexcept>
-#include "itensor/matrix/lapack_wrap.h"
-#include "itensor/matrix/algs.h"
+#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/algs.h"
 #include "itensor/util/count.h"
 
 using std::move;

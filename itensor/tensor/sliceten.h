@@ -6,9 +6,9 @@
 #define __ITENSOR_SLICETEN_H_
 
 #include "itensor/util/count.h"
-#include "itensor/matrix/ten.h"
-#include "itensor/matrix/slicemat.h"
-#include "itensor/matrix/slicerange.h"
+#include "itensor/tensor/ten.h"
+#include "itensor/tensor/slicemat.h"
+#include "itensor/tensor/slicerange.h"
 
 namespace itensor {
 

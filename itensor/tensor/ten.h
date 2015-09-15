@@ -5,9 +5,9 @@
 #ifndef __ITENSOR_TEN_H_
 #define __ITENSOR_TEN_H_
 
-#include "itensor/matrix/teniter.h"
-#include "itensor/matrix/range.h"
-#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/tensor/teniter.h"
+#include "itensor/tensor/range.h"
+#include "itensor/tensor/lapack_wrap.h"
 
 namespace itensor {
 

@@ -5,9 +5,9 @@
 #include <limits>
 #include "itensor/util/count.h"
 #include "itensor/util/timers.h"
-#include "itensor/matrix/lapack_wrap.h"
-#include "itensor/matrix/mat.h"
-#include "itensor/matrix/slicemat.h"
+#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/mat.h"
+#include "itensor/tensor/slicemat.h"
 #include "itensor/detail/algs.h"
 
 namespace itensor {

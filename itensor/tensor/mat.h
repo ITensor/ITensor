@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_MAT__H_
 #define __ITENSOR_MAT__H_
 
-#include "itensor/matrix/matrange.h"
+#include "itensor/tensor/matrange.h"
 
 namespace itensor {
 

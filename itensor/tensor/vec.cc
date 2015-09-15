@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/matrix/vec.h"
+#include "itensor/tensor/vec.h"
 #include <limits>
 #include "itensor/detail/algs.h"
 

@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_MATRIX_ALGS__H_
 #define __ITENSOR_MATRIX_ALGS__H_
 
-#include "slicemat.h"
+#include "itensor/tensor/slicemat.h"
 
 namespace itensor {
 

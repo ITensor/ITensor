@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_TENITER_H_
 #define __ITENSOR_TENITER_H_
 
-#include "itensor/matrix/rangeiter.h"
+#include "itensor/tensor/rangeiter.h"
 
 namespace itensor {
 
