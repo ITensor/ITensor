@@ -12,6 +12,19 @@
 
 namespace itensor {
 
+template<typename Iter1, typename Iter2, typename Func>
+void
+apply(Iter1 it1,
+      Iter1 end1,
+      Iter2 it2,
+      Func const& f)
+    {
+    for(; it1 != end1; ++it1, ++it2)
+        {
+        f(*it1,*it2);
+        }
+    }
+
 template<typename Func, typename Iter>
 void
 apply(MatrixRef const& v,
@@ -35,7 +48,7 @@ operator&=(MatrixRef const& a, MatrixRefc const& b)
     auto assign = [](Real& x, Real y) { x = y; };
     if(a.range()==b.range() && isContiguous(b))
         {
-        apply(a,b.data(),assign);
+        apply(a.data(),a.data()+a.size(),b.data(),assign);
         }
     else
         {
@@ -142,7 +155,7 @@ operator<<(std::ostream& s, MatrixRefc const& M)
         for(auto c : count(ncols(M)))
             {
             s << M(r,c);
-            s << (c == ncols(M) ? "|" : " ");
+            s << (1+c == ncols(M) ? "|" : " ");
             }
         if(r < nrows(M)) s << "\n";
         }
