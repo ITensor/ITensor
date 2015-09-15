@@ -199,11 +199,10 @@ SVDRef(MatrixRefc const& M,
     //Diagonalize rho: evals are squares of singular vals
     diagSymmetric(rho,U,D);
 
-    for(auto& el : D) // el = sqrt(fabs(el));
+    for(auto& el : D)
         {
-        //This formula zeroes out any negative evals,
-        //smaller error than using their abs value
-        el = sqrt((fabs(el)+el)/2);
+        if(el < 0) el = 0.;
+        else       el = sqrt(el);
         }
 
     //Put result of Mt*U==(V*D) in V storage
