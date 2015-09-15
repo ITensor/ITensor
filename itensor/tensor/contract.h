@@ -6,8 +6,8 @@
 #define __ITENSOR_CONTRACT_H
 
 #include "itensor/tensor/vec.h"
-#include "itensor/tensor/permute.h"
-#include "itensor/global.h"
+#include "itensor/util/args.h"
+#include "itensor/detail/gcounter.h"
 
 namespace itensor {
 

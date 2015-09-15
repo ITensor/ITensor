@@ -164,7 +164,8 @@ doTask(AddITensor & A,
     auto dref = makeTenRef(dblock,&drange);
     auto tref = makeTenRef(t.data(),t.size(),&A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
-    do_permute(tref,A.P,dref,add);
+    dref += permute(tref,A.P);
+    //do_permute(tref,A.P,dref,add);
     }
 
 

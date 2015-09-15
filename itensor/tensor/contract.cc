@@ -7,11 +7,11 @@
 #include "itensor/detail/algs.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/tensor/mat.h"
-#include "itensor/tensor/permute.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/slicemat.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/indexset.h"
+#include "itensor/global.h"
 
 using std::vector;
 
@@ -840,11 +840,7 @@ contract(CProps const& p,
 #ifdef DEBUG
         if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
 #endif
-        //cpu_time cpuC; 
-        //if(Global::debug1()) printfln("Permuting C, P = %s, isTrivial = %s",p.PC,isTrivial(p.PC));
-        //TODO: replace this with C += permute(newC,p.PC) [maybe inverse(p.PC)]
-        do_permute(makeRefc(newC),p.PC,C,detail::plusEq<Real>);
-        //println("C permuted, took ",cpuC.sincemark());
+        C += permute(newC,p.PC);
         }
     //println("------------------------------------------");
     //println();
@@ -871,7 +867,7 @@ contract(TenRefc<RangeT> A, Label const& ai,
         return;
         }
     CProps props(ai,bi,ci);
-    props.compute(A,B,makeRefc(C));
+    props.compute(A,B,C);
     contract(props,A,B,C);
     }
 
@@ -979,7 +975,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     if(p.nactiveA != 2 || p.nactiveB != 2 || p.nactiveC != 2)
         {
         //println("calling contract from within contractloop");
-        p.compute(A,B,makeRefc(C));
+        p.compute(A,B,C);
         contract(p,A,B,C);
         return;
         }

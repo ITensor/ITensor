@@ -3,6 +3,8 @@
 #include "itensor/util/count.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/set_scoped.h"
+#include "itensor/util/args.h"
+#include "itensor/global.h"
 
 using namespace itensor;
 
@@ -320,7 +322,6 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM4")
             {
-            SET_SCOPED(Global::debug1()) = true;
             Tensor A(2,3,4,5,6,7),
                    B(8,7,5,6,9),
                    C(2,8,4,3,9);
@@ -341,6 +342,32 @@ TEST_CASE("Contract Test")
                     val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
                     }
                 CHECK_CLOSE(C(i2,i8,i4,i3,i9),val);
+                }
+            }
+
+        SECTION("Case NM5")
+            {
+            SET_SCOPED(Global::debug1()) = true;
+            Tensor A(2,3,4,5,6,7),
+                   B(8,7,5,6,9),
+                   C(4,9,2,3,8);
+            randomize(A);
+            randomize(B);
+            contract(B,{8,7,5,6,9},A,{2,3,4,5,6,7},C,{4,9,2,3,8});
+            for(auto i2 : count(2))
+            for(auto i3 : count(3))
+            for(auto i4 : count(4))
+            for(auto i8 : count(8))
+            for(auto i9 : count(9))
+                {
+                Real val = 0;
+                for(auto i5 : count(5))
+                for(auto i6 : count(6))
+                for(auto i7 : count(7))
+                    {
+                    val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
+                    }
+                CHECK_CLOSE(C(i4,i9,i2,i3,i8),val);
                 }
             }
 
