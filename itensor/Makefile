@@ -10,9 +10,9 @@ include ../options.mk
 SOURCES+= util/args.cc     
 SOURCES+= util/input.cc
 SOURCES+= util/cputime.cc
-SOURCES+= matrix/vec.cc 
-SOURCES+= matrix/mat.cc 
-SOURCES+= matrix/algs.cc 
+SOURCES+= tensor/vec.cc 
+SOURCES+= tensor/mat.cc 
+SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
 SOURCES+= itdata/itreal.cc 
 SOURCES+= itdata/itcplx.cc 
@@ -71,24 +71,23 @@ debug: libitensor-g.a
 mkdebugdir:
 	@mkdir -p .debug_objs
 	@mkdir -p .debug_objs/util
-	@mkdir -p .debug_objs/matrix
 	@mkdir -p .debug_objs/tensor
 	@mkdir -p .debug_objs/itdata
 	@mkdir -p .debug_objs/mps
 
 clean:	
-	@rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
+	@rm -fr *.o .debug_objs util/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h util/readwrite.h
-GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
-matrix/vec.o: $(GDEPHEADERS)
-.debug_objs/matrix/vec.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/matrange.h  matrix/mat.h
-matrix/mat.o: $(GDEPHEADERS)
-.debug_objs/matrix/mat.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
-matrix/algs.o: $(GDEPHEADERS)
-.debug_objs/matrix/algs.o: $(GDEPHEADERS)
+GDEPHEADERS+= tensor/strideiter.h tensor/vec.h
+tensor/vec.o: $(GDEPHEADERS)
+.debug_objs/tensor/vec.o: $(GDEPHEADERS)
+GDEPHEADERS+= tensor/matrange.h  tensor/mat.h
+tensor/mat.o: $(GDEPHEADERS)
+.debug_objs/tensor/mat.o: $(GDEPHEADERS)
+GDEPHEADERS+= tensor/slicemat.h tensor/algs.h
+tensor/algs.o: $(GDEPHEADERS)
+.debug_objs/tensor/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/ten.ih tensor/permutation.h \
 tensor/permute.h tensor/contract.h itdata/task_types.h indexset.ih indexset.h
 tensor/contract.o: $(GDEPHEADERS)
