@@ -99,12 +99,13 @@ permute(Permutation const& P,
         }
     }
 
+
 template <typename Set1,
           typename Set2>
 void
-calc_permutation(Set1 const& s1,
-                 Set2 const& s2,
-                 Permutation & P)
+calcPerm(Set1 const& s1,
+         Set2 const& s2,
+         Permutation & P)
     {
     for(decltype(s2.size()) i2 = 0; i2 < s2.size(); ++i2)
         {
@@ -123,6 +124,17 @@ calc_permutation(Set1 const& s1,
             throw std::runtime_error("sets are not permutations of each other");
             }
         }
+    }
+
+template <typename Set1,
+          typename Set2>
+Permutation
+calcPerm(Set1 const& s1,
+                 Set2 const& s2)
+    {
+    auto P = Permutation(s1.size());
+    calcPerm(s1,s2,P);
+    return P;
     }
 
 inline std::ostream& 

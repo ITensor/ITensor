@@ -171,9 +171,7 @@ do_permute(TenRefc<R1> const& from,
         *to.data() = *from.data();
         return;
         }
-    auto P = Permutation(fL.size());
-    calc_permutation(fL,tL,P);
-    do_permute(from,P,to,func);
+    do_permute(from,calcPerm(fL,tL),to,func);
     }
 
 template<typename R1, typename R2>
