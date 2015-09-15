@@ -9,6 +9,7 @@
 #include "itensor/matrix/mat.h"
 #include "itensor/matrix/permute.h"
 #include "itensor/matrix/contract.h"
+#include "itensor/matrix/slicemat.h"
 #include "itensor/matrix/sliceten.h"
 #include "itensor/indexset.h"
 
@@ -507,25 +508,25 @@ struct CProps
                 {
                 for(decltype(ra) i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        Rb.nextExtent(A.extent(i));
+                        Rb.nextIndex(A.extent(i));
                 }
             else
                 {
                 for(decltype(ra) i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        Rb.nextExtent(newArange.extent(i));
+                        Rb.nextIndex(newArange.extent(i));
                 }
             if(!permuteB_)
                 {
                 for(decltype(rb) j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        Rb.nextExtent(B.extent(j));
+                        Rb.nextIndex(B.extent(j));
                 }
             else
                 {
                 for(decltype(rb) j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        Rb.nextExtent(newBrange.extent(j));
+                        Rb.nextIndex(newBrange.extent(j));
                 }
             newCrange = Rb.build();
             }
@@ -624,14 +625,14 @@ struct CProps
 
 struct ABoffC
     {
-    MatRefc mA, 
+    MatrixRefc mA, 
             mB;
-    MatRef  mC;
+    MatrixRef  mC;
     int offC;
 
-    ABoffC(MatRefc& mA_, 
-           MatRefc& mB_, 
-           MatRef& mC_, 
+    ABoffC(MatrixRefc& mA_, 
+           MatrixRefc& mB_, 
+           MatrixRef& mC_, 
            int offC_)
         : 
         mA(mA_), 
@@ -652,9 +653,9 @@ class CABqueue
     CABqueue() { }
 
     void 
-    addtask(MatRefc& mA, 
-            MatRefc& mB, 
-            MatRef& mC, 
+    addtask(MatrixRefc& mA, 
+            MatrixRefc& mB, 
+            MatrixRef& mC, 
             int offC)
         {
         subtask[offC].emplace_back(mA,mB,mC,offC);
@@ -730,7 +731,7 @@ contract(CProps const& p,
     // o Allocate memory for newA, newB, and newC in a single 
     //   allocation. Use a helper object (with std::array of
     //   ptrs and sizes) to manage.
-    //   This will also make newA-C into MatRef's, avoiding
+    //   This will also make newA-C into MatrixRef's, avoiding
     //   having to allocate any Ranges.
     // 
 
@@ -742,15 +743,14 @@ contract(CProps const& p,
     alloc.add(p.permuteC() ? area(p.newCrange) : 0);
     alloc.allocate();
 
-    MatRefc aref;
+    MatrixRefc aref;
     if(p.permuteA())
         {
         //println("Calling permute A");
         SCOPED_TIMER(12)
         auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
         tref &= permute(A,p.PA);
-        aref = MatRefc(tref.data(),p.dmid,p.dleft);
-        aref.applyTrans();
+        aref = transpose(makeMatRefc(tref.data(),p.dmid,p.dleft));
         }
     else
         {
@@ -758,23 +758,22 @@ contract(CProps const& p,
         if(p.Atrans())
             {
             //println("  Transposing aref");
-            aref = MatRefc(A.data(),p.dmid,p.dleft);
-            aref.applyTrans();
+            aref = transpose(makeMatRefc(A.data(),p.dmid,p.dleft));
             }
         else
             {
-            aref = MatRefc(A.data(),p.dleft,p.dmid);
+            aref = makeMatRefc(A.data(),p.dleft,p.dmid);
             }
         }
 
-    MatRefc bref;
+    MatrixRefc bref;
     if(p.permuteB())
         {
         //println("Calling permute B");
         SCOPED_TIMER(13)
         auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
         tref &= permute(B,p.PB);
-        bref = MatRefc(tref.data(),p.dmid,p.dright);
+        bref = makeMatRefc(tref.data(),p.dmid,p.dright);
         }
     else
         {
@@ -782,51 +781,49 @@ contract(CProps const& p,
         if(p.Btrans())
             {
             //println("  Transposing bref");
-            bref = MatRefc(B.data(),p.dright,p.dmid);
-            bref.applyTrans();
+            bref = transpose(makeMatRefc(B.data(),p.dright,p.dmid));
             }
         else
             {
-            bref = MatRefc(B.data(),p.dmid,p.dright);
+            bref = makeMatRefc(B.data(),p.dmid,p.dright);
             }
         }
 
     //println("A and B permuted, took ",cpu.sincemark());
 
 #ifdef DEBUG
-    if(C.size() != aref.Nrows()*bref.Ncols())
+    if(C.size() != nrows(aref)*ncols(bref))
         {
         println("C.size() = ",C.size());
-        printfln("aref.Ncols()*bref.Nrows() = %d*%d = %d",aref.Ncols(),bref.Nrows(),aref.Ncols()*bref.Nrows());
+        printfln("ncols(aref)*nrows(bref) = %d*%d = %d",ncols(aref),nrows(bref),ncols(aref)*nrows(bref));
         throw std::runtime_error("incorrect size of C in contract");
         }
 #endif
 
-    MatRef cref;
+    MatrixRef cref;
     TensorRef newC;
     if(p.permuteC())
         {
         newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
-        cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
+        cref = makeMatRef(newC.data(),nrows(aref),ncols(bref));
         }
     else
         {
         if(p.Ctrans()) 
             {
-            cref = MatRef(C.data(),bref.Ncols(),aref.Nrows());
-            cref.applyTrans();
+            cref = transpose(makeMatRef(C.data(),ncols(bref),nrows(aref)));
             }
         else
             {
-            cref = MatRef(C.data(),aref.Nrows(),bref.Ncols());
+            cref = makeMatRef(C.data(),nrows(aref),ncols(bref));
             }
         }
 
     //cpu.mark();
     //printfln("Multiplying a %dx%d%s * %dx%d%s = %dx%d%s",
-    //         aref.Nrows(),aref.Ncols(),aref.transposed()?"(t)":"",
-    //         bref.Nrows(),bref.Ncols(),bref.transposed()?"(t)":"",
-    //         cref.Nrows(),cref.Ncols(),cref.transposed()?"(t)":"");
+    //         nrows(aref),ncols(aref),isTransposed(aref)?"(t)":"",
+    //         nrows(bref),ncols(bref),isTransposed(bref)?"(t)":"",
+    //         nrows(cref),ncols(cref),isTransposed(cref)?"(t)":"");
 
     //Important that this be multAdd for block-sparse case
     //where multiple contractions can get added to same block
@@ -1074,11 +1071,11 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
             auto offB = offset(B,bind);
             auto offC = offset(C,cind);
 
-            auto sA = MatRefc(A.data()+offA,Arow,Acol);
-            if(nfo.tA) sA.applyTrans();
-            auto sB = MatRefc(B.data() + offB,Brow,Bcol);
-            if(nfo.tB) sB.applyTrans();
-            auto sC = MatRef(C.data()+offC,Crow,Ccol);
+            auto sA = makeMatRefc(A.data()+offA,Arow,Acol);
+            if(nfo.tA) sA = transpose(sA);
+            auto sB = makeMatRefc(B.data() + offB,Brow,Bcol);
+            if(nfo.tB) sB = transpose(sB);
+            auto sC = makeMatRef(C.data()+offC,Crow,Ccol);
 
             if(nfo.Bfirst)
                 {
@@ -1116,22 +1113,22 @@ contractloop(TenRefc<IndexSet> A, Label const& ai,
 //(A can have some uncontracted indices)
 template<typename RangeT>
 void 
-contractDiagFull(VecRefc A,         Label const& ai, 
+contractDiagFull(VectorRefc A,         Label const& ai, 
                  TenRefc<RangeT> B, Label const& bi, 
-                 VecRef          C, Label const& ci)
+                 VectorRef          C, Label const& ci)
     {
     Error("contractDiagFull not yet implemented");
     }
 template
 void 
-contractDiagFull(VecRefc A,        Label const& ai, 
+contractDiagFull(VectorRefc A,        Label const& ai, 
                  TenRefc<Range> B, Label const& bi, 
-                 VecRef         C, Label const& ci);
+                 VectorRef         C, Label const& ci);
 template
 void 
-contractDiagFull(VecRefc A,           Label const& ai, 
+contractDiagFull(VectorRefc A,           Label const& ai, 
                  TenRefc<IndexSet> B, Label const& bi, 
-                 VecRef            C, Label const& ci);
+                 VectorRef            C, Label const& ci);
 
 ////////////////////////////////////////////
 
