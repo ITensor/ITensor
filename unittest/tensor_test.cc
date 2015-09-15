@@ -2,8 +2,8 @@
 #include "itensor/util/print.h"
 #include "itensor/util/count.h"
 #include "itensor/detail/algs.h"
-#include "itensor/matrix/permutation.h"
-#include "itensor/matrix/sliceten.h"
+#include "itensor/tensor/permutation.h"
+#include "itensor/tensor/sliceten.h"
 
 using namespace itensor;
 

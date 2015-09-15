@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/util/cputime.h"
 #include "itensor/util/count.h"
-#include "itensor/matrix/contract.h"
+#include "itensor/tensor/contract.h"
 #include "itensor/util/set_scoped.h"
 
 using namespace itensor;

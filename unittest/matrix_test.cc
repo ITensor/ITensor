@@ -2,7 +2,7 @@
 
 #include "itensor/util/autovector.h"
 #include "itensor/util/count.h"
-#include "itensor/matrix/algs.h"
+#include "itensor/tensor/algs.h"
 #include "itensor/global.h"
 
 using namespace itensor;
