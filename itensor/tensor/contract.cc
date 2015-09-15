@@ -858,14 +858,14 @@ contract(TenRefc<RangeT> A, Label const& ai,
     {
     if(ai.empty())
         {
-        do_permute(B,bi,C,ci);
+        C &= permute(B,calcPerm(bi,ci));
         auto val = *A.data();
         for(auto& el : C) el *= val;
         return;
         }
     else if(bi.empty())
         {
-        do_permute(A,ai,C,ci);
+        C &= permute(A,calcPerm(ai,ci));
         auto val = *B.data();
         for(auto& el : C) el *= val;
         return;
