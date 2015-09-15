@@ -106,6 +106,52 @@ SECTION("TensorRef")
         static_assert(std::is_same<decltype(ct(5,1)),const Real&>::value,
                       "Type of ct(5,1) is not const Real&");
         }
+
+    SECTION("Addition")
+        {
+        SECTION("Case 1")
+            {
+            auto v1 = std::vector<Real>{110,210,310,410,510,
+                                        120,220,320,420,520};
+            auto v2 = std::vector<Real>{112,212,312,412,512,
+                                        122,222,322,422,522};
+            auto origv1 = v1;
+            auto ot1 = makeTenRef(origv1.data(),origv1.size(),&ind);
+            auto t1 = makeTenRef(v1.data(),v1.size(),&ind);
+            auto t2 = makeTenRef(v2.data(),v2.size(),&ind);
+
+            t1 += t2;
+            CHECK(t1.r()==2);
+            for(auto i0 : count(ind.extent(0)))
+            for(auto i1 : count(ind.extent(1)))
+                {
+                CHECK_CLOSE(t1(i0,i1),ot1(i0,i1)+t2(i0,i1));
+                }
+            }
+
+        SECTION("Case 2")
+            {
+            auto T1 = Tensor(4,2,5);
+            auto T2 = Tensor(5,4,2);
+            randomize(T1);
+            randomize(T2);
+            auto CT1 = T1;
+
+            auto PT2 = permute(T2,Label{2,0,1});
+            CHECK(PT2.extent(0) == T1.extent(0));
+            CHECK(PT2.extent(1) == T1.extent(1));
+            CHECK(PT2.extent(2) == T1.extent(2));
+
+            T1 += PT2;
+            for(auto i0 : count(T1.extent(0)))
+            for(auto i1 : count(T1.extent(1)))
+            for(auto i2 : count(T1.extent(2)))
+                {
+                CHECK_CLOSE(T1(i0,i1,i2),CT1(i0,i1,i2)+PT2(i0,i1,i2));
+                }
+
+            }
+        }
     }
 
 SECTION("Tensor")

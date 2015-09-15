@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_TEN_H_
 #define __ITENSOR_TEN_H_
 
+#include "itensor/detail/algs.h"
 #include "itensor/tensor/teniter.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/lapack_wrap.h"
@@ -247,6 +248,21 @@ template<typename R>
 void
 operator&=(TenRef<R> const& a, Tensor const& t);
 
+template<typename R1, typename R2>
+void 
+operator+=(TenRef<R1> const& a, TenRefc<R2> const& b);
+
+template<typename R>
+void
+operator+=(TenRef<R> const& a, Tensor const& b);
+
+template<typename R>
+void
+operator+=(Tensor & a, TenRefc<R> const& b);
+
+void
+operator+=(Tensor & a, Tensor const& b);
+
 template<typename range_type>
 auto
 makeTenRef(Real* p,
@@ -399,10 +415,10 @@ class Ten
     using const_pointer = std::add_pointer_t<const value_type>;
     using reference = std::add_lvalue_reference_t<value_type>;
     using const_reference = const reference;
-    using size_type = long;
     using range_type = range_type_;
     using ref_type = TenRef<range_type>;
     using const_ref_type = TenRefc<range_type>;
+    using size_type = typename ref_type::size_type;
     public:
     range_type range_;
     storage_type data_;
@@ -547,6 +563,16 @@ class Ten
 
     };
 
+template<typename R, typename... VArgs>
+auto
+offset(TenRefc<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
+    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
+
+template<typename R, typename... VArgs>
+auto
+offset(Ten<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
+    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
+
 //
 // makeRef functions
 //
@@ -632,6 +658,10 @@ makeRefc(Ten<R> && t, VArgs&&... args)
     return TenRefc<R>{};
     }
 
+//
+// Other functions
+//
+
 template<typename R>
 Real
 norm(TenRefc<R> const& t);
@@ -648,18 +678,18 @@ template<typename R>
 bool
 isContiguous(Ten<R> const& t) { return isContiguous(t.range()); }
 
+//Make a scalar (rank 0) tensor with value val
 Tensor
 scalarTen(Real val);
 
-template<typename R, typename... VArgs>
-auto
-offset(TenRefc<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
-    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
+template<typename R>
+void
+randomize(TenRef<R> const& t);
 
-template<typename R, typename... VArgs>
-auto
-offset(Ten<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
-    { return offset(t.range(),std::forward<VArgs>(vargs)...); }
+template<typename R>
+void
+randomize(Ten<R> & t);
+
 
 template<typename R>
 std::ostream&
