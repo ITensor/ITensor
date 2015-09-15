@@ -4,7 +4,7 @@
 //
 #include <algorithm>
 #include "itensor/util/stdx.h"
-#include "itensor/matrix/algs.h"
+#include "itensor/tensor/algs.h"
 #include "itensor/svdalgs.h"
 
 namespace itensor {
@@ -22,36 +22,36 @@ using std::move;
 
 ///////////////
 
-struct ToMatRefc
+struct ToMatrixRefc
     {
     long nrows=0,
          ncols=0;
     bool transpose=false;
-    ToMatRefc(long nr, long nc, bool trans=false) 
+    ToMatrixRefc(long nr, long nc, bool trans=false) 
         : nrows(nr), ncols(nc), transpose(trans)
         { }
     };
 
-MatRefc
-doTask(ToMatRefc const& T, 
+MatrixRefc
+doTask(ToMatrixRefc const& T, 
        ITReal const& d)
     {
-    auto res = MatRefc(d.data(),T.nrows,T.ncols);
-    if(T.transpose) res.applyTrans();
+    auto res = makeMatRef(d.data(),T.nrows,T.ncols);
+    if(T.transpose) return transpose(res);
     return res;
     }
 
 
-MatRefc
-toMatRefc(ITensor const& T, 
+MatrixRefc
+toMatrixRefc(ITensor const& T, 
           Index const& i1, 
           Index const& i2)
     {
     if(i1 == T.inds().front())
         {
-        return doTask(ToMatRefc{i1.m(),i2.m()},T.store());
+        return doTask(ToMatrixRefc{i1.m(),i2.m()},T.store());
         }
-    return doTask(ToMatRefc{i2.m(),i1.m(),true},T.store());
+    return doTask(ToMatrixRefc{i2.m(),i1.m(),true},T.store());
     }
 
 /////////////
@@ -75,7 +75,7 @@ struct GetBlocks
 
 struct Rank2Block
     {
-    MatRefc M;
+    MatrixRefc M;
     long i1 = 0,
          i2 = 0;
     };
@@ -98,13 +98,13 @@ doTask(GetBlocks const& G,
         auto ncol = G.is[1][dblock[1]].m();
         R.i1 = dblock[0];
         R.i2 = dblock[1];
-        R.M = MatRefc(d.data()+dio.offset,nrow,ncol);
+        R.M = makeMatRef(d.data()+dio.offset,nrow,ncol);
         }
     if(G.transpose) 
         {
         for(auto& R : res) 
             {
-            R.M.applyTrans();
+            R.M = transpose(R.M);
             std::swap(R.i1,R.i2);
             }
         }
@@ -115,7 +115,7 @@ doTask(GetBlocks const& G,
 
 
 Real static
-truncate(Vec & P,
+truncate(Vector & P,
          long maxm,
          long minm,
          Real cutoff,
@@ -124,7 +124,7 @@ truncate(Vec & P,
          long & m,
          Real & docut)
     {
-    auto origm = P.size();
+    long origm = P.size();
     m = origm;
     if(m == 1) 
         {
@@ -167,14 +167,14 @@ truncate(Vec & P,
         docut = (P(m+1) + P(m))/2. - 1E-5*P(m+1);
         }
 
-    P.resize(m); 
+    resize(P,m); 
 
     return truncerr;
 
     } // truncate
 
 void
-showEigs(Vec const& P,
+showEigs(Vector const& P,
          Real truncerr,
          LogNumber const& scale,
          Args const& args)
@@ -192,8 +192,8 @@ showEigs(Vec const& P,
     printfln("doRelCutoff = %s, absoluteCutoff = %s",doRelCutoff,absoluteCutoff);
     printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());
 
-    auto stop = std::min(10l,P.size());
-    auto Ps = Vec(subVector(P,1,stop));
+    auto stop = std::min(10ul,P.size());
+    auto Ps = Vector(subVector(P,1,stop));
 
     Real orderMag = log(std::fabs(P(1))) + scale.logNum();
     if(std::fabs(orderMag) < 5 && scale.isFiniteReal())
@@ -206,7 +206,7 @@ showEigs(Vec const& P,
         printf("Denmat evals (not including log(scale) = %.2f)",scale.logNum());
         }
 
-    for(int j = 1; j <= stop; ++j)
+    for(decltype(stop) j = 1; j <= stop; ++j)
         {
         auto eig = Ps(j);
         printf(( eig > 1E-3 && eig < 1000) ? ("%.3f") : ("%.3E") , eig); 
@@ -242,13 +242,13 @@ svdRank2(ITensor A,
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
 #endif
 
-    Mat UU,VV,
-        iUU,iVV;
-    Vec DD;
+    Matrix UU,VV,
+           iUU,iVV;
+    Vector DD;
 
     if(!cplx)
         {
-        auto M = toMatRefc(A,ui,vi);
+        auto M = toMatrixRefc(A,ui,vi);
         SCOPED_TIMER(6)
         SVD(M,UU,DD,VV,thresh);
         }
@@ -272,12 +272,12 @@ svdRank2(ITensor A,
 
     Spectrum spec;
 
-    auto m = DD.size();
+    long m = DD.size();
 
-    Vec probs;
+    Vector probs;
     if(do_truncate || show_eigs)
         {
-        probs = Vec(m);
+        probs = Vector(m);
         for(long j = 1; j <= m; ++j) probs(j) = sqr(DD(j));
         }
 
@@ -288,9 +288,9 @@ svdRank2(ITensor A,
         truncerr = truncate(probs,maxm,minm,cutoff,
                             absoluteCutoff,doRelCutoff,m,docut);
         m = probs.size();
-        DD.resize(m);
-        UU.reduceColsTo(m);
-        VV.reduceColsTo(m);
+        resize(DD,m);
+        reduceCols(UU,m);
+        reduceCols(VV,m);
         }
     spec.truncerr(truncerr);
 
@@ -317,8 +317,8 @@ svdRank2(ITensor A,
         D = ITensor({uL,vL},
                     ITDiag<Real>{DD.begin(),DD.end()},
                     A.scale()*signfix);
-        U = ITensor({ui,uL},ITReal(move(UU.store())),signfix);
-        V = ITensor({vi,vL},ITReal(move(VV.store())));
+        U = ITensor({ui,uL},ITReal(move(UU.storage())),signfix);
+        V = ITensor({vi,vL},ITReal(move(VV.storage())));
         }
 
 
@@ -367,11 +367,11 @@ svdRank2(IQTensor A,
 
     //TODO: optimize allocation/lookup of Umats,Vmats
     //      etc. by allocating memory ahead of time (see algs.cc)
-    //      and making Umats a vector of MatRef's to this memory
-    vector<Mat> Umats(Nblock),
-                Vmats(Nblock),
-                iUmats,
-                iVmats;
+    //      and making Umats a vector of MatrixRef's to this memory
+    vector<Matrix> Umats(Nblock),
+                   Vmats(Nblock),
+                   iUmats,
+                   iVmats;
     if(cplx)
         {
         iUmats.resize(Nblock);
@@ -380,7 +380,7 @@ svdRank2(IQTensor A,
 
     //TODO: allocate dvecs in a single allocation
     //      make dvecs a vector<VecRef>
-    auto dvecs = vector<Vec>(Nblock);
+    auto dvecs = vector<Vector>(Nblock);
 
     auto alleig = stdx::reserve_vector<Real>(std::min(uI.m(),vI.m()));
 
@@ -429,16 +429,16 @@ svdRank2(IQTensor A,
 
 
     auto DDstore = alleig;
-    auto DD = Vec(std::move(DDstore));
+    auto DD = Vector(std::move(DDstore),VecRange{DDstore.size()});
 
     //Sort all eigenvalues from largest to smallest
     //irrespective of quantum numbers
-    Vec probs;
+    Vector probs;
     if(do_truncate or show_eigs) 
         {
         for(auto& val : alleig) val = val*val;
         std::sort(alleig.begin(),alleig.end(),std::greater<Real>{});
-        probs = Vec(std::move(alleig));
+        probs = Vector(std::move(alleig),VecRange{alleig.size()});
         }
 
     long m = alleig.size();
@@ -462,7 +462,7 @@ svdRank2(IQTensor A,
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
 
-        long this_m = 1;
+        size_t this_m = 1;
         while(this_m <= d.size() && sqr(d(this_m)) > docut) 
             {
             if(d(this_m) < 0) d(this_m) = 0;
@@ -485,7 +485,7 @@ svdRank2(IQTensor A,
             continue; 
             }
 
-        d.resize(this_m);
+        resize(d,this_m);
 
         Liq.emplace_back(Index("l",this_m),uI.qn(1+B.i1));
         Riq.emplace_back(Index("r",this_m),vI.qn(1+B.i2));
@@ -516,22 +516,22 @@ svdRank2(IQTensor A,
 
         auto uind = stdx::make_array(B.i1,n);
         auto pU = getBlock(Ustore,Uis,uind);
-        auto Uref = MatRef(pU.data(),uI[B.i1].m(),L[n].m());
+        auto Uref = makeMatRef(pU.data(),uI[B.i1].m(),L[n].m());
         Uref &= UU;
 
         auto dind = stdx::make_array(n,n);
         auto pD = getBlock(Dstore,Dis,dind);
-        auto Dref = VecRef(pD.data(),d.size());
+        auto Dref = makeVecRef(pD.data(),d.size());
         Dref &= d;
 
         auto vind = stdx::make_array(B.i2,n);
         auto pV = getBlock(Vstore,Vis,vind);
-        auto Vref = MatRef(pV.data(),vI[B.i2].m(),R[n].m());
+        auto Vref = makeMatRef(pV.data(),vI[B.i2].m(),R[n].m());
         Vref &= VV;
 
         ///////DEBUG
-        Mat D(d.size(),d.size());
-        for(auto n = 1l; n <= d.size(); ++n)
+        Matrix D(d.size(),d.size());
+        for(decltype(d.size()) n = 1; n <= d.size(); ++n)
             {
             D(n,n) = d(n);
             }
@@ -613,11 +613,11 @@ diag_hermitian(ITensor rho,
     if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
     //Do the diagonalization
-    Vec DD;
-    Mat UU,iUU;
+    Vector DD;
+    Matrix UU,iUU;
     if(!cplx)
         {
-        auto R = toMatRefc(rho,active,prime(active));
+        auto R = toMatrixRefc(rho,active,prime(active));
         diagSymmetric(R,UU,DD);
         }
     else
@@ -658,14 +658,14 @@ diag_hermitian(ITensor rho,
 
     //Truncate
     Real truncerr = 0.0;
-    auto m = DD.size();
+    long m = DD.size();
     Real docut = -1;
     if(do_truncate)
         {
         if(DD(1) < 0) DD *= -1; //DEBUG
         truncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff,m,docut);
         m = DD.size();
-        UU.reduceColsTo(m);
+        reduceCols(UU,m);
         if(showeigs)
             {
             printfln("Truncated to m=%d, trunc. err. = %.2E",m,truncerr);
@@ -693,7 +693,7 @@ diag_hermitian(ITensor rho,
         printfln("Truncation error = %.3E",truncerr);
         auto stop = DD.size();
         print("Eigs: ");
-        for(long j = 1; j <= stop; ++j)
+        for(decltype(stop) j = 1; j <= stop; ++j)
             {
             printf(DD(j) > 1E-3 ? ("%.3f") : ("%.3E"),DD(j));
             print((j != stop) ? ", " : "\n");
@@ -710,7 +710,7 @@ diag_hermitian(ITensor rho,
         }
     else
         {
-        U = ITensor({active,newmid},ITReal{move(UU.store())}); 
+        U = ITensor({active,newmid},ITReal{move(UU.storage())}); 
         D = ITensor({prime(newmid),newmid},ITDiag<Real>{DD.begin(),DD.end()},rho.scale());
         }
 
@@ -754,7 +754,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     vector<Matrix> mmatrix(rho.blocks().size()),
                    imatrix;
-    vector<Vec> mvector(rho.blocks().size());
+    vector<Vector> mvector(rho.blocks().size());
     vector<Real> alleig;
     alleig.reserve(rho.indices().front().m());
 
@@ -797,7 +797,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             }
 
         Matrix &UU = mmatrix.at(itenind);
-        Vec &d =  mvector.at(itenind);
+        Vector &d =  mvector.at(itenind);
 
         //Depending on the sign of the scale, calling .toMatrix11NoScale 
         //yields a matrix proportional to either t or -t.

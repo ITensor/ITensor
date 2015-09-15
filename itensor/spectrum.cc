@@ -56,7 +56,7 @@ Spectrum(const IQTensor& D, const Args& args)
     //    {
     //	if(t.type() != ITensor::Diag)
     //		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
-    //    const Vec svals = t.diag();
+    //    const Vector svals = t.diag();
     //    const QN q = itensor::qn(D,t.indices().front());
     //    for(int n = 1; n <= svals.size(); ++n)
     //        {
@@ -76,7 +76,7 @@ Spectrum(const IQTensor& D, const Args& args)
     }
 
 Spectrum::
-Spectrum(const Vec& eigs, const Args& args)
+Spectrum(const Vector& eigs, const Args& args)
     :
     eigs_(eigs)
     {
@@ -85,7 +85,7 @@ Spectrum(const Vec& eigs, const Args& args)
 
 
 Spectrum::
-Spectrum(const Vec& eigs, 
+Spectrum(const Vector& eigs, 
          const QNStorage& qns,
          const Args& args)
     :
@@ -154,14 +154,14 @@ computeTruncerr(const Args& args)
 std::ostream& 
 operator<<(std::ostream & s, const Spectrum& spec)
     {
-    const Vec& eigs = spec.eigsKept();
+    auto& eigs = spec.eigsKept();
     auto N = eigs.size();
     if(N > 0)
         {
-        long max_show = 20;
+        decltype(N) max_show = 20;
         auto stop = std::min(N,max_show);
         s << "  Eigs kept: ";
-        for(auto j = 1l; j <= stop; ++j)
+        for(decltype(stop) j = 1; j <= stop; ++j)
             {
             s << format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E"), eigs(j));
             s << ((j != stop) ? ", " : "\n");

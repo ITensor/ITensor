@@ -7,6 +7,7 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"
+#include "itensor/tensor/contract.h"
 
 //
 // Template Method Implementations
@@ -301,7 +302,7 @@ operator+=(const ITensorT& R)
     auto P = permutation(L.inds().size());
 #ifdef DEBUG
     try {
-        calc_permutation(R.inds(),L.inds(),P);
+        calcPerm(R.inds(),L.inds(),P);
         }
     catch(const std::exception& e)
         {
@@ -310,7 +311,7 @@ operator+=(const ITensorT& R)
         Error("ITensorT::operator+=: different index structure");
         }
 #else
-    calc_permutation(R.inds(),L.inds(),P);
+    calcPerm(R.inds(),L.inds(),P);
 #endif
 
     //If L store unallocated, just assign from R

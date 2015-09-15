@@ -37,7 +37,7 @@ permuteIQ(const Permutation& P,
     auto bind = IQIndexSetBuilder(r);
     for(auto i : count(r))
         {
-        bind.setExtent(P.dest(i),Ais[i]);
+        bind.setIndex(P.dest(i),Ais[i]);
         }
     Bis = bind.build();
     dB = IQTReal(Bis,doTask(CalcDiv{Ais},dA));
@@ -55,12 +55,12 @@ permuteIQ(const Permutation& P,
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
+        auto bblock = getBlock(dB,Bis,Bblock);
+        auto bref = TensorRef(bblock,&Brange);
+
         auto aref = makeTenRef(dA.data(),aio.offset,dA.size(),&Arange);
 
-        auto bblock = getBlock(dB,Bis,Bblock);
-        auto bref = makeTenRef(bblock,&Brange);
-
-        do_permute(aref,P,bref);
+        bref += permute(aref,P);
         }
     }
 
@@ -72,10 +72,10 @@ replaceInd(IQIndexSet const& is,
     auto newind = IQIndexSetBuilder(is.r());
     long i = 0;
     for(long j = 0; j < loc; ++j)
-        newind.setExtent(i++,is[j]);
-    newind.setExtent(i++,replacement);
+        newind.setIndex(i++,is[j]);
+    newind.setIndex(i++,replacement);
     for(decltype(is.r()) j = loc+1; j < is.r(); ++j)
-        newind.setExtent(i++,is[j]);
+        newind.setIndex(i++,is[j]);
     return newind.build();
     }
 
@@ -120,8 +120,8 @@ combine(IQTReal     const& d,
 
     //Create new IQIndexSet
     auto newind = IQIndexSetBuilder(nr);
-    newind.nextExtent(cind);
-    for(auto i : count(dr)) if(!dtoC[i]) newind.nextExtent(dis[i]);
+    newind.nextIndex(cind);
+    for(auto i : count(dr)) if(!dtoC[i]) newind.nextIndex(dis[i]);
     Nis = newind.build();
 
     //Allocate new data
@@ -155,7 +155,7 @@ combine(IQTReal     const& d,
 
         //Get full block of new storage
         nrange.init(make_indexdim(Nis,nblock));
-        auto nref = makeTenRef(getBlock(nd,Nis,nblock),&nrange);
+        auto nref = TensorRef(getBlock(nd,Nis,nblock),&nrange);
         //Do tensor slicing to get subblock where data will go
         auto nsub = subIndex(nref,0,start,end);
 
@@ -237,9 +237,9 @@ uncombine(IQTReal     const& d,
     auto offset = Cis.r()-1;
     auto newind = IQIndexSetBuilder(newr);
     for(auto j : count(offset))
-        newind.setExtent(j,Cis[1+j]);
+        newind.setIndex(j,Cis[1+j]);
     for(auto j : count(Pis.r()-1))
-        newind.setExtent(offset+j,Pis[1+j]);
+        newind.setIndex(offset+j,Pis[1+j]);
     Nis = newind.build();
 
     copyDataSetpd();

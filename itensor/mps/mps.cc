@@ -472,7 +472,7 @@ plussers(const Index& l1, const Index& l2,
     {
     sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
     first = diagTensor(1,l1,sumind);
-    Mat S(l2.m(),sumind.m());
+    Matrix S(l2.m(),sumind.m());
     for(int i = 1; i <= l2.m(); ++i) 
         {
         S(i,l1.m()+i) = 1;
@@ -1223,13 +1223,13 @@ checkRange(int i) const
 
 //Auxilary method for convertToIQ
 long 
-collapseCols(const Vec& Diag, Mat& M)
+collapseCols(const Vector& Diag, Matrix& M)
     {
     long nr = Diag.size(), 
          nc = long(sumels(Diag));
     assert(nr != 0);
     if(nc == 0) return nc;
-    M = Mat(nr,nc);
+    M = Matrix(nr,nc);
     long c = 0;
     for(long r = 1; r <= nr; ++r)
         if(Diag(r) == 1) { M(r,++c) = 1; }
@@ -1291,7 +1291,7 @@ periodicWrap(int j, int N)
 //
 //    vector<IQIndex> linkind(N+1);
 //
-//    map<QN,Vec> qD; //Diags of compressor matrices by QN
+//    map<QN,Vector> qD; //Diags of compressor matrices by QN
 //
 //    using qt_vt = map<QN,vector<ITensor> >::value_type;
 //    map<QN,vector<ITensor> > qt; //ITensor blocks by QN
@@ -1352,7 +1352,7 @@ periodicWrap(int j, int N)
 //            //Initialize D Vector (D records which values of
 //            //the right Link Index to keep for the current QN q)
 //            auto count = qD.count(q);
-//            Vec& D = qD[q];
+//            Vector& D = qD[q];
 //            if(count == 0) 
 //                { 
 //                D.resize(bond.m()); 
@@ -1453,7 +1453,7 @@ periodicWrap(int j, int N)
 //                    { for(const ITensor& t : blks) nblock.push_back(t); }
 //                else
 //                    {
-//                    Mat M; 
+//                    Matrix M; 
 //                    auto mm = collapseCols(qD[q],M);
 //                    if(s==show_s)
 //                        {
@@ -1666,7 +1666,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
                     {
-                    Mat M; 
+                    Matrix M; 
                     auto mm = collapseCols(qD[q],M);
                     if(s==show_s)
                         {

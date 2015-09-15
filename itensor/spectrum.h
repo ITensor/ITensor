@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_SPECTRUM_H
 #define __ITENSOR_SPECTRUM_H
 
-#include "itensor/matrix/vec.h"
+#include "itensor/tensor/vec.h"
 #include "itensor/iqtensor.h"
 
 namespace itensor {
@@ -29,9 +29,9 @@ class Spectrum
 
     Spectrum(const IQTensor& D, const Args& args = Global::args());
 
-    Spectrum(const Vec& eigs, const Args& args = Global::args());
+    Spectrum(const Vector& eigs, const Args& args = Global::args());
 
-    Spectrum(const Vec& eigs, 
+    Spectrum(const Vector& eigs, 
              const QNStorage& qns,
              const Args& args = Global::args());
 
@@ -44,7 +44,7 @@ class Spectrum
     Real
     eig(int n) const { return eigs_(n); }
 
-    const Vec&
+    const Vector&
     eigs() const { return eigs_; }
 
     Real 
@@ -61,7 +61,7 @@ class Spectrum
     // Other Methods
     //
 
-    const Vec& 
+    const Vector& 
     eigsKept() const { return eigs_; }
 
     int
@@ -71,10 +71,10 @@ class Spectrum
     truncerr(Real val) { truncerr_ = val; }
 
     void 
-    eigsKept(const Vec& val) { eigs_ = val; }
+    eigsKept(const Vector& val) { eigs_ = val; }
 
     void 
-    eigsKept(Vec&& val) { eigs_ = std::move(val); }
+    eigsKept(Vector&& val) { eigs_ = std::move(val); }
 
     void 
     read(std::istream& s);
@@ -85,7 +85,7 @@ class Spectrum
 
     /////////////////
 
-    Vec eigs_;
+    Vector eigs_;
     Real truncerr_;
     std::vector<QN> qns_;
 

@@ -36,7 +36,7 @@ class IQTCombiner
         //blocks that can be formed out of inds
         auto RB = RangeBuilder(inds.size());
         for(decltype(inds.size()) j = 0; j < inds.size(); ++j)
-            RB.nextExtent(inds[j].nindex());
+            RB.nextIndex(inds[j].nindex());
         R_ = RB.build();
         store_.resize(area(R_));
         }

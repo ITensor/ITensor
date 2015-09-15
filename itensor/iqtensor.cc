@@ -2,12 +2,12 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/util/count.h"
-#include "itensor/matrix/lapack_wrap.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/iqtensor.h"
-#include "itensor/util/count.h"
 #include "itensor/util/stdx.h"
+#include "itensor/util/count.h"
+#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/tensor/sliceten.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 
@@ -161,11 +161,10 @@ doTask(AddITensor & A,
     drange.init(make_indexdim(A.iqis,A.block_ind));
     auto dblock = getBlock(d,A.iqis,A.block_ind);
 
-    auto dref = makeTenRef(dblock,&drange);
+    auto dref = TensorRef(dblock,&drange);
     auto tref = makeTenRef(t.data(),t.size(),&A.is);
     auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
-    dref += permute(tref,A.P);
-    //do_permute(tref,A.P,dref,add);
+    stridedApply(dref,permute(tref,A.P),add);
     }
 
 
@@ -263,7 +262,7 @@ doTask(ToITensor & T,
             }
         }
     auto inds = IndexSetBuilder(r);
-    for(decltype(r) j = 0; j < r; ++j) inds.setExtent(j,T.is[j]);
+    for(decltype(r) j = 0; j < r; ++j) inds.setIndex(j,T.is[j]);
     return ITensor(inds.build(),std::move(nd),T.scale);
     }
 
@@ -288,7 +287,7 @@ toITensor(IQTensor const& T)
         {
         if(T.r()==0) return ITensor{};
         auto inds = IndexSetBuilder(T.r());
-        for(decltype(T.r()) j = 0; j < T.r(); ++j) inds.setExtent(j,T.inds()[j]);
+        for(decltype(T.r()) j = 0; j < T.r(); ++j) inds.setIndex(j,T.inds()[j]);
         return ITensor(inds.build());
         }
     //Main case for allocated IQTensors

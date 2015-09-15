@@ -132,9 +132,9 @@ blockDiagDense(IQTDiag const& D,
             Range Trange,
                   Crange;
             Trange.init(make_indexdim(Tis,Tblockind));
-            auto Tref = makeTenRef(tblock,&Trange);
+            auto Tref = TensorRefc(tblock,&Trange);
             Crange.init(make_indexdim(Cis,Cblockind));
-            auto Cref = makeTenRef(cblock,&Crange);
+            auto Cref = TensorRef(cblock,&Crange);
 
             auto Ddim = make_indexdim(Dis,Dblockind);
             auto Dminm = std::numeric_limits<size_t>::max();
@@ -143,7 +143,7 @@ blockDiagDense(IQTDiag const& D,
                 Dminm = std::min(Dminm,Ddim[j]);
                 }
 
-            auto Dref = VecRefc(dblock.data(),Dminm);
+            auto Dref = makeVecRef(dblock.data(),Dminm);
 
             contractDiagPartial(Dref,Dind,
                                 Tref,Tind,

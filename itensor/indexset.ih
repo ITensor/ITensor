@@ -578,14 +578,14 @@ contractIS(IndexSetT<IndexT> const& Lis,
     for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
         {
         if(Lind[j] > 0) //uncontracted
-            newind.nextExtStr(Lis[j],Lind[j]);
+            newind.nextIndStr(Lis[j],Lind[j]);
         }
     for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
         {
         if(Rind[j] > 0) //uncontracted
-            newind.nextExtStr(Ris[j],Rind[j]);
+            newind.nextIndStr(Ris[j],Rind[j]);
         }
-    if(sortResult) newind.sortByExtent();
+    if(sortResult) newind.sortByIndex();
     Nind.resize(newind.size());
     for(decltype(newind.size()) j = 0; j < newind.size(); ++j)
         {

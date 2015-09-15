@@ -4,7 +4,7 @@
 //
 #include "itensor/itdata/itcplx.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/tensor/lapack_wrap.h"
 #include "itensor/util/count.h"
 #include "itensor/util/safe_ptr.h"
 

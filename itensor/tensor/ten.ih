@@ -170,7 +170,7 @@ template<typename R>
 void
 operator&=(TenRef<R> const& a, Tensor const& b)
     {
-    stridedApply(a,b,[](Real& x, Real const& y){ x = y; });
+    stridedApply(a,makeRef(b),[](Real& x, Real const& y){ x = y; });
     }
 
 template<typename R1, typename R2>

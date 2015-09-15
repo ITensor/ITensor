@@ -57,6 +57,12 @@ struct MatRange
     iterator
     end() const;
 
+    void
+    clear()
+        {
+        rn = 0; rs = 0; cn = 0; cs = 0;
+        }
+
     };
 
 //make MatRange with same extents 

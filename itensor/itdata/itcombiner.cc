@@ -46,11 +46,11 @@ combine(const ITReal& d,
             if(j == jc)
                 {
                 for(size_t k = 1; k < Cis.size(); ++k)
-                    newind.setExtent(i++,Cis[k]);
+                    newind.setIndex(i++,Cis[k]);
                 }
             else
                 {
-                newind.setExtent(i++,dis[j]);
+                newind.setIndex(i++,dis[j]);
                 }
         Nis = newind.build();
         }
@@ -83,10 +83,10 @@ combine(const ITReal& d,
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
             for(auto j : count(J1))
-                newind.setExtent(i++,dis[j]);
-            newind.setExtent(i++,cind);
+                newind.setIndex(i++,dis[j]);
+            newind.setIndex(i++,cind);
             for(auto j : count(J1+Cis.r()-1, dis.r()))
-                newind.setExtent(i++,dis[j]);
+                newind.setIndex(i++,dis[j]);
             Nis = newind.build();
             }
         else
@@ -114,12 +114,12 @@ combine(const ITReal& d,
             //permute uncombined indices to back, keeping relative order:
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
-            newind.setExtent(i++,cind);
+            newind.setIndex(i++,cind);
             for(auto j : count(dis.r()))
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);
-                    newind.setExtent(i++,dis[j]);
+                    newind.setIndex(i++,dis[j]);
                     }
             Nis = newind.build();
             auto tfrom = makeTenRef(d.data(),d.size(),&dis);

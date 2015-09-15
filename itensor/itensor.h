@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
 #include "itensor/itensor_interface.h"
-#include "itensor/matrix/mat.h"
+#include "itensor/tensor/mat.h"
 
 namespace itensor {
 
@@ -119,7 +119,7 @@ ITensorT<IndexT>
 randomTensor(const IndexSetT<IndexT>& inds);
 
 ITensor
-matrixTensor(Mat&& M, const Index& i1, const Index& i2);
+matrixTensor(Matrix&& M, const Index& i1, const Index& i2);
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);

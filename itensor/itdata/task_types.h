@@ -5,11 +5,8 @@
 #ifndef __ITENSOR_TASK_TYPES_H_
 #define __ITENSOR_TASK_TYPES_H_
 
-//#include "itensor/util/infarray.h"
-#include "itensor/util/vararray.h"
+#include "itensor/util/infarray.h"
 #include "itensor/util/print.h"
-#include "itensor/matrix/lapack_wrap.h"
-#include "itensor/tensor/permute.h"
 #include "itensor/real.h"
 #include "itensor/indexset.h"
 
@@ -34,8 +31,8 @@ struct MultCplx
 template<typename IndexT>
 struct GetElt
     {
-    //using Inds = InfArray<long,28ul>;
-    using Inds = VarArray<long,31ul>;
+    using Inds = InfArray<long,28ul>;
+    //using Inds = VarArray<long,31ul>;
 
     const IndexSetT<IndexT>& is;
     const Inds& inds;
@@ -47,8 +44,8 @@ struct GetElt
 template<typename T, typename IndexT>
 struct SetElt
     {
-    //using Inds = InfArray<long,28ul>;
-    using Inds = VarArray<long,31ul>;
+    using Inds = InfArray<long,28ul>;
+    //using Inds = VarArray<long,31ul>;
     T elt;
     const IndexSetT<IndexT>& is;
     const Inds& inds;

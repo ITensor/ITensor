@@ -135,7 +135,7 @@ groupInds(Ten_      && T,
         }
     auto PT = Tensor{permute(T,P)};
     if(inds.size() <= 1) return PT;
-    return Tensor{std::move(PT.store()),groupIndsRange(PT.range(),0,inds.size())};
+    return Tensor{std::move(PT.storage()),groupIndsRange(PT.range(),0,inds.size())};
     }
 
 template<typename Ten_, typename Perm_>

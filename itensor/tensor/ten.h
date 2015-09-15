@@ -263,6 +263,12 @@ operator+=(Tensor & a, TenRefc<R> const& b);
 void
 operator+=(Tensor & a, Tensor const& b);
 
+template<typename R1, typename R2, typename Op>
+void
+stridedApply(TenRef<R1>  const& to, 
+             TenRefc<R2> const& from,
+             Op&& op);
+
 template<typename range_type>
 auto
 makeTenRef(Real* p,
@@ -413,8 +419,8 @@ class Ten
     using value_type = Real;
     using pointer = std::add_pointer_t<value_type>;
     using const_pointer = std::add_pointer_t<const value_type>;
-    using reference = std::add_lvalue_reference_t<value_type>;
-    using const_reference = const reference;
+    using reference = typename storage_type::reference;
+    using const_reference = typename storage_type::const_reference;
     using range_type = range_type_;
     using ref_type = TenRef<range_type>;
     using const_ref_type = TenRefc<range_type>;
@@ -458,13 +464,6 @@ class Ten
 
     size_type
     size() const { return data_.size(); }
-
-    //// maximum offset safe to
-    //// add to data() pointer
-    //// (can be greater than max
-    ////  offset of range())
-    //size_t
-    //maxOffset() const { return size(); }
 
     size_type
     extent(size_type i) const { return range_.extent(i); }
@@ -529,6 +528,12 @@ class Ten
 
     const_ref_storage_type
     store() const { return const_ref_storage_type(data(),size()); }
+
+    storage_type &
+    storage() { return data_; }
+
+    storage_type const&
+    storage() const { return data_; }
 
     void
     resize(range_type const& newrange)

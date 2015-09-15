@@ -1,6 +1,6 @@
 #include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itdata.h"
-#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/count.h"
 
@@ -71,7 +71,7 @@ diagDense(ITDiag<Real> const& d,
             }
         else
             {
-            auto dref = VecRefc(d.data(),d.size());
+            auto dref = makeVecRefc(d.data(),d.size());
             contractDiagPartial(dref,dind,
                                 Tref,tind,
                                 Nref,Nind);
@@ -87,7 +87,7 @@ diagDense(ITDiag<Real> const& d,
 
         size_t nsize = (d_ustride==0) ? 1 : d.length;
         auto nstore = ITDiag<Real>::storage_type(nsize,0);
-        auto Nref = VecRef(nstore.data(),nsize);
+        auto Nref = makeVecRef(nstore.data(),nsize);
 
         if(d.allSame())
             {
@@ -98,7 +98,7 @@ diagDense(ITDiag<Real> const& d,
             }
         else
             {
-            auto dref = VecRefc(d.data(),d.size());
+            auto dref = makeVecRef(d.data(),d.size());
             contractDiagFull(dref,dind,
                              Tref,tind,
                              Nref,Nind);

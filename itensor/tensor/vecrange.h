@@ -71,6 +71,13 @@ class VecRange
     iterator
     end() const;
 
+    void
+    clear()
+        {
+        ext_ = 0;
+        stride_ = 1;
+        }
+
     };
 
 //make VecRange with same extent but stride()==1

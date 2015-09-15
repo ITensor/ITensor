@@ -10,6 +10,7 @@
 #include "itensor/iqindex.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/types.h"
+#include "itensor/detail/gcounter.h"
 
 namespace itensor {
 

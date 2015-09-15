@@ -2,11 +2,11 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/matrix/lapack_wrap.h"
 #include "itensor/itensor.h"
-#include "itensor/tensor/contract.h"
 #include "itensor/util/count.h"
 #include "itensor/util/safe_ptr.h"
+#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/contract.h"
 
 using std::array;
 using std::ostream;
@@ -103,9 +103,9 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 ITensor
-matrixTensor(Mat&& M, const Index& i1, const Index& i2)
+matrixTensor(Matrix&& M, const Index& i1, const Index& i2)
     {
-    auto res = ITensor({i1,i2},ITReal{std::move(M.store())});
+    auto res = ITensor({i1,i2},ITReal{std::move(M.storage())});
     M.clear();
     return res;
     }

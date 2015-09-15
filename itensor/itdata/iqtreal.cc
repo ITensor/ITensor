@@ -5,7 +5,8 @@
 #include "itensor/util/count.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/detail/algs.h"
-#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/itdata/iqtreal.h"
 
@@ -89,7 +90,7 @@ updateOffsets(const IQIndexSet& is,
     //Set up a Range to iterate over all blocks
     auto RB = RangeBuilder(is.r());
     for(auto j : count(is.r()))
-        RB.nextExtent(is[j].nindex());
+        RB.nextIndex(is[j].nindex());
 
     long totalsize = 0;
     for(auto I : RB.build())
@@ -182,10 +183,11 @@ doTask(PlusEQ<IQIndex> const& P,
             auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
 
             auto bblock = getBlock(B,P.is2(),Bblock);
-            auto bref = makeTenRef(bblock,&Brange);
+            auto bref = TensorRefc(bblock,&Brange);
 
+            //aref += permute(bref,P.perm());
             auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
-            do_permute(bref,P.perm(),aref,add);
+            stridedApply(aref,permute(bref,P.perm()),add);
             }
         }
     }
@@ -232,9 +234,9 @@ doTask(Contract<IQIndex>& Con,
 
         //"Wire up" TensorRef's pointing to blocks of A,B, and C
         //we are working with
-        auto aref = makeTenRef(ablock,&Arange),
-             bref = makeTenRef(bblock,&Brange);
-        auto cref = makeTenRef(cblock,&Crange);
+        auto aref = TensorRefc(ablock,&Arange),
+             bref = TensorRefc(bblock,&Brange);
+        auto cref = TensorRef(cblock,&Crange);
 
         //Compute cref=aref*bref
         START_TIMER(2)
