@@ -237,6 +237,22 @@ SECTION("Tensor")
             CHECK_CLOSE(t(4,1),52);
             }
         }
+
+    SECTION("Assign from Ref")
+        {
+        auto v1 = std::vector<Real>{110,210,310,410,510,
+                                    120,220,320,420,520};
+        auto t1 = makeTenRef(v1.data(),v1.size(),Range(5,2));
+        auto t2 = Tensor(5,2);
+        randomize(t2);
+        t2 = t1;
+        for(auto i0 : count(5))
+        for(auto i1 : count(2))
+            {
+            CHECK_CLOSE(t2(i0,i1), t1(i0,i1));
+            }
+        }
+
     } // Tensor
 
 SECTION("Slicing")

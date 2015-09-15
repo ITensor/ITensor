@@ -557,10 +557,8 @@ class Ten
     assignFromRef(TenRefc<R> const& ref)
         {
         range_ = normalRange(ref.range());
-        //TODO: use (optimized) TenRef &= instead ?
-        data_.assign(ref.begin(),ref.end());
+        makeRef(*this) &= ref;
         }
-
     };
 
 template<typename R, typename... VArgs>
