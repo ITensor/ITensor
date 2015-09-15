@@ -248,6 +248,12 @@ norm(TenRefc<R> const& t)
     return std::sqrt(nrm);
     }
 
+Tensor inline
+scalarTen(Real val)
+    {
+    return Tensor{Tensor::storage_type(1,val),Range{}};
+    }
+
 template<typename R>
 std::ostream&
 printTensor(std::ostream & s, 
@@ -257,7 +263,7 @@ printTensor(std::ostream & s,
     if(not T) return s << "(empty " << typestr << ")";
     if(T.r() == 0)
         {
-        s << typestr << " " << T();
+        s << typestr << "\n() " << T();
         return s;
         }
     s << typestr << "\n";

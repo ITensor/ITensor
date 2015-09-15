@@ -418,7 +418,7 @@ class Ten
         }
 
     Ten(storage_type && store,
-           range_type && range) 
+          range_type && range) 
       : range_(std::move(range)),
         data_(std::move(store))
         { 
@@ -647,6 +647,9 @@ isContiguous(TenRefc<R> const& t) { return isContiguous(t.range()); }
 template<typename R>
 bool
 isContiguous(Ten<R> const& t) { return isContiguous(t.range()); }
+
+Tensor
+scalarTen(Real val);
 
 template<typename R, typename... VArgs>
 auto
