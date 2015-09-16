@@ -1332,7 +1332,6 @@ SECTION("Combiner")
             auto C = combiner(i,k,m);
             auto R = C * T;
             auto ci = commonIndex(R,C);
-            Print(ci);
 
             CHECK_CLOSE(norm(R),norm(T));
             
@@ -1352,7 +1351,6 @@ SECTION("Combiner")
             auto C = combiner(k,j,l);
             auto R = C * T;
             auto ci = commonIndex(R,C);
-            Print(ci);
 
             CHECK_CLOSE(norm(R),norm(T));
             
@@ -1435,10 +1433,10 @@ CHECK_CLOSE(sumelsC(T),z);
 SECTION("Matrix Constructor Function")
 {
 Matrix M(2,2);
-M(1,1) = 11;
-M(1,2) = 12;
-M(2,1) = 21;
-M(2,2) = 22;
+M(0,0) = 11;
+M(0,1) = 12;
+M(1,0) = 21;
+M(1,1) = 22;
 auto T = matrixTensor(move(M),l1,l2);
 CHECK_CLOSE(T.real(l1(1),l2(1)),11);
 CHECK_CLOSE(T.real(l1(1),l2(2)),12);
