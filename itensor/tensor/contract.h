@@ -247,7 +247,7 @@ contractDiagPartial(DiagElsA const& A,  Label const& ai,
             }
         for(A_size_type J = 0; J < A.size(); ++J)
             {
-            pc[J*a_ustride+coffset] += A(1+J)*pb[J*b_cstride+boffset];
+            pc[J*a_ustride+coffset] += A(J)*pb[J*b_cstride+boffset];
             }
         }
     }
@@ -269,13 +269,13 @@ contractDiagFull(DiagElsA const& A,  Label const& ai,
         {
         auto *Cval = C.data();
         for(A_size_type J = 0; J < A.size(); ++J)
-            *Cval += A(1+J)*pb[J*b_cstride];
+            *Cval += A(J)*pb[J*b_cstride];
         }
     else
         {
         auto pc = MAKE_SAFE_PTR(C.data(),C.size());
         for(A_size_type J = 0; J < A.size(); ++J)
-            pc[J] += A(1+J)*pb[J*b_cstride];
+            pc[J] += A(J)*pb[J*b_cstride];
         }
     }
 
