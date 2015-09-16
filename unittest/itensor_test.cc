@@ -126,30 +126,30 @@ ITensor A,
     {
     auto s1p = prime(s1);
     A = ITensor(s1,prime(s1));
-    A.set(11,s1(1),s1p(1));
-    A.set(12,s1(1),s1p(2));
-    A.set(21,s1(2),s1p(1));
-    A.set(22,s1(2),s1p(2));
+    A.set(s1(1),s1p(1),11);
+    A.set(s1(1),s1p(2),12);
+    A.set(s1(2),s1p(1),21);
+    A.set(s1(2),s1p(2),22);
     }
 
     {
     B = ITensor(s1,s2);
-    B.set(110,s1(1),s2(1));
-    B.set(120,s1(1),s2(2));
-    B.set(210,s1(2),s2(1));
-    B.set(220,s1(2),s2(2));
+    B.set(s1(1),s2(1),110);
+    B.set(s1(1),s2(2),120);
+    B.set(s1(2),s2(1),210);
+    B.set(s1(2),s2(2),220);
     }
 
     {
     X = ITensor(s1,s2);
-    X.set(1,s1(1),s2(2));
-    X.set(1,s1(2),s2(1));
+    X.set(s1(1),s2(2),1);
+    X.set(s1(2),s2(1),1);
     }
     
     {
     Z = ITensor(s1,s2);
-    Z.set(1,s1(1),s2(1));
-    Z.set(1,s1(2),s2(2));
+    Z.set(s1(1),s2(1),1);
+    Z.set(s1(2),s2(2),1);
     }
 
 
@@ -242,7 +242,7 @@ SECTION("Rank 7")
     CHECK_DIFF(t7.real(l1(1),l2(2)),a,1E-5);
     CHECK_DIFF(t7.real(l1(2),l2(1)),a,1E-5);
     CHECK_DIFF(t7.real(l1(2),l2(2)),a,1E-5);
-    t7.set(1.5,l1(2),l2(2));
+    t7.set(l1(2),l2(2),1.5);
     CHECK_DIFF(t7.real(l1(2),l2(2)),1.5,1E-5);
     }
 
@@ -1434,7 +1434,7 @@ CHECK_CLOSE(sumelsC(T),z);
 
 SECTION("Matrix Constructor Function")
 {
-Mat M(2,2);
+Matrix M(2,2);
 M(1,1) = 11;
 M(1,2) = 12;
 M(2,1) = 21;
