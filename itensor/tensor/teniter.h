@@ -9,6 +9,21 @@
 
 namespace itensor {
 
+
+template<typename range_type>
+auto
+rangeBegin(range_type const& r) -> decltype(r.begin())
+    {
+    return r.begin();
+    }
+
+template<typename range_type>
+auto
+rangeEnd(range_type const& r) -> decltype(r.end())
+    {
+    return r.end();
+    }
+
 template<class Ptr, class RangeT>
 class TenIter
     { 
@@ -19,7 +34,7 @@ class TenIter
     using pointer = typename std::iterator_traits<Ptr>::pointer;
     using iterator_category = std::forward_iterator_tag;
     using range_type = RangeT;
-    using range_iter = typename range_type::const_iterator;
+    using range_iter = decltype(rangeBegin(std::declval<range_type>()));
     using storage_type = DataRange<typename std::remove_pointer<Ptr>::type>;
     private:
     storage_type d_;
@@ -30,7 +45,7 @@ class TenIter
 
     TenIter(storage_type d, range_type const& r) 
       : d_(d), 
-        it_(r.begin()) 
+        it_(rangeBegin(r))
         { }  
 
     reference 
@@ -71,7 +86,7 @@ class TenIter
     makeEnd(range_type const& r) 
         {
         TenIter end;
-        end.it_ = r.end();
+        end.it_ = rangeEnd(r);
         return end;
         }
     }; 

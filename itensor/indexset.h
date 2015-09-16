@@ -166,6 +166,9 @@ class IndexSetT : public RangeT<index_type_>
     const_iterator
     cend() const { return end(); }
 
+    parent const&
+    range() const { return *this; }
+
     void
     swap(IndexSetT& other) { parent::swap(other); }
 
@@ -178,6 +181,20 @@ class IndexSetT : public RangeT<index_type_>
     void
     write(std::ostream& s) const;
     };
+
+template<typename index_type>
+auto
+rangeBegin(IndexSetT<index_type> const& is) -> decltype(is.range().begin())
+    {
+    return is.range().begin();
+    }
+
+template<typename index_type>
+auto
+rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
+    {
+    return is.range().end();
+    }
 
 //
 // IndexSetT Primelevel Methods
