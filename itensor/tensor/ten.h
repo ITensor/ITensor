@@ -562,6 +562,7 @@ class Ten
     assignFromRef(TenRefc<R> const& ref)
         {
         range_ = normalRange(ref.range());
+        data_.resize(area(range_));
         makeRef(*this) &= ref;
         }
     };
