@@ -21,7 +21,7 @@ sqr(T x) { return x*x; }
 
 static const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
-static const Real LogNumber_Accuracy = 1E-12;
+static const Real LogNum_Accuracy = 1E-12;
 
 class TooBigForReal : public ITError
     {
@@ -44,11 +44,11 @@ class TooSmallForReal : public ITError
     };
 
 //
-// LogNumber
+// LogNum
 //
 
 //Stores a real number r as lognum_ = log(|r|) and sign_ = sgn(r)
-class LogNumber
+class LogNum
     {
     public:
 
@@ -78,17 +78,18 @@ class LogNumber
         { return (lognum_ < -maxlogdouble); }
 
     bool friend inline
-    isnan(const LogNumber& L) { return std::isnan(L.lognum_); }
+    isnan(const LogNum& L) { return std::isnan(L.lognum_); }
 
     //Default constructed to NAN 
     //to catch initialization errors
-    LogNumber() 
+    LogNum() 
         : 
         lognum_(NAN), 
         sign_(1) 
         { }
 
-    LogNumber(Real r)
+    explicit
+    LogNum(Real r)
         {
         if(r == 0)
             { 
@@ -108,7 +109,7 @@ class LogNumber
             }
         }
 
-    LogNumber(Real lognum, int sign) 
+    LogNum(Real lognum, int sign) 
         : 
         lognum_(lognum), 
         sign_(sign) 
@@ -141,12 +142,12 @@ class LogNumber
         if(lognum_ > maxlogdouble)
             { 
             println("lognum_ = ",lognum_);
-            throw TooBigForReal("LogNumber too big to convert to Real");
+            throw TooBigForReal("LogNum too big to convert to Real");
             }
         if(lognum_ < -maxlogdouble)
             { 
             println("lognum_ = ",lognum_);
-            throw TooSmallForReal("LogNumber too small to convert to Real");
+            throw TooSmallForReal("LogNum too small to convert to Real");
             }
 #endif
         return sign_ * exp(lognum_);
@@ -159,45 +160,45 @@ class LogNumber
         return real();
         }
 
-    LogNumber&
-    operator+=(const LogNumber& other)
+    LogNum&
+    operator+=(const LogNum& other)
         {
         try {
             *this = 
-                LogNumber(this->real()+other.real());
+                LogNum(this->real()+other.real());
             }
         catch(const ITError& e)
             {
-            Error("Could not convert to real in LogNumber::operator+=");
+            Error("Could not convert to real in LogNum::operator+=");
             }
         return *this;
         }
 
 
     bool 
-    operator==(const LogNumber& other) const
+    operator==(const LogNum& other) const
         { return (sign_ == other.sign_) && (lognum_ == other.lognum_); }
 
     bool 
-    operator!=(const LogNumber& other) const
+    operator!=(const LogNum& other) const
         { return (sign_ != other.sign_) || (lognum_ != other.lognum_); }
 
     bool 
-    approxEquals(const LogNumber& other) const
-        { return (sign_ == other.sign_) && (std::fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
+    approxEquals(const LogNum& other) const
+        { return (sign_ == other.sign_) && (std::fabs(lognum_-other.lognum_) < LogNum_Accuracy); }
 
     void
     negate() { sign_ *= -1; }
 
-    LogNumber& 
-    operator*=(const LogNumber& other)
+    LogNum& 
+    operator*=(const LogNum& other)
         {
         sign_ *= other.sign_;
         lognum_ += other.lognum_;
         return *this;
         }
 
-    LogNumber& 
+    LogNum& 
     operator*=(Real other)
         {
         if(other == -1)	// special case for efficiency
@@ -205,36 +206,36 @@ class LogNumber
             sign_ *= -1;
             return *this;
             }
-        return *this *= LogNumber(other);
+        return *this *= LogNum(other);
         }
 
-    LogNumber& 
-    operator/=(const LogNumber& other)
+    LogNum& 
+    operator/=(const LogNum& other)
         {
 #ifdef DEBUG
-        if(other.sign_ == 0) Error("divide by zero in LogNumber");
+        if(other.sign_ == 0) Error("divide by zero in LogNum");
 #endif
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
         return *this;
         }
 
-    LogNumber& 
-    operator/=(Real other) { return *this /= LogNumber(other); }
+    LogNum& 
+    operator/=(Real other) { return *this /= LogNum(other); }
 
-    LogNumber 
+    LogNum 
     operator-() const 
-        { LogNumber res(*this); res.sign_ *= -1; return res; }
+        { LogNum res(*this); res.sign_ *= -1; return res; }
 
-    LogNumber 
-    operator/(const LogNumber& other) const
-        { LogNumber res(*this); res /= other; return res; }
-    LogNumber 
-    operator*(const LogNumber& other) const
-        { LogNumber res(*this); res *= other; return res; }
+    LogNum 
+    operator/(const LogNum& other) const
+        { LogNum res(*this); res /= other; return res; }
+    LogNum 
+    operator*(const LogNum& other) const
+        { LogNum res(*this); res *= other; return res; }
 
     bool 
-    operator<(const LogNumber& other) const
+    operator<(const LogNum& other) const
         {
         if(sign_ != other.sign_)
             { return sign_ < other.sign_; }
@@ -247,25 +248,25 @@ class LogNumber
         }
 
     bool 
-    operator<=(const LogNumber& other) const
+    operator<=(const LogNum& other) const
         {
         return (operator<(other) || operator==(other));
         }
 
     bool 
-    operator>=(const LogNumber& other) const
+    operator>=(const LogNum& other) const
         {
         return !(operator<(other));
         }
 
     bool 
-    operator>(const LogNumber& other) const
+    operator>(const LogNum& other) const
         {
         return (!operator<(other)) && (!operator==(other));
         }
 
     void
-    swap(LogNumber& other)
+    swap(LogNum& other)
         {
         Real sl = lognum_;
         lognum_ = other.lognum_;
@@ -277,14 +278,14 @@ class LogNumber
         }
 
     bool 
-    magnitudeLessThan(const LogNumber& other) const
+    magnitudeLessThan(const LogNum& other) const
         {
         if(sign_ == 0) return other.sign_ != 0;
         if(other.sign_ == 0) return false;
         return lognum_ < other.lognum_;
         }
 
-    const LogNumber&
+    const LogNum&
     pow(Real p)
         {
         lognum_ *= p;
@@ -309,18 +310,26 @@ class LogNumber
 
     };
 
-LogNumber inline
-sqrt(LogNumber L)
+//For backwards compatibility:
+using LogNumber = LogNum;
+
+LogNum inline
+operator*(LogNum L, Real r) { L *= r; return L; }
+LogNum inline
+operator*(Real r, LogNum L) { L *= r; return L; }
+
+LogNum inline
+sqrt(LogNum L)
     {
     if(L.sign() < 0) 
-        Error("Negative LogNumber in sqrt");
+        Error("Negative LogNum in sqrt");
     return L.pow(0.5);
     }
 
 inline std::ostream& 
-operator<<(std::ostream& s, const LogNumber& N)
+operator<<(std::ostream& s, const LogNum& N)
     {
-    s << "LogNumber(" << N.logNum() << ",";
+    s << "LogNum(" << N.logNum() << ",";
     if(N.sign() == 0) s << "0)";
     else           s << (N.sign() > 0 ? "+)" : "-)");
     return s;

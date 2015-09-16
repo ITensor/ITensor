@@ -202,7 +202,7 @@ SVDRef(MatrixRefc const& M,
     for(auto& el : D)
         {
         if(el < 0) el = 0.;
-        else       el = sqrt(el);
+        else       el = std::sqrt(el);
         }
 
     //Put result of Mt*U==(V*D) in V storage

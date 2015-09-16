@@ -62,14 +62,14 @@ template<typename IndexT>
 struct PrintIT
     {
     std::ostream& s;
-    const LogNumber& x;
-    const IndexSetT<IndexT>& is;
+    LogNum const& x;
+    IndexSetT<IndexT> const& is;
     Real scalefac;
     bool print_data;
 
     PrintIT(std::ostream& s_,
-            const LogNumber& x_,
-            const IndexSetT<IndexT>& is_,
+            LogNum const& x_,
+            IndexSetT<IndexT> const& is_,
             bool print_data_)
         : s(s_), x(x_), is(is_), scalefac(1.), print_data(print_data_)
         { 
@@ -78,7 +78,7 @@ struct PrintIT
 
     template<typename D>
     void
-    printInfo(const D& d, 
+    printInfo(D const& d, 
               std::string type_name,
               Real nrm_no_scale = -1)
         {
@@ -102,7 +102,7 @@ struct PrintIT
         }
 
     void
-    printVal(const Cplx& val)
+    printVal(Cplx const& val)
         {
         if(std::norm(val) > 1E-10)
             {
@@ -124,7 +124,7 @@ template<typename IndexT>
 struct SumEls
     {
     const IndexSetT<IndexT>& is;
-    SumEls(const IndexSetT<IndexT>& is_) : is(is_) { }
+    SumEls(IndexSetT<IndexT> const& is_) : is(is_) { }
     };
 
 template<typename F>
@@ -151,7 +151,7 @@ struct VisitIT
     {
     F& f;
     Real scale_fac;
-    VisitIT(F&& f_, const LogNumber& scale)
+    VisitIT(F&& f_, const LogNum& scale)
         : f(f_), scale_fac(scale.real0())
         { }
     };

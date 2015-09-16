@@ -176,7 +176,7 @@ truncate(Vector & P,
 void
 showEigs(Vector const& P,
          Real truncerr,
-         LogNumber const& scale,
+         LogNum const& scale,
          Args const& args)
     {
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -317,7 +317,7 @@ svdRank2(ITensor A,
         D = ITensor({uL,vL},
                     ITDiag<Real>{DD.begin(),DD.end()},
                     A.scale()*signfix);
-        U = ITensor({ui,uL},ITReal(move(UU.storage())),signfix);
+        U = ITensor({ui,uL},ITReal(move(UU.storage())),LogNum(signfix));
         V = ITensor({vi,vL},ITReal(move(VV.storage())));
         }
 
@@ -766,7 +766,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     if(rho.empty())
         throw ResultIsZero("rho.empty()");
 
-    LogNumber refNorm(1);
+    LogNum refNorm(1);
     if(doRelCutoff)
         {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
@@ -776,7 +776,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             {
             maxLogNum = std::max(maxLogNum,t.scale().logNum());
             }
-        refNorm = LogNumber(maxLogNum,1);
+        refNorm = LogNum(maxLogNum,1);
         }
     rho.scaleTo(refNorm);
 
@@ -1140,7 +1140,7 @@ eig_decomp(IQTensor T,
     if(T.empty())
         throw ResultIsZero("T has no blocks");
 
-    LogNumber refNorm(1);
+    LogNum refNorm(1);
     if(doRelCutoff)
         {
         Real maxLogNum = -200;

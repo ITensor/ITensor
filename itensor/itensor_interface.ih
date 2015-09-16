@@ -107,7 +107,7 @@ template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(indexset_type iset,
         storage_ptr&& pdat,
-        const LogNumber& scale)
+        LogNum const& scale)
     :
     is_(std::move(iset)),
     store_(std::move(pdat)),
@@ -119,7 +119,7 @@ template <class DataType>
 ITensorT<IndexT>::
 ITensorT(indexset_type iset,
          DataType&& dat,
-         const LogNumber& scale) :
+         LogNum const& scale) :
     is_(std::move(iset)),
     store_(newITData<std::decay_t<DataType>>(std::move(dat))),
     scale_(scale)
@@ -347,7 +347,7 @@ operator-=(const ITensorT& R)
     auto& L = *this;
     if(&L == &R) 
         { 
-        L.scale_ = 0; 
+        L.scale_ = LogNum(0); 
         return L;
         }
     L.scale().negate();
@@ -409,7 +409,7 @@ template <typename Func>
 const ITensorT<IndexT>& ITensorT<IndexT>::
 visit(Func&& f) const
     {
-    doTask(VisitIT<decltype(f)>{std::forward<Func>(f),scale_.real0()},store_);
+    doTask(VisitIT<decltype(f)>{std::forward<Func>(f),LogNum{scale_.real0()}},store_);
     return *this;
     }
 
@@ -447,7 +447,7 @@ takeImag()
 
 template<typename IndexT> 
 void ITensorT<IndexT>::
-scaleTo(const scale_type& newscale)
+scaleTo(scale_type const& newscale)
     {
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
@@ -455,6 +455,10 @@ scaleTo(const scale_type& newscale)
     doTask(MultReal{scale_.real0()},store_);
     scale_ = newscale;
     }
+
+template<typename IndexT> 
+void ITensorT<IndexT>::
+scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
 
 template<typename I>
 ITensorT<I> 
@@ -700,7 +704,7 @@ read(std::istream& s, ITensorT<I>& T)
     {
     IndexSetT<I> is;
     read(s,is);
-    LogNumber scale;
+    LogNum scale;
     read(s,scale);
     auto type = StorageType::Null;
     read(s,type);

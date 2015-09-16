@@ -39,7 +39,7 @@ class ITensorT
     using indexset_type = IndexSetT<IndexT>;
     using storage_ptr = PData;
     using const_storage_ptr = CPData;
-    using scale_type = LogNumber;
+    using scale_type = LogNum;
     private:
     indexset_type is_;
     mutable storage_ptr store_;
@@ -237,20 +237,20 @@ class ITensorT
     template <class DataType>
     ITensorT(indexset_type iset,
              DataType&& dat,
-             const scale_type& scale = 1);
+             scale_type const& scale = LogNum{1.});
 
     ITensorT(indexset_type iset,
              storage_ptr&& pdat,
-             const scale_type& scale = 1);
+             scale_type const& scale = LogNum{1.});
 
     //Provide indices from IndexSet
     explicit
-    ITensorT(const indexset_type& is);
+    ITensorT(indexset_type const& is);
 
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use; not necessary to explicitly involve
     //scale factors in user-level ITensor operations.
-    const scale_type&
+    scale_type const&
     scale() const { return scale_; }
 
     scale_type&
@@ -263,7 +263,9 @@ class ITensorT
     store() const { return const_storage_ptr(store_); }
 
     void 
-    scaleTo(const scale_type& newscale);
+    scaleTo(scale_type const& newscale);
+    void 
+    scaleTo(Real newscale);
 
     //
     // Deprecated methods for backwards compatibility

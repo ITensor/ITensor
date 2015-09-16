@@ -65,7 +65,7 @@ ITensorT(Complex val)
 //IQTensor(const QN& q,
 //         IQIndexSet&& iset,
 //         NewData nd,
-//         LogNumber scale)
+//         LogNum scale)
 //    :
 //    is_(move(iset)),
 //    store_(move(nd)),
@@ -224,10 +224,10 @@ dag()
 struct ToITensor
     {
     IQIndexSet const& is;
-    LogNumber const& scale;
+    LogNum const& scale;
 
     ToITensor(IQIndexSet const& is_,
-              LogNumber const& scale_)
+              LogNum const& scale_)
         :
         is(is_),
         scale(scale_)
