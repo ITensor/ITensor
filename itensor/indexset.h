@@ -102,24 +102,45 @@ class IndexSetT : public RangeT<index_type_>
     r() const { return parent::r(); }
     
     // 0-indexed access
-    index_type const&
-    operator[](size_type i) const 
+    index_type &
+    operator[](size_type i)
         { 
 #ifdef DEBUG
         if(i >= parent::size()) Error("IndexSetT[i] arg out of range");
 #endif
-        return parent::operator[](i).ind; 
+        return parent::index(i);
         }
 
     // 1-indexed access
-    index_type const&
-    index(size_type I) const 
+    index_type &
+    index(size_type I)
         { 
 #ifdef DEBUG
         if(I < 1 || I > parent::size()) Error("IndexSetT.index(i) arg out of range");
 #endif
-        return parent::operator[](I-1).ind; 
+        return operator[](I-1);
         }
+
+    // 0-indexed access
+    index_type const&
+    operator[](size_type i) const
+        { 
+#ifdef DEBUG
+        if(i >= parent::size()) Error("IndexSetT[i] arg out of range");
+#endif
+        return parent::index(i);
+        }
+
+    // 1-indexed access
+    index_type const&
+    index(size_type I) const
+        { 
+#ifdef DEBUG
+        if(I < 1 || I > parent::size()) Error("IndexSetT.index(i) arg out of range");
+#endif
+        return operator[](I-1);
+        }
+
 
     index_type const&
     front() const { return parent::front().ind; }
@@ -325,16 +346,13 @@ class IndexSetIter
                                       range_ptr>;
     private:
     size_t off_ = 0;
-    data_ptr p_; 
+    indexset_type* p_; 
     public: 
 
     IndexSetIter() : p_(nullptr) { }
 
     explicit
-    IndexSetIter(indexset_type & is) : p_(is.data()) { }
-
-    const data_ptr
-    data() const { return p_; }
+    IndexSetIter(indexset_type & is) : p_(&is) { }
 
     size_t
     offset() const { return off_; }
@@ -384,19 +402,19 @@ class IndexSetIter
         } 
 
     reference 
-    operator[](difference_type n) { return p_[n].ind; } 
+    operator[](difference_type n) { return p_->operator[](n); } 
 
     reference 
-    operator*() { return p_[off_].ind; }  
+    operator*() { return p_->operator[](off_); }  
 
     pointer 
-    operator->() { return &(p_[off_].ind); }
+    operator->() { return &(p_->operator[](off_)); }
 
     IndexSetIter static
     makeEnd(indexset_type & is)
         {
         IndexSetIter end;
-        end.p_ = is.data()+is.size();
+        end.p_ = &is;
         end.off_ = is.size();
         return end;
         }
@@ -406,21 +424,21 @@ template <typename T>
 bool 
 operator==(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
     { 
-    return x.data() == y.data(); 
+    return x.offset() == y.offset(); 
     } 
 
 template <typename T>
 bool 
 operator!=(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
     { 
-    return x.data() != y.data(); 
+    return x.offset() != y.offset(); 
     } 
 
 template <typename T>
 bool 
 operator<(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
     { 
-    return x.data() < y.data(); 
+    return x.offset() < y.offset(); 
     } 
 
 template <typename T>

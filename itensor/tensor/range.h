@@ -98,6 +98,12 @@ class RangeT
     size_type
     stride(size_type i) const { return store_[i].str; }
 
+    index_type const&
+    index(size_type i) const { return store_[i].ind; }
+
+    index_type &
+    index(size_type i) { return store_[i].ind; }
+
     size_type
     r() const { return store_.size(); }
 
