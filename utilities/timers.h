@@ -139,16 +139,17 @@ std::ostream&
 operator<<(std::ostream& s, Timers<NTimer> const& T)
     {
     auto tot = T.total();
-    s << "-----------------------------------------\n";
-    s << format("Timers:       Total Time = %.3f  %% Total",tot);
+    s << "-----------------------------------------------------\n";
+    s << format("Timers:                  Total Time = %.4f  %% Total",tot);
     for(decltype(T.size()) n = 0; n < T.size(); ++n)
         {
         if(T.count(n) == 0) continue;
         auto avg = T.avgTime(n);
-        auto pct = 100*(T.time(n)/tot);
-        s << format("\nSection %2d, Average Time = %.3f [%5.1f%%]",n,avg,pct);
+        auto time = T.time(n);
+        auto pct = 100*(time/tot);
+        s << format("\nSection %2d, Average = %.4f, Total = %.4f [%5.1f%%]",n,avg,time,pct);
         }
-    s << "\n-----------------------------------------";
+    s << "\n-----------------------------------------------------";
     return s;
     }
 
