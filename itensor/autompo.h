@@ -183,6 +183,7 @@ class AutoMPO
 
     public:
 
+    explicit
     AutoMPO(const SiteSet& sites) 
         : sites_(sites)
         { }
@@ -202,10 +203,12 @@ class AutoMPO
     operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
+    reset() { terms_.clear(); }
+
+    private:
 
     void
-    reset() { terms_.clear(); }
+    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
 
     };
 
@@ -218,6 +221,6 @@ operator<<(std::ostream& s, const HTerm& t);
 std::ostream& 
 operator<<(std::ostream& s, const AutoMPO& a);
 
-}
+} //namespace itensor
 
 #endif
