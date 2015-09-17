@@ -426,7 +426,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     IndexSet<Index> is;
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
         {
-        //ur += GET(iv,++nn).indexqn().uniqueReal(); 
+        ++nn;
         if(!hasindex(*this,iv.at(nn).index)) 
             Error("IQTensor::operator(): IQIndex not found.");
         is.addindex(iv[nn].indexqn());
@@ -1146,7 +1146,9 @@ operator*=(const IQTensor& other)
 
         for(const BlockInfo& l : Lb)
             {
+            START_TIMER(2)
             if(l.c == r.c) insertAdd(N[l.u+r.u],L[l.p] * R[r.p]);
+            STOP_TIMER(2)
             }
         }
 
