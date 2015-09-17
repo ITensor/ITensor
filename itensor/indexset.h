@@ -763,11 +763,12 @@ getperm(const IndexSet<IndexT>& iset,
             }
 	    if(!got_one)
             {
+            println("Index sets are not permutations of each other");
             println("j = ",j);
-            println("iset =");
+            println("index set 1 =");
             for(int j = 0; j < iset.r(); ++j)
                 printfln("%d %s",j,iset[j]);
-            println("\noset = ");
+            println("\nindex set 2 = ");
             for(int j = 0; j < iset.r(); ++j)
                 printfln("%d %s",j,oset[j]);
             println();
