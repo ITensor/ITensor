@@ -468,4 +468,14 @@ SECTION("ComplexConvert")
     CHECK((imagPart(t)-i).norm() < 1E-12);
     }
 
+SECTION("Element Access")
+    {
+    IQTensor T(S1(1),L1(3));
+
+    CHECK_CLOSE(T(S1(2),L1(2)),0,1E-10);
+
+    const auto& cT = T;
+    CHECK_CLOSE(cT(S1(2),L1(2)),0,1E-10);
+    }
+
 }
