@@ -363,8 +363,6 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
 // with the new MPS being calculated at each step via an
 // SVD of the MPO-MPS product.
 //
-// Uses cutoff and max of MPS psi unless specified.
-//
 template<class Tensor>
 void 
 zipUpApplyMPO(const MPSt<Tensor>& psi, 
