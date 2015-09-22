@@ -12,7 +12,7 @@
 
 namespace itensor {
 
-template<typename IndexT> 
+template<typename index_type> 
 class ITensorT;
 
 class IQIndex;
@@ -30,13 +30,13 @@ using IQTensor = ITensorT<IQIndex>;
 
 struct ITData;
 
-template<typename IndexT>
+template<typename index_type_>
 class ITensorT
     {
     public:
-    using index_type = IndexT;
+    using index_type = index_type_;
     using indexval_type = typename index_type::indexval_type;
-    using indexset_type = IndexSetT<IndexT>;
+    using indexset_type = IndexSetT<index_type>;
     using storage_ptr = PData;
     using const_storage_ptr = CPData;
     using scale_type = LogNum;
@@ -55,18 +55,18 @@ class ITensorT
 
     //Construct rank 1 tensor, all elements set to zero
     explicit
-    ITensorT(const IndexT& i1);
+    ITensorT(index_type const& i1);
 
     //Construct rank 2 tensor, all elements set to zero
-    ITensorT(const IndexT& i1,
-             const IndexT& i2);
+    ITensorT(index_type const& i1,
+             index_type const& i2);
 
     //Construct rank n tensor, all elements set to zero
     template <typename... Indices>
-    ITensorT(const IndexT& i1,
-             const IndexT& i2, 
-             const IndexT& i3, 
-             const Indices&... rest);
+    ITensorT(index_type  const& i1,
+             index_type  const& i2, 
+             index_type  const& i3, 
+             Indices const&... rest);
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
@@ -78,8 +78,8 @@ class ITensorT
     //entry specified by the IndexVal/IQIndexVal args
     template <typename... IVals>
     explicit
-    ITensorT(const indexval_type& iv1, 
-             const IVals&... rest);
+    ITensorT(indexval_type const& iv1, 
+             IVals const&... rest);
 
     //Automatic conversion to ITensor
     operator ITensor() const;
@@ -359,7 +359,7 @@ imagPart(ITensorT<I> T) { T.takeImag(); return T; }
 
 template<typename I>
 bool
-isComplex(const ITensorT<I>& T);
+isComplex(ITensorT<I> const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
@@ -367,11 +367,11 @@ isComplex(const ITensorT<I>& T);
 //(and similar for complex case) but computed more efficiently
 template<typename I>
 Real
-norm(const ITensorT<I>& T);
+norm(ITensorT<I> const& T);
 
 template<typename I>
 ITensorT<I>
-randomize(ITensorT<I> T, const Args& args = Global::args());
+randomize(ITensorT<I> T, Args const& args = Args::global());
 
 template<typename I>
 ITensorT<I>
@@ -383,11 +383,11 @@ dag(ITensorT<I> T);
 
 template<typename I>
 Real
-sumels(const ITensorT<I>& t);
+sumels(ITensorT<I> const& t);
 
 template<typename I>
 Cplx
-sumelsC(const ITensorT<I>& t);
+sumelsC(ITensorT<I> const& t);
 
 template<typename I>
 void
@@ -395,7 +395,7 @@ read(std::istream& s, ITensorT<I>& T);
 
 template<typename I>
 void
-write(std::ostream& s, const ITensorT<I>& T);
+write(std::ostream& s, ITensorT<I> const& T);
 
 //
 // Given Tensors which represent operator matrices
@@ -415,7 +415,7 @@ write(std::ostream& s, const ITensorT<I>& T);
 //
 template<class I>
 ITensorT<I>
-multSiteOps(ITensorT<I> A, const ITensorT<I>& B) 
+multSiteOps(ITensorT<I> A, ITensorT<I> const& B) 
     {
     A.prime(Site);
     A *= B;
