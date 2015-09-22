@@ -194,10 +194,14 @@ SVDRef(MatrixRefc const& M,
 #endif
 
     //Form 'density matrix' rho
+    START_TIMER(77)
     auto rho = M * transpose(M);
+    STOP_TIMER(77)
 
     //Diagonalize rho: evals are squares of singular vals
+    START_TIMER(88)
     diagSymmetric(rho,U,D);
+    STOP_TIMER(88)
 
     for(auto& el : D)
         {
@@ -206,18 +210,20 @@ SVDRef(MatrixRefc const& M,
         }
 
     //Put result of Mt*U==(V*D) in V storage
+    START_TIMER(99)
     mult(transpose(M),U,V);
     for(auto c : index(D)) 
         {
         if(D(c) > 0) column(V,c) /= D(c);
         }
 
-    size_t start = 2;
     auto D1t = D(0)*thresh;
+    size_t start = 1;
     for(; start < Mr; ++start)
         {
         if(D(start) < D1t) break;
         }
+    STOP_TIMER(99)
 
 
     if(start >= (Mr-1)) 
