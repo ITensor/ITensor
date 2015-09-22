@@ -173,9 +173,7 @@ doTask(Contract<Index> & C,
          t2 = makeTenRef(a2.data(),a2.size(),&C.Ris);
     auto rsize = area(C.Nis);
     START_TIMER(4)
-    //TODO don't initialize values here, let contract overwrite
-    //     though need to change contract to no longer do +=
-    auto nd = m.makeNewData<ITReal>(rsize,0.);
+    auto nd = m.makeNewData<ITReal>(rsize);
     STOP_TIMER(4)
     auto tr = makeTenRef(nd->data(),nd->size(),&(C.Nis));
 
@@ -205,8 +203,8 @@ doTask(PlusEQ<Index> const& P,
         {
         auto ref1 = makeTenRef(a1.data(),a1.size(),&P.is1());
         auto ref2 = makeTenRef(a2.data(),a2.size(),&P.is2());
-        auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
-        stridedApply(ref1,permute(ref2,P.perm()),add);
+        auto add = [f=P.fac](Real r2, Real& r1) { r1 += f*r2; };
+        transform(permute(ref2,P.perm()),ref1,add);
         }
     }
 

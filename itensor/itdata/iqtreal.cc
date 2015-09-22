@@ -186,8 +186,8 @@ doTask(PlusEQ<IQIndex> const& P,
             auto bref = TensorRefc(bblock,&Brange);
 
             //aref += permute(bref,P.perm());
-            auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
-            stridedApply(aref,permute(bref,P.perm()),add);
+            auto add = [f=P.fac](Real r2, Real& r1) { r1 += f*r2; };
+            transform(permute(bref,P.perm()),aref,add);
             }
         }
     }
@@ -238,9 +238,9 @@ doTask(Contract<IQIndex>& Con,
              bref = TensorRefc(bblock,&Brange);
         auto cref = TensorRef(cblock,&Crange);
 
-        //Compute cref=aref*bref
+        //Compute cref += aref*bref
         START_TIMER(2)
-        contract(aref,Lind,bref,Rind,cref,Cind);
+        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         STOP_TIMER(2)
         };
 

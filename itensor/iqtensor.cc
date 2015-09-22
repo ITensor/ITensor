@@ -163,8 +163,8 @@ doTask(AddITensor & A,
 
     auto dref = TensorRef(dblock,&drange);
     auto tref = makeTenRef(t.data(),t.size(),&A.is);
-    auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
-    stridedApply(dref,permute(tref,A.P),add);
+    auto add = [f=A.fac](Real r2, Real& r1) { r1 += f*r2; };
+    transform(permute(tref,A.P),dref,add);
     }
 
 
