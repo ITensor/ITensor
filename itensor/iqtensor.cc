@@ -342,9 +342,9 @@ combiner(std::vector<IQIndex> inds,
             }
         }
 
-    auto cstore = IQIndex::storage(qms.size());
-    for(auto n : index(qms))
-        cstore[n] = IndexQN(Index(nameint("c",n),qms[n].m,itype),qms[n].q);
+    auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
+    for(auto n : index(qms)) 
+        cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
 
     auto newinds = stdx::reserve_vector<IQIndex>(1+inds.size());
     newinds.emplace_back(cname,std::move(cstore),dir);
