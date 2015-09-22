@@ -97,6 +97,15 @@ find_if(Container&& C,
     return std::find_if(C.begin(),C.end(),std::forward<UnaryCmpFunc>(f));
     }
 
+template<typename Container,
+         class UnaryFunc>
+void
+for_each(Container&& C,
+         UnaryFunc&& f)
+    {
+    std::for_each(C.begin(),C.end(),std::forward<UnaryFunc>(f));
+    }
+
 } //namespace stdx
 
 #endif
