@@ -50,6 +50,10 @@ class TooSmallForReal : public ITError
 //Stores a real number r as lognum_ = log(|r|) and sign_ = sgn(r)
 class LogNum
     {
+    //Log of the magnitude of 
+    //the number represented.
+    Real lognum_;
+    int sign_;
     public:
 
     Real 
@@ -291,23 +295,6 @@ class LogNum
         lognum_ *= p;
         return *this;
         }
-
-    private:
-
-    /////////////
-    //
-    // Data Members
-    //
-
-    //Log of the magnitude of 
-    //the number represented.
-    Real lognum_;
-
-    int sign_;
-
-    //
-    /////////////
-
     };
 
 //For backwards compatibility:
@@ -327,11 +314,11 @@ sqrt(LogNum L)
     }
 
 inline std::ostream& 
-operator<<(std::ostream& s, const LogNum& N)
+operator<<(std::ostream& s, LogNum const& N)
     {
     s << "LogNum(" << N.logNum() << ",";
     if(N.sign() == 0) s << "0)";
-    else           s << (N.sign() > 0 ? "+)" : "-)");
+    else              s << (N.sign() > 0 ? "+)" : "-)");
     return s;
     }
 

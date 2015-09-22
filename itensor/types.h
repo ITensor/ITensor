@@ -6,7 +6,7 @@
 #define __ITENSOR_TYPES_H_
 
 #include <limits>
-#include <complex>
+#include "util/cplx_literal.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
@@ -15,8 +15,13 @@
 namespace itensor {
 
 using Real = double;
-using Cplx = std::complex<Real>;
-using Complex = std::complex<Real>;
+using Cplx = std::complex<double>;
+using Complex = std::complex<double>;
+
+static const Cplx Complex_1 = Cplx(1,0);
+static const Cplx Complex_i = Cplx(0,1);
+static const Cplx Cplx_1 = Cplx(1,0);
+static const Cplx Cplx_i = Cplx(0,1);
 
 }
 
