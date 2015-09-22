@@ -97,12 +97,12 @@ checkCompatible(TenRefc<R1> const& A,
 
 template<typename R1, typename R2, typename Op>
 void
-stridedApply(TenRef<R1> const& to, 
-             TenRefc<R2> const& from,
-             Op&& op)
+transform(TenRefc<R1> const& from, 
+          TenRef<R2> const& to,
+          Op&& op)
     {
 #ifdef DEBUG
-    checkCompatible(to,from,"stridedApply");
+    checkCompatible(to,from,"transform");
 #endif 
     using size_type = decltype(from.extent(0));
     auto r = to.r();
@@ -138,7 +138,7 @@ stridedApply(TenRef<R1> const& to,
         auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.store().size());
         for(decltype(bigsize) b = 0; b < bigsize; ++b)
             {
-            op(*pto,*pfrom);
+            op(*pfrom,*pto);
             pto += stepto;
             pfrom += stepfrom;
             }
@@ -160,44 +160,44 @@ stridedApply(TenRef<R1> const& to,
 //Assign to referenced data
 template<typename R1, typename R2>
 void 
-operator&=(TenRef<R1> const& a, TenRefc<R2> const& b)
+operator&=(TenRef<R1> const& A, TenRefc<R2> const& B)
     {
-    stridedApply(a,b,[](Real& x, Real const& y){ x = y; });
+    transform(B,A,[](Real b, Real& a){ a = b; });
     }
 
 //Assign to referenced data
 template<typename R>
 void
-operator&=(TenRef<R> const& a, Tensor const& b)
+operator&=(TenRef<R> const& A, Tensor const& B)
     {
-    stridedApply(a,makeRef(b),[](Real& x, Real const& y){ x = y; });
+    transform(makeRef(B),A,[](Real b, Real& a){ a = b; });
     }
 
 template<typename R1, typename R2>
 void 
-operator+=(TenRef<R1> const& a, TenRefc<R2> const& b)
+operator+=(TenRef<R1> const& A, TenRefc<R2> const& B)
     {
-    stridedApply(a,b,[](Real& x, Real const& y){ x += y; });
+    transform(B,A,[](Real b, Real& a){ a += b; });
     }
 
 template<typename R>
 void
-operator+=(TenRef<R> const& a, Tensor const& b)
+operator+=(TenRef<R> const& A, Tensor const& B)
     {
-    stridedApply(a,makeRef(b),[](Real& x, Real const& y){ x += y; });
+    transform(makeRef(B),A,[](Real b, Real& a){ a += b; });
     }
 
 template<typename R>
 void
-operator+=(Tensor & a, TenRefc<R> const& b)
+operator+=(Tensor & A, TenRefc<R> const& B)
     {
-    stridedApply(makeRef(a),b,[](Real& x, Real const& y){ x += y; });
+    transform(B,makeRef(A),[](Real b, Real& a){ a += b; });
     }
 
 void inline
-operator+=(Tensor & a, Tensor const& b)
+operator+=(Tensor & A, Tensor const& B)
     {
-    stridedApply(makeRef(a),makeRef(b),[](Real& x, Real const& y){ x += y; });
+    transform(makeRef(B),makeRef(A),[](Real b, Real& a){ a += b; });
     }
 
 template<typename R>

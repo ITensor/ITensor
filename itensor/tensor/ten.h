@@ -265,9 +265,9 @@ operator+=(Tensor & a, Tensor const& b);
 
 template<typename R1, typename R2, typename Op>
 void
-stridedApply(TenRef<R1>  const& to, 
-             TenRefc<R2> const& from,
-             Op&& op);
+transform(TenRefc<R1>  const& from, 
+          TenRef<R2> const& to,
+          Op&& op);
 
 template<typename range_type>
 auto
