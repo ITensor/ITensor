@@ -9,7 +9,7 @@
 #include "itensor/util/stdx.h"
 #include "itensor/util/print.h"
 
-#define COLLECT_TIMES
+//#define COLLECT_TIMES
 
 #ifdef COLLECT_TIMES
 #define SCOPED_TIMER(N) auto scoped_timer_instance0_ = ScopedTimer(N);
@@ -67,6 +67,9 @@ struct Timers
         if(print_on_exit_)
             println(*this);
         }
+
+    void
+    printOnExit(bool val) { print_on_exit_ = val; }
 
     size_type constexpr
     size() const { return NTimer; }
