@@ -15,12 +15,16 @@ template<typename RangeT>
 void 
 contract(TenRefc<RangeT> A, Label const& ai, 
          TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci);
+         TenRef<RangeT>  C, Label const& ci,
+         Real alpha = 1.,
+         Real beta = 0.);
 
 void 
 contract(Tensor const& A, Label const& ai, 
          Tensor const& B, Label const& bi, 
-         Tensor      & C, Label const& ci);
+         Tensor      & C, Label const& ci,
+         Real alpha = 1.,
+         Real beta = 0.);
 
 template<typename range_type>
 void 
@@ -107,9 +111,11 @@ find_index(InfArray<T,MaxSize> const& v,
 void inline
 contract(Tensor const& A, Label const& ai, 
          Tensor const& B, Label const& bi, 
-         Tensor      & C, Label const& ci)
+         Tensor      & C, Label const& ci,
+         Real alpha,
+         Real beta)
     {
-    contract(makeRef(A),ai,makeRef(B),bi,makeRef(C),ci);
+    contract(makeRef(A),ai,makeRef(B),bi,makeRef(C),ci,alpha,beta);
     }
 
 template<typename range_type>

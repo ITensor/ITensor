@@ -721,7 +721,9 @@ void
 contract(CProps const& p,
          TenRefc<RangeT> A, 
          TenRefc<RangeT> B, 
-         TenRef<RangeT>  C)
+         TenRef<RangeT>  C,
+         Real alpha = 1.,
+         Real beta = 0.)
     {
     //println();
     //println("------------------------------------------");
@@ -825,11 +827,8 @@ contract(CProps const& p,
     //         nrows(bref),ncols(bref),isTransposed(bref)?"(t)":"",
     //         nrows(cref),ncols(cref),isTransposed(cref)?"(t)":"");
 
-    //Important that this be multAdd for block-sparse case
-    //where multiple contractions can get added to same block
-    //(e.g. when result is a scalar)
     START_TIMER(11)
-    multAdd(aref,bref,cref);
+    call_dgemm(aref,bref,cref,alpha,beta);
     STOP_TIMER(11)
 
     //println("Matrix multiply done, took ",cpu.sincemark());
@@ -840,7 +839,7 @@ contract(CProps const& p,
 #ifdef DEBUG
         if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
 #endif
-        C += permute(newC,p.PC);
+        C &= permute(newC,p.PC);
         }
     //println("------------------------------------------");
     //println();
@@ -848,38 +847,57 @@ contract(CProps const& p,
 
 template<typename RangeT>
 void 
+contractScalar(Real a, 
+               TenRefc<RangeT> B, Label const& bi, 
+               TenRef<RangeT>  C, Label const& ci,
+               Real alpha,
+               Real beta)
+    {
+    auto fac = alpha*a;
+    auto PB = permute(B,calcPerm(bi,ci));
+    if(beta == 0)
+        transform(PB,C,[fac](Real b, Real& c){ c = fac*b; });
+    else
+        transform(PB,C,[fac,beta](Real b, Real& c){ c = fac*b+beta*c; });
+    }
+
+template<typename RangeT>
+void 
 contract(TenRefc<RangeT> A, Label const& ai, 
          TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci)
+         TenRef<RangeT>  C, Label const& ci,
+         Real alpha,
+         Real beta)
     {
-    if(ai.empty())
+    if(ai.empty()) 
         {
-        C &= permute(B,calcPerm(bi,ci));
-        auto val = *A.data();
-        for(auto& el : C) el *= val;
-        return;
+        contractScalar(*A.data(),B,bi,C,ci,alpha,beta);
         }
-    else if(bi.empty())
+    else if(bi.empty()) 
         {
-        C &= permute(A,calcPerm(ai,ci));
-        auto val = *B.data();
-        for(auto& el : C) el *= val;
-        return;
+        contractScalar(*B.data(),A,ai,C,ci,alpha,beta);
         }
-    CProps props(ai,bi,ci);
-    props.compute(A,B,C);
-    contract(props,A,B,C);
+    else
+        {
+        CProps props(ai,bi,ci);
+        props.compute(A,B,C);
+        contract(props,A,B,C,alpha,beta);
+        }
     }
 
 //Explicit template instantiations:
 template void 
 contract(TenRefc<Range>, Label const&, 
          TenRefc<Range>, Label const&, 
-         TenRef<Range>,  Label const&);
+         TenRef<Range>,  Label const&,
+         Real alpha,
+         Real beta);
 template void 
 contract(TenRefc<IndexSet>, Label const&, 
          TenRefc<IndexSet>, Label const&, 
-         TenRef<IndexSet>,  Label const&);
+         TenRef<IndexSet>,  Label const&,
+         Real alpha,
+         Real beta);
 
 
 struct MultInfo
