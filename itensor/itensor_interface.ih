@@ -221,6 +221,17 @@ getVals(Iter it,
     return getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
+template<typename IndexValT, typename Iter, typename... Rest>
+bool
+getVals(Iter it,
+        Cplx & z,
+        Cplx w,
+        Rest&&... rest)
+    {
+    static_assert(stdx::false_regardless_of<Iter>::value,"Scalar value passed to .set method must be last argument");
+    return false;
+    }
+
 //template<typename C>
 //void
 //print_container(C const& c)
