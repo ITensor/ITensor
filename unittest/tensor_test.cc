@@ -177,7 +177,7 @@ SECTION("Tensor")
             CHECK_CLOSE(s(0),0);
             CHECK_CLOSE(s(1),0);
             //...
-            CHECK_CLOSE(s(m0),0);
+            CHECK_CLOSE(s(m0-1),0);
             }
 
         SECTION("Case 2")
