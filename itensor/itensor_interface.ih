@@ -57,17 +57,26 @@ checkArrows(IndexSet const& I1,
 
 void inline
 checkArrows(IQIndexSet const& I1,
-            IQIndexSet const& I2)
+            IQIndexSet const& I2,
+            bool shouldMatch = false)
     {
-    for(auto& j1 : I1)
-    for(auto& j2 : I2)
-    if(j1 == j2 && j1.dir() == j2.dir())
+    for(auto j1 : index(I1))
+    for(auto j2 = j1+1; j2 < I2.size(); ++j2)
         {
-        println("IQIndexSet 1 = \n",I1);
-        println("----------------------------------------");
-        println("IQIndexSet 2 = \n",I2);
-        println("----------------------------------------");
-        Error(format("Mismatched arrows for IQIndex %s",j1));
+        auto& J1 = I1[j1];
+        auto& J2 = I2[j2];
+        if(J1 == J2)
+            {
+            auto cond = shouldMatch ^ (J1.dir() == J2.dir());
+            if(cond)
+                {
+                println("IQIndexSet 1 = \n",I1);
+                println("----------------------------------------");
+                println("IQIndexSet 2 = \n",I2);
+                println("----------------------------------------");
+                Error(format("Mismatched arrows for IQIndex %s",J1));
+                }
+            }
         }
     }
 } //namespace detail
@@ -324,6 +333,12 @@ operator+=(const ITensorT& R)
 #else
     calcPerm(R.inds(),L.inds(),P);
 #endif
+
+    if(Global::checkArrows()) 
+        {
+        auto shouldMatch = true;
+        detail::checkArrows(L.inds(),R.inds(),shouldMatch);
+        }
 
     //If L store unallocated, just assign from R
     if(!L.store() || L.scale().isZero()) return L = R;
