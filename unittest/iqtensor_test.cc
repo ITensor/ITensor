@@ -137,8 +137,8 @@ SECTION("Contracting Product")
                    Z0P(sP(2));
 
         IQTensor Op(dag(s),sP);
-        Op.set(Sqrt2,Z0,UpP);
-        Op.set(Sqrt2,Dn,Z0P);
+        Op.set(Z0,UpP,Sqrt2);
+        Op.set(Dn,Z0P,Sqrt2);
 
         Op *= 0.5;
         //Op.scaleTo(1.); //This fixes the bug
