@@ -846,7 +846,7 @@ std::ostream&
 operator<<(std::ostream& s, const IndexSet<Index>& is)
     {
     int i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
+    for(; i < is.r(); ++i) { s << is.index(i) << " "; } 
     if(is.r() != 0) { s << is.index(i); } //print last one
     return s;
     }

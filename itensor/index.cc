@@ -219,7 +219,7 @@ id() const
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
-    s << t.name() << "(" << t.m() << ","
+    s << "(" << t.name() << "," << t.m() << ","
       << t.type().c_str() << "){" << (t.id_ % 1000) << "}";
     return s;
 
