@@ -42,11 +42,11 @@ struct ApproxReal
 
     bool 
     operator==(const ApproxReal& other) const
-        { return fabs(r-other.r) <= ApproxReal_Accuracy; }
+        { return std::fabs(r-other.r) <= ApproxReal_Accuracy; }
 
     bool 
     operator!=(const ApproxReal& other) const
-        { return fabs(r-other.r) > ApproxReal_Accuracy; }
+        { return std::fabs(r-other.r) > ApproxReal_Accuracy; }
 
     bool
     operator<(const ApproxReal& other) const
@@ -228,7 +228,7 @@ class LogNumber
 
     bool 
     approxEquals(const LogNumber& other) const
-        { return (sign_ == other.sign_) && (fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
+        { return (sign_ == other.sign_) && (std::fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
 
     void
     negate() { sign_ *= -1; }
@@ -360,6 +360,12 @@ sqrt(LogNumber L)
     if(L.sign() < 0) 
         Error("Negative LogNumber in sqrt");
     return L.pow(0.5);
+    }
+
+LogNumber inline
+fabs(LogNumber const& L)
+    {
+    return LogNumber(L.logNum(),1);
     }
 
 inline 

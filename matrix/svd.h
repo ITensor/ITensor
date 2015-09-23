@@ -43,6 +43,8 @@ SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
            Matrix& Vre, Matrix& Vim);
            
 
+void 
+checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V);
 }
 
 #endif

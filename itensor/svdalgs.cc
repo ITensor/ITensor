@@ -18,6 +18,7 @@ using std::pair;
 using std::make_pair;
 using std::string;
 using std::sqrt;
+using std::fabs;
 
 //Vector static
 //sqrt(Vector V)
@@ -254,16 +255,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
           vL(rname,m,ritype);
 
     D = ITensor(uL,vL,DD);
-    D *= A.scale();
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
-
-    //Fix for cases where A.scale() may be negative
-    if(A.scale().sign() == -1)
-        {
-        D *= -1;
-        U *= -1;
-        }
 
     if(cplx)
         {
@@ -274,6 +267,11 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         if(iV.norm() > 1E-14)
             V = V + iV*Complex_i;
         }
+
+    //Put in A.scale() which was omitted when doing
+    //lower level SVD (put sign into U to keep D >= 0)
+    D *= fabs(A.scale());
+    U *= A.scale().sign();
 
     //Square all singular values
     //since convention is to report
@@ -628,7 +626,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     //Originally eigs were found by calling
     //toMatrix11NoScale, so put the scale back in
-    D *= refNorm;
+    D *= fabs(refNorm);
+    U *= refNorm.sign();
 
     int aesize = int(alleig.size());
     int neig = std::min(aesize,L.m());

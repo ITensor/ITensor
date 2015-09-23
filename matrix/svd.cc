@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "lapack_wrap.h"
+#include "print.h"
 
 using namespace std;
 
