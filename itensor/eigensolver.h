@@ -130,7 +130,7 @@ powerMethod(const BigMatrixT& A,
             v /= lambda;
             if(dlevel >= 1)
                 printfln("%d %d %.10f",t,ii,lambda);
-            if(fabs(lambda-last_lambda) < errgoal_)
+            if(std::fabs(lambda-last_lambda) < errgoal_)
                 {
                 break;
                 }
@@ -156,7 +156,7 @@ findEig(int which,        //zero-indexed; so is return value
     for(int ii = 1; ii <= L; ++ii) 
         {
         A2(ii) = sqr(DR(ii))+sqr(DI(ii));
-        //A2(ii) = fabs(DR(ii));
+        //A2(ii) = std::fabs(DR(ii));
         if(A2(ii) > maxj) 
             {
             maxj = A2(ii);
@@ -303,7 +303,7 @@ arnoldi(const BigMatrixT& A,
             //for(int i2 = 0; i2 <= j+1; ++i2)
             //    {
             //    auto olap = BraKet(V.at(i1),V.at(i2)).real();
-            //    if(fabs(olap) > 1E-12)
+            //    if(std::fabs(olap) > 1E-12)
             //        Cout << Format(" %.2E") % BraKet(V.at(i1),V.at(i2)).real();
             //    }
             //Cout << Endl;
@@ -336,16 +336,16 @@ arnoldi(const BigMatrixT& A,
 
                 for(int j = 0; j <= w; ++j)
                     {
-                    if(fabs(eigs[j].real()) > 1E-6)
+                    if(std::fabs(eigs[j].real()) > 1E-6)
                         {
-                        if(fabs(eigs[j].imag()) > Approx0)
+                        if(std::fabs(eigs[j].imag()) > Approx0)
                             printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
                         else
                             printf(" %.10f",eigs[j].real());
                         }
                     else
                         {
-                        if(fabs(eigs[j].imag()) > Approx0)
+                        if(std::fabs(eigs[j].imag()) > Approx0)
                             printf(" (%.5E,%.5E)",eigs[j].real(),eigs[j].imag());
                         else
                             printf(" %.5E",eigs[j].real());
@@ -457,7 +457,7 @@ class PseudoInverter
         Real
         operator()(Real val) const
             {
-            if(fabs(val) < cut_)
+            if(std::fabs(val) < cut_)
                 return 0;
             else
                 return 1./val;
@@ -749,7 +749,7 @@ complexDavidson(const BigMatrixT& A,
             for(size_t j = 0; j < eigs.size(); ++j)
                 {
                 if(std::isnan(eigs[j].real())) break;
-                if(fabs(eigs[j].imag()) > Approx0)
+                if(std::fabs(eigs[j].imag()) > Approx0)
                     printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
                 else
                     printf(" %.10f",eigs[j].real());
@@ -834,7 +834,7 @@ complexDavidson(const BigMatrixT& A,
 
         if(debug_level_ >= 3)
             {
-            if(fabs(q.norm()-1.0) > 1E-10)
+            if(std::fabs(q.norm()-1.0) > 1E-10)
                 {
                 Print(q.norm());
                 Error("q not normalized after Gram Schmidt.");
@@ -941,7 +941,7 @@ complexDavidson(const BigMatrixT& A,
         for(size_t j = 0; j < eigs.size(); ++j)
             {
             if(std::isnan(eigs[j].real())) break;
-            if(fabs(eigs[j].imag()) > Approx0)
+            if(std::fabs(eigs[j].imag()) > Approx0)
                 printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
             else
                 printf(" %.10f",eigs[j].real());
@@ -1052,7 +1052,7 @@ genDavidson(const BigMatrixTA& A,
 
         //Check convergence
         qnorm = q.norm();
-        if( (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
+        if( (qnorm < errgoal_ && std::fabs(lambda-last_lambda) < errgoal_) 
             || qnorm < 1E-12 )
             {
             break; //Out of ii loop to return

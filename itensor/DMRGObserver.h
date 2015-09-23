@@ -98,7 +98,7 @@ measure(const Args& args)
                 {
                 Complex z = 
                     BraKet(prime(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
-                if(fabs(z.imag()) < 1E-14)
+                if(std::fabs(z.imag()) < 1E-14)
                     printfln("<%s>(%d) = %.10E",opname,b,z.real());
                 else
                     printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
@@ -115,7 +115,7 @@ measure(const Args& args)
             Real S = 0;
             for(int j = 1; j <= center_eigs.Length(); ++j) 
                 {
-                S -= center_eigs(j)*log(fabs(center_eigs(j)));
+                S -= center_eigs(j)*log(std::fabs(center_eigs(j)));
                 }
             printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
             printf("    Eigs at center bond b=%d: ",N/2);
@@ -154,7 +154,7 @@ checkDone(const Args& args)
     if(sw == 1) last_energy_ = 1000;
     if(energy_errgoal > 0 && sw%2 == 0)
         {
-        Real dE = fabs(energy-last_energy_);
+        Real dE = std::fabs(energy-last_energy_);
         if(dE < energy_errgoal)
             {
             printfln("    Energy error goal met (dE = %.3E < %.3E); returning after %d sweeps.",

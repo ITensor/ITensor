@@ -13,6 +13,7 @@ using std::vector;
 using std::array;
 using std::pair;
 using std::make_pair;
+using std::fabs;
 
 namespace itensor {
 
@@ -20,7 +21,7 @@ bool
 isReal(const Complex& z) { return z.imag() == 0; }
 
 bool
-isApproxReal(const Complex& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
+isApproxReal(const Complex& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
 
 SiteTerm::
 SiteTerm() : i(-1), coef(0) { }
@@ -689,7 +690,7 @@ toExpH_ZW1(const AutoMPO& am,
         Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
         }
 
-    bool is_complex = fabs(tau.imag()) > fabs(1E-12*tau.real());
+    bool is_complex = std::fabs(tau.imag()) > std::fabs(1E-12*tau.real());
 
     //Special SiteTerm objects indicating either
     //a string of identities coming from the first

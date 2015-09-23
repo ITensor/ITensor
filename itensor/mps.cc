@@ -18,6 +18,7 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
+using std::fabs;
 
 //
 // class MPSt

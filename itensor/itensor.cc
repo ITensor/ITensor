@@ -13,6 +13,7 @@ using std::cout;
 using std::endl;
 using std::sqrt;
 using std::vector;
+using std::fabs;
 
 #ifdef DEBUG
 #define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
@@ -2558,6 +2559,7 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
+    SCOPED_TIMER(40)
     if(!this->valid() || !other.valid())
         Error("Null ITensor in product");
 
@@ -2753,10 +2755,14 @@ operator*=(const ITensor& other)
 
         //Do the matrix multiplication
         auto nsize = rref.Nrows()*lref.Ncols();
+        START_TIMER(38)
         auto np = make_shared<ITDat>(nsize,0);
+        STOP_TIMER(38)
 
         SimpleMatrixRef nref(np->data(),rref.Nrows(),lref.Ncols());
+        {SCOPED_TIMER(11)
         mult_add(rref,lref,nref,0);
+        }//TIMER
 
         r_.swap(np);
         
@@ -2784,7 +2790,9 @@ operator*=(const ITensor& other)
 
     scale_ *= other.scale_;
 
+        {SCOPED_TIMER(3)
     scaleOutNorm();
+        }//TIMER
 
     return *this;
     } //ITensor::operator*=(ITensor)
@@ -2931,7 +2939,18 @@ operator+=(const ITensor& other)
         }
 
     Permutation P(NMAX+1); 
+#ifdef DEBUG
+    try {
+#endif
     getperm(is_,other.is_,P);
+#ifdef DEBUG
+    }
+    catch(const ITError& e)
+    {
+    println("Mismatched indices in ITensor +=");
+    throw e;
+    }
+#endif
     Counter c(other.is_);
 
     const int* j[NMAX+1];
@@ -3260,7 +3279,7 @@ convertToDense()
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
-    s << "ITensor r = " << t.r() << ": ";
+    s << "ITensor r=" << t.r() << " ";
     s << t.indices() << "\n";
 
     s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
@@ -3397,10 +3416,8 @@ ITDat()
 ITDat::
 ITDat(size_t size, 
       Real val) 
-    : 
-    v(size,val)
-    { 
-    }
+  : v(size,val)
+    { }
 
 ITDat::
 ITDat(const VectorRef& vref) 

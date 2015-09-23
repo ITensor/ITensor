@@ -76,7 +76,7 @@ gateTEvol(const Iterable& gatelist,
     const bool normalize = args.getBool("Normalize",true);
 
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
-    if(fabs(nt*tstep-ttotal) > 1E-9)
+    if(std::fabs(nt*tstep-ttotal) > 1E-9)
         {
         Error("Timestep not commensurate with total time");
         }

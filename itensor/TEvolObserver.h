@@ -60,7 +60,7 @@ measure(const Args& args)
         {
         const Real ttotal = args.getReal("TotalTime");
         Real percentdone = (100.*t)/ttotal;
-        if(percentdone < 99.5 || (fabs(t-ttotal) < 1E-10))
+        if(percentdone < 99.5 || (std::fabs(t-ttotal) < 1E-10))
             {
             printf("\b\b\b%2.f%%",percentdone);
             std::cout.flush();
