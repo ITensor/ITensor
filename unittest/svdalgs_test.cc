@@ -615,4 +615,32 @@ SECTION("Returned Spectrum scale")
         }
     CHECK(fabs(spec.eig(1)-maxDD) < 1E-12);
     }
+
+SECTION("Regression Test - Complex with Negative Scale")
+    {
+    //
+    // Based on a bug report from Benoit Vermersch, Sep 23, 2015
+    // where in ITensor svd scale was only properly put into
+    // real part of D and U, not imaginary part
+    //
+	Index s1("s1",2,Site),
+          s2("s2",2,Site),
+          l1("l1",4,Link),
+          l2("l2",4,Link),
+          li("li",4,Link);
+
+	ITensor T(s1,s2,l1,l2), 
+            U(s1,l1,li), 
+            D,V;
+
+	T(s2(2),s1(1),l1(2),l2(1)) =  0.025;
+	T = T * Complex_i;
+	T(s2(2),s1(2),l1(1),l2(1)) =  0.99;
+	T(s2(1),s1(2),l1(2),l2(1)) =  -0.001;
+
+	T.scaleTo(LogNumber(-0.000312338,-1));
+	svd(T,U,D,V);
+	ITensor diff = T - U*D*V;
+    CHECK(norm(diff) < 1E-11);
+    }
 }
