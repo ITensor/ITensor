@@ -75,9 +75,28 @@ struct SiteTerm
 bool
 isFermionic(const SiteTerm& st);
 
-struct HTerm
+struct SiteTermProd
     {
     std::vector<SiteTerm> ops;
+    
+    std::string opStr() const;
+    
+    SiteTermProd operator*(const SiteTermProd &other) const;
+    
+    bool operator==(const SiteTermProd& other) const;
+    bool operator!=(const SiteTermProd& other) const {return !operator==(other);};
+    };
+
+struct SiteTermSum
+    {
+    std::vector<std::pair<Complex, SiteTermProd>> opSum;
+    
+    void operator+=(const std::pair<Complex, SiteTermProd> &term);
+    };
+
+struct HTerm
+    {
+    SiteTermProd opProd;
 
     HTerm();
 
@@ -97,16 +116,16 @@ struct HTerm
         Real x = 1);
 
     explicit
-    operator bool() const { return !ops.empty(); }
+    operator bool() const { return !opProd.ops.empty(); }
 
     int
-    Nops() const { return ops.size(); }
+    Nops() const { return opProd.ops.size(); }
 
     const SiteTerm&
-    first() const { return ops.front(); }
+    first() const { return opProd.ops.front(); }
 
     const SiteTerm&
-    last() const { return ops.back(); }
+    last() const { return opProd.ops.back(); }
 
     bool
     startsOn(int i) const;
@@ -133,11 +152,26 @@ struct HTerm
     operator!=(const HTerm& other) const;
     };
 
+typedef std::pair<int,int> MatIndex;
+
 class AutoMPO
     {
     const SiteSet& sites_;
     std::vector<HTerm> terms_;
+    
+    std::vector<std::vector<SiteTermProd>> leftPart_,rightPart_;
+    std::vector<Matrix> Coeff_;
+    std::vector<std::vector<std::pair<MatIndex, SiteTermSum>>> tempMPO_;
+    
+    MPO H_;
+    bool svd_;
 
+    void AddToTempMPO(int n, MatIndex ind, const std::pair<Complex, SiteTermProd> &term);
+    void DecomposeTerm(int n, const SiteTermProd &term, 
+                    SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
+    int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
+    void AddToMPO(int n, Complex coeff, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &terms);
+    
     enum State { New, Op };
 
     class Accumulator
@@ -183,8 +217,8 @@ class AutoMPO
 
     public:
 
-    AutoMPO(const SiteSet& sites) 
-        : sites_(sites)
+    AutoMPO(const SiteSet& sites, const Args& args) 
+        : sites_(sites), svd_(args.getBool("SVD",false))
         { }
 
     const SiteSet&
@@ -192,11 +226,13 @@ class AutoMPO
 
     const std::vector<HTerm>&
     terms() const { return terms_; }
+    
+    void ConstructMPOUsingSVD();
 
-    operator MPO() const { return toMPO<ITensor>(*this); }
+    operator MPO() { if(svd_) {ConstructMPOUsingSVD(); return H_; } else return toMPO<ITensor>(*this); }
 
-    operator IQMPO() const { return toMPO<IQTensor>(*this); }
-
+    operator IQMPO() { if(svd_) {ConstructMPOUsingSVD(); return H_.toIQMPO(); } else return toMPO<IQTensor>(*this); }
+    
     template <typename T>
     Accumulator
     operator+=(T x) { return Accumulator(this,x); }
@@ -211,6 +247,12 @@ class AutoMPO
 
 std::ostream& 
 operator<<(std::ostream& s, const SiteTerm& t);
+
+std::ostream& 
+operator<<(std::ostream& s, const SiteTermProd& t);
+
+std::ostream& 
+operator<<(std::ostream& s, const SiteTermSum& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const HTerm& t);
