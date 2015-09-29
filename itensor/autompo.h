@@ -165,6 +165,10 @@ class AutoMPO
     
     MPO H_;
     bool svd_;
+    
+#ifdef SHOW_AUTOMPO
+    std::string mpoStr_[100][100];
+#endif
 
     void AddToTempMPO(int n, MatIndex ind, const std::pair<Complex, SiteTermProd> &term);
     void DecomposeTerm(int n, const SiteTermProd &term, 

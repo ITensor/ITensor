@@ -457,8 +457,19 @@ void AutoMPO::AddToMPO(int n, Complex coeff, MatIndex ind,
         std::string opstr = term.second.opStr();
 
         if(isReal(coeff) && isReal(term.first))        
+            {
             H_.Anc(n) += coeff.real() * term.first.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
+#ifdef SHOW_AUTOMPO
+            std::string str = format("%.2f %s",coeff.real() * term.first.real(),opstr);
+            if(!mpoStr_[ind.first-1][ind.second-1].empty())
+                mpoStr_[ind.first-1][ind.second-1] += "+" + str;
+            else 
+                mpoStr_[ind.first-1][ind.second-1] = str;
+#endif
+            }
+            
         else
+            // TODO: SHOW_AUTOMPO
             H_.Anc(n) += coeff * term.first * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
         }
     }
@@ -525,6 +536,17 @@ void AutoMPO::ConstructMPOUsingSVD()
                 onsite.ops.emplace_back(SiteTerm("Id",n));
             AddToTempMPO(n, {j, k}, {c, onsite});
             }
+            
+#ifdef SHOW_AUTOMPO
+    for(int n=1; n<=N; n++)
+        {
+        for(const std::pair<MatIndex, SiteTermSum> &mt: tempMPO_.at(n-1))
+            println(mt.first.first,',',mt.first.second,'\t', mt.second);        
+        println("=========================================");
+        }
+
+
+#endif            
 
     // SVD Coeff matrix on each link and construct the final MPO matrix for each site
     // Note that for the MPO matrix on site n we need the SVD on both the previous link and the following link
@@ -561,6 +583,11 @@ void AutoMPO::ConstructMPOUsingSVD()
         H_.Anc(n) += sites_.op("Id",n) * row(1) * col(1);
         H_.Anc(n) += sites_.op("Id",n) * row(2) * col(2);
 
+#ifdef SHOW_AUTOMPO
+        mpoStr_[0][0] = "1";
+        mpoStr_[1][1] = "1";
+#endif        
+
         for(const std::pair<MatIndex, SiteTermSum> &mt: tempMPO_.at(n-1))
             {
             int k = mt.first.first;
@@ -588,6 +615,21 @@ void AutoMPO::ConstructMPOUsingSVD()
                 }
             }
 
+#ifdef SHOW_AUTOMPO
+        if(n <= 10 or n == N)
+            {
+            for(int r = 0; r < d_n+2; ++r, println())
+            for(int c = 0; c < d_npp+2; ++c)
+                {
+                print(mpoStr_[r][c],"\t");
+                if(mpoStr_[r][c].length() < 8 && c == 1) 
+                print("\t");
+                // reset
+                mpoStr_[r][c] = "";
+                }
+            println("=========================================");
+            }
+#endif    
         // Store SVD computed at this step for next link
         V_n = V_npp;
         d_n = d_npp;        
