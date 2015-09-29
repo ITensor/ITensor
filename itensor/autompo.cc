@@ -585,7 +585,7 @@ void AutoMPO::ConstructMPOUsingSVD()
             Vector D;
             
             SVD(Coeff_.at(n), U, D, V_npp);
-            Real epsilon = 1E-16;
+            Real epsilon = 1E-14;
             auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
             auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
             d_npp=firstApproxZero - D.begin();
