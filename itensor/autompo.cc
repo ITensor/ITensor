@@ -79,10 +79,9 @@ bool SiteTermProd::operator==(const SiteTermProd &other) const
         return false;
 
     for(size_t n = 0; n < ops.size(); ++n)
-        if(ops[n] != other.ops.at(n)) 
-            {
+        if(!ops[n].proportialTo(other.ops.at(n))) 
             return false;
-            }
+
     return true;
     }
     
