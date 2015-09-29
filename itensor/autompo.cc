@@ -564,8 +564,10 @@ void AutoMPO::ConstructMPOUsingSVD()
             Vector D;
             
             SVD(Coeff_.at(n), U, D, V_npp);
-            auto firstZero = find(D.begin(), D.end(), 0);
-            d_npp=firstZero - D.begin();
+            Real epsilon = 1E-16;
+            auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
+            auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
+            d_npp=firstApproxZero - D.begin();
             D.ReduceDimension(d_npp);
             }
             
