@@ -1204,10 +1204,10 @@ operator<<(std::ostream& s, const SiteTermProd& prod)
     
 std::ostream& 
 operator<<(std::ostream& s, const SiteTermSum& sum)
-    {        
+    {
+    const char* pfix = "";     
     for(const std::pair<Complex, SiteTermProd> &t : sum.opSum)
-        {
-        const char* pfix = "";
+        {        
         if(abs(t.first-1.0) > 1E-12) 
             if(isReal(t.first))
                 {
