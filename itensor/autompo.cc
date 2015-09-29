@@ -411,18 +411,11 @@ plusAppend(std::string& s, const std::string& a)
 //#define SHOW_AUTOMPO
 
 // Note that n is 1-based site index
-void AutoMPO::AddToTempMPO(int n, MatIndex ind, const std::pair<Complex, SiteTermProd> &term)
+void AutoMPO::AddToTempMPO(int n, const MatElement &elem)
     {
-        auto isAtIndex = [&ind](const std::pair<MatIndex, SiteTermSum> &t) {return t.first == ind;};
-        auto sumAtIndex = find_if(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), isAtIndex);
-        if(sumAtIndex != tempMPO_.at(n-1).end())
-            sumAtIndex->second += term;
-        else
-            {
-            SiteTermSum sum;
-            sum+=term;
-            tempMPO_.at(n-1).emplace_back(ind, sum);
-            }
+        auto el = find(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), elem);
+        if(el == tempMPO_.at(n-1).end())
+            tempMPO_.at(n-1).push_back(elem);
     }
 
 void AutoMPO::DecomposeTerm(int n, const SiteTermProd &term, 
@@ -450,28 +443,26 @@ int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec)
     }
     
 void AutoMPO::AddToMPO(int n, Complex coeff, MatIndex ind, 
-                        const Index &row, const Index &col, const SiteTermSum &terms)
+                        const Index &row, const Index &col, const SiteTermProd &prod)
     {
-    for(const std::pair<Complex, SiteTermProd> &term : terms.opSum)
-        {
-        std::string opstr = term.second.opStr();
+    std::string opstr = prod.opStr();
 
-        if(isReal(coeff) && isReal(term.first))        
-            {
-            H_.Anc(n) += coeff.real() * term.first.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
+    if(isReal(coeff))        
+        {
+        H_.Anc(n) += coeff.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
+        
 #ifdef SHOW_AUTOMPO
-            std::string str = format("%.2f %s",coeff.real() * term.first.real(),opstr);
-            if(!mpoStr_[ind.first-1][ind.second-1].empty())
-                mpoStr_[ind.first-1][ind.second-1] += "+" + str;
-            else 
-                mpoStr_[ind.first-1][ind.second-1] = str;
+        std::string str = format("%.2f %s",coeff.real(), opstr);
+        if(!mpoStr_[ind.first-1][ind.second-1].empty())
+            mpoStr_[ind.first-1][ind.second-1] += "+" + str;
+        else 
+            mpoStr_[ind.first-1][ind.second-1] = str;
 #endif
-            }
-            
-        else
-            // TODO: SHOW_AUTOMPO
-            H_.Anc(n) += coeff * term.first * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
-        }
+        }        
+    else
+        // TODO: SHOW_AUTOMPO
+        H_.Anc(n) += coeff * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
+
     }
 
 
@@ -534,14 +525,18 @@ void AutoMPO::ConstructMPOUsingSVD()
             if(onsite.ops.empty())
                 // TODO: Handle Fermions
                 onsite.ops.emplace_back(SiteTerm("Id",n));
-            AddToTempMPO(n, {j, k}, {c, onsite});
+            MatElement elem({j, k}, c, onsite);
+            AddToTempMPO(n, elem);
             }
             
 #ifdef SHOW_AUTOMPO
     for(int n=1; n<=N; n++)
         {
-        for(const std::pair<MatIndex, SiteTermSum> &mt: tempMPO_.at(n-1))
-            println(mt.first.first,',',mt.first.second,'\t', mt.second);        
+        for(const MatElement &elem: tempMPO_.at(n-1))
+            {
+            MatIndex ind = std::get<0>(elem);
+            println(ind.first,',',ind.second,'\t',std::get<1>(elem),'\t',std::get<2>(elem));
+            }
         println("=========================================");
         }
 
@@ -588,30 +583,32 @@ void AutoMPO::ConstructMPOUsingSVD()
         mpoStr_[1][1] = "1";
 #endif        
 
-        for(const std::pair<MatIndex, SiteTermSum> &mt: tempMPO_.at(n-1))
+        for(const MatElement &elem: tempMPO_.at(n-1))
             {
-            int k = mt.first.first;
-            int l = mt.first.second;
+            MatIndex ind = std::get<0>(elem);
+            int k = ind.first;
+            int l = ind.second;
+            Complex c = std::get<1>(elem);            
             if(l==0 && k==0)	// on-site terms
-                AddToMPO(n, 1, {2,1}, row, col, mt.second);
+                AddToMPO(n, c, {2,1}, row, col, std::get<2>(elem));
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp; j++)
                     if(V_npp(j,l) != 0) // 1-based access of matrix elements
-                        AddToMPO(n, V_npp(j,l), {2,2+j}, row, col, mt.second);
+                        AddToMPO(n, c*V_npp(j,l), {2,2+j}, row, col, std::get<2>(elem));
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n; i++)
                     if(V_n(i,k) != 0) // 1-based access of matrix elements
-                        AddToMPO(n, V_n(i,k), {2+i,1}, row, col, mt.second);
+                        AddToMPO(n, c*V_n(i,k), {2+i,1}, row, col,std::get<2>(elem));
                 }
             else 
                 {
                 for(int i=1; i<=d_n; i++)
                     for(int j=1; j<=d_npp; j++) 
                         if( (V_n(i,k) != 0) && (V_npp(j,l) != 0) ) // 1-based access of matrix elements
-                            AddToMPO(n, V_n(i,k)*V_npp(j,l), {2+i,2+j}, row, col, mt.second);
+                            AddToMPO(n, c*V_n(i,k)*V_npp(j,l), {2+i,2+j}, row, col, std::get<2>(elem));
                 }
             }
 

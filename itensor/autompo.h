@@ -154,6 +154,8 @@ struct HTerm
 
 typedef std::pair<int,int> MatIndex;
 
+typedef std::tuple<MatIndex, Complex, SiteTermProd> MatElement;
+
 class AutoMPO
     {
     const SiteSet& sites_;
@@ -161,7 +163,7 @@ class AutoMPO
     
     std::vector<std::vector<SiteTermProd>> leftPart_,rightPart_;
     std::vector<Matrix> Coeff_;
-    std::vector<std::vector<std::pair<MatIndex, SiteTermSum>>> tempMPO_;
+    std::vector<std::vector<MatElement>> tempMPO_;
     
     MPO H_;
     bool svd_;
@@ -170,11 +172,11 @@ class AutoMPO
     std::string mpoStr_[100][100];
 #endif
 
-    void AddToTempMPO(int n, MatIndex ind, const std::pair<Complex, SiteTermProd> &term);
+    void AddToTempMPO(int n, const MatElement &elem);
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
-    void AddToMPO(int n, Complex coeff, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &terms);
+    void AddToMPO(int n, Complex coeff, MatIndex ind, const Index &row, const Index &col, const SiteTermProd &prod);
     
     enum State { New, Op };
 
