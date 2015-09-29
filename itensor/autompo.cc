@@ -568,6 +568,8 @@ void AutoMPO::ConstructMPOUsingSVD()
     // Note that for the MPO matrix on site n we need the SVD on both the previous link and the following link
     Matrix V_n, V_npp;
     int d_n = 0, d_npp = 0; 	// d_n = num of non-zero singular values of Coeff_[n]
+    
+    int max_d = 0;
 
     vector<Index> links(N+1);
     links.at(0) = Index(nameint("Hl",0),d_n+2);
@@ -653,10 +655,13 @@ void AutoMPO::ConstructMPOUsingSVD()
         // Store SVD computed at this step for next link
         V_n = V_npp;
         d_n = d_npp;        
+        max_d = max(max_d, d_n);
         }
     
     H_.Anc(1) *= ITensor(links.at(0)(2));
     H_.Anc(N) *= ITensor(links.at(N)(1));
+    
+    println("Maximal dimension of MPO is ", max_d+2);
     }
 
 string
