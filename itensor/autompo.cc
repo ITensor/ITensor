@@ -489,6 +489,9 @@ void AutoMPO::ConstructMPOUsingSVD()
             {
             SiteTermProd left, onsite, right;
             DecomposeTerm(n, ht.opProd, left, onsite, right);
+#ifdef SHOW_AUTOMPO            
+            println(ht, ", n=",n,": ", left, ", ", onsite, ", ", right);
+#endif
             int j,k,l;
             
             if(left.ops.empty())
@@ -530,6 +533,7 @@ void AutoMPO::ConstructMPOUsingSVD()
             }
             
 #ifdef SHOW_AUTOMPO
+    println("TempMPO Elements:");
     for(int n=1; n<=N; n++)
         {
         for(const MatElement &elem: tempMPO_.at(n-1))
@@ -540,7 +544,25 @@ void AutoMPO::ConstructMPOUsingSVD()
         println("=========================================");
         }
 
+    println("Left and Right Partials:");
+    for(int n=0; n<N; n++)
+    {
+        println("Left:");
+        for(const SiteTermProd &prod : leftPart_.at(n))
+            println(prod);
+        println("Right:");
+        for(const SiteTermProd &prod : rightPart_.at(n))
+            println(prod);
 
+         println("=========================================");
+    }
+    
+    println("Left-Right Coefficients:");        
+    for(int n=0; n<N; n++)
+    {
+         println(Coeff_.at(n));
+         println("=========================================");
+    }
 #endif            
 
     // SVD Coeff matrix on each link and construct the final MPO matrix for each site
