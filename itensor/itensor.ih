@@ -27,9 +27,16 @@ template <typename... IndexVals>
 Cplx ITensor::
 cplx(IndexVals&&... ivs) const
   {
-  ITENSOR_CHECK_NULL
   constexpr size_t size = sizeof...(ivs);
   auto vals = std::array<IndexVal,size>{{static_cast<IndexVal>(ivs)...}};
+  return this->cplx<size>(vals);
+  }
+
+template <size_t size>
+Cplx ITensor::
+cplx(std::array<IndexVal,size> const& vals) const
+  {
+  ITENSOR_CHECK_NULL
 #ifdef DEBUG
   if(size != size_t(r())) 
       Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",r(),size));
@@ -138,7 +145,13 @@ set(VArgs&&... vargs)
   Cplx z;
   bool z_is_real =
     detail::getVals<IndexVal>(vals.begin(),z,std::forward<VArgs&&>(vargs)...);
+  set<size>(vals,z,z_is_real);
+  }
 
+template <size_t size>
+void ITensor::
+set(std::array<IndexVal,size> vals, Cplx z, bool z_is_real)
+  {
   std::array<int,NMAX> ii;
   ii.fill(0);
   stdx::permute_map(is_,vals,ii,[](IndexVal const& iv) { return iv.i-1; });

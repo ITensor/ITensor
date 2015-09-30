@@ -442,13 +442,13 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     else
         {
         return block.operator()(iv1.blockIndexVal(),
-                                         iv2.blockIndexVal(),
-                                         iv3.blockIndexVal(),
-                                         iv4.blockIndexVal(),
-                                         iv5.blockIndexVal(),
-                                         iv6.blockIndexVal(),
-                                         iv7.blockIndexVal(),
-                                         iv8.blockIndexVal());
+                                iv2.blockIndexVal(),
+                                iv3.blockIndexVal(),
+                                iv4.blockIndexVal(),
+                                iv5.blockIndexVal(),
+                                iv6.blockIndexVal(),
+                                iv7.blockIndexVal(),
+                                iv8.blockIndexVal());
         }
 	}
 

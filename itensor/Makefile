@@ -24,7 +24,7 @@ SOURCES+= autompo.cc
 HEADERS=global.h real.h permutation.h indextype.h index.h \
         indexset.h counter.h simplematrix.h itensor.h itensor.ih \
         qn.h iqindex.h iqtdat.h  \
-        detail/skip_iterator.h iqtensor.h \
+        detail/skip_iterator.h iqtensor.h iqtensor.ih \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\

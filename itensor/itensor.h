@@ -508,6 +508,15 @@ class ITensor
     //void 
     //assignFromVec(const VectorRef& v);
 
+    //Helper for element access, used by IQTensor
+    template <size_t size>
+    Cplx
+    cplx(std::array<IndexVal,size> const& vals) const;
+
+    //Helper for element access, used by IQTensor
+    template <size_t size>
+    void
+    set(std::array<IndexVal,size> vals, Cplx z, bool z_is_real);
 
     private:
 

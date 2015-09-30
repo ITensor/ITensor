@@ -1,0 +1,82 @@
+
+namespace itensor {
+
+template <typename... IQIndexVals>
+Real IQTensor::
+real(IQIndexVals&&... ivs) const
+  {
+  auto z = cplx(std::forward<IQIndexVals>(ivs)...);
+  if(std::fabs(z.imag()) != 0)
+      {
+      printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+      Error("tensor is Complex valued, use .cplx(...) method");
+      }
+  return z.real();
+  }
+
+template <typename... IQIndexVals>
+Cplx IQTensor::
+cplx(IQIndexVals&&... ivs) const
+  {
+  constexpr size_t size = sizeof...(ivs);
+  auto qvals = std::array<IQIndexVal,size>{{static_cast<IQIndexVal>(ivs)...}};
+#ifdef DEBUG
+  if(size != size_t(r())) 
+      Error(format("Wrong number of IQIndexVals passed to real/cplx (expected %d, got %d)",r(),size));
+#endif
+
+  IndexSet<Index> is;
+  for(int n = 0; n < r(); ++n)
+    {
+#ifdef DEBUG
+    if(!hasindex(*this,qvals.at(n).index))
+      Error("IQTensor.real/cplx: IQIndex not found");
+#endif
+    is.addindex(qvals[n].indexqn());
+    }
+
+  ITensor const& block = getBlock(is);
+  if(!block) return Cplx(0.,0.);
+
+  std::array<IndexVal,size> vals;
+  for(size_t n = 0; n < size; ++n) vals[n] = qvals[n].blockIndexVal();
+
+  return block.cplx<size>(vals);
+  }
+
+
+template <typename... VArgs>
+void IQTensor::
+set(VArgs&&... vargs)
+  {
+  solo();
+  static constexpr auto size = sizeof...(vargs)-1;
+#ifdef DEBUG
+  if(size != size_t(r())) 
+      Error(format("Wrong number of IQIndexVals passed to real/cplx (expected %d, got %d)",r(),size));
+#endif
+  std::array<IQIndexVal,size> qvals;
+  Cplx z;
+  bool z_is_real = 
+    detail::getVals<IQIndexVal>(qvals.begin(),z,std::forward<VArgs&&>(vargs)...);
+
+  IndexSet<Index> is;
+  for(int n = 0; n < r(); ++n)
+    {
+#ifdef DEBUG
+    if(!hasindex(*this,qvals.at(n).index))
+      Error("IQTensor::set: IQIndex not found");
+#endif
+    is.addindex(qvals[n].indexqn());
+    }
+
+  ITensor & block = getBlock(is);
+  if(!block) block = ITensor(is);
+
+  std::array<IndexVal,size> vals;
+  for(size_t n = 0; n < size; ++n) vals[n] = qvals[n].blockIndexVal();
+
+  block.set<size>(vals,z,z_is_real);
+  }
+
+} //namespace itensor

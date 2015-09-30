@@ -206,37 +206,59 @@ class IQTensor
     //before inserting
     void insert(const ITensor& block);
 
+    // New style IQIndexVal element access
+    // T.real(I1(n1),I2(n2),...) returns 
+    // component of IQTensor where
+    // I1 set to n1, I2 to n2, etc.
+
+    // Value is returned as Real number
+    template <typename... IQIndexVals>
+    Real
+    real(IQIndexVals&&... ivs) const;
+
+    // Value is returned as Cplx number
+    template <typename... IQIndexVals>
+    Cplx
+    cplx(IQIndexVals&&... ivs) const;
+
+    // Set element at I1(n1),I2(n2),...
+    // to value 4.56 by calling
+    // T.set(I1(n1),I2(n2),...,4.56);
+    template <typename... VArgs>
+    void
+    set(VArgs&&... vargs);
+
     //Non-const element access
     Real& 
     operator()(const IQIndexVal& iv1, 
                const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv3 = IQIndexVal::Null(), 
                const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv5 = IQIndexVal::Null(), 
                const IQIndexVal& iv6 = IQIndexVal::Null(),
-	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv7 = IQIndexVal::Null(), 
                const IQIndexVal& iv8 = IQIndexVal::Null());
 
     //const element access
     Real 
     operator()(const IQIndexVal& iv1, 
                const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv3 = IQIndexVal::Null(), 
                const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv5 = IQIndexVal::Null(), 
                const IQIndexVal& iv6 = IQIndexVal::Null(),
-	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
+	             const IQIndexVal& iv7 = IQIndexVal::Null(), 
                const IQIndexVal& iv8 = IQIndexVal::Null()) const;
 
     //Method for specifically requesting const access
     Real 
     at(const IQIndexVal& iv1, 
        const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	   const IQIndexVal& iv3 = IQIndexVal::Null(), 
+	     const IQIndexVal& iv3 = IQIndexVal::Null(), 
        const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	   const IQIndexVal& iv5 = IQIndexVal::Null(), 
+	     const IQIndexVal& iv5 = IQIndexVal::Null(), 
        const IQIndexVal& iv6 = IQIndexVal::Null(),
-	   const IQIndexVal& iv7 = IQIndexVal::Null(), 
+	     const IQIndexVal& iv7 = IQIndexVal::Null(), 
        const IQIndexVal& iv8 = IQIndexVal::Null()) const;
 
     Real
@@ -526,5 +548,7 @@ void
 checkStorage(const IQTensor& T);
 
 } //namespace itensor
+
+#include "iqtensor.ih"
 
 #endif
