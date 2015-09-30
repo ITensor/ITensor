@@ -47,10 +47,10 @@ proportialTo(const SiteTerm& other) const
     return (op == other.op && i == other.i);
     }
 
-bool
-isFermionic(const SiteTerm& st)
+bool SiteTerm::
+isFermionic() const
     {
-    if(!st.op.empty() && st.op.front() == 'C') return true;
+    if(!op.empty() && op.front() == 'C') return true;
     return false;
     }
 
@@ -62,6 +62,79 @@ opStr() const
             opstr += t->op + "*";
         opstr += ops.back().op;
         return opstr;
+    }
+    
+bool SiteTermProd::
+isFermionic() const
+    {
+    std::string opstr = opStr();
+    auto num = std::count(opstr.begin(), opstr.end(), 'C');
+    return num % 2;
+    }
+    
+string
+startTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cdagup","Adagup*F"),
+           make_pair("Cup","Aup*F"),
+           make_pair("Cdagdn","Adagdn"),
+           make_pair("Cdn","Adn"),
+           make_pair("C","A*F"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
+
+string
+endTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cup","Aup"),
+           make_pair("Cdagup","Adagup"),
+           make_pair("Cdn","F*Adn"),
+           make_pair("Cdagdn","F*Adagdn"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
+
+    
+void SiteTermProd::
+rewriteFermionic(bool start)
+    {
+    if(!isFermionic())
+        return;
+        
+    // Check that all the terms are on the same site
+    int i = ops.front().i;
+    for(SiteTerm &t : ops)
+        if(t.i != i)
+            Error("Rewriting of fermionic multi-site terms is not supported.");    
+
+    // It is enough to rewrite a single Fermionic operator
+    for(SiteTerm &t : ops)
+        if(t.isFermionic())
+            {
+            if(start)
+                t.op = startTerm(t.op);
+            else
+                t.op = endTerm(t.op);
+            break;
+            }
     }
 
 SiteTermProd SiteTermProd::
@@ -550,8 +623,13 @@ void AutoMPO::ConstructMPOUsingSVD()
             Complex c = j==0 ? ht.coef() : 1;
             
             if(onsite.ops.empty())
-                // TODO: Handle Fermions
-                onsite.ops.emplace_back(SiteTerm("Id",n));
+                {
+                if(left.isFermionic())
+                    onsite.ops.emplace_back(SiteTerm("F",n));
+                else 
+                    onsite.ops.emplace_back(SiteTerm("Id",n));
+                }
+            onsite.rewriteFermionic(!left.isFermionic());
             MatElement elem({j, k}, c, onsite);
             AddToTempMPO(n, elem);
             }
@@ -697,46 +775,6 @@ void AutoMPO::ConstructMPOUsingSVD()
     H_.Anc(N) *= ITensor(links.at(N)(1));
     
     println("Maximal dimension of MPO is ", max_d+2);
-    }
-
-string
-startTerm(const std::string& op)
-    {
-    static array<pair<string,string>,6>
-           rewrites =
-           {{
-           make_pair("Cdagup","Adagup*F"),
-           make_pair("Cup","Aup*F"),
-           make_pair("Cdagdn","Adagdn"),
-           make_pair("Cdn","Adn"),
-           make_pair("C","A*F"),
-           make_pair("Cdag","Adag")
-           }};
-    for(auto& p : rewrites)
-        {
-        if(p.first == op) return p.second;
-        }
-    return op;
-    }
-
-string
-endTerm(const std::string& op)
-    {
-    static array<pair<string,string>,6>
-           rewrites =
-           {{
-           make_pair("Cup","Aup"),
-           make_pair("Cdagup","Adagup"),
-           make_pair("Cdn","F*Adn"),
-           make_pair("Cdagdn","F*Adagdn"),
-           make_pair("C","A"),
-           make_pair("Cdag","Adag")
-           }};
-    for(auto& p : rewrites)
-        {
-        if(p.first == op) return p.second;
-        }
-    return op;
     }
 
 template<>
@@ -915,12 +953,12 @@ toMPO<IQTensor>(const AutoMPO& am,
                 //if(found == 0)
                     */
 
-                if(isFermionic(cst))
+                if(cst.isFermionic())
                     W += sites.op("F",n) * rc;
                 else
                     W += sites.op("Id",n) * rc;
 #ifdef SHOW_AUTOMPO
-                if(isFermionic(cst)) ws[r][c] = "F";
+                if(cst.isFermionic()) ws[r][c] = "F";
                 else                 ws[r][c] = "1";
 #endif
                 //if(found > 1)
@@ -1144,10 +1182,10 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst == rst)
                 {
 #ifdef SHOW_AUTOMPO
-                if(isFermionic(cst)) plusAppend(ws[r][c],"F");
+                if(cst.isFermionic()) plusAppend(ws[r][c],"F");
                 else                 plusAppend(ws[r][c],"1");
 #endif
-                if(isFermionic(cst))
+                if(cst.isFermionic())
                     W += sites.op("F",n) * rc;
                 else
                     W += sites.op("Id",n) * rc;

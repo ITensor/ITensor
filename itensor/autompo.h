@@ -61,6 +61,8 @@ struct SiteTerm
     SiteTerm(const std::string& op,
              int i,
              Real coef = 1);
+             
+    bool isFermionic() const;
 
     bool
     operator==(const SiteTerm& other) const;
@@ -72,14 +74,18 @@ struct SiteTerm
     proportialTo(const SiteTerm& other) const;
     };
 
-bool
-isFermionic(const SiteTerm& st);
-
 struct SiteTermProd
     {
     std::vector<SiteTerm> ops;
     
     std::string opStr() const;
+    
+    // Check if the number of fermionic operators in the term is even or odd
+    bool isFermionic() const;
+    
+    // Works (and is used) only for single-site terms
+    // If the term is fermionic, rewrite one of the fermionic operators using the Jordan-Wigner string    
+    void rewriteFermionic(bool start);
     
     SiteTermProd operator*(const SiteTermProd &other) const;
     
