@@ -57,11 +57,14 @@ isFermionic() const
 std::string SiteTermProd::
 opStr() const
     {
-        std::string opstr;
-        for(auto t = ops.begin(); t != ops.end()-1; t++)
-            opstr += t->op + "*";
-        opstr += ops.back().op;
-        return opstr;
+    if(ops.empty())
+        return "";
+
+    std::string opstr;
+    for(auto t = ops.begin(); t != ops.end()-1; t++)
+        opstr += t->op + "*";
+    opstr += ops.back().op;
+    return opstr;
     }
     
 bool SiteTermProd::
