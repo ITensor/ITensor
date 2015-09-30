@@ -226,6 +226,11 @@ class IndexVal
     Null();
     };
 
+bool inline
+operator==(IndexVal const& iv, Index const& i) { return iv.index == i; }
+bool inline
+operator==(Index const& i, IndexVal const& iv) { return operator==(iv,i); }
+
 Index inline
 dag(Index res) { res.dag(); return res; }
 
