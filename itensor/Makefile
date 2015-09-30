@@ -22,7 +22,7 @@ SOURCES+= tevol.cc
 SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h indextype.h index.h \
-        indexset.h counter.h simplematrix.h itensor.h \
+        indexset.h counter.h simplematrix.h itensor.h itensor.ih \
         qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
@@ -68,6 +68,9 @@ $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
 	@cp $^ $(ITENSOR_INCLUDEDIR)/sites
 
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
+	@cp $^ $(ITENSOR_INCLUDEDIR)
+
+$(ITENSOR_INCLUDEDIR)/%.ih: %.ih
 	@cp $^ $(ITENSOR_INCLUDEDIR)
 
 %.o: %.cc

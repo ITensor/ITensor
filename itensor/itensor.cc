@@ -15,11 +15,6 @@ using std::sqrt;
 using std::vector;
 using std::fabs;
 
-#ifdef DEBUG
-#define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
-#else
-#define ITENSOR_CHECK_NULL
-#endif
 
 void
 vectormult(std::vector<Real>& v, Real fac)

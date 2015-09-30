@@ -62,6 +62,9 @@ class IndexSet
     int
     rn() const { return rn_; }
 
+    int
+    size() const { return r_; }
+
     const IndexT&
     index(int j) const { return index_[j-1]; }
 

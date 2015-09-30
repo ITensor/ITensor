@@ -20,6 +20,17 @@ namespace stdx {
 template<typename Expression, typename ReturnValue>
 using if_compiles_return = ReturnValue;
 
+//Helper type for making static_assert always fail,
+//but only if a given template is instantiated
+//(unlike std::false_type, this type depends on
+//the typename T so will not be evaluated until
+//the template is instantiated)
+template<typename T, typename... Rest>
+struct false_regardless_of : public std::false_type
+    {
+    using ignored_type = T;
+    };
+
 //
 //Dummy argument types to simplify
 //template overload precedence.
@@ -84,6 +95,49 @@ find_if(Container&& C,
         UnaryCmpFunc&& f) -> decltype(C.begin())
     {
     return std::find_if(C.begin(),C.end(),std::forward<UnaryCmpFunc>(f));
+    }
+
+template <typename Set1,
+          typename Set2Iter,
+          typename RType,
+          typename Map>
+void
+permute_map(const Set1& s1,
+            const Set2Iter& s2begin,
+            const Set2Iter& s2end,
+            RType& r,
+            Map&& m)
+    {
+    for(auto it = s2begin; it != s2end; ++it)
+        {
+        auto& v2 = *it;
+        bool found = false;
+        for(size_t i1 = 0; i1 < s1.size(); ++i1)
+            if(v2 == s1[i1])
+                {
+                r[i1] = m(v2);
+                found = true;
+                break;
+                }
+
+        if(!found)
+            {
+            throw std::runtime_error("sets are not permutations of each other");
+            }
+        }
+    }
+
+template <typename Set1,
+          typename Set2,
+          typename RType,
+          typename Map>
+void
+permute_map(const Set1& s1,
+            const Set2& s2,
+            RType& r,
+            Map&& m)
+    {
+    permute_map(s1,std::begin(s2),std::end(s2),r,std::forward<Map>(m));
     }
 
 } //namespace stdx

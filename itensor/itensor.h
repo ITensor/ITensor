@@ -6,6 +6,7 @@
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
 #include "counter.h"
+#include "stdx.h"
 
 namespace itensor {
 
@@ -267,8 +268,31 @@ class ITensor
     Complex
     toComplex() const;
 
-    // IndexVal element access
-    // Given iv1 = (I1,n1), iv2 = (I2,n2), ...
+    // New style IndexVal element access
+    // T.real(I1(n1),I2(n2),...) returns 
+    // component of ITensor where
+    // I1 set to n1, I2 to n2, etc.
+
+    // Value is returned as Real number
+    template <typename... IndexVals>
+    Real
+    real(IndexVals&&... ivs) const;
+
+    // Value is returned as Cplx number
+    template <typename... IndexVals>
+    Cplx
+    cplx(IndexVals&&... ivs) const;
+
+    // Set element at I1(n1),I2(n2),...
+    // to value 4.56 by calling
+    // T.set(I1(n1),I2(n2),...,4.56);
+    template <typename... VArgs>
+    void
+    set(VArgs&&... vargs);
+
+    // Older style IndexVal element access
+    // (works for Real ITensors only)
+    // Given iv1 = I1(n1), iv2 = I2(n2), ...
     // returns component of ITensor such that
     // I1 temporarily set to n1, I2 to n2, etc.
     // Can be used to set components of ITensors
@@ -686,21 +710,6 @@ bool
 operator<(const Tensor& t, const IndexSet<IndexT>& is)
     { return t.indices() < is; }
 
-template <typename Callable> 
-ITensor& ITensor::
-mapElems(const Callable& f)
-    {
-    if(isComplex())
-        throw ITError("mapElems only works for real ITensor");
-    solo();
-    scaleTo(1);
-    for(size_t j = 0; j < r_->size(); ++j)
-        {
-        r_->v[j] = f(r_->v[j]);
-        }
-    return *this;
-    }
-
 
 Real inline
 norm(const ITensor& t) { return t.norm(); }
@@ -1016,7 +1025,6 @@ toReal(const ITensor& T) { return T.toReal(); }
 Complex inline
 toComplex(const ITensor& T) { return T.toComplex(); }
 
-
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
@@ -1039,6 +1047,13 @@ Tensor
 deprimed(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
+int
+_ind(IndexSet<Index> const& is,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8);
+
 } //namespace itensor
+
+#include "itensor.ih"
 
 #endif
