@@ -152,6 +152,17 @@ struct HTerm
     operator!=(const HTerm& other) const;
     };
 
+struct ComplexMatrix
+    {
+    Matrix Re;
+    Matrix Im;
+    
+    bool isEmpty() const { return (!Re.Storage() && !Im.Storage()); };
+    bool isComplex() const { return Im.Storage(); };
+    void insert(int i, int j, Complex val);
+    Complex  operator() (int i, int j) const;
+    };
+
 typedef std::pair<int,int> MatIndex;
 
 typedef std::tuple<MatIndex, Complex, SiteTermProd> MatElement;
@@ -162,7 +173,8 @@ class AutoMPO
     std::vector<HTerm> terms_;
     
     std::vector<std::vector<SiteTermProd>> leftPart_,rightPart_;
-    std::vector<Matrix> Coeff_;
+    std::vector<ComplexMatrix> Coeff_;
+
     std::vector<std::vector<MatElement>> tempMPO_;
     
     MPO H_;

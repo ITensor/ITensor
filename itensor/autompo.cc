@@ -447,22 +447,51 @@ void AutoMPO::AddToMPO(int n, Complex coeff, MatIndex ind,
     std::string opstr = prod.opStr();
 
     if(isReal(coeff))        
-        {
-        H_.Anc(n) += coeff.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
+        H_.Anc(n) += coeff.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);       
+    else
+        H_.Anc(n) += coeff * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
         
 #ifdef SHOW_AUTOMPO
-        std::string str = format("%.2f %s",coeff.real(), opstr);
+        std::string str = format("%.2f %s",coeff, opstr);
         if(!mpoStr_[ind.first-1][ind.second-1].empty())
             mpoStr_[ind.first-1][ind.second-1] += "+" + str;
         else 
             mpoStr_[ind.first-1][ind.second-1] = str;
 #endif
-        }        
-    else
-        // TODO: SHOW_AUTOMPO
-        H_.Anc(n) += coeff * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
-
     }
+
+Complex ComplexMatrix::operator() (int i, int j) const
+    {
+        Complex re, im;
+        if(Im.Storage())
+            im = Complex(0, Im(i,j));
+        if(Re.Storage())
+            re = Complex(Re(i,j),0);
+        return re+im;
+    }
+    
+// i,j are 1-based    
+void ComplexMatrix::insert(int i, int j, Complex val) 
+    {
+    // if this is the first complex value in the matrix
+    // create the Im matrix with the same dimensions as the Re matrix
+    if(!isReal(val) && !Im.Storage())
+        Im.ReDimension(Re.Nrows(), Re.Ncols());
+        
+   // TODO: Determine the size in advance instead of resizing every time
+    if(i > Re.Nrows() || j > Re.Ncols())
+        {
+        int newNRows = max(i, Re.Nrows());
+        int newNCols = max(j, Re.Ncols());
+        Re.Enlarge(newNRows, newNCols);
+        if(Im.Storage())
+            Im.Enlarge(newNRows, newNCols);
+        }
+    
+    Re(i,j) = val.real();
+    if(!isReal(val))
+        Im(i,j) = val.imag();    
+    }   
 
 
 void AutoMPO::ConstructMPOUsingSVD()
@@ -514,11 +543,7 @@ void AutoMPO::ConstructMPOUsingSVD()
                     k = AddToVec(right, rightPart_.at(n));
                     }
                 l = AddToVec(left, leftPart_.at(n-1));
-                // TODO: Determine the size in advance instead of resizing every time
-                if(l > Coeff_.at(n-1).Nrows() || j > Coeff_.at(n-1).Ncols())
-                    Coeff_.at(n-1).Enlarge(max(l,Coeff_.at(n-1).Nrows()), max(j, Coeff_.at(n-1).Ncols()));
-                // TODO: Complex coef
-                Coeff_.at(n-1).el(l-1, j-1) = ht.coef().real();
+                Coeff_.at(n-1).insert(l,j, ht.coef());
                 }
                 
             // Place the coefficient of the HTerm when the term starts
@@ -559,14 +584,16 @@ void AutoMPO::ConstructMPOUsingSVD()
     println("Left-Right Coefficients:");        
     for(int n=0; n<N; n++)
     {
-         println(Coeff_.at(n));
+         println(Coeff_.at(n).Re);
+         if(Coeff_.at(n).isComplex())
+             println(Coeff_.at(n).Im);
          println("=========================================");
     }
 #endif            
 
     // SVD Coeff matrix on each link and construct the final MPO matrix for each site
     // Note that for the MPO matrix on site n we need the SVD on both the previous link and the following link
-    Matrix V_n, V_npp;
+    ComplexMatrix V_n, V_npp;
     int d_n = 0, d_npp = 0; 	// d_n = num of non-zero singular values of Coeff_[n]
     
     int max_d = 0;
@@ -579,19 +606,25 @@ void AutoMPO::ConstructMPOUsingSVD()
             
         // for 1st site there are no left partials and Coeff_[n-1] is empty but Coeff_[n] is not
         // for Nth site Coeff_[n] is empty but Coeff_[n-1] is not
-        if(n==N || !Coeff_.at(n).Store())
+        if(n==N || Coeff_.at(n).isEmpty())
             d_npp = 0;
         else
             {
-            Matrix U;
             Vector D;
-            
-            SVD(Coeff_.at(n), U, D, V_npp);
+            if(Coeff_.at(n).isComplex())
+                {                    
+                ComplexMatrix U;
+                SVD(Coeff_.at(n).Re, Coeff_.at(n).Im, U.Re, U.Im, D, V_npp.Re, V_npp.Im);
+                }
+            else
+                {
+                Matrix U;                
+                SVD(Coeff_.at(n).Re, U, D, V_npp.Re);
+                }
             Real epsilon = 1E-14;
             auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
             auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
             d_npp=firstApproxZero - D.begin();
-            D.ReduceDimension(d_npp);
             }
             
         links.at(n) = Index(nameint("Hl",n),d_npp+2);
@@ -607,6 +640,8 @@ void AutoMPO::ConstructMPOUsingSVD()
         mpoStr_[0][0] = "1";
         mpoStr_[1][1] = "1";
 #endif        
+        
+        Complex Zero(0,0);
 
         for(const MatElement &elem: tempMPO_.at(n-1))
             {
@@ -619,20 +654,20 @@ void AutoMPO::ConstructMPOUsingSVD()
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp; j++)
-                    if(V_npp(j,l) != 0) // 1-based access of matrix elements
+                    if(V_npp(j,l) != Zero) // 1-based access of matrix elements
                         AddToMPO(n, c*V_npp(j,l), {2,2+j}, row, col, std::get<2>(elem));
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n; i++)
-                    if(V_n(i,k) != 0) // 1-based access of matrix elements
+                    if(V_n(i,k) != Zero) // 1-based access of matrix elements
                         AddToMPO(n, c*V_n(i,k), {2+i,1}, row, col,std::get<2>(elem));
                 }
             else 
                 {
                 for(int i=1; i<=d_n; i++)
                     for(int j=1; j<=d_npp; j++) 
-                        if( (V_n(i,k) != 0) && (V_npp(j,l) != 0) ) // 1-based access of matrix elements
+                        if( (V_n(i,k) != Zero)  && (V_npp(j,l) != Zero) ) // 1-based access of matrix elements
                             AddToMPO(n, c*V_n(i,k)*V_npp(j,l), {2+i,2+j}, row, col, std::get<2>(elem));
                 }
             }
