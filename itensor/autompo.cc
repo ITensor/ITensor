@@ -549,18 +549,13 @@ Complex ComplexMatrix::operator() (int i, int j) const
 // i,j are 1-based    
 void ComplexMatrix::insert(int i, int j, Complex val) 
     {
-    // if this is the first complex value in the matrix
-    // create the Im matrix with the same dimensions as the Re matrix
-    if(!isReal(val) && !Im.Storage())
-        Im.ReDimension(Re.Nrows(), Re.Ncols());
-        
    // TODO: Determine the size in advance instead of resizing every time
     if(i > Re.Nrows() || j > Re.Ncols())
         {
         int newNRows = max(i, Re.Nrows());
         int newNCols = max(j, Re.Ncols());
         Re.Enlarge(newNRows, newNCols);
-        if(Im.Storage())
+        if(Im.Storage() || !isReal(val))
             Im.Enlarge(newNRows, newNCols);
         }
     
