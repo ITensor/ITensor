@@ -219,8 +219,21 @@ id() const
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
-    s << "(" << t.name() << "," << t.m() << ","
-      << t.type().c_str() << "){" << (t.id_ % 1000) << "}";
+    s << "(" << t.rawname() << "," << t.m() << ","
+      << t.type().c_str() << ")";
+    if(t.primeLevel() > 0) 
+      {
+      if(t.primeLevel() > 3)
+        {
+        s << "'" << t.primeLevel();
+        }
+      else
+        {
+        for(int n = 1; n <= t.primeLevel(); ++n)
+          s << "'";
+        }
+      }
+    //{" << (t.id_ % 1000) << "}";
     return s;
 
     //s << putprimes("",t.primeLevel()) << "(";
