@@ -3277,7 +3277,7 @@ operator<<(ostream & s, const ITensor& t)
     s << "ITensor r=" << t.r() << " ";
     s << t.indices() << "\n";
 
-    s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
+    s << "{log(scale)[incl in elems]=" << t.scale().logNum();
 
     const
     bool iscplx = t.isComplex();
@@ -3321,13 +3321,13 @@ operator<<(ostream & s, const ITensor& t)
                 const Real rval = t.r_->v.at(0)*scale;
                 if(!iscplx)
                     {
-                    s << format("  %.10f\n",rval);
+                    s << format("%.10f\n",rval);
                     }
                 else
                     {
                     const Real ival = t.i_->v.at(0)*scale;
                     const char sgn = (ival > 0 ? '+' : '-');
-                    s << format("  %.10f%s%.10fi\n",rval,sgn,fabs(ival));
+                    s << format("%.10f%s%.10fi\n",rval,sgn,fabs(ival));
                     }
                 return s;
                 }
@@ -3342,7 +3342,7 @@ operator<<(ostream & s, const ITensor& t)
                         {
                         if(fabs(rval) > Global::printScale())
                             {
-                            s << "  (" << j;
+                            s << "(" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
                             s << format(") %.10f\n",rval);
@@ -3354,7 +3354,7 @@ operator<<(ostream & s, const ITensor& t)
                         if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
                             {
                             const char sgn = (ival > 0 ? '+' : '-');
-                            s << "  (" << j;
+                            s << "(" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
                             s << format(") %.10f%s%.10fi\n",rval,sgn,fabs(ival));
@@ -3373,7 +3373,7 @@ operator<<(ostream & s, const ITensor& t)
                         {
                         Real val = pv[c.ind]*scale;
                         if(fabs(val) > Global::printScale())
-                            { s << "  " << c << format(" %.10f\n",val); }
+                            { s << c << format(" %.10f\n",val); }
                         }
                     }
                 else //t is complex
@@ -3388,7 +3388,7 @@ operator<<(ostream & s, const ITensor& t)
                         const char sgn = (ival > 0 ? '+' : '-');
                         if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
                             { 
-                            s << "  " << c << format(" %.10f%s%.10fi\n",rval,sgn,fabs(ival)); 
+                            s << c << format(" %.10f%s%.10fi\n",rval,sgn,fabs(ival)); 
                             }
                         }
                     }
