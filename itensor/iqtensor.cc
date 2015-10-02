@@ -302,29 +302,34 @@ div(IQTensor const& T)
     }
 
 IQTensor
-combiner(std::vector<IQIndex> inds,
+combiner(std::vector<IQIndex> cinds,
          Args const& args)
     {
-    if(inds.empty()) Error("No indices passed to combiner");
+    if(cinds.empty()) Error("No indices passed to combiner");
     auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",inds.front().type());
-    auto cr = inds.size();
-    auto dir = inds.front().dir();
+    auto itype = getIndexType(args,"IndexType",cinds.front().type());
+    auto cr = cinds.size();
+    auto dir = cinds.front().dir();
 
-    auto C = IQTCombiner{inds};
+    auto C = IQTCombiner{cinds};
 
     //Build the combined IQIndex,
     //saving information about
     //how we're doing it in C
     struct QNm { QN q; long m = 1; };
     auto qms = vector<QNm>{};
+
+    //Loop over all possible QN sectors that
+    //can be formed by the combined indices
     for(auto I : C.range())
         {
         QNm qm;
+        //For this sector, figure out the total QN (qm.q)
+        //and combined sector size (qm.m)
         for(auto j : count(cr))
             {
-            qm.q += inds[j].qn(1+I[j]) * inds[j].dir();
-            qm.m *= inds[j].index(1+I[j]).m();
+            qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir();
+            qm.m *= cinds[j].index(1+I[j]).m();
             }
 
         size_t n = 0;
@@ -345,12 +350,17 @@ combiner(std::vector<IQIndex> inds,
     auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
     for(auto n : index(qms)) 
         cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
+    auto cind = IQIndex{cname,std::move(cstore),dir};
 
-    auto newinds = stdx::reserve_vector<IQIndex>(1+inds.size());
-    newinds.emplace_back(cname,std::move(cstore),dir);
-    for(auto& I : inds) newinds.push_back(dag(I));
+    auto newind = IQIndexSetBuilder(1+cinds.size());
+    newind.nextIndex(std::move(cind));
+    for(auto& I : cinds) 
+        {
+        I.dag();
+        newind.nextIndex(std::move(I));
+        }
 
-    return IQTensor{IQIndexSet{std::move(newinds)},std::move(C)};
+    return IQTensor{newind.build(),std::move(C)};
     }
 
 IQIndex

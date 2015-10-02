@@ -320,18 +320,18 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(T),norm(R));
         CHECK(div(T) == div(R));
 
-        //R *= dag(C); //uncombine
-        //CHECK(!hasindex(R,ci));
-        //CHECK(hasindex(R,L1));
-        //CHECK(hasindex(R,L2));
-        //CHECK(hasindex(R,S1));
-        ////Check that R equals original T
-        //for(int i1 = 1; i1 <= L1.m(); ++i1)
-        //for(int i2 = 1; i2 <= L2.m(); ++i2)
-        //for(int j1 = 1; j1 <= S1.m(); ++j1)
-        //    {
-        //    CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
-        //    }
+        R *= dag(C); //uncombine
+        CHECK(!hasindex(R,ci));
+        CHECK(hasindex(R,L1));
+        CHECK(hasindex(R,L2));
+        CHECK(hasindex(R,S1));
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+            {
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
+            }
         }
 
     SECTION("Combine / Uncombine 3 - No Permute")
@@ -345,15 +345,15 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(T),norm(R));
         CHECK(div(T) == div(R));
 
-        //R *= dag(C); //uncombine
-        ////Check that R equals original T
-        //for(int i1 = 1; i1 <= L1.m(); ++i1)
-        //for(int i2 = 1; i2 <= L2.m(); ++i2)
-        //for(int j1 = 1; j1 <= S1.m(); ++j1)
-        //for(int j2 = 1; j2 <= S2.m(); ++j2)
-        //    {
-        //    CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
-        //    }
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int j2 = 1; j2 <= S2.m(); ++j2)
+            {
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            }
         }
 
     SECTION("Combine / Uncombine 4 - Permute")
@@ -367,15 +367,15 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(T),norm(R));
         CHECK(div(T) == div(R));
 
-        //R *= dag(C); //uncombine
-        ////Check that R equals original T
-        //for(int i1 = 1; i1 <= L1.m(); ++i1)
-        //for(int i2 = 1; i2 <= L2.m(); ++i2)
-        //for(int j1 = 1; j1 <= S1.m(); ++j1)
-        //for(int j2 = 1; j2 <= S2.m(); ++j2)
-        //    {
-        //    CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
-        //    }
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int j2 = 1; j2 <= S2.m(); ++j2)
+            {
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            }
         }
 
     SECTION("Combine / Uncombine 5 - Permute")
@@ -393,20 +393,20 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(T),norm(R));
         CHECK(div(T) == div(R));
 
-        //R = dag(C)*R; //uncombine
-        //CHECK(!hasindex(R,ci));
-        //CHECK(hasindex(R,L1));
-        //CHECK(hasindex(R,L2));
-        //CHECK(hasindex(R,S1));
-        //CHECK(hasindex(R,S2));
-        ////Check that R equals original T
-        //for(int i1 = 1; i1 <= L1.m(); ++i1)
-        //for(int i2 = 1; i2 <= L2.m(); ++i2)
-        //for(int j1 = 1; j1 <= S1.m(); ++j1)
-        //for(int j2 = 1; j2 <= S2.m(); ++j2)
-        //    {
-        //    CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
-        //    }
+        R = dag(C)*R; //uncombine
+        CHECK(!hasindex(R,ci));
+        CHECK(hasindex(R,L1));
+        CHECK(hasindex(R,L2));
+        CHECK(hasindex(R,S1));
+        CHECK(hasindex(R,S2));
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int j2 = 1; j2 <= S2.m(); ++j2)
+            {
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            }
         }
 
     SECTION("Combine / Uncombine 6 - Permute")
@@ -424,15 +424,32 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(T),norm(R));
         CHECK(div(T) == div(R));
 
-        //R *= dag(C); //uncombine
-        ////Check that R equals original T
-        //for(int i1 = 1; i1 <= L1.m(); ++i1)
-        //for(int i2 = 1; i2 <= L2.m(); ++i2)
-        //for(int j1 = 1; j1 <= S1.m(); ++j1)
-        //for(int j2 = 1; j2 <= S2.m(); ++j2)
-        //    {
-        //    CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
-        //    }
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int j2 = 1; j2 <= S2.m(); ++j2)
+            {
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            }
+        }
+
+    SECTION("Combine / Uncombined 7")
+        {
+        auto T = randomTensor(QN(),L1,S1,L2,S2);
+        auto C = combiner(L2,L1);
+        auto R = T*C;
+        CHECK_CLOSE(norm(R),norm(T));
+
+        auto U = dag(C)*R;
+        for(auto l1 : count1(L1.m()))
+        for(auto l2 : count1(L1.m()))
+        for(auto s1 : count1(S1.m()))
+        for(auto s2 : count1(S2.m()))
+            {
+            CHECK_CLOSE(U.real(L1(l1),L2(l2),S1(s1),S2(s2)),T.real(L1(l1),L2(l2),S1(s1),S2(s2)));
+            }
         }
 
     SECTION("Fragmented IQIndex Combiner Test 1")
@@ -471,10 +488,10 @@ SECTION("Combiner")
         auto ci = commonIndex(R,C);
         
         ////Uncombine
-        //auto nT = dag(C) * R;
-        //CHECK(div(T) == div(R));
-        //CHECK(div(T) == div(nT));
-        //CHECK(norm(T-nT) < 1E-11);
+        auto nT = dag(C) * R;
+        CHECK(div(T) == div(R));
+        CHECK(div(T) == div(nT));
+        CHECK(norm(T-nT) < 1E-11);
         }
 
     SECTION("Fragmented IQIndex Combiner Test 2")
@@ -512,12 +529,13 @@ SECTION("Combiner")
         auto R = C * T;
 
         ////Uncombine
-        //auto nT = dag(C) * R;
+        auto nT = dag(C) * R;
 
-        //CHECK(div(T) == div(R));
-        //CHECK(div(T) == div(nT));
-        //CHECK(norm(T-nT) < 1E-11);
+        CHECK(div(T) == div(R));
+        CHECK(div(T) == div(nT));
+        CHECK(norm(T-nT) < 1E-11);
         }
+
 
     }
 

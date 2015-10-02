@@ -100,68 +100,73 @@ combine(IQTReal     const& d,
         }
 #endif
 
-    auto& cind = Cis[0];
-    auto cr = Cis.r();
-    auto dr = dis.r();
-    auto ncomb = cr-1;
+    using size_type = decltype(rank(dis));
+    auto dr = rank(dis);
+    auto ncomb = rank(Cis)-1;
     auto nr = dr-ncomb+1;
 
-    auto dtoC = Label(dr,0);
-    auto to_comb = Label(ncomb,-1);
+    auto dperm = Label(dr,-1);
+    auto uncomb_dest = ncomb;
     for(auto i : count(dr)) 
         {
         auto jc = findindex(Cis,dis[i]);
-        if(jc >= 0)  //combined index
-            {
-            dtoC[i] = jc;
-            to_comb[jc-1] = i;
-            }
+        if(jc >= 0) dperm[i] = jc-1;
+        else        dperm[i] = uncomb_dest++;
         }
+
+    auto combined = [&dperm,ncomb](size_type i) { return dperm[i] < long(ncomb); };
 
     //Create new IQIndexSet
     auto newind = IQIndexSetBuilder(nr);
-    newind.nextIndex(cind);
-    for(auto i : count(dr)) if(!dtoC[i]) newind.nextIndex(dis[i]);
+    newind.nextIndex(Cis[0]);
+    for(auto i : count(dr)) if(!combined(i)) newind.nextIndex(dis[i]);
     Nis = newind.build();
 
     //Allocate new data
     auto& nd = *m.makeNewData<IQTReal>(Nis,doTask(CalcDiv{dis},d));
 
-    auto drange = Range(dr),
-         nrange = Range(nr);
-    auto dblock = Label(dr),
-         nblock = Label(nr),
-         cblock = Label(ncomb);
-    size_t start = 0,
-           end   = 0;
+    auto drange = Range(dr), //block range of current storage
+         nrange = Range(nr); //block range of new storage
+    auto dblock = Label(dr), //block index of current storage
+         nblock = Label(nr), //block index of new storage
+         cblock = Label(ncomb); //corresponding subblock of combiner
+    size_t start = 0, //offsets within sector of combined
+           end   = 0; //IQIndex where block will go
     for(auto io : d.offsets) //loop over non-zero blocks
         {
+        //Figure out this block's "block index"
         computeBlockInd(io.block,dis,dblock);
+
+        //Make TensorRef for this block of d
         drange.init(make_indexdim(dis,dblock));
         auto dref = makeTenRef(d.data(),io.offset,d.size(),&drange);
 
-        //QN of combined indices for this block
-        //total dimension of combined indices for this block
+        //Permute combined indices to front, then
+        //group the first ncomb indices into one
+        auto Pdref = Tensor{permute(dref,dperm)};
+        auto gPdref = groupInds(Pdref,0,ncomb);
+
+        //Figure out "block index" where this block will
+        //go in new storage (nblock) and which sector of
+        //combined indices maps to new combined index (cblock)
         size_t nu = 1;
         for(auto i : count(dr)) 
             {
-            if(!dtoC[i]) //uncombined
-                nblock[nu++] = dblock[i];
-            else            //combined
-                cblock[dtoC[i]-1] = dblock[i];
+            if(combined(i)) cblock[dperm[i]] = dblock[i];
+            else            nblock[nu++] = dblock[i];
             }
 
+        //Use cblock to recover info about structure of combined IQIndex,
+        //which sector to map to, where this subsector starts, and ends
         std::tie(nblock[0],start,end) = C.getBlockRange(cblock);
 
         //Get full block of new storage
         nrange.init(make_indexdim(Nis,nblock));
         auto nref = TensorRef(getBlock(nd,Nis,nblock),&nrange);
-        //Do tensor slicing to get subblock where data will go
-        auto nsub = subIndex(nref,0,start,end);
 
-        //Call groupInds on current block permutes combined
-        //inds to front, then groups them into a single ind
-        nsub &= groupInds(dref,to_comb);
+        //Slice this new-storage block to get subblock where data will go
+        auto nsub = subIndex(nref,0,start,end);
+        nsub &= gPdref;
         }
     }
 
@@ -194,57 +199,82 @@ combReplaceIndex(IQIndexSet  const& dis,
 
 void
 uncombine(IQTReal     const& d,
+          IQTCombiner const& C,
           IQIndexSet  const& dis,
           IQIndexSet  const& Cis,
           IQIndexSet       & Nis,
           ManageStore      & m,
           bool              own_data)
     {
-    //cind is special "combined index"
-    auto const& cind = Cis[0];
-    auto jc = findindex(dis,cind);
+    using size_type = decltype(rank(dis));
+    //auto const& cind = Cis[0];
+    auto dr = rank(dis);
+    auto cr = rank(Cis);
+    auto ncomb = cr-1;
+    auto nr = dr-1+ncomb;
 
-    IQTReal* pd = nullptr;
-    //Call this if necessary to modify the data
-    auto copyDataSetpd = [&]()
-        {
-        if(pd) return;
-        if(own_data) pd = m.modifyData(d);
-        else         pd = m.makeNewData<IQTReal>(d);
-        };
-
-    Permutation P;
-
-    if(jc != 0) //cind not at front
-        {
-        P = Permutation(dis.r());
-        P.setFromTo(jc,0);
-        long ni = 1;
-        for(auto j : count(dis.r()))
-            if(j != jc) P.setFromTo(j,ni++);
-        jc = 0;
-        }
-
-    if(P) 
-        {
-        copyDataSetpd(); //sets pd
-        permuteIQ(P,dis,d,Nis,*pd);
-        }
-    //Pis means 'permuted' index set
-    auto& Pis = (P ? Nis : dis);
-
-    auto newr = Pis.r()+Cis.r()-2;
-    auto offset = Cis.r()-1;
-    auto newind = IQIndexSetBuilder(newr);
-    for(auto j : count(offset))
-        newind.setIndex(j,Cis[1+j]);
-    for(auto j : count(Pis.r()-1))
-        newind.setIndex(offset+j,Pis[1+j]);
+    //Build new index set.
+    //combine routine always puts combined IQIndex
+    //at front, so restore combined indices there
+    auto newind = IQIndexSetBuilder(nr);
+    for(auto n : count(1,cr)) newind.nextIndex(Cis[n]);
+    for(auto n : count(1,dr)) newind.nextIndex(dis[n]);
     Nis = newind.build();
 
-    copyDataSetpd();
-    auto div = doTask(CalcDiv{dis},d);
-    pd->updateOffsets(Nis,div);
+    //Allocate new data
+    auto& nd = *m.makeNewData<IQTReal>(Nis,doTask(CalcDiv{dis},d));
+
+    auto drange = Range(dr), //block range of current storage
+         nrange = Range(nr); //block range of new storage
+    auto dblock = Label(dr), //block index of current storage
+         nblock = Label(nr); //block index of new storage
+    for(auto io : d.offsets) //loop over non-zero blocks
+        {
+        //Figure out this block's "block index"
+        computeBlockInd(io.block,dis,dblock);
+
+        //Make TensorRef for this block of d
+        drange.init(make_indexdim(dis,dblock));
+        auto dref = makeTenRef(d.data(),io.offset,d.size(),&drange);
+
+        auto n = dblock[0];
+
+        for(auto o : index(C.store_))
+            {
+            auto& br = C.store_[o];
+
+            //Only loop over subblocks of combined
+            //indices compatible with current sector (==n)
+            //of combined index cind (==dis[jc])
+            if(br.block != size_type(n)) continue;
+
+            //"invert" offset o into 
+            //first ncomb indices of nblock
+            //similar to computeBlockInd
+            for(auto m : count(ncomb-1))
+                {
+                nblock[m] = o % Cis[1+m].nindex();
+                o = (o-nblock[m])/Cis[1+m].nindex();
+                }
+            nblock[ncomb-1] = o;
+            //fill out rest of nblock
+            for(size_type m = ncomb, p = 1; p < dr; ++m, ++p)
+                {
+                nblock[m] = dblock[p];
+                }
+            //Get subblock of d data
+            auto dsub = subIndex(dref,0,br.start,br.start+br.extent);
+
+            nrange.init(make_indexdim(Nis,nblock));
+            auto nref = TensorRef(getBlock(nd,Nis,nblock),&nrange);
+
+            auto slice = groupInds(nref,0,ncomb);
+            groupInds(nref,0,ncomb) &= dsub;
+
+            } //for br in C storage
+        } //for blocks of d
+
+
     }
 
 void
@@ -254,11 +284,17 @@ doTask(Contract<IQIndex>      & C,
        ManageStore            & m)
     {
     if(C.Ris.r()==2)
+        {
         combReplaceIndex(C.Lis,C.Ris,C.Nis);
+        }
     else if(hasindex(C.Lis,C.Ris[0]))
-        uncombine(d,C.Lis,C.Ris,C.Nis,m,true);
+        {
+        uncombine(d,cmb,C.Lis,C.Ris,C.Nis,m,true);
+        }
     else
+        {
         combine(d,cmb,C.Lis,C.Ris,C.Nis,m);
+        }
     }
 
 void
@@ -274,7 +310,7 @@ doTask(Contract<IQIndex>      & C,
         }
     else if(hasindex(C.Ris,C.Lis[0]))
         {
-        uncombine(d,C.Ris,C.Lis,C.Nis,m,false);
+        uncombine(d,cmb,C.Ris,C.Lis,C.Nis,m,false);
         }
     else
         {

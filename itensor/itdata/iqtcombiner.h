@@ -23,20 +23,20 @@ class IQTCombiner
     public:
     using storage_type = std::vector<BlockRange>;
     using size_type = storage_type::size_type;
-    private:
+    //private:
     Range R_;
     storage_type store_;
     public:
     
     template<typename IQInds>
     explicit
-    IQTCombiner(IQInds const& inds)
+    IQTCombiner(IQInds const& cinds)
         { 
         //set up range to sum over all possible
-        //blocks that can be formed out of inds
-        auto RB = RangeBuilder(inds.size());
-        for(decltype(inds.size()) j = 0; j < inds.size(); ++j)
-            RB.nextIndex(inds[j].nindex());
+        //blocks that can be formed out of combined inds
+        auto RB = RangeBuilder(cinds.size());
+        for(auto j : count(cinds.size()))
+            RB.nextIndex(cinds[j].nindex());
         R_ = RB.build();
         store_.resize(area(R_));
         }
