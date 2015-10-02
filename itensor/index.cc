@@ -121,8 +121,21 @@ read(std::istream& s)
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
-    s << t.name() << "(" << t.m() << ","
-      << t.type().c_str() << "){" << (t.id() % 1000) << "}";
+    s << "(" << t.rawname() << "," << t.m() << ","
+      << t.type().c_str() << ")"; 
+    if(t.primeLevel() > 0) 
+      {
+      if(t.primeLevel() > 3)
+        {
+        s << "'" << t.primeLevel();
+        }
+      else
+        {
+        for(int n = 1; n <= t.primeLevel(); ++n)
+          s << "'";
+        }
+      }
+    //{" << (t.id() % 1000) << "}";
     return s;
     }
 
