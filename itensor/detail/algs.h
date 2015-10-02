@@ -73,10 +73,18 @@ contains(const Container& C,
     }
 
 //Simple linear congruential random number generator
-double inline
-quickran()
+inline int&
+seed_quickran(int newseed)
     {
     static int seed = (std::time(NULL) + getpid());
+    if(newseed != 0) seed = newseed;
+    return seed;
+    }
+
+double inline
+quickran() 
+    {
+    auto& seed = seed_quickran(0);
     int im = 134456;
     int ia = 8121;
     int ic = 28411;
