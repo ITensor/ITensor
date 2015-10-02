@@ -150,6 +150,11 @@ class Index
     IndexVal 
     operator()(long plev, long nplev) const;
 
+    //Creates a copy of this Index with prime level plev
+    //(regardless of which prime level this Index has)
+    Index
+    operator[](int plev) const { auto I = *this; I.primeLevel(plev); return I; }
+
     //
     // Other methods
     //
