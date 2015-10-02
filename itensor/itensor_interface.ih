@@ -56,25 +56,25 @@ checkArrows(IndexSet const& I1,
     }
 
 void inline
-checkArrows(IQIndexSet const& I1,
-            IQIndexSet const& I2,
+checkArrows(IQIndexSet const& is1,
+            IQIndexSet const& is2,
             bool shouldMatch = false)
     {
-    for(auto j1 : index(I1))
-    for(auto j2 = j1+1; j2 < I2.size(); ++j2)
+    for(auto I1 : is1)
+    for(auto I2 : is2)
         {
-        auto& J1 = I1[j1];
-        auto& J2 = I2[j2];
-        if(J1 == J2)
+        if(I1 == I2)
             {
-            auto cond = shouldMatch ^ (J1.dir() == J2.dir());
+            auto cond = shouldMatch ^ (I1.dir() == I2.dir());
             if(cond)
                 {
-                println("IQIndexSet 1 = \n",I1);
                 println("----------------------------------------");
-                println("IQIndexSet 2 = \n",I2);
+                println("IQIndexSet 1 = \n",is1);
                 println("----------------------------------------");
-                Error(format("Mismatched arrows for IQIndex %s",J1));
+                println("IQIndexSet 2 = \n",is1);
+                println("----------------------------------------");
+                printfln("Mismatched IQIndex %s",I1);
+                Error("Mismatched IQIndex arrows");
                 }
             }
         }
@@ -149,13 +149,14 @@ cplx(IVs&&... ivs) const
     {
     using indexval_type = typename IndexT::indexval_type;
     using Inds = typename GetElt<IndexT>::Inds;
-    constexpr size_t size = sizeof...(ivs);
-    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
-#ifdef DEBUG
+
     if(!store()) Error("tensor storage unallocated");
+
+    constexpr size_t size = sizeof...(ivs);
     if(size != size_t(inds().r())) 
         Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
-#endif
+
+    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
     Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
@@ -260,12 +261,16 @@ set(VArgs&&... vargs)
     using indexval_type = typename IndexT::indexval_type;
     using Inds = typename SetElt<Real,IndexT>::Inds;
     static constexpr auto size = sizeof...(vargs)-1;
+    if(size != size_t(inds().r())) 
+        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",inds().r(),size));
     std::array<indexval_type,size> vals;
     Cplx z;
     bool is_real = 
         detail::getVals<indexval_type>(vals.begin(),z,std::forward<VArgs&&>(vargs)...);
     auto inds = Inds(is_.r(),0);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    //TODO: if !store_ and !is_real, call allocCplx instead
+    //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(is_real)
