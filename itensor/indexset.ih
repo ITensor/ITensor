@@ -629,7 +629,7 @@ operator<<(std::ostream& s, IndexSetT<Index> const& is)
     for(decltype(is.r()) i = 1; i <= is.r(); ++i) 
         { 
         s << is.index(i);
-        if(i < is.r()) s << ", ";
+        if(i < is.r()) s << " ";
         } 
     return s;
     }
