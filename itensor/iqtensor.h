@@ -459,6 +459,9 @@ mapElems(const Callable& f)
 Real inline
 norm(const IQTensor& t) { return t.norm(); }
 
+int inline
+rank(const IQTensor& T) { return rank(T.indices()); }
+
 Real
 sumels(const IQTensor& T);
 

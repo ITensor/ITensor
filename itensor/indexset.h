@@ -690,6 +690,10 @@ sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
 //
 
 template<class IndexT>
+int
+rank(const IndexSet<IndexT>& is) { return is.r(); }
+
+template<class IndexT>
 Arrow
 dir(const IndexSet<IndexT>& is, const IndexT& I)
     {

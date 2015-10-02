@@ -721,10 +721,13 @@ operator<(const Tensor& t, const IndexSet<IndexT>& is)
 
 
 Real inline
-norm(const ITensor& t) { return t.norm(); }
+norm(const ITensor& T) { return T.norm(); }
+
+int inline
+rank(const ITensor& T) { return rank(T.indices()); }
 
 Real
-sumels(const ITensor& t);
+sumels(const ITensor& T);
 
 ITensor inline
 conj(ITensor res) { res.conj(); return res; }
