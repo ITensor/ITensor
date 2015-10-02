@@ -32,13 +32,6 @@ groupInds(Ten_ && T,
           size_t istart,
           size_t iend);
 
-////group non-contiguous indices
-////allocates a new Tensor to hold result
-//template<typename Ten_, typename Inds_>
-//Tensor
-//groupInds(Ten_      && T,
-//          Inds_ const& inds);
-
 template<typename Ten_, typename Perm_>
 ref_type<Ten_>
 permute(Ten_  const& t,
@@ -111,32 +104,6 @@ groupInds(Ten_ && T,
     {
     return makeRef(T.store(),groupIndsRange(T.range(),istart,iend));
     }
-
-//template<typename Ten_, typename Inds_>
-//auto
-//groupInds(Ten_      && T,
-//          Inds_ const& inds) -> Tensor
-//    {
-//    //Does permute followed by contiguous groupInds; returns a Tensor
-//    using value_t = decltype(inds[0]);
-//    auto r = T.r();
-//    auto P = Label(r);
-//    auto inds_has = [&inds](value_t j) -> long
-//        { 
-//        for(auto n : index(inds)) if(j==inds[n]) return true;
-//        return false;
-//        };
-//    size_t tofront = 0,
-//           toback = inds.size();
-//    for(decltype(r) j = 0; j < r; ++j)
-//        {
-//        if(inds_has(j)) P[j] = tofront++;
-//        else            P[j] = toback++;
-//        }
-//    auto PT = Tensor{permute(T,P)};
-//    if(inds.size() <= 1) return PT;
-//    return Tensor{std::move(PT.storage()),groupIndsRange(PT.range(),0,inds.size())};
-//    }
 
 template<typename Ten_, typename Perm_>
 auto
