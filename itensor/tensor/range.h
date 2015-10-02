@@ -208,6 +208,11 @@ init(std::initializer_list<index_type> il)
 
 
 template<typename index_type>
+auto
+rank(RangeT<index_type> const& R) -> decltype(R.size()) { return R.size(); }
+
+
+template<typename index_type>
 std::ostream&
 operator<<(std::ostream& s, RangeT<index_type> const& r)
     {
@@ -292,6 +297,13 @@ class RangeBuilderT
     nextIndex(index_type const& ind)
         {
         store_[n_].ind = ind;
+        ++n_;
+        }
+
+    void
+    nextIndex(index_type && ind)
+        {
+        store_[n_].ind = std::move(ind);
         ++n_;
         }
 

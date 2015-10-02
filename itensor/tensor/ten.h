@@ -667,6 +667,14 @@ makeRefc(Ten<R> && t, VArgs&&... args)
 //
 
 template<typename R>
+auto
+rank(TenRefc<R> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+
+template<typename R>
+auto
+rank(Ten<R> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+
+template<typename R>
 Real
 norm(TenRefc<R> const& t);
 
