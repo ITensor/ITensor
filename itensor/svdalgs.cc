@@ -125,52 +125,55 @@ truncate(Vector & P,
          Real & docut)
     {
     long origm = P.size();
-    m = origm;
-    if(m == 1) 
+    long n = origm-1;
+    
+    if(origm == 1) 
         {
         docut = P(1)/2.;
         return 0;
         }
 
     //Zero out any negative weight
-    for(auto zerom = m; zerom > 0; --zerom)
+    for(auto zn = n; zn >= 0; --zn)
         {
-        if(P(zerom) >= 0) break;
-        P(zerom) = 0;
+        if(P(zn) >= 0) break;
+        P(zn) = 0;
         }
 
     Real truncerr = 0;
     if(absoluteCutoff)
         {
         //Always truncate at least to m==maxm
-        for(; m > maxm; --m) truncerr += P(m);
+        for(; n >= maxm; --n) truncerr += P(n);
         //Continue truncating until (absolute) cutoff reached (or m==minm)
-        for(; P(m) < cutoff && m > minm; --m) truncerr += P(m);
+        for(; P(n) < cutoff && n >= minm; --n) truncerr += P(n);
         }
     else
         {
         Real scale = doRelCutoff ? P(1) : 1.0;
         //Always truncate at least to m==maxm
-        for(;m > maxm; --m) truncerr += P(m);
+        for(; n >= maxm; --n) truncerr += P(n);
         //Continue truncating until cutoff reached (or m==minm)
-        for(;truncerr+P(m) < cutoff*scale && m > minm; --m)
+        for(;truncerr+P(n) < cutoff*scale && n >= minm; --n)
             {
-            truncerr += P(m);
+            truncerr += P(n);
             }
         truncerr = (P(1) == 0 ? 0 : truncerr/scale);
         }
 
-    if(m < 1) m = 1;
+    if(n < 0) n = 0;
+
+    //P is 0-indexed, so add 1 to n to get correct state count m
+    m = n+1;
 
     if(m < origm)
         {
-        docut = (P(m+1) + P(m))/2. - 1E-5*P(m+1);
+        docut = (P(m) + P(m-1))/2. - 1E-5*P(m);
         }
 
     resize(P,m); 
 
     return truncerr;
-
     } // truncate
 
 void
@@ -216,12 +219,12 @@ showEigs(Vector const& P,
 
 Spectrum 
 svdRank2(ITensor A, 
-         const Index& ui, 
-         const Index& vi,
-         ITensor& U, 
-         ITensor& D, 
-         ITensor& V,
-         const Args& args)
+         Index const& ui, 
+         Index const& vi,
+         ITensor & U, 
+         ITensor & D, 
+         ITensor & V,
+         Args const& args)
     {
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -346,8 +349,6 @@ svdRank2(IQTensor A,
          IQTensor & V,
          Args const& args)
     {
-    PrintData(A);
-    println("In svdRank2, norm(A) = ",norm(A));
     auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -394,7 +395,7 @@ svdRank2(IQTensor A,
         auto& VV = Vmats.at(b);
         auto& d =  dvecs.at(b);
 
-        printfln("Block %d = \n%s",b,M);
+        //printfln("Block %d = \n%s",b,M);
 
         if(!cplx)
             {
@@ -426,7 +427,6 @@ svdRank2(IQTensor A,
         //(denmat eigenvalues) in alleig
         for(auto& val : d) alleig.push_back(val);
         }
-
 
     auto DDstore = alleig;
     auto DD = Vector(std::move(DDstore),VecRange{DDstore.size()});
@@ -462,28 +462,30 @@ svdRank2(IQTensor A,
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
 
-        size_t this_m = 1;
-        while(this_m <= d.size() && sqr(d(this_m)) > docut) 
+        long this_n = 0;
+        while(this_n < long(d.size()) && sqr(d(this_n)) > docut) 
             {
-            if(d(this_m) < 0) d(this_m) = 0;
-            ++this_m;
+            if(d(this_n) < 0) d(this_n) = 0;
+            ++this_n;
             }
-        --this_m; //since the loop overshoots by 1
+        --this_n; //since the loop overshoots by 1
 
         if(m == 0 && d.size() >= 1) // zero mps, just keep one arb state
             { 
-            this_m = 1; 
+            this_n = 0; 
             m = 1; 
             docut = 1; 
             }
 
-        if(this_m == 0) 
+        if(this_n < 0) 
             { 
             d.clear();
             B.M.clear();
             ++b; 
             continue; 
             }
+
+        auto this_m = this_n + 1;
 
         resize(d,this_m);
 
@@ -529,20 +531,20 @@ svdRank2(IQTensor A,
         auto Vref = makeMatRef(pV.data(),vI[B.i2].m(),R[n].m());
         Vref &= VV;
 
-        ///////DEBUG
-        Matrix D(d.size(),d.size());
-        for(decltype(d.size()) n = 1; n <= d.size(); ++n)
-            {
-            D(n,n) = d(n);
-            }
-        D *= A.scale().real0();
-        auto AA = Uref * D * transpose(Vref);
-        Print(Uref);
-        Print(D);
-        Print(Vref);
-        printfln("Check %d = \n%s",b,AA);
-        printfln("Diff %d = %.10f",b,norm(AA-B.M));
-        ///////DEBUG
+        /////////DEBUG
+        //Matrix D(d.size(),d.size());
+        //for(decltype(d.size()) n = 0; n < d.size(); ++n)
+        //    {
+        //    D(n,n) = d(n);
+        //    }
+        //D *= A.scale().real0();
+        //auto AA = Uref * D * transpose(Vref);
+        //Print(Uref);
+        //Print(D);
+        //Print(Vref);
+        //printfln("Check %d = \n%s",b,AA);
+        //printfln("Diff %d = %.10f",b,norm(AA-B.M));
+        /////////DEBUG
 
         ++n;
         }
@@ -553,10 +555,6 @@ svdRank2(IQTensor A,
     U = IQTensor(Uis,std::move(Ustore));
     D = IQTensor({L,R},std::move(Dstore),A.scale()*signfix);
     V = IQTensor(Vis,std::move(Vstore));
-
-    PrintData(U*D*V);
-    printfln("Norm check: norm(A-U*D*V) = %.10f",norm(A-U*D*V));
-    println("In svdRank2, norm(U*D*V) = ",norm(U*D*V));
 
     //Originally eigs were found without including scale
     //so put the scale back in
