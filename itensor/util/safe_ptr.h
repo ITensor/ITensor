@@ -162,10 +162,10 @@ makeSafePtr(T* pt, size_t offset, size_t offset_end)
 
 #ifdef DEBUG
 #define MAKE_SAFE_PTR(X,Y) makeSafePtr(X,Y)
-#define MAKE_SAFE_PTR3(X,Y,Z) makeSafePtr(X,Y,Z)
+#define MAKE_SAFE_PTR_OFFSET(X,Y,Z) makeSafePtr(X,Y,Z)
 #else
 #define MAKE_SAFE_PTR(X,Y) (X)
-#define MAKE_SAFE_PTR3(X,Y,Z) ((X)+(Y))
+#define MAKE_SAFE_PTR_OFFSET(X,Y,Z) ((X)+(Y))
 #endif
 
 

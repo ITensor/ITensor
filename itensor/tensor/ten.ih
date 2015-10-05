@@ -134,8 +134,8 @@ transform(TenRefc<R1> const& from,
 
     for(auto& i : RB.build())
         {
-        auto pto = MAKE_SAFE_PTR3(to.data(),offset(to,i),to.store().size());
-        auto pfrom = MAKE_SAFE_PTR3(from.data(),offset(from,i),from.store().size());
+        auto pto = MAKE_SAFE_PTR_OFFSET(to.data(),offset(to,i),to.store().size());
+        auto pfrom = MAKE_SAFE_PTR_OFFSET(from.data(),offset(from,i),from.store().size());
         for(decltype(bigsize) b = 0; b < bigsize; ++b)
             {
             op(*pfrom,*pto);
