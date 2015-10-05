@@ -198,26 +198,54 @@ randomMat(CtrArgs&&... args)
 
 auto inline
 makeMatRef(Real* p,
+           size_t max_offset,
            size_t nrows,
            size_t ncols)
     {
-    return MatrixRef({p,nrows*ncols},MatRange{nrows,ncols});
+    return MatrixRef({p,max_offset},MatRange{nrows,ncols});
     }
 
 auto inline
 makeMatRef(const Real* p,
+           size_t max_offset,
            size_t nrows,
            size_t ncols)
     {
-    return MatrixRefc({p,nrows*ncols},MatRange{nrows,ncols});
+    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
     }
 
 auto inline
 makeMatRefc(const Real* p,
+            size_t max_offset,
             size_t nrows,
             size_t ncols)
     {
-    return MatrixRefc({p,nrows*ncols},MatRange{nrows,ncols});
+    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
+    }
+
+auto inline
+makeMatRef(Data const& D,
+           size_t nrows,
+           size_t ncols)
+    {
+    return MatrixRef(D,MatRange{nrows,ncols});
+    }
+
+auto inline
+makeMatRef(cData const& D,
+           size_t nrows,
+           size_t ncols)
+    {
+    return MatrixRefc(D,MatRange{nrows,ncols});
+    }
+
+template<typename T>
+auto 
+makeMatRefc(DataRange<T> const& D,
+            size_t nrows,
+            size_t ncols)
+    {
+    return MatrixRefc(DataRange<const T>(D),MatRange{nrows,ncols});
     }
 
 } //namespace itensor
