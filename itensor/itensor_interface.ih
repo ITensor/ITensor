@@ -50,7 +50,8 @@ allocReal(IQTensor& T, const Container& inds)
 
 void inline
 checkArrows(IndexSet const& I1,
-            IndexSet const& I2)
+            IndexSet const& I2,
+            bool shouldMatch = false)
     {
     //This space intentionally left blank
     }
@@ -238,7 +239,7 @@ getVals(Iter it,
         Cplx w,
         Rest&&... rest)
     {
-    static_assert(stdx::false_regardless_of<Iter>::value,"Scalar value passed to .set method must be last argument");
+    static_assert(stdx::false_regardless_of<Iter>::value,"New value passed to .set method must be last argument");
     return false;
     }
 

@@ -124,8 +124,6 @@ matrixTensor(Matrix&& M, const Index& i1, const Index& i2);
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
-
-
 template<> ITensor::
 ITensorT(const Index& i1);
 
