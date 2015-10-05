@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
+#include <tuple>
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/svdalgs.h"
@@ -19,6 +20,7 @@ using std::make_pair;
 using std::string;
 using std::sqrt;
 using std::move;
+using std::tie;
 
 ///////////////
 
@@ -114,18 +116,17 @@ doTask(GetBlocks const& G,
 ///////////////
 
 
-Real static
+std::tuple<Real,Real>
 truncate(Vector & P,
          long maxm,
          long minm,
          Real cutoff,
          bool absoluteCutoff,
-         bool doRelCutoff,
-         long & m,
-         Real & docut)
+         bool doRelCutoff)
     {
     long origm = P.size();
     long n = origm-1;
+    Real docut = 0;
     
     if(origm == 1) 
         {
@@ -141,19 +142,19 @@ truncate(Vector & P,
         }
 
     Real truncerr = 0;
-    if(absoluteCutoff)
+    //Always truncate down to at least m==maxm
+    for(; n >= maxm; --n) truncerr += P(n);
+
+    if(absoluteCutoff) //absoluteCutoff is typically false
         {
-        //Always truncate at least to m==maxm
-        for(; n >= maxm; --n) truncerr += P(n);
-        //Continue truncating until (absolute) cutoff reached (or m==minm)
+        //Truncate all probability weights below cutoff (or m==minm)
         for(; P(n) < cutoff && n >= minm; --n) truncerr += P(n);
         }
     else
         {
         Real scale = doRelCutoff ? P(1) : 1.0;
-        //Always truncate at least to m==maxm
-        for(; n >= maxm; --n) truncerr += P(n);
-        //Continue truncating until cutoff reached (or m==minm)
+        //Continue truncating until *sum* of discarded probability 
+        //weight reaches cutoff reached (or m==minm)
         for(;truncerr+P(n) < cutoff*scale && n >= minm; --n)
             {
             truncerr += P(n);
@@ -163,17 +164,15 @@ truncate(Vector & P,
 
     if(n < 0) n = 0;
 
-    //P is 0-indexed, so add 1 to n to get correct state count m
-    m = n+1;
+    //P is 0-indexed, so add 1 to n to 
+    //get correct state count m
+    auto m = n+1;
 
-    if(m < origm)
-        {
-        docut = (P(m) + P(m-1))/2. - 1E-5*P(m);
-        }
+    if(m < origm) docut = (P(m) + P(m-1))/2. - 1E-5*P(m);
 
     resize(P,m); 
 
-    return truncerr;
+    return std::make_tuple(truncerr,docut);
     } // truncate
 
 void
@@ -273,28 +272,28 @@ svdRank2(ITensor A,
     // Truncate
     //
 
-    Spectrum spec;
-
-    long m = DD.size();
 
     Vector probs;
     if(do_truncate || show_eigs)
         {
-        probs = Vector(m);
-        for(long j = 1; j <= m; ++j) probs(j) = sqr(DD(j));
+        probs = DD;
+        for(auto j : index(probs)) probs(j) = sqr(probs(j));
         }
 
     Real truncerr = 0;
     Real docut = -1;
+    long m = DD.size();
     if(do_truncate)
         {
-        truncerr = truncate(probs,maxm,minm,cutoff,
-                            absoluteCutoff,doRelCutoff,m,docut);
+        tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+                                       absoluteCutoff,doRelCutoff);
         m = probs.size();
         resize(DD,m);
         reduceCols(UU,m);
         reduceCols(VV,m);
         }
+
+    Spectrum spec;
     spec.truncerr(truncerr);
 
     if(show_eigs) showEigs(probs,truncerr,A.scale(),args);
@@ -446,8 +445,9 @@ svdRank2(IQTensor A,
     Real docut = -1;
     if(do_truncate)
         {
-        truncerr = truncate(probs,maxm,minm,cutoff,
-                            absoluteCutoff,doRelCutoff,m,docut);
+        tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+                                       absoluteCutoff,doRelCutoff);
+        m = probs.size();
         }
 
     if(show_eigs) showEigs(probs,truncerr,A.scale(),args);
@@ -661,7 +661,7 @@ diag_hermitian(ITensor rho,
     if(do_truncate)
         {
         if(DD(1) < 0) DD *= -1; //DEBUG
-        truncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff,m,docut);
+        tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         m = DD.size();
         reduceCols(UU,m);
         if(showeigs)

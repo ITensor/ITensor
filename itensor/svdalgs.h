@@ -517,6 +517,15 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     */
     }
 
+//Return value is: (trunc_error,docut)
+std::tuple<Real,Real>
+truncate(Vector & P,
+         long maxm,
+         long minm,
+         Real cutoff,
+         bool absoluteCutoff = false,
+         bool doRelCutoff = false);
+
 } //namespace itensor
 
 
