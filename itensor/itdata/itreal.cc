@@ -65,15 +65,16 @@ doTask(NormNoScale, ITReal const& d)
     }
 
 void
-doTask(Conj,ITReal const& d) { }
+doTask(Conj,ITReal const& d) { /*Nothing to conj*/ }
 
 void
-doTask(TakeReal, ITReal const& d) { }
+doTask(TakeReal, ITReal const& d) { /*Already real*/ }
 
 void
-doTask(TakeImag, ITReal const& d, ManageStore & m) 
+doTask(TakeImag, ITReal & d)
     { 
-    m.makeNewData<ITReal>(d.size(),0);
+    //Set all elements to zero
+    doTask(MultReal{0.},d);
     }
 
 void

@@ -184,19 +184,29 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& mp);
 
 void
-doTask(Conj, const IQTReal& d);
+doTask(Conj, IQTReal const& d);
 
 bool inline
-doTask(CheckComplex,const IQTReal& d) { return false; }
+doTask(CheckComplex,IQTReal const& d) { return false; }
+
+void inline
+doTask(TakeReal, IQTReal const& d) { }
+
+void inline
+doTask(TakeImag, IQTReal & d) 
+    { 
+    //Set all elements to zero
+    doTask(MultReal{0.},d);
+    }
 
 Real
-doTask(NormNoScale, const IQTReal& d);
+doTask(NormNoScale, IQTReal const& d);
 
 void
-doTask(PrintIT<IQIndex>& P, const IQTReal& d);
+doTask(PrintIT<IQIndex>& P, IQTReal const& d);
 
 void
-doTask(Write& W, const IQTReal& d);
+doTask(Write& W, IQTReal const& d);
 
 IQTReal::BlOf inline
 make_blof(long b, long o)

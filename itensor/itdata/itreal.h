@@ -161,7 +161,7 @@ void
 doTask(TakeReal, const ITReal& );
 
 void
-doTask(TakeImag, const ITReal& d, ManageStore& m);
+doTask(TakeImag, ITReal & d);
 
 void
 doTask(PrintIT<Index>& P, const ITReal& d);
