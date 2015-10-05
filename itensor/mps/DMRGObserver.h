@@ -121,7 +121,8 @@ measure(const Args& args)
                 }
             printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
             printf("    Eigs at center bond b=%d: ",N/2);
-            for(long j = 1; j <= std::min(center_eigs.size(),10l); ++j) 
+            auto ten = decltype(center_eigs.size())(10);
+            for(decltype(ten) j = 1; j <= std::min(center_eigs.size(),ten); ++j) 
                 {
                 auto eig = center_eigs(j);
                 if(eig < 1E-3) break;
