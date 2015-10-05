@@ -153,4 +153,26 @@ SECTION("ITensor SVD")
 
     }
 
+SECTION("IQTensor SVD")
+    {
+
+    SECTION("Regression Test 1")
+        {
+        //Oct 5, 2015: was encountering a 
+        //bad memory access bug with this code
+        IQIndex u("u",Index{"u+2",1},QN(+2),
+                      Index{"u00",1},QN( 0),
+                      Index{"u-2",1},QN(-2));
+        IQIndex v("v",Index{"v+2",1},QN(+2),
+                      Index{"v00",1},QN( 0),
+                      Index{"v-2",1},QN(-2));
+
+        auto S = randomTensor(QN(),u,v);
+        IQTensor U(u),D,V;
+        svd(S,U,D,V);
+
+        CHECK(norm(S-U*D*V) < 1E-12);
+        }
+    }
+
 }

@@ -752,7 +752,7 @@ contract(CProps const& p,
         SCOPED_TIMER(12)
         auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
         tref &= permute(A,p.PA);
-        aref = transpose(makeMatRefc(tref.data(),p.dmid,p.dleft));
+        aref = transpose(makeMatRefc(tref.store(),p.dmid,p.dleft));
         }
     else
         {
@@ -760,11 +760,11 @@ contract(CProps const& p,
         if(p.Atrans())
             {
             //println("  Transposing aref");
-            aref = transpose(makeMatRefc(A.data(),p.dmid,p.dleft));
+            aref = transpose(makeMatRefc(A.store(),p.dmid,p.dleft));
             }
         else
             {
-            aref = makeMatRefc(A.data(),p.dleft,p.dmid);
+            aref = makeMatRefc(A.store(),p.dleft,p.dmid);
             }
         }
 
@@ -775,7 +775,7 @@ contract(CProps const& p,
         SCOPED_TIMER(13)
         auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
         tref &= permute(B,p.PB);
-        bref = makeMatRefc(tref.data(),p.dmid,p.dright);
+        bref = makeMatRefc(tref.store(),p.dmid,p.dright);
         }
     else
         {
@@ -783,11 +783,11 @@ contract(CProps const& p,
         if(p.Btrans())
             {
             //println("  Transposing bref");
-            bref = transpose(makeMatRefc(B.data(),p.dright,p.dmid));
+            bref = transpose(makeMatRefc(B.store(),p.dright,p.dmid));
             }
         else
             {
-            bref = makeMatRefc(B.data(),p.dmid,p.dright);
+            bref = makeMatRefc(B.store(),p.dmid,p.dright);
             }
         }
 
@@ -807,17 +807,17 @@ contract(CProps const& p,
     if(p.permuteC())
         {
         newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
-        cref = makeMatRef(newC.data(),nrows(aref),ncols(bref));
+        cref = makeMatRef(newC.store(),nrows(aref),ncols(bref));
         }
     else
         {
         if(p.Ctrans()) 
             {
-            cref = transpose(makeMatRef(C.data(),ncols(bref),nrows(aref)));
+            cref = transpose(makeMatRef(C.store(),ncols(bref),nrows(aref)));
             }
         else
             {
-            cref = makeMatRef(C.data(),nrows(aref),ncols(bref));
+            cref = makeMatRef(C.store(),nrows(aref),ncols(bref));
             }
         }
 
@@ -1085,11 +1085,11 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
             auto offB = offset(B,bind);
             auto offC = offset(C,cind);
 
-            auto sA = makeMatRefc(A.data()+offA,Arow,Acol);
+            auto sA = makeMatRefc(A.store()+offA,Arow,Acol);
             if(nfo.tA) sA = transpose(sA);
-            auto sB = makeMatRefc(B.data() + offB,Brow,Bcol);
+            auto sB = makeMatRefc(B.store() + offB,Brow,Bcol);
             if(nfo.tB) sB = transpose(sB);
-            auto sC = makeMatRef(C.data()+offC,Crow,Ccol);
+            auto sC = makeMatRef(C.store()+offC,Crow,Ccol);
 
             if(nfo.Bfirst)
                 {

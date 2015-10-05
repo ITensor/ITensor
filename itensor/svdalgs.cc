@@ -38,7 +38,7 @@ MatrixRefc
 doTask(ToMatrixRefc const& T, 
        ITReal const& d)
     {
-    auto res = makeMatRef(d.data(),T.nrows,T.ncols);
+    auto res = makeMatRef(d.data(),d.size(),T.nrows,T.ncols);
     if(T.transpose) return transpose(res);
     return res;
     }
@@ -100,7 +100,7 @@ doTask(GetBlocks const& G,
         auto ncol = G.is[1][dblock[1]].m();
         R.i1 = dblock[0];
         R.i2 = dblock[1];
-        R.M = makeMatRef(d.data()+dio.offset,nrow,ncol);
+        R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
         }
     if(G.transpose) 
         {
@@ -348,6 +348,7 @@ svdRank2(IQTensor A,
          IQTensor & V,
          Args const& args)
     {
+    //PrintData(A);
     auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -500,13 +501,17 @@ svdRank2(IQTensor A,
                Dis(L,R),
                Vis(vI,dag(R));
 
+    //Print(Uis);
+    //Print(Dis);
+    //Print(Vis);
+
     IQTReal Ustore(Uis,QN()),
             Vstore(Vis,QN());
 
     IQTDiag Dstore(Dis,div(A));
 
     long n = 0;
-    for(decltype(Nblock) b = 0; b < Nblock; ++b)
+    for(auto b: count(Nblock))
         {
         auto& B = blocks[b];
         auto& UU = Umats.at(b);
@@ -516,19 +521,30 @@ svdRank2(IQTensor A,
         //to this_m==0 case above
         if(not B.M) continue;
 
+        //printfln("{B.i1,n} = {%d,%d}",B.i1,n);
+        //printfln("{n,n} = {%d,%d}",n,n);
+        //printfln("{B.i2,n} = {%d,%d}",B.i2,n);
+        //Print(uI[B.i1].m());
+        //Print(L[n].m());
+
         auto uind = stdx::make_array(B.i1,n);
         auto pU = getBlock(Ustore,Uis,uind);
-        auto Uref = makeMatRef(pU.data(),uI[B.i1].m(),L[n].m());
+        assert(pU.data() != nullptr);
+        auto Uref = makeMatRef(pU,uI[B.i1].m(),L[n].m());
+        //Print(Uref.range());
+        //Print(UU.range());
         Uref &= UU;
 
         auto dind = stdx::make_array(n,n);
         auto pD = getBlock(Dstore,Dis,dind);
+        assert(pD.data() != nullptr);
         auto Dref = makeVecRef(pD.data(),d.size());
         Dref &= d;
 
         auto vind = stdx::make_array(B.i2,n);
         auto pV = getBlock(Vstore,Vis,vind);
-        auto Vref = makeMatRef(pV.data(),vI[B.i2].m(),R[n].m());
+        assert(pV.data() != nullptr);
+        auto Vref = makeMatRef(pV.data(),pV.size(),vI[B.i2].m(),R[n].m());
         Vref &= VV;
 
         /////////DEBUG
