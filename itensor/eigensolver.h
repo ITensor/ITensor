@@ -6,7 +6,7 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "itensor/util/count.h"
 #include "itensor/iqtensor.h"
-#include "itensor/matrix/algs.h"
+#include "itensor/tensor/algs.h"
 
 
 namespace itensor {
@@ -55,19 +55,19 @@ complexDavidson(const BigMatrixT& A,
 
 int inline
 findEig(int which,        //zero-indexed; so is return value
-        const Vec& DR, //real part of eigenvalues
-        const Vec& DI) //imag part of eigenvalues
+        Vector const& DR, //real part of eigenvalues
+        Vector const& DI) //imag part of eigenvalues
     {
     const auto L = DR.size();
 #ifdef DEBUG
     if(DI.size() != L) Error("Vectors must have same length in findEig");
 #endif
-    Vec A2(L);
+    Vector A2(L);
     int n = -1;
 
     //Find maximum norm2 of all the eigs
     Real maxj = -1;
-    for(int ii = 1; ii <= L; ++ii) 
+    for(auto ii : count(L))
         {
         A2(ii) = sqr(DR(ii))+sqr(DI(ii));
         //A2(ii) = std::fabs(DR(ii));
@@ -82,7 +82,7 @@ findEig(int which,        //zero-indexed; so is return value
     for(int j = 1; j <= which; ++j)
         {
         Real nextmax = -1;
-        for(int ii = 1; ii <= L; ++ii)
+        for(auto ii : count(L))
             {
             if(maxj > A2(ii) && A2(ii) > nextmax)
                 {
@@ -176,16 +176,20 @@ complexDavidson(const BigMatrixT& A,
                        AV(actual_maxiter+2);
 
     //Storage for Matrix that gets diagonalized 
-    //set to NAN to ensure failure if we use uninitialized elements
-    Mat MR(actual_maxiter+2,actual_maxiter+2,NAN),
-        MI(actual_maxiter+2,actual_maxiter+2,NAN);
+    Matrix MR(actual_maxiter+2,actual_maxiter+2),
+           MI(actual_maxiter+2,actual_maxiter+2);
+#ifdef DEBUG
+    //Set to NAN to ensure failure if we use uninitialized elements
+    for(auto& el : MR) el = NAN;
+    for(auto& el : MI) el = NAN;
+#endif
 
-    Vec NCR(actual_maxiter+2),
-        NCI(actual_maxiter+2);
+    Vector NCR(actual_maxiter+2),
+           NCI(actual_maxiter+2);
 
     //Mref holds current projection of A into V's
-    auto MrefR = subMatrix(MR,1,1,1,1);
-    auto MrefI = subMatrix(MI,1,1,1,1);
+    auto MrefR = subMatrix(MR,0,1,0,1);
+    auto MrefI = subMatrix(MI,0,1,0,1);
 
     //Get diagonal of A to use later
     //auto Adiag = A.diag();
@@ -204,8 +208,8 @@ complexDavidson(const BigMatrixT& A,
         printfln("Initial Davidson energy = %.10f",initEn);
 
     size_t t = 0; //which eigenvector we are currently targeting
-    Vec D,DI;
-    Mat UR,UI;
+    Vector D,DI;
+    Matrix UR,UI;
 
     std::vector<Cplx> eigs(nget,Cplx(NAN,NAN));
 
@@ -264,7 +268,7 @@ complexDavidson(const BigMatrixT& A,
                 D *= -1;
                 //println("D = \n",D);
                 //println("UR = \n",UR);
-                DI.resize(D.size());
+                resize(DI,D.size());
                 std::fill(DI.begin(),DI.end(),0);
 
                 //Compute corresponding eigenvector
@@ -274,18 +278,18 @@ complexDavidson(const BigMatrixT& A,
                 //printfln("ii = %d",ii);
                 //print("Weights:"); for(int k = 0; k <= ii; ++k) print(" ",UR(1+w,1+k)); println();
 
-                phi_t = UR(1,1+w)*V[0];
-                q     = UR(1,1+w)*AV[0];
+                phi_t = UR(0,w)*V[0];
+                q     = UR(0,w)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    phi_t += UR(1+k,1+w)*V[k];
-                    q     += UR(1+k,1+w)*AV[k];
+                    phi_t += UR(k,w)*V[k];
+                    q     += UR(k,w)*AV[k];
                     }
                 }
             //printfln("ii=%d, partial q = \n%f",ii,q);
 
             //lambda is the w^th eigenvalue of M
-            lambda = Cplx{D(1+w),DI(1+w)};
+            lambda = Cplx{D(w),DI(w)};
 
             //Step B of Davidson (1975)
             //Calculate residual q
@@ -295,7 +299,7 @@ complexDavidson(const BigMatrixT& A,
                 q += (-lambda)*phi_t;
 
             //Fix sign
-            if(UR(1+w,1) < 0)
+            if(UR(w,0) < 0)
                 {
                 phi_t *= -1;
                 q *= -1;
@@ -472,21 +476,21 @@ complexDavidson(const BigMatrixT& A,
 
         //Step H of Davidson (1975)
         //Add new row and column to M
-        MrefR = subMatrix(MR,1,ni+1,1,ni+1);
-        MrefI = subMatrix(MI,1,ni+1,1,ni+1);
-        auto newColR = subVector(NCR,1,1+ni),
-             newColI = subVector(NCI,1,1+ni);
+        MrefR = subMatrix(MR,0,ni+1,0,ni+1);
+        MrefI = subMatrix(MI,0,ni+1,0,ni+1);
+        auto newColR = subVector(NCR,0,1+ni),
+             newColI = subVector(NCI,0,1+ni);
         for(int k = 0; k <= ni; ++k)
             {
             z = (dag(V.at(k))*AV.at(ni)).cplx();
-            newColR(k+1) = z.real();
-            newColI(k+1) = z.imag();
+            newColR(k) = z.real();
+            newColI(k) = z.imag();
             }
-        column(MrefR,ni+1) &= newColR;
-        column(MrefI,ni+1) &= newColI;
-        row(MrefR,ni+1) &= newColR;
-        row(MrefI,ni+1) &= newColI;
-        row(MrefI,ni+1) *= -1;
+        column(MrefR,ni) &= newColR;
+        column(MrefI,ni) &= newColI;
+        row(MrefR,ni) &= newColR;
+        row(MrefI,ni) &= newColI;
+        row(MrefI,ni) *= -1;
 
 
         if(!complex_diag && norm(newColI) > errgoal_)
@@ -505,24 +509,24 @@ complexDavidson(const BigMatrixT& A,
     for(size_t j = t+1; j < nget; ++j)
         {
         Error("Need to check this section for transpose diagSymmetric UR convention");
-        eigs.at(j) = Cplx(D(1+j),DI(1+j));
+        eigs.at(j) = Cplx(D(j),DI(j));
         
         auto& phi_j = phi.at(j);
-        bool complex_evec = (norm(column(UI,1+t)) > Approx0);
+        bool complex_evec = (norm(column(UI,t)) > Approx0);
 
-        auto Nr = UR.Nrows();
+        auto Nr = nrows(UR);
 
-        phi_j = UR(1,1+t)*V[0];
-        for(int k = 1; k < Nr; ++k)
+        phi_j = UR(0,t)*V[0];
+        for(auto k : count(Nr-1))
             {
-            phi_j += UR(1+k,1+t)*V[k];
+            phi_j += UR(k,1+t)*V[k];
             }
         if(complex_evec)
             {
-            phi_j += Complex_i*UI(1,1+t)*V[0];
-            for(int k = 1; k < Nr; ++k)
+            phi_j += Complex_i*UI(0,t)*V[0];
+            for(auto k : count(Nr-1))
                 {
-                phi_j += Complex_i*UI(1+k,1+t)*V[k];
+                phi_j += Complex_i*UI(k,t)*V[k];
                 }
             }
         }
@@ -530,11 +534,11 @@ complexDavidson(const BigMatrixT& A,
     if(debug_level_ >= 3)
         {
         //Check V's are orthonormal
-        Mat Vo_final(iter+1,iter+1,NAN); 
-        for(int r = 1; r <= iter+1; ++r)
-        for(int c = r; c <= iter+1; ++c)
+        Matrix Vo_final(iter+1,iter+1);
+        for(int r = 0; r < iter+1; ++r)
+        for(int c = r; c < iter+1; ++c)
             {
-            z = (dag(V[r-1])*V[c-1]).cplx();
+            z = (dag(V[r])*V[c]).cplx();
             Vo_final(r,c) = abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
