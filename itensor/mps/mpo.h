@@ -214,10 +214,14 @@ sum(const MPOt<Tensor>& L,
     return res;
     }
 
-
+//<psi|H|phi>
 template <class Tensor>
 void 
-psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H|phi>
+psiHphi(MPSt<Tensor> const& psi, 
+        MPOt<Tensor> const& H, 
+        MPSt<Tensor> const& phi, 
+        Real& re, 
+        Real& im)
     {
     auto N = H.N();
     if(phi.N() != N || psi.N() != N) Error("psiHphi: mismatched N");
@@ -236,7 +240,7 @@ psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi,
     L *= H.A(N);
     if(H.A(N+1)) L *= H.A(N+1);
 
-    auto z = (prime(psi.A(N))*L).cplx();
+    auto z = (dag(prime(psi.A(N)))*L).cplx();
     re = z.real();
     im = z.imag();
     }
