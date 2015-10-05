@@ -48,7 +48,10 @@ operator&=(MatrixRef const& a, MatrixRefc const& b)
     auto assign = [](Real& x, Real y) { x = y; };
     if(a.range()==b.range() && isContiguous(b))
         {
-        apply(a.data(),a.data()+a.size(),b.data(),assign);
+        auto pa = MAKE_SAFE_PTR(a.data(),a.store().size());
+        auto pae = MAKE_SAFE_PTR_OFFSET(a.data(),area(a.range()),a.store().size());
+        auto pb = MAKE_SAFE_PTR(b.data(),b.store().size());
+        apply(pa,pae,pb,assign);
         }
     else
         {
