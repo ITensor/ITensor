@@ -74,6 +74,26 @@ isFermionic() const
     auto num = std::count(opstr.begin(), opstr.end(), 'C');
     return num % 2;
     }
+
+string
+fermionicTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cdagup","Adagup"),
+           make_pair("Cup","Aup"),
+           make_pair("Cdagdn","Adagdn*Fup"),
+           make_pair("Cdn","Adn*Fup"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
     
 string
 startTerm(const std::string& op)
@@ -117,27 +137,24 @@ endTerm(const std::string& op)
 
     
 void SiteTermProd::
-rewriteFermionic(bool start)
+rewriteFermionic(bool isLeftF)
     {
-    if(!isFermionic())
-        return;
-        
     // Check that all the terms are on the same site
     int i = ops.front().i;
     for(SiteTerm &t : ops)
         if(t.i != i)
             Error("Rewriting of fermionic multi-site terms is not supported.");    
 
-    // It is enough to rewrite a single Fermionic operator
-    for(SiteTerm &t : ops)
-        if(t.isFermionic())
-            {
-            if(start)
-                t.op = startTerm(t.op);
-            else
-                t.op = endTerm(t.op);
-            break;
-            }
+    bool isSiteF = isFermionic();
+    if(isSiteF)
+        {
+        for(SiteTerm &t : ops)
+            if(t.isFermionic())
+                t.op = fermionicTerm(t.op);
+        }
+    
+    if((isLeftF && !isSiteF) || (!isLeftF && isSiteF))
+        ops.emplace_back("F", i);         
     }
 
 SiteTermProd SiteTermProd::
@@ -164,7 +181,14 @@ bool SiteTermProd::operator==(const SiteTermProd &other) const
 void SiteTermSum::
 operator+=(const std::pair<Complex, SiteTermProd> &term)
     {
-    opSum.push_back(term);
+    // Check if the SiteTermProd already appears in the sum and if yes, then only add the coefficients
+    const SiteTermProd &prod = term.second;
+    auto isEqualProd = [&prod](const std::pair<Complex, SiteTermProd> &t) { return t.second == prod; };
+    auto it = find_if(opSum.begin(), opSum.end(), isEqualProd);
+    if(it != opSum.end())
+        it->first += term.first;
+    else
+        opSum.push_back(term);
     }    
 
 
@@ -198,9 +222,36 @@ add(const std::string& op,
     //The following ensures operators remain
     //in site order within the vector "ops"
     auto it = opProd.ops.begin();
-    while(it != opProd.ops.end() && it->i < i) ++it;
-    if(it!= opProd.ops.end() && it->i == i) Error("AutoMPO: operators must be placed on distinct sites");
-    opProd.ops.emplace(it,op,i,x);
+    while(it != opProd.ops.end() && it->i <= i) ++it;
+    
+    // TODO: Restore behaviour to be compatible with SVD = false !!!
+    //if(it!= opProd.ops.end() && it->i == i) Error("AutoMPO: operators must be placed on distinct sites");
+    
+    // if the term is being inserted to the first place, move the coeff
+    SiteTerm t(op,i,x);
+    if(it == opProd.ops.begin() && Nops()>0)
+    {
+        t.coef = t.coef*coef();
+        opProd.ops.front().coef = 1;
+    }
+    
+    
+    // If the operator is fermionic and being inserted in between existing operators 
+    // need to check if an extra minus is required
+    if(it != opProd.ops.end() && t.isFermionic())
+    {
+        SiteTermProd right;
+        right.ops = std::vector<SiteTerm>(it, opProd.ops.end());
+        if(right.isFermionic())
+            {
+            if(it == opProd.ops.begin())
+                t.coef*=-1;
+            else
+                (*this) *= -1;
+            }
+    }
+    
+    opProd.ops.insert(it,t);
     }
 
 bool HTerm::
@@ -248,20 +299,47 @@ operator*=(Complex x)
     opProd.ops.front().coef *= x;
     return *this;
     }
+    
+HTerm& HTerm::
+operator+=(const HTerm& other)
+    {
+    if(Nops() == 0) Error("No operators in HTerm");
+    if(!proportialTo(other)) Error("Cannot add HTerms unless they are proportional");
+    opProd.ops.front().coef += other.coef();
+    return *this;
+    }
 
 bool HTerm::
 operator==(const HTerm& other) const
     {  
-    if(opProd != other.opProd) 
-        return false;
-
-    return true;
+    return proportialTo(other) && coef() == other.coef();
+    }
+    
+bool HTerm::
+proportialTo(const HTerm& other) const
+    {  
+    return opProd == other.opProd;
     }
 
 bool HTerm::
 operator!=(const HTerm& other) const
     {
     return !operator==(other);
+    }
+    
+void AutoMPO::
+add(const HTerm& t)
+    { 
+    if(abs(t.coef()) == 0)
+        return; 
+    
+    // Check if a proportional term already exists
+    auto isProportial = [&t](const HTerm &ht) {return ht.proportialTo(t); };
+    auto it = find_if(terms_.begin(), terms_.end(), isProportial);
+    if(it == terms_.end())
+        terms_.push_back(t); 
+    else
+        *it += t;
     }
 
 
@@ -483,8 +561,6 @@ plusAppend(std::string& s, const std::string& a)
         }
     }
 
-//#define SHOW_AUTOMPO
-
 // Note that n is 1-based site index
 void AutoMPO::AddToTempMPO(int n, const MatElement &elem)
     {
@@ -517,23 +593,29 @@ int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec)
     return vec.size();
     }
     
-void AutoMPO::AddToMPO(int n, Complex coeff, MatIndex ind, 
-                        const Index &row, const Index &col, const SiteTermProd &prod)
+void AutoMPO::AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &sum)
     {
-    std::string opstr = prod.opStr();
-
-    if(isReal(coeff))        
-        H_.Anc(n) += coeff.real() * sites_.op(opstr, n) * row(ind.first) * col(ind.second);       
-    else
-        H_.Anc(n) += coeff * sites_.op(opstr, n) * row(ind.first) * col(ind.second);
         
-#ifdef SHOW_AUTOMPO
-        std::string str = format("%.2f %s",coeff, opstr);
-        if(!mpoStr_[ind.first-1][ind.second-1].empty())
-            mpoStr_[ind.first-1][ind.second-1] += "+" + str;
-        else 
-            mpoStr_[ind.first-1][ind.second-1] = str;
-#endif
+    for(const std::pair<Complex, SiteTermProd> &term : sum.opSum)
+        {
+        Complex coeff = term.first;
+        const SiteTermProd &prod = term.second;
+        
+        clock_t dt1 = clock();
+        IQTensor op = sites_.op(prod.ops.front().op, n);
+        for(auto it = prod.ops.begin()+1; it != prod.ops.end(); it++)
+            op = multSiteOps(op, sites_.op(it->op, n));
+        dt1 = clock()-dt1;
+        dt1_ += dt1;
+        
+        clock_t dt2 = clock();            
+        if(isReal(coeff))        
+            H_.Anc(n) += coeff.real() * op * row(ind.first) * col(ind.second);       
+        else
+            H_.Anc(n) += coeff * op * row(ind.first) * col(ind.second);
+        dt2 = clock()-dt2;
+        dt2_ += dt2;
+        }
     }
 
 Complex ComplexMatrix::operator() (int i, int j) const
@@ -577,9 +659,12 @@ void AutoMPO::ConstructMPOUsingSVD()
     H_ = MPO(sites_);
     
     tempMPO_.resize(N);
+    finalMPO_.resize(N);
     leftPart_.resize(N);
     rightPart_.resize(N);
     Coeff_.resize(N);
+    
+    clock_t t = clock();
         
     // Construct left & right partials and the ceofficients matrix on each link 
     // as well as the temporary MPO
@@ -620,18 +705,23 @@ void AutoMPO::ConstructMPOUsingSVD()
             // Place the coefficient of the HTerm when the term starts
             Complex c = j==0 ? ht.coef() : 1;
             
+            bool leftF = left.isFermionic();
             if(onsite.ops.empty())
                 {
-                if(left.isFermionic())
+                if(leftF)
                     onsite.ops.emplace_back(SiteTerm("F",n));
                 else 
                     onsite.ops.emplace_back(SiteTerm("Id",n));
                 }
-            onsite.rewriteFermionic(!left.isFermionic());
+            else
+                onsite.rewriteFermionic(leftF);
             MatElement elem({j, k}, c, onsite);
             AddToTempMPO(n, elem);
             }
-            
+    
+    t = clock() - t;
+    println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to construct the temporary MPO");
+    
 #ifdef SHOW_AUTOMPO
     println("TempMPO Elements:");
     for(int n=1; n<=N; n++)
@@ -671,12 +761,10 @@ void AutoMPO::ConstructMPOUsingSVD()
     // Note that for the MPO matrix on site n we need the SVD on both the previous link and the following link
     ComplexMatrix V_n, V_npp;
     int d_n = 0, d_npp = 0; 	// d_n = num of non-zero singular values of Coeff_[n]
-    
     int max_d = 0;
 
-    vector<Index> links(N+1);
-    links.at(0) = Index(nameint("Hl",0),d_n+2);
-
+    t = clock();
+    
     for(int n=1; n<=N; n++)
         {
             
@@ -686,6 +774,8 @@ void AutoMPO::ConstructMPOUsingSVD()
             d_npp = 0;
         else
             {
+            clock_t svdt = clock();
+            
             Vector D;
             if(Coeff_.at(n).isComplex())
                 {                    
@@ -697,82 +787,125 @@ void AutoMPO::ConstructMPOUsingSVD()
                 Matrix U;                
                 SVD(Coeff_.at(n).Re, U, D, V_npp.Re);
                 }
-            Real epsilon = 1E-14;
+
+            svdt = clock() - svdt;
+            println("SVD for site ", n, " took ", ((float)svdt)/CLOCKS_PER_SEC, " seconds");
+
+            Real epsilon = 1E-12;
             auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
             auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
             d_npp=firstApproxZero - D.begin();
             }
             
-        links.at(n) = Index(nameint("Hl",n),d_npp+2);
-        auto &row = links.at(n-1),
-             &col = links.at(n);
-
-        H_.Anc(n) = ITensor(sites_.si(n),sites_.siP(n),row,col);
-
-        H_.Anc(n) += sites_.op("Id",n) * row(1) * col(1);
-        H_.Anc(n) += sites_.op("Id",n) * row(2) * col(2);
-
-#ifdef SHOW_AUTOMPO
-        mpoStr_[0][0] = "1";
-        mpoStr_[1][1] = "1";
-#endif        
+        println("Num of elements in temporary MPO for site ", n, " is ", tempMPO_.at(n-1).size());
         
+        clock_t sitet = clock();
+        
+        finalMPO_.at(n-1).resize(d_n+2);
+        for(auto &v : finalMPO_.at(n-1))
+            v.resize(d_npp+2);
+            
+        println("Size of MPO matrix for site ", n, " is (", d_n+2, ", ", d_npp+2, ")");
+        
+        SiteTermProd prodId;
+        prodId.ops.emplace_back("Id", n);
+        
+        finalMPO_.at(n-1).at(0).at(0) += std::pair<Complex, SiteTermProd>(1, prodId);
+        finalMPO_.at(n-1).at(1).at(1) += std::pair<Complex, SiteTermProd>(1, prodId);
+            
         Complex Zero(0,0);
-
         for(const MatElement &elem: tempMPO_.at(n-1))
             {
             MatIndex ind = std::get<0>(elem);
             int k = ind.first;
             int l = ind.second;
-            Complex c = std::get<1>(elem);            
+            Complex c = std::get<1>(elem);
+            SiteTermProd prod = std::get<2>(elem);
+    
             if(l==0 && k==0)	// on-site terms
-                AddToMPO(n, c, {2,1}, row, col, std::get<2>(elem));
+                finalMPO_.at(n-1).at(1).at(0) += std::pair<Complex, SiteTermProd>(c, prod);
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp; j++)
                     if(V_npp(j,l) != Zero) // 1-based access of matrix elements
-                        AddToMPO(n, c*V_npp(j,l), {2,2+j}, row, col, std::get<2>(elem));
+                        finalMPO_.at(n-1).at(1).at(1+j) += std::pair<Complex, SiteTermProd>(c*V_npp(j,l), prod);
+                        
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n; i++)
                     if(V_n(i,k) != Zero) // 1-based access of matrix elements
-                        AddToMPO(n, c*V_n(i,k), {2+i,1}, row, col,std::get<2>(elem));
+                        finalMPO_.at(n-1).at(1+i).at(0) += std::pair<Complex, SiteTermProd>(c*V_n(i,k), prod);
                 }
             else 
                 {
                 for(int i=1; i<=d_n; i++)
                     for(int j=1; j<=d_npp; j++) 
                         if( (V_n(i,k) != Zero)  && (V_npp(j,l) != Zero) ) // 1-based access of matrix elements
-                            AddToMPO(n, c*V_n(i,k)*V_npp(j,l), {2+i,2+j}, row, col, std::get<2>(elem));
+                            finalMPO_.at(n-1).at(1+i).at(1+j) += std::pair<Complex, SiteTermProd>(c*V_n(i,k)*V_npp(j,l), prod);
                 }
             }
+            sitet = clock() - sitet;
+            println("It took ", ((float)sitet)/CLOCKS_PER_SEC, " seconds to construct the final MPO for site ", n);
 
-#ifdef SHOW_AUTOMPO
-        if(n <= 10 or n == N)
-            {
-            for(int r = 0; r < d_n+2; ++r, println())
-            for(int c = 0; c < d_npp+2; ++c)
-                {
-                print(mpoStr_[r][c],"\t");
-                if(mpoStr_[r][c].length() < 8 && c == 1) 
-                print("\t");
-                // reset
-                mpoStr_[r][c] = "";
-                }
-            println("=========================================");
-            }
-#endif    
         // Store SVD computed at this step for next link
         V_n = V_npp;
         d_n = d_npp;        
         max_d = max(max_d, d_n);
         }
+        
+        t = clock() - t;
+        println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to construct the final MPO");
+        
+        println("Maximal dimension of MPO is ", max_d+2);
+        
+#ifdef SHOW_AUTOMPO
+        for(int n=1; n<=N; n++)
+            {
+            for(unsigned r = 0; r < finalMPO_.at(n-1).size(); ++r, println())
+                for(unsigned c = 0; c < finalMPO_.at(n-1).at(r).size(); ++c)
+                    print(finalMPO_.at(n-1).at(r).at(c), "\t");
+            println("=========================================");
+            }
+#endif    
+
+        t = clock();
+        
+        vector<Index> links(N+1);
+        links.at(0) = Index(nameint("Hl",0),finalMPO_.at(0).size());
+
+        for(int n=1; n<=N; n++)
+            {
+            int nr = finalMPO_.at(n-1).size();
+            int nc = n == N ? 2 : finalMPO_.at(n).size();
+            println("Site ", n, ": nr=", nr, ", nc=", nc);
+            
+            links.at(n) = Index(nameint("Hl",n),nc);
+            auto &row = links.at(n-1),
+                 &col = links.at(n);
+
+            H_.Anc(n) = ITensor(sites_.si(n),sites_.siP(n),row,col);
+                
+            clock_t sitet = clock();
+            
+            for(int r = 1; r <= nr; ++r)
+                for(int c = 1; c <= nc; ++c)
+                    AddToMPO(n, {r,c}, row, col, finalMPO_.at(n-1).at(r-1).at(c-1));    
+
+            sitet = clock() - sitet;
+            println("It took ", ((float)sitet)/CLOCKS_PER_SEC, " seconds to construct the MPO matrix for site ", n);
+
+        }
+        
+    t = clock() - t;
+    println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to construct the MPO matrices");
+    
+    println("Operators multiplication took ", ((float)dt1_)/CLOCKS_PER_SEC, " seconds");
+    println("Operators addition took ", ((float)dt2_)/CLOCKS_PER_SEC, " seconds");
+
     
     H_.Anc(1) *= ITensor(links.at(0)(2));
     H_.Anc(N) *= ITensor(links.at(N)(1));
-    
-    println("Maximal dimension of MPO is ", max_d+2);
     }
 
 template<>

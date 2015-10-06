@@ -85,7 +85,7 @@ struct SiteTermProd
     
     // Works (and is used) only for single-site terms
     // If the term is fermionic, rewrite one of the fermionic operators using the Jordan-Wigner string    
-    void rewriteFermionic(bool start);
+    void rewriteFermionic(bool isleftF);
     
     SiteTermProd operator*(const SiteTermProd &other) const;
     
@@ -150,7 +150,13 @@ struct HTerm
 
     HTerm&
     operator*=(Complex x);
+    
+    HTerm&
+    operator+=(const HTerm& other);
 
+    bool
+    proportialTo(const HTerm& other) const;
+    
     bool
     operator==(const HTerm& other) const;
 
@@ -182,19 +188,18 @@ class AutoMPO
     std::vector<ComplexMatrix> Coeff_;
 
     std::vector<std::vector<MatElement>> tempMPO_;
+    std::vector<std::vector<std::vector<SiteTermSum>>> finalMPO_;
     
     MPO H_;
     bool svd_;
     
-#ifdef SHOW_AUTOMPO
-    std::string mpoStr_[100][100];
-#endif
+    clock_t dt1_, dt2_;
 
     void AddToTempMPO(int n, const MatElement &elem);
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
-    void AddToMPO(int n, Complex coeff, MatIndex ind, const Index &row, const Index &col, const SiteTermProd &prod);
+    void AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &sum);
     
     enum State { New, Op };
 
@@ -242,7 +247,7 @@ class AutoMPO
     public:
 
     AutoMPO(const SiteSet& sites, const Args& args) 
-        : sites_(sites), svd_(args.getBool("SVD",false))
+        : sites_(sites), svd_(args.getBool("SVD",false)), dt1_(0), dt2_(0)
         { }
 
     const SiteSet&
@@ -262,7 +267,7 @@ class AutoMPO
     operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
+    add(const HTerm& t);
 
     void
     reset() { terms_.clear(); }
