@@ -317,7 +317,7 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
                     //Print Indices of this block
                     for(auto i : count(rank))
                         {
-                        if(i > 0) P.s << ", ";
+                        if(i > 0) P.s << " ";
                         P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
                         }
                     P.s << "\n";
