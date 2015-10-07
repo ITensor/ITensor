@@ -207,18 +207,26 @@ uncombine(IQTReal     const& d,
           bool              own_data)
     {
     using size_type = decltype(rank(dis));
-    //auto const& cind = Cis[0];
+    auto& cind = Cis[0];
     auto dr = rank(dis);
     auto cr = rank(Cis);
     auto ncomb = cr-1;
     auto nr = dr-1+ncomb;
 
-    //Build new index set.
-    //combine routine always puts combined IQIndex
-    //at front, so restore combined indices there
+    decltype(dr) jc = 0;
     auto newind = IQIndexSetBuilder(nr);
-    for(auto n : count(1,cr)) newind.nextIndex(Cis[n]);
-    for(auto n : count(1,dr)) newind.nextIndex(dis[n]);
+    for(auto n : count(dr)) 
+        {
+        if(dis[n] == cind)
+            {
+            jc = n;
+            for(auto n : count(1,cr)) newind.nextIndex(Cis[n]);
+            }
+        else
+            {
+            newind.nextIndex(dis[n]);
+            }
+        }
     Nis = newind.build();
 
     //Allocate new data
@@ -237,7 +245,7 @@ uncombine(IQTReal     const& d,
         drange.init(make_indexdim(dis,dblock));
         auto dref = makeTenRef(d.data(),io.offset,d.size(),&drange);
 
-        auto n = dblock[0];
+        auto n = dblock[jc];
 
         for(auto o : index(C.store_))
             {
@@ -249,33 +257,35 @@ uncombine(IQTReal     const& d,
             if(br.block != size_type(n)) continue;
 
             //"invert" offset o into 
-            //first ncomb indices of nblock
+            //indices of nblock corresponding to
+            //newly restored uncombined indices
+            //using algorithm
             //similar to computeBlockInd
             for(auto m : count(ncomb-1))
                 {
-                nblock[m] = o % Cis[1+m].nindex();
-                o = (o-nblock[m])/Cis[1+m].nindex();
+                nblock[jc+m] = o % Cis[1+m].nindex();
+                o = (o-nblock[jc+m])/Cis[1+m].nindex();
                 }
-            nblock[ncomb-1] = o;
+            nblock[jc+ncomb-1] = o;
+
             //fill out rest of nblock
-            for(size_type m = ncomb, p = 1; p < dr; ++m, ++p)
-                {
-                nblock[m] = dblock[p];
-                }
+            for(auto m : count(jc)) nblock[m] = dblock[m];
+            for(auto m : count(1+jc,dr)) nblock[ncomb+m-1] = dblock[m];
+
             //Get subblock of d data
-            auto dsub = subIndex(dref,0,br.start,br.start+br.extent);
+            auto dsub = subIndex(dref,jc,br.start,br.start+br.extent);
 
             nrange.init(make_indexdim(Nis,nblock));
-            auto nref = TensorRef(getBlock(nd,Nis,nblock),&nrange);
+            auto nb = getBlock(nd,Nis,nblock);
+            assert(nb.data() != nullptr);
+            auto nref = TensorRef(nb,&nrange);
+            auto nslice = groupInds(nref,jc,jc+ncomb);
 
-            auto slice = groupInds(nref,0,ncomb);
-            groupInds(nref,0,ncomb) &= dsub;
+            nslice &= dsub;
 
             } //for br in C storage
         } //for blocks of d
-
-
-    }
+    }//uncombine
 
 void
 doTask(Contract<IQIndex>      & C,
