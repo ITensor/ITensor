@@ -251,9 +251,9 @@ doTask(Contract<IQIndex>& Con,
                          do_contract);
     STOP_TIMER(20)
 
-    //START_TIMER(21)
-    //Con.computeScalefac(C);
-    //STOP_TIMER(21)
+    START_TIMER(21)
+    Con.computeScalefac(C);
+    STOP_TIMER(21)
     }
 
 void
