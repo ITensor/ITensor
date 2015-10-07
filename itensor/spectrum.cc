@@ -13,70 +13,69 @@ namespace itensor {
 
 struct OrderSecond
     {
-    using value_type = pair<QN,Real>;
-
+    template<typename PairType>
     bool
-    operator()(const value_type& i, const value_type& j) const 
+    operator()(PairType const& i, PairType const& j) const 
         { 
         return i.second > j.second; 
         }
     };
 
 Spectrum::
-Spectrum(const Args& args) 
+Spectrum(Args const& args) 
     :
     truncerr_(NAN)
     { 
     computeTruncerr(args);
     }
 
-Spectrum::
-Spectrum(const ITensor& D, const Args& args)
-    :
-    truncerr_(0)
-    {
-    Error("Spectrum ITensor constructor not yet implemented");
-    //if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
-    //eigs_ = D.diag();
-    //for(auto n = 1l; n <= eigs_.size(); ++n)
-    //    eigs_(n) = sqr(eigs_(n));
-    //computeTruncerr(args);
-    }
+//Spectrum::
+//Spectrum(ITensor const& D, Args const& args)
+//    :
+//    truncerr_(0)
+//    {
+//    Error("Spectrum ITensor constructor not yet implemented");
+//    //if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
+//    //eigs_ = D.diag();
+//    //for(auto n = 1l; n <= eigs_.size(); ++n)
+//    //    eigs_(n) = sqr(eigs_(n));
+//    //computeTruncerr(args);
+//    }
+//
+//Spectrum::
+//Spectrum(const IQTensor& D, const Args& args)
+//    :
+//    truncerr_(0)
+//    {
+//    Error("Spectrum IQTensor constructor not yet implemented");
+//    //std::vector<OrderSecond::value_type> eigs;
+//    //eigs.reserve(D.indices().front().m());
+//
+//    //for(const ITensor& t : D.blocks())
+//    //    {
+//    //	if(t.type() != ITensor::Diag)
+//    //		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
+//    //    const Vector svals = t.diag();
+//    //    const QN q = itensor::qn(D,t.indices().front());
+//    //    for(int n = 1; n <= svals.size(); ++n)
+//    //        {
+//    //        eigs.push_back(std::make_pair(q,sqr(svals(n))));
+//    //        }
+//    //    }
+//    //std::sort(eigs.begin(),eigs.end(),OrderSecond());
+//
+//    //qns_.resize(eigs.size());
+//    //eigs_.ReDimension(eigs.size());
+//    //for(size_t j = 0; j < eigs.size(); ++j)
+//    //    {
+//    //    qns_.at(j) = eigs.at(j).first;
+//    //    eigs_[j] = eigs.at(j).second;
+//    //    }
+//    //computeTruncerr(args);
+//    }
 
 Spectrum::
-Spectrum(const IQTensor& D, const Args& args)
-    :
-    truncerr_(0)
-    {
-    Error("Spectrum IQTensor constructor not yet implemented");
-    //std::vector<OrderSecond::value_type> eigs;
-    //eigs.reserve(D.indices().front().m());
-
-    //for(const ITensor& t : D.blocks())
-    //    {
-    //	if(t.type() != ITensor::Diag)
-    //		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
-    //    const Vector svals = t.diag();
-    //    const QN q = itensor::qn(D,t.indices().front());
-    //    for(int n = 1; n <= svals.size(); ++n)
-    //        {
-    //        eigs.push_back(std::make_pair(q,sqr(svals(n))));
-    //        }
-    //    }
-    //std::sort(eigs.begin(),eigs.end(),OrderSecond());
-
-    //qns_.resize(eigs.size());
-    //eigs_.ReDimension(eigs.size());
-    //for(size_t j = 0; j < eigs.size(); ++j)
-    //    {
-    //    qns_.at(j) = eigs.at(j).first;
-    //    eigs_[j] = eigs.at(j).second;
-    //    }
-    //computeTruncerr(args);
-    }
-
-Spectrum::
-Spectrum(const Vector& eigs, const Args& args)
+Spectrum(Vector const& eigs, Args const& args)
     :
     eigs_(eigs)
     {
@@ -85,9 +84,9 @@ Spectrum(const Vector& eigs, const Args& args)
 
 
 Spectrum::
-Spectrum(const Vector& eigs, 
-         const QNStorage& qns,
-         const Args& args)
+Spectrum(Vector    const& eigs, 
+         QNStorage const& qns,
+         Args      const& args)
     :
     eigs_(eigs),
     qns_(qns)
@@ -133,21 +132,19 @@ write(std::ostream& s) const
     }
 
 void Spectrum::
-computeTruncerr(const Args& args)
+computeTruncerr(Args const& args)
     {
     if(args.defined("Truncerr"))
         {
         truncerr_ = args.getReal("Truncerr");
+        return;
         }
-    else
+    if(eigs_.size() > 0)
         {
-        if(eigs_.size() > 0)
-            {
-        	// Note: This only makes sense if the spectrum was normalized before truncation.
-        	// Otherwise this will mostly return zero.
-            truncerr_ = 1.-sumels(eigs_);
-            if(truncerr_ < 0) truncerr_ = 0;
-            }
+        // Note: This only makes sense if the spectrum was normalized before truncation.
+        // Otherwise this will mostly return zero.
+        truncerr_ = 1.-sumels(eigs_);
+        if(truncerr_ < 0) truncerr_ = 0;
         }
     }
 

@@ -20,29 +20,36 @@ namespace itensor {
 class Spectrum
     {
     public:
-
     using QNStorage = std::vector<QN>;
+    private:
+    Vector eigs_;
+    Real truncerr_;
+    QNStorage qns_;
+    public:
 
-    Spectrum(const Args& args = Global::args());
+    Spectrum(Args const& args = Args::global());
 
-    Spectrum(const ITensor& D, const Args& args = Global::args());
+    Spectrum(Vector const& eigs, Args const& args = Args::global());
 
-    Spectrum(const IQTensor& D, const Args& args = Global::args());
+    Spectrum(Vector const& eigs, 
+             QNStorage const& qns,
+             Args const& args = Args::global());
 
-    Spectrum(const Vector& eigs, const Args& args = Global::args());
+    //Spectrum(ITensor const& D, Args const& args = Args::global());
 
-    Spectrum(const Vector& eigs, 
-             const QNStorage& qns,
-             const Args& args = Global::args());
+    //Spectrum(IQTensor const& D, Args const& args = Args::global());
 
+
+    //1-indexed
     QN
     qn(int n) const;
 
     const QNStorage&
     qns() const { return qns_; }
 
+    //1-indexed
     Real
-    eig(int n) const { return eigs_(n); }
+    eig(int n) const { return eigs_(n-1); }
 
     const Vector&
     eigs() const { return eigs_; }
@@ -61,7 +68,7 @@ class Spectrum
     // Other Methods
     //
 
-    const Vector& 
+    Vector const& 
     eigsKept() const { return eigs_; }
 
     int
@@ -71,7 +78,7 @@ class Spectrum
     truncerr(Real val) { truncerr_ = val; }
 
     void 
-    eigsKept(const Vector& val) { eigs_ = val; }
+    eigsKept(Vector const& val) { eigs_ = val; }
 
     void 
     eigsKept(Vector&& val) { eigs_ = std::move(val); }
@@ -82,22 +89,14 @@ class Spectrum
     write(std::ostream& s) const;
 
     private:
-
-    /////////////////
-
-    Vector eigs_;
-    Real truncerr_;
-    std::vector<QN> qns_;
-
-    /////////////////
-
+     
     void
     computeTruncerr(const Args& args);
 
     }; //class Spectrum
 
 std::ostream& 
-operator<<(std::ostream & s, const Spectrum& spec);
+operator<<(std::ostream & s,Spectrum const& spec);
 
 } //namespace itensor
 
