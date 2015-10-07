@@ -167,8 +167,6 @@ void TermSum::operator+=(const Term &term)
         sum.push_back(term);
     }    
 
-// TODO: Restore behaviour to be compatible with SVD = false !!!
-// (operators are expected to be placed on distinct sites)  
 void HTerm::
 add(const std::string& op,
     int i,
@@ -810,10 +808,13 @@ toMPO<IQTensor>(const AutoMPO& am,
     const auto checkqn = args.getBool("CheckQNs",true);
 
     for(auto& t : am.terms())
-    if(t.Nops() > 2) 
-        {
-        Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
-        }
+        if(t.Nops() > 2) 
+            Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO when SVD option is set to false.");
+        else if(t.Nops() > 1)
+            {
+                if(t.first().i == t.last().i)
+                    Error("AutoMPO: operators must be placed on distinct sites when SVD option is set to false.");
+            }
 
     //Special SiteTerm objects indicating either
     //a string of identities coming from the first
