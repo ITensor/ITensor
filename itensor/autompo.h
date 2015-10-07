@@ -54,13 +54,10 @@ struct SiteTerm
     {
     std::string op;
     int i;
-    Complex coef;
 
     SiteTerm();
 
-    SiteTerm(const std::string& op,
-             int i,
-             Real coef = 1);
+    SiteTerm(const std::string& op, int i);
              
     bool isFermionic() const;
 
@@ -69,52 +66,44 @@ struct SiteTerm
 
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
-
-    bool
-    proportialTo(const SiteTerm& other) const;
     };
 
-struct SiteTermProd
+typedef std::vector<SiteTerm> SiteTermProd;
+
+std::string OpString(const SiteTermProd &prod);
+    
+// Check if the number of fermionic operators in the term is even or odd
+bool IsFermionic(const SiteTermProd &prod);
+    
+// Rewrites a fermionic single site product using the Jordan-Wigner string
+// Adds an on-site FermiPhase operator if needed
+void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic);
+
+SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
+
+struct Term
     {
-    std::vector<SiteTerm> ops;
+    Complex coef;
+    SiteTermProd ops;
     
-    std::string opStr() const;
+    Term() : coef(1) {};
     
-    // Check if the number of fermionic operators in the term is even or odd
-    bool isFermionic() const;
+    Term(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
     
-    // Works (and is used) only for single-site terms
-    // If the term is fermionic, rewrite one of the fermionic operators using the Jordan-Wigner string    
-    void rewriteFermionic(bool isleftF);
+    bool operator==(const Term &other) const {return coef == other.coef && ops == other.ops; }
+    };
     
-    SiteTermProd operator*(const SiteTermProd &other) const;
+struct TermSum
+    {
+    std::vector<Term> sum;
     
-    bool operator==(const SiteTermProd& other) const;
-    bool operator!=(const SiteTermProd& other) const {return !operator==(other);};
+    void operator+=(const Term &t);
     };
 
-struct SiteTermSum
+struct HTerm : Term
     {
-    std::vector<std::pair<Complex, SiteTermProd>> opSum;
-    
-    void operator+=(const std::pair<Complex, SiteTermProd> &term);
-    };
-
-struct HTerm
-    {
-    SiteTermProd opProd;
-
-    HTerm();
-
-    HTerm(const std::string& op1,
-          int i1,
-          Real x = 1);
-
-    HTerm(const std::string& op1_,
-          int i1_,
-          const std::string& op2_,
-          int i2_,
-          Real x_ = 1);
+        
+    HTerm() {};
 
     void
     add(const std::string& op,
@@ -122,16 +111,16 @@ struct HTerm
         Real x = 1);
 
     explicit
-    operator bool() const { return !opProd.ops.empty(); }
+    operator bool() const { return !ops.empty(); }
 
     int
-    Nops() const { return opProd.ops.size(); }
+    Nops() const { return ops.size(); }
 
     const SiteTerm&
-    first() const { return opProd.ops.front(); }
+    first() const { return ops.front(); }
 
     const SiteTerm&
-    last() const { return opProd.ops.back(); }
+    last() const { return ops.back(); }
 
     bool
     startsOn(int i) const;
@@ -142,26 +131,38 @@ struct HTerm
     bool
     contains(int i) const;
 
-    Complex
-    coef() const;
-
     HTerm&
     operator*=(Real x);
 
     HTerm&
     operator*=(Complex x);
-    
-    HTerm&
-    operator+=(const HTerm& other);
 
     bool
-    proportialTo(const HTerm& other) const;
+    proportionalTo(const HTerm& other) const;
     
     bool
     operator==(const HTerm& other) const;
 
     bool
     operator!=(const HTerm& other) const;
+    };
+
+struct MatIndex
+    {
+    int row, col;
+    MatIndex(int r, int c) : row(r), col(c) {};
+    
+    bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
+    };
+
+struct MatElement
+    {
+    MatIndex ind;
+    Term term;
+    
+    MatElement(MatIndex index, Term t) : ind(index), term(t) {};
+    
+    bool operator==(const MatElement &other) const {return ind == other.ind && term == other.term; }
     };
 
 struct ComplexMatrix
@@ -172,13 +173,9 @@ struct ComplexMatrix
     bool isEmpty() const { return (!Re.Storage() && !Im.Storage()); };
     bool isComplex() const { return Im.Storage(); };
     void insert(int i, int j, Complex val);
-    Complex  operator() (int i, int j) const;
+    Complex operator() (int i, int j) const;
     };
-
-typedef std::pair<int,int> MatIndex;
-
-typedef std::tuple<MatIndex, Complex, SiteTermProd> MatElement;
-
+    
 class AutoMPO
     {
     const SiteSet& sites_;
@@ -188,7 +185,7 @@ class AutoMPO
     std::vector<ComplexMatrix> Coeff_;
 
     std::vector<std::vector<MatElement>> tempMPO_;
-    std::vector<std::vector<std::vector<SiteTermSum>>> finalMPO_;
+    std::vector<std::vector<std::vector<TermSum>>> finalMPO_;
     
     MPO H_;
     bool svd_;
@@ -199,7 +196,7 @@ class AutoMPO
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
-    void AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &sum);
+    void AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const TermSum &sum);
     
     enum State { New, Op };
 
@@ -281,7 +278,7 @@ std::ostream&
 operator<<(std::ostream& s, const SiteTermProd& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTermSum& t);
+operator<<(std::ostream& s, const TermSum& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const HTerm& t);

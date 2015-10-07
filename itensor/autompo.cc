@@ -23,26 +23,18 @@ bool
 isApproxReal(const Complex& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
 
 SiteTerm::
-SiteTerm() : i(-1), coef(0) { }
+SiteTerm() : i(-1) { }
 
 SiteTerm::
 SiteTerm(const std::string& op_,
-         int i_,
-         Real coef_)
+         int i_)
     :
     op(op_),
-    i(i_),
-    coef(coef_)
+    i(i_)
     { }
 
 bool SiteTerm::
 operator==(const SiteTerm& other) const
-    {
-    return (op == other.op && i == other.i && abs(coef-other.coef) < 1E-12);
-    }
-
-bool SiteTerm::
-proportialTo(const SiteTerm& other) const
     {
     return (op == other.op && i == other.i);
     }
@@ -54,23 +46,21 @@ isFermionic() const
     return false;
     }
 
-std::string SiteTermProd::
-opStr() const
+std::string OpString(const SiteTermProd &prod)
     {
-    if(ops.empty())
+    if(prod.empty())
         return "";
 
     std::string opstr;
-    for(auto t = ops.begin(); t != ops.end()-1; t++)
+    for(auto t = prod.begin(); t != prod.end()-1; t++)
         opstr += t->op + "*";
-    opstr += ops.back().op;
+    opstr += prod.back().op;
     return opstr;
     }
     
-bool SiteTermProd::
-isFermionic() const
+bool IsFermionic(const SiteTermProd &prod)
     {
-    std::string opstr = opStr();
+    std::string opstr = OpString(prod);
     auto num = std::count(opstr.begin(), opstr.end(), 'C');
     return num % 2;
     }
@@ -136,84 +126,49 @@ endTerm(const std::string& op)
     }
 
     
-void SiteTermProd::
-rewriteFermionic(bool isLeftF)
+void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
     {
-    // Check that all the terms are on the same site
-    int i = ops.front().i;
-    for(SiteTerm &t : ops)
+    if(prod.empty())
+        Error("Empty product in RewriteFermionic is not expected.");    
+    
+    int i = prod.front().i;
+    for(const SiteTerm &t : prod)
         if(t.i != i)
-            Error("Rewriting of fermionic multi-site terms is not supported.");    
-
-    bool isSiteF = isFermionic();
-    if(isSiteF)
+            Error("Multi-site product in RewriteFermionic is not expected.");    
+            
+    bool isSiteFermionic = IsFermionic(prod);
+    if(isSiteFermionic)
         {
-        for(SiteTerm &t : ops)
+        for(SiteTerm &t : prod)
             if(t.isFermionic())
                 t.op = fermionicTerm(t.op);
         }
     
-    if((isLeftF && !isSiteF) || (!isLeftF && isSiteF))
-        ops.emplace_back("F", i);         
+    if((isleftFermionic && !isSiteFermionic) || (!isleftFermionic && isSiteFermionic))
+        prod.emplace_back("F", i);         
     }
 
-SiteTermProd SiteTermProd::
-operator*(const SiteTermProd &other) const
+SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
     {
-    SiteTermProd prod(*this);
-    for(SiteTerm op : other.ops)
-        prod.ops.push_back(op);
+    SiteTermProd prod = first;
+    prod.insert( prod.end(), second.begin(), second.end() );
     return prod;
     }
     
-bool SiteTermProd::operator==(const SiteTermProd &other) const
+void TermSum::operator+=(const Term &term)
     {
-    if(ops.size() != other.ops.size())
-        return false;
-
-    for(size_t n = 0; n < ops.size(); ++n)
-        if(!ops[n].proportialTo(other.ops.at(n))) 
-            return false;
-
-    return true;
-    }
-    
-void SiteTermSum::
-operator+=(const std::pair<Complex, SiteTermProd> &term)
-    {
-    // Check if the SiteTermProd already appears in the sum and if yes, then only add the coefficients
-    const SiteTermProd &prod = term.second;
-    auto isEqualProd = [&prod](const std::pair<Complex, SiteTermProd> &t) { return t.second == prod; };
-    auto it = find_if(opSum.begin(), opSum.end(), isEqualProd);
-    if(it != opSum.end())
-        it->first += term.first;
+    // Check if the Term already appears in the sum and if yes, then only add the coefficients
+    SiteTermProd ops = term.ops;
+    auto isEqualProd = [&ops](const Term &t) { return t.ops == ops; };
+    auto it = find_if(sum.begin(), sum.end(), isEqualProd);
+    if(it != sum.end())
+        it->coef += term.coef;
     else
-        opSum.push_back(term);
+        sum.push_back(term);
     }    
 
-
-HTerm::
-HTerm() { }
-
-HTerm::
-HTerm(const std::string& op1_,
-      int i1_,
-      Real x_)
-    { 
-    add(op1_,i1_,x_);
-    }
-
-HTerm::
-HTerm(const std::string& op1_,
-      int i1_,
-      const std::string& op2_,
-      int i2_,
-      Real x_)
-    { 
-    add(op1_,i1_,x_);
-    add(op2_,i2_);
-    }
-
+// TODO: Restore behaviour to be compatible with SVD = false !!!
+// (operators are expected to be placed on distinct sites)  
 void HTerm::
 add(const std::string& op,
     int i,
@@ -221,125 +176,78 @@ add(const std::string& op,
     {
     //The following ensures operators remain
     //in site order within the vector "ops"
-    auto it = opProd.ops.begin();
-    while(it != opProd.ops.end() && it->i <= i) ++it;
+    auto it = ops.begin();
+    while(it != ops.end() && it->i <= i) ++it;
     
-    // TODO: Restore behaviour to be compatible with SVD = false !!!
-    //if(it!= opProd.ops.end() && it->i == i) Error("AutoMPO: operators must be placed on distinct sites");
-    
-    // if the term is being inserted to the first place, move the coeff
-    SiteTerm t(op,i,x);
-    if(it == opProd.ops.begin() && Nops()>0)
-    {
-        t.coef = t.coef*coef();
-        opProd.ops.front().coef = 1;
-    }
-    
+    SiteTerm t(op,i);
     
     // If the operator is fermionic and being inserted in between existing operators 
     // need to check if an extra minus is required
-    if(it != opProd.ops.end() && t.isFermionic())
+    if(it != ops.end() && t.isFermionic())
     {
-        SiteTermProd right;
-        right.ops = std::vector<SiteTerm>(it, opProd.ops.end());
-        if(right.isFermionic())
-            {
-            if(it == opProd.ops.begin())
-                t.coef*=-1;
-            else
-                (*this) *= -1;
-            }
+        SiteTermProd rightOps(it, ops.end());
+        if(IsFermionic(rightOps))
+            coef *= -1;
     }
     
-    opProd.ops.insert(it,t);
+    coef *= x;
+    ops.insert(it,t);
     }
 
 bool HTerm::
 startsOn(int i) const 
     { 
-    if(opProd.ops.empty()) Error("No operators in HTerm");
+    if(ops.empty()) Error("No operators in HTerm");
     return first().i == i; 
     }
 
 bool HTerm::
 endsOn(int i) const 
     { 
-    if(opProd.ops.empty()) Error("No operators in HTerm");
+    if(ops.empty()) Error("No operators in HTerm");
     return last().i == i; 
     }
 
 bool HTerm::
 contains(int i) const 
     { 
-    if(opProd.ops.empty()) Error("No operators in HTerm");
+    if(ops.empty()) Error("No operators in HTerm");
     return i >= first().i && i <= last().i; 
-    }
-
-Complex HTerm::
-coef() const
-    {
-    if(Nops() == 0) return 0;
-    Complex c = 1;
-    for(const auto& op : opProd.ops) c *= op.coef;
-    return c;
     }
 
 HTerm& HTerm::
 operator*=(Real x)
     {
-    if(Nops() == 0) Error("No operators in HTerm");
-    opProd.ops.front().coef *= x;
+    coef *= x;
     return *this;
     }
 
 HTerm& HTerm::
 operator*=(Complex x)
     {
-    if(Nops() == 0) Error("No operators in HTerm");
-    opProd.ops.front().coef *= x;
+    coef *= x;
     return *this;
     }
     
-HTerm& HTerm::
-operator+=(const HTerm& other)
-    {
-    if(Nops() == 0) Error("No operators in HTerm");
-    if(!proportialTo(other)) Error("Cannot add HTerms unless they are proportional");
-    opProd.ops.front().coef += other.coef();
-    return *this;
-    }
-
 bool HTerm::
-operator==(const HTerm& other) const
+proportionalTo(const HTerm& other) const
     {  
-    return proportialTo(other) && coef() == other.coef();
-    }
-    
-bool HTerm::
-proportialTo(const HTerm& other) const
-    {  
-    return opProd == other.opProd;
-    }
-
-bool HTerm::
-operator!=(const HTerm& other) const
-    {
-    return !operator==(other);
+    return ops == other.ops;
     }
     
 void AutoMPO::
 add(const HTerm& t)
     { 
-    if(abs(t.coef()) == 0)
+    if(abs(t.coef) == 0)
         return; 
     
     // Check if a proportional term already exists
-    auto isProportial = [&t](const HTerm &ht) {return ht.proportialTo(t); };
-    auto it = find_if(terms_.begin(), terms_.end(), isProportial);
+    auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
+    auto it = find_if(terms_.begin(), terms_.end(), isProportional);
     if(it == terms_.end())
         terms_.push_back(t); 
     else
-        *it += t;
+        it->coef += t.coef;
     }
 
 
@@ -457,167 +365,7 @@ operator,(const std::string& op_)
         }
     return *this;
     }
-
-/*
-MPO convention:
-===============
-For each link of the MPO, define a set of bases 
-that describe the terms of the Hamiltonian
-corresponding to the left "half" of the MPO.
-The terms include "IL", which means the product
-of identities to the left, and "HL", the sum of
-all terms entirely contained on the left.
-
-Usually these two special terms occupy positions 1 and two,
-respectively.
-
-The rest of the bases are each site term on the left that
-is connected to something on the right.
-
-So for neighbor and next neighbor, operator pair A B, 
-coefs t1 and t2, on site n, the MPO matrix is:
-n-1             n
-      1111   HL  11A1  111A  <== bases
-1111   1     0     0    A         
-HL     0     1     0    0   
-11A1   0    t2 B   0    0   
-111A   0    t1 B   1    0   
-
-For neighbor and next neighbor, operator pair A B and B A, t1 and t2
-site n:
-n-1             n
-      1111  HL    11A1 11B1  111A  111B 
-1111   1     0     0     0     A     B  
-HL     0     1     0     0     0     0  
-11A1   0    t2 B   0     0     0     0  
-11B1   0    t2 A   0     0     0     0  
-111A   0    t1 B   1     0     0     0  
-111B   0    t1 A   0     1     0     0  
-
-F == fermiPhase, i.e. F = (-1)^(# of fermions of either type of spin)
-Then we make c and cdagger both have F's going off to the left.
-
-Fermion operator rewriting convention:
-
-//
-//Spinless fermions
-//
-
-Cdag_i C_j  = (F_1 F_2 F_3 ... F_{i-1})^2 (Adag_i F_i) F_{i+1} ... A_j
-            = Adag_i F_{i+1} ... A_j
-
-C_i Cdag_j = (A_i F_i) F_{i+1} ... Adag_j
-
-//
-//Fermions with spin
-//
-
-Cdagup_i Cup_j  = (F_1 F_2 F_3 ... )^2 (Adagup_i F_i) F_{i+1} ... Aup_j
-                = (Adagup_i F_i) F_{i+1} ... Aup_j //cancel squared F operators
-
-Cup_i Cdagup_j = (Aup_i F_i) F_{i+1} ... Adagup_j
-
-Cdagdn_i Cdn_j  = (Adagdn_i F_i) F_{i+1} ... Fup_j Adn_j 
-                = - Adagdn_i F_{i+1} ... Fup_j Adn_j     //use Adagdn_i * F_i = -Adagdn_i
-                = Adagdn_i F_{i+1} ... Fup_j Fdn_j Adn_j //use Adn_j = -Fdn_j*Adn_j
-                = Adagdn_i F_{i+1} ... (F_j Adn_j)       //combine Fup_j*Fdn_j = F_j (definition)
-
-Cdn_i Cdagdn_j = (Adn_i F_i) F_{i+1} ... Fup_j Adagdn_j
-               = - Adn_i F_{i+1} ... Fup_j Adagdn_j      //use Adn_i*F_i = -Adn_i
-               = Adn_i F_{i+1} ... Fup_j Fdn_j Adagdn_j  //use Adagdn_j = -Fdn_j*Adagdn_j
-               = Adn_i F_{i+1} ... (F_j Adagdn_j)        //combined Fup_j*Fdn_j = F_j (definition)
-
-
-*/
-
-
-//TODO:
-// o Add support for > 2 site operators
-// o Add support for long-range (exponentially-decaying type) operator strings
-// o Add support for fermionic operator strings
-
-struct SiteQN
-    {
-    SiteTerm st;
-    QN q;
-    SiteQN() { }
-    SiteQN(const SiteTerm& st_,
-           const QN& q_)
-        :
-        st(st_),
-        q(q_)
-        {
-        }
-    };
-
-void
-plusAppend(std::string& s, const std::string& a)
-    {
-    if(s.size() == 0 || s == "0") s = a;
-    else 
-        {
-        s += "+";
-        s += a;
-        }
-    }
-
-// Note that n is 1-based site index
-void AutoMPO::AddToTempMPO(int n, const MatElement &elem)
-    {
-        auto el = find(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), elem);
-        if(el == tempMPO_.at(n-1).end())
-            tempMPO_.at(n-1).push_back(elem);
-    }
-
-void AutoMPO::DecomposeTerm(int n, const SiteTermProd &term, 
-                            SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const
-    {
-    auto isOnSiteOrOnTheRight = [&n](const SiteTerm &t) {return t.i >= n;};
-    auto startOfOnSite = find_if(term.ops.begin(), term.ops.end(), isOnSiteOrOnTheRight);
     
-    auto isOnTheRight = [&n](const SiteTerm &t) {return t.i > n;};
-    auto startOfRightPart = find_if(startOfOnSite, term.ops.end(), isOnTheRight);
-
-    left.ops = std::vector<SiteTerm>(term.ops.begin(), startOfOnSite);
-    onsite.ops = std::vector<SiteTerm>(startOfOnSite, startOfRightPart);
-    right.ops = std::vector<SiteTerm>(startOfRightPart, term.ops.end());
-    }  
-
-// Returns a 1-based index of the SiteTermProd ops in the vector
-int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec)
-    {   
-    auto it = find(vec.begin(), vec.end(), ops);
-    if (it != vec.end())
-        return it - vec.begin() + 1;
-    vec.push_back(ops);
-    return vec.size();
-    }
-    
-void AutoMPO::AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const SiteTermSum &sum)
-    {
-        
-    for(const std::pair<Complex, SiteTermProd> &term : sum.opSum)
-        {
-        Complex coeff = term.first;
-        const SiteTermProd &prod = term.second;
-        
-        clock_t dt1 = clock();
-        IQTensor op = sites_.op(prod.ops.front().op, n);
-        for(auto it = prod.ops.begin()+1; it != prod.ops.end(); it++)
-            op = multSiteOps(op, sites_.op(it->op, n));
-        dt1 = clock()-dt1;
-        dt1_ += dt1;
-        
-        clock_t dt2 = clock();            
-        if(isReal(coeff))        
-            H_.Anc(n) += coeff.real() * op * row(ind.first) * col(ind.second);       
-        else
-            H_.Anc(n) += coeff * op * row(ind.first) * col(ind.second);
-        dt2 = clock()-dt2;
-        dt2_ += dt2;
-        }
-    }
-
 Complex ComplexMatrix::operator() (int i, int j) const
     {
         Complex re, im;
@@ -646,6 +394,59 @@ void ComplexMatrix::insert(int i, int j, Complex val)
         Im(i,j) = val.imag();    
     }   
 
+// Note that n is 1-based site index
+void AutoMPO::AddToTempMPO(int n, const MatElement &elem)
+    {
+        auto el = find(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), elem);
+        if(el == tempMPO_.at(n-1).end())
+            tempMPO_.at(n-1).push_back(elem);
+    }
+
+void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops, 
+                            SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const
+    {
+    auto isOnSiteOrOnTheRight = [&n](const SiteTerm &t) {return t.i >= n;};
+    auto startOfOnSite = find_if(ops.begin(), ops.end(), isOnSiteOrOnTheRight);
+    
+    auto isOnTheRight = [&n](const SiteTerm &t) {return t.i > n;};
+    auto startOfRightPart = find_if(startOfOnSite, ops.end(), isOnTheRight);
+
+    left = SiteTermProd(ops.begin(), startOfOnSite);
+    onsite = SiteTermProd(startOfOnSite, startOfRightPart);
+    right = SiteTermProd(startOfRightPart, ops.end());
+    }  
+
+// Returns a 1-based index of the SiteTermProd ops in the vector
+int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec)
+    {   
+    auto it = find(vec.begin(), vec.end(), ops);
+    if (it != vec.end())
+        return it - vec.begin() + 1;
+    vec.push_back(ops);
+    return vec.size();
+    }
+    
+void AutoMPO::AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const TermSum &tSum)
+    {
+        
+    for(const Term &term : tSum.sum)
+        {        
+        clock_t dt1 = clock();
+        IQTensor op = sites_.op(term.ops.front().op, n);
+        for(auto it = term.ops.begin()+1; it != term.ops.end(); it++)
+            op = multSiteOps(op, sites_.op(it->op, n));
+        dt1 = clock()-dt1;
+        dt1_ += dt1;
+        
+        clock_t dt2 = clock();            
+        if(isReal(term.coef))        
+            H_.Anc(n) += term.coef.real() * op * row(ind.row) * col(ind.col);       
+        else
+            H_.Anc(n) += term.coef * op * row(ind.row) * col(ind.col);
+        dt2 = clock()-dt2;
+        dt2_ += dt2;
+        }
+    }
 
 void AutoMPO::ConstructMPOUsingSVD()
     {
@@ -672,50 +473,50 @@ void AutoMPO::ConstructMPOUsingSVD()
         for(int n = ht.first().i; n <= ht.last().i; n++)
             {
             SiteTermProd left, onsite, right;
-            DecomposeTerm(n, ht.opProd, left, onsite, right);
+            DecomposeTerm(n, ht.ops, left, onsite, right);
 #ifdef SHOW_AUTOMPO            
             println(ht, ", n=",n,": ", left, ", ", onsite, ", ", right);
 #endif
             int j,k,l;
             
-            if(left.ops.empty())
+            if(left.empty())
                 {
                 j=0;
-                if(right.ops.empty()) // on site term
+                if(right.empty()) // on site term
                     k = 0;
                 else // term starting on site n
                     k = AddToVec(right, rightPart_.at(n));
                 }
             else
                 {
-                if(right.ops.empty()) // term ending on site n
+                if(right.empty()) // term ending on site n
                     {
                     k = 0;
                     j = AddToVec(onsite, rightPart_.at(n-1));
                     }
                 else
                     {
-                    j = AddToVec(onsite*right, rightPart_.at(n-1));
+                    j = AddToVec(mult(onsite,right), rightPart_.at(n-1));
                     k = AddToVec(right, rightPart_.at(n));
                     }
                 l = AddToVec(left, leftPart_.at(n-1));
-                Coeff_.at(n-1).insert(l,j, ht.coef());
+                Coeff_.at(n-1).insert(l,j, ht.coef);
                 }
                 
             // Place the coefficient of the HTerm when the term starts
-            Complex c = j==0 ? ht.coef() : 1;
+            Complex c = j==0 ? ht.coef : 1;
             
-            bool leftF = left.isFermionic();
-            if(onsite.ops.empty())
+            bool leftF = IsFermionic(left);
+            if(onsite.empty())
                 {
                 if(leftF)
-                    onsite.ops.emplace_back(SiteTerm("F",n));
+                    onsite.emplace_back(SiteTerm("F",n));
                 else 
-                    onsite.ops.emplace_back(SiteTerm("Id",n));
+                    onsite.emplace_back(SiteTerm("Id",n));
                 }
             else
-                onsite.rewriteFermionic(leftF);
-            MatElement elem({j, k}, c, onsite);
+                RewriteFermionic(onsite, leftF);
+            MatElement elem(MatIndex(j, k), Term(c, onsite));
             AddToTempMPO(n, elem);
             }
     
@@ -727,10 +528,7 @@ void AutoMPO::ConstructMPOUsingSVD()
     for(int n=1; n<=N; n++)
         {
         for(const MatElement &elem: tempMPO_.at(n-1))
-            {
-            MatIndex ind = std::get<0>(elem);
-            println(ind.first,',',ind.second,'\t',std::get<1>(elem),'\t',std::get<2>(elem));
-            }
+            println(elem.ind.row,',',elem.ind.col,'\t',elem.term.coef,'\t',elem.term.ops);
         println("=========================================");
         }
 
@@ -807,42 +605,39 @@ void AutoMPO::ConstructMPOUsingSVD()
             
         println("Size of MPO matrix for site ", n, " is (", d_n+2, ", ", d_npp+2, ")");
         
-        SiteTermProd prodId;
-        prodId.ops.emplace_back("Id", n);
+        SiteTermProd opId;
+        opId.emplace_back("Id", n);
         
-        finalMPO_.at(n-1).at(0).at(0) += std::pair<Complex, SiteTermProd>(1, prodId);
-        finalMPO_.at(n-1).at(1).at(1) += std::pair<Complex, SiteTermProd>(1, prodId);
+        finalMPO_.at(n-1).at(0).at(0) += Term(1, opId);
+        finalMPO_.at(n-1).at(1).at(1) += Term(1, opId);
             
         Complex Zero(0,0);
         for(const MatElement &elem: tempMPO_.at(n-1))
             {
-            MatIndex ind = std::get<0>(elem);
-            int k = ind.first;
-            int l = ind.second;
-            Complex c = std::get<1>(elem);
-            SiteTermProd prod = std::get<2>(elem);
+            int k = elem.ind.row;
+            int l = elem.ind.col;
     
             if(l==0 && k==0)	// on-site terms
-                finalMPO_.at(n-1).at(1).at(0) += std::pair<Complex, SiteTermProd>(c, prod);
+                finalMPO_.at(n-1).at(1).at(0) += elem.term;
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp; j++)
                     if(V_npp(j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1).at(1+j) += std::pair<Complex, SiteTermProd>(c*V_npp(j,l), prod);
+                        finalMPO_.at(n-1).at(1).at(1+j) += Term(elem.term.coef*V_npp(j,l), elem.term.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n; i++)
                     if(V_n(i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1+i).at(0) += std::pair<Complex, SiteTermProd>(c*V_n(i,k), prod);
+                        finalMPO_.at(n-1).at(1+i).at(0) += Term(elem.term.coef*V_n(i,k), elem.term.ops);
                 }
             else 
                 {
                 for(int i=1; i<=d_n; i++)
                     for(int j=1; j<=d_npp; j++) 
                         if( (V_n(i,k) != Zero)  && (V_npp(j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO_.at(n-1).at(1+i).at(1+j) += std::pair<Complex, SiteTermProd>(c*V_n(i,k)*V_npp(j,l), prod);
+                            finalMPO_.at(n-1).at(1+i).at(1+j) += Term(elem.term.coef*V_n(i,k)*V_npp(j,l), elem.term.ops);
                 }
             }
             sitet = clock() - sitet;
@@ -878,7 +673,6 @@ void AutoMPO::ConstructMPOUsingSVD()
             {
             int nr = finalMPO_.at(n-1).size();
             int nc = n == N ? 2 : finalMPO_.at(n).size();
-            println("Site ", n, ": nr=", nr, ", nc=", nc);
             
             links.at(n) = Index(nameint("Hl",n),nc);
             auto &row = links.at(n-1),
@@ -890,7 +684,7 @@ void AutoMPO::ConstructMPOUsingSVD()
             
             for(int r = 1; r <= nr; ++r)
                 for(int c = 1; c <= nc; ++c)
-                    AddToMPO(n, {r,c}, row, col, finalMPO_.at(n-1).at(r-1).at(c-1));    
+                    AddToMPO(n, MatIndex(r,c), row, col, finalMPO_.at(n-1).at(r-1).at(c-1));    
 
             sitet = clock() - sitet;
             println("It took ", ((float)sitet)/CLOCKS_PER_SEC, " seconds to construct the MPO matrix for site ", n);
@@ -908,6 +702,103 @@ void AutoMPO::ConstructMPOUsingSVD()
     H_.Anc(N) *= ITensor(links.at(N)(1));
     }
 
+/*
+MPO convention:
+===============
+For each link of the MPO, define a set of bases 
+that describe the terms of the Hamiltonian
+corresponding to the left "half" of the MPO.
+The terms include "IL", which means the product
+of identities to the left, and "HL", the sum of
+all terms entirely contained on the left.
+
+Usually these two special terms occupy positions 1 and two,
+respectively.
+
+The rest of the bases are each site term on the left that
+is connected to something on the right.
+
+So for neighbor and next neighbor, operator pair A B, 
+coefs t1 and t2, on site n, the MPO matrix is:
+n-1             n
+      1111   HL  11A1  111A  <== bases
+1111   1     0     0    A         
+HL     0     1     0    0   
+11A1   0    t2 B   0    0   
+111A   0    t1 B   1    0   
+
+For neighbor and next neighbor, operator pair A B and B A, t1 and t2
+site n:
+n-1             n
+      1111  HL    11A1 11B1  111A  111B 
+1111   1     0     0     0     A     B  
+HL     0     1     0     0     0     0  
+11A1   0    t2 B   0     0     0     0  
+11B1   0    t2 A   0     0     0     0  
+111A   0    t1 B   1     0     0     0  
+111B   0    t1 A   0     1     0     0  
+
+F == fermiPhase, i.e. F = (-1)^(# of fermions of either type of spin)
+Then we make c and cdagger both have F's going off to the left.
+
+Fermion operator rewriting convention:
+
+//
+//Spinless fermions
+//
+
+Cdag_i C_j  = (F_1 F_2 F_3 ... F_{i-1})^2 (Adag_i F_i) F_{i+1} ... A_j
+            = Adag_i F_{i+1} ... A_j
+
+C_i Cdag_j = (A_i F_i) F_{i+1} ... Adag_j
+
+//
+//Fermions with spin
+//
+
+Cdagup_i Cup_j  = (F_1 F_2 F_3 ... )^2 (Adagup_i F_i) F_{i+1} ... Aup_j
+                = (Adagup_i F_i) F_{i+1} ... Aup_j //cancel squared F operators
+
+Cup_i Cdagup_j = (Aup_i F_i) F_{i+1} ... Adagup_j
+
+Cdagdn_i Cdn_j  = (Adagdn_i F_i) F_{i+1} ... Fup_j Adn_j 
+                = - Adagdn_i F_{i+1} ... Fup_j Adn_j     //use Adagdn_i * F_i = -Adagdn_i
+                = Adagdn_i F_{i+1} ... Fup_j Fdn_j Adn_j //use Adn_j = -Fdn_j*Adn_j
+                = Adagdn_i F_{i+1} ... (F_j Adn_j)       //combine Fup_j*Fdn_j = F_j (definition)
+
+Cdn_i Cdagdn_j = (Adn_i F_i) F_{i+1} ... Fup_j Adagdn_j
+               = - Adn_i F_{i+1} ... Fup_j Adagdn_j      //use Adn_i*F_i = -Adn_i
+               = Adn_i F_{i+1} ... Fup_j Fdn_j Adagdn_j  //use Adagdn_j = -Fdn_j*Adagdn_j
+               = Adn_i F_{i+1} ... (F_j Adagdn_j)        //combined Fup_j*Fdn_j = F_j (definition)
+
+
+*/
+
+struct SiteQN
+    {
+    SiteTerm st;
+    QN q;
+    SiteQN() { }
+    SiteQN(const SiteTerm& st_,
+           const QN& q_)
+        :
+        st(st_),
+        q(q_)
+        {
+        }
+    };
+
+void
+plusAppend(std::string& s, const std::string& a)
+    {
+    if(s.size() == 0 || s == "0") s = a;
+    else 
+        {
+        s += "+";
+        s += a;
+        }
+    }
+    
 template<>
 IQMPO
 toMPO<IQTensor>(const AutoMPO& am,
@@ -1017,7 +908,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     //end on, or cross site "j"
     vector<vector<HTerm>> ht_by_n(N+1);
     for(const HTerm& ht : am.terms()) 
-    for(const auto& st : ht.opProd.ops)
+    for(const auto& st : ht.ops)
         {
         ht_by_n.at(st.i).push_back(ht);
         }
@@ -1049,12 +940,9 @@ toMPO<IQTensor>(const AutoMPO& am,
                 {
                 //Call startTerm to handle fermionic cases with Jordan-Wigner strings
                 auto op = startTerm(cst.op);
-                W += cst.coef * sites.op(op,n) * rc;
+                W += sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
-                if(isApproxReal(cst.coef))
-                    ws[r][c] = format("%.2f %s",cst.coef.real(),op);
-                else
-                    ws[r][c] = format("%.2f %s",cst.coef,op);
+                ws[r][c] = op;
 #endif
                 }
 
@@ -1062,28 +950,6 @@ toMPO<IQTensor>(const AutoMPO& am,
             //strings of more than two sites in length
             if(cst == rst)
                 {
-                /*
-                int found = 0;
-                for(const auto& ht : ht_by_n.at(n))
-                    {
-                    if(ht.first() == rst &&
-                       ht.first().i != n && 
-                       ht.last().i  != n)
-                        {
-                        for(const auto& st : ht.ops)
-                        if(st.i == n)
-                            {
-                            found += 1;
-#ifdef SHOW_AUTOMPO
-                            ws[r][c] = format("%.2f %s",st.coef,st.op);
-#endif
-                            W += st.coef * sites.op(st.op,n) * rc;
-                            }
-                        }
-                    }
-                //if(found == 0)
-                    */
-
                 if(cst.isFermionic())
                     W += sites.op("F",n) * rc;
                 else
@@ -1092,11 +958,6 @@ toMPO<IQTensor>(const AutoMPO& am,
                 if(cst.isFermionic()) ws[r][c] = "F";
                 else                 ws[r][c] = "1";
 #endif
-                //if(found > 1)
-                //    {
-                //    println("Warning: found > 1 at site ",n);
-                //    PAUSE
-                //    }
                 }
 
             //End operator strings
@@ -1106,7 +967,7 @@ toMPO<IQTensor>(const AutoMPO& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
                     auto op = endTerm(ht.last().op);
-                    W += ht.last().coef * sites.op(op,n) * rc;
+                    W += ht.coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
 #endif
@@ -1120,12 +981,12 @@ toMPO<IQTensor>(const AutoMPO& am,
                 if(ht.first().i == ht.last().i)
                     {
 #ifdef SHOW_AUTOMPO
-                    if(isApproxReal(ht.first().coef))
-                        ws[r][c] = format("%.2f %s",ht.first().coef.real(),ht.first().op);
+                    if(isApproxReal(ht.coef))
+                        ws[r][c] = format("%.2f %s",ht.coef.real(),ht.first().op);
                     else
-                        ws[r][c] = format("%.2f %s",ht.first().coef,ht.first().op);
+                        ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.first().coef * sites.op(ht.first().op,n) * rc;
+                    W += ht.coef * sites.op(ht.first().op,n) * rc;
                     }
                 }
 
@@ -1265,7 +1126,7 @@ toExpH_ZW1(const AutoMPO& am,
     //end on, or cross site "j"
     vector<vector<HTerm>> ht_by_n(N+1);
     for(const HTerm& ht : am.terms()) 
-    for(const auto& st : ht.opProd.ops)
+    for(const auto& st : ht.ops)
         {
         ht_by_n.at(st.i).push_back(ht);
         }
@@ -1296,13 +1157,10 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst.i == n && rst == IL)
                 {
 #ifdef SHOW_AUTOMPO
-                if(isApproxReal(cst.coef))
-                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef.real(),cst.op);
-                else
-                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
+                ws[r][c] = "(-t)*" + cst.op;
 #endif
                 auto opname = startTerm(cst.op);
-                auto op = cst.coef * sites.op(opname,n) * rc;
+                auto op = sites.op(opname,n) * rc;
                 if(is_complex) op *= (-tau);
                 else           op *= (-tau.real());
                 W += op;
@@ -1329,9 +1187,12 @@ toExpH_ZW1(const AutoMPO& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
 #ifdef SHOW_AUTOMPO
-                    ws[r][c] = ht.last().op;
+                if(isApproxReal(ht.coef))
+                    ws[r][c] = format("%.2f %s",ht.coef.real(),cst.op);
+                else
+                    ws[r][c] = format("%.2f %s",ht.coef,cst.op);
 #endif
-                    W += ht.last().coef * sites.op(endTerm(ht.last().op),n) * rc;
+                    W += ht.coef * sites.op(endTerm(ht.last().op),n) * rc;
                     }
                 }
 
@@ -1342,12 +1203,12 @@ toExpH_ZW1(const AutoMPO& am,
                 if(ht.first().i == ht.last().i)
                     {
 #ifdef SHOW_AUTOMPO
-                    if(isApproxReal(ht.first().coef))
-                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef.real(),ht.first().op));
+                    if(isApproxReal(ht.coef))
+                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.coef.real(),ht.first().op));
                     else
-                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef,ht.first().op));
+                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.coef,ht.first().op));
 #endif
-                    auto op = ht.first().coef * sites.op(ht.first().op,n) * rc;
+                    auto op = ht.coef * sites.op(ht.first().op,n) * rc;
                     if(is_complex) op *= (-tau);
                     else           op *= (-tau.real());
                     W += op;
@@ -1411,19 +1272,15 @@ toExpH<ITensor>(const AutoMPO& a,
 std::ostream& 
 operator<<(std::ostream& s, const SiteTerm& t)
     {
-    if(isReal(t.coef))
-        s << format("%f * %s(%d)",t.coef.real(),t.op,t.i);
-    else
-        s << format("%f * %s(%d)",t.coef,t.op,t.i);
+    s << format("%s(%d)",t.op,t.i);
     return s;
     }
 
-
 std::ostream& 
-operator<<(std::ostream& s, const SiteTermProd& prod)
+operator<<(std::ostream& s, const SiteTermProd& ops)
     {
     const char* pfix = "";
-    for(const auto& st : prod.ops) 
+    for(const auto& st : ops) 
         {
         s << format("%s%s(%d)",pfix,st.op,st.i);
         pfix = " ";
@@ -1432,24 +1289,24 @@ operator<<(std::ostream& s, const SiteTermProd& prod)
     }
     
 std::ostream& 
-operator<<(std::ostream& s, const SiteTermSum& sum)
+operator<<(std::ostream& s, const TermSum& tSum)
     {
     const char* pfix = "";     
-    for(const std::pair<Complex, SiteTermProd> &t : sum.opSum)
+    for(const Term &t : tSum.sum)
         {        
-        if(abs(t.first-1.0) > 1E-12) 
-            if(isReal(t.first))
+        if(abs(t.coef-1.0) > 1E-12) 
+            if(isReal(t.coef))
                 {
-                if (t.first.real() > 0)
+                if (t.coef.real() > 0)
                     s << pfix;
-                s << format("%s%f ",pfix,t.first.real());
+                s << format("%s%f ",pfix,t.coef.real());
                 }
             else
-                format("%s%f ",pfix,t.first);
+                format("%s%f ",pfix,t.coef);
         else
             s << pfix;
             
-        s << t.second;
+        s << t.ops;
         pfix = "+";
         }
     return s;
@@ -1458,9 +1315,9 @@ operator<<(std::ostream& s, const SiteTermSum& sum)
 std::ostream& 
 operator<<(std::ostream& s, const HTerm& t)
     {
-    if(abs(t.coef()-1.0) > 1E-12) 
-        s << (isReal(t.coef()) ? format("%f ",t.coef().real()) : format("%f ",t.coef()));
-    s << t.opProd;
+    if(abs(t.coef-1.0) > 1E-12) 
+        s << (isReal(t.coef) ? format("%f ",t.coef.real()) : format("%f ",t.coef));
+    s << t.ops;
     return s;
     }
 
