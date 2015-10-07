@@ -195,7 +195,7 @@ showEigs(Vector const& P,
     printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());
 
     auto stop = std::min(10ul,P.size());
-    auto Ps = Vector(subVector(P,1,stop));
+    auto Ps = Vector(subVector(P,0,stop));
 
     Real orderMag = log(std::fabs(P(1))) + scale.logNum();
     if(std::fabs(orderMag) < 5 && scale.isFiniteReal())
@@ -205,15 +205,16 @@ showEigs(Vector const& P,
         }
     else
         {
-        printf("Denmat evals (not including log(scale) = %.2f)",scale.logNum());
+        printf("Denmat evals (not including log(scale) = %.2f): ",scale.logNum());
         }
 
-    for(decltype(stop) j = 1; j <= stop; ++j)
+    for(decltype(stop) j = 0; j < stop; ++j)
         {
         auto eig = Ps(j);
-        printf(( eig > 1E-3 && eig < 1000) ? ("%.3f") : ("%.3E") , eig); 
+        printf(( eig > 1E-3 && eig < 1000) ? ("%.4f") : ("%.3E") , eig); 
         print((j != stop) ? ", " : "\n");
         }
+    println();
     } // showEigs
 
 Spectrum 
@@ -230,7 +231,7 @@ svdRank2(ITensor A,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto cplx = isComplex(A);
     auto lname = args.getString("LeftIndexName","ul");
@@ -296,7 +297,17 @@ svdRank2(ITensor A,
     Spectrum spec;
     spec.truncerr(truncerr);
 
-    if(show_eigs) showEigs(probs,truncerr,A.scale(),args);
+    if(show_eigs) 
+        {
+        auto showargs = args;
+        showargs.add("Cutoff",cutoff);
+        showargs.add("Maxm",maxm);
+        showargs.add("Minm",minm);
+        showargs.add("Truncate",do_truncate);
+        showargs.add("DoRelCutoff",doRelCutoff);
+        showargs.add("AbsoluteCutoff",absoluteCutoff);
+        showEigs(probs,truncerr,A.scale(),showargs);
+        }
     
     Index uL(lname,m,litype),
           vL(rname,m,ritype);
@@ -425,22 +436,21 @@ svdRank2(IQTensor A,
         alleig.insert(alleig.end(),d.begin(),d.end());
         }
 
-    auto DDstore = alleig;
-    auto DD = Vector(std::move(DDstore),VecRange{DDstore.size()});
-
+    //Square the singular values into probabilities
+    //(density matrix eigenvalues)
+    for(auto& sval : alleig) sval = sval*sval;
     //Sort all eigenvalues from largest to smallest
     //irrespective of quantum numbers
-    Vector probs;
-    if(do_truncate or show_eigs) 
-        {
-        //Square the singular values into probabilities
-        //(density matrix eigenvalues)
-        for(auto& sval : alleig) sval = sval*sval;
-        stdx::sort(alleig,std::greater<Real>{});
-        probs = Vector(std::move(alleig),VecRange{alleig.size()});
-        }
+    stdx::sort(alleig,std::greater<Real>{});
 
-    long m = alleig.size();
+    //print("alleig = "); for(auto& el : alleig) print(" ",el); println();
+
+    auto pstore = alleig;
+    auto probs = Vector(move(pstore),VecRange{pstore.size()});
+
+    //print("probs = "); for(auto& el : probs) print(" ",el); println();
+
+    long m = probs.size();
     Real truncerr = 0;
     Real docut = -1;
     if(do_truncate)
@@ -450,7 +460,17 @@ svdRank2(IQTensor A,
         m = probs.size();
         }
 
-    if(show_eigs) showEigs(probs,truncerr,A.scale(),args);
+    if(show_eigs) 
+        {
+        auto showargs = args;
+        showargs.add("Cutoff",cutoff);
+        showargs.add("Maxm",maxm);
+        showargs.add("Minm",minm);
+        showargs.add("Truncate",do_truncate);
+        showargs.add("DoRelCutoff",doRelCutoff);
+        showargs.add("AbsoluteCutoff",absoluteCutoff);
+        showEigs(probs,truncerr,A.scale(),showargs);
+        }
 
     IQIndex::storage Liq,
                      Riq;
@@ -494,8 +514,8 @@ svdRank2(IQTensor A,
         Riq.emplace_back(Index("r",this_m),vI.qn(1+B.i2));
         }
     
-    IQIndex L("L",std::move(Liq),uI.dir()), 
-            R("R",std::move(Riq),vI.dir());
+    IQIndex L("L",move(Liq),uI.dir()), 
+            R("R",move(Riq),vI.dir());
 
     IQIndexSet Uis(uI,dag(L)),
                Dis(L,R),
@@ -578,17 +598,17 @@ svdRank2(IQTensor A,
         }
 
     //Fix sign to make sure D has positive elements
-    Real signfix = (A.scale().sign() == -1) ? -1 : +1;
+    Real signfix = (A.scale().sign() == -1) ? -1. : +1.;
 
-    U = IQTensor(Uis,std::move(Ustore));
-    D = IQTensor({L,R},std::move(Dstore),A.scale()*signfix);
-    V = IQTensor(Vis,std::move(Vstore));
+    U = IQTensor(Uis,move(Ustore));
+    D = IQTensor({L,R},move(Dstore),A.scale()*signfix);
+    V = IQTensor(Vis,move(Vstore));
 
     //Originally eigs were found without including scale
     //so put the scale back in
-    DD *= A.scale().real0();
+    probs *= sqr(A.scale().real0());
 
-    return Spectrum(DD,Args("Truncerr",truncerr));
+    return Spectrum(move(probs),Args("Truncerr",truncerr));
 
     } // svdRank2 IQTensor
 
