@@ -115,14 +115,14 @@ measure(const Args& args)
             println();
             auto center_eigs = last_spec_.eigsKept();
             Real S = 0;
-            for(const auto& p : center_eigs)
+            for(auto& p : center_eigs)
                 {
                 S -= p*log(std::fabs(p));
                 }
             printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
-            printf("    Eigs at center bond b=%d: ",N/2);
+            printf(  "    Eigs at center bond b=%d: ",N/2);
             auto ten = decltype(center_eigs.size())(10);
-            for(decltype(ten) j = 1; j <= std::min(center_eigs.size(),ten); ++j) 
+            for(auto j : count(std::min(center_eigs.size(),ten)))
                 {
                 auto eig = center_eigs(j);
                 if(eig < 1E-3) break;
