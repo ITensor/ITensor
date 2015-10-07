@@ -372,7 +372,11 @@ complexDavidson(const BigMatrixT& A,
 
         //Step D of Davidson (1975)
         //Apply Davidson preconditioner
-        //TODO
+
+        //
+        //TODO add preconditioner step (may require
+        //non-contracting product to do efficiently)
+        //
         //if(Adiag)
         //    {
         //    //Function which applies the mapping
@@ -503,6 +507,15 @@ complexDavidson(const BigMatrixT& A,
         } //for(ii)
 
     done:
+
+
+    for(auto& T : phi)
+        {
+        if(T.scale().logNum() > 2)
+            {
+            T.scaleTo(1.);
+            }
+        }
 
     //Compute any remaining eigenvalues and eigenvectors requested
     //(zero indexed) value of t indicates how many have been "targeted" so far
