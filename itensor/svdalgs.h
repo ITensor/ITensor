@@ -199,8 +199,8 @@ svd(Tensor AA,
         if(hasindex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
-    auto Ucomb = combiner(std::move(Uinds),{"IndexName","ui"});
-    auto Vcomb = combiner(std::move(Vinds),{"IndexName","vi"});
+    auto Ucomb = combiner(std::move(Uinds),{"IndexName","uc"});
+    auto Vcomb = combiner(std::move(Vinds),{"IndexName","vc"});
 
     AA = Ucomb * AA * Vcomb;
 

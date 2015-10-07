@@ -348,7 +348,6 @@ svdRank2(IQTensor A,
          IQTensor & V,
          Args const& args)
     {
-    //PrintData(A);
     auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -423,9 +422,7 @@ svdRank2(IQTensor A,
             //    thresh);
             }
 
-        //Store the squared singular values
-        //(denmat eigenvalues) in alleig
-        for(auto& val : d) alleig.push_back(val);
+        alleig.insert(alleig.end(),d.begin(),d.end());
         }
 
     auto DDstore = alleig;
@@ -436,8 +433,10 @@ svdRank2(IQTensor A,
     Vector probs;
     if(do_truncate or show_eigs) 
         {
-        for(auto& val : alleig) val = val*val;
-        std::sort(alleig.begin(),alleig.end(),std::greater<Real>{});
+        //Square the singular values into probabilities
+        //(density matrix eigenvalues)
+        for(auto& sval : alleig) sval = sval*sval;
+        stdx::sort(alleig,std::greater<Real>{});
         probs = Vector(std::move(alleig),VecRange{alleig.size()});
         }
 
@@ -463,30 +462,31 @@ svdRank2(IQTensor A,
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
 
-        long this_n = 0;
-        while(this_n < long(d.size()) && sqr(d(this_n)) > docut) 
+        //print("d^2 = "); for(auto&& el : d) print(" ",sqr(el)); println();
+
+        //Count number of eigenvalues in the sector above docut
+        long this_m = 0;
+        for(decltype(d.size()) n = 0; n < d.size() && sqr(d(n)) > docut; ++n)
             {
-            if(d(this_n) < 0) d(this_n) = 0;
-            ++this_n;
+            this_m += 1;
+            if(d(n) < 0) d(n) = 0;
             }
-        --this_n; //since the loop overshoots by 1
 
         if(m == 0 && d.size() >= 1) // zero mps, just keep one arb state
             { 
-            this_n = 0; 
+            this_m = 1; 
             m = 1; 
             docut = 1; 
             }
 
-        if(this_n < 0) 
+        if(this_m == 0) 
             { 
             d.clear();
             B.M.clear();
-            ++b; 
+            assert(not B.M);
             continue; 
             }
 
-        auto this_m = this_n + 1;
 
         resize(d,this_m);
 
@@ -521,6 +521,7 @@ svdRank2(IQTensor A,
         //to this_m==0 case above
         if(not B.M) continue;
 
+        //println("block b = ",b);
         //printfln("{B.i1,n} = {%d,%d}",B.i1,n);
         //printfln("{n,n} = {%d,%d}",n,n);
         //printfln("{B.i2,n} = {%d,%d}",B.i2,n);
@@ -530,7 +531,10 @@ svdRank2(IQTensor A,
         auto uind = stdx::make_array(B.i1,n);
         auto pU = getBlock(Ustore,Uis,uind);
         assert(pU.data() != nullptr);
+        assert(uI[B.i1].m() == long(nrows(UU)));
         auto Uref = makeMatRef(pU,uI[B.i1].m(),L[n].m());
+        reduceCols(UU,L[n].m());
+        //println("Doing Uref &= UU");
         //Print(Uref.range());
         //Print(UU.range());
         Uref &= UU;
@@ -539,12 +543,20 @@ svdRank2(IQTensor A,
         auto pD = getBlock(Dstore,Dis,dind);
         assert(pD.data() != nullptr);
         auto Dref = makeVecRef(pD.data(),d.size());
+        //println("Doing Dref &= d");
+        //Print(Dref.range());
+        //Print(d.range());
         Dref &= d;
 
         auto vind = stdx::make_array(B.i2,n);
         auto pV = getBlock(Vstore,Vis,vind);
         assert(pV.data() != nullptr);
+        assert(vI[B.i2].m() == long(nrows(VV)));
         auto Vref = makeMatRef(pV.data(),pV.size(),vI[B.i2].m(),R[n].m());
+        reduceCols(VV,R[n].m());
+        //println("Doing Vref &= VV");
+        //Print(Vref.range());
+        //Print(VV.range());
         Vref &= VV;
 
         /////////DEBUG

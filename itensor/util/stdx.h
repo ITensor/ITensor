@@ -103,7 +103,16 @@ void
 for_each(Container&& C,
          UnaryFunc&& f)
     {
-    std::for_each(C.begin(),C.end(),std::forward<UnaryFunc>(f));
+    std::for_each(std::begin(C),std::end(C),std::forward<UnaryFunc>(f));
+    }
+
+template<typename Container,
+         class CmpFun>
+void
+sort(Container && C,
+     CmpFun && f)
+    {
+    std::sort(std::begin(C),std::end(C),std::forward<CmpFun>(f));
     }
 
 } //namespace stdx
