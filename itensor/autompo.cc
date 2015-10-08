@@ -428,7 +428,10 @@ void AutoMPO::AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, 
     {
         
     for(const Term &term : tSum.sum)
-        {        
+        {
+        if(fabs(term.coef) < 1E-12)
+            continue;
+            
         clock_t dt1 = clock();
         IQTensor op = sites_.op(term.ops.front().op, n);
         for(auto it = term.ops.begin()+1; it != term.ops.end(); it++)
