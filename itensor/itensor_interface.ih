@@ -154,10 +154,18 @@ cplx(IVs&&... ivs) const
     if(!store()) Error("tensor storage unallocated");
 
     constexpr size_t size = sizeof...(ivs);
-    if(size != size_t(inds().r())) 
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
-
     auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
+    if(size != size_t(inds().r())) 
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : vals) println(iv.index);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        }
+
     Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
@@ -262,12 +270,20 @@ set(VArgs&&... vargs)
     using indexval_type = typename IndexT::indexval_type;
     using Inds = typename SetElt<Real,IndexT>::Inds;
     static constexpr auto size = sizeof...(vargs)-1;
-    if(size != size_t(inds().r())) 
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",inds().r(),size));
     std::array<indexval_type,size> vals;
     Cplx z;
     bool is_real = 
         detail::getVals<indexval_type>(vals.begin(),z,std::forward<VArgs&&>(vargs)...);
+    if(size != size_t(inds().r())) 
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : vals) println(iv.index);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",inds().r(),size));
+        }
     auto inds = Inds(is_.r(),0);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     //TODO: if !store_ and !is_real, call allocCplx instead
