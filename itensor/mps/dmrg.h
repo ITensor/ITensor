@@ -235,11 +235,17 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             PH.position(b,psi);
 
+            START_TIMER(50)
             auto phi = psi.A(b)*psi.A(b+1);
+            STOP_TIMER(50)
 
+            START_TIMER(51)
             energy = davidson(PH,phi,args);
+            STOP_TIMER(51)
             
+            START_TIMER(52)
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
+            STOP_TIMER(52)
 
 
             if(!quiet)

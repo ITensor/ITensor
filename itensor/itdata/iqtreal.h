@@ -307,6 +307,9 @@ loopContractedBlocks(BlockSparseA const& A,
     for(auto& aio : A.offsets)
         {
         //Reconstruct indices labeling this block of A, put into Ablock
+        //TODO: optimize away need to call computeBlockInd by
+        //      storing block indices directly in IQTReal
+        //      Taking 10% of running time in S=1 N=100 DMRG tests (maxm=100)
         computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();
@@ -323,6 +326,7 @@ loopContractedBlocks(BlockSparseA const& A,
         //Loop over blocks of B which contract with current block of A
         for(;couB.notDone(); ++couB)
             {
+            //START_TIMER(33)
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by computing its QN flux,
             //      could be faster than calling getBlock
@@ -337,11 +341,14 @@ loopContractedBlocks(BlockSparseA const& A,
                 Bblockind[ib] = couB.i[ib];
                 }
 
+            START_TIMER(33)
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
+            STOP_TIMER(33)
 
             auto ablock = cData(A.data(),aio.offset,A.size());
             assert(ablock);
+            //STOP_TIMER(33)
 
             callback(ablock,Ablockind,
                      bblock,Bblockind,
