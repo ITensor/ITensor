@@ -338,9 +338,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
         const BigMatrixT& PH, const Args& args)
     {
     setBond(b);
-
-    Spectrum res;
-
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
         printfln("b=%d, l_orth_lim_=%d",b,l_orth_lim_);
@@ -352,9 +349,12 @@ svdBond(int b, const Tensor& AA, Direction dir,
         Error("b+2 < r_orth_lim_");
         }
 
-    const Real noise = args.getReal("Noise",0.);
-    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto noise = args.getReal("Noise",0.);
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    Spectrum res;
 
+    //TODO 
+    //if(true) 
     if(args.getBool("UseSVD",false) || (noise == 0 && cutoff < 1E-12))
         {
         //Need high accuracy, use svd which calls the
@@ -369,10 +369,8 @@ svdBond(int b, const Tensor& AA, Direction dir,
             }
 
         //Push the singular values into the appropriate site tensor
-        if(dir == Fromleft)
-            A_[b+1] *= D;
-        else
-            A_[b] *= D;
+        if(dir == Fromleft) A_[b+1] *= D;
+        else                A_[b]   *= D;
         }
     else
         {
@@ -393,17 +391,11 @@ svdBond(int b, const Tensor& AA, Direction dir,
     if(dir == Fromleft)
         {
         l_orth_lim_ = b;
-        if(r_orth_lim_ < b+2) 
-            {
-            r_orth_lim_ = b+2;
-            }
+        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
         }
     else //dir == Fromright
         {
-        if(l_orth_lim_ > b-1) 
-            {
-            l_orth_lim_ = b-1;
-            }
+        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
         r_orth_lim_ = b+1;
         }
 

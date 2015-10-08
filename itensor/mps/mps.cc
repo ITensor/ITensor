@@ -425,11 +425,15 @@ void MPSt<IQTensor>::random_tensors(std::vector<ITensor>& A_);
 
 template <class Tensor>
 void MPSt<Tensor>::
-init_tensors(std::vector<ITensor>& A_, const InitState& initState)
+init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
-    new_tensors(A_); 
-    for(int i = 1; i <= N_; ++i) 
-        A_[i].set(initState(i),1);
+    std::vector<Index> a(N_+1);
+    for(int i = 1; i <= N_; ++i)
+        { a[i] = Index(nameint("a",i)); }
+    A_[1] = ITensor(initState(1),a[1](1));
+    for(int i = 2; i < N_; i++)
+        { A_[i] = ITensor(dag(a[i-1])(1),initState(i),a[i](1)); }
+    A_[N_] = ITensor(dag(a[N_-1])(1),initState(N_));
     }
 template
 void MPSt<ITensor>::
