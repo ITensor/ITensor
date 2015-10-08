@@ -35,14 +35,16 @@ template<typename Container>
 void
 computeBlockInd(long block,
                 IQIndexSet const& is,
-                Container& ind)
+                Container & ind)
     {
-    auto r = int(ind.size());
-    assert(r == is.r());
-    for(int j = 0; j < r-1; ++j)
+    using size_type = decltype(ind.size());
+    size_type r = ind.size();
+    assert(r == size_type(is.r()));
+    for(size_type j = 0; j < r-1; ++j)
         {
-        ind[j] = block % is[j].nindex();
-        block = (block-ind[j])/is[j].nindex();
+        auto res = std::ldiv(block,is[j].nindex());
+        ind[j] = res.rem;
+        block = res.quot;
         }
     ind[r-1] = block;
     }
