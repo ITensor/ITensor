@@ -38,7 +38,9 @@ diagSymmetric(MatrixRefc const& M,
     if(!isContiguous(U))
         throw std::runtime_error("diagSymmetric: U must be contiguous");
     if(!isContiguous(d))
+        {
         throw std::runtime_error("diagSymmetric: d must be contiguous");
+        }
 #endif
 
     //Set U = -M so eigenvalues will be sorted from largest to smallest
@@ -76,15 +78,22 @@ diagSymmetric(MatrixRefc const& M,
     }
 
 void
-diagSymmetric(MatrixRefc M,
-              Matrix & U,
-              Vector & d)
+diagSymmetric(MatrixRefc const& M,
+              Matrix          & U,
+              VectorRef  const& d)
+    {
+    resize(U,nrows(M),ncols(M));
+    diagSymmetric(M,makeRef(U),d);
+    }
+
+void
+diagSymmetric(MatrixRefc const& M,
+              Matrix          & U,
+              Vector          & d)
     {
     resize(U,nrows(M),ncols(M));
     resize(d,nrows(M));
-    auto Uref = makeRef(U);
-    auto dref = makeRef(d);
-    diagSymmetric(M,Uref,dref);
+    diagSymmetric(M,makeRef(U),makeRef(d));
     }
 
 //

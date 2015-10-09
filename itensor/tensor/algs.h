@@ -29,15 +29,21 @@ namespace itensor {
 //  earlier version of ITensor/MatrixRef)
 //
 
-//void
-//diagSymmetric(const MatrixRefc& M,
-//              MatrixRef&  U,
-//              VectorRef&  d);
 
 void
-diagSymmetric(MatrixRefc M,
-              Matrix& U,
-              Vector& d);
+diagSymmetric(MatrixRefc const& M,
+              Matrix          & U,
+              Vector          & d);
+
+void
+diagSymmetric(MatrixRefc const& M,
+              Matrix          & U,
+              VectorRef  const& d);
+
+void
+diagSymmetric(MatrixRefc const& M,
+              MatrixRef  const& U,
+              VectorRef  const& d);
 
 //orthogonalize the first num columns of a matrixref M,
 //optionally repeating numpass times to reduce roundoff errors
