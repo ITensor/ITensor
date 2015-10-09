@@ -364,6 +364,31 @@ operator,(const std::string& op_)
     return *this;
     }
     
+ComplexMatrix::ComplexMatrix(const std::vector<CoefMatElement> &M)
+    {
+    int nr = 0, nc = 0;
+    bool isComplex = false;
+    
+    for(const CoefMatElement &elem : M)
+        {
+        nr = max(nr, elem.ind.row);
+        nc = max(nc, elem.ind.col);
+        if(!isReal(elem.val))
+            isComplex = true;
+        }
+    
+    Re.Enlarge(nr, nc);
+    if(isComplex)
+        Im.Enlarge(nr, nc);
+        
+    for(const CoefMatElement &elem : M)
+        {
+        Re(elem.ind.row,elem.ind.col) = elem.val.real();
+        if(!isReal(elem.val))
+            Im(elem.ind.row,elem.ind.col) = elem.val.imag();
+        }
+    }
+    
 Complex ComplexMatrix::operator() (int i, int j) const
     {
         Complex re, im;
@@ -373,27 +398,9 @@ Complex ComplexMatrix::operator() (int i, int j) const
             re = Complex(Re(i,j),0);
         return re+im;
     }
-    
-// i,j are 1-based    
-void ComplexMatrix::insert(int i, int j, Complex val) 
-    {
-   // TODO: Determine the size in advance instead of resizing every time
-    if(i > Re.Nrows() || j > Re.Ncols())
-        {
-        int newNRows = max(i, Re.Nrows());
-        int newNCols = max(j, Re.Ncols());
-        Re.Enlarge(newNRows, newNCols);
-        if(Im.Storage() || !isReal(val))
-            Im.Enlarge(newNRows, newNCols);
-        }
-    
-    Re(i,j) = val.real();
-    if(!isReal(val))
-        Im(i,j) = val.imag();    
-    }   
 
 // Note that n is 1-based site index
-void AutoMPO::AddToTempMPO(int n, const MatElement &elem)
+void AutoMPO::AddToTempMPO(int n, const MPOMatElement &elem)
     {
         auto el = find(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), elem);
         if(el == tempMPO_.at(n-1).end())
@@ -501,7 +508,7 @@ void AutoMPO::ConstructMPOUsingSVD()
                     k = AddToVec(right, rightPart_.at(n));
                     }
                 l = AddToVec(left, leftPart_.at(n-1));
-                Coeff_.at(n-1).insert(l,j, ht.coef);
+                Coeff_.at(n-1).emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
                 }
                 
             // Place the coefficient of the HTerm when the term starts
@@ -517,7 +524,7 @@ void AutoMPO::ConstructMPOUsingSVD()
                 }
             else
                 RewriteFermionic(onsite, leftF);
-            MatElement elem(MatIndex(j, k), Term(c, onsite));
+            MPOMatElement elem(MatIndex(j, k), Term(c, onsite));
             AddToTempMPO(n, elem);
             }
     
@@ -528,8 +535,8 @@ void AutoMPO::ConstructMPOUsingSVD()
     println("TempMPO Elements:");
     for(int n=1; n<=N; n++)
         {
-        for(const MatElement &elem: tempMPO_.at(n-1))
-            println(elem.ind.row,',',elem.ind.col,'\t',elem.term.coef,'\t',elem.term.ops);
+        for(const MPOMatElement &elem: tempMPO_.at(n-1))
+            println(elem.ind.row,',',elem.ind.col,'\t',elem.val.coef,'\t',elem.val.ops);
         println("=========================================");
         }
 
@@ -549,10 +556,9 @@ void AutoMPO::ConstructMPOUsingSVD()
     println("Left-Right Coefficients:");        
     for(int n=0; n<N; n++)
     {
-         println(Coeff_.at(n).Re);
-         if(Coeff_.at(n).isComplex())
-             println(Coeff_.at(n).Im);
-         println("=========================================");
+        for(const CoefMatElement &elem : Coeff_.at(n))
+            println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
+        println("=========================================");
     }
 #endif            
 
@@ -569,22 +575,25 @@ void AutoMPO::ConstructMPOUsingSVD()
             
         // for 1st site there are no left partials and Coeff_[n-1] is empty but Coeff_[n] is not
         // for Nth site Coeff_[n] is empty but Coeff_[n-1] is not
-        if(n==N || Coeff_.at(n).isEmpty())
+        if(n==N || Coeff_.at(n).empty())
             d_npp = 0;
         else
             {
             clock_t svdt = clock();
             
+            // Convert Coeff_.at(n) to a dense Matrix                
+            ComplexMatrix C(Coeff_.at(n));
+            
             Vector D;
-            if(Coeff_.at(n).isComplex())
+            if(C.isComplex())
                 {                    
                 ComplexMatrix U;
-                SVD(Coeff_.at(n).Re, Coeff_.at(n).Im, U.Re, U.Im, D, V_npp.Re, V_npp.Im);
+                SVD(C.Re, C.Im, U.Re, U.Im, D, V_npp.Re, V_npp.Im);
                 }
             else
                 {
                 Matrix U;                
-                SVD(Coeff_.at(n).Re, U, D, V_npp.Re);
+                SVD(C.Re, U, D, V_npp.Re);
                 }
 
             svdt = clock() - svdt;
@@ -613,32 +622,32 @@ void AutoMPO::ConstructMPOUsingSVD()
         finalMPO_.at(n-1).at(1).at(1) += Term(1, opId);
             
         Complex Zero(0,0);
-        for(const MatElement &elem: tempMPO_.at(n-1))
+        for(const MPOMatElement &elem: tempMPO_.at(n-1))
             {
             int k = elem.ind.row;
             int l = elem.ind.col;
     
             if(l==0 && k==0)	// on-site terms
-                finalMPO_.at(n-1).at(1).at(0) += elem.term;
+                finalMPO_.at(n-1).at(1).at(0) += elem.val;
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp; j++)
                     if(V_npp(j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1).at(1+j) += Term(elem.term.coef*V_npp(j,l), elem.term.ops);
+                        finalMPO_.at(n-1).at(1).at(1+j) += Term(elem.val.coef*V_npp(j,l), elem.val.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n; i++)
                     if(V_n(i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1+i).at(0) += Term(elem.term.coef*V_n(i,k), elem.term.ops);
+                        finalMPO_.at(n-1).at(1+i).at(0) += Term(elem.val.coef*V_n(i,k), elem.val.ops);
                 }
             else 
                 {
                 for(int i=1; i<=d_n; i++)
                     for(int j=1; j<=d_npp; j++) 
                         if( (V_n(i,k) != Zero)  && (V_npp(j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO_.at(n-1).at(1+i).at(1+j) += Term(elem.term.coef*V_n(i,k)*V_npp(j,l), elem.term.ops);
+                            finalMPO_.at(n-1).at(1+i).at(1+j) += Term(elem.val.coef*V_n(i,k)*V_npp(j,l), elem.val.ops);
                 }
             }
             sitet = clock() - sitet;

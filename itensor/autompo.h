@@ -155,24 +155,31 @@ struct MatIndex
     bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
     };
 
+template<typename T>
 struct MatElement
     {
     MatIndex ind;
-    Term term;
+    T val;
     
-    MatElement(MatIndex index, Term t) : ind(index), term(t) {};
+    MatElement<T>(MatIndex index, T v) : ind(index), val(v) {};
     
-    bool operator==(const MatElement &other) const {return ind == other.ind && term == other.term; }
+    bool operator==(const MatElement<T> &other) const {return ind == other.ind && val == other.val; }
     };
-
+    
+typedef MatElement<Term> MPOMatElement;
+typedef MatElement<Complex> CoefMatElement;
+    
 struct ComplexMatrix
     {
     Matrix Re;
     Matrix Im;
     
-    bool isEmpty() const { return (!Re.Storage() && !Im.Storage()); };
+    ComplexMatrix() {};
+    
+    ComplexMatrix(const std::vector<CoefMatElement> &M);
+    
     bool isComplex() const { return Im.Storage(); };
-    void insert(int i, int j, Complex val);
+    
     Complex operator() (int i, int j) const;
     };
     
@@ -182,9 +189,9 @@ class AutoMPO
     std::vector<HTerm> terms_;
     
     std::vector<std::vector<SiteTermProd>> leftPart_,rightPart_;
-    std::vector<ComplexMatrix> Coeff_;
+    std::vector<std::vector<CoefMatElement>> Coeff_;
 
-    std::vector<std::vector<MatElement>> tempMPO_;
+    std::vector<std::vector<MPOMatElement>> tempMPO_;
     std::vector<std::vector<std::vector<TermSum>>> finalMPO_;
     
     MPO H_;
@@ -192,7 +199,7 @@ class AutoMPO
     
     clock_t dt1_, dt2_;
 
-    void AddToTempMPO(int n, const MatElement &elem);
+    void AddToTempMPO(int n, const MPOMatElement &elem);
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
