@@ -351,11 +351,11 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
     auto noise = args.getReal("Noise",0.);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto usesvd = args.getBool("UseSVD",false);
+
     Spectrum res;
 
-    //TODO 
-    //if(true) 
-    if(args.getBool("UseSVD",false) || (noise == 0 && cutoff < 1E-12))
+    if(usesvd || (noise == 0 && cutoff < 1E-12))
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
