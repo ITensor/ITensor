@@ -28,6 +28,8 @@ namespace itensor {
 
 #define SET_SCOPED(X) SET_SCOPED0(X)
 
+namespace detail {
+
 template<typename T>
 class SetScoped
     {
@@ -77,19 +79,20 @@ struct MakeSetScoped
     MakeSetScoped(T& i) : pi(&i) { }
 
     SetScoped<T>
-    operator=(const T& nval) 
+    operator=(T const& nval) 
         { 
         SetScoped<T> sv(*pi);
         sv.setNewVal(nval);
         return std::move(sv);
         }
     };
+} //namespace detail
 
 template<typename T>
 auto
-makeSetScoped(T& t) -> MakeSetScoped<T>
+makeSetScoped(T& t) -> detail::MakeSetScoped<T>
     { 
-    return MakeSetScoped<T>(t);
+    return detail::MakeSetScoped<T>(t);
     }
 
 
