@@ -67,9 +67,9 @@ diagTensor(Container const& C,
     //types (such as Container==int) that don't have a value_type member type
     -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
     { 
-    using size_type = decltype(C.size());
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
+    using size_type = decltype(C.size());
     //Compute min of all index dimensions
     auto minm = i1.m();
     for(const auto& ind : is)
