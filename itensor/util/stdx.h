@@ -109,10 +109,19 @@ fill(Container&& C,
 template<typename Container,
          typename T>
 auto
-find(Container&& C,
-     T&& val) -> decltype(C.begin())
+count(Container&& C,
+     T const& val) -> decltype(std::count(C.begin(),C.end(),val))
     {
-    return std::find(C.begin(),C.end(),std::forward<T>(val));
+    return std::count(C.begin(),C.end(),val);
+    }
+
+template<typename Container,
+         typename T>
+auto
+find(Container&& C,
+     T const& val) -> decltype(C.begin())
+    {
+    return std::find(C.begin(),C.end(),val);
     }
 
 template<typename Container,
