@@ -149,7 +149,7 @@ computeTruncerr(Args const& args)
     }
 
 std::ostream& 
-operator<<(std::ostream & s, const Spectrum& spec)
+operator<<(std::ostream & s, Spectrum const& spec)
     {
     auto& eigs = spec.eigsKept();
     auto N = eigs.size();
@@ -157,13 +157,12 @@ operator<<(std::ostream & s, const Spectrum& spec)
         {
         decltype(N) max_show = 20;
         auto stop = std::min(N,max_show);
-        s << "  Eigs kept: ";
-        for(decltype(stop) j = 1; j <= stop; ++j)
+        s << "  Eigs kept:";
+        for(auto j : count(stop))
             {
-            s << format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E"), eigs(j));
-            s << ((j != stop) ? ", " : "\n");
+            s << format(eigs(j) > 1E-3 ? (" %.3f") : (" %.3E"), eigs(j));
             }
-        s << format("  Trunc. error = %.3E\n", spec.truncerr());
+        s << format("\n  Trunc. error = %.3E\n", spec.truncerr());
         }
     return s;
     }
