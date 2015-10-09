@@ -197,11 +197,9 @@ SECTION("Erase")
         }
     CHECK(ia.size()==(size-vals_to_erase.size()));
 
-    auto erased = [&vals_to_erase](auto elt)
+    auto erased = [&vals_to_erase](int elt)
                   {
-                  return std::find(vals_to_erase.begin(),
-                                   vals_to_erase.end(),
-                                   elt)!=vals_to_erase.end();
+                  return stdx::count(vals_to_erase,elt) != 0;
                   };
 
     //print("New els:");

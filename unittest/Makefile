@@ -9,10 +9,10 @@ SOURCES=test.cc
 ifdef test
 SOURCES+= $(test)_test.cc
 else
-#SOURCES+= util_test.cc
-#SOURCES+= algorithm_test.cc
-#SOURCES+= real_test.cc
-#SOURCES+= args_test.cc
+SOURCES+= util_test.cc
+SOURCES+= algorithm_test.cc
+SOURCES+= real_test.cc
+SOURCES+= args_test.cc
 SOURCES+= matrix_test.cc
 SOURCES+= tensor_test.cc
 #SOURCES+= contract_test.cc
@@ -21,7 +21,7 @@ SOURCES+= indexset_test.cc
 SOURCES+= itensor_test.cc
 SOURCES+= iqindex_test.cc
 SOURCES+= iqtensor_test.cc
-#SOURCES+= svdalgs_test.cc
+SOURCES+= svdalgs_test.cc
 #SOURCES+= mps_test.cc
 #SOURCES+= mpo_test.cc
 #SOURCES+= eigensolver_test.cc

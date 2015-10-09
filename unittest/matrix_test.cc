@@ -432,7 +432,7 @@ SECTION("Constructors")
              Ac = 4;
         auto data = randomData(Ar*Ac);
         CHECK(data.size() == Ar*Ac);
-        auto A = makeMatRef(data.begin(),Ar,Ac);
+        auto A = makeMatRef(data.begin(),data.size(),Ar,Ac);
 
         for(auto c : count(Ac))
         for(auto r : count(Ar))
@@ -484,8 +484,8 @@ SECTION("Automatic Conversion")
     auto N = 10;
     auto data1 = randomData(N*N);
     auto data2 = randomData(N*N);
-    auto mr1 = makeMatRef(data1.begin(),N,N);
-    auto cmr2 = makeMatRefc(data2.begin(),N,N);
+    auto mr1 = makeMatRef(data1.begin(),data1.size(),N,N);
+    auto cmr2 = makeMatRefc(data2.begin(),data2.size(),N,N);
 
     //Assigning to MatrixRefc from MatrixRef is ok
     cmr2 = mr1;
@@ -505,8 +505,8 @@ SECTION("Test makeRef")
     auto N = 10;
     auto data = randomData(N*N);
 
-    auto Mr = makeMatRef(data.begin(),N,N);
-    auto cMr = makeMatRefc(data.begin(),N,N);
+    auto Mr = makeMatRef(data.begin(),data.size(),N,N);
+    auto cMr = makeMatRefc(data.begin(),data.size(),N,N);
     Matrix M(N,N);
     const auto& cM = M;
 
@@ -539,11 +539,11 @@ SECTION("Test += -= operators")
     auto dataB = randomData(N*N);
     auto origdataA = dataA;
 
-    auto A = makeMatRef(dataA.begin(),N,N);
-    auto origA = makeMatRefc(origdataA.cbegin(),N,N);
-    auto B = makeMatRefc(dataB.cbegin(),N,N);
-    auto At = transpose(makeMatRef(dataA.begin(),N,N));
-    auto Bt = transpose(makeMatRefc(dataB.cbegin(),N,N));
+    auto A = makeMatRef(dataA.begin(),dataA.size(),N,N);
+    auto origA = makeMatRefc(origdataA.cbegin(),origdataA.size(),N,N);
+    auto B = makeMatRefc(dataB.cbegin(),dataB.size(),N,N);
+    auto At = transpose(makeMatRef(dataA.begin(),dataA.size(),N,N));
+    auto Bt = transpose(makeMatRefc(dataB.cbegin(),dataB.size(),N,N));
 
     A += B;
     for(auto r : count(N))
@@ -606,9 +606,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Ar,Bc);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Ar,Bc);
 
         mult(A,B,C);
         for(auto r : count(nrows(C)))
@@ -629,9 +629,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(K*Bc);
         auto dataC = autovector<Real>(1,Ac*Bc);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Ac,Bc);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Ac,Bc);
 
         auto At = transpose(A);
         mult(At,B,C);
@@ -653,9 +653,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(Br*K);
         auto dataC = autovector<Real>(1,Ar*Br);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Ar,Br);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),Br,K);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Ar,Br);
 
         auto Bt = transpose(B);
         mult(A,Bt,C);
@@ -677,9 +677,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(Br*K);
         auto dataC = autovector<Real>(1,Ac*Br);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Ac,Br);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),Br,K);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Ac,Br);
 
         auto At = transpose(A);
         auto Bt = transpose(B);
@@ -702,9 +702,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Bc,Ar);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Bc,Ar);
 
         auto Ct = transpose(C);
         mult(A,B,Ct);
@@ -726,9 +726,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(K*Bc);
         auto dataC = autovector<Real>(1,Bc*Ac);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Bc,Ac);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Bc,Ac);
 
         auto At = transpose(A);
         auto Ct = transpose(C);
@@ -751,9 +751,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(Br*K);
         auto dataC = autovector<Real>(1,Br*Ar);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Br,Ar);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),Br,K);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Br,Ar);
 
         auto Bt = transpose(B);
         auto Ct = transpose(C);
@@ -776,9 +776,9 @@ SECTION("Test MatrixRef mult")
         auto dataB = randomData(Br*K);
         auto dataC = autovector<Real>(1,Br*Ac);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Br,Ac);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),dataB.size(),Br,K);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),Br,Ac);
 
         auto At = transpose(A);
         auto Bt = transpose(B);
@@ -799,8 +799,8 @@ SECTION("Test MatrixRef mult")
         auto dataA = randomData(N*N);
         auto dataC = randomData(N*N);
 
-        auto A = makeMatRef(dataA.begin(),N,N);
-        auto C = makeMatRef(dataC.begin(),N,N);
+        auto A = makeMatRef(dataA.begin(),dataA.size(),N,N);
+        auto C = makeMatRef(dataC.begin(),dataC.size(),N,N);
 
         mult(A,A,C);
         for(auto r : count(nrows(C)))
@@ -822,14 +822,14 @@ SECTION("Test multAdd")
     auto dataB = randomData(K*Bc);
     auto dataC = autovector<Real>(1,Ar*Bc);
 
-    auto A = makeMatRef(dataA.begin(),Ar,K);
-    auto B = makeMatRef(dataB.begin(),K,Bc);
-    auto C = makeMatRef(dataC.begin(),Ar,Bc);
+    auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
+    auto B = makeMatRef(dataB.begin(),dataB.size(),K,Bc);
+    auto C = makeMatRef(dataC.begin(),dataC.size(),Ar,Bc);
 
     //Save a copy of C's original data in order
     //to explicitly carry out multAdd alg. below
     auto orig_dataC = dataC;
-    auto origC = makeMatRef(orig_dataC.begin(),Ar,Bc);
+    auto origC = makeMatRef(orig_dataC.begin(),orig_dataC.size(),Ar,Bc);
 
     multAdd(A,B,C);
     for(auto r : count(nrows(C)))
@@ -919,7 +919,7 @@ SECTION("Test Matrix multiplication")
 
     //Store result in a matrixref instead
     auto dataC = autovector<Real>(1,Ar*Bc);
-    auto Cref = makeMatRef(dataC.begin(),Ar,Bc);
+    auto Cref = makeMatRef(dataC.begin(),dataC.size(),Ar,Bc);
     mult(A,B,Cref);
     for(auto r : count(nrows(C)))
     for(auto c : count(ncols(C)))
