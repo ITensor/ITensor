@@ -42,19 +42,25 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 
 template<class Tensor>
 Spectrum 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             const Args& args = Global::args())
+denmatDecomp(Tensor const& AA, 
+             Tensor & A, 
+             Tensor & B, 
+             Direction dir, 
+             Args const& args = Global::args())
     {
     return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>{},args);
     }
 
-//Density matrix decomp with LocalOpT object supporting the noise term
-//The LocalOpT argument PH has to provide the deltaRho method
+//Density matrix decomp with BigMatrixT object supporting the noise term
+//The BigMatrixT argument PH has to provide the deltaRho method
 //to enable the noise term feature (see localop.h for example)
-template<class Tensor, class LocalOpT>
+template<class Tensor, class BigMatrixT>
 Spectrum 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             const LocalOpT& PH,
+denmatDecomp(Tensor const& AA, 
+             Tensor & A, 
+             Tensor & B, 
+             Direction dir, 
+             BigMatrixT const& PH,
              Args args = Global::args());
 
 
@@ -71,7 +77,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 //
 template<class Tensor>
 Spectrum 
-diagHermitian(const Tensor& M, 
+diagHermitian(Tensor const& M, 
               Tensor& U, 
               Tensor& D, 
               Args args = Global::args());
@@ -257,11 +263,13 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
     return Spectrum();
     }
 
-template<class Tensor, class LocalOpT>
+template<class Tensor, class BigMatrixT>
 Spectrum 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, 
+denmatDecomp(Tensor const& AA, 
+             Tensor & A, 
+             Tensor & B, 
              Direction dir, 
-             const LocalOpT& PH,
+             BigMatrixT const& PH,
              Args args)
     {
     using IndexT = typename Tensor::index_type;
@@ -289,6 +297,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
             cinds.push_back(I);
 
     //Apply combiner
+    START_TIMER(8)
     auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
     auto cmb = combiner(std::move(cinds),iname);
     auto ci = cmb.inds().front();
@@ -298,6 +307,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     //Form density matrix
     auto rho = AAc*dag(prime(AAc,ci)); 
 
+
     //Add noise term if requested
     if(noise > 0 && PH)
         {
@@ -305,6 +315,8 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         auto tr = (diagTensor(1,ci,prime(ci))*realPart(rho)).real();
         rho *= 1./tr;
         }
+
+    STOP_TIMER(8)
 
     if(args.getBool("UseOrigM",false))
         {
@@ -318,8 +330,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         rho = realPart(rho);
         }
 
-    Tensor U;
-    Tensor D;
+    Tensor U,D;
     args.add("Truncate",true);
     auto spec = diag_hermitian(rho,U,D,args);
 

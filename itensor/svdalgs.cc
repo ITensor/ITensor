@@ -443,12 +443,7 @@ svdRank2(IQTensor A,
     //irrespective of quantum numbers
     stdx::sort(alleig,std::greater<Real>{});
 
-    //print("alleig = "); for(auto& el : alleig) print(" ",el); println();
-
-    auto pstore = alleig;
-    auto probs = Vector(move(pstore),VecRange{pstore.size()});
-
-    //print("probs = "); for(auto& el : probs) print(" ",el); println();
+    auto probs = Vector(move(alleig),VecRange{alleig.size()});
 
     long m = probs.size();
     Real truncerr = 0;
@@ -531,7 +526,7 @@ svdRank2(IQTensor A,
     IQTDiag Dstore(Dis,div(A));
 
     long n = 0;
-    for(auto b: count(Nblock))
+    for(auto b : count(Nblock))
         {
         auto& B = blocks[b];
         auto& UU = Umats.at(b);
@@ -601,7 +596,7 @@ svdRank2(IQTensor A,
     Real signfix = (A.scale().sign() == -1) ? -1. : +1.;
 
     U = IQTensor(Uis,move(Ustore));
-    D = IQTensor({L,R},move(Dstore),A.scale()*signfix);
+    D = IQTensor(Dis,move(Dstore),A.scale()*signfix);
     V = IQTensor(Vis,move(Vstore));
 
     //Originally eigs were found without including scale
@@ -628,7 +623,21 @@ diag_hermitian(ITensor rho,
     auto cplx = isComplex(rho);
     auto showeigs = args.getBool("ShowEigs",false);
 
+    Index active;
+    for(auto& I : rho.inds())
+        if(I.primeLevel() == 0)
+            {
+            active = I;
+            break;
+            }
+
 #ifdef DEBUG
+    if(!active)
+        {
+        Print(rho.inds());
+        Error("Tensor must have one unprimed index");
+        }
+
     if(rho.r() != 2)
         {
         Print(rho.r());
@@ -636,20 +645,6 @@ diag_hermitian(ITensor rho,
         Error("Rank greater than 2 in diag_hermitian");
         }
 #endif
-
-    Index active;
-    for(const Index& I : rho.inds())
-        if(I.primeLevel() == 0)
-            {
-            active = I;
-            break;
-            }
-
-    if(!active)
-        {
-        Print(rho.inds());
-        Error("Tensor must have one unprimed index");
-        }
 
     //Depending on the sign of the scale, calling .toMatrix11NoScale 
     //yields a matrix proportional to either rho or -rho.
@@ -686,22 +681,6 @@ diag_hermitian(ITensor rho,
         }
 
 
-    //Include rho's scale to get the actual eigenvalues kept
-    //as long as the leading eigenvalue is within a few orders
-    //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    //Real orderMag = log(std::fabs(DD(1))) + rho.scale().logNum();
-    //if(std::fabs(orderMag) < 5 && rho.scale().isFiniteReal())
-    //    {
-    //    DD *= rho.scale().real();
-    //    }
-
-    if(showeigs)
-        {
-        println("Before truncating, m = ",DD.size());
-        println("DD = ",DD);
-        printfln("maxm=%d,minm=%d,cutoff=%.2E",maxm,minm,cutoff);
-        }
-
     //Truncate
     Real truncerr = 0.0;
     long m = DD.size();
@@ -712,13 +691,7 @@ diag_hermitian(ITensor rho,
         tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         m = DD.size();
         reduceCols(UU,m);
-        if(showeigs)
-            {
-            printfln("Truncated to m=%d, trunc. err. = %.2E",m,truncerr);
-            }
         }
-    Spectrum spec;
-    spec.truncerr(truncerr);
 
 #ifdef DEBUG
     if(m > maxm)
@@ -732,65 +705,79 @@ diag_hermitian(ITensor rho,
         }
 #endif
 
-    if(args.getBool("ShowEigs",false))
+    if(showeigs)
         {
-        printfln("\nminm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
-        printfln("Kept %d states in diag_denmat",m);
-        printfln("Truncation error = %.3E",truncerr);
-        auto stop = DD.size();
-        print("Eigs: ");
-        for(decltype(stop) j = 1; j <= stop; ++j)
-            {
-            printf(DD(j) > 1E-3 ? ("%.3f") : ("%.3E"),DD(j));
-            print((j != stop) ? ", " : "\n");
-            }
-        println();
+        auto showargs = args;
+        showargs.add("Cutoff",cutoff);
+        showargs.add("Maxm",maxm);
+        showargs.add("Minm",minm);
+        showargs.add("Truncate",do_truncate);
+        showargs.add("DoRelCutoff",doRelCutoff);
+        showargs.add("AbsoluteCutoff",absoluteCutoff);
+        showEigs(DD,truncerr,rho.scale(),showargs);
         }
 
     Index newmid(active.rawname(),m,active.type());
 
-    if(cplx)
-        {
-        //ITensor iU(active,newmid,iUU.Columns(1,m));
-        //U = U + iU*Complex_i;
-        }
-    else
+    if(not cplx)
         {
         U = ITensor({active,newmid},ITReal{move(UU.storage())}); 
         D = ITensor({prime(newmid),newmid},ITDiag<Real>{DD.begin(),DD.end()},rho.scale());
         }
-
-    if(rho.scale().isFiniteReal())
-        DD *= rho.scale().real();
     else
-        println("Scale not a finite Real, omitting from returned spectrum.");
+        {
+        //ITensor iU(active,newmid,iUU.Columns(1,m));
+        //U = U + iU*Complex_i;
+        }
 
-    spec.eigsKept(move(DD));
+    if(not rho.scale().isTooBigForReal())
+        {
+        DD *= rho.scale().real0();
+        }
+    else
+        {
+        println("diag_hermitian: scale too big for Real, omitting from returned spectrum.");
+        }
 
-    return spec;
+    return Spectrum{move(DD),{"Truncerr",truncerr}};
     }
 
 Spectrum
-diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
-               const Args& args)
+diag_hermitian(IQTensor    rho, 
+               IQTensor  & U, 
+               IQTensor  & D,
+               Args const& args)
     {
-    /*
-    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
-    const int maxm = args.getInt("Maxm",MAX_M);
-    const int minm = args.getInt("Minm",1);
-    const bool do_truncate = args.getBool("Truncate",false);
-    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    const bool cplx = rho.isComplex();
+    SCOPED_TIMER(7)
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto maxm = args.getInt("Maxm",MAX_M);
+    auto minm = args.getInt("Minm",1);
+    auto do_truncate = args.getBool("Truncate",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto showeigs = args.getBool("ShowEigs",false);
+    auto cplx = isComplex(rho);
 
     if(rho.r() != 2)
         {
-        Print(rho.indices());
-        Error("Density matrix doesn't have rank 2");
+        Print(rho.inds());
+        Error("diag_hermitian requires rank 2 input tensor");
+        }
+    
+    IQIndex ai;
+    for(auto& I : rho.inds())
+        {
+        if(I.primeLevel()==0)
+            {
+            ai = I;
+            break;
+            }
         }
 
 #ifdef DEBUG
-    const QN Zero;
+    if(not ai) Error("in diag_hermitian rho should have one primed and one unprimed IQIndex");
+
+    auto Zero = QN();
     if(div(rho) != Zero)
         { 
         Print(rho); 
@@ -798,161 +785,84 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         }
 #endif
 
-    vector<Matrix> mmatrix(rho.blocks().size()),
-                   imatrix;
-    vector<Vector> mvector(rho.blocks().size());
-    vector<Real> alleig;
-    alleig.reserve(rho.indices().front().m());
+    if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
-    if(cplx)
-        imatrix.resize(rho.blocks().size());
+    auto blocks = doTask(GetBlocks{rho.inds(),ai,prime(ai)},rho.store());
+    auto Nblock = blocks.size();
 
-    if(rho.indices().front().m() == 0)
-        throw ResultIsZero("rho.index(1).m()");
-    if(rho.empty())
-        throw ResultIsZero("rho.empty()");
-
-    LogNum refNorm(1);
-    if(doRelCutoff)
+    size_t totaldsize = 0,
+           totalUsize = 0;
+    for(auto b : count(Nblock))
         {
-        //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
-        Real maxLogNum = -200;
-        rho.scaleOutNorm();
-        for(const ITensor& t : rho.blocks())
-            {
-            maxLogNum = std::max(maxLogNum,t.scale().logNum());
-            }
-        refNorm = LogNum(maxLogNum,1);
+        totaldsize += nrows(blocks[b].M);
+        totalUsize += nrows(blocks[b].M)*ncols(blocks[b].M);
         }
-    rho.scaleTo(refNorm);
 
+    auto Udata = vector<Real>(totalUsize);
+    auto Umats = vector<MatrixRef>(Nblock);
+
+    auto ddata = vector<Real>(totaldsize);
+    auto dvecs = vector<VectorRef>(Nblock);
+
+    auto alleig = stdx::reserve_vector<Real>(rho.inds().front().m());
 
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
-    int itenind = 0;
-    for(const ITensor& t : rho.blocks())
+    totaldsize = 0;
+    totalUsize = 0;
+    for(auto b : count(Nblock))
         {
-        Index a;
-        for(const Index& I : t.indices())
-            {
-            if(I.primeLevel() == 0)
-                {
-                a = I;
-                break;
-                }
-            }
+        auto& M = blocks[b].M;
+        auto& UU = Umats.at(b);
+        auto& d =  dvecs.at(b);
+        auto rM = nrows(M),
+             cM = ncols(M);
 
-        Matrix &UU = mmatrix.at(itenind);
-        Vector &d =  mvector.at(itenind);
+        d = makeVecRef(ddata.data()+totaldsize,rM);
+        UU = makeMatRef(Udata.data()+totalUsize,rM*cM,rM,cM);
 
-        //Depending on the sign of the scale, calling .toMatrix11NoScale 
-        //yields a matrix proportional to either t or -t.
-        //If t (scale().sign() > 0) then want to temporarily reverse 
-        //the sign of the matrix when calling the diagonalization routine
-        //to ensure eigenvalues are ordered from largest to smallest.
-        bool flipSign = t.scale().sign() > 0;
-
-        //Diag ITensors within rho
-        const int n = a.m();
         if(!cplx)
             {
-            Matrix M;
-            t.toMatrix11NoScale(a,prime(a),M);
-            if(flipSign) M *= -1;
-            EigenValues(M,d,UU);
-            if(flipSign) d *= -1;
+            diagSymmetric(makeRef(M),UU,d);
             }
         else
             {
-            ITensor ret = realPart(t),
-                    imt = imagPart(t);
-            ret.scaleTo(refNorm);
-            imt.scaleTo(refNorm);
-            Matrix Mr,Mi;
-            Matrix &iUU = imatrix.at(itenind);
-            ret.toMatrix11NoScale(prime(a),a,Mr);
-            imt.toMatrix11NoScale(prime(a),a,Mi);
-            if(flipSign)
-                {
-                Mr *= -1;
-                Mi *= -1;
-                }
-            HermitianEigenvalues(Mr,Mi,d,UU,iUU);
-            if(flipSign) d *= -1;
+            Error("Complex diag_hermitian not yet implemented");
             }
 
-        for(int j = 1; j <= n; ++j) 
-            alleig.push_back(d(j));
-
-        ++itenind;
-
-#ifdef STRONG_DEBUG
-	Real maxM = 1.0;
-        for(int r = 1; r <= n; ++r)
-	    for(int c = r+1; c <= n; ++c)
-		maxM = std::max(maxM,std::fabs(M(r,c)));
-	Real maxcheck = 1e-13 * maxM;
-        for(int r = 1; r <= n; ++r)
-	    for(int c = r+1; c <= n; ++c)
-            {
-            if(std::fabs(M(r,c)-M(c,r)) > maxcheck)
-                {
-                Print(M);
-                Error("M not symmetric in diag_denmat");
-                }
-            }
-
-        Matrix Id(UU.Nrows(),UU.Nrows()); Id = 1;
-        Matrix Diff = Id-(UU.t()*UU);
-        if(Norm(Diff.TreatAsVector()) > 1E-12)
-            {
-            printfln("\ndiff=%.2E",Norm(Diff.TreatAsVector()));
-            Print(UU.t()*UU);
-            Error("UU not unitary in diag_denmat");
-            }
-        
-#endif //STRONG_DEBUG
+        alleig.insert(alleig.end(),d.begin(),d.end());
+        totaldsize += rM;
+        totalUsize += rM*cM;
         }
+
 
     //2. Truncate eigenvalues
 
+    stdx::sort(alleig,std::greater<Real>{});
+
+    auto probs = Vector{move(alleig),VecRange{alleig.size()}};
+
     //Determine number of states to keep m
-    Real svdtruncerr = 0;
+    long m = probs.size();
+    Real truncerr = 0;
     Real docut = -1;
-    int m = (int)alleig.size();
-
-    sort(alleig.begin(),alleig.end());
-
     if(do_truncate)
         {
-        //Sort all eigenvalues from smallest to largest
-        //irrespective of quantum numbers
-
-        svdtruncerr = truncate(alleig,m,docut,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
+        tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+                                       absoluteCutoff,doRelCutoff);
+        m = probs.size();
         }
-    Spectrum spec;
-    spec.truncerr(svdtruncerr);
 
-    if(args.getBool("ShowEigs",false))
+    if(showeigs)
         {
-        cout << endl;
-        printfln("Kept %d states in diag_denmat line 721", m);
-        printfln("svdtruncerr = %.2E",svdtruncerr);
-        printfln("docut = %.2E",docut);
-        printfln("cutoff=%.2E, minm=%d, maxm=%d",cutoff,minm,maxm);
-        cout << "doRelCutoff is " << (doRelCutoff ? "true" : "false") << endl;
-        cout << "absoluteCutoff is " << (absoluteCutoff ? "true" : "false") << endl;
-        cout << "refNorm is " << refNorm << endl;
-        int s = alleig.size();
-        const int max_show = 20;
-        int stop = s-std::min(s,max_show);
-        cout << "Eigs: ";
-        for(int j = s-1; j >= stop; --j)
-            {
-            printf(alleig.at(j) > 1E-3 ? ("%.3f") : ("%.3E"), alleig.at(j));
-            cout << ((j != stop) ? ", " : "\n");
-            }
-        cout << endl;
+        auto showargs = args;
+        showargs.add("Cutoff",cutoff);
+        showargs.add("Maxm",maxm);
+        showargs.add("Minm",minm);
+        showargs.add("Truncate",do_truncate);
+        showargs.add("DoRelCutoff",doRelCutoff);
+        showargs.add("AbsoluteCutoff",absoluteCutoff);
+        showEigs(probs,truncerr,rho.scale(),showargs);
         }
 
 #ifdef DEBUG
@@ -963,139 +873,101 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         }
     if(m > 20000)
         {
-        cout << "WARNING: very large m = " << m << " in diag_hermitian" << endl;
+        printfln("WARNING: very large m = %d in diag_hermitian",m);
         }
 #endif
 
-    IQIndex active;
-    for(const IQIndex& I : rho.indices())
+    //3. Truncate eigenvalues and eigenvectors of rho
+
+    //Form new Link IQIndex with appropriate m's for each block
+    IQIndex::storage iq;
+    iq.reserve(Nblock);
+
+    for(auto b : count(Nblock))
         {
-        if(I.primeLevel() == 0)
+        auto& UU = Umats.at(b);
+        auto& d = dvecs.at(b);
+        auto& B = blocks[b];
+
+        //Count number of eigenvalues in the sector above docut
+        long this_m = 0;
+        for(auto n : index(d))
             {
-            active = I;
-            break;
+            if(d(n) > docut) this_m += 1;
+            else             break;
             }
+
+        if(m == 0 && d.size() >= 1) // zero mps, just keep one arb state
+            { 
+            this_m = 1; 
+            m = 1; 
+            docut = 1; 
+            }
+
+        if(this_m == 0) 
+            { 
+            d.clear();
+            B.M.clear();
+            assert(not B.M);
+            continue; 
+            }
+
+        d = subVector(d,0,this_m);
+        UU = columns(UU,0,this_m);
+
+        iq.emplace_back(Index(nameint("d",b),this_m),ai.qn(1+B.i1));
         }
 
-    //
-    //Truncate eigenvalues and eigenvectors of rho
-    //
+    IQIndex d("d",move(iq),-ai.dir());
 
-    //Build blocks for unitary diagonalizing rho
-    vector<ITensor> blocks,
-                    iblocks;
-    vector<ITensor> Dblocks;
-    blocks.reserve(rho.blocks().size());
-    Dblocks.reserve(rho.blocks().size());
-    if(cplx) iblocks.reserve(rho.blocks().size());
+    IQIndexSet Uis(dag(ai),dag(d)),
+               Dis(prime(d),dag(d));
 
-    //Also form new Link IQIndex with appropriate m's for each block
-    IQIndex::Storage iq;
-    iq.reserve(rho.blocks().size());
+    IQTReal Ustore(Uis,QN());
+    IQTDiag Dstore(Dis,div(rho));
 
-    itenind = 0;
-    for(const ITensor& t : rho.blocks())
+    long n = 0;
+    for(auto b : count(Nblock))
         {
-        Vec& thisD = mvector.at(itenind);
-        Matrix& thisU = mmatrix.at(itenind);
+        auto& B = blocks[b];
+        auto& UU = Umats.at(b);
+        auto& dv = dvecs.at(b);
+        auto mm = ncols(UU);
+        //Default-constructed B.M corresponds
+        //to this_m==0 case above
+        if(not B.M) continue;
 
-        int this_m = 1;
-        if(do_truncate)
-            {
-            while(this_m <= thisD.Length() && thisD(this_m) > docut) 
-                {
-                if(thisD(this_m) < 0) thisD(this_m) = 0;
-                ++this_m;
-                }
-            --this_m; //since the loop overshoots by 1
+        auto uind = stdx::make_array(B.i1,n);
+        auto pU = getBlock(Ustore,Uis,uind);
+        assert(pU.data() != nullptr);
+        assert(ai[B.i1].m() == long(nrows(UU)));
+        auto Uref = makeMatRef(pU,nrows(UU),mm);
+        Uref &= UU;
 
-            if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
-                { this_m = 1; m = 1; docut = 1; }
+        auto dind = stdx::make_array(n,n);
+        auto pD = getBlock(Dstore,Dis,dind);
+        assert(pD.data() != nullptr);
+        auto Dref = makeVecRef(pD.data(),mm);
+        Dref &= dv;
 
-            thisD.ReduceDimension(this_m);
-            }
-        else
-            {
-            this_m = thisD.Length();
-            }
-
-        if(this_m == 0) { ++itenind; continue; }
-
-        Index nm("qlink",this_m);
-
-        Index act;
-        for(const Index& I : t.indices())
-            {
-            if(I.primeLevel() == 0)
-                {
-                act = I;
-                break;
-                }
-            }
-
-        iq.push_back(IndexQN(nm,qn(active,act)));
-
-        MatrixRef Utrunc = thisU.Columns(1,this_m);
-
-        ITensor block(act,nm);
-        block.fromMatrix11(act,nm,Utrunc);
-        blocks.push_back(block);
-
-        if(cplx)
-            {
-            iblocks.push_back(ITensor(act,nm,imatrix.at(itenind).Columns(1,this_m)));
-            }
-
-        Dblocks.push_back(ITensor(prime(nm),nm,thisD.SubVector(1,this_m)));
-
-        ++itenind;
+        ++n;
         }
 
-    if(iq.size() == 0)
+    U = IQTensor(Uis,move(Ustore));
+    D = IQTensor(Dis,move(Dstore),rho.scale());
+
+    if(rho.scale().isTooBigForReal())
         {
-        Print(m);
-        Print(docut);
-        throw ResultIsZero("iq.size() == 0");
+        println("scale too big, omitting from reported eigenvalues");
+        }
+    else
+        {
+        probs *= rho.scale().real0();
         }
 
-    IQIndex newmid("qlink",iq, -active.dir());
+    return Spectrum{move(probs),{"Truncerr",truncerr}};
 
-    U = IQTensor(dag(active),dag(newmid));
-    D = IQTensor(prime(newmid),dag(newmid));
-    for(long j = 0; j < blocks.size(); ++j)
-        {
-        D += Dblocks.at(j);
-        U += blocks.at(j);
-        }
-
-    if(cplx)
-        {
-        IQTensor iU(dag(active),dag(newmid));
-        for(size_t j = 0; j < iblocks.size(); ++j)
-            {
-            if(iblocks.at(j).norm() > 1E-14)
-                iU += iblocks.at(j);
-            }
-        if(!iU.blocks().empty())
-            U = U + iU*Complex_i;
-        }
-
-    D *= refNorm;
-
-    Vec DD(newmid.m());
-    const size_t aesize = alleig.size();
-    for(int i = 1; i <= newmid.m(); ++i) 
-        DD(i) = alleig.at(aesize-i);
-
-    spec.eigsKept(DD);
-
-    return spec;
-    */
-
-    //TODO: remove this, just here to make it compile
-    return Spectrum();
-
-    } //void diag_hermitian
+    } //diag_hermitian IQTensor
 
 void 
 eig_decomp(ITensor T, 

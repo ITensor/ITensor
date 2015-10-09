@@ -173,6 +173,45 @@ SECTION("IQTensor SVD")
 
         CHECK(norm(S-U*D*V) < 1E-12);
         }
+
+    }
+
+SECTION("IQTensor denmatDecomp")
+    {
+    SECTION("Test 1")
+        {
+        IQIndex S1("S1",Index("s1+",1,Site),QN(+1),
+                        Index("s1-",1,Site),QN(-1));
+        IQIndex S2("S2",Index("s2+",1,Site),QN(+1),
+                        Index("s2-",1,Site),QN(-1));
+        IQIndex L1("L1",Index("l1+2",3),QN(+2),
+                        Index("l1+1",4),QN(+1),
+                        Index("l1 0",8),QN( 0),
+                        Index("l1-1",4),QN(-1),
+                        Index("l1-2",2),QN(-2));
+        IQIndex L2("L2",Index("l2+2",4),QN(+2),
+                        Index("l2+1",6),QN(+1),
+                        Index("l2 0",10),QN( 0),
+                        Index("l2-1",4),QN(-1),
+                        Index("l2-2",3),QN(-2));
+        IQIndex L3("L3",Index("l3+2",2),QN(+2),
+                        Index("l3 0",4),QN( 0),
+                        Index("l3-2",2),QN(-2));
+
+        auto A1 = randomTensor(QN(),L1,S1,L2),
+             A2 = randomTensor(QN(),dag(L2),S2,L3);
+
+        auto AA = A1*A2;
+        AA *= -1./norm(AA);
+        auto spec = denmatDecomp(AA,A1,A2,Fromleft);
+
+        CHECK(norm(AA-A1*A2) < 1E-11);
+
+        for(auto eig : spec.eigsKept())
+            {
+            CHECK(eig >= 0.);
+            }
+        }
     }
 
 }

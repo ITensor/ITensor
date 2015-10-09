@@ -65,6 +65,7 @@ SECTION("Constructors")
     auto vr = makeVecRef(data.begin(),size);
     CHECK(vr);
     CHECK(vr.size() == size);
+    CHECK(isContiguous(vr));
 
     for(auto i : count(size))
         {
@@ -79,6 +80,7 @@ SECTION("Constructors")
         {
         CHECK_CLOSE(v(i),p[i]);
         }
+    CHECK(isContiguous(v));
     }
 
 SECTION("VectorRef Conversion")

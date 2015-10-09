@@ -79,6 +79,7 @@ SECTION("TensorRef")
         CHECK(t.extent(0) == 5);
         CHECK(t.extent(1) == 2);
         CHECK(t.size() == 10);
+        CHECK(isContiguous(t));
         }
 
     SECTION("Non-const Element Access")
