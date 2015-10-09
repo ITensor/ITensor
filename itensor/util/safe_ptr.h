@@ -5,7 +5,8 @@
 #ifndef __ITENSOR_SAFE_PTR_H
 #define __ITENSOR_SAFE_PTR_H
 
-#include "print.h"
+#include "itensor/util/print.h"
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 
@@ -13,7 +14,7 @@ template<typename T>
 class SafePtr
     {
     public:
-    using value_type = std::remove_const_t<T>;
+    using value_type = stdx::remove_const_t<T>;
     using pointer = T*;
     using reference = T&;
     using const_pointer = const T*;

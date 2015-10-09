@@ -67,7 +67,7 @@ template<typename R>
 template<typename Indices>
 auto TenRefc<R>::
 operator()(Indices const& ii) const 
-  -> stdx::if_compiles_return<decltype(ii.begin()), reference>
+  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
     { return d_[offset(*prange_,ii)]; }
 
 template<typename R>
@@ -248,14 +248,14 @@ template<typename R>
 template <typename Indices>
 auto Ten<R>::
 operator()(Indices const& ii) 
-  -> stdx::if_compiles_return<decltype(ii.begin()), reference>
+  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
     { return data_[offset(range_,ii)]; }
 
 template<typename R>
 template <typename Indices>
 auto Ten<R>::
 operator()(Indices const& ii) const 
-  -> stdx::if_compiles_return<decltype(ii.begin()), const_reference>
+  -> stdx::if_compiles_return<const_reference,decltype(ii.begin())>
     { return const_reference(data_[offset(range_,ii)]); }
 
 template<typename R>

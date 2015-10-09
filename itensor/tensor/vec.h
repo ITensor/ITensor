@@ -15,10 +15,10 @@ using VectorRef  = TenRef<VecRange>;
 using VectorRefc = TenRefc<VecRange>;
 
 auto inline
-stride(VectorRefc const& v) { return v.stride(0); }
+stride(VectorRefc const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 
 auto inline
-stride(Vector const& v) { return v.stride(0); }
+stride(Vector const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 
 VectorRef
 operator*=(VectorRef v, Real fac);
@@ -167,6 +167,7 @@ operator<<(std::ostream& s, Vector const& v) { return operator<<(s,makeRefc(v));
 auto inline
 makeVecRef(Real* p,
            size_t size)
+    -> VectorRef
     {
     return VectorRef({p,size},VecRange(size));
     }
@@ -174,6 +175,7 @@ makeVecRef(Real* p,
 auto inline
 makeVecRef(const Real* p,
            size_t size)
+    -> VectorRefc
     {
     return VectorRefc({p,size},VecRange(size));
     }
@@ -181,6 +183,7 @@ makeVecRef(const Real* p,
 auto inline
 makeVecRefc(const Real* p,
             size_t size)
+    -> VectorRefc
     {
     return makeVecRef(p,size);
     }
@@ -189,6 +192,7 @@ auto inline
 makeVecRef(Real* p,
            size_t size,
            size_t stride)
+    -> VectorRef
     {
     return VectorRef({p,size*stride},VecRange(size,stride));
     }
@@ -197,6 +201,7 @@ auto inline
 makeVecRef(const Real* p,
            size_t size,
            size_t stride)
+    -> VectorRefc
     {
     return VectorRefc({p,size*stride},VecRange(size,stride));
     }
@@ -205,6 +210,7 @@ auto inline
 makeVecRefc(const Real* p,
             size_t size,
             size_t stride)
+    -> VectorRefc
     {
     return makeVecRef(p,size);
     }
@@ -219,6 +225,7 @@ auto
 subVector(Vec_&& v,
           size_t start,
           size_t stop)
+    -> decltype(makeRef(std::forward<Vec_>(v).store(),VecRange{}))
     {
     static_assert(!std::is_same<Vec_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subVector");
     auto offset = start;

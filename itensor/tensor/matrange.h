@@ -84,6 +84,7 @@ auto inline
 offset(MatRange const& mr, 
        size_t i1,
        size_t i2)
+    -> MatRange::size_type
     {
     return i1*mr.rs+i2*mr.cs;
     }
@@ -92,7 +93,7 @@ offset(MatRange const& mr,
 template<typename Iterable>
 auto
 offset(MatRange const& mr, Iterable const& inds)
-    -> stdx::if_compiles_return<decltype(inds[0]),MatRange::size_type>
+    -> stdx::if_compiles_return<MatRange::size_type,decltype(inds[0])>
     {
     assert(inds.size()==2);
     return offset(mr,inds[0],inds[1]);
@@ -100,6 +101,7 @@ offset(MatRange const& mr, Iterable const& inds)
 
 auto inline
 area(MatRange const& mr)
+    -> MatRange::size_type
     {
     return mr.rn * mr.cn;
     }

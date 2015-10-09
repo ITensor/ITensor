@@ -27,14 +27,14 @@ using Tensor     = Ten<Range>;
 using TensorRef  = TenRef<Range>;
 using TensorRefc = TenRefc<Range>;
 
-template<typename Ten_>
-using ref_type = typename std::decay<Ten_>::type::ref_type;
+template<typename Ten_, typename range_type = Range>
+using ref_type = typename stdx::decay_t<Ten_>::template ref_type<range_type>;
 
 template<typename range_type_>
 class TenRefc
     { 
     public:
-    using range_type = std::remove_const_t<range_type_>;
+    using range_type = stdx::remove_const_t<range_type_>;
     using value_type = Real;
     using iterator = TenIter<const Real*,range_type>;
     using const_iterator = iterator;
@@ -43,8 +43,10 @@ class TenRefc
     using size_type = size_t;
     using tensor_type = Ten<range_type>;
     using storage_type = DataRange<const Real>;
-    using ref_type = TenRefc<Range>;
-    using const_ref_type = TenRefc<Range>;
+    template<typename R_>
+    using ref_type = TenRefc<R_>;
+    template<typename R_>
+    using const_ref_type = TenRefc<R_>;
     private:
     storage_type d_;
     const range_type* prange_ = nullptr;
@@ -172,8 +174,10 @@ class TenRef : public TenRefc<range_type_>
     using size_type = typename parent::size_type;
     using tensor_type = typename parent::tensor_type;
     using storage_type = DataRange<value_type>;
-    using ref_type = TenRef<Range>;
-    using const_ref_type = TenRefc<Range>;
+    template<typename R_>
+    using ref_type = TenRef<R_>;
+    template<typename R_>
+    using const_ref_type = TenRefc<R_>;
 
     TenRef() { }
 
@@ -274,8 +278,9 @@ auto
 makeTenRef(Real* p,
            size_t max_size,
            const range_type* prange)
+    -> TenRef<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRef<R>({p,max_size},prange);
     }
 
@@ -284,33 +289,36 @@ auto
 makeTenRef(const Real* p,
            size_t max_size,
            const range_type* prange)
+    -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRefc<R>({p,max_size},prange);
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeTenRef(Real* p,
            size_t max_size,
            range_type && range)
+    -> TenRef<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range type is of pointer type");
     return TenRef<R>({p,max_size},std::move(range));
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeTenRef(const Real* p,
            size_t max_size,
            range_type && range)
+    -> TenRefc<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range_type is of pointer type");
     return TenRefc<R>({p,max_size},std::move(range));
     }
@@ -321,8 +329,9 @@ makeTenRef(Real* p,
            size_t offset,
            size_t max_size,
            const range_type* prange)
+    -> TenRef<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRef<R>({p,offset,max_size},prange);
     }
 
@@ -332,35 +341,38 @@ makeTenRef(const Real* p,
            size_t offset,
            size_t max_size,
            const range_type* prange)
+    -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRefc<R>({p,offset,max_size},prange);
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeTenRef(Real* p,
            size_t offset,
            size_t max_size,
            range_type && range)
+    -> TenRef<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range_type is of pointer type");
     return TenRef<R>({p,offset,max_size},std::move(range));
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeTenRef(const Real* p,
            size_t offset,
            size_t max_size,
            range_type && range)
+    -> TenRefc<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range_type is of pointer type");
     return TenRefc<R>({p,offset,max_size},std::move(range));
     }
@@ -369,8 +381,9 @@ template<typename range_type>
 auto
 makeRef(Data const& store,
         const range_type* prange)
+    -> TenRef<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRef<R>(store,prange);
     }
 
@@ -378,31 +391,34 @@ template<typename range_type>
 auto
 makeRef(cData const& store,
         const range_type* prange)
+    -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>>
     {
-    using R = std::decay_t<std::remove_pointer_t<range_type>>;
+    using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
     return TenRefc<R>(store,prange);
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeRef(Data const& store,
         range_type && range)
+    -> TenRef<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range_type is of pointer type");
     return TenRef<R>(store,std::move(range));
     }
 
 template<typename range_type,
-         class = std::enable_if_t<std::is_rvalue_reference<range_type&&>::value
+         class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
 makeRef(cData const& store,
         range_type && range)
+    -> TenRefc<stdx::decay_t<range_type>>
     {
-    using R = std::decay_t<range_type>;
+    using R = stdx::decay_t<range_type>;
     static_assert(!std::is_pointer<R>::value,"Error: range_type is of pointer type");
     return TenRefc<R>(store,std::move(range));
     }
@@ -417,14 +433,16 @@ class Ten
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
     using value_type = Real;
-    using pointer = std::add_pointer_t<value_type>;
-    using const_pointer = std::add_pointer_t<const value_type>;
+    using pointer = stdx::add_pointer_t<value_type>;
+    using const_pointer = stdx::add_pointer_t<const value_type>;
     using reference = typename storage_type::reference;
     using const_reference = typename storage_type::const_reference;
     using range_type = range_type_;
-    using ref_type = TenRef<range_type>;
-    using const_ref_type = TenRefc<range_type>;
-    using size_type = typename ref_type::size_type;
+    template<typename R_>
+    using ref_type = TenRef<R_>;
+    template<typename R_>
+    using const_ref_type = TenRefc<R_>;
+    using size_type = typename ref_type<range_type>::size_type;
     public:
     range_type range_;
     storage_type data_;
@@ -583,23 +601,24 @@ offset(Ten<R> const& t, VArgs&&... vargs) -> decltype(offset(t.range(),0))
 
 template<typename R>
 auto constexpr
-makeRef(TenRef<R> const& t) { return t; }
+makeRef(TenRef<R> const& t) -> decltype(t) { return t; }
 
 template<typename R>
 auto constexpr
-makeRef(TenRefc<R> const& t) { return t; }
+makeRef(TenRefc<R> const& t) -> decltype(t) { return t; }
 
 template<typename R>
 auto 
-makeRef(Ten<R> & t) { return TenRef<R>{t}; }
+makeRef(Ten<R> & t) -> TenRef<R> { return TenRef<R>{t}; }
 
 template<typename R>
 auto 
-makeRef(Ten<R> const& t) { return TenRefc<R>{t}; }
+makeRef(Ten<R> const& t) -> TenRefc<R> { return TenRefc<R>{t}; }
 
 template<typename R, typename Arg, typename... Rest>
 auto
 makeRef(TenRef<R> const& t, Arg&& arg, Rest&&... rest) 
+    -> TenRef<R>
     { 
     return TenRef<R>(t.store(),std::forward<Arg>(arg),std::forward<Rest>(rest)...); 
     }
@@ -607,6 +626,7 @@ makeRef(TenRef<R> const& t, Arg&& arg, Rest&&... rest)
 template<typename R, typename Arg, typename... Rest>
 auto
 makeRef(TenRefc<R> const& t, Arg&& arg, Rest&&... rest) 
+    -> TenRefc<R>
     { 
     return TenRefc<R>(t.store(),std::forward<Arg>(arg),std::forward<Rest>(rest)...); 
     }
@@ -614,6 +634,7 @@ makeRef(TenRefc<R> const& t, Arg&& arg, Rest&&... rest)
 template<typename R, typename Arg, typename... Rest>
 auto
 makeRef(Ten<R> & t, Arg&& arg, Rest&&... rest) 
+    -> TenRef<R>
     { 
     return TenRef<R>(t.store(),std::forward<Arg>(arg),std::forward<Rest>(rest)...); 
     }
@@ -621,6 +642,7 @@ makeRef(Ten<R> & t, Arg&& arg, Rest&&... rest)
 template<typename R, typename Arg, typename... Rest>
 auto
 makeRef(Ten<R> const& t, Arg&& arg, Rest&&... rest) 
+    -> TenRefc<R>
     { 
     return TenRefc<R>(t.store(),std::forward<Arg>(arg),std::forward<Rest>(rest)...); 
     }
@@ -630,6 +652,7 @@ makeRef(Ten<R> const& t, Arg&& arg, Rest&&... rest)
 template<typename R, typename... VArgs>
 auto
 makeRef(Ten<R> && t, VArgs&&... args) 
+    -> TenRefc<R>
     { 
     static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRef on temporary/rvalue Ten<R>");
     return TenRefc<R>{};
@@ -642,21 +665,22 @@ makeRef(Ten<R> && t, VArgs&&... args)
 
 template<typename R>
 auto
-makeRefc(TenRef<R> const& t) { return TenRefc<R>{t}; }
+makeRefc(TenRef<R> const& t) -> TenRefc<R> { return TenRefc<R>{t}; }
 
 template<typename R>
 auto constexpr
-makeRefc(TenRefc<R> const& t) { return t; }
+makeRefc(TenRefc<R> const& t) -> decltype(t) { return t; }
 
 template<typename R>
 auto
-makeRefc(Ten<R> const& t) { return TenRefc<R>{t}; }
+makeRefc(Ten<R> const& t) -> TenRefc<R> { return TenRefc<R>{t}; }
 
 //This version of makeRefc intended to fail instantiation,
 //forbids explicitly making TenRefs to temporaries
 template<typename R, typename... VArgs>
 auto
 makeRefc(Ten<R> && t, VArgs&&... args) 
+    -> TenRefc<R>
     { 
     static_assert(stdx::false_regardless_of<R,VArgs...>::value,"Cannot call makeRefc on temporary/rvalue Ten<R>");
     return TenRefc<R>{};

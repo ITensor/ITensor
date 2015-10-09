@@ -12,6 +12,7 @@ namespace itensor {
 template<typename Mat_>
 auto
 transpose(Mat_&& M)
+    -> decltype(makeRef(std::forward<Mat_>(M),MatRange{}))
     {
     return makeRef(std::forward<Mat_>(M),transpose(M.range()));
     }
@@ -23,6 +24,7 @@ subMatrix(Mat_&& M,
           size_t rstop,
           size_t cstart,
           size_t cstop)
+    -> decltype(makeRef(std::forward<Mat_>(M),MatRange{}))
     {
     static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subMatrix");
 #ifdef DEBUG
@@ -39,6 +41,7 @@ auto
 rows(Mat_&& M,
      size_t rstart,
      size_t rstop)
+    -> decltype(makeRef(std::forward<Mat_>(M),MatRange{}))
     {
     return subMatrix(std::forward<Mat_>(M),rstart,rstop,0,nrows(M));
     }
@@ -48,6 +51,7 @@ auto
 columns(Mat_&& M,
         size_t cstart,
         size_t cstop)
+    -> decltype(makeRef(std::forward<Mat_>(M),MatRange{}))
     {
     return subMatrix(std::forward<Mat_>(M),0,nrows(M),cstart,cstop);
     }
@@ -55,6 +59,7 @@ columns(Mat_&& M,
 template<typename Mat_>
 auto
 diagonal(Mat_&& M)
+    -> decltype(makeRef(std::forward<Mat_>(M).store(),VecRange{}))
     {
     static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to diagonal(M)");
     auto drange = VecRange(std::min(nrows(M),ncols(M)),rowStride(M)+colStride(M));
@@ -64,6 +69,7 @@ diagonal(Mat_&& M)
 template<typename Mat_>
 auto
 row(Mat_&& M, size_t j)
+    -> decltype(makeRef(std::forward<Mat_>(M).store(),VecRange{}))
     {
     static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to row(M,n)");
 #ifdef DEBUG
@@ -76,6 +82,7 @@ row(Mat_&& M, size_t j)
 template<typename Mat_>
 auto
 column(Mat_&& M, size_t j)
+    -> decltype(makeRef(std::forward<Mat_>(M).store(),VecRange{}))
     {
     static_assert(!std::is_same<Mat_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to column(M,n)");
 #ifdef DEBUG

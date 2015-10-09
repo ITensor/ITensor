@@ -90,12 +90,14 @@ normalRange(VecRange const& vr)
 //0-indexed
 auto inline
 offset(VecRange const& vr, VecRange::size_type ind)
+    -> VecRange::size_type
     {
     return vr.stride()*ind;
     }
 
 auto inline
 area(VecRange const& vr)
+    -> VecRange::size_type
     {
     return vr.extent();
     }

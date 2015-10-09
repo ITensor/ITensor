@@ -15,22 +15,22 @@ using Matrix = Ten<MatRange>;
 
 template<typename Mat_>
 auto
-nrows(Mat_ const& M) { return M.range().rn; }
+nrows(Mat_ const& M) -> MatRange::size_type { return M.range().rn; }
 
 template<typename Mat_>
 auto
-ncols(Mat_ const& M) { return M.range().cn; }
+ncols(Mat_ const& M) -> MatRange::size_type { return M.range().cn; }
 
 template<typename Mat_>
 auto
-rowStride(Mat_ const& M) { return M.range().rs; }
+rowStride(Mat_ const& M) -> MatRange::size_type { return M.range().rs; }
 
 template<typename Mat_>
 auto
-colStride(Mat_ const& M) { return M.range().cs; }
+colStride(Mat_ const& M) -> MatRange::size_type { return M.range().cs; }
 
 template<typename Mat_>
-auto
+bool
 isTransposed(Mat_ const& M) { return isTransposed(M.range()); }
 
 
@@ -201,6 +201,7 @@ makeMatRef(Real* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
+    -> MatrixRef
     {
     return MatrixRef({p,max_offset},MatRange{nrows,ncols});
     }
@@ -210,6 +211,7 @@ makeMatRef(const Real* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
+    -> MatrixRefc
     {
     return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
     }
@@ -219,6 +221,7 @@ makeMatRefc(const Real* p,
             size_t max_offset,
             size_t nrows,
             size_t ncols)
+    -> MatrixRefc
     {
     return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
     }
@@ -227,6 +230,7 @@ auto inline
 makeMatRef(Data const& D,
            size_t nrows,
            size_t ncols)
+    -> MatrixRef
     {
     return MatrixRef(D,MatRange{nrows,ncols});
     }
@@ -235,6 +239,7 @@ auto inline
 makeMatRef(cData const& D,
            size_t nrows,
            size_t ncols)
+    -> MatrixRefc
     {
     return MatrixRefc(D,MatRange{nrows,ncols});
     }
@@ -244,6 +249,7 @@ auto
 makeMatRefc(DataRange<T> const& D,
             size_t nrows,
             size_t ncols)
+    -> MatrixRefc
     {
     return MatrixRefc(DataRange<const T>(D),MatRange{nrows,ncols});
     }

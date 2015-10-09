@@ -354,6 +354,7 @@ namespace detail {
     template<typename index_type, typename Iterable>
     auto
     offsetIterable(RangeT<index_type> const& r, Iterable const& inds)
+        -> decltype(r.size())
         {
         using size_type = decltype(r.size());
         size_type I  = 0, 
@@ -411,7 +412,7 @@ template<typename index_type, typename Iterable>
 auto
 offset(RangeT<index_type> const& r, Iterable const& inds)
     //Constrain this template to only work for inds that have a begin() method
-    -> stdx::if_compiles_return<decltype(inds.begin()),decltype(r.extent(0))>
+    -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds.begin())>
     //...if so make the return type to be decltype(r.extent(1))
     {
     return detail::offsetIterable(r,inds);
@@ -421,6 +422,7 @@ offset(RangeT<index_type> const& r, Iterable const& inds)
 template<typename index_type, typename... Inds>
 auto
 offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
+    -> decltype(r.stride(0))
     {
     return detail::ComputeOffset<index_type>(r)(i1,inds...);
     }
@@ -428,6 +430,7 @@ offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
 template<typename index_type>
 auto
 area(RangeT<index_type> const& R)
+    -> decltype(R.extent(0))
     { 
     using size_type = decltype(R.size());
     size_type A = 1;

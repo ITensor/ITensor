@@ -11,13 +11,40 @@
 
 namespace stdx {
 
+template<typename T>
+using remove_const_t = typename std::remove_const<T>::type;
+
+template<typename T>
+using remove_pointer_t = typename std::remove_pointer<T>::type;
+
+template<typename T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
+template<typename T>
+using add_pointer_t = typename std::add_pointer<T>::type;
+
+template<typename T>
+using decay_t = typename std::decay<T>::type;
+
+template<bool B, class T = void>
+using enable_if_t = typename std::enable_if<B,T>::type;
+
+template<bool B, typename T1, typename T2>
+using conditional_t = typename std::conditional<B,T1,T2>::type;
+
+template<bool B, typename T1, typename T2>
+using conditional_t = typename std::conditional<B,T1,T2>::type;
+
+template<class T>
+using result_of_t = typename std::result_of<T>::type;
+
 //
 //Useful for disabling candidate template functions
-//where if Expression fails to compile (fails template
+//where if Expressions.. fail to compile (fail template
 //substitution), then a lower-precedence overload
 //will be selected.
 //
-template<typename Expression, typename ReturnValue>
+template<typename ReturnValue, typename... Expressions>
 using if_compiles_return = ReturnValue;
 
 //Helper type for making static_assert always fail,

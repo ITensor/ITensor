@@ -29,63 +29,67 @@ namespace itensor {
 #define SET_SCOPED(X) SET_SCOPED0(X)
 
 template<typename T>
+class SetScoped
+    {
+    T* pi;
+    T oval = 0;
+    public:
+    explicit
+    SetScoped(T& i) : pi(&i), oval(i) { }
+
+    SetScoped(const SetScoped& other) = delete;
+
+    SetScoped&
+    operator=(const SetScoped& other) = delete;
+
+    SetScoped(SetScoped&& other)
+        :
+        pi(other.pi),
+        oval(other.oval)
+        {
+        other.pi = nullptr;
+        other.oval = 0;
+        }
+
+    SetScoped&
+    operator=(SetScoped&& other)
+        {
+        pi = other.pi;
+        oval = other.oval;
+        other.pi = nullptr;
+        other.oval = 0;
+        return *this;
+        }
+
+    void
+    setNewVal(const T& nval)
+        {
+        *pi = nval;
+        }
+
+    ~SetScoped() { if(pi) *pi = oval; }
+    };
+
+template<typename T>
+struct MakeSetScoped
+    {
+    T* pi;
+    MakeSetScoped(T& i) : pi(&i) { }
+
+    SetScoped<T>
+    operator=(const T& nval) 
+        { 
+        SetScoped<T> sv(*pi);
+        sv.setNewVal(nval);
+        return std::move(sv);
+        }
+    };
+
+template<typename T>
 auto
-makeSetScoped(T& t)
+makeSetScoped(T& t) -> MakeSetScoped<T>
     { 
-    class SetScoped
-        {
-        T* pi;
-        T oval = 0;
-        public:
-        explicit
-        SetScoped(T& i) : pi(&i), oval(i) { }
-
-        SetScoped(const SetScoped& other) = delete;
-
-        SetScoped&
-        operator=(const SetScoped& other) = delete;
-
-        SetScoped(SetScoped&& other)
-            :
-            pi(other.pi),
-            oval(other.oval)
-            {
-            other.pi = nullptr;
-            other.oval = 0;
-            }
-
-        SetScoped&
-        operator=(SetScoped&& other)
-            {
-            pi = other.pi;
-            oval = other.oval;
-            other.pi = nullptr;
-            other.oval = 0;
-            return *this;
-            }
-
-        void
-        setNewVal(const T& nval)
-            {
-            *pi = nval;
-            }
-
-        ~SetScoped() { if(pi) *pi = oval; }
-        };
-    struct MakeSetScoped
-        {
-        T* pi;
-        MakeSetScoped(T& i) : pi(&i) { }
-
-        SetScoped
-        operator=(const T& nval) 
-            { 
-            SetScoped sv(*pi);
-            sv.setNewVal(nval);
-            return std::move(sv);
-            }
-        };
-    return std::move(MakeSetScoped(t));
+    return MakeSetScoped<T>(t);
     }
 
 

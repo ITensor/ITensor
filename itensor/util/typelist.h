@@ -70,14 +70,14 @@ using popFront = typename TList::Next;
 struct NoneType { };
 
 template<typename T, typename ElseType>
-using ifTypeElse = std::conditional_t<not std::is_same<T,NoneType>::value,
+using ifTypeElse = typename std::conditional<not std::is_same<T,NoneType>::value,
                                       T,
-                                      ElseType>;
+                                      ElseType>::type;
 
 template<typename T, typename TList>
 struct CheckContainsType : CheckContainsType<T,popFront<TList>>
     {
-    using Test = std::conditional_t<std::is_same<frontType<TList>,T>::value,T,NoneType>;
+    using Test = typename std::conditional<std::is_same<frontType<TList>,T>::value,T,NoneType>::type;
     using ParentResult = typename CheckContainsType<T,popFront<TList>>::Result;
     using Result = ifTypeElse<Test,ParentResult>;
     };
