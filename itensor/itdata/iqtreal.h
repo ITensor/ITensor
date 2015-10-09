@@ -255,6 +255,7 @@ class IndexDim
 template<typename Indexable>
 auto
 make_indexdim(IQIndexSet const& is, Indexable const& ind) 
+    -> IndexDim<Indexable>
     { 
     return IndexDim<Indexable>(is,ind); 
     }

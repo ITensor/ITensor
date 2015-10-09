@@ -347,18 +347,18 @@ template<typename index_type_>
 class IndexSetIter
     { 
     public:
-    using index_type = std::remove_const_t<index_type_>;
+    using index_type = stdx::remove_const_t<index_type_>;
     using value_type = index_type;
     using reference = index_type_&;
     using difference_type = std::ptrdiff_t;
     using pointer = index_type_*;
     using iterator_category = std::random_access_iterator_tag;
-    using indexset_type = std::conditional_t<std::is_const<index_type_>::value,
+    using indexset_type = stdx::conditional_t<std::is_const<index_type_>::value,
                                              const IndexSetT<index_type>,
                                              IndexSetT<index_type>>;
     using range_ptr = typename RangeT<index_type>::value_type*;
     using const_range_ptr = const typename RangeT<index_type>::value_type*;
-    using data_ptr = std::conditional_t<std::is_const<index_type_>::value,
+    using data_ptr = stdx::conditional_t<std::is_const<index_type_>::value,
                                       const_range_ptr,
                                       range_ptr>;
     private:

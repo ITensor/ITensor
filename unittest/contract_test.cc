@@ -8,9 +8,11 @@
 
 using namespace itensor;
 
+
 TEST_CASE("Contract Test")
     {
-    auto randomize = [](auto& t)
+
+    auto randomize = [](TensorRef t)
         {
         for(auto& elt : t) elt = Global::random();
         };

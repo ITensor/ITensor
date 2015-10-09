@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <stdexcept>
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 namespace detail {
@@ -43,7 +44,7 @@ call_impl(T&& obj, V&& v, long)
     return Ret();
     }
 template <typename Ret, class T, typename V>
-std::enable_if_t<std::is_same<typename std::result_of<T(V)>::type,void>::value,Ret>
+stdx::enable_if_t<std::is_same<typename std::result_of<T(V)>::type,void>::value,Ret>
 fixret(T&& obj, V&& v, int)
     {
     call_impl<void,T,V>(std::forward<T>(obj),std::forward<V>(v),0);
@@ -80,7 +81,7 @@ call(T&& obj, V&& v);
 template <class T, typename V>
 auto 
 call_impl(T&& obj, V&& v, int)
-    -> std::conditional_t<std::is_same<decltype(obj(v)),void>::value,int,int>
+    -> stdx::conditional_t<std::is_same<decltype(obj(v)),void>::value,int,int>
     {
     obj(std::forward<V>(v));
     return 0;
@@ -128,7 +129,7 @@ call_impl(FType&& func, T1&& a1, T2&& a2, long)
     return Ret();
     }
 template <typename Ret, class FType, typename T1, typename T2>
-std::enable_if_t<std::is_same<typename std::result_of<FType(T1,T2)>::type,void>::value,Ret>
+stdx::enable_if_t<std::is_same<typename std::result_of<FType(T1,T2)>::type,void>::value,Ret>
 fixret(FType&& func, T1&& a1, T2&& a2, int)
     {
     call_impl<void,FType,T1,T2>(std::forward<FType>(func),
@@ -174,7 +175,7 @@ call(T&& obj, V1&& v1, V2&& v2);
 template <class T, typename V1, typename V2>
 auto 
 call_impl(T&& obj, V1&& v1, V2&& v2, int)
-    -> std::conditional_t<std::is_same<decltype(obj(std::forward<V1>(v1),std::forward<V2>(v2))),void>::value,int,int>
+    -> stdx::conditional_t<std::is_same<decltype(obj(std::forward<V1>(v1),std::forward<V2>(v2))),void>::value,int,int>
     {
     obj(std::forward<V1>(v1),std::forward<V2>(v2));
     return 0;

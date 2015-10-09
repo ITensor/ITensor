@@ -186,7 +186,8 @@ doTask(PlusEQ<IQIndex> const& P,
             auto bref = TensorRefc(bblock,&Brange);
 
             //aref += permute(bref,P.perm());
-            auto add = [f=P.fac](Real r2, Real& r1) { r1 += f*r2; };
+            auto f = P.fac;
+            auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
             transform(permute(bref,P.perm()),aref,add);
             }
         }

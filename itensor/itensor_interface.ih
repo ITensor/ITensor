@@ -131,7 +131,7 @@ ITensorT(indexset_type iset,
          DataType&& dat,
          LogNum const& scale) :
     is_(std::move(iset)),
-    store_(newITData<std::decay_t<DataType>>(std::move(dat))),
+    store_(newITData<stdx::decay_t<DataType>>(std::move(dat))),
     scale_(scale)
     {
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,

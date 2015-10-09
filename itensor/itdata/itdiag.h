@@ -6,7 +6,6 @@
 #define __ITENSOR_ITDIAG_H
 
 #include "itensor/itdata/itreal.h"
-#include "itensor/detail/call_rewrite.h"
 
 namespace itensor {
 
@@ -108,7 +107,7 @@ write(std::ostream& s, const ITDiag<T>& dat)
     }
 
 template <typename F, typename T,
-          typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
+          typename std::enable_if<std::is_same<T,stdx::result_of_t<F(T)>>::value>::type* = nullptr>
 void
 doTask(ApplyIT<F>& A, ITDiag<T>& d) 
     { 
