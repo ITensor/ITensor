@@ -92,8 +92,14 @@ class MPSt
     orthoCenter() const;
 
     //Read-only access to i'th MPS tensor
-    const Tensor& 
+    Tensor const& 
     A(int i) const;
+
+    void
+    setA(int i, Tensor const& nA) { Anc(i) = nA; }
+
+    void
+    setA(int i, Tensor && nA) { Anc(i) = std::move(nA); }
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
