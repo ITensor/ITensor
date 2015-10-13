@@ -68,7 +68,7 @@ class DataRange
             {
             std::cout << "offset = " << n << std::endl;
             std::cout << "max offset (size-1) = " << (size_==0 ? -1ul : size_-1ul) << std::endl;
-            Error("offset exceeded size in DataRange operator[]");
+            Error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
         return pdata_[n];
@@ -82,7 +82,7 @@ class DataRange
             {
             std::cout << "offset = " << n << std::endl;
             std::cout << "max offset (size-1) = " << (size_==0 ? -1ul : size_-1ul) << std::endl;
-            Error("offset exceeded size in DataRange operator[]");
+            Error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
         return pdata_[n];

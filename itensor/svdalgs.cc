@@ -130,7 +130,7 @@ truncate(Vector & P,
     
     if(origm == 1) 
         {
-        docut = P(1)/2.;
+        docut = P(0)/2.;
         return 0;
         }
 
