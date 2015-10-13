@@ -36,11 +36,9 @@ nameindex(const IndexType& it, int plev)
     }
 
 string 
-nameint(const string& f, int n)
+nameint(string const& f, int n)
     { 
-    stringstream ss; 
-    ss << f << n; 
-    return ss.str(); 
+    return format("%s%d",f,n);
     }
 
 //
