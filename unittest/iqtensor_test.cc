@@ -532,8 +532,34 @@ SECTION("Combiner")
             }
         }
 
+    SECTION("Combiner Arrow Regression Test")
+        {
+        IQIndex s9("S9",Index{"Up 9",1,Site},QN(+1),
+                        Index{"Dn 9",1,Site},QN(-1));
 
-    }
+        IQIndex hl8("hl8",Index{"hl8 0",3},QN(0),
+                          Index{"hl8-2",1},QN(-2),
+                          Index{"hl8+2",1},QN(+2));
+
+        IQIndex L("L",Index{"l 1",1},QN(0));
+
+        auto A = randomTensor(QN(),dag(s9),prime(s9),dag(hl8),dag(L));
+        auto C = combiner(dag(s9),prime(s9),dag(L));
+
+        auto R = C * A;
+
+        CHECK(fabs(norm(R)-norm(A)) < 1E-11);
+
+        auto nA1 = dag(C) * R;
+        CHECK(norm(nA1-A) < 1E-11);
+
+        auto nA2 = R * dag(C);
+        CHECK(norm(nA2-A) < 1E-11);
+
+        }
+
+
+    } //Combiner
 
 SECTION("Scalar")
     {
