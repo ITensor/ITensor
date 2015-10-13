@@ -584,7 +584,8 @@ totalQN(const IQMPS& psi);
 //
 template <class MPSType>
 Complex 
-psiphiC(const MPSType& psi, const MPSType& phi)
+psiphiC(MPSType const& psi, 
+        MPSType const& phi)
     {
     auto N = psi.N();
     if(N != phi.N()) Error("psiphi: mismatched N");
@@ -602,13 +603,13 @@ psiphiC(const MPSType& psi, const MPSType& phi)
     L = L * phi.A(N);
 
     auto lNm = linkInd(psi,N-1);
-    if(lNm) return (prime(psi.A(N),lNm)*L).cplx();
-    return (psi.A(N)*L).cplx();
+    if(lNm) return (dag(prime(psi.A(N),lNm))*L).cplx();
+    return (dag(psi.A(N))*L).cplx();
     }
 
 template <class MPSType>
 void 
-psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
+psiphi(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
     {
     auto z = psiphiC(psi,phi);
     re = z.real();
@@ -617,7 +618,7 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
 
 template <class MPSType>
 Real 
-psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
+psiphi(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
     {
     Real re, im;
     psiphi(psi,phi,re,im);
