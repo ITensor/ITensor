@@ -310,7 +310,7 @@ combiner(std::vector<IQIndex> cinds,
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",cinds.front().type());
     auto cr = cinds.size();
-    auto dir = cinds.front().dir();
+    auto cdir = cinds.front().dir();
 
     auto C = IQTCombiner{cinds};
 
@@ -329,7 +329,7 @@ combiner(std::vector<IQIndex> cinds,
         //and combined sector size (qm.m)
         for(auto j : count(cr))
             {
-            qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir();
+            qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
             qm.m *= cinds[j].index(1+I[j]).m();
             }
 
@@ -351,7 +351,7 @@ combiner(std::vector<IQIndex> cinds,
     auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
     for(auto n : index(qms)) 
         cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
-    auto cind = IQIndex{cname,std::move(cstore),dir};
+    auto cind = IQIndex{cname,std::move(cstore),cdir};
 
     auto newind = IQIndexSetBuilder(1+cinds.size());
     newind.nextIndex(std::move(cind));
