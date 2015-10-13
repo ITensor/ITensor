@@ -48,10 +48,14 @@ proportialTo(const SiteTerm& other) const
     return (op == other.op && i == other.i);
     }
 
+//forward declaration
+string
+startTerm(const std::string& op);
+
 bool
 isFermionic(const SiteTerm& st)
     {
-    if(!st.op.empty() && st.op.front() == 'C') return true;
+    if(startTerm(st.op) != st.op) return true;
     return false;
     }
 
