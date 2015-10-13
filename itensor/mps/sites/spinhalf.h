@@ -76,9 +76,9 @@ constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         {
-        site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
-            Index(nameint("Up:site",j),1,Site),QN(+1,0),
-            Index(nameint("Dn:site",j),1,Site),QN(-1,0));
+        site_.at(j) = IQIndex(nameint("S=1/2 ",j),
+            Index(nameint("Up ",j),1,Site),QN(+1,0),
+            Index(nameint("Dn ",j),1,Site),QN(-1,0));
         }
     }
 
