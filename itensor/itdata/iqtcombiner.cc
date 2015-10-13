@@ -9,6 +9,7 @@
 #include "itensor/iqindex.h"
 
 using std::vector;
+using std::tie;
 
 namespace itensor {
 
@@ -158,11 +159,13 @@ combine(IQTReal     const& d,
 
         //Use cblock to recover info about structure of combined IQIndex,
         //which sector to map to, where this subsector starts, and ends
-        std::tie(nblock[0],start,end) = C.getBlockRange(cblock);
+        tie(nblock[0],start,end) = C.getBlockRange(cblock);
 
         //Get full block of new storage
         nrange.init(make_indexdim(Nis,nblock));
-        auto nref = TensorRef(getBlock(nd,Nis,nblock),&nrange);
+        auto nb = getBlock(nd,Nis,nblock);
+        assert(nb.data() != nullptr);
+        auto nref = TensorRef(nb,&nrange);
 
         //Slice this new-storage block to get subblock where data will go
         auto nsub = subIndex(nref,0,start,end);
