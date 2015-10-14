@@ -13,11 +13,11 @@ HEADERS=matrixref.h matrix.h sparse.h bigmatrix.h davidson.h\
     svd.h
 
 OBJECTS=  matrix.o  utility.o  sparse.o  david.o sparseref.o\
-	hpsortir.o  daxpy.o matrixref.o  storelink.o conjugate_gradient.o\
+	daxpy.o matrixref.o  storelink.o conjugate_gradient.o\
 	 dgemm.o svd.o
 
-SOURCES= matrix.cc utility.cc sparse.cc david.cc hpsortir.cc \
-	matrixref.cc storelink.cc hpsortir.cc \
+SOURCES= matrix.cc utility.cc sparse.cc david.cc \
+	matrixref.cc storelink.cc \
 	conjugate_gradient.cc sparseref.cc\
 	daxpy.cc svd.cc
 
