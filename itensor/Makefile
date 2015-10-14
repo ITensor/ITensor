@@ -38,7 +38,10 @@ SOURCES+= util/cputime.cc
 #SOURCES+= tevol.cc
 #SOURCES+= autompo.cc
 
-HEADERS=global.h real.h permutation.h indextype.h index.h \
+HEADERS= util/tinyformat.h util/print.h util/types.h util/indent.h util/cputime.h util/tarray1.h \
+        util/flstring.h util/option.h util/input.h util/error.h util/minmax.h util/cplx_literal.h \
+        util/autovector.h util/optional_ptr.h util/count.h util/stdx.h util/timers.h \
+        global.h real.h permutation.h indextype.h index.h \
         indexset.h counter.h simplematrix.h itensor.h itensor.ih \
         qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h iqtensor.ih \
@@ -67,6 +70,12 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
+
+$(ITENSOR_INCLUDEDIR)/util/%.h: util/%.h
+	@cp $^ $(ITENSOR_INCLUDEDIR)
+
+$(ITENSOR_INCLUDEDIR)/matrix/%.h: matrix/%.h
+	@cp $^ $(ITENSOR_INCLUDEDIR)
 
 $(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/detail
