@@ -8,39 +8,42 @@ include ../options.mk
 
 ####################################
 
-SOURCES+= util/error.cc 
-SOURCES+= util/ran1.cc 
-SOURCES+= util/tarray1.cc 
-SOURCES+= util/input.cc 
-SOURCES+= util/option.cc 
-SOURCES+= util/cputime.cc 
+UTILSOURCES+= util/error.cc 
+UTILSOURCES+= util/ran1.cc 
+UTILSOURCES+= util/tarray1.cc 
+UTILSOURCES+= util/input.cc 
+UTILSOURCES+= util/option.cc 
+UTILSOURCES+= util/cputime.cc 
 
-#SOURCES+= matrix/matrix.cc 
-#SOURCES+= matrix/utility.cc 
-#SOURCES+= matrix/sparse.cc 
-#SOURCES+= matrix/david.cc 
-#SOURCES+= matrix/matrixref.cc 
-#SOURCES+= matrix/storelink.cc 
-#SOURCES+= matrix/sparseref.cc 
-#SOURCES+= matrix/daxpy.cc 
-#SOURCES+= matrix/svd.cc 
+MATSOURCES+= matrix/matrix.cc 
+MATSOURCES+= matrix/utility.cc 
+MATSOURCES+= matrix/sparse.cc 
+MATSOURCES+= matrix/david.cc 
+MATSOURCES+= matrix/matrixref.cc 
+MATSOURCES+= matrix/storelink.cc 
+MATSOURCES+= matrix/sparseref.cc 
+MATSOURCES+= matrix/daxpy.cc 
+MATSOURCES+= matrix/svd.cc 
 
-#SOURCES+= index.cc 
-#SOURCES+= itensor.cc 
-#SOURCES+= iqindex.cc 
-#SOURCES+= iqtensor.cc 
-#SOURCES+= condenser.cc
-#SOURCES+= iqcombiner.cc 
-#SOURCES+= spectrum.cc 
-#SOURCES+= svdalgs.cc 
-#SOURCES+= mps.cc 
-#SOURCES+= mpo.cc 
-#SOURCES+= tevol.cc
-#SOURCES+= autompo.cc
+SOURCES+= index.cc 
+SOURCES+= itensor.cc 
+SOURCES+= iqindex.cc 
+SOURCES+= iqtensor.cc 
+SOURCES+= condenser.cc
+SOURCES+= iqcombiner.cc 
+SOURCES+= spectrum.cc 
+SOURCES+= svdalgs.cc 
+SOURCES+= mps.cc 
+SOURCES+= mpo.cc 
+SOURCES+= tevol.cc
+SOURCES+= autompo.cc
 
-HEADERS= util/tinyformat.h util/print.h util/types.h util/indent.h util/cputime.h util/tarray1.h \
+HEADERS=util/tinyformat.h util/print.h util/types.h util/indent.h util/cputime.h util/tarray1.h \
         util/flstring.h util/option.h util/input.h util/error.h util/minmax.h util/cplx_literal.h \
         util/autovector.h util/optional_ptr.h util/count.h util/stdx.h util/timers.h \
+        matrix/matrixref.h matrix/matrix.h matrix/sparse.h matrix/bigmatrix.h matrix/davidson.h\
+	    matrix/storelink.h matrix/conjugate_gradient.h matrix/sparseref.h\
+        matrix/svd.h \
         global.h real.h permutation.h indextype.h index.h \
         indexset.h counter.h simplematrix.h itensor.h itensor.ih \
         qn.h iqindex.h iqtdat.h  \
@@ -67,6 +70,10 @@ CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM)
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
+UTILOBJECTS= $(patsubst %.cc,%.o, $(UTILSOURCES))
+UTILGOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(UTILSOURCES))
+MATOBJECTS= $(patsubst %.cc,%.o, $(MATSOURCES))
+MATGOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(MATSOURCES))
 INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
@@ -111,6 +118,26 @@ $(ITENSOR_INCLUDEDIR)/%.ih: %.ih
 
 install: installo installg
 
+libutilities.a:	$(UTILOBJECTS) $(HEADERS)
+	@echo "Building static library libutilities.a"
+	@ar r libutilities.a $(UTILOBJECTS)
+	@ranlib libutilities.a
+
+libutilities-g.a: mkdebugdir $(UTILGOBJECTS) $(HEADERS)
+	@echo "Building static library libutilities-g.a"
+	@ar r libutilities-g.a $(UTILGOBJECTS)
+	@ranlib libutilities-g.a
+
+libmatrix.a: $(MATOBJECTS) $(HEADERS)
+	@echo "Building static library libmatrix.a"
+	@ar r libmatrix.a $(MATOBJECTS)
+	@touch libmatrix.a
+
+libmatrix-g.a: mkdebugdir $(MATGOBJECTS) $(HEADERS)
+	@echo "Building static library libmatrix-g.a"
+	@ar r libmatrix-g.a $(MATGOBJECTS)
+	@touch libmatrix-g.a
+
 libitensor.a: $(OBJECTS)
 	@echo "Building static library libitensor.a"
 	@ar r libitensor.a $(OBJECTS)
@@ -129,12 +156,20 @@ libs: libitensor.a
 	@echo "Copying libitensor.a to $(ITENSOR_LIBDIR)"
 	@cp libitensor.a $(ITENSOR_LIBDIR)
 
-installo: headerscopy libitensor.a
+installo: headerscopy libutilities.a libmatrix.a libitensor.a
+	@echo "Copying libutilities.a to $(ITENSOR_LIBDIR)"
+	@cp libutilities.a $(ITENSOR_LIBDIR)
+	@echo "Copying libmatrix.a to $(ITENSOR_LIBDIR)"
+	@cp libmatrix.a $(ITENSOR_LIBDIR)
 	@echo "Copying libitensor.a to $(ITENSOR_LIBDIR)"
 	@cp libitensor.a $(ITENSOR_LIBDIR)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
-installg: headerscopy libitensor-g.a
+installg: headerscopy libutilities-g.a libmatrix-g.a libitensor-g.a
+	@echo "Copying libutilities-g.a to $(ITENSOR_LIBDIR)"
+	@cp libutilities-g.a $(ITENSOR_LIBDIR)
+	@echo "Copying libmatrix-g.a to $(ITENSOR_LIBDIR)"
+	@cp libmatrix-g.a $(ITENSOR_LIBDIR)
 	@echo "Copying libitensor-g.a to $(ITENSOR_LIBDIR)"
 	@cp libitensor-g.a $(ITENSOR_LIBDIR)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
@@ -146,7 +181,7 @@ mkdebugdir:
 	@mkdir -p .debug_objs/mps
 
 clean:	
-	@echo "Cleaning build files in folder itensor/"
+	@echo "Cleaning build files"
 	@rm -fr *.o .debug_objs util/*.o matrix/*.o mps/*.o libitensor.a libitensor-g.a
 
 DEPHEADERS=real.h global.h indextype.h index.h permutation.h
