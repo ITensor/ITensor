@@ -8,18 +8,35 @@ include ../options.mk
 
 ####################################
 
-SOURCES = index.cc 
-SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= condenser.cc
-SOURCES+= iqcombiner.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
-SOURCES+= mps.cc 
-SOURCES+= mpo.cc 
-SOURCES+= tevol.cc
-SOURCES+= autompo.cc
+SOURCES+= util/error.cc 
+SOURCES+= util/ran1.cc 
+SOURCES+= util/tarray1.cc 
+SOURCES+= util/input.cc 
+SOURCES+= util/option.cc 
+SOURCES+= util/cputime.cc 
+
+#SOURCES+= matrix/matrix.cc 
+#SOURCES+= matrix/utility.cc 
+#SOURCES+= matrix/sparse.cc 
+#SOURCES+= matrix/david.cc 
+#SOURCES+= matrix/matrixref.cc 
+#SOURCES+= matrix/storelink.cc 
+#SOURCES+= matrix/sparseref.cc 
+#SOURCES+= matrix/daxpy.cc 
+#SOURCES+= matrix/svd.cc 
+
+#SOURCES+= index.cc 
+#SOURCES+= itensor.cc 
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= condenser.cc
+#SOURCES+= iqcombiner.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
+#SOURCES+= mps.cc 
+#SOURCES+= mpo.cc 
+#SOURCES+= tevol.cc
+#SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h indextype.h index.h \
         indexset.h counter.h simplematrix.h itensor.h itensor.ih \
@@ -115,10 +132,13 @@ installg: headerscopy libitensor-g.a
 
 mkdebugdir:
 	@mkdir -p .debug_objs
+	@mkdir -p .debug_objs/util
+	@mkdir -p .debug_objs/matrix
+	@mkdir -p .debug_objs/mps
 
 clean:	
 	@echo "Cleaning build files in folder itensor/"
-	@rm -fr *.o .debug_objs libitensor.a libitensor-g.a
+	@rm -fr *.o .debug_objs util/*.o matrix/*.o mps/*.o libitensor.a libitensor-g.a
 
 DEPHEADERS=real.h global.h indextype.h index.h permutation.h
 index.o: $(DEPHEADERS)
