@@ -94,6 +94,9 @@ void Orthog(const MatrixRef& Mre, const MatrixRef& Mim, int nr = 0, int numpass 
 void 
 QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R);
 
+void
+SchurDecomp(const MatrixRef& M, Matrix& T, Matrix& Z);
+
 // one argument means do all columns < rows 
 
 void EigenValues(const MatrixRef &, Vector &, Matrix &);

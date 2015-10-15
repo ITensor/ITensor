@@ -152,6 +152,16 @@ void F77NAME(zgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a
 void F77NAME(dgeqrf)(LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, 
                      double *tau, double *work, LAPACK_INT *lwork, LAPACK_INT *info);
 
+void F77NAME(dgehrd)(LAPACK_INT* n, LAPACK_INT* ilo, LAPACK_INT* ihi, LAPACK_REAL* A,
+                     LAPACK_INT* lda, LAPACK_REAL* tau, LAPACK_INT* info);
+
+void F77NAME(dorghr)(LAPACK_INT* n, LAPACK_INT* ilo, LAPACK_INT* ihi, LAPACK_REAL* A,
+                     LAPACK_INT* lda, LAPACK_REAL* tau, LAPACK_INT* info);
+
+void F77NAME(dhseqr)(LAPACK_INT* n, LAPACK_INT* ilo, LAPACK_INT* ihi, LAPACK_REAL* h,
+                     LAPACK_INT* ldh, LAPACK_REAL* wr, LAPACK_REAL* wi, LAPACK_REAL* z,
+                     LAPACK_INT* ldz, LAPACK_INT* info);
+
 void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a, 
                      LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
                      LAPACK_INT *info);
@@ -415,6 +425,118 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     LAPACK_INT lwork = std::max(1,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
+    }
+
+//
+// dgehrd
+//
+// Reduces a general matrix to upper Hessenberg form.
+//
+void inline
+dgehrd_wrapper(LAPACK_INT* n,     //order of the matrix A
+               LAPACK_INT* ilo,   //
+               LAPACK_INT* ihi,   //it is assumed that A is already upper triangular in rows 
+                                  //and columns 1:ilo-1 and ihi+1:n 
+                                  //ilo and ihi are normally set by a previous call to dgebal; 
+                                  //otherwise they should be set to 1 and n respectively
+               LAPACK_REAL* A,    //on entry, the n-by-n general matrix to be reduced
+                                  //on exit, the upper triangle and the first subdiagonal of A
+                                  //are overwritten with the upper Hessenberg matrix H, and the
+                                  //elements below the first subdiagonal, with the array tau,
+                                  //represent the orthogonal matrix Q as a product of elementary
+                                  //reflectors
+               LAPACK_INT* lda,   //The leading dimension of the array A
+                                  //lda >= max(1,n)
+               LAPACK_REAL* tau,  //the scalar factors of the elementary reflectors
+                                  //elements 1:ilo-1 and ihi:n-1 of tau are set to zero.
+               LAPACK_INT* info)  //error info
+    {
+    int lwork = max(1,4*max(*n,*n));
+    LAPACK_REAL work[lwork];
+    F77NAME(dgehrd)(n,ilo,ihi,A,lda,tau,work,&lwork,info);
+    }
+
+//
+// dorghr
+//
+// Generates the real orthogonal matrix Q determined by dgehrd.
+//
+void inline
+dorghr_wrapper(LAPACK_INT* n,     //order of the matrix Q
+               LAPACK_INT* ilo,   //
+               LAPACK_INT* ihi,   //ilo and ihi must have the same values as in the previous call
+                                  //of dgehrd. Q is equal to the unit matrix except in the
+                                  //submatrix Q(ilo+1:ihi,ilo+1:ihi).
+               LAPACK_REAL* A,    //on entry, the vectors which define the elementary reflectors,
+                                  //as returned by dgehrd
+                                  //on exit, the n-by-n orthogonal matrix Q
+               LAPACK_INT* lda,   //the leading dimension of the array A
+                                  //lda >= max(1,n)
+               LAPACK_REAL* tau,  //tau(i) must contain the scalar factor of the elementary
+                                  //reflector H(i), as returned by dgehrd
+               LAPACK_INT* info)  //error info
+    {
+    int lwork = max(1,4*max(*n,*n));
+    LAPACK_REAL work[lwork];
+    F77NAME(dorghr)(n,ilo,ihi,A,lda,tau,work,&lwork,info);
+    }
+
+//
+// dhseqr
+//
+// Computes all eigenvalues and (optionally) the Schur factorization 
+// of a matrix reduced to Hessenberg form.
+//
+void inline
+dhseqr_wrapper(LAPACK_INT* n,     //order of the matrix H
+               LAPACK_INT* ilo,   //
+               LAPACK_INT* ihi,   //it is assumed that H is already upper triangular in rows
+                                  //and columns 1:ilo-1 and ihi+1:n 
+                                  //ilo and ihi are normally set by a previous call to dgebal, 
+                                  //and then passed to zgehrd when the matrix output by dgebal 
+                                  //is reduced to Hessenberg form
+                                  //otherwise ilo and ihi should be set to 1 and n respectively
+               LAPACK_REAL* h,    //on entry, the upper Hessenberg matrix H
+                                  //on exit, if info = 0 and job = 'S', then H contains the
+                                  //upper quasi-triangular matrix T from the Schur decomposition
+                                  //(the Schur form); 2-by-2 diagonal blocks (corresponding to
+                                  //complex conjugate pairs of eigenvalues) are returned in
+                                  //standard form, with H(i,i) = H(i+1,i+1) and
+                                  //H(i+1,i)*H(i,i+1) <= 0
+                                  //if info = 0 and job = 'E', the contents of H are unspecified 
+                                  //on exit
+               LAPACK_INT* ldh,   //leading dimension of the array H
+                                  //ldh >= max(1,n)
+               LAPACK_REAL* wr,   //
+               LAPACK_REAL* wi,   //the real and imaginary parts, respectively, of the computed
+                                  //eigenvalues 
+                                  //if two eigenvalues are computed as a complex conjugate pair, 
+                                  //they are stored in consecutive elements of wr and wi, say the 
+                                  //i-th and (i+1)th, with wi(i) > 0 and wi(i+1) < 0 
+                                  //if job = 'S', the eigenvalues are stored in the same order as 
+                                  //on the diagonal of the Schur form returned in H, with 
+                                  //wr(i) = H(i,i) and, if H(i:i+1,i:i+1) is a 2-by-2 diagonal block, 
+                                  //wi(i) = sqrt(-H(i+1,i)*H(i,i+1)) and wi(i+1) = -wi(i)
+               LAPACK_REAL* z,    //if compz = 'N', Z is not referenced
+                                  //if compz = 'I', on entry Z need not be set and on exit,
+                                  //if info = 0, Z contains the orthogonal matrix Z of the Schur
+                                  //vectors of H
+                                  //if compz = 'V', on entry Z must contain an
+                                  //n-by-n matrix Q, which is assumed to be equal to the unit
+                                  //matrix except for the submatrix Z(ILO:IHI,ILO:IHI)
+                                  //on exit, if info = 0, Z contains Q*Z
+                                  //normally Q is the orthogonal matrix generated by dorghr
+                                  //after the call to dgehrd which formed the Hessenberg matrix H
+               LAPACK_INT* ldz,   //the leading dimension of the array Z
+                                  //if compz = 'I' or compz = 'V', then ldz >= max(1,n)  
+                                  //otherwize, ldz >= 1
+               LAPACK_INT* info)  //error info
+    {
+    int lwork = max(1,4*max(*n,*n));
+    LAPACK_REAL work[lwork];
+    char job = 'S';
+    char compz = 'V';
+    F77NAME(dhseqr)(&job,&compz,n,ilo,ihi,h,ldh,wr,wi,z,ldz,work,&lwork,info);
     }
 
 //
