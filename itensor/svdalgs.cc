@@ -68,9 +68,7 @@ struct GetBlocks
               IQIndex const& i2_)
       : is(is_)
         { 
-#ifdef DEBUG
         if(is.r() != 2) Error("GetBlocks only supports rank 2 currently");
-#endif
         transpose = (i2_ == is.front());
         }
     };
@@ -86,9 +84,7 @@ vector<Rank2Block>
 doTask(GetBlocks const& G, 
        IQTReal const& d)
     {
-#ifdef DEBUG
     if(G.is.r() != 2) Error("doTask(GetBlocks,IQTReal) only supports rank 2");
-#endif
     vector<Rank2Block> res{d.offsets.size()};
     Label dblock(2,0);
     size_t n = 0;
@@ -241,9 +237,7 @@ svdRank2(ITensor A,
     auto ritype = getIndexType(args,"RightIndexType",itype);
     auto show_eigs = args.getBool("ShowEigs",false);
 
-#ifdef DEBUG
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
-#endif
 
     Matrix UU,VV,
            iUU,iVV;
@@ -631,7 +625,6 @@ diag_hermitian(ITensor rho,
             break;
             }
 
-#ifdef DEBUG
     if(!active)
         {
         Print(rho.inds());
@@ -644,7 +637,6 @@ diag_hermitian(ITensor rho,
         Print(rho);
         Error("Rank greater than 2 in diag_hermitian");
         }
-#endif
 
     //Depending on the sign of the scale, calling .toMatrix11NoScale 
     //yields a matrix proportional to either rho or -rho.
@@ -693,7 +685,6 @@ diag_hermitian(ITensor rho,
         reduceCols(UU,m);
         }
 
-#ifdef DEBUG
     if(m > maxm)
         {
         printfln("m > maxm; m = %d, maxm = %d",m,maxm);
@@ -703,7 +694,6 @@ diag_hermitian(ITensor rho,
         {
         printfln("WARNING: very large m = %d in ITensor diag_hermitian");
         }
-#endif
 
     if(showeigs)
         {
@@ -774,9 +764,9 @@ diag_hermitian(IQTensor    rho,
             }
         }
 
-#ifdef DEBUG
     if(not ai) Error("in diag_hermitian rho should have one primed and one unprimed IQIndex");
 
+#ifdef DEBUG
     auto Zero = QN();
     if(div(rho) != Zero)
         { 
@@ -865,7 +855,6 @@ diag_hermitian(IQTensor    rho,
         showEigs(probs,truncerr,rho.scale(),showargs);
         }
 
-#ifdef DEBUG
     if(m > maxm)
         {
         printfln("m > maxm; m = %d, maxm = %d",m,maxm);
@@ -875,7 +864,6 @@ diag_hermitian(IQTensor    rho,
         {
         printfln("WARNING: very large m = %d in diag_hermitian",m);
         }
-#endif
 
     //3. Truncate eigenvalues and eigenvectors of rho
 
@@ -897,12 +885,12 @@ diag_hermitian(IQTensor    rho,
             else             break;
             }
 
-        if(m == 0 && d.size() >= 1) // zero mps, just keep one arb state
-            { 
-            this_m = 1; 
-            m = 1; 
-            docut = 1; 
-            }
+        //if(m == 0 && d.size() >= 1) // zero-just keep one arb state
+        //    { 
+        //    this_m = 1; 
+        //    m = 1; 
+        //    docut = 1; 
+        //    }
 
         if(this_m == 0) 
             { 
@@ -916,6 +904,13 @@ diag_hermitian(IQTensor    rho,
         UU = columns(UU,0,this_m);
 
         iq.emplace_back(Index(nameint("d",b),this_m),ai.qn(1+B.i1));
+        }
+
+    if(iq.empty())
+        {
+        if(blocks.empty()) Error("No blocks in IQTensor svd");
+        auto& B = blocks.front();
+        iq.emplace_back(Index(nameint("d",0),1),ai.qn(1+B.i1));
         }
 
     IQIndex d("d",move(iq),-ai.dir());
