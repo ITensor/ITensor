@@ -425,30 +425,31 @@ zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
 //Expensive: scales as m^3 k^3!
 template<class Tensor>
 void 
-exactApplyMPO(const MPSt<Tensor>& x, 
-              const MPOt<Tensor>& K, 
-              MPSt<Tensor>& res,
-              const Args& args)
+exactApplyMPO(MPSt<Tensor> const& x, 
+              MPOt<Tensor> const& K, 
+              MPSt<Tensor>      & res,
+              Args const& args)
     {
     using IndexT = typename Tensor::index_type;
 
-    int N = x.N();
+    auto orthog = args.getBool("Orthog",true);
+
+    auto N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
 
-    if(&res != &x)
-        res = x;
+    //if(&res != &x)
+    //    res = x;
+    res = MPSt<Tensor>(x.sites());
 
     res.Anc(1) = x.A(1) * K.A(1);
-    for(int j = 1; j < N; ++j)
+    for(auto j : count1(N-1))
         {
-        //cout << "exact_applyMPO: step " << j << endl;
         //Compute product of MPS tensor and MPO tensor
         res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to combiner
-        std::vector<IndexT> cinds;
-        cinds.reserve(res.A(j).r()); //ok to reserve a few too many
-        for(const IndexT& I : res.A(j).inds())
+        auto cinds = stdx::reserve_vector<IndexT>(res.A(j).r());
+        for(auto& I : res.A(j).inds())
             {
             if(hasindex(res.A(j+1),I))
                 cinds.push_back(I);
@@ -460,7 +461,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
         res.Anc(j+1) = dag(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
-    res.orthogonalize(args);
+    if(orthog) res.orthogonalize(args);
     } //void exact_applyMPO
 template
 void 
@@ -468,6 +469,23 @@ exactApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args&);
 template
 void 
 exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args&);
+
+template<class Tensor>
+MPSt<Tensor> 
+exactApplyMPO(MPSt<Tensor> const& x, 
+              MPOt<Tensor> const& K, 
+              Args const& args)
+    {
+    MPSt<Tensor> res;
+    exactApplyMPO(x,K,res,args);
+    return res;
+    }
+template
+MPS
+exactApplyMPO(const MPS& x, const MPO& K, const Args&);
+template
+IQMPS
+exactApplyMPO(const IQMPS& x, const IQMPO& K, const Args&);
 
 
 template<class Tensor>
@@ -516,23 +534,23 @@ fitApplyMPO(Real fac,
             const Sweeps& sweeps,
             Args args)
     {
-    const int N = psi.N();
-    const bool verbose = args.getBool("Verbose",false);
-    const bool normalize = args.getBool("Normalize",true);
+    auto N = psi.N();
+    auto verbose = args.getBool("Verbose",false);
+    auto normalize = args.getBool("Normalize",true);
 
-    const MPSt<Tensor> origPsi(psi);
+    const auto origPsi = psi;
 
-    vector<Tensor> BK(N+2);
+    auto BK = vector<Tensor>(N+2);
 
     BK.at(N) = origPsi.A(N)*K.A(N)*dag(prime(res.A(N)));
-    for(int n = N-1; n > 2; --n)
+    for(auto n = N-1; n > 2; --n)
         {
         BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
 
     res.position(1);
 
-    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
+    for(auto sw : count1(sweeps.nsweep()))
         {
         args.add("Sweep",sw);
         args.add("Cutoff",sweeps.cutoff(sw));
@@ -547,12 +565,12 @@ fitApplyMPO(Real fac,
                 println("Sweep=",sw,", HS=",ha,", Bond=(",b,",",b+1,")");
                 }
 
-            Tensor lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
+            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);
             Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
             rwfK *= K.A(b+1);
 
-            Tensor wfK = lwfK*rwfK;
+            auto wfK = lwfK*rwfK;
             wfK.noprime();
             wfK *= fac;
 
@@ -563,8 +581,8 @@ fitApplyMPO(Real fac,
             //Print(BK.at(b+2).inds());
             //Print(wfK);
             //PAUSE
-            LocalOp<Tensor> PH(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
-            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
+            auto PH = LocalOp<Tensor>(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
+            auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
 
             if(verbose)
                 {
@@ -619,8 +637,8 @@ fitApplyMPO(Real mpsfac,
         {
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
         }
-    const int N = psiA.N();
-    const int nsweep = args.getInt("Nsweep",1);
+    auto N = psiA.N();
+    auto nsweep = args.getInt("Nsweep",1);
 
     vector<Tensor> B(N+2),
                    BK(N+2);

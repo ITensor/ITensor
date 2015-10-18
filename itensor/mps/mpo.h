@@ -381,15 +381,24 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
 //of x and K.
 template<class Tensor>
 void 
-exactApplyMPO(const MPSt<Tensor>& x, 
-              const MPOt<Tensor>& K, 
-              MPSt<Tensor>& res,
-              const Args& args = Global::args());
+exactApplyMPO(MPSt<Tensor> const& x, 
+              MPOt<Tensor> const& K, 
+              MPSt<Tensor>      & res,
+              Args const& args = Args::global());
+
+//Applies an MPO K to an MPS x with no approximation (|res>=K|x>)
+//Returns the result.
+template<class Tensor>
+MPSt<Tensor>
+exactApplyMPO(MPSt<Tensor> const& x,
+              MPOt<Tensor> const& K,
+              Args const& args = Args::global());
 
 //Applies an MPO K to an MPS psi (|res>=K|psi>) using a sweeping/DMRG-like
 //fitting approach. Warning: this method can get stuck i.e. fail to converge
 //if the initial value of res is too different from the product K|psi>.
 //List of options recognized:
+//   Normalize (default: true) - normalize state to 1 after applying MPO
 //   Nsweep (default: 1) - number of sweeps to use
 //   Maxm (default: res.maxm()) - maximum number of states to keep
 //   Minm (default: res.minm()) - minimum number of states to keep
@@ -405,6 +414,7 @@ fitApplyMPO(const MPSt<Tensor>& psi,
 //using a sweeping/DMRG-like fitting approach. 
 //Warning: this method can get stuck i.e. fail to converge
 //if the initial value of res is too different from the product fac*K|psi>.
+//   Normalize (default: true) - normalize state to 1 after applying MPO
 //   Nsweep (default: 1) - number of sweeps to use
 //   Maxm (default: res.maxm()) - maximum number of states to keep
 //   Minm (default: res.minm()) - minimum number of states to keep
@@ -423,8 +433,8 @@ fitApplyMPO(Real fac,
 //if the initial value of res is too different from the product fac*K|psi>.
 //Try setting noise > 0 in the Sweeps argument to overcome this.
 //Arguments recognized:
-//   "Verbose" (default: false): print out extra information
-//   "Normalize" (default: true): normalize the result MPS "res" at every step
+//   Verbose (default: false): print out extra information
+//   Normalize (default: true): normalize the state to 1 after applying MPO
 //
 template<class Tensor>
 void
