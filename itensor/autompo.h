@@ -216,7 +216,7 @@ class AutoMPO
     std::vector<std::vector<IQMPOMatElement>> tempMPO_;
     std::vector<std::vector<std::vector<TermSum>>> finalMPO_;
     
-    MPO H_;
+    IQMPO H_;
     bool svd_;
     
     clock_t dt1_, dt2_;
@@ -284,9 +284,9 @@ class AutoMPO
     
     void ConstructMPOUsingSVD();
 
-    operator MPO() { if(svd_) {ConstructMPOUsingSVD(); return H_; } else return toMPO<ITensor>(*this); }
+    operator MPO() { if(svd_) {ConstructMPOUsingSVD(); return H_.toMPO(); } else return toMPO<ITensor>(*this); }
 
-    operator IQMPO() { if(svd_) {ConstructMPOUsingSVD(); return H_.toIQMPO(); } else return toMPO<IQTensor>(*this); }
+    operator IQMPO() { if(svd_) {ConstructMPOUsingSVD(); return H_; } else return toMPO<IQTensor>(*this); }
     
     template <typename T>
     Accumulator

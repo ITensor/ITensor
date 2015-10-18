@@ -477,7 +477,7 @@ void AutoMPO::ConstructMPOUsingSVD()
         
     const int N = sites_.N();
     
-    H_ = MPO(sites_);
+    H_ = IQMPO(sites_);
     
     tempMPO_.resize(N);
     finalMPO_.resize(N);
