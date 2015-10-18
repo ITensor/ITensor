@@ -95,7 +95,7 @@ updateOffsets(const IQIndexSet& is,
     long totalsize = 0;
     for(auto I : RB.build())
         {
-        QN blockqn;
+        auto blockqn = QN{};
         for(auto j : count(is.r()))
             {
             auto& J = is[j];
@@ -144,6 +144,14 @@ doTask(SetElt<Real,IQIndex>& S, IQTReal& d)
     auto* pelt = d.getElt(S.is,S.inds);
     if(pelt) *pelt = S.elt;
     else     Error("Setting IQTensor element non-zero would violate its symmetry.");
+    }
+
+Cplx
+doTask(SumEls<IQIndex>, IQTReal const& d)
+    {
+    Real s = 0.;
+    for(auto& el : d.store) s += el;
+    return Cplx(s,0.);
     }
 
 void
@@ -347,7 +355,7 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
 
 
 void
-doTask(Write& W, const IQTReal& d)
+doTask(Write& W, IQTReal const& d)
     {
     W.writeType(StorageType::IQTReal,d); 
     }

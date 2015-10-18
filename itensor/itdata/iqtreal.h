@@ -74,7 +74,7 @@ class IQTReal
     IQTReal(IQIndexSet const& is, 
             QN const& div_);
 
-    explicit operator bool() const { return !store.empty(); }
+    explicit operator bool() const { return !store.empty() && !offsets.empty(); }
 
     Real*
     data() { return store.data(); }
@@ -135,6 +135,7 @@ template <typename F>
 void
 doTask(ApplyIT<F>& A, IQTReal& d)
     {
+    if(!d) throw ITError("Empty storage in IQTReal apply");
     for(auto& elt : d.store)
         elt = A.f(elt);
     }
@@ -143,20 +144,22 @@ template <typename F>
 void
 doTask(VisitIT<F>& V, const IQTReal& d)
     {
+    if(!d) throw ITError("Empty storage in IQTReal visit");
     for(const auto& elt : d.store)
         V.f(elt*V.scale_fac);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, IQTReal& d)
+doTask(GenerateIT<F,Real>& G, IQTReal & d)
     {
+    if(!d) throw ITError("Empty storage in IQTReal generate");
     std::generate(d.store.begin(),d.store.end(),G.f);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, const IQTReal& cd, ManageStore& mp)
+doTask(GenerateIT<F,Cplx>& G, IQTReal const& cd, ManageStore& mp)
     {
     Error("Complex version of IQTensor generate not yet supported");
     }
@@ -171,18 +174,21 @@ doTask(SetElt<Real,IQIndex>& S, IQTReal& d);
 //void
 //doTask(SetElt<Cplx,IQIndex>& S, IQTReal& d);
 
+Cplx
+doTask(SumEls<IQIndex>, IQTReal const& d);
+
 void
 doTask(MultReal const& M, IQTReal& d);
 
 void
-doTask(const PlusEQ<IQIndex>& P,
+doTask(PlusEQ<IQIndex> const& P,
        IQTReal& A,
-       const IQTReal& B);
+       IQTReal const& B);
 
 void
 doTask(Contract<IQIndex>& Con,
-       const IQTReal& A,
-       const IQTReal& B,
+       IQTReal const& A,
+       IQTReal const& B,
        ManageStore& mp);
 
 void
