@@ -85,6 +85,14 @@ doTask(CalcDiv const& C, IQTDiag const& d)
     return calcDiv(C.is,block_ind);
     }
 
+Cplx
+doTask(SumEls<IQIndex>, IQTDiag const& d)
+    {
+    Real s = 0.;
+    for(auto& el : d.store) s += el;
+    return Cplx(s,0.);
+    }
+
 void
 doTask(MultReal & M, IQTDiag & d)
     {

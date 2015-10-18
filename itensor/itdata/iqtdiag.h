@@ -158,6 +158,9 @@ doTask(GenerateIT<F,Cplx> & G, IQTDiag const& cd, ManageStore & mp)
     Error("Complex version of IQTensor generate not yet supported");
     }
 
+Cplx
+doTask(SumEls<IQIndex>, IQTDiag const& d);
+
 void
 doTask(MultReal & M, IQTDiag & d);
 
