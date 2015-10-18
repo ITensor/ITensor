@@ -33,7 +33,7 @@ MPSt<Tensor>::
 MPSt() 
     : 
     N_(0), 
-    sites_(0),
+    sites_(nullptr),
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -205,9 +205,8 @@ template <class Tensor>
 void MPSt<Tensor>::
 read(std::istream& s)
     {
-    if(sites_ == 0)
-        Error("Can't read to default constructed MPS");
-    for(size_t j = 0; j < A_.size(); ++j) 
+    if(not sites_) Error("Can't read to default constructed MPS");
+    for(auto j : index(A_))
         {
         itensor::read(s,A_[j]);
         }
@@ -216,7 +215,12 @@ read(std::istream& s)
     auto s1 = findtype(A_.at(1),Site);
     s1.noprime();
     if(s1 != IndexT(sites_->si(1)))
+        {
+        Print(A_.at(1).inds());
+        Print(s1);
+        Print(IndexT(sites_->si(1)));
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
+        }
     itensor::read(s,l_orth_lim_);
     itensor::read(s,r_orth_lim_);
     }
