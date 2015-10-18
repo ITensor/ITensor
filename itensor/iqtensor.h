@@ -110,20 +110,36 @@ IQTensor
 randomTensor(IQIndexVal const& iv1, 
              IQIndVals&&... ivs)
     {
-    return randomize(IQTensor(iv1,std::forward<IQIndVals>(ivs)...));
+    auto T = IQTensor(iv1,std::forward<IQIndVals>(ivs)...);
+    try {
+        return randomize(T);
+        }
+    catch(ITError const& e)
+        {
+        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        }
+    return T;
     }
 template <typename... Inds>
 IQTensor
-randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
+randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds)
     {
     auto is = IQIndexSet{i1,std::forward<Inds>(inds)...};
     auto dat = IQTReal{is,q};
-    return randomize(IQTensor(std::move(is),std::move(dat)));
+    auto T = IQTensor(std::move(is),std::move(dat));
+    try {
+        return randomize(T);
+        }
+    catch(ITError const& e)
+        {
+        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        }
+    return T;
     }
 
 
 std::ostream& 
-operator<<(std::ostream & s, const IQTensor &t);
+operator<<(std::ostream & s, IQTensor const& t);
 
 } //namespace itensor
 
