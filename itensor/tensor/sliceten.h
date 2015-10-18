@@ -52,9 +52,9 @@ subTensor(Ten_ && T,
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subTensor");
     static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subTensor");
     using range_type = decltype(T.range());
-    using stop_type = decltype(*stop.begin());
     auto r = T.r();
 #ifdef DEBUG
+    using stop_type = decltype(*stop.begin());
     if(r != decltype(r)(start.size())) throw std::runtime_error("subTensor: wrong size of start");
     if(r != decltype(r)(stop.size()))  throw std::runtime_error("subTensor: wrong size of stop");
     auto st_ = start.begin();

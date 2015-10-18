@@ -127,7 +127,7 @@ truncate(Vector & P,
     if(origm == 1) 
         {
         docut = P(0)/2.;
-        return 0;
+        return std::make_tuple(0,0);
         }
 
     //Zero out any negative weight
