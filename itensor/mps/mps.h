@@ -584,11 +584,11 @@ totalQN(const IQMPS& psi);
 //
 template <class MPSType>
 Complex 
-psiphiC(MPSType const& psi, 
+overlapC(MPSType const& psi, 
         MPSType const& phi)
     {
     auto N = psi.N();
-    if(N != phi.N()) Error("psiphi: mismatched N");
+    if(N != phi.N()) Error("overlap: mismatched N");
 
     auto l1 = linkInd(psi,1);
     auto L = phi.A(1);
@@ -607,24 +607,47 @@ psiphiC(MPSType const& psi,
     return (dag(psi.A(N))*L).cplx();
     }
 
+
 template <class MPSType>
 void 
-psiphi(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
+overlap(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
     {
-    auto z = psiphiC(psi,phi);
+    auto z = overlapC(psi,phi);
     re = z.real();
     im = z.imag();
     }
 
 template <class MPSType>
 Real 
-psiphi(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
+overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
     {
     Real re, im;
-    psiphi(psi,phi,re,im);
+    overlap(psi,phi,re,im);
     if(std::fabs(im) > (1E-12 * std::fabs(re)) )
-        printfln("Real psiphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+        printfln("Real overlap: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
+    }
+
+template <class MPSType>
+Complex 
+psiphiC(MPSType const& psi, 
+        MPSType const& phi)
+    {
+    return overlapC(psi,phi);
+    }
+
+template <class MPSType>
+void 
+psiphi(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
+    {
+    overlap(psi,phi,re,im);
+    }
+
+template <class MPSType>
+Real 
+psiphi(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
+    {
+    return overlap(psi,phi);
     }
 
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
