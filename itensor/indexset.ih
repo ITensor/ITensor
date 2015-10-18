@@ -57,14 +57,16 @@ template <class IndexT>
 void IndexSetT<IndexT>::
 write(std::ostream& s) const
     {
-    itensor::write(s,*this);
+    parent const& pr = *this;
+    itensor::write(s,pr);
     }
 
 template <class IndexT>
 void IndexSetT<IndexT>::
 read(std::istream& s)
     {
-    itensor::read(s,*this);
+    parent & pr = *this;
+    itensor::read(s,pr);
     }
 
 
