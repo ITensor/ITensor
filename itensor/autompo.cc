@@ -148,13 +148,24 @@ void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
         prod.emplace_back("F", i);         
     }
 
+QN QuantumNumber(const SiteSet &sites, const SiteTermProd &prod)
+    {
+    QN qn;
+    for(const SiteTerm &t: prod)
+        {
+        IQTensor op = sites.op(t.op,t.i);
+        qn += -div(op);                    
+        }
+    return qn;
+    }
+    
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
     {
     SiteTermProd prod = first;
     prod.insert( prod.end(), second.begin(), second.end() );
     return prod;
-    }
-    
+    }    
+
 void TermSum::operator+=(const Term &term)
     {
     // Check if the Term already appears in the sum and if yes, then only add the coefficients
@@ -400,8 +411,9 @@ Complex ComplexMatrix::operator() (int i, int j) const
     }
 
 // Note that n is 1-based site index
-void AutoMPO::AddToTempMPO(int n, const MPOMatElement &elem)
+void AutoMPO::AddToTempMPO(int n, const IQMPOMatElement &elem)
     {
+        // TODO: Check if this find is needed
         auto el = find(tempMPO_.at(n-1).begin(), tempMPO_.at(n-1).end(), elem);
         if(el == tempMPO_.at(n-1).end())
             tempMPO_.at(n-1).push_back(elem);
@@ -431,7 +443,7 @@ int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec)
     return vec.size();
     }
     
-void AutoMPO::AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const TermSum &tSum)
+void AutoMPO::AddToMPO(int n, MatIndex ind, const IQIndex &row, const IQIndex &col, const TermSum &tSum)
     {
         
     for(const Term &term : tSum.sum)
@@ -469,11 +481,10 @@ void AutoMPO::ConstructMPOUsingSVD()
     
     tempMPO_.resize(N);
     finalMPO_.resize(N);
-    leftPart_.resize(N);
-    rightPart_.resize(N);
-    Coeff_.resize(N);
+    part_.resize(N);
     
     clock_t t = clock();
+    
         
     // Construct left & right partials and the ceofficients matrix on each link 
     // as well as the temporary MPO
@@ -482,10 +493,19 @@ void AutoMPO::ConstructMPOUsingSVD()
             {
             SiteTermProd left, onsite, right;
             DecomposeTerm(n, ht.ops, left, onsite, right);
+            
+            QN lqn = QuantumNumber(sites_, left);
+            QN sqn = QuantumNumber(sites_, onsite);
+            
+            // TODO: Sanity check - calc rqn and check that lqn+sqn+rqn=0
+            
 #ifdef SHOW_AUTOMPO            
-            println(ht, ", n=",n,": ", left, ", ", onsite, ", ", right);
+            println(ht, ", n=",n,": ", left, "(", lqn, ")" , " | ", onsite, "(", sqn, ")" , " | ", right);
 #endif
             int j,k,l;
+            // TODO: Check if adding to part_.at(n) is really needed
+            // ( the terms are annyway added in the next step to part_.at(n-1) ? )
+            // note that left is added only at(n-1)
             
             if(left.empty())
                 {
@@ -493,22 +513,22 @@ void AutoMPO::ConstructMPOUsingSVD()
                 if(right.empty()) // on site term
                     k = 0;
                 else // term starting on site n
-                    k = AddToVec(right, rightPart_.at(n));
+                    k = AddToVec(right, part_.at(n)[sqn].right);
                 }
             else
                 {
                 if(right.empty()) // term ending on site n
                     {
                     k = 0;
-                    j = AddToVec(onsite, rightPart_.at(n-1));
+                    j = AddToVec(onsite, part_.at(n-1)[lqn].right);
                     }
                 else
                     {
-                    j = AddToVec(mult(onsite,right), rightPart_.at(n-1));
-                    k = AddToVec(right, rightPart_.at(n));
+                    j = AddToVec(mult(onsite,right), part_.at(n-1)[lqn].right);
+                    k = AddToVec(right, part_.at(n)[lqn+sqn].right);
                     }
-                l = AddToVec(left, leftPart_.at(n-1));
-                Coeff_.at(n-1).emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
+                l = AddToVec(left, part_.at(n-1)[lqn].left);
+                part_.at(n-1)[lqn].Coeff.emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
                 }
                 
             // Place the coefficient of the HTerm when the term starts
@@ -524,7 +544,8 @@ void AutoMPO::ConstructMPOUsingSVD()
                 }
             else
                 RewriteFermionic(onsite, leftF);
-            MPOMatElement elem(MatIndex(j, k), Term(c, onsite));
+            
+            IQMPOMatElement elem(lqn, lqn+sqn, j, k, Term(c, onsite));
             AddToTempMPO(n, elem);
             }
     
@@ -535,85 +556,129 @@ void AutoMPO::ConstructMPOUsingSVD()
     println("TempMPO Elements:");
     for(int n=1; n<=N; n++)
         {
-        for(const MPOMatElement &elem: tempMPO_.at(n-1))
-            println(elem.ind.row,',',elem.ind.col,'\t',elem.val.coef,'\t',elem.val.ops);
+        for(const IQMPOMatElement &elem: tempMPO_.at(n-1))
+            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
         println("=========================================");
         }
 
     println("Left and Right Partials:");
     for(int n=0; n<N; n++)
-    {
-        println("Left:");
-        for(const SiteTermProd &prod : leftPart_.at(n))
-            println(prod);
-        println("Right:");
-        for(const SiteTermProd &prod : rightPart_.at(n))
-            println(prod);
+        {
+        for(const auto &pqn : part_.at(n))
+            {
+            const Partition &p = pqn.second;
 
-         println("=========================================");
-    }
-    
-    println("Left-Right Coefficients:");        
-    for(int n=0; n<N; n++)
-    {
-        for(const CoefMatElement &elem : Coeff_.at(n))
-            println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
+            println("Left, QN = ", pqn.first);
+            for(const SiteTermProd &prod : p.left)
+                println(prod);
+            println("Right, QN = ", pqn.first);
+            for(const SiteTermProd &prod : p.right)
+                println(prod);
+            println("Coef, QN = ", pqn.first);
+            for(const CoefMatElement &elem : p.Coeff)
+                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
+            }
         println("=========================================");
-    }
+        }
 #endif            
 
     // SVD Coeff matrix on each link and construct the final MPO matrix for each site
     // Note that for the MPO matrix on site n we need the SVD on both the previous link and the following link
-    ComplexMatrix V_n, V_npp;
-    int d_n = 0, d_npp = 0; 	// d_n = num of non-zero singular values of Coeff_[n]
+    
+    std::map<QN, ComplexMatrix> V_n, V_npp;
+    std::map<QN, int> d_n, d_npp; 	// num of non-zero singular values for each QN block
+    int d_n_tot = 0, d_npp_tot = 0;
     int max_d = 0;
+    
+    std::map<QN, int> qnstart_n, qnstart_npp;
 
     t = clock();
+    
+    clock_t svdt_tot = 0;
+    
+    vector<IQIndex> links(N+1);
+    
+    QN ZeroQN;
+    
+    // TODO: include n=0 into the loop and avoid next 6 lines?
+    d_n[ZeroQN] = 0;
+    d_n_tot = 2;
+    qnstart_n[ZeroQN] = 2;
+        
+    vector<IndexQN> inqn;
+    inqn.emplace_back(Index("hl0_0",d_n[ZeroQN]+2),ZeroQN);
+    links.at(0) = IQIndex("Hl0",inqn);
     
     for(int n=1; n<=N; n++)
         {
             
         // for 1st site there are no left partials and Coeff_[n-1] is empty but Coeff_[n] is not
         // for Nth site Coeff_[n] is empty but Coeff_[n-1] is not
-        if(n==N || Coeff_.at(n).empty())
-            d_npp = 0;
-        else
-            {
-            clock_t svdt = clock();
-            
-            // Convert Coeff_.at(n) to a dense Matrix                
-            ComplexMatrix C(Coeff_.at(n));
-            
-            Vector D;
-            if(C.isComplex())
-                {                    
-                ComplexMatrix U;
-                SVD(C.Re, C.Im, U.Re, U.Im, D, V_npp.Re, V_npp.Im);
-                }
-            else
+        
+        // TODO: part_.at(0) is always empty
+
+        if(n==N || part_.at(n).empty())
+            d_npp[ZeroQN] = 0;        
+        else    
+            for(const std::pair<QN, Partition> &v : part_.at(n) )
                 {
-                Matrix U;                
-                SVD(C.Re, U, D, V_npp.Re);
+                QN qn = v.first;
+                Partition part = v.second;
+                
+                clock_t svdt = clock();
+                
+                // Convert the coefficients of the partition to a dense Matrix                
+                ComplexMatrix C(part.Coeff);
+                
+                Vector D;
+                if(C.isComplex())
+                    {                    
+                    ComplexMatrix U;
+                    SVD(C.Re, C.Im, U.Re, U.Im, D, V_npp[qn].Re, V_npp[qn].Im);
+                    }
+                else
+                    {
+                    Matrix U;                
+                    SVD(C.Re, U, D, V_npp[qn].Re);
+                    }
+
+                svdt_tot += clock() - svdt;
+
+                Real epsilon = 1E-12;
+                auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
+                auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
+                d_npp[qn]=firstApproxZero - D.begin();
                 }
 
-            svdt = clock() - svdt;
-            println("SVD for site ", n, " took ", ((float)svdt)/CLOCKS_PER_SEC, " seconds");
+        d_npp_tot = d_npp[ZeroQN]+2;
+        qnstart_npp[ZeroQN] = 2;
+        
+        vector<IndexQN> inqn;
+        int count = 0;
+        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d_npp[ZeroQN]+2),ZeroQN);
 
-            Real epsilon = 1E-12;
-            auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
-            auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
-            d_npp=firstApproxZero - D.begin();
+        for(const std::pair<QN, int> &d : d_npp)
+            {
+            if(d.first == ZeroQN)
+                continue;
+            
+            qnstart_npp[d.first] = d_npp_tot;
+            d_npp_tot += d.second;
+            
+            inqn.emplace_back(Index(format("hl%d_%d",n,count++),d.second),d.first);
             }
+            
+        links.at(n) = IQIndex(nameint("Hl",n),inqn);
             
         println("Num of elements in temporary MPO for site ", n, " is ", tempMPO_.at(n-1).size());
         
-        clock_t sitet = clock();
+        // TODO: Think if finalMPO_ should be stored by QN ?
         
-        finalMPO_.at(n-1).resize(d_n+2);
+        finalMPO_.at(n-1).resize(d_n_tot);
         for(auto &v : finalMPO_.at(n-1))
-            v.resize(d_npp+2);
+            v.resize(d_npp_tot);
             
-        println("Size of MPO matrix for site ", n, " is (", d_n+2, ", ", d_npp+2, ")");
+        println("Size of MPO matrix for site ", n, " is (", d_n_tot, ", ", d_npp_tot, ")");
         
         SiteTermProd opId;
         opId.emplace_back("Id", n);
@@ -622,47 +687,52 @@ void AutoMPO::ConstructMPOUsingSVD()
         finalMPO_.at(n-1).at(1).at(1) += Term(1, opId);
             
         Complex Zero(0,0);
-        for(const MPOMatElement &elem: tempMPO_.at(n-1))
+        for(const IQMPOMatElement &elem: tempMPO_.at(n-1))
             {
-            int k = elem.ind.row;
-            int l = elem.ind.col;
+            int k = elem.row;
+            int l = elem.col;
     
             if(l==0 && k==0)	// on-site terms
                 finalMPO_.at(n-1).at(1).at(0) += elem.val;
             else if(k==0)  	// terms starting on site n
                 {
-                for(int j=1; j<=d_npp; j++)
-                    if(V_npp(j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1).at(1+j) += Term(elem.val.coef*V_npp(j,l), elem.val.ops);
+                for(int j=1; j<=d_npp[elem.colqn]; j++)
+                    if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
+                        finalMPO_.at(n-1).at(1).at(qnstart_npp[elem.colqn]+j-1) += Term(elem.val.coef*V_npp[elem.colqn](j,l), elem.val.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
-                for(int i=1; i<=d_n; i++)
-                    if(V_n(i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO_.at(n-1).at(1+i).at(0) += Term(elem.val.coef*V_n(i,k), elem.val.ops);
+                for(int i=1; i<=d_n[elem.rowqn]; i++)
+                    if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
+                        finalMPO_.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += Term(elem.val.coef*V_n[elem.rowqn](i,k), elem.val.ops);
                 }
             else 
                 {
-                for(int i=1; i<=d_n; i++)
-                    for(int j=1; j<=d_npp; j++) 
-                        if( (V_n(i,k) != Zero)  && (V_npp(j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO_.at(n-1).at(1+i).at(1+j) += Term(elem.val.coef*V_n(i,k)*V_npp(j,l), elem.val.ops);
+                for(int i=1; i<=d_n[elem.rowqn]; i++)
+                    for(int j=1; j<=d_npp[elem.colqn]; j++) 
+                        if( (V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
+                            finalMPO_.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(elem.val.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), elem.val.ops);
                 }
             }
-            sitet = clock() - sitet;
-            println("It took ", ((float)sitet)/CLOCKS_PER_SEC, " seconds to construct the final MPO for site ", n);
 
         // Store SVD computed at this step for next link
         V_n = V_npp;
-        d_n = d_npp;        
-        max_d = max(max_d, d_n);
+        d_n = d_npp;
+        d_n_tot = d_npp_tot;
+        qnstart_n = qnstart_npp;
+        max_d = max(max_d, d_n_tot);
+        
+        V_npp.clear();
+        d_npp.clear();
+        qnstart_npp.clear();
         }
         
         t = clock() - t;
+        println("SVD took ", ((float)svdt_tot)/CLOCKS_PER_SEC, " seconds");
         println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to construct the final MPO");
         
-        println("Maximal dimension of MPO is ", max_d+2);
+        println("Maximal dimension of MPO is ", max_d);
         
 #ifdef SHOW_AUTOMPO
         for(int n=1; n<=N; n++)
@@ -676,19 +746,15 @@ void AutoMPO::ConstructMPOUsingSVD()
 
         t = clock();
         
-        vector<Index> links(N+1);
-        links.at(0) = Index(nameint("Hl",0),finalMPO_.at(0).size());
-
         for(int n=1; n<=N; n++)
             {
             int nr = finalMPO_.at(n-1).size();
             int nc = n == N ? 2 : finalMPO_.at(n).size();
             
-            links.at(n) = Index(nameint("Hl",n),nc);
             auto &row = links.at(n-1),
                  &col = links.at(n);
 
-            H_.Anc(n) = ITensor(sites_.si(n),sites_.siP(n),row,col);
+            H_.Anc(n) = IQTensor(dag(sites_(n)),prime(sites_(n)),dag(row),col);
                 
             clock_t sitet = clock();
             
@@ -707,9 +773,8 @@ void AutoMPO::ConstructMPOUsingSVD()
     println("Operators multiplication took ", ((float)dt1_)/CLOCKS_PER_SEC, " seconds");
     println("Operators addition took ", ((float)dt2_)/CLOCKS_PER_SEC, " seconds");
 
-    
-    H_.Anc(1) *= ITensor(links.at(0)(2));
-    H_.Anc(N) *= ITensor(links.at(N)(1));
+    H_.Anc(1) *= IQTensor(links.at(0)(2));
+    H_.Anc(N) *= IQTensor(dag(links.at(N))(1));
     }
 
 /*

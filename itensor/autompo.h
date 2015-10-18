@@ -5,6 +5,8 @@
 #ifndef __ITENSOR_AUTOMPO_H
 #define __ITENSOR_AUTOMPO_H
 
+#include <map>
+
 #include "global.h"
 #include "mpo.h"
 
@@ -78,6 +80,8 @@ bool IsFermionic(const SiteTermProd &prod);
 // Rewrites a fermionic single site product using the Jordan-Wigner string
 // Adds an on-site FermiPhase operator if needed
 void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic);
+
+QN QuantumNumber(const SiteSet &sites, const SiteTermProd &prod);
 
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
 
@@ -168,6 +172,19 @@ struct MatElement
     
 typedef MatElement<Term> MPOMatElement;
 typedef MatElement<Complex> CoefMatElement;
+
+struct IQMPOMatElement
+    {
+    QN rowqn, colqn;
+    int row, col;
+    Term val;
+    
+    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const Term &t) : 
+        rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
+        
+    // TODO: Check if needed (used in AddToVec)
+    bool operator==(const IQMPOMatElement &other) const {return rowqn == other.rowqn && colqn == other.colqn && row == other.row && col == other.col && val == other.val; }
+    };
     
 struct ComplexMatrix
     {
@@ -183,15 +200,20 @@ struct ComplexMatrix
     Complex operator() (int i, int j) const;
     };
     
+struct Partition
+    {
+        std::vector<SiteTermProd> left,right;
+        std::vector<CoefMatElement> Coeff;        
+    };
+    
 class AutoMPO
     {
     const SiteSet& sites_;
     std::vector<HTerm> terms_;
     
-    std::vector<std::vector<SiteTermProd>> leftPart_,rightPart_;
-    std::vector<std::vector<CoefMatElement>> Coeff_;
+    std::vector<std::map<QN, Partition>> part_; // sort according to QN of left part
 
-    std::vector<std::vector<MPOMatElement>> tempMPO_;
+    std::vector<std::vector<IQMPOMatElement>> tempMPO_;
     std::vector<std::vector<std::vector<TermSum>>> finalMPO_;
     
     MPO H_;
@@ -199,11 +221,11 @@ class AutoMPO
     
     clock_t dt1_, dt2_;
 
-    void AddToTempMPO(int n, const MPOMatElement &elem);
+    void AddToTempMPO(int n, const IQMPOMatElement &elem);
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
-    void AddToMPO(int n, MatIndex ind, const Index &row, const Index &col, const TermSum &sum);
+    void AddToMPO(int n, MatIndex ind, const IQIndex &row, const IQIndex &col, const TermSum &sum);
     
     enum State { New, Op };
 
