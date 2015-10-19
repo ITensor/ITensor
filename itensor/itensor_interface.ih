@@ -349,7 +349,7 @@ operator*=(ITensorT const& R)
 
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
-operator+=(const ITensorT& R)
+operator+=(ITensorT const& R)
     {
     auto& L = *this;
     if(!L) Error("Calling += on default constructed ITensor");
@@ -363,7 +363,7 @@ operator+=(const ITensorT& R)
     try {
         calcPerm(R.inds(),L.inds(),P);
         }
-    catch(const std::exception& e)
+    catch(std::exception const& e)
         {
         Print(L);
         Print(R);
@@ -396,16 +396,14 @@ operator+=(const ITensorT& R)
         scalefac = (R.scale()/L.scale()).real();
         }
 
-    if(isTrivial(P))
+    auto PEq = PlusEQ<index_type>{scalefac};
+    if(not isTrivial(P))
         {
-        doTask(PlusEQ<index_type>{scalefac},L.store(),R.store());
-        }
-    else
-        {
-        doTask(PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac},
-               L.store(),R.store());
+        PEq = PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac};
         }
 
+    doTask(PEq,L.store(),R.store());
+    
     return L;
     } 
 
@@ -567,13 +565,13 @@ ITensorT<I>
 operator+(ITensorT<I> A, const ITensorT<I>& B) { A += B; return A; }
 template<typename I>
 ITensorT<I> 
-operator+(const ITensorT<I>& A, ITensorT<I>&& B) { B += A; return B; }
+operator+(ITensorT<I> const& A, ITensorT<I>&& B) { B += A; return B; }
 template<typename I>
 ITensorT<I> 
 operator-(ITensorT<I> A, const ITensorT<I>& B) { A -= B; return A; }
 template<typename I>
 ITensorT<I> 
-operator-(const ITensorT<I>& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
+operator-(ITensorT<I> const& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
