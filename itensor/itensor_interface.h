@@ -267,6 +267,9 @@ class ITensorT
     void 
     scaleTo(Real newscale);
 
+    void
+    swap(ITensorT & other);
+
     //
     // Deprecated methods for backwards compatibility
     // 

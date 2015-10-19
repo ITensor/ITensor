@@ -508,6 +508,15 @@ template<typename IndexT>
 void ITensorT<IndexT>::
 scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
 
+template<typename IndexT>
+void ITensorT<IndexT>::
+swap(ITensorT & other)
+    {
+    is_.swap(other.is_);
+    store_.swap(other.store_);
+    scale_.swap(other.scale_);
+    }
+
 template<typename I>
 ITensorT<I> 
 operator*(ITensorT<I> A, const ITensorT<I>& B) { A *= B; return A; }
@@ -731,7 +740,7 @@ sumels(const ITensorT<I>& t)
 
 template<typename I>
 Cplx
-sumelsC(const ITensorT<I>& t)
+sumelsC(ITensorT<I> const& t)
     {
     auto z = doTask(SumEls<I>{t.inds()},t.store());
     return t.scale().real0()*z;
