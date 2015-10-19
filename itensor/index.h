@@ -48,7 +48,7 @@ class Index
 
     // Name of Index is used for printing purposes
     explicit
-    Index(const std::string& name, 
+    Index(std::string const& name, 
           long m = 1, 
           IndexType it = Link, 
           int primelev = 0);

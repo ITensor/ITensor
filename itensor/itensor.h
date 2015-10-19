@@ -103,20 +103,20 @@ operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
 template <typename... Inds>
 ITensor
-randomTensor(const Index& i1, Inds&&... inds)
+randomTensor(Index const& i1, Inds&&... inds)
     {
     return randomize(ITensor(i1,std::forward<Inds>(inds)...));
     }
 template <typename... Inds>
 ITensor
-randomTensorC(const Index& i1, Inds&&... inds)
+randomTensorC(Index const& i1, Inds&&... inds)
     {
-    return randomize(ITensor(i1,std::forward<Inds>(inds)...),"Complex");
+    return randomize(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
     }
 
 template<typename IndexT>
 ITensorT<IndexT>
-randomTensor(const IndexSetT<IndexT>& inds);
+randomTensor(IndexSetT<IndexT> const& inds);
 
 ITensor
 matrixTensor(Matrix&& M, const Index& i1, const Index& i2);
