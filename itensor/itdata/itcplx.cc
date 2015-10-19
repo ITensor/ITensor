@@ -3,10 +3,8 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/itdata/itcplx.h"
+#include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/util/count.h"
-#include "itensor/util/safe_ptr.h"
 
 namespace itensor {
 
@@ -62,8 +60,8 @@ doTask(const SetElt<Cplx,Index>& s, ITCplx& d)
 
 void
 doTask(Contract<Index>& C,
-       const ITCplx& a1,
-       const ITCplx& a2,
+       ITCplx const& a1,
+       ITCplx const& a2,
        ManageStore& m)
     {
     Label Lind,
@@ -100,14 +98,14 @@ doTask(Contract<Index>& C,
     //contractloop(t1i,Lind,t2r,Rind,tri,Nind);
     //contractloop(t1r,Lind,t2i,Rind,tri,Nind);
 
-    //if(rsize > 1) C.computeScalefac(*nd);
+    if(rsize > 1) C.computeScalefac(*nd);
     }
 
 void
-realCplx(const ITReal& R,
-         const IndexSet& ris,
-         const ITCplx& C,
-         const IndexSet& cis,
+realCplx(ITReal const& R,
+         IndexSet const& ris,
+         ITCplx const& C,
+         IndexSet const& cis,
          IndexSet& Nis,
          ManageStore& m,
          Contract<Index>& Con,
@@ -125,42 +123,6 @@ realCplx(const ITReal& R,
     contractIS(ris,rind,cis,cind,Nis,Nind,sortInds);
 
     auto rsize = area(Nis);
-
-    //if(area(ris)==1) //Real tensor is a scalar
-    //    {
-    //    scalefac_ = R[0];
-    //    if(RealOnLeft) assignPointerRtoL();
-    //    return;
-    //    }
-    //if(area(cis)==1) //Cplx tensor is a scalar
-    //    {
-    //    Error("Need to check in this case whether RealOnLeft or not");
-    //    auto z = C.get(0);
-    //    auto zr = z.real(),
-    //         zi = z.imag();
-    //    if(zi == 0)
-    //        {
-    //        scalefac_ = zr;
-    //        assignPointerRtoL();
-    //        }
-    //    else
-    //        {
-    //        assert(size_t(rsize)==size_t(R.size()));
-    //        auto nd = makeNewData<ITCplx>(rsize);
-    //        auto pr = MAKE_SAFE_PTR(nd->rstart(),rsize);
-    //        auto pi = MAKE_SAFE_PTR(nd->istart(),rsize);
-    //        for(auto el : R)
-    //            {
-    //            *pr = el*zr;
-    //            *pi = el*zi;
-    //            ++pr;
-    //            ++pi;
-    //            }
-    //        }
-    //    return;
-    //    }
-    
-
     auto nd = m.makeNewData<ITCplx>(rsize,0.);
 
     auto t1 = makeTenRef(R.data(),R.size(),&ris),
@@ -169,8 +131,11 @@ realCplx(const ITReal& R,
     auto trr = makeTenRef(nd->rstart(),nd->csize(),&Nis),
          tri = makeTenRef(nd->istart(),nd->csize(),&Nis);
 
-    contractloop(t1,rind,t2r,cind,trr,Nind);
-    contractloop(t1,rind,t2i,cind,tri,Nind);
+    contract(t1,rind,t2r,cind,trr,Nind);
+    contract(t1,rind,t2i,cind,tri,Nind);
+
+    //contractloop(t1,rind,t2r,cind,trr,Nind);
+    //contractloop(t1,rind,t2i,cind,tri,Nind);
 
     if(rsize > 1) Con.computeScalefac(*nd);
     }
@@ -195,7 +160,78 @@ doTask(Contract<Index>& C,
     }
 
 void
-doTask(const FillReal& f, const ITCplx& d, ManageStore& m)
+doTask(PlusEQ<Index> const& P,
+       ITCplx & a1,
+       ITCplx const& a2)
+    {
+    if(!P.hasPerm())
+        {
+        daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
+        }
+    else
+        {
+        auto t1r = makeTenRef(a1.rstart(),a1.csize(),&P.is1());
+        auto t1i = makeTenRef(a1.istart(),a1.csize(),&P.is1());
+        auto t2r = makeTenRef(a2.rstart(),a2.csize(),&P.is2());
+        auto t2i = makeTenRef(a2.istart(),a2.csize(),&P.is2());
+        auto f = P.fac;
+        auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
+        transform(permute(t2r,P.perm()),t1r,add);
+        transform(permute(t2i,P.perm()),t1i,add);
+        }
+    }
+
+//void
+//addCplxReal(ITCplx             & C,
+//            IndexSet      const& cis,
+//            ITReal        const& R,
+//            IndexSet      const& ris,
+//            PlusEQ<Index> const& P,
+//            bool Cleft)
+//    {
+//    }
+
+void
+doTask(PlusEQ<Index> & P,
+       ITReal const& a1,
+       ITCplx const& a2,
+       ManageStore& m)
+    {
+    auto *nd = m.makeNewData<ITCplx>(a1);
+    doTask(P,*nd,a2);
+
+    //auto *nd = m.makeNewData<ITCplx>(a2);
+    //if(P.fac != 1.0)
+    //    {
+    //    doTask(MultReal{P.fac},*nd);
+    //    P.fac = 1.0;
+    //    }
+    //addCplxReal(*nd,P.is2(),a1,P.is1(),P,false);
+    //P.switchIndSet = true;
+    }
+
+void
+doTask(PlusEQ<Index> const& P,
+       ITCplx & C,
+       ITReal const& R)
+    {
+    //addCplxReal(a1,P.is1(),a2,P.is2(),P);
+    if(!P.hasPerm())
+        {
+        daxpy_wrapper(C.csize(),P.fac,R.data(),1,C.rstart(),1);
+        }
+    else
+        {
+        auto Cr = makeTenRef(C.rstart(),C.csize(),&P.is1());
+        auto Rr = makeTenRef(R.data(),R.size(),&P.is2());
+        auto f = P.fac;
+        auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
+        transform(permute(Rr,P.perm()),Cr,add);
+        }
+    }
+
+void
+doTask(FillReal const& f, ITCplx const& d, ManageStore& m)
     {
     m.makeNewData<ITReal>(d.csize(),f.r);
     }
@@ -207,24 +243,21 @@ doTask(const FillCplx& f, ITCplx& d)
     }
 
 void
-doTask(const MultCplx& M, ITCplx& d) 
+doTask(MultCplx const& M, ITCplx& d) 
     { 
     d *= M.z; 
     }
 
 void
-doTask(const MultReal& m, ITCplx& d)
+doTask(MultReal const& m, ITCplx& d)
     {
     for(auto& elt : d) elt *= m.r;
     }
 
 Real
-doTask(NormNoScale, const ITCplx& d)
+doTask(NormNoScale, ITCplx const& d)
     { 
-    Real nrm = 0;
-    for(auto& elt : d)
-        nrm += std::norm(elt); //conj(elt)*elt
-    return std::sqrt(nrm);
+    return dnrm2_wrapper(d.size(),d.data());
     }
 
 void

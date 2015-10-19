@@ -223,6 +223,21 @@ doTask(Contract<Index>& C,
        ManageStore & m);
 
 void
+doTask(PlusEQ<Index> const& P,
+       ITCplx & a1,
+       ITCplx const& a2);
+
+void
+doTask(PlusEQ<Index> const& P,
+       ITCplx & a1,
+       ITReal const& a2);
+void
+doTask(PlusEQ<Index> & P,
+       ITReal const& a1,
+       ITCplx const& a2,
+       ManageStore& m);
+
+void
 doTask(FillReal const& f, ITCplx const& d, ManageStore& m);
 
 void

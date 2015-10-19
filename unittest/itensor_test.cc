@@ -632,6 +632,138 @@ SECTION("Add diag")
 
 }
 
+SECTION("Complex SumDifference")
+{
+
+SECTION("Complex+-Complex")
+    {
+    SECTION("Case 1 - Same Order")
+        {
+        auto T1 = randomTensorC(l2,b4,b2);
+        auto T2 = randomTensorC(l2,b4,b2);
+
+        auto R = T1 + T2;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 2 - Different Order")
+        {
+        auto T1 = randomTensorC(l2,b4,b2);
+        auto T2 = randomTensorC(b4,l2,b2);
+
+        auto R = T1 + T2;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 3 - Subtract Different Order")
+        {
+        auto f1 = Global::random(),
+             f2 = Global::random();
+        auto T1 = randomTensorC(l2,b4,b2);
+        auto T2 = randomTensorC(b4,l2,b2);
+
+        auto R = f1*T1 - f2*T2;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))-f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+    }
+
+SECTION("Real+-Complex")
+    {
+    auto f1 = Global::random(),
+         f2 = Global::random();
+    auto T1 = randomTensor(l2,b4,b2);
+
+    SECTION("Case 1: Real+Cplx, No Permute")
+        {
+        auto T2 = randomTensorC(l2,b4,b2);
+        //println("Case 1");
+        auto R = f1*T1 + f2*T2;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 2: Real+Cplx, Permute")
+        {
+        auto T2 = randomTensorC(b4,l2,b2);
+        //println("Case 2");
+        auto R = f1*T1 + f2*T2;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 3: Cplx+Real, No Permute")
+        {
+        auto T2 = randomTensorC(l2,b4,b2);
+        //println("Case 3");
+        auto R = f2*T2 + f1*T1;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 4: Cplx+Real, Permute")
+        {
+        auto T2 = randomTensorC(b4,l2,b2);
+        //println("Case 4");
+        auto R = f2*T2 + f1*T1;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+
+    SECTION("Case 5: Cplx+Real, Permute")
+        {
+        auto T2 = randomTensorC(b2,l2,b4);
+        //println("Case 5");
+        auto R = f2*T2 + f1*T1;
+
+        for(auto i2 : count1(l2.m()))
+        for(auto j2 : count1(b2.m()))
+        for(auto j4 : count1(b4.m()))
+            {
+            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            }
+        }
+    }
+
+}
+
 SECTION("ContractingProduct")
 {
 
