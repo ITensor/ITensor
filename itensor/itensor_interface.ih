@@ -15,6 +15,10 @@
 
 namespace itensor {
 
+//forward declaration for checkSameDiv
+QN
+div(IQTensor const& T);
+
 namespace detail {
 void inline
 allocReal(ITensor& T)
@@ -79,6 +83,19 @@ checkArrows(IQIndexSet const& is1,
                 }
             }
         }
+    }
+
+void inline
+checkSameDiv(ITensor const& T1,
+             ITensor const& T2)
+    { }
+
+
+void inline
+checkSameDiv(IQTensor const& T1,
+             IQTensor const& T2)
+    {
+    if(div(T1) != div(T2)) Error("div(T1) must equal div(T2) when adding T1+T2");
     }
 } //namespace detail
 
@@ -364,6 +381,10 @@ operator+=(const ITensorT& R)
 
     //If L store unallocated, just assign from R
     if(!L.store() || L.scale().isZero()) return L = R;
+
+#ifdef DEBUG
+    detail::checkSameDiv(L,R);
+#endif
 
     Real scalefac = 1;
     if(L.scale().magnitudeLessThan(R.scale())) 
