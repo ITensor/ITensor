@@ -138,10 +138,18 @@ template <typename NArgs, typename Task, typename Return>
 class RegisterTask;
 
 template<typename NArgs, typename Task, typename Return>
-Task
-getReturnHelperImpl(stdx::choice<2>, RegisterTask<NArgs,Task,Return> & R)
+auto
+getReturnHelperImpl(stdx::choice<3>, RegisterTask<NArgs,Task,Return> & R)
+    -> typename RegisterTask<NArgs,Task,Return>::task_type
     {
     return std::move(R.task_);
+    }
+template<typename NArgs, typename Task, typename Return>
+auto
+getReturnHelperImpl(stdx::choice<2>, RegisterTask<NArgs,Task,Return> & R)
+    -> stdx::enable_if_t<std::is_lvalue_reference<Task>::value,Task>
+    {
+    return R.task_;
     }
 template<typename NArgs, typename Task, typename Return>
 auto
@@ -167,11 +175,11 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     using return_type = stdx::conditional_t<std::is_same<Return,NoneType>::value,
                                            task_type,
                                            Return>;
-    task_type task_;
+    Task task_;
     ManageStore m_;
     Return ret_;
 
-    RegisterTask(const task_type& t)
+    RegisterTask(task_type& t)
       : task_(t)
         { }
 
@@ -185,7 +193,7 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
         m_(std::move(m))
         { }
 
-    RegisterTask(const task_type& t,
+    RegisterTask(task_type& t,
                  ManageStore&& m)
       : task_(t),
         m_(std::move(m))
@@ -741,14 +749,14 @@ template<typename Task>
 auto
 doTask(Task&& t,
        CPData arg)
-    -> typename detail::RegisterTask<detail::OneArg<CPData>,Task,ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
     ManageStore m(&(arg.p));
-    detail::RegisterTask<detail::OneArg<CPData>,Task,Ret> r{std::forward<Task>(t),std::move(m)};
+    detail::RegisterTask<detail::OneArg<CPData>,decltype(t),Ret> r{std::forward<Task>(t),std::move(m)};
     arg->plugInto(r);
     return r.getReturn();
     }
@@ -757,14 +765,14 @@ template<typename Task>
 auto
 doTask(Task&& t,
        PData& arg)
-    -> typename detail::RegisterTask<detail::OneArg<PData>,Task,ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<PData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
     ManageStore m(&arg);
-    detail::RegisterTask<detail::OneArg<PData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
+    detail::RegisterTask<detail::OneArg<PData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
     return r.getReturn();
     }
@@ -774,7 +782,7 @@ auto
 doTask(Task&& t,
        CPData arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,Task,ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
@@ -782,7 +790,7 @@ doTask(Task&& t,
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
     ManageStore m(&(arg1.p),&(arg2.p));
-    detail::RegisterTask<detail::TwoArgs<CPData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
+    detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
     return r.getReturn();
     }
@@ -792,7 +800,7 @@ auto
 doTask(Task&& t,
        PData& arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,Task,ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
@@ -800,7 +808,7 @@ doTask(Task&& t,
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
     ManageStore m(&arg1,&(arg2.p));
-    detail::RegisterTask<detail::TwoArgs<PData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
+    detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
     return r.getReturn();
     }
