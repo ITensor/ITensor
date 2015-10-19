@@ -493,27 +493,27 @@ SECTION("Complex Scalar Multiply")
 {
 CHECK(typeOf(A) == DenseReal);
 A *= 1_i;
-//CHECK(typeOf(A) == DenseCplx);
-//auto s1P = prime(s1);
-//CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
-//CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
-//CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
-//CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
-//
-//auto T = randomize(A);
-//CHECK(typeOf(T) == DenseReal);
-//CHECK(typeOf(A) == DenseCplx);
-//
-//T = randomize(T,"Complex");
-//CHECK(typeOf(T) == DenseCplx);
-//
-//auto z = 2.2-3.1_i;
-//auto cT = T;
-//T *= z;
-//CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
-//CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
-//CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
-//CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
+CHECK(typeOf(A) == DenseCplx);
+auto s1P = prime(s1);
+CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
+CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
+CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
+CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
+
+auto T = randomize(A);
+CHECK(typeOf(T) == DenseReal);
+CHECK(typeOf(A) == DenseCplx);
+
+T = randomize(T,"Complex");
+CHECK(typeOf(T) == DenseCplx);
+
+auto z = 2.2-3.1_i;
+auto cT = T;
+T *= z;
+CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
+CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
+CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
+CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
 }
 
 SECTION("Apply / Visit / Generate")
@@ -819,25 +819,24 @@ SECTION("Scalar Result")
 
 SECTION("Complex Contracting Product")
 {
-//TODO fix this failing test
-//SECTION("Complex-Complex")
-//    {
-//    auto T1 = randomTensorC(b3,b5,l6,a1,s3),
-//         T2 = randomTensorC(l6,s4,b3,a1);
-//    auto R = T1*T2;
-//    for(int j5 = 1; j5 <= 5; ++j5)
-//    for(int i3 = 1; i3 <= 2; ++i3)
-//    for(int i4 = 1; i4 <= 2; ++i4)
-//        {
-//        Complex val = 0;
-//        for(int j3 = 1; j3 <= 3; ++j3)
-//        for(int k6 = 1; k6 <= 2; ++k6)
-//            {
-//            val += T1.cplx(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(a1(1),l6(k6),s4(i4),b3(j3));
-//            }
-//        CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
-//        }
-//    }
+SECTION("Complex-Complex")
+    {
+    auto T1 = randomTensorC(b3,b5,l6,a1,s3),
+         T2 = randomTensorC(l6,s4,b3,a1);
+    auto R = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int i3 = 1; i3 <= 2; ++i3)
+    for(int i4 = 1; i4 <= 2; ++i4)
+        {
+        Cplx val = 0;
+        for(int j3 = 1; j3 <= 3; ++j3)
+        for(int k6 = 1; k6 <= 2; ++k6)
+            {
+            val += T1.cplx(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(a1(1),l6(k6),s4(i4),b3(j3));
+            }
+        CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
+        }
+    }
 
 SECTION("Real-Complex")
     {
@@ -906,29 +905,28 @@ SECTION("Complex Times Scalar Real")
         }
     }
 
-//TODO fix this failing test
-//SECTION("Complex Times Scalar Complex")
-//    {
-//    auto T1 = randomTensorC(b3,b5,a1),
-//         T2 = randomTensorC(a1,a2);
-//    CHECK(isComplex(T1));
-//    CHECK(isComplex(T2));
-//    auto R1 = T1*T2;
-//    for(int j5 = 1; j5 <= 5; ++j5)
-//    for(int j3 = 1; j3 <= 3; ++j3)
-//        {
-//        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-//        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3),a2(1)),val);
-//        }
-//
-//    auto R2 = T2*T1;
-//    for(int j5 = 1; j5 <= 5; ++j5)
-//    for(int j3 = 1; j3 <= 3; ++j3)
-//        {
-//        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-//        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3),a2(1)),val);
-//        }
-//    }
+SECTION("Complex Times Scalar Complex")
+    {
+    auto T1 = randomTensorC(b3,b5,a1),
+         T2 = randomTensorC(a1,a2);
+    CHECK(isComplex(T1));
+    CHECK(isComplex(T2));
+    auto R1 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3),a2(1)),val);
+        }
+
+    auto R2 = T2*T1;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3),a2(1)),val);
+        }
+    }
 }
 
 
