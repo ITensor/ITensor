@@ -135,9 +135,9 @@ class TenRefc
     reference
     operator()(Inds&&... ii) const;
 
-    template<typename Indices>
-    reference
-    operator()(Indices const& ii) const;
+    //template<typename Indices>
+    //reference
+    //operator()(Indices const& ii) const;
 
     void
     clear() { d_.clear(); prange_ = nullptr; }
@@ -230,9 +230,9 @@ class TenRef : public TenRefc<range_type_>
     reference
     operator()(Inds&&... ii) const { return const_cast<reference>(parent::operator()(std::forward<Inds>(ii)...)); }
 
-    template<typename Indices>
-    reference
-    operator()(Indices const& ii) const { return const_cast<reference>(parent::operator()(ii)); }
+    //template<typename Indices>
+    //reference
+    //operator()(Indices const& ii) const { return const_cast<reference>(parent::operator()(ii)); }
 
     iterator
     begin() const { return iterator(store(),parent::range()); }
@@ -507,13 +507,14 @@ class Ten
     reference
     operator()(Inds&&... ii);
 
-    template<typename Indices>
-    reference
-    operator()(Indices const& ii);
 
-    template<typename Indices>
-    const_reference
-    operator()(Indices const& ii) const;
+    //template<typename Indices>
+    //reference
+    //operator()(Indices const& ii);
+
+    //template<typename Indices>
+    //const_reference
+    //operator()(Indices const& ii) const;
 
     iterator
     begin() { return data_.begin(); }

@@ -424,6 +424,10 @@ auto
 offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
     -> decltype(r.stride(0))
     {
+#ifdef DEBUG
+    if(1+sizeof...(inds) != rank(r)) 
+        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
+#endif
     return detail::ComputeOffset<index_type>(r)(i1,inds...);
     }
 

@@ -57,18 +57,15 @@ template <typename... Inds>
 auto TenRefc<R>::
 operator()(Inds&&... ii) const -> reference
     { 
-#ifdef DEBUG
-    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to TenRef");
-#endif
     return d_[offset(*prange_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename R>
-template<typename Indices>
-auto TenRefc<R>::
-operator()(Indices const& ii) const 
-  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
-    { return d_[offset(*prange_,ii)]; }
+//template<typename R>
+//template<typename Indices>
+//auto TenRefc<R>::
+//operator()(Indices const& ii) const 
+//  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
+//    { return d_[offset(*prange_,ii)]; }
 
 template<typename R>
 void TenRefc<R>::
@@ -219,9 +216,6 @@ template <typename... Inds>
 auto Ten<R>::
 operator()(Inds&&... ii) const -> const_reference
     { 
-#ifdef DEBUG
-    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
-#endif
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
@@ -241,25 +235,22 @@ template <typename... Inds>
 auto Ten<R>::
 operator()(Inds&&... ii) -> reference
     { 
-#ifdef DEBUG
-    if(sizeof...(ii) != r()) throw std::runtime_error("Wrong number of indices passed to Ten");
-#endif
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename R>
-template <typename Indices>
-auto Ten<R>::
-operator()(Indices const& ii) 
-  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
-    { return data_[offset(range_,ii)]; }
+//template<typename R>
+//template <typename Indices>
+//auto Ten<R>::
+//operator()(Indices const& ii) 
+//  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
+//    { return data_[offset(range_,ii)]; }
 
-template<typename R>
-template <typename Indices>
-auto Ten<R>::
-operator()(Indices const& ii) const 
-  -> stdx::if_compiles_return<const_reference,decltype(ii.begin())>
-    { return const_reference(data_[offset(range_,ii)]); }
+//template<typename R>
+//template <typename Indices>
+//auto Ten<R>::
+//operator()(Indices const& ii) const 
+//  -> stdx::if_compiles_return<const_reference,decltype(ii.begin())>
+//    { return const_reference(data_[offset(range_,ii)]); }
 
 template<typename R>
 Real
@@ -307,7 +298,8 @@ printTensor(std::ostream & s,
         return s;
         }
     s << typestr << "\n";
-    for(auto& i : T.range())
+    auto e = rangeEnd(T.range());
+    for(auto i = rangeBegin(T.range()); i != e; ++i)
         {
         s << "(" << i.index() << ") " << T(i) << "\n";
         }
