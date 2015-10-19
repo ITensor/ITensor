@@ -224,18 +224,32 @@ contains(int i) const
     return i >= first().i && i <= last().i; 
     }
 
-HTerm& HTerm::
+Term& Term::
 operator*=(Real x)
     {
     coef *= x;
     return *this;
     }
 
-HTerm& HTerm::
+Term& Term::
 operator*=(Complex x)
     {
     coef *= x;
     return *this;
+    }
+    
+Term Term::
+operator*(Real x) const
+    {
+    Term t(x*this->coef, this->ops);
+    return t;
+    }
+
+Term Term::
+operator*(Complex x) const
+    {
+    Term t(x*this->coef, this->ops);
+    return t;
     }
     
 bool HTerm::
@@ -532,7 +546,8 @@ void AutoMPO::PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::v
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, const std::vector<std::vector<IQMPOMatElement>> &tempMPO,
-                        std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links) const
+                        std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links, 
+                        bool isExp = false, Complex tau = 0) const
     {
     const int N = sites_.N();
     
@@ -545,16 +560,18 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
     
     const QN ZeroQN;
     
+    int d0 = isExp ? 1 : 2;
+    
     d_n[ZeroQN] = 0;
     // TODO: The number of rows for the 1st site can actually be 1
-    d_n_tot = 2;
+    d_n_tot = d0;
     
     // qn block offset in the compressed MPO
     std::map<QN, int> qnstart_n, qnstart_npp;
-    qnstart_n[ZeroQN] = 2; 
+    qnstart_n[ZeroQN] = d0; 
         
     vector<IndexQN> inqn;
-    inqn.emplace_back(Index("hl0_0",d_n[ZeroQN]+2),ZeroQN);
+    inqn.emplace_back(Index("hl0_0",d_n[ZeroQN]+d0),ZeroQN);
     links.at(0) = IQIndex("Hl0",inqn);
 
     // TODO: relabel part vector to be from 0 to N-1, now part[0] is always empty
@@ -589,16 +606,16 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
                 d_npp[qn]=firstApproxZero - D.begin();
                 }
 
-        qnstart_npp[ZeroQN] = 2;
+        qnstart_npp[ZeroQN] = d0;
         
         vector<IndexQN> inqn;
         int count = 0;
         
         // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d_npp[ZeroQN]+2),ZeroQN);
+        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d_npp[ZeroQN]+d0),ZeroQN);
 
         // TODO: The number of columns for the last site can actually be 1
-        d_npp_tot = d_npp[ZeroQN]+2;
+        d_npp_tot = d_npp[ZeroQN]+d0;
         
         for(const std::pair<QN, int> &d : d_npp)
             {
@@ -627,35 +644,39 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
         opId.emplace_back("Id", n);
         
         finalMPO.at(n-1).at(0).at(0) += Term(1, opId);
-        finalMPO.at(n-1).at(1).at(1) += Term(1, opId);
+        if(!isExp)
+            finalMPO.at(n-1).at(1).at(1) += Term(1, opId);
             
         Complex Zero(0,0);
         for(const IQMPOMatElement &elem: tempMPO.at(n-1))
             {
             int k = elem.row;
             int l = elem.col;
+            
+            Term t = (isExp && k==0) ? elem.val*(-tau) : elem.val;
+            int rowOffset = isExp ? 0 : 1;
     
             if(l==0 && k==0)	// on-site terms
-                finalMPO.at(n-1).at(1).at(0) += elem.val;
+                finalMPO.at(n-1).at(rowOffset).at(0) += t;
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(1).at(qnstart_npp[elem.colqn]+j-1) += Term(elem.val.coef*V_npp[elem.colqn](j,l), elem.val.ops);
+                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_npp[elem.colqn](j,l), t.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += Term(elem.val.coef*V_n[elem.rowqn](i,k), elem.val.ops);
+                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += Term(t.coef*V_n[elem.rowqn](i,k), t.ops);
                 }
             else 
                 {
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     for(int j=1; j<=d_npp[elem.colqn]; j++) 
                         if( (V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(elem.val.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), elem.val.ops);
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
                 }
             }
 
@@ -685,17 +706,19 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
 #endif            
     }
 
-IQMPO AutoMPO::ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, const std::vector<IQIndex> &links) const
+IQMPO AutoMPO::ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, 
+                                    const std::vector<IQIndex> &links, bool isExp = false) const
     {
     
     IQMPO H(sites_);
     
     const int N = sites_.N();
+    int min_n = isExp ? 1 : 2;
     
     for(int n=1; n<=N; n++)
         {
         int nr = finalMPO.at(n-1).size();
-        int nc = n == N ? 2 : finalMPO.at(n).size();
+        int nc = n == N ? min_n : finalMPO.at(n).size();
         
         auto &row = links.at(n-1),
              &col = links.at(n);
@@ -720,8 +743,9 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<std::vector<std::vector<Ter
                     }
         }
         
-    H.Anc(1) *= IQTensor(links.at(0)(2));
-    H.Anc(N) *= IQTensor(dag(links.at(N))(1));        
+    
+    H.Anc(1) *= IQTensor(links.at(0)(min_n));
+    H.Anc(N) *= IQTensor(dag(links.at(N))(1));   
     
     return H;
     }
@@ -756,6 +780,25 @@ IQMPO AutoMPO::ConstructMPOUsingSVD()
 
     t = clock() - t;
     println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to construct the MPO tensors");
+    
+    return H;
+    }
+
+IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
+    {
+    const int N = sites_.N();
+    
+    std::vector<std::map<QN, Partition>> part(N);
+    std::vector<std::vector<IQMPOMatElement>> tempMPO(N);
+
+    PartitionHTerms(part, tempMPO);        
+    
+    std::vector<std::vector<std::vector<TermSum>>> finalMPO(N);
+    std::vector<IQIndex> links(N+1);
+    
+    CompressMPO(part, tempMPO, finalMPO, links, /*isExp*/ true, tau);
+
+    IQMPO H = ConstructMPOTensors(finalMPO, links, /*isExp*/ true);
     
     return H;
     }
@@ -1111,6 +1154,10 @@ toExpH_ZW1(const AutoMPO& am,
            Complex tau,
            const Args& args)
     {
+        
+    if(am.usingSVD())
+        return am.toExpHUsingSVD_ZW1(tau);
+        
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
     const int N = sites.N();

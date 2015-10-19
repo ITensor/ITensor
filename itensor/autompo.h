@@ -95,6 +95,18 @@ struct Term
     Term(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
     
     bool operator==(const Term &other) const {return coef == other.coef && ops == other.ops; }
+    
+    Term&
+    operator*=(Real x);
+
+    Term&
+    operator*=(Complex x);
+    
+    Term
+    operator*(Real x) const;
+
+    Term
+    operator*(Complex x) const;
     };
     
 struct TermSum
@@ -134,12 +146,6 @@ struct HTerm : Term
 
     bool
     contains(int i) const;
-
-    HTerm&
-    operator*=(Real x);
-
-    HTerm&
-    operator*=(Complex x);
 
     bool
     proportionalTo(const HTerm& other) const;
@@ -219,9 +225,11 @@ class AutoMPO
     void PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::vector<std::vector<IQMPOMatElement>> &tempMPO) const;
     
     void CompressMPO(const std::vector<std::map<QN, Partition>> &part, const std::vector<std::vector<IQMPOMatElement>> &tempMPO,
-                    std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links) const;
-    
-    IQMPO ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, const std::vector<IQIndex> &links) const;
+                    std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links, 
+                    bool isExp, Complex tau) const;
+                    
+    IQMPO ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, 
+                            const std::vector<IQIndex> &links, bool isExp) const;
     
     IQMPO ConstructMPOUsingSVD();
     
@@ -279,6 +287,10 @@ class AutoMPO
 
     const std::vector<HTerm>&
     terms() const { return terms_; }
+    
+    bool usingSVD() const { return svd_; }
+    
+    IQMPO toExpHUsingSVD_ZW1(Complex tau) const;
     
     operator MPO();
 
