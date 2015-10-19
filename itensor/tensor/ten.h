@@ -451,6 +451,7 @@ class Ten
     Ten() { }
 
     template<typename... Dims>
+    explicit
     Ten(size_type d1, Dims&&... rest)
       : range_(d1,std::forward<Dims>(rest)...)
         {
