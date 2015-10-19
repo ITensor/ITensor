@@ -34,6 +34,7 @@ class ITReal
 
     ITReal() { }
 
+    explicit
     ITReal(size_t size) : store(size) { }
 
     ITReal(size_t size, Real val) 

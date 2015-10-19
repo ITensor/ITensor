@@ -37,6 +37,7 @@ class ITCplx
 
     ITCplx() { }
 
+    explicit
     ITCplx(size_t size) : store(2*size,0) { }
 
     //Set all elements equal to (val,0)
@@ -55,7 +56,7 @@ class ITCplx
         }
 
     explicit
-    ITCplx(const ITReal& d);
+    ITCplx(ITReal const& d);
 
     template<typename InputIterator>
     ITCplx(InputIterator b, InputIterator e) : store(b,e) { }
@@ -184,7 +185,9 @@ doTask(GenerateIT<F,Real>& G, const ITCplx& d, ManageStore& m)
 //
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, const ITReal& d, ManageStore& m)
+doTask(GenerateIT<F,Cplx>& G, 
+       ITReal const& d, 
+       ManageStore& m)
     { 
     auto* nd = m.makeNewData<ITCplx>(d.size());
     for(auto j = 0ul; j < nd->csize(); ++j)
@@ -193,67 +196,67 @@ doTask(GenerateIT<F,Cplx>& G, const ITReal& d, ManageStore& m)
 
 
 Cplx
-doTask(const GetElt<Index>& g, const ITCplx& d);
+doTask(GetElt<Index> const& g, ITCplx const& d);
 
 void
-doTask(const SetElt<Real,Index>& s, ITCplx& d);
+doTask(SetElt<Real,Index> const& s, ITCplx & d);
 
 void
-doTask(const SetElt<Cplx,Index>& s, ITCplx& d);
+doTask(SetElt<Cplx,Index> const& s, ITCplx & d);
 
 void
 doTask(Contract<Index>& C,
-       const ITCplx& a1,
-       const ITCplx& a2,
+       ITCplx const& a1,
+       ITCplx const& a2,
        ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
-       const ITReal& a1,
-       const ITCplx& a2,
+       ITReal const& a1,
+       ITCplx const& a2,
        ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
-       const ITCplx& a1,
-       const ITReal& a2,
-       ManageStore& m);
+       ITCplx const& a1,
+       ITReal const& a2,
+       ManageStore & m);
 
 void
-doTask(const FillReal& f, const ITCplx& d, ManageStore& m);
+doTask(FillReal const& f, ITCplx const& d, ManageStore& m);
 
 void
-doTask(const FillCplx& f, ITCplx& d);
+doTask(FillCplx const& f, ITCplx& d);
 
 void
-doTask(const MultCplx& M, ITCplx& d); 
+doTask(MultCplx const& M, ITCplx& d); 
 
 void
-doTask(const MultReal& m, ITCplx& d);
+doTask(MultReal const& m, ITCplx& d);
 
 Real
-doTask(NormNoScale, const ITCplx& d);
+doTask(NormNoScale, ITCplx const& d);
 
 void
-doTask(Conj, ITCplx& d); 
+doTask(Conj, ITCplx & d); 
 
 void
-doTask(TakeReal,ITCplx& d, ManageStore& m);
+doTask(TakeReal, ITCplx & d, ManageStore& m);
 
 void
-doTask(TakeImag,const ITCplx& d, ManageStore& m); 
+doTask(TakeImag, ITCplx const& d, ManageStore& m); 
 
 void
-doTask(PrintIT<Index>& P, const ITCplx& d);
+doTask(PrintIT<Index>& P, ITCplx const& d);
 
 bool
-doTask(CheckComplex,const ITCplx& d);
+doTask(CheckComplex,ITCplx const& d);
 
 Cplx
-doTask(SumEls<Index>, const ITCplx& d);
+doTask(SumEls<Index>, ITCplx const& d);
 
 void
-doTask(Write& W, const ITCplx& d);
+doTask(Write& W, ITCplx const& d);
 
 } //namespace itensor
 
