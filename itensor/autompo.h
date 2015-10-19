@@ -210,22 +210,20 @@ class AutoMPO
     {
     const SiteSet& sites_;
     std::vector<HTerm> terms_;
-    
-    std::vector<std::map<QN, Partition>> part_; // sort according to QN of left part
-
-    std::vector<std::vector<IQMPOMatElement>> tempMPO_;
-    std::vector<std::vector<std::vector<TermSum>>> finalMPO_;
-    
-    IQMPO H_;
     bool svd_;
     
-    clock_t dt1_, dt2_;
-
-    void AddToTempMPO(int n, const IQMPOMatElement &elem);
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
-    int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec);
-    void AddToMPO(int n, MatIndex ind, const IQIndex &row, const IQIndex &col, const TermSum &sum);
+    int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
+    
+    void PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::vector<std::vector<IQMPOMatElement>> &tempMPO) const;
+    
+    void CompressMPO(const std::vector<std::map<QN, Partition>> &part, const std::vector<std::vector<IQMPOMatElement>> &tempMPO,
+                    std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links) const;
+    
+    IQMPO ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, const std::vector<IQIndex> &links) const;
+    
+    IQMPO ConstructMPOUsingSVD();
     
     enum State { New, Op };
 
@@ -273,7 +271,7 @@ class AutoMPO
     public:
 
     AutoMPO(const SiteSet& sites, const Args& args) 
-        : sites_(sites), svd_(args.getBool("SVD",false)), dt1_(0), dt2_(0)
+        : sites_(sites), svd_(args.getBool("SVD",false))
         { }
 
     const SiteSet&
@@ -282,11 +280,9 @@ class AutoMPO
     const std::vector<HTerm>&
     terms() const { return terms_; }
     
-    void ConstructMPOUsingSVD();
+    operator MPO();
 
-    operator MPO() { if(svd_) {ConstructMPOUsingSVD(); return H_.toMPO(); } else return toMPO<ITensor>(*this); }
-
-    operator IQMPO() { if(svd_) {ConstructMPOUsingSVD(); return H_; } else return toMPO<IQTensor>(*this); }
+    operator IQMPO();
     
     template <typename T>
     Accumulator
