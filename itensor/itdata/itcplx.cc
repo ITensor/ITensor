@@ -87,14 +87,20 @@ doTask(Contract<Index>& C,
     auto trr = makeTenRef(nd->rstart(),nd->csize(),&C.Nis),
          tri = makeTenRef(nd->istart(),nd->csize(),&C.Nis);
 
-    contractloop(t1i,Lind,t2i,Rind,trr,Nind);
+    contract(t1i,Lind,t2i,Rind,trr,Nind,1,1);
     for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
-    contractloop(t1r,Lind,t2r,Rind,trr,Nind);
+    contract(t1r,Lind,t2r,Rind,trr,Nind,1,1);
 
-    contractloop(t1i,Lind,t2r,Rind,tri,Nind);
-    contractloop(t1r,Lind,t2i,Rind,tri,Nind);
+    contract(t1i,Lind,t2r,Rind,tri,Nind,1,1);
+    contract(t1r,Lind,t2i,Rind,tri,Nind,1,1);
 
-    if(rsize > 1) C.computeScalefac(*nd);
+    //contractloop(t1i,Lind,t2i,Rind,trr,Nind);
+    //for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
+    //contractloop(t1r,Lind,t2r,Rind,trr,Nind);
+    //contractloop(t1i,Lind,t2r,Rind,tri,Nind);
+    //contractloop(t1r,Lind,t2i,Rind,tri,Nind);
+
+    //if(rsize > 1) C.computeScalefac(*nd);
     }
 
 void
