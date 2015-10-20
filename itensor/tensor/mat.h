@@ -131,6 +131,9 @@ Matrix
 operator+(Matrix && A, MatrixRefc const& B);
 
 Matrix 
+operator+(Matrix && A, Matrix && B);
+
+Matrix 
 operator-(MatrixRefc const& A, MatrixRefc const& B);
 
 Matrix 
@@ -138,6 +141,9 @@ operator-(MatrixRefc const& A, Matrix && B);
 
 Matrix 
 operator-(Matrix && A, MatrixRefc const& B);
+
+Matrix 
+operator-(Matrix && A, Matrix && B);
 
 Matrix 
 matrixMult(MatrixRefc const& A,

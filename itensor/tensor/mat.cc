@@ -377,6 +377,15 @@ operator+(Matrix && A, MatrixRefc const& B)
     }
 
 Matrix 
+operator+(Matrix && A, Matrix && B)
+    {
+    Matrix mA(std::move(A)); 
+    Matrix mB(std::move(B)); 
+    mA += mB; 
+    return mA; 
+    }
+
+Matrix 
 operator-(MatrixRefc const& A, MatrixRefc const& B)
     { 
     Matrix res(A);
@@ -399,6 +408,15 @@ operator-(Matrix && A, MatrixRefc const& B)
     Matrix res(std::move(A)); 
     res -= B; 
     return res; 
+    }
+
+Matrix 
+operator-(Matrix && A, Matrix && B)
+    {
+    Matrix mA(std::move(A)); 
+    Matrix mB(std::move(B)); 
+    mA -= mB; 
+    return mA; 
     }
 
 Matrix 
