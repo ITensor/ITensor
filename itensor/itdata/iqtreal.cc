@@ -169,9 +169,9 @@ doTask(PlusEQ<IQIndex> const& P,
 #ifdef DEBUG
     if(A.store.size() != B.store.size()) Error("Mismatched sizes in plusEq");
 #endif
-    if(!P.hasPerm())
+    if(isTrivial(P.perm()))
         {
-        daxpy_wrapper(A.store.size(),P.fac,B.data(),1,A.data(),1);
+        daxpy_wrapper(A.store.size(),P.fac(),B.data(),1,A.data(),1);
         }
     else
         {
@@ -194,7 +194,7 @@ doTask(PlusEQ<IQIndex> const& P,
             auto bref = TensorRefc(bblock,&Brange);
 
             //aref += permute(bref,P.perm());
-            auto f = P.fac;
+            auto f = P.fac();
             auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
             transform(permute(bref,P.perm()),aref,add);
             }

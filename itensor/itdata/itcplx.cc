@@ -164,9 +164,9 @@ doTask(PlusEQ<Index> const& P,
        ITCplx & a1,
        ITCplx const& a2)
     {
-    if(!P.hasPerm())
+    if(isTrivial(P.perm()))
         {
-        daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
+        daxpy_wrapper(a1.size(),P.fac(),a2.data(),1,a1.data(),1);
         }
     else
         {
@@ -174,7 +174,7 @@ doTask(PlusEQ<Index> const& P,
         auto t1i = makeTenRef(a1.istart(),a1.csize(),&P.is1());
         auto t2r = makeTenRef(a2.rstart(),a2.csize(),&P.is2());
         auto t2i = makeTenRef(a2.istart(),a2.csize(),&P.is2());
-        auto f = P.fac;
+        auto f = P.fac();
         auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
         transform(permute(t2r,P.perm()),t1r,add);
         transform(permute(t2i,P.perm()),t1i,add);
@@ -201,10 +201,10 @@ doTask(PlusEQ<Index> & P,
     doTask(P,*nd,a2);
 
     //auto *nd = m.makeNewData<ITCplx>(a2);
-    //if(P.fac != 1.0)
+    //if(P.fac() != 1.0)
     //    {
     //    doTask(MultReal{P.fac},*nd);
-    //    P.fac = 1.0;
+    //    P.fac() = 1.0;
     //    }
     //addCplxReal(*nd,P.is2(),a1,P.is1(),P,false);
     //P.switchIndSet = true;
@@ -215,16 +215,15 @@ doTask(PlusEQ<Index> const& P,
        ITCplx & C,
        ITReal const& R)
     {
-    //addCplxReal(a1,P.is1(),a2,P.is2(),P);
-    if(!P.hasPerm())
+    if(isTrivial(P.perm()))
         {
-        daxpy_wrapper(C.csize(),P.fac,R.data(),1,C.rstart(),1);
+        daxpy_wrapper(C.csize(),P.fac(),R.data(),1,C.rstart(),1);
         }
     else
         {
         auto Cr = makeTenRef(C.rstart(),C.csize(),&P.is1());
         auto Rr = makeTenRef(R.data(),R.size(),&P.is2());
-        auto f = P.fac;
+        auto f = P.fac();
         auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
         transform(permute(Rr,P.perm()),Cr,add);
         }

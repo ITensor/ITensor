@@ -386,7 +386,7 @@ operator+=(ITensorT const& R)
     detail::checkSameDiv(L,R);
 #endif
 
-    Real scalefac = 1;
+    Real scalefac = 1.0;
     if(L.scale().magnitudeLessThan(R.scale())) 
         {
         L.scaleTo(R.scale()); 
@@ -396,12 +396,7 @@ operator+=(ITensorT const& R)
         scalefac = (R.scale()/L.scale()).real();
         }
 
-    auto PEq = PlusEQ<index_type>{scalefac};
-    if(not isTrivial(P))
-        {
-        PEq = PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac};
-        }
-
+    auto PEq = PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac};
     doTask(PEq,L.store(),R.store());
     
     return L;

@@ -196,15 +196,15 @@ doTask(PlusEQ<Index> const& P,
 #ifdef DEBUG
     if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
 #endif
-    if(!P.hasPerm())
+    if(isTrivial(P.perm()))
         {
-        daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
+        daxpy_wrapper(a1.size(),P.fac(),a2.data(),1,a1.data(),1);
         }
     else
         {
         auto ref1 = makeTenRef(a1.data(),a1.size(),&P.is1());
         auto ref2 = makeTenRef(a2.data(),a2.size(),&P.is2());
-        auto f = P.fac;
+        auto f = P.fac();
         auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
         transform(permute(ref2,P.perm()),ref1,add);
         }

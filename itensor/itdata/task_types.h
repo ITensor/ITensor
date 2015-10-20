@@ -181,26 +181,22 @@ struct PlusEQ
     const Permutation *perm_ = nullptr;
     const iset_type *is1_ = nullptr,
                     *is2_ = nullptr;
+    Real fac_ = NAN;
     public:
 
-    Real fac = NAN;
-
-    PlusEQ(Real fac_) :
-        fac(fac_)
-        { }
 
     PlusEQ(Permutation const& P,
            iset_type const& is1,
            iset_type const& is2,
-           Real fac_) :
+           Real fac) :
         perm_(&P),
         is1_(&is1),
         is2_(&is2),
-        fac(fac_)
+        fac_(fac)
         { }
 
-    bool
-    hasPerm() const { return bool(perm_); }
+    Real
+    fac() const { return fac_; }
 
     Permutation const&
     perm() const { return *perm_; }

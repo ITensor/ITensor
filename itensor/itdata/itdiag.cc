@@ -140,7 +140,7 @@ doTask(Contract<Index> & C,
     }
 
 void
-doTask(const PlusEQ<Index>& P,
+doTask(PlusEQ<Index> const& P,
        ITDiag<Real>& a1,
        const ITDiag<Real>& a2)
     {
@@ -148,7 +148,7 @@ doTask(const PlusEQ<Index>& P,
     if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
 #endif
     if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
-    daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
+    daxpy_wrapper(a1.size(),P.fac(),a2.data(),1,a1.data(),1);
     }
 
 template<typename T>
