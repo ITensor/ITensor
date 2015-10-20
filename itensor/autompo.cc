@@ -85,47 +85,6 @@ fermionicTerm(const std::string& op)
     return op;
     }
     
-string
-startTerm(const std::string& op)
-    {
-    static array<pair<string,string>,6>
-           rewrites =
-           {{
-           make_pair("Cdagup","Adagup*F"),
-           make_pair("Cup","Aup*F"),
-           make_pair("Cdagdn","Adagdn"),
-           make_pair("Cdn","Adn"),
-           make_pair("C","A*F"),
-           make_pair("Cdag","Adag")
-           }};
-    for(auto& p : rewrites)
-        {
-        if(p.first == op) return p.second;
-        }
-    return op;
-    }
-
-string
-endTerm(const std::string& op)
-    {
-    static array<pair<string,string>,6>
-           rewrites =
-           {{
-           make_pair("Cup","Aup"),
-           make_pair("Cdagup","Adagup"),
-           make_pair("Cdn","F*Adn"),
-           make_pair("Cdagdn","F*Adagdn"),
-           make_pair("C","A"),
-           make_pair("Cdag","Adag")
-           }};
-    for(auto& p : rewrites)
-        {
-        if(p.first == op) return p.second;
-        }
-    return op;
-    }
-
-    
 void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
     {
     if(prod.empty())
@@ -135,7 +94,8 @@ void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
     for(const SiteTerm &t : prod)
         if(t.i != i)
             Error("Multi-site product in RewriteFermionic is not expected.");    
-            
+
+    // Rewrite a fermionic single site product using the Jordan-Wigner string            
     bool isSiteFermionic = IsFermionic(prod);
     if(isSiteFermionic)
         {
@@ -144,6 +104,8 @@ void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
                 t.op = fermionicTerm(t.op);
         }
     
+    // Add a FermiPhase operator at the end if the product of operators
+    // to the left (including this site) is fermionic
     if((isleftFermionic && !isSiteFermionic) || (!isleftFermionic && isSiteFermionic))
         prod.emplace_back("F", i);         
     }
@@ -165,6 +127,34 @@ SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
     prod.insert( prod.end(), second.begin(), second.end() );
     return prod;
     }    
+
+Term& Term::
+operator*=(Real x)
+    {
+    coef *= x;
+    return *this;
+    }
+
+Term& Term::
+operator*=(Complex x)
+    {
+    coef *= x;
+    return *this;
+    }
+    
+Term Term::
+operator*(Real x) const
+    {
+    Term t(x*this->coef, this->ops);
+    return t;
+    }
+
+Term Term::
+operator*(Complex x) const
+    {
+    Term t(x*this->coef, this->ops);
+    return t;
+    }
 
 void TermSum::operator+=(const Term &term)
     {
@@ -224,34 +214,6 @@ contains(int i) const
     return i >= first().i && i <= last().i; 
     }
 
-Term& Term::
-operator*=(Real x)
-    {
-    coef *= x;
-    return *this;
-    }
-
-Term& Term::
-operator*=(Complex x)
-    {
-    coef *= x;
-    return *this;
-    }
-    
-Term Term::
-operator*(Real x) const
-    {
-    Term t(x*this->coef, this->ops);
-    return t;
-    }
-
-Term Term::
-operator*(Complex x) const
-    {
-    Term t(x*this->coef, this->ops);
-    return t;
-    }
-    
 bool HTerm::
 proportionalTo(const HTerm& other) const
     {  
@@ -389,6 +351,13 @@ operator,(const std::string& op_)
     return *this;
     }
     
+bool IQMPOMatElement::operator==(const IQMPOMatElement &other) const
+    {
+        return rowqn == other.rowqn && colqn == other.colqn && 
+                row == other.row && col == other.col && 
+                val == other.val;
+    }
+
 ComplexMatrix::ComplexMatrix(const std::vector<CoefMatElement> &M)
     {
     int nr = 0, nc = 0;
@@ -449,7 +418,7 @@ int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) c
     }
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
-void AutoMPO::PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::vector<std::vector<IQMPOMatElement>> &tempMPO) const
+void AutoMPO::PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const
     {    
     for(const HTerm &ht : terms_)
         for(int n = ht.first().i; n <= ht.last().i; n++)
@@ -545,9 +514,9 @@ void AutoMPO::PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::v
     }
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
-void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, const std::vector<std::vector<IQMPOMatElement>> &tempMPO,
-                        std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links, 
-                        bool isExp = false, Complex tau = 0) const
+void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<MPOSparseMatrix> &tempMPO,
+                        std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
+                        bool isExpH = false, Complex tau = 0) const
     {
     const int N = sites_.N();
     
@@ -560,7 +529,7 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
     
     const QN ZeroQN;
     
-    int d0 = isExp ? 1 : 2;
+    int d0 = isExpH ? 1 : 2;
     
     d_n[ZeroQN] = 0;
     // TODO: The number of rows for the 1st site can actually be 1
@@ -644,7 +613,7 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
         opId.emplace_back("Id", n);
         
         finalMPO.at(n-1).at(0).at(0) += Term(1, opId);
-        if(!isExp)
+        if(!isExpH)
             finalMPO.at(n-1).at(1).at(1) += Term(1, opId);
             
         Complex Zero(0,0);
@@ -653,8 +622,8 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
             int k = elem.row;
             int l = elem.col;
             
-            Term t = (isExp && k==0) ? elem.val*(-tau) : elem.val;
-            int rowOffset = isExp ? 0 : 1;
+            Term t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
+            int rowOffset = isExpH ? 0 : 1;
     
             if(l==0 && k==0)	// on-site terms
                 finalMPO.at(n-1).at(rowOffset).at(0) += t;
@@ -706,14 +675,14 @@ void AutoMPO::CompressMPO(const std::vector<std::map<QN, Partition>> &part, cons
 #endif            
     }
 
-IQMPO AutoMPO::ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, 
-                                    const std::vector<IQIndex> &links, bool isExp = false) const
+IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO, 
+                                    const std::vector<IQIndex> &links, bool isExpH = false) const
     {
     
     IQMPO H(sites_);
     
     const int N = sites_.N();
-    int min_n = isExp ? 1 : 2;
+    int min_n = isExpH ? 1 : 2;
     
     for(int n=1; n<=N; n++)
         {
@@ -750,12 +719,12 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<std::vector<std::vector<Ter
     return H;
     }
 
-IQMPO AutoMPO::ConstructMPOUsingSVD()
+IQMPO AutoMPO::ConstructMPOUsingSVD() const
     {
     const int N = sites_.N();
     
-    std::vector<std::map<QN, Partition>> part(N);
-    std::vector<std::vector<IQMPOMatElement>> tempMPO(N);
+    std::vector<PartitionByQN> part(N);
+    std::vector<MPOSparseMatrix> tempMPO(N);
 
     clock_t t = clock();
     
@@ -764,7 +733,7 @@ IQMPO AutoMPO::ConstructMPOUsingSVD()
     t = clock() - t;
     println("It took ", ((float)t)/CLOCKS_PER_SEC, " seconds to partition HTerms and construct the temporary MPO");
     
-    std::vector<std::vector<std::vector<TermSum>>> finalMPO(N);
+    std::vector<MPOMatrix> finalMPO(N);
     std::vector<IQIndex> links(N+1);
 
     t = clock();
@@ -788,17 +757,17 @@ IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
     {
     const int N = sites_.N();
     
-    std::vector<std::map<QN, Partition>> part(N);
-    std::vector<std::vector<IQMPOMatElement>> tempMPO(N);
+    std::vector<PartitionByQN> part(N);
+    std::vector<MPOSparseMatrix> tempMPO(N);
 
     PartitionHTerms(part, tempMPO);        
     
-    std::vector<std::vector<std::vector<TermSum>>> finalMPO(N);
+    std::vector<MPOMatrix> finalMPO(N);
     std::vector<IQIndex> links(N+1);
     
-    CompressMPO(part, tempMPO, finalMPO, links, /*isExp*/ true, tau);
+    CompressMPO(part, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
-    IQMPO H = ConstructMPOTensors(finalMPO, links, /*isExp*/ true);
+    IQMPO H = ConstructMPOTensors(finalMPO, links, /*isExpH*/ true);
     
     return H;
     }
@@ -874,6 +843,46 @@ Cdn_i Cdagdn_j = (Adn_i F_i) F_{i+1} ... Fup_j Adagdn_j
 
 
 */
+
+string
+startTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cdagup","Adagup*F"),
+           make_pair("Cup","Aup*F"),
+           make_pair("Cdagdn","Adagdn"),
+           make_pair("Cdn","Adn"),
+           make_pair("C","A*F"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
+
+string
+endTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cup","Aup"),
+           make_pair("Cdagup","Adagup"),
+           make_pair("Cdn","F*Adn"),
+           make_pair("Cdagdn","F*Adagdn"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
 
 struct SiteQN
     {
@@ -1129,7 +1138,7 @@ toMPO<ITensor>(const AutoMPO& a,
     return res.toMPO();
     }
     
-AutoMPO::operator MPO() 
+AutoMPO::operator MPO() const
     { 
     if(svd_) 
         {
@@ -1140,7 +1149,7 @@ AutoMPO::operator MPO()
         return toMPO<ITensor>(*this); 
     }
 
-AutoMPO::operator IQMPO() 
+AutoMPO::operator IQMPO() const
     { 
     if(svd_) 
         return ConstructMPOUsingSVD(); 

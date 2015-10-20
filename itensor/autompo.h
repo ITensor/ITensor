@@ -72,17 +72,6 @@ struct SiteTerm
 
 typedef std::vector<SiteTerm> SiteTermProd;
 
-std::string OpString(const SiteTermProd &prod);
-    
-// Check if the number of fermionic operators in the term is even or odd
-bool IsFermionic(const SiteTermProd &prod);
-    
-// Rewrites a fermionic single site product using the Jordan-Wigner string
-// Adds an on-site FermiPhase operator if needed
-void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic);
-
-QN QuantumNumber(const SiteSet &sites, const SiteTermProd &prod);
-
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
 
 struct Term
@@ -165,20 +154,16 @@ struct MatIndex
     bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
     };
 
-template<typename T>
-struct MatElement
+struct CoefMatElement
     {
     MatIndex ind;
-    T val;
+    Complex val;
     
-    MatElement<T>(MatIndex index, T v) : ind(index), val(v) {};
+    CoefMatElement(MatIndex index, Complex v) : ind(index), val(v) {};
     
-    bool operator==(const MatElement<T> &other) const {return ind == other.ind && val == other.val; }
+    bool operator==(const CoefMatElement &other) const {return ind == other.ind && val == other.val; }
     };
     
-typedef MatElement<Term> MPOMatElement;
-typedef MatElement<Complex> CoefMatElement;
-
 struct IQMPOMatElement
     {
     QN rowqn, colqn;
@@ -188,8 +173,7 @@ struct IQMPOMatElement
     IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const Term &t) : 
         rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
         
-    // TODO: Check if needed (used in AddToVec)
-    bool operator==(const IQMPOMatElement &other) const {return rowqn == other.rowqn && colqn == other.colqn && row == other.row && col == other.col && val == other.val; }
+    bool operator==(const IQMPOMatElement &other) const;
     };
     
 struct ComplexMatrix
@@ -211,6 +195,10 @@ struct Partition
         std::vector<SiteTermProd> left,right;
         std::vector<CoefMatElement> Coeff;        
     };
+
+typedef std::map<QN, Partition> PartitionByQN;
+typedef std::vector<IQMPOMatElement> MPOSparseMatrix;
+typedef std::vector<std::vector<TermSum>> MPOMatrix;
     
 class AutoMPO
     {
@@ -222,16 +210,16 @@ class AutoMPO
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
     
-    void PartitionHTerms(std::vector<std::map<QN, Partition>> &part, std::vector<std::vector<IQMPOMatElement>> &tempMPO) const;
+    void PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const;
     
-    void CompressMPO(const std::vector<std::map<QN, Partition>> &part, const std::vector<std::vector<IQMPOMatElement>> &tempMPO,
-                    std::vector<std::vector<std::vector<TermSum>>> &finalMPO, std::vector<IQIndex> &links, 
-                    bool isExp, Complex tau) const;
+    void CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<MPOSparseMatrix> &tempMPO,
+                    std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
+                    bool isExpH, Complex tau) const;
                     
-    IQMPO ConstructMPOTensors(const std::vector<std::vector<std::vector<TermSum>>> &finalMPO, 
-                            const std::vector<IQIndex> &links, bool isExp) const;
+    IQMPO ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO, 
+                            const std::vector<IQIndex> &links, bool isExpH) const;
     
-    IQMPO ConstructMPOUsingSVD();
+    IQMPO ConstructMPOUsingSVD() const;
     
     enum State { New, Op };
 
@@ -292,9 +280,9 @@ class AutoMPO
     
     IQMPO toExpHUsingSVD_ZW1(Complex tau) const;
     
-    operator MPO();
+    operator MPO() const;
 
-    operator IQMPO();
+    operator IQMPO() const;
     
     template <typename T>
     Accumulator
