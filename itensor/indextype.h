@@ -80,6 +80,7 @@ operator==(const IndexType& t1, const IndexType& t2)
     for(size_t j = 0; j < IndexType::size(); ++j)
         if(t1[j] != t2[j]) return false;
     return true;
+    //return *reinterpret_cast<const uint64_t*>(t1.c_str()) == *reinterpret_cast<const uint64_t*>(t2.c_str());
     }
 
 bool inline
