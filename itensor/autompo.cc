@@ -408,7 +408,8 @@ void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops,
     }  
 
 // Returns a 1-based index of the SiteTermProd ops in the vector
-int AutoMPO::AddToVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const
+// If ops is not in the vector adds it is added
+int AutoMPO::PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const
     {   
     auto it = find(vec.begin(), vec.end(), ops);
     if (it != vec.end())
@@ -431,32 +432,32 @@ void AutoMPO::PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOS
             
             int j,k,l;
 
-            // TODO: Check if adding to part_.at(n) is really needed
-            // ( the terms are annyway added in the next step to part_.at(n-1) ? )
-            // note that left is added only at(n-1)
-           
+            // part.at(i) is the partition at the link between sites i+1 and i+2
+            // i.e. part.at(0) is the partition at the link between sites 1 and 2
+            // and part.at(N-2) is the partition at the link between sites N-1 and N
+            // for site n the link on the left is part.at(n-2) and the link on the right is part.at(n-1)
             if(left.empty())
                 {
                 j=0;
                 if(right.empty()) // on site term
                     k = 0;
                 else // term starting on site n
-                    k = AddToVec(right, part.at(n)[sqn].right);
+                    k = PosInVec(right, part.at(n-1)[sqn].right);
                 }
             else
                 {
                 if(right.empty()) // term ending on site n
                     {
                     k = 0;
-                    j = AddToVec(onsite, part.at(n-1)[lqn].right);
+                    j = PosInVec(onsite, part.at(n-2)[lqn].right);
                     }
                 else
                     {
-                    j = AddToVec(mult(onsite,right), part.at(n-1)[lqn].right);
-                    k = AddToVec(right, part.at(n)[lqn+sqn].right);
+                    j = PosInVec(mult(onsite,right), part.at(n-2)[lqn].right);
+                    k = PosInVec(right, part.at(n-1)[lqn+sqn].right);
                     }
-                l = AddToVec(left, part.at(n-1)[lqn].left);
-                part.at(n-1)[lqn].Coeff.emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
+                l = PosInVec(left, part.at(n-2)[lqn].left);
+                part.at(n-2)[lqn].Coeff.emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
                 }
                 
             // Place the coefficient of the HTerm when the term starts
@@ -543,19 +544,18 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
     inqn.emplace_back(Index("hl0_0",d_n[ZeroQN]+d0),ZeroQN);
     links.at(0) = IQIndex("Hl0",inqn);
 
-    // TODO: relabel part vector to be from 0 to N-1, now part[0] is always empty
     for(int n=1; n<=N; n++)
         {
-        if(n==N || part.at(n).empty())
+        if(n==N || part.at(n-1).empty())
             d_npp[ZeroQN] = 0;        
         else    
-            for(const std::pair<QN, Partition> &v : part.at(n) )
+            for(const std::pair<QN, Partition> &v : part.at(n-1) )
                 {
                 QN qn = v.first;
-                Partition part = v.second;
+                Partition p = v.second;
                 
                 // Convert the coefficients of the partition to a dense Matrix                
-                ComplexMatrix C(part.Coeff);
+                ComplexMatrix C(p.Coeff);
                 
                 Vector D;
                 if(C.isComplex())
@@ -723,7 +723,7 @@ IQMPO AutoMPO::ConstructMPOUsingSVD() const
     {
     const int N = sites_.N();
     
-    std::vector<PartitionByQN> part(N);
+    std::vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
     std::vector<MPOSparseMatrix> tempMPO(N);
 
     clock_t t = clock();
@@ -757,7 +757,7 @@ IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
     {
     const int N = sites_.N();
     
-    std::vector<PartitionByQN> part(N);
+    std::vector<PartitionByQN> part(N-1); // There are N-1 links between N sites
     std::vector<MPOSparseMatrix> tempMPO(N);
 
     PartitionHTerms(part, tempMPO);        
