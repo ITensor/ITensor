@@ -1292,6 +1292,28 @@ SECTION("diagSymmetric")
     CHECK(norm(R-M) < 1E-12*norm(M));
     }
 
+SECTION("diagHermitian")
+    {
+    auto N = 10;
+    auto Mre = Matrix(N,N);
+    auto Mim = Matrix(N,N);
+    randomize(Mre);
+    randomize(Mim);
+    Mre = Mre+transpose(Mre);
+    Mim = Mim-transpose(Mim);
+    Mre /= 2.;
+    Mim /= 2.;
+
+    auto Ure = Matrix(N,N);
+    auto Uim = Matrix(N,N);
+    auto d = Vector(N);
+    diagHermitian(makeRef(Mre),makeRef(Mim),makeRef(Ure),makeRef(Uim),makeRef(d));
+    auto DD = Matrix(N,N);
+    diagonal(DD) &= d;
+    CHECK(norm(Ure*DD*transpose(Ure) + Uim*DD*transpose(Uim) - Mre) < 1E-11);
+    CHECK(norm(Uim*DD*transpose(Ure)-Ure*DD*transpose(Uim)-Mim) < 1E-11);
+    }
+
 SECTION("Orthogonalize")
     {
     auto N = 4;

@@ -13,6 +13,35 @@ using std::sqrt;
 
 namespace itensor {
 
+//Helper for diagSymmetric
+template<typename Iter>
+void
+copyNegElts(Iter m,
+            MatrixRef const& U)
+    {
+    auto ue = U.data()+U.size();
+    for(auto u = U.data(); u != ue; ++u,++m)
+        {
+        *u = -(*m);
+        }
+    }
+
+//Helper for diagHermitian
+template<typename Iter>
+void
+copyNegElts(Iter mre,
+            Iter mim,
+            std::vector<LAPACK_COMPLEX> & Mc)
+    {
+    for(auto& z : Mc)
+        {
+        realRef(z) = -(*mre);
+        imagRef(z) = -(*mim);
+        ++mre;
+        ++mim;
+        }
+    }
+
 //
 // diagSymmetric
 //
@@ -38,32 +67,12 @@ diagSymmetric(MatrixRefc const& M,
     if(!isContiguous(U))
         throw std::runtime_error("diagSymmetric: U must be contiguous");
     if(!isContiguous(d))
-        {
         throw std::runtime_error("diagSymmetric: d must be contiguous");
-        }
 #endif
 
     //Set U = -M so eigenvalues will be sorted from largest to smallest
-    if(isContiguous(M) && isContiguous(U))
-        {
-        auto m = M.data();
-        auto u = U.data();
-        for(decltype(M.size()) j = 0; j < M.size(); ++j)
-            {
-            *u = -(*m);
-            ++u; 
-            ++m;
-            }
-        }
-    else
-        {
-        auto pM = M.cbegin();
-        for(auto& el : U) 
-            { 
-            el = -(*pM); 
-            ++pM; 
-            }
-        }
+    if(isContiguous(M)) copyNegElts(M.data(),U);
+    else                copyNegElts(M.cbegin(),U);
 
     LAPACK_INT info = 0;
     dsyev_wrapper('V','U',N,U.data(),d.data(),info);
@@ -94,6 +103,99 @@ diagSymmetric(MatrixRefc const& M,
     resize(U,nrows(M),ncols(M));
     resize(d,nrows(M));
     diagSymmetric(M,makeRef(U),makeRef(d));
+    }
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              MatrixRef  const& Ure,
+              MatrixRef  const& Uim,
+              VectorRef  const& d)
+    {
+    auto N = ncols(Mre);
+    if(N != nrows(Mre))
+        {
+        printfln("Mre is %dx%d",nrows(Mre),ncols(Mre));
+        throw std::runtime_error("diagHermitian: Input Matrix must be square");
+        }
+    if(N != nrows(Mim) || N != ncols(Mim))
+        {
+        printfln("Mim is %dx%d",nrows(Mim),ncols(Mim));
+        throw std::runtime_error("diagHermitian: Input Matrix must be square, and real and imag part same size");
+        }
+
+#ifdef DEBUG
+    if(N < 1) throw std::runtime_error("diagHermitian: 0 dimensional matrix");
+    if(!(nrows(Ure) == N && ncols(Ure) == N)) 
+        throw std::runtime_error("diagHermitian: Ure should have same dims as M");
+    if(!(nrows(Uim) == N && ncols(Uim) == N)) 
+        throw std::runtime_error("diagHermitian: Uim should have same dims as M");
+    if(d.size() != N)
+        throw std::runtime_error("diagHermitian: d size should be linear size of M");
+    if(!isContiguous(Ure))
+        throw std::runtime_error("diagHermitian: Ure must be contiguous");
+    if(!isContiguous(Uim))
+        throw std::runtime_error("diagHermitian: Uim must be contiguous");
+    if(!isContiguous(d))
+        throw std::runtime_error("diagHermitian: d must be contiguous");
+#endif
+
+
+    //Set Mc = -M so eigenvalues will be sorted from largest to smallest
+    auto Mc = std::vector<LAPACK_COMPLEX>(N*N);
+    if(isContiguous(Mre) && isContiguous(Mim))
+        {
+        copyNegElts(Mre.data(),Mim.data(),Mc);
+        }
+    else
+        {
+        copyNegElts(Mre.cbegin(),Mim.cbegin(),Mc);
+        }
+
+    auto info = zheev_wrapper(N,Mc.data(),d.data());
+    if(info != 0) 
+        {
+        throw std::runtime_error("Error condition in diagHermitian");
+        }
+
+    //Correct eigenvalue signs
+    d *= -1;
+
+    //Following code assumes Ure and Uim are contiguous
+    auto ur = Ure.data();
+    auto ui = Uim.data();
+    for(auto& z : Mc)
+        {
+        (*ur) = realRef(z);
+        (*ui) = imagRef(z);
+        ++ur;
+        ++ui;
+        }
+    }
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              Matrix          & Ure,
+              Matrix          & Uim,
+              VectorRef  const& d)
+    {
+    resize(Ure,nrows(Mre),ncols(Mre));
+    resize(Uim,nrows(Mre),ncols(Mre));
+    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),d);
+    }
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              Matrix          & Ure,
+              Matrix          & Uim,
+              Vector          & d)
+    {
+    resize(Ure,nrows(Mre),ncols(Mre));
+    resize(Uim,nrows(Mre),ncols(Mre));
+    resize(d,nrows(Mre));
+    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),makeRef(d));
     }
 
 //

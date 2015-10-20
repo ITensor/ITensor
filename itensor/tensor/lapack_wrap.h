@@ -33,6 +33,13 @@ namespace itensor {
 using LAPACK_INT = __CLPK_integer;
 using LAPACK_REAL = __CLPK_doublereal;
 using LAPACK_COMPLEX = __CLPK_doublecomplex;
+
+inline LAPACK_REAL& 
+realRef(LAPACK_COMPLEX & z) { return z.r; }
+
+inline LAPACK_REAL& 
+imagRef(LAPACK_COMPLEX & z) { return z.i; }
+
 }
 
 #elif defined PLATFORM_acml
@@ -47,6 +54,13 @@ typedef struct
 {
   double real, imag;
 } LAPACK_COMPLEX;
+
+inline LAPACK_REAL& 
+realRef(LAPACK_COMPLEX & z) { return z.real; }
+
+inline LAPACK_REAL& 
+imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+
 }
 
 #elif defined PLATFORM_mkl
@@ -59,6 +73,13 @@ namespace itensor {
 using LAPACK_INT = MKL_INT;
 using LAPACK_REAL = double;
 using LAPACK_COMPLEX = MKL_Complex16;
+
+inline LAPACK_REAL& 
+realRef(LAPACK_COMPLEX & z) { return z.real; }
+
+inline LAPACK_REAL& 
+imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+
 }
 
 #endif
@@ -465,26 +486,25 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
-void inline
-zheev_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
-                                    //if 'N', only eigenvalues
-              char* uplo,           //if 'U', use upper triangle of A
-              LAPACK_INT* n,        //number of cols of A
-              LAPACK_COMPLEX* A,    //matrix A, on return contains eigenvectors
-              LAPACK_INT* lda,      //size of A (usually same as n)
-              LAPACK_REAL* d,       //eigenvalues on return
-              LAPACK_COMPLEX* work, //complex workspace array
-              LAPACK_INT* lwork,    //size of work
-              LAPACK_REAL* rwork,   //real workspace array
-              LAPACK_INT* info)  //error info
+LAPACK_INT inline
+zheev_wrapper(LAPACK_INT N,        //number of cols of A
+              LAPACK_COMPLEX *A,    //matrix A, on return contains eigenvectors
+              LAPACK_REAL *d)       //eigenvalues on return
     {
+    char jobz = 'V';
+    char uplo = 'U';
+    LAPACK_INT lwork = std::max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    std::vector<LAPACK_COMPLEX> work(lwork);
+    std::vector<LAPACK_REAL> rwork(lwork);
+    LAPACK_INT info = 0;
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
     LAPACK_INT uplo_len = 1;
-    F77NAME(zheev)(jobz,uplo,n,A,lda,d,work,lwork,rwork,info,jobz_len,uplo_len);
+    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
 #else
-    F77NAME(zheev)(jobz,uplo,n,A,lda,d,work,lwork,rwork,info);
+    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info);
 #endif
+    return info;
     }
 
 //

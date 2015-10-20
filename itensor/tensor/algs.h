@@ -20,15 +20,11 @@ namespace itensor {
 // In other words, the following holds:
 //
 //   diagSymmetric(M,U,d);
-//   matrix D = matrix(M.Nrows(),M.Ncols());
-//   diagonal(D) = d;
+//   auto D = Matrix(nrows(M),ncols(M));
+//   diagonal(D) &= d;
 //   M == U*D*transpose(U); //<-- pseudo code
 //
-// (Note this is the transpose of the convention
-//  for U used in the EigenValues routine of
-//  earlier version of ITensor/MatrixRef)
 //
-
 
 void
 diagSymmetric(MatrixRefc const& M,
@@ -44,6 +40,46 @@ void
 diagSymmetric(MatrixRefc const& M,
               MatrixRef  const& U,
               VectorRef  const& d);
+
+//
+// diagHermitian diagonalizes a 
+// hermitian matrix with real part Mre (symmetric)
+// and imaginary part Mim (antisymmetric)
+// such that:
+// o Elements of d are the (real) eigenvalues in 
+//   decreasing order.
+// o Columns of Ure and Uim are the real and imag
+//   parts of the corresponding eigenvectors
+//
+// In other words, the following holds:
+//
+//   diagHermitian(Mre,Mim,Ure,Uim,d);
+//   auto D = Matrix(nrows(Mre),ncols(Mre));
+//   diagonal(D) &= d;
+//   Mre == Ure*D*transpose(Ure) + Uim*D*transpose(Uim); //<-- pseudo code
+//   Mim == Uim*D*transpose(Ure) - Ure*D*transpose(Uim); //<-- pseudo code
+//
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              MatrixRef  const& Ure,
+              MatrixRef  const& Uim,
+              VectorRef  const& d);
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              Matrix          & Ure,
+              Matrix          & Uim,
+              VectorRef  const& d);
+
+void
+diagHermitian(MatrixRefc const& Mre,
+              MatrixRefc const& Mim,
+              Matrix          & Ure,
+              Matrix          & Uim,
+              Vector          & d);
 
 //orthogonalize the first num columns of a matrixref M,
 //optionally repeating numpass times to reduce roundoff errors
