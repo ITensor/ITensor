@@ -1332,36 +1332,178 @@ SECTION("Orthogonalize")
 
 SECTION("Singular Value Decomp")
     {
-    Matrix U,V,D;
-    Vector d;
+    SECTION("One Pass Case")
+        {
+        Matrix U,V,D;
+        Vector d;
 
-    auto dMat = 
-        [](Vector const& d) 
-        { 
-        Matrix D(d.size(),d.size()); 
-        diagonal(D) &= d; 
-        return D; 
-        };
+        auto dMat = 
+            [](Vector const& d) 
+            { 
+            Matrix D(d.size(),d.size()); 
+            diagonal(D) &= d; 
+            return D; 
+            };
 
-    auto Nr = 10,
-         Nc = 8;
-    auto M = randomMat(Nr,Nc);
-    SVD(M,U,d,V);
-    auto R = U*dMat(d)*transpose(V);
-    CHECK((norm(R-M)/norm(M)) < 1E-13);
+        auto Nr = 10,
+             Nc = 8;
+        auto M = randomMat(Nr,Nc);
+        SVD(M,U,d,V);
+        auto R = U*dMat(d)*transpose(V);
+        CHECK((norm(R-M)/norm(M)) < 1E-14);
 
-    Nr = 10;
-    Nc = 10;
-    M = randomMat(Nr,Nc);
-    SVD(M,U,d,V);
-    auto R2 = U*dMat(d)*transpose(V);
-    CHECK((norm(R2-M)/norm(M)) < 1E-13);
+        Nr = 10;
+        Nc = 10;
+        M = randomMat(Nr,Nc);
+        SVD(M,U,d,V);
+        auto R2 = U*dMat(d)*transpose(V);
+        CHECK((norm(R2-M)/norm(M)) < 1E-14);
 
-    Nr = 10;
-    Nc = 20;
-    M = randomMat(Nr,Nc);
-    SVD(M,U,d,V);
-    auto R3 = U*dMat(d)*transpose(V);
-    CHECK((norm(R3-M)/norm(M)) < 1E-13);
+        Nr = 10;
+        Nc = 20;
+        M = randomMat(Nr,Nc);
+        SVD(M,U,d,V);
+        auto R3 = U*dMat(d)*transpose(V);
+        CHECK((norm(R3-M)/norm(M)) < 1E-14);
+        }
+    SECTION("Two Pass Case")
+        {
+        auto n = 5,
+             m = 5;
+        auto M = Matrix(n,m);
+        randomize(M);
+
+        Matrix U,V;
+        Vector d;
+        SVD(M,U,d,V);
+
+        //Make svals decay quickly
+        d(0) = 0.9;
+        d(1) = 1E-2;
+        d(2) = 1E-4;
+        d(3) = 1E-4;
+        d(4) = 1E-4;
+
+        //Put M back together with new svals
+        auto ns = d.size();
+        auto DD = Matrix(ns,ns);
+        diagonal(DD) &= d;
+        M = U*DD*transpose(V);
+        SVD(M,U,d,V,1E-1);
+        diagonal(DD) &= d;
+
+        //Print(norm(U*DD*transpose(V)-M));
+        CHECK(norm(U*DD*transpose(V)-M) < 1E-12);
+        }
+
+    SECTION("Accuracy Stress Test")
+        {
+        auto n = 100,
+             m = n;
+        auto M = Matrix(n,m);
+        randomize(M);
+
+        Matrix U,V;
+        Vector d;
+        SVD(M,U,d,V);
+
+        //Change spectrum to be quickly decaying,
+        //with lots of small singular vals
+        for(auto j : count(n))
+            {
+            d(j) = pow(0.8,j);
+            }
+        auto ns = d.size();
+        auto DD = Matrix(ns,ns);
+        diagonal(DD) &= d;
+
+        M = U*DD*transpose(V);
+
+        SVD(M,U,d,V);
+        diagonal(DD) &= d;
+
+        //Print(norm(U*DD*transpose(V)-M));
+        auto relnrm = norm(U*DD*transpose(V)-M)/norm(M);
+        CHECK(relnrm < 1E-13);
+        }
+    }
+
+SECTION("Complex SVD")
+    {
+    SECTION("One Pass Case")
+        {
+        auto n = 15,
+             m = 5;
+        auto Mre = Matrix(n,m);
+        auto Mim = Matrix(n,m);
+        randomize(Mre);
+        randomize(Mim);
+
+        Matrix Ure,Uim,Vre,Vim;
+        Vector d;
+        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+
+        auto ns = d.size();
+        auto DD = Matrix(ns,ns);
+        diagonal(DD) &= d;
+
+        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
+        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
+        }
+    SECTION("One Pass Case - Tranpose")
+        {
+        auto n = 5,
+             m = 15;
+        auto Mre = Matrix(n,m);
+        auto Mim = Matrix(n,m);
+        randomize(Mre);
+        randomize(Mim);
+
+        Matrix Ure,Uim,Vre,Vim;
+        Vector d;
+        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+
+        auto ns = d.size();
+        auto DD = Matrix(ns,ns);
+        diagonal(DD) &= d;
+
+        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
+        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
+        }
+    SECTION("Two Pass Case")
+        {
+        auto n = 5,
+             m = 5;
+        auto Mre = Matrix(n,m);
+        auto Mim = Matrix(n,m);
+        randomize(Mre);
+        randomize(Mim);
+
+        Matrix Ure,Uim,Vre,Vim;
+        Vector d;
+        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+
+        //Make svals decay quickly
+        d(0) = 0.9;
+        d(1) = 1E-2;
+        d(2) = 1E-4;
+        d(3) = 1E-4;
+        d(4) = 1E-4;
+
+        //Put M back together with new svals
+        auto ns = d.size();
+        auto DD = Matrix(ns,ns);
+        diagonal(DD) &= d;
+        Mre = Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim);
+        Mim = Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim);
+
+        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,1E-1);
+        diagonal(DD) &= d;
+
+        auto nrmre = norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre)/norm(Mre);
+        CHECK(nrmre < 1E-13);
+        auto nrmim = norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim)/norm(Mim);
+        CHECK(nrmim < 1E-13);
+        }
     }
 } //Test matrix algorithms
