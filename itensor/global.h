@@ -154,31 +154,20 @@ class Global
         }
     };
 
+#define PrintDat(X)  PrintEither(true,#X,X)
+#define PrintData(X) PrintEither(true,#X,X)
+
 template<typename T>
 void
 PrintEither(bool pdat,
             const char* tok,
             T const& X)
     {
-    bool savep = Global::printdat();
+    auto savep = Global::printdat();
     Global::printdat() = pdat;
-    auto pre = format("%s = ",tok);
-    auto str = format("%s",X);
-    std::cout << pre;
-    bool has_newline = false;
-    for(auto c : str)
-        if(c == '\n')
-            {
-            has_newline = true;
-            break;
-            }
-    if(has_newline || (pre.size() + str.size() > 60)) std::cout << "\n";
-    std::cout << str << std::endl;
+    PrintNice(tok,X);
     Global::printdat() = savep;
     }
-#define Print(X)     PrintEither(false,#X,X)
-#define PrintDat(X)  PrintEither(true,#X,X)
-#define PrintData(X) PrintEither(true,#X,X)
 
 } //namespace itensor
 
