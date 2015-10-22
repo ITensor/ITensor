@@ -79,8 +79,20 @@ operator*=(MatrixRef const& A, Real fac)
 void 
 operator/=(MatrixRef const& A, Real fac)
     {
-    if(fac == 0) throw std::runtime_error("MatrixRef /=: divide by zero");
-    operator*=(A,1./fac);
+    //if(fac == 0) throw std::runtime_error("MatrixRef /=: divide by zero");
+    //operator*=(A,1./fac);
+    if(isContiguous(A))
+        {
+        auto ae = A.data()+A.size();
+        for(auto a = A.data(); a != ae; ++a)
+            {
+            *a /= fac;
+            }
+        }
+    else
+        {
+        for(auto& el : A) el /= fac;
+        }
     }
 
 template<typename MatT1, typename MatT2>
@@ -340,7 +352,7 @@ Matrix
 operator/(MatrixRefc const& A, Real fac)
     { 
     Matrix res(A);
-    res *= 1./fac; 
+    res /= fac; 
     return res; 
     }
 
@@ -348,7 +360,7 @@ Matrix
 operator/(Matrix && A, Real fac)
     { 
     Matrix res(std::move(A));
-    res *= 1./fac; 
+    res /= fac; 
     return res; 
     }
 

@@ -53,9 +53,11 @@ operator*=(VectorRef a, Real fac)
             throw std::runtime_error("VectorRef overflow of size beyond LAPACK_INT range");
 #endif
         dscal_wrapper(a.size(),fac,a.data());
-        return a;
         }
-    for(auto& el : a) el *= fac;
+    else
+        {
+        for(auto& el : a) el *= fac;
+        }
     return a;
     }
 
@@ -63,7 +65,19 @@ VectorRef
 operator/=(VectorRef a, Real fac)
     {
     if(fac == 0) throw std::runtime_error("VectorRef /=: divide by zero");
-    return operator*=(a,1./fac);
+    if(isContiguous(a))
+        {
+        auto ae = a.data()+a.size();
+        for(auto i = a.data(); i != ae; ++i)
+            {
+            *i /= fac;
+            }
+        }
+    else
+        {
+        for(auto& el : a) el /= fac;
+        }
+    return a;
     }
 
 void
