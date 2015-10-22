@@ -251,16 +251,14 @@ svdRank2(ITensor A,
         }
     else
         {
-        Error("Complex ITensor SVD not yet implemented");
-        ITensor Are = realPart(A),
-                Aim = imagPart(A);
-        Are.scaleTo(A.scale());
-        Aim.scaleTo(A.scale());
-        //Matrix Mre,Mim;
-        //Are.toMatrix11NoScale(ui,vi,Mre);
-        //Aim.toMatrix11NoScale(ui,vi,Mim);
-
-        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
+        auto Are = realPart(A),
+             Aim = imagPart(A);
+        //Are.scaleTo(A.scale());
+        //Aim.scaleTo(A.scale());
+        auto Mre = toMatrixRefc(Are,ui,vi);
+        auto Mim = toMatrixRefc(Aim,ui,vi);
+        SCOPED_TIMER(6)
+        SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
         }
 
     //
@@ -309,21 +307,23 @@ svdRank2(ITensor A,
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
 
+    D = ITensor({uL,vL},
+                ITDiag<Real>{DD.begin(),DD.end()},
+                A.scale()*signfix);
+
     if(cplx)
         {
-        Error("Complex ITensor SVD not yet implemented (2)");
-        //ITensor iU(ui,uL,iUU.Columns(1,m)),
-        //        iV(vL,vi,iVV.Rows(1,m));
-        //if(iU.norm() > 1E-14)
-        //    U = U + iU*Complex_i;
-        //if(iV.norm() > 1E-14)
-        //    V = V + iV*Complex_i;
+        auto Ustore = ITCplx(UU.size());
+        std::copy(UU.cbegin(),UU.cend(),Ustore.rstart());
+        std::copy(iUU.cbegin(),iUU.cend(),Ustore.istart());
+        auto Vstore = ITCplx(VV.size());
+        std::copy(VV.cbegin(),VV.cend(),Vstore.rstart());
+        std::copy(iVV.cbegin(),iVV.cend(),Vstore.istart());
+        U = ITensor({ui,uL},move(Ustore),LogNum(signfix));
+        V = ITensor({vi,vL},move(Vstore));
         }
     else
         {
-        D = ITensor({uL,vL},
-                    ITDiag<Real>{DD.begin(),DD.end()},
-                    A.scale()*signfix);
         U = ITensor({ui,uL},ITReal(move(UU.storage())),LogNum(signfix));
         V = ITensor({vi,vL},ITReal(move(VV.storage())));
         }
