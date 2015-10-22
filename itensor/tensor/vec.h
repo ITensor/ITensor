@@ -92,6 +92,14 @@ operator+(Vector&& A, VectorRefc B)
     }
 
 Vector inline
+operator+(Vector&& A, Vector&& B) 
+    { 
+    Vector a(std::move(A));
+    a += B;
+    return a;
+    }
+
+Vector inline
 operator-(VectorRefc A, VectorRefc B)
     { 
     Vector res(A);
@@ -114,6 +122,14 @@ operator-(Vector&& A, VectorRefc B)
     Vector res(std::move(A)); 
     res -= B; 
     return res; 
+    }
+
+Vector inline
+operator-(Vector&& A, Vector&& B) 
+    { 
+    Vector a(std::move(A));
+    a -= B;
+    return a;
     }
 
 template<>
