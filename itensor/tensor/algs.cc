@@ -4,12 +4,16 @@
 //
 #include <limits>
 #include <stdexcept>
+#include <tuple>
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/util/count.h"
 
 using std::move;
 using std::sqrt;
+using std::tuple;
+using std::make_tuple;
+using std::tie;
 
 namespace itensor {
 
@@ -203,31 +207,15 @@ diagHermitian(MatrixRefc const& Mre,
 //
 
 void 
-orthog(MatrixRef M, size_t num, size_t numpass)
+orthog(MatrixRef M, 
+       size_t numpass)
     {
-    if(num == 0) num = ncols(M);
-#ifdef DEBUG
-    //if(num > nrows(M) || (num == 0 && ncols(M) > nrows(M)))
-    //    throw std::runtime_error("orthog: ncols() > nrows()");
-#endif
-
-    size_t nkeep = -1;// Orthogonalize to at most the column dim 
-    if (num > 0 && num <= ncols(M) && num <= nrows(M))
-        {
-        nkeep = num;
-        }
-    else
-        {
-        nkeep = std::min(nrows(M), ncols(M));
-        }
-
-    Vector dots(nkeep);
-    MatrixRef Mcols;
-    VectorRef dotsref, 
-              coli;
+    auto nkeep = std::min(nrows(M), ncols(M));
+    auto dots = Vector(nkeep);
     for(auto i : count(nkeep))
         {
-        coli = column(M,i);
+        //normalize column i
+        auto coli = column(M,i);
         auto nrm = norm(coli);
         if(nrm == 0.0)
             {
@@ -237,8 +225,8 @@ orthog(MatrixRef M, size_t num, size_t numpass)
         coli /= nrm;
         if(i == 0) continue;
 
-        Mcols = columns(M,0,i);
-        dotsref = subVector(dots,0,i);
+        auto Mcols = columns(M,0,i);
+        auto dotsref = subVector(dots,0,i);
         for(auto pass : count1(numpass))
             {
             // does dotsref &= transpose(Mcols) * coli:
@@ -253,6 +241,65 @@ orthog(MatrixRef M, size_t num, size_t numpass)
                 nrm = norm(coli);
                 }
             coli /= nrm;
+            }
+        }
+    }
+
+Real static
+sqr(Real x) { return x*x; }
+
+void 
+orthog(MatrixRef Mr,
+       MatrixRef Mi,
+       size_t numpass)
+    {
+    auto nkeep = std::min(nrows(Mr), ncols(Mr));
+    auto Dr = Vector(nkeep);
+    auto Di = Vector(nkeep);
+    auto cnorm = [](VectorRefc const& r,
+                    VectorRefc const& i)
+        {
+        return sqrt(sqr(norm(r))+sqr(norm(i)));
+        };
+    for(auto n : count(nkeep))
+        {
+        //normalize column n
+        auto cr = column(Mr,n);
+        auto ci = column(Mi,n);
+        auto nrm = cnorm(cr,ci);
+        if(nrm == 0.0)
+            {
+            randomize(cr);
+            randomize(ci);
+            nrm = cnorm(cr,ci);
+            }
+        cr /= nrm;
+        ci /= nrm;
+        if(n == 0) continue;
+
+        auto mr = columns(Mr,0,n);
+        auto mi = columns(Mi,0,n);
+        auto dr = subVector(Dr,0,n);
+        auto di = subVector(Di,0,n);
+        for(auto pass : count1(numpass))
+            {
+            //// does dotsref &= transpose(Mcols) * coli:
+            //mult(transpose(Mcols),coli,dotsref);
+            dr &= transpose(mr)*cr+transpose(mi)*ci;
+            di &= transpose(mr)*ci-transpose(mi)*cr;
+            cr -= mr*dr-mi*di;
+            ci -= mr*di+mi*dr;
+
+            nrm = cnorm(cr,ci);
+            if(nrm < 1E-3) --pass; //orthog is suspect
+            if(nrm < 1E-10) // What if a subspace was zero in all vectors?
+                {
+                randomize(cr);
+                randomize(ci);
+                nrm = cnorm(cr,ci);
+                }
+            cr /= nrm;
+            ci /= nrm;
             }
         }
     }
@@ -276,19 +323,43 @@ checksvd(MatrixRefc const& A,
     printfln("relative error with sqrt in low level svd is %.5E",norm(Ach)/norm(A));
     }
 
+tuple<bool,size_t> // == (done, start)
+checkSVDDone(VectorRefc const& D,
+             Real thresh)
+    {
+    auto N = D.size();
+    if(N <= 1 || thresh <= 0) 
+        {
+        println("Got zero thresh");
+        return make_tuple(true,1);
+        }
+    auto D1t = D(0)*thresh;
+    size_t start = 1;
+    for(; start < N; ++start)
+        {
+        if(D(start) < D1t) break;
+        }
+
+    if(start >= (N-1)) 
+        return make_tuple(true,start);
+
+    return make_tuple(false,start);
+    }
+
 void
-SVDRef(MatrixRefc const& M,
-       MatrixRef  const& U, 
-       VectorRef  const& D, 
-       MatrixRef  const& V,
-       Real thresh)
+SVDRefImpl(MatrixRefc const& M,
+           MatrixRef  const& U, 
+           VectorRef  const& D, 
+           MatrixRef  const& V,
+           Real thresh,
+           int depth = 0)
     {
     auto Mr = nrows(M), 
          Mc = ncols(M);
 
     if(Mr > Mc)
         {
-        SVDRef(transpose(M),V,D,U,thresh);
+        SVDRefImpl(transpose(M),V,D,U,thresh,depth);
 #ifdef CHKSVD
         checksvd(M,U,D,V);
 #endif
@@ -305,14 +376,10 @@ SVDRef(MatrixRefc const& M,
 #endif
 
     //Form 'density matrix' rho
-    START_TIMER(77)
     auto rho = M * transpose(M);
-    STOP_TIMER(77)
 
     //Diagonalize rho: evals are squares of singular vals
-    START_TIMER(88)
     diagSymmetric(rho,U,D);
-    STOP_TIMER(88)
 
     for(auto& el : D)
         {
@@ -320,30 +387,37 @@ SVDRef(MatrixRefc const& M,
         else       el = std::sqrt(el);
         }
 
+    size_t nlarge = 0;
+    auto rthresh = D(0)*thresh;
+    for(decltype(Mr) n = 0; n < Mr; ++n)
+        {
+        if(D(n) < rthresh)
+            {
+            nlarge = n;
+            break;
+            }
+        }
+
     //Put result of Mt*U==(V*D) in V storage
-    START_TIMER(99)
     mult(transpose(M),U,V);
-    for(auto c : index(D)) 
+
+    for(decltype(nlarge) n = 0; n < nlarge; ++n)
         {
-        if(D(c) > 0) column(V,c) /= D(c);
+        column(V,n) /= D(n);
         }
 
-    auto D1t = D(0)*thresh;
+    if(nlarge < Mr)
+        {
+        //Much more accurate than dividing
+        //by smallest singular values
+        orthog(columns(V,nlarge,Mr),2);
+        }
+
+    bool done = false;
     size_t start = 1;
-    for(; start < Mr; ++start)
-        {
-        if(D(start) < D1t) break;
-        }
-    STOP_TIMER(99)
+    tie(done,start) = checkSVDDone(D,thresh);
 
-
-    if(start >= (Mr-1)) 
-        {
-#ifdef CHKSVD
-        checksvd(M,U,D,V);
-#endif
-        return;
-        }
+    if(done) return;
 
     //
     //Recursively SVD part of B 
@@ -352,25 +426,54 @@ SVDRef(MatrixRefc const& M,
 
     auto n = Mr-start;
 
+     //   {
+     //   //println("Method 1");
+     //   //TEST VERSION - SLOW!
+     //   auto B = transpose(U)*M*V;
+     //   auto b = Matrix{subMatrix(B,start,Mr,start,Mr)};
+
+     //   auto d = subVector(D,start,Mr);
+     //   Matrix u(n,n),
+     //          v(n,n);
+     //   SVDRefImpl(b,u,d,v,thresh,1+depth);
+
+     //   auto ns = d.size();
+     //   auto dd = Matrix(ns,ns);
+     //   diagonal(dd) &= d;
+
+     //   auto nu = columns(U,start,Mr);
+     //   auto tmpu = nu * u;
+     //   nu &= tmpu;
+
+     //   auto nv = columns(V,start,Mr);
+     //   auto tmpv = nv * v;
+     //   nv &= tmpv;
+     //   }
+
     //reuse storage of rho to hold mv=M*columns(V,start,Mr)
     auto mv = move(rho);
     reduceCols(mv,n);
-    mult(M,columns(V,start,Mr),mv);
+
+    auto u = columns(U,start,Mr);
+    auto v = columns(V,start,Mr);
 
     //b should be close to diagonal
     //but may not be perfect - fix it up below
-    auto b = rows(transpose(U),start,Mr)*mv;
+    mult(M,v,mv);
+    auto b = transpose(u)*mv;
    
     auto d = subVector(D,start,Mr);
-    Matrix u(n,n),
-           v(n,n);
-    SVDRef(b,u,d,v,thresh);
+    Matrix bu(n,n),
+           bv(n,n);
+    SVDRef(b,bu,d,bv,thresh);
 
-    auto Uu = move(mv);
-    mult(columns(U,start,Mr),u,Uu);
-    columns(U,start,Mr) &= Uu;
+    //reuse storage to avoid allocations
+    auto W = move(mv);
+    mult(u,bu,W);
+    u &= W;
 
-    columns(V,start,Mr) &= columns(V,start,Mr) * v;
+    mult(v,bv,W);
+    v &= W;
 
 #ifdef CHKSVD
 	checksvd(M,U,D,V);
@@ -378,6 +481,17 @@ SVDRef(MatrixRefc const& M,
 
     return;
     }
+
+void
+SVDRef(MatrixRefc const& M,
+       MatrixRef  const& U, 
+       VectorRef  const& D, 
+       MatrixRef  const& V,
+       Real thresh)
+    {
+    SVDRefImpl(M,U,D,V,thresh);
+    }
+
 
 void
 SVD(MatrixRefc const& M,
@@ -394,5 +508,193 @@ SVD(MatrixRefc const& M,
     resize(D,nsv);
     SVDRef(M,U,D,V,thresh);
     }
+
+void
+SVDRef(MatrixRefc const& Mre,
+       MatrixRefc const& Mim,
+       MatrixRef  const& Ure, 
+       MatrixRef  const& Uim, 
+       VectorRef  const& D, 
+       MatrixRef  const& Vre,
+       MatrixRef  const& Vim,
+       Real thresh)
+    {
+    auto Mr = nrows(Mre), 
+         Mc = ncols(Mim);
+
+    if(Mr > Mc)
+        {
+        SVDRef(transpose(Mre),transpose(Mim),Vre,Vim,D,Ure,Uim,thresh);
+        Uim *= -1;
+        Vim *= -1;
+        return;
+        }
+
+#ifdef DEBUG
+    if(!(nrows(Mim)==Mr && ncols(Mim)==Mc)) 
+        throw std::runtime_error("SVD (ref version), Mim must have same dims as Mre");
+    if(!(nrows(Ure)==Mr && ncols(Ure)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of Ure");
+    if(!(nrows(Uim)==Mr && ncols(Uim)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of Uim");
+    if(!(nrows(Vre)==Mc && ncols(Vre)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of Vre");
+    if(!(nrows(Vim)==Mc && ncols(Vim)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of Vim");
+    if(D.size()!=Mr)
+        throw std::runtime_error("SVD (ref version), wrong size of D");
+#endif
+
+    //Form 'density matrix' rho
+    auto rhore = Mre*transpose(Mre) + Mim*transpose(Mim);
+    auto rhoim = Mim*transpose(Mre) - Mre*transpose(Mim);
+
+    //Diagonalize rho: evals are squares of singular vals
+    diagHermitian(rhore,rhoim,Ure,Uim,D);
+
+    for(auto& el : D)
+        {
+        if(el < 0) el = 0.;
+        else       el = std::sqrt(el);
+        }
+    size_t nlarge = 0;
+    auto rthresh = D(0)*thresh;
+    for(decltype(Mr) n = 0; n < Mr; ++n)
+        {
+        if(D(n) < rthresh)
+            {
+            nlarge = n;
+            break;
+            }
+        }
+
+    //Compute Mt*U = V*D
+    Vre &= transpose(Mre)*Ure + transpose(Mim)*Uim;
+    Vim &= transpose(Mre)*Uim - transpose(Mim)*Ure;
+
+    for(decltype(nlarge) n = 0; n < nlarge; ++n)
+        {
+        column(Vre,n) /= D(n);
+        column(Vim,n) /= D(n);
+        }
+    if(nlarge < Mr)
+        {
+        //Much more accurate than dividing
+        //by smallest singular values
+        auto Vcr = columns(Vre,nlarge,Mr);
+        auto Vci = columns(Vim,nlarge,Mr);
+        orthog(Vcr,Vci,2);
+        }
+
+    bool done = false;
+    size_t start = 1;
+    tie(done,start) = checkSVDDone(D,thresh);
+    if(done) return;
+
+    //
+    //Recursively SVD part of B 
+    //for greater final accuracy
+    //
+    auto n = Mr-start;
+
+    //{
+    //println("Method 1");
+    ////TEST VERSION - SLOW!
+    //auto Tre = Mre*Vre - Mim*Vim;
+    //auto Tim = Mre*Vim + Mim*Vre;
+    //auto Bre = transpose(Ure)*Tre + transpose(Uim)*Tim;
+    //auto Bim = transpose(Ure)*Tim - transpose(Uim)*Tre;
+
+    //auto bre = Matrix{subMatrix(Bre,start,Mr,start,Mr)};
+    //auto bim = Matrix{subMatrix(Bim,start,Mr,start,Mr)};
+
+    //auto d = subVector(D,start,Mr);
+    //Matrix ure(n,n),
+    //       uim(n,n),
+    //       vre(n,n),
+    //       vim(n,n);
+    //SVDRef(bre,bim,ure,uim,d,vre,vim,thresh);
+
+    //auto nure = columns(Ure,start,Mr);
+    //auto nuim = columns(Uim,start,Mr);
+    //auto tmpre = nure*ure - nuim*uim;
+    //auto tmpim = nuim*ure + nure*uim;
+    //nure &= tmpre;
+    //nuim &= tmpim;
+
+    //auto nvre = columns(Vre,start,Mr);
+    //auto nvim = columns(Vim,start,Mr);
+    //tmpre = nvre*vre - nvim*vim;
+    //tmpim = nvim*vre + nvre*vim;
+    //nvre &= tmpre;
+    //nvim &= tmpim;
+    //}
+
+    //reuse storage of rho to hold mv=M*columns(V,start,Mr)
+    auto mvre = move(rhore);
+    auto mvim = move(rhoim);
+    reduceCols(mvre,n);
+    reduceCols(mvim,n);
+
+    auto ure = columns(Ure,start,Mr);
+    auto uim = columns(Uim,start,Mr);
+    auto vre = columns(Vre,start,Mr);
+    auto vim = columns(Vim,start,Mr);
+
+    mvre = Mre*vre - Mim*vim;
+    mvim = Mre*vim + Mim*vre;
+
+    auto utre = transpose(ure);
+    auto utim = transpose(uim);
+
+    //b (=ut*M*v) should be close to diagonal
+    //but may not be perfect - fix it up below
+    auto bre = utre*mvre + utim*mvim;
+    auto bim = utre*mvim - utim*mvre;
+    auto d = subVector(D,start,Mr);
+    Matrix bure(n,n),
+           buim(n,n),
+           bvre(n,n),
+           bvim(n,n);
+    SVDRef(bre,bim,bure,buim,d,bvre,bvim,thresh);
+
+    auto Nure = ure*bure-uim*buim;
+    auto Nuim = ure*buim+uim*bure;
+    ure &= Nure;
+    uim &= Nuim;
+
+    auto Nvre = vre*bvre-vim*bvim;
+    auto Nvim = vre*bvim+vim*bvre;
+    vre &= Nvre;
+    vim &= Nvim;
+
+#ifdef CHKSVD
+	checksvd(M,U,D,V);
+#endif
+
+    return;
+    }
+
+void
+SVD(MatrixRefc const& Mre,
+    MatrixRefc const& Mim,
+    Matrix & Ure, 
+    Matrix & Uim, 
+    Vector & D, 
+    Matrix & Vre,
+    Matrix & Vim,
+    Real thresh)
+    {
+    auto Mr = nrows(Mre),
+         Mc = ncols(Mim);
+    auto nsv = std::min(Mr,Mc);
+    resize(Ure,Mr,nsv);
+    resize(Uim,Mr,nsv);
+    resize(Vre,Mc,nsv);
+    resize(Vim,Mc,nsv);
+    resize(D,nsv);
+    SVDRef(Mre,Mim,Ure,Uim,D,Vre,Vim,thresh);
+    }
+
 
 } //namespace itensor

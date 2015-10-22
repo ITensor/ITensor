@@ -9,6 +9,8 @@
 
 namespace itensor {
 
+static const Real SVD_THRESH = 1E-5;
+
 //
 // diagSymmetric diagonalizes a (real)
 // symmetric matrix M and return U, d
@@ -81,11 +83,10 @@ diagHermitian(MatrixRefc const& Mre,
               Matrix          & Uim,
               Vector          & d);
 
-//orthogonalize the first num columns of a matrixref M,
-//optionally repeating numpass times to reduce roundoff errors
-//if num == 0, orthogonalizes all columns
+//orthogonalize the columns of a matrixref M, optionally
+//repeating numpass times to reduce roundoff errors
 void 
-orthog(MatrixRef M, size_t num = 0, size_t numpass = 2);
+orthog(MatrixRef M, size_t numpass = 2);
 
 //Compute U,D,V such that 
 //norm(A-U*DD*transpose(V)) < epsilon
@@ -95,7 +96,7 @@ SVDRef(MatrixRefc const& M,
        MatrixRef  const& U, 
        VectorRef  const& D, 
        MatrixRef  const& V,
-       Real thresh = 1E-3);
+       Real thresh = SVD_THRESH);
 
 //Compute U,D,V such that 
 //norm(A-U*D*transpose(V)) < epsilon
@@ -105,13 +106,33 @@ SVD(MatrixRefc const& A,
     Matrix & U, 
     Vector & D, 
     Matrix & V,
-    Real thresh = 1E-3);
+    Real thresh = SVD_THRESH);
 
 void 
 checksvd(MatrixRefc const& A, 
          MatrixRefc const& U, 
          VectorRefc const& D, 
          MatrixRefc const& V);
+
+void
+SVDRef(MatrixRefc const& Mre,
+       MatrixRefc const& Mim,
+       MatrixRef  const& Ure, 
+       MatrixRef  const& Uim, 
+       VectorRef  const& D, 
+       MatrixRef  const& Vre,
+       MatrixRef  const& Vim,
+       Real thresh = SVD_THRESH);
+
+void
+SVD(MatrixRefc const& Mre,
+    MatrixRefc const& Mim,
+    Matrix & Ure, 
+    Matrix & Uim, 
+    Vector & D, 
+    Matrix & Vre,
+    Matrix & Vim,
+    Real thresh = SVD_THRESH);
 
 } //namespace itensor
 
