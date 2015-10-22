@@ -48,7 +48,7 @@ class ITCplx
         std::fill(store.begin(),store.begin()+csize(),val);
         }
     //Set all elements equal to (val.real(),val.imag())
-    ITCplx(size_t size, const Cplx& val) 
+    ITCplx(size_t size, Cplx const& val) 
         : 
         store(2*size) 
         { 

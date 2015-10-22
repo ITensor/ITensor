@@ -46,6 +46,18 @@ doTask(Contract<Index>& C,
        const ITReal& d,
        ManageStore& m);
 
+void
+doTask(Contract<Index> & C,
+       ITCplx     const& d,
+       ITCombiner const& cmb,
+       ManageStore     & m);
+
+void
+doTask(Contract<Index> & C,
+       ITCombiner const& cmb,
+       ITCplx     const& d,
+       ManageStore     & m);
+
 bool
 doTask(CheckComplex, const ITCombiner& d);
 

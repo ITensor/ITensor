@@ -5,6 +5,7 @@
 #include "itensor/util/count.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/itdata.h"
+#include "itensor/itdata/itcplx.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/iqindex.h"
@@ -14,24 +15,52 @@ using std::vector;
 namespace itensor {
 
 Cplx
-doTask(const GetElt<Index>& g, const ITCombiner& c)
+doTask(GetElt<Index> const& g, ITCombiner const& c)
     {
     if(g.inds.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
     return Cplx(1.,0.);
     }
 
 Real
-doTask(NormNoScale, const ITCombiner& d) { return 0; }
+doTask(NormNoScale, ITCombiner const& d) { return 0; }
 
 void
-doTask(Conj,const ITCombiner& d) { }
+doTask(Conj,ITCombiner const& d) { }
 
 void
-combine(const ITReal& d,
-        const IndexSet& dis,
-        const IndexSet& Cis,
-        IndexSet& Nis,
-        ManageStore& m)
+permuteStore(ITReal      const& d,
+             IndexSet    const& dis,
+             Permutation const& P,
+             ManageStore      & m)
+    {
+    auto tfrom = makeTenRef(d.data(),d.size(),&dis);
+    auto to = Tensor(permute(tfrom,P));
+    m.makeNewData<ITReal>(move(to.storage()));
+    }
+
+void
+permuteStore(ITCplx      const& d,
+             IndexSet    const& dis,
+             Permutation const& P,
+             ManageStore      & m)
+    {
+    auto *nd = m.makeNewData<ITCplx>(d.size());
+    auto csize = d.csize();
+    auto fromre = makeTenRef(d.rstart(),csize,&dis);
+    auto tore = makeTenRef(nd->rstart(),csize,&dis);
+    auto fromim = makeTenRef(d.istart(),csize,&dis);
+    auto toim = makeTenRef(nd->istart(),csize,&dis);
+    tore &= permute(fromre,P);
+    toim &= permute(fromim,P);
+    }
+
+template<typename Storage>
+void
+combine(Storage  const& d,
+        IndexSet const& dis,
+        IndexSet const& Cis,
+        IndexSet      & Nis,
+        ManageStore   & m)
     {
     //TODO: try to make use of Lind,Rind label vectors
     //      to simplify combine logic
@@ -122,9 +151,7 @@ combine(const ITReal& d,
                     newind.setIndex(i++,dis[j]);
                     }
             Nis = newind.build();
-            auto tfrom = makeTenRef(d.data(),d.size(),&dis);
-            auto to = Tensor(permute(tfrom,P));
-            m.makeNewData<ITReal>(to.begin(),to.end());
+            permuteStore(d,dis,P,m);
             }
         }
     }
@@ -142,6 +169,24 @@ doTask(Contract<Index>& C,
        const ITCombiner& cmb,
        const ITReal& d,
        ManageStore& m)
+    { 
+    combine(d,C.Ris,C.Lis,C.Nis,m);
+    if(!m.newData()) m.assignPointerRtoL();
+    }
+
+void
+doTask(Contract<Index> & C,
+       ITCplx     const& d,
+       ITCombiner const& cmb,
+       ManageStore     & m)
+    {
+    combine(d,C.Lis,C.Ris,C.Nis,m);
+    }
+void
+doTask(Contract<Index> & C,
+       ITCombiner const& cmb,
+       ITCplx     const& d,
+       ManageStore     & m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);
     if(!m.newData()) m.assignPointerRtoL();
