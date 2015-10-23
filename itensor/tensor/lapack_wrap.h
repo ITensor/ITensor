@@ -6,6 +6,7 @@
 #define __ITENSOR_lapack_wrap_h
 
 #include <vector>
+#include <complex>
 
 //
 // Headers and typedefs
@@ -132,6 +133,19 @@ void cblas_dgemm(const enum CBLAS_ORDER __Order,
 #else
 void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
             LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
+            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
+#endif
+
+#ifdef PLATFORM_macos
+void cblas_zgemm(const enum CBLAS_ORDER __Order,
+        const enum CBLAS_TRANSPOSE __TransA,
+        const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
+        const int __K, const void *__alpha, const void *__A, const int __lda,
+        const void *__B, const int __ldb, const void *__beta, void *__C,
+        const int __ldc);
+#else
+void F77NAME(zgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
+            LAPACK_COMPLEX*,LAPACK_COMPLEX*,LAPACK_INT*,LAPACK_COMPLEX*,
             LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
 #endif
 
@@ -338,6 +352,58 @@ dgemm_wrapper(bool transa,
         ldb = n;
         }
     F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
+#endif
+    }
+
+//
+// zgemm
+//
+void inline
+zgemm_wrapper(bool transa, 
+              bool transb,
+              LAPACK_INT m,
+              LAPACK_INT n,
+              LAPACK_INT k,
+              std::complex<double> alpha,
+              const LAPACK_COMPLEX* A,
+              const LAPACK_COMPLEX* B,
+              std::complex<double> beta,
+              LAPACK_COMPLEX* C)
+    {
+    LAPACK_INT lda = m,
+               ldb = k;
+#ifdef PLATFORM_macos
+    auto at = CblasNoTrans,
+         bt = CblasNoTrans;
+    if(transa)
+        {
+        at = CblasTrans;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CblasTrans;
+        ldb = n;
+        }
+    auto palpha = (void*)(&alpha); 
+    auto pbeta = (void*)(&beta); 
+    cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
+#else
+    auto *pA = const_cast<double*>(A);
+    auto *pB = const_cast<double*>(B);
+    char at = 'N';
+    char bt = 'N';
+    if(transa)
+        {
+        at = 'T';
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = 'T';
+        ldb = n;
+        }
+    F77NAME(zgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
 #endif
     }
 
