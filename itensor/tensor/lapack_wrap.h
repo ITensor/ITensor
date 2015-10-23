@@ -6,7 +6,7 @@
 #define __ITENSOR_lapack_wrap_h
 
 #include <vector>
-#include <complex>
+#include "itensor/types.h"
 
 //
 // Headers and typedefs
@@ -309,16 +309,16 @@ ddot_wrapper(LAPACK_INT N,
 // dgemm
 //
 void inline
-dgemm_wrapper(bool transa, 
-              bool transb,
-              LAPACK_INT m,
-              LAPACK_INT n,
-              LAPACK_INT k,
-              LAPACK_REAL alpha,
-              const LAPACK_REAL* A,
-              const LAPACK_REAL* B,
-              LAPACK_REAL beta,
-              LAPACK_REAL* C)
+gemm_wrapper(bool transa, 
+             bool transb,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             LAPACK_INT k,
+             LAPACK_REAL alpha,
+             const LAPACK_REAL* A,
+             const LAPACK_REAL* B,
+             LAPACK_REAL beta,
+             LAPACK_REAL* C)
     {
     LAPACK_INT lda = m,
                ldb = k;
@@ -359,16 +359,16 @@ dgemm_wrapper(bool transa,
 // zgemm
 //
 void inline
-zgemm_wrapper(bool transa, 
-              bool transb,
-              LAPACK_INT m,
-              LAPACK_INT n,
-              LAPACK_INT k,
-              std::complex<double> alpha,
-              const LAPACK_COMPLEX* A,
-              const LAPACK_COMPLEX* B,
-              std::complex<double> beta,
-              LAPACK_COMPLEX* C)
+gemm_wrapper(bool transa, 
+             bool transb,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             LAPACK_INT k,
+             Cplx alpha,
+             const Cplx* A,
+             const Cplx* B,
+             Cplx beta,
+             Cplx* C)
     {
     LAPACK_INT lda = m,
                ldb = k;

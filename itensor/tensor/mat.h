@@ -65,12 +65,13 @@ operator&=(MatrixRef const& A, MatrixRefc const& B);
 void inline
 operator&=(MatrixRef const& A, Matrix const& B) { A &= makeRefc(B); }
 
+template<typename V>
 void
-call_dgemm(MatrixRefc A, 
-           MatrixRefc B, 
-           MatrixRef  C,
-           Real alpha,
-           Real beta);
+call_gemm(MatRefc<V> A, 
+          MatRefc<V> B, 
+          MatRef<V>  C,
+          Real alpha,
+          Real beta);
 
 void
 mult(MatrixRefc A,

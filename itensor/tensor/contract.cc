@@ -828,7 +828,7 @@ contract(CProps const& p,
     //         nrows(cref),ncols(cref),isTransposed(cref)?"(t)":"");
 
     START_TIMER(11)
-    call_dgemm(aref,bref,cref,alpha,beta);
+    call_gemm(aref,bref,cref,alpha,beta);
     STOP_TIMER(11)
 
     //println("Matrix multiply done, took ",cpu.sincemark());

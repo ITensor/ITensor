@@ -195,12 +195,13 @@ operator<<(std::ostream& s, CMatrixRefc const& M)
     }
 
 // C = alpha*A*B + beta*C
+template<typename V>
 void
-call_dgemm(MatrixRefc A, 
-           MatrixRefc B, 
-           MatrixRef  C,
-           Real alpha,
-           Real beta)
+call_gemm(MatRefc<V> A, 
+          MatRefc<V> B, 
+          MatRef<V>  C,
+          Real alpha,
+          Real beta)
     {
 #ifdef DEBUG
     if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
@@ -228,9 +229,9 @@ call_dgemm(MatrixRefc A,
         throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
         }
 #endif
-    dgemm_wrapper(isTransposed(A),isTransposed(B),
-                  nrows(A),ncols(B),ncols(A),
-                  alpha,A.data(),B.data(),beta,C.data());
+    gemm_wrapper(isTransposed(A),isTransposed(B),
+                 nrows(A),ncols(B),ncols(A),
+                 alpha,A.data(),B.data(),beta,C.data());
     }
 
 void
@@ -238,7 +239,7 @@ mult(MatrixRefc A,
      MatrixRefc B, 
      MatrixRef  C)
     {
-    call_dgemm(A,B,C,1.,0.);
+    call_gemm(A,B,C,1.,0.);
     }
 
 void
@@ -246,48 +247,7 @@ multAdd(MatrixRefc A,
         MatrixRefc B, 
         MatrixRef  C)
     {
-    call_dgemm(A,B,C,1.,1.);
-    }
-
-void
-call_zgemm(CMatrixRefc A, 
-           CMatrixRefc B, 
-           CMatrixRef  C,
-           Real alpha,
-           Real beta)
-    {
-#ifdef DEBUG
-    if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
-        throw std::runtime_error("multiplication of non-contiguous MatrixRefs not currently supported");
-#endif
-    if(isTransposed(C))
-        {
-        //Do C = Bt*At instead of Ct=A*B
-        //Recall that C.data() points to elements of C, not C.t()
-        //regardless of whether C.transpose()==true or false
-        std::swap(A,B);
-        A = transpose(A);
-        B = transpose(B);
-        C = transpose(C);
-        }
-
-#ifdef DEBUG
-    if(ncols(A) != nrows(B))
-        throw std::runtime_error("matrices A, B incompatible");
-    if(nrows(A) != nrows(C) || ncols(B) != ncols(C))
-        {
-        printfln("A is %dx%d",nrows(A),ncols(A));
-        printfln("B is %dx%d",nrows(B),ncols(B));
-        printfln("C is %dx%d",nrows(C),ncols(C));
-        throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
-        }
-#endif
-    auto pa = reinterpret_cast<const LAPACK_COMPLEX*>(A.data());
-    auto pb = reinterpret_cast<const LAPACK_COMPLEX*>(B.data());
-    auto pc = reinterpret_cast<LAPACK_COMPLEX*>(C.data());
-    zgemm_wrapper(isTransposed(A),isTransposed(B),
-                  nrows(A),ncols(B),ncols(A),
-                  alpha,pa,pb,beta,pc);
+    call_gemm(A,B,C,1.,1.);
     }
 
 void
@@ -295,7 +255,7 @@ mult(CMatrixRefc A,
      CMatrixRefc B,
      CMatrixRef  C)
     {
-    call_zgemm(A,B,C,1.,0.);
+    call_gemm(A,B,C,1.,0.);
     }
 
 void
@@ -502,7 +462,7 @@ matrixMult(MatrixRefc const& A,
            MatrixRefc const& B)
     {
     Matrix C(nrows(A),ncols(B));
-    call_dgemm(A,B,C,1.,0.);
+    call_gemm(A,B,makeRef(C),1.,0.);
     return C;
     }
 
