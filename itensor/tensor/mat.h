@@ -9,9 +9,20 @@
 
 namespace itensor {
 
+template<typename V>
+using MatRefc = TenRefc<MatRange,V>;
+template<typename V>
+using MatRef = TenRef<MatRange,V>;
+template<typename V>
+using Mat = Ten<MatRange,V>;
+
 using MatrixRef = TenRef<MatRange>;
 using MatrixRefc = TenRefc<MatRange>;
 using Matrix = Ten<MatRange>;
+
+using CMatrixRef  = TenRef<MatRange,Cplx>;
+using CMatrixRefc = TenRefc<MatRange,Cplx>;
+using CMatrix     = Ten<MatRange,Cplx>;
 
 template<typename Mat_>
 auto
@@ -93,6 +104,11 @@ multSub(MatrixRefc M,
         VectorRefc x,
         VectorRef y,
         bool fromleft = false);
+
+void
+mult(CMatrixRefc A,
+     CMatrixRefc B,
+     CMatrixRef  C);
 
 //Reducing number of columns does not affect
 //remaining data (column major storage)
@@ -182,12 +198,17 @@ template<>
 std::ostream&
 operator<<(std::ostream& s, MatrixRefc const& M);
 
-template<> inline
+template<>
 std::ostream&
-operator<<(std::ostream& s, MatrixRef const& M) { return s << makeRefc(M); }
+operator<<(std::ostream& s, CMatrixRefc const& M);
 
-inline std::ostream&
-operator<<(std::ostream& s, Matrix const& M) { return s << makeRefc(M); }
+template<typename V>
+std::ostream&
+operator<<(std::ostream& s, TenRef<MatRange,V> const& M) { return s << makeRefc(M); }
+
+template<typename V>
+std::ostream&
+operator<<(std::ostream& s, Ten<MatRange,V> const& M) { return s << makeRefc(M); }
 
 template<typename... CtrArgs>
 Matrix
