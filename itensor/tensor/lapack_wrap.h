@@ -389,8 +389,13 @@ gemm_wrapper(bool transa,
     auto pbeta = (void*)(&beta); 
     cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
 #else
-    auto *pA = const_cast<double*>(A);
-    auto *pB = const_cast<double*>(B);
+    auto *npA = const_cast<Cplx*>(A);
+    auto *npB = const_cast<Cplx*>(B);
+    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(npA);
+    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(npB);
+    auto *pC = reinterpret_cast<LAPACK_COMPLEX*>(C);
+    auto *palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
+    auto *pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
     char at = 'N';
     char bt = 'N';
     if(transa)
@@ -403,7 +408,7 @@ gemm_wrapper(bool transa,
         bt = 'T';
         ldb = n;
         }
-    F77NAME(zgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
+    F77NAME(zgemm)(&at,&bt,&m,&n,&k,palpha,pA,&lda,pB,&ldb,pbeta,pC,&m);
 #endif
     }
 
