@@ -7,8 +7,8 @@
 
 namespace itensor {
 
-template<typename R>
-TenRefc<R>& TenRefc<R>::
+template<typename R,typename T>
+TenRefc<R,T>& TenRefc<R,T>::
 operator=(TenRefc const& t)
     {
     d_ = t.d_;
@@ -24,8 +24,8 @@ operator=(TenRefc const& t)
     return *this;
     }
 
-template<typename R>
-TenRefc<R>& TenRefc<R>::
+template<typename R, typename T>
+TenRefc<R,T>& TenRefc<R,T>::
 operator=(TenRefc && t)
     {
     d_ = t.d_;
@@ -41,8 +41,8 @@ operator=(TenRefc && t)
     return *this;
     }
 
-template<typename R>
-auto TenRefc<R>::
+template<typename R, typename T>
+auto TenRefc<R,T>::
 operator()() const -> reference
     { 
 #ifdef DEBUG
@@ -52,9 +52,9 @@ operator()() const -> reference
     }
 
 
-template<typename R>
+template<typename R,typename T>
 template <typename... Inds>
-auto TenRefc<R>::
+auto TenRefc<R,T>::
 operator()(Inds&&... ii) const -> reference
     { 
     return d_[offset(*prange_,std::forward<Inds>(ii)...)]; 
@@ -67,8 +67,8 @@ operator()(Inds&&... ii) const -> reference
 //  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
 //    { return d_[offset(*prange_,ii)]; }
 
-template<typename R>
-void TenRefc<R>::
+template<typename R,typename T>
+void TenRefc<R,T>::
 pointTo(tensor_type const& t)
     {
     d_ = storage_type(t.data(),t.size());
@@ -76,10 +76,10 @@ pointTo(tensor_type const& t)
     range_ = range_type{};
     }
 
-template<typename R1, typename R2>
+template<typename R1, typename R2, typename T>
 void
-checkCompatible(TenRefc<R1> const& A, 
-                TenRefc<R2> const& B,
+checkCompatible(TenRefc<R1,T> const& A, 
+                TenRefc<R2,T> const& B,
                 std::string methodName = "")
     {
     auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
@@ -92,10 +92,10 @@ checkCompatible(TenRefc<R1> const& A,
             }
     }
 
-template<typename R1, typename R2, typename Op>
+template<typename R1, typename R2, typename T, typename Op>
 void
-transform(TenRefc<R1> const& from, 
-          TenRef<R2> const& to,
+transform(TenRefc<R1,T> const& from, 
+          TenRef<R2,T> const& to,
           Op&& op)
     {
 #ifdef DEBUG
@@ -158,50 +158,51 @@ transform(TenRefc<R1> const& from,
 //    }
 
 //Assign to referenced data
-template<typename R1, typename R2>
+template<typename R1, typename R2, typename T>
 void 
-operator&=(TenRef<R1> const& A, TenRefc<R2> const& B)
+operator&=(TenRef<R1,T> const& A, TenRefc<R2,T> const& B)
     {
-    transform(B,A,[](Real b, Real& a){ a = b; });
+    transform(B,A,[](T b, T& a){ a = b; });
     }
 
 //Assign to referenced data
-template<typename R>
+template<typename R, typename T>
 void
-operator&=(TenRef<R> const& A, Tensor const& B)
+operator&=(TenRef<R,T> const& A, Ten<Range,T> const& B)
     {
-    transform(makeRef(B),A,[](Real b, Real& a){ a = b; });
+    transform(makeRef(B),A,[](T b, T& a){ a = b; });
     }
 
-template<typename R1, typename R2>
+template<typename R1, typename R2,typename T>
 void 
-operator+=(TenRef<R1> const& A, TenRefc<R2> const& B)
+operator+=(TenRef<R1,T> const& A, TenRefc<R2,T> const& B)
     {
-    transform(B,A,[](Real b, Real& a){ a += b; });
+    transform(B,A,[](T b, T& a){ a += b; });
     }
 
-template<typename R>
+template<typename R, typename T>
 void
-operator+=(TenRef<R> const& A, Tensor const& B)
+operator+=(TenRef<R,T> const& A, Ten<Range,T> const& B)
     {
-    transform(makeRef(B),A,[](Real b, Real& a){ a += b; });
+    transform(makeRef(B),A,[](T b, T& a){ a += b; });
     }
 
-template<typename R>
+template<typename R,typename T>
 void
-operator+=(Tensor & A, TenRefc<R> const& B)
+operator+=(Ten<Range,T> & A, TenRefc<R,T> const& B)
     {
-    transform(B,makeRef(A),[](Real b, Real& a){ a += b; });
+    transform(B,makeRef(A),[](T b, T& a){ a += b; });
     }
 
-void inline
-operator+=(Tensor & A, Tensor const& B)
+template<typename R, typename T>
+void
+operator+=(Ten<R,T> & A, Ten<R,T> const& B)
     {
-    transform(makeRef(B),makeRef(A),[](Real b, Real& a){ a += b; });
+    transform(makeRef(B),makeRef(A),[](T b, T& a){ a += b; });
     }
 
-template<typename R>
-auto inline Ten<R>::
+template<typename R,typename T>
+auto inline Ten<R,T>::
 operator()() const -> value_type
     { 
 #ifdef DEBUG
@@ -211,16 +212,16 @@ operator()() const -> value_type
     return data_.front();
     }
 
-template<typename R>
+template<typename R,typename T>
 template <typename... Inds>
-auto Ten<R>::
+auto Ten<R,T>::
 operator()(Inds&&... ii) const -> const_reference
     { 
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename R>
-auto inline Ten<R>::
+template<typename R,typename T>
+auto inline Ten<R,T>::
 operator()() -> reference
     { 
 #ifdef DEBUG
@@ -230,31 +231,31 @@ operator()() -> reference
     return data_.front(); 
     }
 
-template<typename R>
+template<typename R,typename T>
 template <typename... Inds>
-auto Ten<R>::
+auto Ten<R,T>::
 operator()(Inds&&... ii) -> reference
     { 
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-//template<typename R>
+//template<typename R,typename T>
 //template <typename Indices>
-//auto Ten<R>::
+//auto Ten<R,T>::
 //operator()(Indices const& ii) 
 //  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
 //    { return data_[offset(range_,ii)]; }
 
-//template<typename R>
+//template<typename R,typename T>
 //template <typename Indices>
-//auto Ten<R>::
+//auto Ten<R,T>::
 //operator()(Indices const& ii) const 
 //  -> stdx::if_compiles_return<const_reference,decltype(ii.begin())>
 //    { return const_reference(data_[offset(range_,ii)]); }
 
 template<typename R>
 Real
-norm(TenRefc<R> const& t)
+norm(TenRefc<R,Real> const& t)
     {
     if(isContiguous(t))
         {
@@ -271,24 +272,68 @@ scalarTen(Real val)
     return Tensor{Tensor::storage_type(1,val),Range{}};
     }
 
-template<typename R>
+namespace detail {
+
+template<typename X>
+auto
+random() -> stdx::enable_if_t<std::is_same<X,Real>::value,Real>
+    {
+    return detail::quickran();
+    }
+
+template<typename X>
+auto
+random() -> stdx::enable_if_t<std::is_same<X,Cplx>::value,Cplx>
+    {
+    return Cplx(detail::quickran(),detail::quickran());
+    }
+
+}//namespace detail
+
+template<typename R,typename V>
 void
 randomize(TenRef<R> const& t)
     {
-    for(auto& el : t) el = detail::quickran();
+    for(auto& el : t) el = detail::random<V>();
     }
 
-template<typename R>
+template<typename R,typename V>
 void
-randomize(Ten<R> & t)
+randomize(Ten<R,V> & t)
     {
-    for(auto& el : t) el = detail::quickran();
+    for(auto& el : t) el = detail::random<V>();
     }
 
-template<typename R>
+namespace detail {
+
+std::string inline
+printVal(double val)
+    {
+    if(std::fabs(val) > 1E-10)
+        return format("%s",val);
+    return format("%.8E",val);
+    }
+
+std::string inline
+printVal(Cplx const& val)
+    {
+    auto sgn = (val.imag() < 0 ? '-' : '+');
+    auto nrm = std::norm(val);
+    if(nrm == 0. || nrm > 1E-10)
+        {
+        return format("%f%s%fi",val.real(),sgn,std::fabs(val.imag()));
+        }
+    else
+        {
+        return format("%.8E%s%.8Ei",val.real(),sgn,std::fabs(val.imag()));
+        }
+    }
+} //namespace detail
+
+template<typename R, typename V>
 std::ostream&
 printTensor(std::ostream & s, 
-            TenRefc<R> const& T, 
+            TenRefc<R,V> const& T, 
             const char* typestr)
     {
     if(not T) return s << "(empty " << typestr << ")";
@@ -301,27 +346,28 @@ printTensor(std::ostream & s,
     auto e = rangeEnd(T.range());
     for(auto i = rangeBegin(T.range()); i != e; ++i)
         {
-        s << "(" << i.index() << ") " << T(i) << "\n";
+        s << "(" << i.index() << ") " << detail::printVal(T(i)) << "\n";
         }
     return s;
     }
 
-template<typename R>
+template<typename R,typename V>
 std::ostream&
-operator<<(std::ostream & s, TenRef<R> const& T)
+operator<<(std::ostream & s, TenRef<R,V> const& T)
     {
     return printTensor(s,T,"TenRef");
     }
 
-template<typename R>
+template<typename R, typename V>
 std::ostream&
-operator<<(std::ostream & s, TenRefc<R> const& T)
+operator<<(std::ostream & s, TenRefc<R,V> const& T)
     {
     return printTensor(s,T,"TenRefc");
     }
 
-inline std::ostream&
-operator<<(std::ostream & s, Tensor const& T) 
+template<typename R, typename V>
+std::ostream&
+operator<<(std::ostream & s, Ten<R,V> const& T) 
     { 
     return printTensor(s,makeRefc(T),"Tensor");
     }
