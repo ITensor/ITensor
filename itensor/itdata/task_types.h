@@ -104,14 +104,14 @@ struct PrintIT
     void
     printVal(Cplx const& val)
         {
+        auto sgn = (val.imag() < 0 ? '-' : '+');
         if(std::norm(val) > 1E-10)
             {
-            auto sgn = (val.imag() < 0 ? '-' : '+');
             s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
             }
         else
             {
-            s << format("%.8E\n",val);
+            s << format("%.8E%s%.8E\n",val.real(),sgn,std::fabs(val.imag()));
             }
         }
     };
