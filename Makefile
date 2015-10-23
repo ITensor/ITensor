@@ -3,8 +3,6 @@
 #
 ####################################
 
-.NOTPARALLEL:
-
 include options.mk
 
 build: itensor 
@@ -13,7 +11,7 @@ itensor: configure
 	@echo
 	@echo Building ITensor library
 	@echo
-	@cd itensor && make
+	@cd itensor && $(MAKE)
 
 configure:
 	@echo
@@ -23,9 +21,9 @@ configure:
 clean:
 	@echo "Removing temporary build files"
 	@touch this_dir.mk
-	@cd itensor && make clean
-	@cd sample && make clean
-	@cd unittest && make clean
+	@cd itensor && $(MAKE) clean
+	@cd sample && $(MAKE) clean
+	@cd unittest && $(MAKE) clean
 	@rm -f lib/*
 	@rm -f this_dir.mk
 
