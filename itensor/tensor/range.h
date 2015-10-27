@@ -351,10 +351,13 @@ class RangeBuilderT
 
 namespace detail {
 
+    //Implementation of offset for Iterables supporting iteration (begin/end)
     template<typename index_type, typename Iterable>
     auto
-    offsetIterable(RangeT<index_type> const& r, Iterable const& inds)
-        -> decltype(r.size())
+    offsetImpl(stdx::choice<1>,RangeT<index_type> const& r, Iterable const& inds)
+        //Constrain this template to only work for inds that have a begin() method
+        -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds.begin())>
+        //...if so make the return type to be decltype(r.extent(1))
         {
         using size_type = decltype(r.size());
         size_type I  = 0, 
@@ -367,6 +370,27 @@ namespace detail {
 #endif
             I += r.stride(ri)*ii;
             ++ri;
+            }
+        return I;
+        }
+
+    //Implementation of offset for Iterables supporting .operator[] and .size()
+    template<typename index_type, typename Iterable>
+    auto
+    offsetImpl(stdx::choice<2>,RangeT<index_type> const& r, Iterable const& inds)
+        //Constrain this template to only work for inds that have .operator[] and .size()
+        -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds[0]),decltype(inds.size())>
+        //...if so make the return type to be decltype(r.extent(0))
+        {
+        using size_type = decltype(r.extent(0));
+        size_type I  = 0;
+        for(decltype(inds.size()) n = 0; n < inds.size(); ++n)
+            {
+#ifdef DEBUG
+            if(static_cast<size_type>(n) >= r.r())
+                Error("Container-Range size mismatch in offset(...)");
+#endif
+            I += r.stride(n)*inds[n];
             }
         return I;
         }
@@ -411,11 +435,9 @@ namespace detail {
 template<typename index_type, typename Iterable>
 auto
 offset(RangeT<index_type> const& r, Iterable const& inds)
-    //Constrain this template to only work for inds that have a begin() method
-    -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds.begin())>
-    //...if so make the return type to be decltype(r.extent(1))
+    -> typename RangeT<index_type>::size_type
     {
-    return detail::offsetIterable(r,inds);
+    return detail::offsetImpl(stdx::select_overload{},r,inds);
     }
 
 //0-indexed
