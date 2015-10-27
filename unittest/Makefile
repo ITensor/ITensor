@@ -16,6 +16,7 @@ SOURCES+= args_test.cc
 SOURCES+= matrix_test.cc
 SOURCES+= tensor_test.cc
 #SOURCES+= contract_test.cc
+SOURCES+= sparse_contract_test.cc
 SOURCES+= index_test.cc
 SOURCES+= indexset_test.cc
 SOURCES+= itensor_test.cc

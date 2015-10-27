@@ -11,7 +11,6 @@ using namespace itensor;
 
 TEST_CASE("Contract Test")
     {
-
     auto randomize = [](TensorRef t)
         {
         for(auto& elt : t) elt = Global::random();
