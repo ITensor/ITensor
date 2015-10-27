@@ -1135,16 +1135,110 @@ contractDiagFull(VectorRefc A,         Label const& ai,
     }
 template
 void 
-contractDiagFull(VectorRefc A,        Label const& ai, 
+contractDiagFull(VectorRefc     A, Label const& ai, 
                  TenRefc<Range> B, Label const& bi, 
-                 VectorRef         C, Label const& ci);
+                 VectorRef      C, Label const& ci);
 template
 void 
-contractDiagFull(VectorRefc A,           Label const& ai, 
+contractDiagFull(VectorRefc        A, Label const& ai, 
                  TenRefc<IndexSet> B, Label const& bi, 
-                 VectorRef            C, Label const& ci);
+                 VectorRef         C, Label const& ci);
 
 ////////////////////////////////////////////
 
+//
+// Non-Contracting Product Optimization Ideas
+// 
+// o Identify common index to A,B,C with largest
+//   extent and make this the innermost loop
+//   (similar to big index in transform method in ten.ih)
+// o If A and B sufficiently small, permute one or both
+//   to group merged/unmerged indices together
+// o Move merged indices to front and parallelize similar
+//   to contractloop
+//
+//
+
+//Holds an container of pointers to value_type,
+//PtrInter interface pretends this is an actual 
+//container of values (not pointers) instead
+template<typename value_type_, size_t ArrSize>
+class PtrInd
+    {
+    public:
+    using value_type = value_type_;
+    using pointer_type = value_type const*;
+    using storage_type = InfArray<pointer_type,ArrSize>;
+    using size_type = typename storage_type::size_type;
+    private:
+    storage_type ptrs_;
+    public:
+
+    PtrInd(size_type size)
+      : ptrs_(size,nullptr)
+        { }
+
+    size_type
+    size() const { return ptrs_.size(); }
+
+    void
+    set(size_type n, pointer_type p)
+        {
+        ptrs_[n] = p;
+        }
+
+    value_type const&
+    operator[](size_type n) const
+        {
+        return *(ptrs_[n]);
+        }
+    };
+
+//Non-contracting product
+void 
+ncprod(TenRefc<Range> A, Label const& ai, 
+       TenRefc<Range> B, Label const& bi, 
+       TenRef<Range>  C, Label const& ci)
+    {
+    auto rA = rank(A),
+         rB = rank(B),
+         rC = rank(C);
+
+    auto cb = rangeBegin(C.range());
+    auto ce = rangeEnd(C.range());
+
+    using value_type = stdx::remove_reference_t<decltype(cb[0])>;
+    using PtrIndType = PtrInd<value_type,Label::arr_size()>;
+    auto aind = PtrIndType(rA);
+    auto bind = PtrIndType(rB);
+
+    for(auto nc : count(rC))
+        {
+        for(auto na : count(rA))
+            {
+            if(ci[nc] == ai[na])
+                {
+                aind.set(na,&cb[nc]);
+                break;
+                }
+            }
+        for(auto nb : count(rB))
+            {
+            if(ci[nc] == bi[nb])
+                {
+                bind.set(nb,&cb[nc]);
+                break;
+                }
+            }
+        }
+
+    auto pa = MAKE_SAFE_PTR(A.data(),A.size());
+    auto pb = MAKE_SAFE_PTR(B.data(),B.size());
+    auto pc = MAKE_SAFE_PTR(C.data(),C.size());
+    for(; cb != ce; ++cb)
+        {
+        pc[cb.offset()] = pa[offset(A,aind)] * pb[offset(B,bind)];
+        }
+    }
 
 } //namespace itensor

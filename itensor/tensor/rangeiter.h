@@ -42,7 +42,7 @@ class RangeIter
     RangeIter const&
     operator*() const { return *this; }  
 
-    size_type
+    size_type const&
     operator[](size_type n) const { return ind_[n]; }
 
     size_type

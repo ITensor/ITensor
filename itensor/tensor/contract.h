@@ -56,6 +56,12 @@ contractDiagPartial(DiagElsA const& A,  Label const& ai,
                     TenRefc<RangeT> B, Label const& bi, 
                     TenRef<RangeT>  C, Label const& ci);
 
+//Non-contracting product
+void 
+ncprod(TenRefc<Range> A, Label const& ai, 
+       TenRefc<Range> B, Label const& bi, 
+       TenRef<Range>  C, Label const& ci);
+
 template<typename Inds, typename Func>
 long
 computeLabels(Inds const& Lis,
