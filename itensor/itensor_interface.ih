@@ -347,6 +347,45 @@ operator*=(ITensorT const& R)
     return L;
     }
 
+//Non-contracting product
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator/=(ITensorT const& R)
+    {
+    auto& L = *this;
+
+    if(!L || !R) Error("Default constructed ITensor in product");
+
+    if(&L == &R)
+        {
+        struct Sqr
+            {
+            Real operator()(Real x) const { return x*x; }
+            Cplx operator()(Cplx z) const { return z*z; }
+            };
+        L.apply(Sqr{});
+        return L;
+        }
+
+    if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds(),true);
+
+    auto C = doTask(NCProd<index_type>{L.inds(),R.inds()},
+                    L.store(),
+                    R.store());
+
+    L.scale_ *= R.scale();
+    if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;
+
+#ifdef DEBUG
+    //Check for duplicate indices
+    detail::check(C.Nis);
+#endif
+
+    L.is_.swap(C.Nis);
+
+    return L;
+    }
+
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
 operator+=(ITensorT const& R)
@@ -533,10 +572,11 @@ swap(ITensorT & other)
 
 template<typename I>
 ITensorT<I> 
-operator*(ITensorT<I> A, const ITensorT<I>& B) { A *= B; return A; }
+operator*(ITensorT<I> A, ITensorT<I> const& B) { A *= B; return A; }
 template<typename I>
 ITensorT<I>
-operator*(const ITensorT<I>& A, ITensorT<I>&& B) { B *= A; return B; }
+operator*(ITensorT<I> const& A, ITensorT<I>&& B) { B *= A; return B; }
+
 template<typename I>
 ITensorT<I> 
 operator*(ITensorT<I> T, Real fac) { T *= fac; return T; }
@@ -555,18 +595,27 @@ operator/(ITensorT<I> T, Real fac) { T /= fac; return T; }
 template<typename I>
 ITensorT<I> 
 operator/(ITensorT<I> T, Complex fac) { T /= fac; return T; }
+
 template<typename I>
 ITensorT<I> 
 operator+(ITensorT<I> A, const ITensorT<I>& B) { A += B; return A; }
 template<typename I>
 ITensorT<I> 
 operator+(ITensorT<I> const& A, ITensorT<I>&& B) { B += A; return B; }
+
 template<typename I>
 ITensorT<I> 
 operator-(ITensorT<I> A, const ITensorT<I>& B) { A -= B; return A; }
 template<typename I>
 ITensorT<I> 
 operator-(ITensorT<I> const& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
+
+template<typename I>
+ITensorT<I> 
+operator/(ITensorT<I> A, ITensorT<I> const& B) { A /= B; return A; }
+template<typename I>
+ITensorT<I>
+operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return B; }
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>

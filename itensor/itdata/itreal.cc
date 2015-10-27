@@ -184,8 +184,37 @@ doTask(Contract<Index> & C,
     STOP_TIMER(2)
 
     START_TIMER(3)
-    if(rsize > 1) C.computeScalefac(*nd);
+    if(rsize > 1) C.scalefac = computeScalefac(*nd);
     STOP_TIMER(3)
+    }
+
+void
+doTask(NCProd<Index>& P,
+       ITReal const& d1,
+       ITReal const& d2,
+       ManageStore& m)
+    {
+    Label Lind,
+          Rind,
+          Nind;
+    computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);
+    ncprod(P.Lis,Lind,P.Ris,Rind,P.Nis,Nind);
+    Print(P.Lis);
+    Print(P.Ris);
+    Print(P.Nis);
+    Print(Lind);
+    Print(Rind);
+    Print(Nind);
+
+    auto t1 = makeTenRef(d1.data(),d1.size(),&P.Lis),
+         t2 = makeTenRef(d2.data(),d2.size(),&P.Ris);
+    auto rsize = area(P.Nis);
+    auto nd = m.makeNewData<ITReal>(rsize);
+    auto tr = makeTenRef(nd->data(),nd->size(),&(P.Nis));
+
+    ncprod(t1,Lind,t2,Rind,tr,Nind);
+
+    if(rsize > 1) P.scalefac = computeScalefac(*nd);
     }
 
 void

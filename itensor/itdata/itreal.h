@@ -175,8 +175,14 @@ doTask(Write& W, const ITReal& d);
 
 void
 doTask(Contract<Index>& C,
-       const ITReal& a1,
-       const ITReal& a2,
+       ITReal const& a1,
+       ITReal const& a2,
+       ManageStore& m);
+
+void
+doTask(NCProd<Index>& NCP,
+       ITReal const& a1,
+       ITReal const& a2,
        ManageStore& m);
 
 void

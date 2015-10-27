@@ -96,7 +96,7 @@ doTask(Contract<Index>& C,
     //contractloop(t1i,Lind,t2r,Rind,tri,Nind);
     //contractloop(t1r,Lind,t2i,Rind,tri,Nind);
 
-    if(rsize > 1) C.computeScalefac(*nd);
+    if(rsize > 1) C.scalefac = computeScalefac(*nd);
     }
 
 void
@@ -135,7 +135,7 @@ realCplx(ITReal const& R,
     //contractloop(t1,rind,t2r,cind,trr,Nind);
     //contractloop(t1,rind,t2i,cind,tri,Nind);
 
-    if(rsize > 1) Con.computeScalefac(*nd);
+    if(rsize > 1) Con.scalefac = computeScalefac(*nd);
     }
 
 

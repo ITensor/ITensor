@@ -208,6 +208,26 @@ struct PlusEQ
     is2() const { return *is2_; }
     };
 
+//
+// Helper for Contract and NCProd
+//
+template<typename Storage>
+Real
+computeScalefac(Storage & dat)
+    {
+    //
+    // TODO: better design could be
+    //       to require each data type to
+    //       an operator*= or similar
+    //       Then, within e.g. ITReal make
+    //       a TensorRef T and call norm(T)
+    //       and T *= 1./scalefac
+    //       Have TensorRef use dnrm2 and dscal
+    auto scalefac = doTask(NormNoScale{},dat);
+    if(std::fabs(scalefac) < 1E-11) return NAN;
+    doTask(MultReal{1./scalefac},dat);
+    return scalefac;
+    }
 
 template<typename IndexT>
 struct Contract
@@ -239,35 +259,42 @@ struct Contract
 
     Contract(const Contract& other) = delete;
     Contract& operator=(const Contract& other) = delete;
-
     Contract(Contract&& other)
-      : Lis(std::move(other.Lis)),
-        Ris(std::move(other.Ris)),
+      : Lis(other.Lis),
+        Ris(other.Ris),
         Nis(std::move(other.Nis)),
         scalefac(other.scalefac),
         needresult(other.needresult)
         { }
 
-    template<typename Storage>
-    void
-    computeScalefac(Storage& dat)
-        {
-        //
-        // TODO: better design would be to create 
-        //       is to require each data type to
-        //       an operator*= or similar
-        //       Then, within e.g. ITReal make
-        //       a TensorRef T and call norm(T)
-        //       and T *= 1./scalefac
-        //       Have TensorRef use dnrm2 and dscal
-        scalefac = doTask(NormNoScale{},dat);
-        if(std::fabs(scalefac) < 1E-11) 
-            {
-            scalefac = NAN;
-            return;
-            }
-        doTask(MultReal{1./scalefac},dat);
-        }
+    };
+
+//Non-contracting product
+template<typename IndexT>
+struct NCProd
+    {
+    using index_type = IndexT;
+    using iset_type = IndexSetT<IndexT>;
+
+    iset_type const& Lis;
+    iset_type const& Ris;
+    iset_type Nis; //new IndexSet
+    Real scalefac = NAN;
+
+    NCProd(iset_type const& Lis_,
+           iset_type const& Ris_)
+      : Lis(Lis_),
+        Ris(Ris_)
+        { }
+
+    NCProd(NCProd const& other) = delete;
+    NCProd& operator=(NCProd const& other) = delete;
+    NCProd(NCProd && other)
+      : Lis(other.Lis),
+        Ris(other.Ris),
+        Nis(std::move(other.Nis)),
+        scalefac(other.scalefac)
+        { }
     };
 
 enum class 

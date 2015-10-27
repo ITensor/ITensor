@@ -193,15 +193,15 @@ class ITensorT
     //All matching Index pairs automatically contracted
     //Cji = \sum_{k,l} Akjl * Blki
     ITensorT&
-    operator*=(const ITensorT& other);
+    operator*=(ITensorT const& other);
 
     //Tensor addition and subtraction
     //Summands must have same Indices, in any order
     //Cijk = Aijk + Bkij
     ITensorT& 
-    operator+=(const ITensorT& other);
+    operator+=(ITensorT const& other);
     ITensorT& 
-    operator-=(const ITensorT& other);
+    operator-=(ITensorT const& other);
 
     //Multiplication by real scalar
     ITensorT&
@@ -222,6 +222,13 @@ class ITensorT
     //Negation
     ITensorT&
     operator-() { scale_.negate(); return *this; }
+
+    //Non-contracting product
+    //All matching Index pairs automatically merged
+    //Ciik = Aij * Bjk
+    ITensorT&
+    operator/=(ITensorT const& other);
+
 
     public:
 

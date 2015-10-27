@@ -1195,10 +1195,11 @@ class PtrInd
     };
 
 //Non-contracting product
+template<typename R>
 void 
-ncprod(TenRefc<Range> A, Label const& ai, 
-       TenRefc<Range> B, Label const& bi, 
-       TenRef<Range>  C, Label const& ci)
+ncprod(TenRefc<R> A, Label const& ai, 
+       TenRefc<R> B, Label const& bi, 
+       TenRef<R>  C, Label const& ci)
     {
     auto rA = rank(A),
          rB = rank(B),
@@ -1240,5 +1241,14 @@ ncprod(TenRefc<Range> A, Label const& ai,
         pc[cb.offset()] = pa[offset(A,aind)] * pb[offset(B,bind)];
         }
     }
+
+template void 
+ncprod(TenRefc<Range> A, Label const& ai, 
+       TenRefc<Range> B, Label const& bi, 
+       TenRef<Range>  C, Label const& ci);
+template void 
+ncprod(TenRefc<IndexSet> A, Label const& ai, 
+       TenRefc<IndexSet> B, Label const& bi, 
+       TenRef<IndexSet>  C, Label const& ci);
 
 } //namespace itensor
