@@ -18,6 +18,18 @@
 #endif
 
 #ifdef COLLECT_TIMES
+#define TIMER_START(N) timers().start(N);
+#else
+#define TIMER_START(N) 
+#endif
+
+#ifdef COLLECT_TIMES
+#define TIMER_STOP(N) timers().stop(N);
+#else
+#define TIMER_STOP(N) 
+#endif
+
+#ifdef COLLECT_TIMES
 #define START_TIMER(N) timers().start(N);
 #else
 #define START_TIMER(N) 
