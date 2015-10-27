@@ -329,15 +329,24 @@ contractIS(IndexSetT<IndexT> const& Lis,
            IndexSetT<IndexT> & Nis,
            bool sortResult = false);
 
-template<class IndexT, class ContainerT>
+template<class IndexT, class LabelT>
 void
 contractIS(IndexSetT<IndexT> const& Lis,
-           ContainerT const& Lind,
+           LabelT const& Lind,
            IndexSetT<IndexT> const& Ris,
-           ContainerT const& Rind,
+           LabelT const& Rind,
            IndexSetT<IndexT> & Nis,
-           ContainerT & Nind,
+           LabelT & Nind,
            bool sortResult = false);
+
+template<class IndexT, class LabelT>
+void
+ncprod(IndexSetT<IndexT> const& Lis,
+       LabelT const& Lind,
+       IndexSetT<IndexT> const& Ris,
+       LabelT const& Rind,
+       IndexSetT<IndexT> & Nis,
+       LabelT & Nind);
 
 template <class IndexT>
 std::ostream&

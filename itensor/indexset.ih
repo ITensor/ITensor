@@ -557,14 +557,14 @@ maxM(const IndexSetT<IndexT>& iset)
     return mm;
     }
 
-template<class IndexT, class ContainerT>
+template<class IndexT, class LabelT>
 void
 contractIS(IndexSetT<IndexT> const& Lis,
-           ContainerT const& Lind,
+           LabelT const& Lind,
            IndexSetT<IndexT> const& Ris,
-           ContainerT const& Rind,
+           LabelT const& Rind,
            IndexSetT<IndexT> & Nis,
-           ContainerT & Nind,
+           LabelT & Nind,
            bool sortResult)
     {
     long ncont = 0;
@@ -609,6 +609,49 @@ contractIS(IndexSetT<IndexT> const& Lis,
           Nind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
     contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
+    }
+
+template<class IndexT, class LabelT>
+void
+ncprod(IndexSetT<IndexT> const& Lis,
+       LabelT const& Lind,
+       IndexSetT<IndexT> const& Ris,
+       LabelT const& Rind,
+       IndexSetT<IndexT> & Nis,
+       LabelT & Nind)
+    {
+    long nmerge = 0;
+    for(auto& i : Lind) if(i < 0) ++nmerge;
+    auto nuniq = Lis.r()+Ris.r()-2*nmerge;
+    auto NisBuild = RangeBuilderT<IndexSetT<IndexT>>(nmerge+nuniq);
+    Nind.resize(nmerge+nuniq);
+    long n = 0;
+
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] < 0) //merged
+            {
+            NisBuild.nextIndex(Lis[j]);
+            Nind[n++] = Lind[j];
+            }
+        }
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] > 0) //unmerged/unique
+            {
+            NisBuild.nextIndex(Lis[j]);
+            Nind[n++] = Lind[j];
+            }
+        }
+    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
+        {
+        if(Rind[j] > 0) //unmerged/unique
+            {
+            NisBuild.nextIndex(Ris[j]);
+            Nind[n++] = Rind[j];
+            }
+        }
+    Nis = NisBuild.build();
     }
 
 template <class IndexT>
