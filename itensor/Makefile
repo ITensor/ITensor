@@ -10,6 +10,7 @@ include ../options.mk
 SOURCES+= util/args.cc     
 SOURCES+= util/input.cc
 SOURCES+= util/cputime.cc
+SOURCES+= tensor/lapack_wrap.cc 
 SOURCES+= tensor/vec.cc 
 SOURCES+= tensor/mat.cc 
 SOURCES+= tensor/algs.cc 
