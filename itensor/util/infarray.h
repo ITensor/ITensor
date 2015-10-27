@@ -188,8 +188,8 @@ class InfArray
     size_t
     size() const { return size_; }
 
-    size_t constexpr
-    arr_size() const { return ArrSize; }
+    size_t constexpr static
+    arr_size() { return ArrSize; }
 
     size_t
     vec_size() const { return vec_.size(); }
