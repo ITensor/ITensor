@@ -199,12 +199,6 @@ doTask(NCProd<Index>& P,
           Nind;
     computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);
     ncprod(P.Lis,Lind,P.Ris,Rind,P.Nis,Nind);
-    Print(P.Lis);
-    Print(P.Ris);
-    Print(P.Nis);
-    Print(Lind);
-    Print(Rind);
-    Print(Nind);
 
     auto t1 = makeTenRef(d1.data(),d1.size(),&P.Lis),
          t2 = makeTenRef(d2.data(),d2.size(),&P.Ris);
