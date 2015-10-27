@@ -229,9 +229,11 @@ call_gemm(MatRefc<V> A,
         throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
         }
 #endif
+    START_TIMER(33)
     gemm_wrapper(isTransposed(A),isTransposed(B),
                  nrows(A),ncols(B),ncols(A),
                  alpha,A.data(),B.data(),beta,C.data());
+    STOP_TIMER(33)
     }
 
 void

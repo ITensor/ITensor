@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "itensor/types.h"
+#include "itensor/util/timers.h"
 
 //
 // Headers and typedefs
@@ -252,63 +253,36 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
 // daxpy
 // Y += alpha*X
 //
-void inline
+void
 daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
               LAPACK_REAL alpha,   //scale factor
               const LAPACK_REAL* X, //pointer to head of vector X
               LAPACK_INT incx,     //increment with which to step through X
               LAPACK_REAL* Y,       //pointer to head of vector Y
-              LAPACK_INT incy)     //increment with which to step through Y
-    {
-#ifdef PLATFORM_macos
-    cblas_daxpy(n,alpha,X,incx,Y,incy);
-#else
-    auto Xnc = const_cast<LAPACK_REAL*>(X);
-    F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
-#endif
-    }
+              LAPACK_INT incy);     //increment with which to step through Y
 
 //
 // dnrm2
 //
-LAPACK_REAL inline
+LAPACK_REAL
 dnrm2_wrapper(LAPACK_INT N,
               const LAPACK_REAL* X,
-              LAPACK_INT incx = 1)
-    {
-#ifdef PLATFORM_macos
-    return cblas_dnrm2(N,X,incx);
-#else
-    auto *Xnc = const_cast<LAPACK_REAL*>(X);
-    return F77NAME(dnrm2)(&N,Xnc,&incx);
-#endif
-    return -1;
-    }
+              LAPACK_INT incx = 1);
 
 //
 // ddot
 //
-LAPACK_REAL inline
+LAPACK_REAL
 ddot_wrapper(LAPACK_INT N,
              const LAPACK_REAL* X,
              LAPACK_INT incx,
              const LAPACK_REAL* Y,
-             LAPACK_INT incy)
-    {
-#ifdef PLATFORM_macos
-    return cblas_ddot(N,X,incx,Y,incy);
-#else
-    auto *Xnc = const_cast<LAPACK_REAL*>(X);
-    auto *Ync = const_cast<LAPACK_REAL*>(Y);
-    return F77NAME(ddot)(&N,Xnc,&incx,Ync,&incy);
-#endif
-    return -1;
-    }
+             LAPACK_INT incy);
 
 //
 // dgemm
 //
-void inline
+void
 gemm_wrapper(bool transa, 
              bool transb,
              LAPACK_INT m,
@@ -318,47 +292,12 @@ gemm_wrapper(bool transa,
              const LAPACK_REAL* A,
              const LAPACK_REAL* B,
              LAPACK_REAL beta,
-             LAPACK_REAL* C)
-    {
-    LAPACK_INT lda = m,
-               ldb = k;
-#ifdef PLATFORM_macos
-    auto at = CblasNoTrans,
-         bt = CblasNoTrans;
-    if(transa)
-        {
-        at = CblasTrans;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CblasTrans;
-        ldb = n;
-        }
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
-#else
-    auto *pA = const_cast<double*>(A);
-    auto *pB = const_cast<double*>(B);
-    char at = 'N';
-    char bt = 'N';
-    if(transa)
-        {
-        at = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = 'T';
-        ldb = n;
-        }
-    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
-#endif
-    }
+             LAPACK_REAL* C);
 
 //
 // zgemm
 //
-void inline
+void
 gemm_wrapper(bool transa, 
              bool transb,
              LAPACK_INT m,
@@ -368,54 +307,12 @@ gemm_wrapper(bool transa,
              const Cplx* A,
              const Cplx* B,
              Cplx beta,
-             Cplx* C)
-    {
-    LAPACK_INT lda = m,
-               ldb = k;
-#ifdef PLATFORM_macos
-    auto at = CblasNoTrans,
-         bt = CblasNoTrans;
-    if(transa)
-        {
-        at = CblasTrans;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CblasTrans;
-        ldb = n;
-        }
-    auto palpha = (void*)(&alpha); 
-    auto pbeta = (void*)(&beta); 
-    cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
-#else
-    auto *npA = const_cast<Cplx*>(A);
-    auto *npB = const_cast<Cplx*>(B);
-    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(npA);
-    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(npB);
-    auto *pC = reinterpret_cast<LAPACK_COMPLEX*>(C);
-    auto *palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
-    auto *pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
-    char at = 'N';
-    char bt = 'N';
-    if(transa)
-        {
-        at = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = 'T';
-        ldb = n;
-        }
-    F77NAME(zgemm)(&at,&bt,&m,&n,&k,palpha,pA,&lda,pB,&ldb,pbeta,pC,&m);
-#endif
-    }
+             Cplx* C);
 
 //
 // dgemv - matrix*vector multiply
 //
-void inline
+void
 dgemv_wrapper(bool trans, 
               LAPACK_REAL alpha,
               LAPACK_REAL beta,
@@ -425,64 +322,30 @@ dgemv_wrapper(bool trans,
               const LAPACK_REAL* x,
               LAPACK_INT incx,
               LAPACK_REAL* y,
-              LAPACK_INT incy)
-    {
-#ifdef PLATFORM_macos
-    auto Tr = trans ? CblasTrans : CblasNoTrans;
-    cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
-#else
-    char Tr = trans ? 'T' : 'N';
-    F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
-#endif
-    }
+              LAPACK_INT incy);
 
 
 //
 // dsyev
 //
-void inline
+void
 dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               char uplo,        //if uplo=='U', read from upper triangle of A
               LAPACK_INT n,     //number of cols of A
               LAPACK_REAL* A,    //symmetric matrix A
               LAPACK_REAL* eigs, //eigenvalues on return
-              LAPACK_INT& info)  //error info
-    {
-    static std::vector<LAPACK_REAL> work;
-    LAPACK_INT lda = n;
-
-#ifdef PLATFORM_acml
-    LAPACK_INT lwork = std::max(1,3*n-1);
-    work.resize(lwork+2);
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
-#else
-    //Compute optimal workspace size (will be written to wkopt)
-    LAPACK_INT lwork = -1; //tell dsyev to compute optimal size
-    LAPACK_REAL wkopt = 0;
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,&wkopt,&lwork,&info);
-    lwork = LAPACK_INT(wkopt);
-    work.resize(lwork+2);
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info);
-#endif
-    }
+              LAPACK_INT& info);  //error info
 
 //
 // dscal
 //
-void inline
+void
 dscal_wrapper(LAPACK_INT N,
               LAPACK_REAL alpha,
               LAPACK_REAL* data,
-              LAPACK_INT inc = 1)
-    {
-#ifdef PLATFORM_macos
-    cblas_dscal(N,alpha,data,inc);
-#else
-    F77NAME(dscal)(&N,&alpha,data,&inc);
-#endif
-    }
+              LAPACK_INT inc = 1);
 
-void inline
+void
 zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -491,31 +354,14 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_REAL *s,       //on return, singular values of A
                LAPACK_COMPLEX *u,    //on return, unitary matrix U
                LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
-               LAPACK_INT *info)
-    {
-    static std::vector<LAPACK_COMPLEX> work;
-    static std::vector<LAPACK_REAL> rwork;
-    static std::vector<LAPACK_INT> iwork;
-    LAPACK_INT l = std::min(*m,*n),
-               g = std::max(*m,*n);
-    LAPACK_INT lwork = l*l+2*l+g+100;
-    work.resize(lwork);
-    rwork.resize(5*l*(1+l));
-    iwork.resize(8*l);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
-#else
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work.data(),&lwork,rwork.data(),iwork.data(),info);
-#endif
-    }
+               LAPACK_INT *info);
 
 //
 // dgeqrf
 //
 // QR factorization of a real matrix A
 //
-void inline
+void
 dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_REAL* A,    //matrix A
@@ -523,20 +369,14 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors of elementary reflectors
                                   //length should be min(m,n)
-               LAPACK_INT* info)  //error info
-    {
-    static std::vector<LAPACK_REAL> work;
-    int lwork = std::max(1,4*std::max(*n,*m));
-    work.resize(lwork+2); 
-    F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
-    }
+               LAPACK_INT* info);  //error info
 
 //
 // dorgqr
 //
 // Generates Q from output of QR factorization routine dgeqrf (see above)
 //
-void inline
+void
 dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
@@ -544,39 +384,17 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //on return contains Q
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
-               LAPACK_INT* info)  //error info
-    {
-    static std::vector<LAPACK_REAL> work;
-    auto lwork = std::max(1,4*std::max(*n,*m));
-    work.resize(lwork+2); 
-    F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
-    }
+               LAPACK_INT* info);  //error info
 
 //
 // zheev
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
-LAPACK_INT inline
+LAPACK_INT 
 zheev_wrapper(LAPACK_INT N,        //number of cols of A
               LAPACK_COMPLEX *A,    //matrix A, on return contains eigenvectors
-              LAPACK_REAL *d)       //eigenvalues on return
-    {
-    char jobz = 'V';
-    char uplo = 'U';
-    LAPACK_INT lwork = std::max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    std::vector<LAPACK_COMPLEX> work(lwork);
-    std::vector<LAPACK_REAL> rwork(lwork);
-    LAPACK_INT info = 0;
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    LAPACK_INT uplo_len = 1;
-    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
-#else
-    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info);
-#endif
-    return info;
-    }
+              LAPACK_REAL *d);       //eigenvalues on return
 
 //
 // dsygv
@@ -586,7 +404,7 @@ zheev_wrapper(LAPACK_INT N,        //number of cols of A
 // A and B must be symmetric
 // B must be positive definite
 //
-void inline
+void
 dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
                                     //if 'N', only eigenvalues
               char* uplo,           //if 'U', use upper triangle of A
@@ -594,20 +412,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_REAL* A,       //matrix A, on return contains eigenvectors
               LAPACK_REAL* B,       //matrix B
               LAPACK_REAL* d,       //eigenvalues on return
-              LAPACK_INT* info)  //error info
-    {
-    static std::vector<LAPACK_REAL> work;
-    int itype = 1;
-    LAPACK_INT lwork = std::max(1,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
-    work.resize(lwork);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    LAPACK_INT uplo_len = 1;
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info,jobz_len,uplo_len);
-#else
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info);
-#endif
-    }
+              LAPACK_INT* info);  //error info
 
 //
 // dgeev
@@ -615,7 +420,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 // Eigenvalues and eigenvectors of real, square matrix A
 // A can be a general real matrix, not assumed symmetric
 //
-void inline
+void
 dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
               char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
               LAPACK_INT* n,        //number of rows/cols of A
@@ -624,21 +429,7 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
               LAPACK_REAL* di,      //imaginary parts of eigenvalues
               LAPACK_REAL* vl,      //left eigenvectors on return
               LAPACK_REAL* vr,      //right eigenvectors on return
-              LAPACK_INT* info)  //error info
-    {
-    static std::vector<LAPACK_REAL> work;
-    LAPACK_INT nevecl = (*jobvl == 'V' ? *n : 1);
-    LAPACK_INT nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = std::max(1,4*(*n));
-    work.resize(lwork);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobvl_len = 1;
-    LAPACK_INT jobvr_len = 1;
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,info,jobvl_len,jobvr_len);
-#else
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,info);
-#endif
-    }
+              LAPACK_INT* info);  //error info
 
 //
 // zgeev
@@ -646,7 +437,7 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
 // Eigenvalues and eigenvectors of complex, square matrix A
 // A can be a general complex matrix, not assumed symmetric
 //
-void inline
+void
 zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
               char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
               LAPACK_INT* n,        //number of rows/cols of A
@@ -654,22 +445,7 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
               LAPACK_COMPLEX* d,    //eigenvalues
               LAPACK_COMPLEX* vl,   //left eigenvectors on return
               LAPACK_COMPLEX* vr,   //right eigenvectors on return
-              LAPACK_INT* info)  //error info
-    {
-    static std::vector<LAPACK_COMPLEX> work;
-    static std::vector<LAPACK_REAL> rwork;
-    int nevecl = (*jobvl == 'V' ? *n : 1);
-    int nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = std::max(1,4*(*n));
-    work.resize(lwork);
-    LAPACK_INT lrwork = std::max(1,2*(*n));
-    rwork.resize(lrwork);
-#ifdef PLATFORM_acml
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work.data(),&lwork,rwork.data(),info,1,1);
-#else
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work.data(),&lwork,rwork.data(),info);
-#endif
-    }
+              LAPACK_INT* info);  //error info
 
 } //namespace itensor
 
