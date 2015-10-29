@@ -1037,6 +1037,15 @@ toReal(const ITensor& T) { return T.toReal(); }
 Complex inline
 toComplex(const ITensor& T) { return T.toComplex(); }
 
+template <typename... Inds>
+ITensor
+randomTensor(Index const& i1, Inds&&... inds)
+    {
+    auto T = ITensor{i1,std::forward<Inds>(inds)...};
+    T.randomize();
+    return T;
+    }
+
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
