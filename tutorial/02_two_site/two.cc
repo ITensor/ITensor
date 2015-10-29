@@ -1,4 +1,4 @@
-#include "core.h"
+#include "itensor/core.h"
 
 using namespace itensor;
 

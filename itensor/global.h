@@ -10,14 +10,14 @@
 #include <fstream>
 #include <complex>
 #include "assert.h"
-#include "error.h"
-#include "option.h"
-#include "types.h"
+#include "itensor/util/error.h"
+#include "itensor/util/option.h"
+#include "itensor/util/types.h"
 #include <ctime>
 #include <string.h>
 #include <cstring>
-#include "real.h"
-#include "timers.h"
+#include "itensor/real.h"
+#include "itensor/util/timers.h"
 
 #if defined(_MSC_VER)
 #include <process.h>

@@ -4,9 +4,9 @@
 //
 #ifndef __IQCOMBINER_H
 #define __IQCOMBINER_H
-#include "combiner.h"
-#include "condenser.h"
-#include "qcounter.h"
+#include "itensor/combiner.h"
+#include "itensor/condenser.h"
+#include "itensor/qcounter.h"
 
 namespace itensor {
 

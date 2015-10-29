@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
-#include "global.h"
-#include "indextype.h"
+#include "itensor/global.h"
+#include "itensor/indextype.h"
 
 namespace itensor {
 

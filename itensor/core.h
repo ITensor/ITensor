@@ -5,6 +5,6 @@
 #ifndef __ITENSOR_CORE_H
 #define __ITENSOR_CORE_H
 
-#include "dmrg.h"
+#include "itensor/mps/dmrg.h"
 
 #endif

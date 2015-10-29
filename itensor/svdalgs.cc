@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "svdalgs.h"
 #include <algorithm>
+#include "itensor/svdalgs.h"
 
 namespace itensor {
 

@@ -7,19 +7,7 @@
 
 include options.mk
 
-build: utilities matrix itensor 
-
-utilities: configure
-	@echo
-	@echo Building Utilities library
-	@echo
-	@cd utilities && make
-
-matrix: configure
-	@echo
-	@echo Building MatrixRef library
-	@echo
-	@cd matrix && make
+build: itensor 
 
 itensor: configure
 	@echo
@@ -35,8 +23,6 @@ configure:
 clean:
 	@echo "Removing temporary build files"
 	@touch this_dir.mk
-	@cd utilities && make clean
-	@cd matrix && make clean
 	@cd itensor && make clean
 	@cd sample && make clean
 	@cd unittest && make clean

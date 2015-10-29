@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_CONDENSER_H
 #define __ITENSOR_CONDENSER_H
-#include "iqtensor.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 

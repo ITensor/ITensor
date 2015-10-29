@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_IQTDAT_H
 #define __ITENSOR_IQTDAT_H
 
-#include "detail/skip_iterator.h"
+#include "itensor/detail/skip_iterator.h"
 
 namespace itensor {
 

@@ -5,10 +5,7 @@
 #ifndef __ITENSOR_COUNTER_H
 #define __ITENSOR_COUNTER_H
 
-#include "indexset.h"
-
-#define Cout std::cout
-#define Endl std::endl
+#include "itensor/indexset.h"
 
 namespace itensor {
 
@@ -166,6 +163,4 @@ operator<<(std::ostream& s, const Counter& c)
 
 } //namespace itensor
 
-#undef Cout
-#undef Endl
 #endif

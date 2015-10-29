@@ -1,6 +1,6 @@
-#include "tevol.h"
-#include "sites/spinhalf.h"
-#include "hams/Heisenberg.h"
+#include "itensor/mps/tevol.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/hams/Heisenberg.h"
 
 using std::vector;
 using namespace itensor;

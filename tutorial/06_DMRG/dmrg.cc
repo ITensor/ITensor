@@ -1,8 +1,8 @@
-#include "eigensolver.h"
-#include "localmpo.h"
-#include "sweeps.h"
-#include "sites/spinone.h"
-#include "hams/Heisenberg.h"
+#include "itensor/eigensolver.h"
+#include "itensor/mps/localmpo.h"
+#include "itensor/mps/sweeps.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/hams/Heisenberg.h"
 
 using namespace itensor;
 

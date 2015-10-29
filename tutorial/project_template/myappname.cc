@@ -1,4 +1,4 @@
-#include "itensor.h"
+#include "itensor/itensor.h"
 #include "myclass.h"
 
 using std::cout;
