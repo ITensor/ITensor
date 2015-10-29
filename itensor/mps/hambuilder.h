@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_HAMBUILDER_H
 #define __ITENSOR_HAMBUILDER_H
-#include "mpo.h"
+#include "itensor/mps/mpo.h"
 
 #define String std::string
 

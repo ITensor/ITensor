@@ -4,9 +4,9 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "real.h"
-#include "counter.h"
-#include "stdx.h"
+#include "itensor/real.h"
+#include "itensor/counter.h"
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 

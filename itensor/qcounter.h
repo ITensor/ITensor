@@ -5,11 +5,8 @@
 #ifndef __ITENSOR_QCOUNTER_H
 #define __ITENSOR_QCOUNTER_H
 
-#include "counter.h"
-#include "iqindex.h"
-
-#define Cout std::cout
-#define Endl std::endl
+#include "itensor/counter.h"
+#include "itensor/iqindex.h"
 
 namespace itensor {
 
@@ -68,8 +65,5 @@ class QCounter : public Counter
     };
 
 } //namespace itensor
-
-#undef Cout
-#undef Endl
 
 #endif

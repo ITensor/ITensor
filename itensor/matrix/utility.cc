@@ -1,12 +1,11 @@
 // utility.cc -- Various matrix utility routines
 
-#include "matrix.h"
-#include "tarray1.h"
-#include "minmax.h"
 #include <math.h>
 #include <fstream>
-
-#include "lapack_wrap.h"
+#include "itensor/util/tarray1.h"
+#include "itensor/util/minmax.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/matrix/lapack_wrap.h"
 
 using namespace std;
 

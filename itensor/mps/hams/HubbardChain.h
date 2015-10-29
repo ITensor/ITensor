@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_HAMS_HUBBARDCHAIN_H
 #define __ITENSOR_HAMS_HUBBARDCHAIN_H
-#include "../mpo.h"
-#include "../sites/hubbard.h"
+#include "itensor/mps/mpo.h"
+#include "itensor/mps/sites/hubbard.h"
 
 namespace itensor {
 

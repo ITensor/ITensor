@@ -2,9 +2,9 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "mps.h"
-#include "localop.h"
 #include <map>
+#include "itensor/mps/mps.h"
+#include "itensor/mps/localop.h"
 
 namespace itensor {
 

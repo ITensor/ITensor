@@ -3,7 +3,7 @@
 #ifndef _sparseref_h
 #define _sparseref_h
 
-#include "sparse.h"
+#include "itensor/matrix/sparse.h"
 
 namespace itensor {
 

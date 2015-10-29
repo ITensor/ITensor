@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_HAMS_EXTENDEDHUBBARD_H
 #define __ITENSOR_HAMS_EXTENDEDHUBBARD_H
-#include "../mpo.h"
+#include "itensor/mps/mpo.h"
 
 namespace itensor {
 

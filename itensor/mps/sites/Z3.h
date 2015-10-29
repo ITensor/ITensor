@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_Z3_H
 #define __ITENSOR_Z3_H
-#include "../siteset.h"
+#include "itensor/mps/sites/siteset.h"
 
 namespace itensor {
 

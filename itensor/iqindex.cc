@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "iqindex.h"
+#include "itensor/iqindex.h"
 
 namespace itensor {
 

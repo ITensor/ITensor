@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_BONDGATE_H
 #define __ITENSOR_BONDGATE_H
 
-#include "iqtensor.h"
-#include "siteset.h"
+#include "itensor/iqtensor.h"
+#include "itensor/mps/siteset.h"
 
 namespace itensor {
 

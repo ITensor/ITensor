@@ -4,7 +4,7 @@
 #ifndef _bigmatrix_h
 #define _bigmatrix_h
 
-#include "matrix.h"
+#include "itensor/matrix/matrix.h"
 
 namespace itensor {
 

@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_HAMS_J1J2CHAIN_H
 #define __ITENSOR_HAMS_J1J2CHAIN_H
-#include "../mpo.h"
+#include "itensor/mps/mpo.h"
 
 namespace itensor {
 

@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_LOCALMPO
 #define __ITENSOR_LOCALMPO
-#include "mpo.h"
-#include "localop.h"
+#include "itensor/mps/mpo.h"
+#include "itensor/mps/localop.h"
 
 namespace itensor {
 

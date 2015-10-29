@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "mpo.h"
+#include "itensor/mps/mpo.h"
 
 namespace itensor {
 

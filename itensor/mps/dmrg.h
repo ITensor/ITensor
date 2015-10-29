@@ -5,11 +5,11 @@
 #ifndef __ITENSOR_DMRG_H
 #define __ITENSOR_DMRG_H
 
-#include "eigensolver.h"
-#include "localmposet.h"
-#include "localmpo_mps.h"
-#include "sweeps.h"
-#include "DMRGObserver.h"
+#include "itensor/eigensolver.h"
+#include "itensor/mps/localmposet.h"
+#include "itensor/mps/localmpo_mps.h"
+#include "itensor/mps/sweeps.h"
+#include "itensor/mps/DMRGObserver.h"
 
 
 namespace itensor {

@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_TEVOLOBSERVER_H
 #define __ITENSOR_TEVOLOBSERVER_H
-#include "observer.h"
+#include "itensor/mps/observer.h"
 
 namespace itensor {
 

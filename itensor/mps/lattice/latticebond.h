@@ -6,7 +6,7 @@
 #define __ITENSOR_LATTICEBOND_H__
 
 #include <vector>
-#include "global.h"
+#include "itensor/global.h"
 
 namespace itensor {
 

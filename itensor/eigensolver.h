@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
-#include "iqcombiner.h"
+#include "itensor/iqcombiner.h"
 
 
 namespace itensor {

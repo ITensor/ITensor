@@ -3,7 +3,7 @@
 #ifndef _SPARSE_H
 #define _SPARSE_H
 
-#include "bigmatrix.h"		/* includes matrix.h */
+#include "itensor/matrix/bigmatrix.h"
 
 namespace itensor {
 

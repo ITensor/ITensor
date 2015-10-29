@@ -2,9 +2,9 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "tevol.h"
-#include "integrators.h"
-#include "sweeps.h"
+#include "itensor/mps/tevol.h"
+#include "itensor/mps/integrators.h"
+#include "itensor/mps/sweeps.h"
 
 namespace itensor {
 

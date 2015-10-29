@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "autompo.h"
 #include <algorithm>
+#include "itensor/mps/autompo.h"
 
 using std::find;
 using std::cout;

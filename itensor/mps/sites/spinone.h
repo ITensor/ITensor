@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_SPINONE_H
 #define __ITENSOR_SPINONE_H
-#include "../siteset.h"
+#include "itensor/mps/siteset.h"
 
 #define Cout std::cout
 #define Endl std::endl

@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_LOCAL_OP
 #define __ITENSOR_LOCAL_OP
-#include "iqtensor.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 

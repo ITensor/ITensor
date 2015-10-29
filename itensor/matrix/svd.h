@@ -1,7 +1,7 @@
 #ifndef __MATRIXREF_SVD_H
 #define __MATRIXREF_SVD_H
 
-#include "matrix.h"
+#include "itensor/matrix/matrix.h"
 
 namespace itensor {
 

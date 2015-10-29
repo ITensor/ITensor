@@ -1,9 +1,9 @@
 // test.cc -- Test the matrix package
 
-#include "matrix.h"
 #include <math.h>
 #include <fstream>
 #include <iomanip>
+#include "itensor/matrix/matrix.h"
 using namespace std;
 using namespace itensor;
 

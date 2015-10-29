@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#include "storelink.h"
+#include "itensor/matrix/storelink.h"
 //#include "minmax.h"
 
 namespace itensor {

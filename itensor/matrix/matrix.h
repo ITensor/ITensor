@@ -3,8 +3,8 @@
 #ifndef _matrix_h
 #define _matrix_h
 
-#include "matrixref.h"
 #include <vector>
+#include "itensor/matrix/matrixref.h"
 
 
 namespace itensor {

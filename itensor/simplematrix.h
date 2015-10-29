@@ -5,9 +5,9 @@
 #ifndef __ITENSOR_SIMPLEMATRIX_H
 #define __ITENSOR_SIMPLEMATRIX_H
 
-#include "types.h"
-#include "matrixref.h"
-#include "print.h"
+#include "itensor/util/types.h"
+#include "itensor/matrix/matrixref.h"
+#include "itensor/util/print.h"
 
 namespace itensor {
 

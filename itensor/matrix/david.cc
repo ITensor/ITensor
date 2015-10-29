@@ -2,12 +2,12 @@
 //             See Ernest R. Davidson, J. Comp. Phys. 17, 87-94 (1975).
 
 
-#include "matrix.h"
-#include "minmax.h"
-#include "bigmatrix.h"		/* include file for BigMatrix type */
-#include "indent.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/util/minmax.h"
+#include "itensor/matrix/bigmatrix.h"
+#include "itensor/util/indent.h"
 #include <math.h>
-#include "lapack_wrap.h"
+#include "itensor/matrix/lapack_wrap.h"
 
 //extern void reportnew();
 

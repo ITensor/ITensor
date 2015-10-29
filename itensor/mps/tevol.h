@@ -5,9 +5,9 @@
 #ifndef __ITENSOR_TEVOL_H
 #define __ITENSOR_TEVOL_H
 
-#include "mpo.h"
-#include "bondgate.h"
-#include "TEvolObserver.h"
+#include "itensor/mps/mpo.h"
+#include "itensor/mps/bondgate.h"
+#include "itensor/mps/TEvolObserver.h"
 
 namespace itensor {
 

@@ -1,11 +1,11 @@
 // matrixref.cc -- Code for MatrixRef class
 
-#include "matrix.h"
 #include <math.h>
 //#include <stdlib.h>
 #include <iomanip>
 #include <memory>
-#include "indent.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/util/indent.h"
 
 
 namespace itensor {

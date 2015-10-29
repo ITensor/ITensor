@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
 #define __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
-#include "../mpo.h"
+#include "itensor/mps/mpo.h"
 
 namespace itensor {
 

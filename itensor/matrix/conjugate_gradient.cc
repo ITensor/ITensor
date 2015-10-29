@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
-#include "matrix.h"
-#include "bigmatrix.h"		/* include file for BigMatrix type */
-#include "indent.h"
-#include "conjugate_gradient.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/matrix/bigmatrix.h"
+#include "itensor/util/indent.h"
+#include "itensor/matrix/conjugate_gradient.h"
 
 namespace itensor {
 

@@ -4,7 +4,7 @@
 #ifndef _davidson_h
 #define _davidson_h
 
-#include "bigmatrix.h"
+#include "itensor/matrix/bigmatrix.h"
 
 namespace itensor {
 

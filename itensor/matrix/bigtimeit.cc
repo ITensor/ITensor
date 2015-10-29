@@ -1,7 +1,7 @@
 // test.cc -- Test the matrix package
 
-#include "matrix.h"
-#include "cputime.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/matrix/cputime.h"
 #include <math.h>
 
 using namespace itensor;

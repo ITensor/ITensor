@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_DMRGOBSERVER_H
 #define __ITENSOR_DMRGOBSERVER_H
-#include "observer.h"
+#include "itensor/mps/observer.h"
 
 namespace itensor {
 

@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_SITESET_H
 #define __ITENSOR_SITESET_H
-#include "iqtensor.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 

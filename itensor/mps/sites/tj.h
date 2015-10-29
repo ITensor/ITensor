@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_TJ_H
 #define __ITENSOR_TJ_H
-#include "../siteset.h"
+#include "itensor/mps/siteset.h"
 
 namespace itensor {
 

@@ -4,7 +4,7 @@
 #define _storelink_h
 
 #include <vector>
-#include "types.h"
+#include "itensor/util/types.h"
 
 
 namespace itensor {

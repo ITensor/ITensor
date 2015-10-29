@@ -1,4 +1,4 @@
-#include "sparseref2.h"
+#include "itensor/matrix/sparseref2.h"
 
 namespace itensor {
 

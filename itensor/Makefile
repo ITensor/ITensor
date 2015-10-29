@@ -33,10 +33,10 @@ SOURCES+= condenser.cc
 SOURCES+= iqcombiner.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-SOURCES+= mps.cc 
-SOURCES+= mpo.cc 
-SOURCES+= tevol.cc
-SOURCES+= autompo.cc
+SOURCES+= mps/mps.cc 
+SOURCES+= mps/mpo.cc 
+SOURCES+= mps/tevol.cc
+SOURCES+= mps/autompo.cc
 
 HEADERS=util/tinyformat.h util/print.h util/types.h util/indent.h util/cputime.h util/tarray1.h \
         util/flstring.h util/option.h util/input.h util/error.h util/minmax.h util/cplx_literal.h \
@@ -49,17 +49,17 @@ HEADERS=util/tinyformat.h util/print.h util/types.h util/indent.h util/cputime.h
         qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h iqtensor.ih \
         condenser.h combiner.h qcounter.h iqcombiner.h \
-        spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
-        sweeps.h stats.h siteset.h\
-        hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
-        hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
-        hams/tJChain.h \
-        sites/spinhalf.h sites/spinone.h sites/hubbard.h sites/spinless.h\
-        sites/tj.h sites/Z3.h\
-        eigensolver.h localop.h localmpo.h localmposet.h \
-        partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h \
-        lattice/latticebond.h lattice/square.h lattice/triangular.h
+        spectrum.h svdalgs.h mps/mps.h mps/mpo.h core.h mps/observer.h mps/DMRGObserver.h \
+        mps/sweeps.h util/stats.h mps/siteset.h\
+        mps/hams/HubbardChain.h mps/hams/Heisenberg.h mps/hams/ExtendedHubbard.h \
+        mps/hams/TriHeisenberg.h mps/hams/Ising.h mps/hams/J1J2Chain.h \
+        mps/hams/tJChain.h \
+        mps/sites/spinhalf.h mps/sites/spinone.h mps/sites/hubbard.h mps/sites/spinless.h\
+        mps/sites/tj.h mps/sites/Z3.h\
+        eigensolver.h mps/localop.h mps/localmpo.h mps/localmposet.h \
+        partition.h mps/hambuilder.h mps/localmpo_mps.h mps/tevol.h mps/dmrg.h mps/bondgate.h\
+        mps/integrators.h mps/idmrg.h mps/TEvolObserver.h iterpair.h mps/autompo.h \
+        mps/lattice/latticebond.h mps/lattice/square.h mps/lattice/triangular.h
 
 
 
@@ -88,17 +88,20 @@ $(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/detail
 	@cp $^ $(ITENSOR_INCLUDEDIR)/detail
 
-$(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
+$(ITENSOR_INCLUDEDIR)/mps/hams/%.h: mps/hams/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/hams
 	@cp $^ $(ITENSOR_INCLUDEDIR)/hams
 
-$(ITENSOR_INCLUDEDIR)/lattice/%.h: lattice/%.h
+$(ITENSOR_INCLUDEDIR)/mps/lattice/%.h: mps/lattice/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/lattice
 	@cp $^ $(ITENSOR_INCLUDEDIR)/lattice
 
-$(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
+$(ITENSOR_INCLUDEDIR)/mps/sites/%.h: mps/sites/%.h
 	@mkdir -p $(ITENSOR_INCLUDEDIR)/sites
 	@cp $^ $(ITENSOR_INCLUDEDIR)/sites
+
+$(ITENSOR_INCLUDEDIR)/mps/%.h: %.h
+	@cp $^ $(ITENSOR_INCLUDEDIR)
 
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
 	@cp $^ $(ITENSOR_INCLUDEDIR)
@@ -199,7 +202,7 @@ iqindex.o: $(DEPHEADERS)
 DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
-DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
+DEPHEADERS+= combiner.h condenser.h iqcombiner.h mps/localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
 condenser.o: $(DEPHEADERS)
@@ -210,15 +213,15 @@ spectrum.o: $(DEPHEADERS)
 DEPHEADERS+= svdalgs.h
 svdalgs.o: $(DEPHEADERS)
 .debug_objs/svdalgs.o: $(DEPHEADERS)
-DEPHEADERS+= mps.h
-mps.o: $(DEPHEADERS)
+DEPHEADERS+= mps/mps.h
+mps/mps.o: $(DEPHEADERS)
 .debug_objs/mps.o: $(DEPHEADERS)
-DEPHEADERS+= mpo.h
-mpo.o: $(DEPHEADERS)
+DEPHEADERS+= mps/mpo.h
+mps/mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
-DEPHEADERS+= autompo.h
-autompo.o: $(DEPHEADERS)
+DEPHEADERS+= mps/autompo.h
+mps/autompo.o: $(DEPHEADERS)
 .debug_objs/autompo.o: $(DEPHEADERS)
-DEPHEADERS+= bondgate.h tevol.h integrators.h
-tevol.o: $(DEPHEADERS)
+DEPHEADERS+= mps/bondgate.h mps/tevol.h mps/integrators.h
+mps/tevol.o: $(DEPHEADERS)
 .debug_objs/tevol.o: $(DEPHEADERS)

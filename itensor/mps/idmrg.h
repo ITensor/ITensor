@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_IDMRG_H
 #define __ITENSOR_IDMRG_H
 
-#include "dmrg.h"
+#include "itensor/mps/dmrg.h"
 
 namespace itensor {
 

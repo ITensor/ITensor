@@ -1,12 +1,12 @@
 // matrix.cc -- Code for Matrix class
 
-#include "matrix.h"
 #include <iostream>
 #include <iomanip>
 #include <memory.h>
-#include "minmax.h"
-#include "sparse.h"
-#include "indent.h"
+#include "itensor/matrix/matrix.h"
+#include "itensor/util/minmax.h"
+#include "itensor/matrix/sparse.h"
+#include "itensor/util/indent.h"
 #ifdef _CRAY
 #define VECTOR #pragma _CRI ivdep
 #else

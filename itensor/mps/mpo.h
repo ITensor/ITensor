@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_MPO_H
 #define __ITENSOR_MPO_H
-#include "mps.h"
-#include "sweeps.h"
+#include "itensor/mps/mps.h"
+#include "itensor/mps/sweeps.h"
 
 
 namespace itensor {

@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_SPINHALF_H
 #define __ITENSOR_SPINHALF_H
-#include "../siteset.h"
+#include "itensor/mps/siteset.h"
 
 namespace itensor {
 

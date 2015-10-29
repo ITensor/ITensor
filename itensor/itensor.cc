@@ -2,9 +2,9 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "itensor.h"
+#include "itensor/itensor.h"
 #include "itensor/matrix/lapack_wrap.h"
-#include "simplematrix.h"
+#include "itensor/simplematrix.h"
 
 namespace itensor {
 

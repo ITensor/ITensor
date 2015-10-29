@@ -5,11 +5,11 @@
 
 //#define MATRIXBOUNDS		/* Define this for bounds checking  * /
 
-#include "minmax.h"
-#include "storelink.h"
-#include "tarray1.h"
-#include <cassert>
 #include <cstdlib>
+#include <cassert>
+#include "itensor/util/minmax.h"
+#include "itensor/util/tarray1.h"
+#include "itensor/matrix/storelink.h"
 
 
 namespace itensor {

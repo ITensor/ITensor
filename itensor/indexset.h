@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
-#include "index.h"
-#include "permutation.h"
+#include "itensor/index.h"
+#include "itensor/permutation.h"
 
 namespace itensor {
 

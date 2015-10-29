@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_INTEGRATORS_H
 #define __ITENSOR_INTEGRATORS_H
 
-#include "global.h"
+#include "itensor/global.h"
 
 namespace itensor {
 

@@ -4,9 +4,9 @@
 //
 #ifndef __ITENSOR_MPS_H
 #define __ITENSOR_MPS_H
-#include "svdalgs.h"
-#include "siteset.h"
-#include "bondgate.h"
+#include "itensor/svdalgs.h"
+#include "itensor/mps/siteset.h"
+#include "itensor/mps/bondgate.h"
 
 namespace itensor {
 

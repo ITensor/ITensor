@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_LATTICE_SQUARE_H_
 #define __ITENSOR_LATTICE_SQUARE_H_
 
-#include "latticebond.h"
+#include "itensor/mps/lattice/latticebond.h"
 
 
 namespace itensor {

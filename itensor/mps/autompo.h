@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_AUTOMPO_H
 #define __ITENSOR_AUTOMPO_H
 
-#include "global.h"
-#include "mpo.h"
+#include "itensor/global.h"
+#include "itensor/mps/mpo.h"
 
 namespace itensor {
 

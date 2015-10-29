@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_SWEEPS_HEADER_H
 #define __ITENSOR_SWEEPS_HEADER_H
-#include "global.h"
-#include "input.h"
+#include "itensor/global.h"
+#include "itensor/util/input.h"
 
 namespace itensor {
 

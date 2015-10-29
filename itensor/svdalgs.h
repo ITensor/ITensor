@@ -4,10 +4,9 @@
 //
 #ifndef __ITENSOR_SVDALGS_H
 #define __ITENSOR_SVDALGS_H
-#include "iqcombiner.h"
-#include "localop.h"
-#include "spectrum.h"
-
+#include "itensor/iqcombiner.h"
+#include "itensor/spectrum.h"
+#include "itensor/mps/localop.h"
 
 namespace itensor {
 

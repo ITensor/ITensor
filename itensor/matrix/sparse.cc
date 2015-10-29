@@ -1,10 +1,10 @@
 // sparse.cc -- Routines for sparse matrix class
 
-#include "sparse.h"
 #include <iomanip>
 #include <math.h>
 //#include <memory.h>
-#include "indent.h"
+#include "itensor/util/indent.h"
+#include "itensor/matrix/sparse.h"
 #ifdef _CRAY
 #define VECTOR #pragma _CRI ivdep
 #else

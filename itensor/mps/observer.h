@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_OBSERVER_H
 #define __ITENSOR_OBSERVER_H
 
-#include "spectrum.h"
+#include "itensor/spectrum.h"
 
 namespace itensor {
 

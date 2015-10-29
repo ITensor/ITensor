@@ -5,8 +5,8 @@
 #ifndef __COMBINER_H
 #define __COMBINER_H
 
-#include "itensor.h"
-#include "iterpair.h"
+#include "itensor/itensor.h"
+#include "itensor/iterpair.h"
 
 namespace itensor {
 
