@@ -116,6 +116,15 @@ reserve_vector(typename std::vector<T>::size_type size)
     }
 
 template<typename Container,
+         typename F>
+void
+generate(Container&& C,
+     F&& f)
+    {
+    std::generate(C.begin(),C.end(),std::forward<F>(f));
+    }
+
+template<typename Container,
          typename T>
 void
 fill(Container&& C,
