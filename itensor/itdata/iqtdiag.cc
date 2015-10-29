@@ -133,8 +133,8 @@ blockDiagDense(IQTDiag const& D,
 
         auto do_contract =
             [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
-            (cData dblock, Label const& Dblockind,
-             cData tblock, Label const& Tblockind,
+            (Datac dblock, Label const& Dblockind,
+             Datac tblock, Label const& Tblockind,
              Data  cblock, Label const& Cblockind)
             {
             Range Trange,

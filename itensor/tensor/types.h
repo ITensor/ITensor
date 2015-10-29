@@ -10,6 +10,7 @@
 #include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/timers.h"
+#include "itensor/types.h"
 
 namespace itensor {
 
@@ -21,8 +22,11 @@ using Label = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
 template<typename T>
 class DataRange;
 
-using Data  = DataRange<double>;
-using cData = DataRange<const double>;
+using Data  = DataRange<Real>;
+using Datac = DataRange<const Real>;
+
+using CData = DataRange<Cplx>;
+using CDatac = DataRange<const Cplx>;
 
 template<typename T>
 class DataRange

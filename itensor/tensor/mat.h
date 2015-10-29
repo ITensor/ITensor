@@ -264,7 +264,7 @@ makeMatRef(Data const& D,
     }
 
 auto inline
-makeMatRef(cData const& D,
+makeMatRef(Datac const& D,
            size_t nrows,
            size_t ncols)
     -> MatrixRefc

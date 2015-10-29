@@ -216,8 +216,8 @@ doTask(Contract<IQIndex>& Con,
     //contracted blocks of A and B
     auto do_contract = 
         [&Con,&Lind,&Rind,&Cind]
-        (cData ablock, Label const& Ablockind,
-         cData bblock, Label const& Bblockind,
+        (Datac ablock, Label const& Ablockind,
+         Datac bblock, Label const& Bblockind,
          Data  cblock, Label const& Cblockind)
         {
         Range Arange,
@@ -312,8 +312,8 @@ doTask(NCProd<IQIndex>& P,
 
     auto do_ncprod = 
         [&P,&Aind,&Bind,&Cind]
-        (cData ablock, Label const& Ablockind,
-         cData bblock, Label const& Bblockind,
+        (Datac ablock, Label const& Ablockind,
+         Datac bblock, Label const& Bblockind,
          Data  cblock, Label const& Cblockind)
         {
         Range Arange,
