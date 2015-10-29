@@ -9,10 +9,24 @@
 #include <memory>
 #include <vector>
 #include "string.h"
-#include "unistd.h"
 #include "itensor/types.h"
 #include "itensor/util/error.h"
 #include "itensor/util/infarray.h"
+
+#if defined(_MSC_VER)
+#include <process.h>
+#include <io.h>
+#include <direct.h>
+inline char*
+mkdtemp(char *templat)
+    {
+    char* retval = _mktemp(templat);
+    if (retval) { _mkdir(retval); }
+    return retval;
+    }
+#else
+#include <unistd.h>
+#endif
 
 namespace itensor {
 
