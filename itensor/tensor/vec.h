@@ -10,9 +10,23 @@
 
 namespace itensor {
 
-using Vector     = Ten<VecRange>;
-using VectorRef  = TenRef<VecRange>;
-using VectorRefc = TenRefc<VecRange>;
+template<typename V>
+using VecRefc = TenRefc<VecRange,V>;
+template<typename V>
+using VecRef = TenRef<VecRange,V>;
+template<typename V>
+using Vec = Ten<VecRange,V>;
+
+using Vector     = Vec<Real>;
+using VectorRef  = VecRef<Real>;
+using VectorRefc = VecRefc<Real>;
+
+using CVector     = Vec<Cplx>;
+using CVectorRef  = VecRef<Cplx>;
+using CVectorRefc = VecRefc<Cplx>;
+
+template<typename V>
+using hasVecRange = std::is_same<VecRange,typename stdx::decay_t<V>::range_type>;
 
 auto inline
 stride(VectorRefc const& v) -> decltype(v.stride(0)) { return v.stride(0); }
