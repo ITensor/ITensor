@@ -90,7 +90,7 @@ quickran()
     int ic = 28411;
     double scale = 1.0 / im;
     seed = (seed*ia+ic)%im;
-    return double(seed) * scale;
+    return std::fabs(double(seed)) * scale;
     }
 
 Cplx inline
