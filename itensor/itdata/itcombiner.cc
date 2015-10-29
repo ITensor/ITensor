@@ -5,7 +5,7 @@
 #include "itensor/util/count.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/itdata.h"
-#include "itensor/itdata/itcplx.h"
+//#include "itensor/itdata/itcplx.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/iqindex.h"
@@ -27,32 +27,33 @@ doTask(NormNoScale, ITCombiner const& d) { return 0; }
 void
 doTask(Conj,ITCombiner const& d) { }
 
+template<typename T>
 void
-permuteStore(ITReal      const& d,
+permuteStore(Dense<T>   const& d,
              IndexSet    const& dis,
              Permutation const& P,
              ManageStore      & m)
     {
     auto tfrom = makeTenRef(d.data(),d.size(),&dis);
-    auto to = Tensor(permute(tfrom,P));
-    m.makeNewData<ITReal>(move(to.storage()));
+    auto to = Ten<Range,T>(permute(tfrom,P));
+    m.makeNewData<Dense<T>>(move(to.storage()));
     }
 
-void
-permuteStore(ITCplx      const& d,
-             IndexSet    const& dis,
-             Permutation const& P,
-             ManageStore      & m)
-    {
-    auto *nd = m.makeNewData<ITCplx>(d.size());
-    auto csize = d.csize();
-    auto fromre = makeTenRef(d.rstart(),csize,&dis);
-    auto tore = makeTenRef(nd->rstart(),csize,&dis);
-    auto fromim = makeTenRef(d.istart(),csize,&dis);
-    auto toim = makeTenRef(nd->istart(),csize,&dis);
-    tore &= permute(fromre,P);
-    toim &= permute(fromim,P);
-    }
+//void
+//permuteStore(ITCplx      const& d,
+//             IndexSet    const& dis,
+//             Permutation const& P,
+//             ManageStore      & m)
+//    {
+//    auto *nd = m.makeNewData<ITCplx>(d.size());
+//    auto csize = d.csize();
+//    auto fromre = makeTenRef(d.rstart(),csize,&dis);
+//    auto tore = makeTenRef(nd->rstart(),csize,&dis);
+//    auto fromim = makeTenRef(d.istart(),csize,&dis);
+//    auto toim = makeTenRef(nd->istart(),csize,&dis);
+//    tore &= permute(fromre,P);
+//    toim &= permute(fromim,P);
+//    }
 
 template<typename Storage>
 void
@@ -158,7 +159,7 @@ combine(Storage  const& d,
 
 void
 doTask(Contract<Index>& C,
-       ITReal const& d,
+       DenseReal const& d,
        ITCombiner const& cmb,
        ManageStore& m)
     {
@@ -167,7 +168,7 @@ doTask(Contract<Index>& C,
 void
 doTask(Contract<Index>& C,
        ITCombiner const& cmb,
-       ITReal const& d,
+       DenseReal const& d,
        ManageStore& m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);
@@ -176,7 +177,7 @@ doTask(Contract<Index>& C,
 
 void
 doTask(Contract<Index> & C,
-       ITCplx     const& d,
+       DenseCplx  const& d,
        ITCombiner const& cmb,
        ManageStore     & m)
     {
@@ -185,7 +186,7 @@ doTask(Contract<Index> & C,
 void
 doTask(Contract<Index> & C,
        ITCombiner const& cmb,
-       ITCplx     const& d,
+       DenseCplx  const& d,
        ManageStore     & m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);

@@ -36,36 +36,36 @@ doTask(Conj,const ITCombiner& d);
 
 void
 doTask(Contract<Index>& C,
-       const ITReal& d,
-       const ITCombiner& cmb,
+       DenseReal const& d,
+       ITCombiner const& cmb,
        ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
-       const ITCombiner& cmb,
-       const ITReal& d,
+       ITCombiner const& cmb,
+       DenseReal const& d,
        ManageStore& m);
 
-void
-doTask(Contract<Index> & C,
-       ITCplx     const& d,
-       ITCombiner const& cmb,
-       ManageStore     & m);
-
-void
-doTask(Contract<Index> & C,
-       ITCombiner const& cmb,
-       ITCplx     const& d,
-       ManageStore     & m);
+//void
+//doTask(Contract<Index> & C,
+//       ITCplx     const& d,
+//       ITCombiner const& cmb,
+//       ManageStore     & m);
+//
+//void
+//doTask(Contract<Index> & C,
+//       ITCombiner const& cmb,
+//       ITCplx     const& d,
+//       ManageStore     & m);
 
 bool
-doTask(CheckComplex, const ITCombiner& d);
+doTask(CheckComplex, ITCombiner const& d);
 
 void
-doTask(PrintIT<Index>& P, const ITCombiner& d);
+doTask(PrintIT<Index>& P, ITCombiner const& d);
 
 void
-doTask(Write& W, const ITCombiner& d);
+doTask(Write& W, ITCombiner const& d);
 
 QN 
 doTask(CalcDiv const& C, ITCombiner const& d);

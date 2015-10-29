@@ -16,16 +16,11 @@ namespace itensor {
 // Task Types
 // 
 
-struct MultReal
+template<typename T>
+struct Mult
     {
-    Real r;
-    MultReal(Real r_) : r(r_) { }
-    };
-
-struct MultCplx
-    {
-    Cplx z;
-    MultCplx(Cplx z_) : z(z_) { }
+    T x;
+    Mult(T x_) : x(x_) { }
     };
 
 template<typename IndexT>
@@ -156,16 +151,11 @@ struct VisitIT
         { }
     };
 
-struct FillReal
+template<typename T>
+struct Fill
     {
-    Real r;
-    FillReal(Real r_) : r(r_) { }
-    };
-
-struct FillCplx
-    {
-    Cplx z;
-    FillCplx(Cplx z_) : z(z_) { }
+    T x;
+    Fill(T x_) : x(x_) { }
     };
 
 struct TakeReal { };
@@ -225,7 +215,7 @@ computeScalefac(Storage & dat)
     //       Have TensorRef use dnrm2 and dscal
     auto scalefac = doTask(NormNoScale{},dat);
     if(std::fabs(scalefac) < 1E-11) return NAN;
-    doTask(MultReal{1./scalefac},dat);
+    doTask(Mult<Real>{1./scalefac},dat);
     return scalefac;
     }
 
@@ -301,8 +291,8 @@ enum class
 StorageType
     { 
     Null=0, 
-    ITReal=1, 
-    ITCplx=2, 
+    DenseReal=1, 
+    DenseCplx=2, 
     ITCombiner=3, 
     ITDiagReal=4, 
     ITDiagCplx=5,

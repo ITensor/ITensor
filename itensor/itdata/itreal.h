@@ -12,15 +12,21 @@
 
 namespace itensor {
 
+template<typename T>
+class Dense;
 
-class ITReal
+using DenseReal = Dense<Real>;
+using DenseCplx = Dense<Cplx>;
+
+template<typename T>
+class Dense
     {
     public:
-    using storage_type = std::vector<Real>;
-    using size_type = storage_type::size_type;
-    using iterator = storage_type::iterator;
-    using const_iterator = storage_type::const_iterator;
-    using value_type = Real;
+    using value_type = T;
+    using storage_type = std::vector<value_type>;
+    using size_type = typename storage_type::size_type;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
 
     //
     // Data members
@@ -32,25 +38,25 @@ class ITReal
     // Constructors
     //
 
-    ITReal() { }
+    Dense() { }
 
     explicit
-    ITReal(size_t size) : store(size) { }
+    Dense(size_t size) : store(size) { }
 
-    ITReal(size_t size, Real val) 
+    Dense(size_t size, value_type val) 
       : store(size,val)
         { }
 
     template<typename InputIterator>
-    ITReal(InputIterator b, InputIterator e) : store(b,e) { }
+    Dense(InputIterator b, InputIterator e) : store(b,e) { }
 
-    ITReal(storage_type&& data) : store(std::move(data)) { }
+    Dense(storage_type&& data) : store(std::move(data)) { }
 
     //
     //std container like methods
     //
 
-    Real&
+    value_type&
     operator[](size_type i) 
         { 
 #ifdef DEBUG
@@ -59,7 +65,7 @@ class ITReal
         return store[i]; 
 #endif
         }
-    const Real&
+    value_type const&
     operator[](size_type i) const 
         {
 #ifdef DEBUG
@@ -74,9 +80,9 @@ class ITReal
     bool
     empty() const { return store.empty(); }
 
-    Real*
+    value_type*
     data() { return store.data(); }
-    const Real*
+    value_type const*
     data() const { return store.data(); }
     
     const_iterator
@@ -98,100 +104,175 @@ class ITReal
     end() { return store.end(); }
     };
 
-void inline
-read(std::istream& s, ITReal& dat)
+Data inline
+realData(DenseReal & d) { return Data(d.data(),d.size()); }
+
+Datac inline
+realData(DenseReal const& d) { return Datac(d.data(),d.size()); }
+
+template<typename T>
+bool inline constexpr
+isReal(Dense<T> const& t) { return std::is_same<typename T::value_type,Real>::value; }
+
+template<typename T>
+bool inline constexpr
+isCplx(Dense<T> const& t) { return std::is_same<typename T::value_type,Cplx>::value; }
+
+Data inline
+realData(DenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
+
+Datac inline
+realData(DenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
+
+template<typename T>
+void 
+read(std::istream& s, Dense<T> & dat)
     {
     itensor::read(s,dat.store);
     }
 
-void inline
-write(std::ostream& s, const ITReal& dat)
+template<typename T>
+void
+write(std::ostream& s, Dense<T> const& dat)
     {
     itensor::write(s,dat.store);
     }
 
-template<typename F>
+template<typename F, typename T>
 void
-doTask(ApplyIT<F>& A, ITReal& d)
+doTask(ApplyIT<F>& A, Dense<T>& d)
     { 
-    for(auto& elt : d) elt = detail::call<Real>(A.f,elt);
+    for(auto& elt : d) elt = detail::call<T>(A.f,elt);
     }
 
-template<typename F>
+template<typename F, typename T>
 void
-doTask(VisitIT<F>& V, const ITReal& d)
+doTask(VisitIT<F>& V, Dense<T> const& d)
     { 
     for(auto& elt : d) detail::call<void>(V.f,V.scale_fac * elt);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, ITReal& d)
-    { 
-    std::generate(d.begin(),d.end(),G.f);
+doTask(GenerateIT<F,Real>& G, Dense<Real> & D)
+    {
+    stdx::generate(D,G.f);
     }
 
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, Dense<Cplx> const& D, ManageStore & m)
+    {
+    auto *nD = m.makeNewData<DenseReal>(D.size());
+    stdx::generate(*nD,G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, Dense<Real> const& D, ManageStore & m)
+    {
+    auto *nD = m.makeNewData<DenseCplx>(D.size());
+    stdx::generate(*nD,G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, Dense<Cplx> & D)
+    {
+    stdx::generate(D,G.f);
+    }
+
+
+template<typename T>
 Cplx 
-doTask(const GetElt<Index>& g, const ITReal& d);
+doTask(GetElt<Index> const& g, Dense<T> const& d);
+
+template<typename E, typename T>
+void
+doTask(SetElt<E,Index> const& S, Dense<T> const& d, ManageStore & m);
 
 void
-doTask(const SetElt<Real,Index>& s, ITReal& d);
+doTask(Fill<Real> const& f, DenseReal & d);
 
 void
-doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManageStore& m);
+doTask(Fill<Real> const& f, DenseCplx const& d, ManageStore & m);
 
 void
-doTask(const FillReal& f, ITReal& d);
+doTask(Fill<Cplx> const& f, DenseReal & d);
 
 void
-doTask(const FillCplx& f, const ITReal& d, ManageStore& m);
+doTask(Fill<Cplx> const& f, DenseCplx const& d, ManageStore & m);
+
+template<typename T>
+void
+doTask(Mult<Real> const& f, Dense<T> & D);
 
 void
-doTask(const MultCplx& M, const ITReal& d, ManageStore& m);
+doTask(Mult<Cplx> const& f, Dense<Real> const& D, ManageStore & m);
 
 void
-doTask(const MultReal& m, ITReal& d);
+doTask(Mult<Cplx> const& f, Dense<Cplx> & D);
 
+template<typename T>
 Real
-doTask(NormNoScale, const ITReal& d);
+doTask(NormNoScale, Dense<T> const& d);
 
 void
-doTask(Conj,const ITReal& d);
+doTask(Conj,DenseReal const& d);
 
 void
-doTask(TakeReal, const ITReal& );
+doTask(Conj,DenseCplx const& d);
 
 void
-doTask(TakeImag, ITReal & d);
+doTask(TakeReal, DenseReal const& );
 
 void
-doTask(PrintIT<Index>& P, const ITReal& d);
+doTask(TakeReal, DenseCplx const& );
 
+void
+doTask(TakeImag, DenseReal & d);
+
+void
+doTask(TakeImag, DenseCplx & d);
+
+template<typename T>
+void
+doTask(PrintIT<Index>& P, Dense<T> const& d);
+
+template<typename T>
 Cplx
-doTask(SumEls<Index>, const ITReal& d);
+doTask(SumEls<Index>, Dense<T> const& d);
 
 void
-doTask(Write& W, const ITReal& d);
+doTask(Write& W, DenseReal const& d);
 
 void
-doTask(Contract<Index>& C,
-       ITReal const& a1,
-       ITReal const& a2,
-       ManageStore& m);
+doTask(Write& W, DenseCplx const& d);
 
-void
-doTask(NCProd<Index>& NCP,
-       ITReal const& a1,
-       ITReal const& a2,
-       ManageStore& m);
+//template<typename T1, typename T2>
+//void
+//doTask(Contract<Index>& C,
+//       Dense<T1> const& a1,
+//       Dense<T2> const& a2,
+//       ManageStore& m);
+//
+//template<typename T1, typename T2>
+//void
+//doTask(NCProd<Index>& NCP,
+//       Dense<T1> const& a1,
+//       Dense<T2> const& a2,
+//       ManageStore& m);
+//
+//template<typename T1, typename T2>
+//void
+//doTask(PlusEQ<Index> const& P,
+//       Dense<T1> const& a1,
+//       Dense<T2> const& a2,
+//       ManageStore & m);
 
-void
-doTask(const PlusEQ<Index>& P,
-       ITReal& a1,
-       const ITReal& a2);
-
-bool inline
-doTask(CheckComplex, const ITReal& d) { return false; }
+template<typename T>
+bool constexpr
+doTask(CheckComplex, Dense<T> const& d) { return isCplx(d); }
 
 } //namespace itensor
 

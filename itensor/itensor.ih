@@ -42,48 +42,48 @@ ITensorT(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = newITData<ITReal>(area(is_),0.);
+    store_ = newITData<DenseReal>(area(is_),0.);
     set(iv1,rest...,1.);
     }
 
-template<typename... Inds>
-ITensor
-diagTensor(Complex z, 
-           const Index& i1,
-           Inds&&... inds)
-    { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
-    auto len = minM(is);
-    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(len,z.real()));
-    return ITensor(std::move(is),ITDiag<Complex>(len,z));
-    }
-
-template<typename Container, typename... Inds>
-auto
-diagTensor(Container const& C, 
-           Index const& i1,
-           Inds &&... inds)
-    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
-    //types (such as Container==int) that don't have a value_type member type
-    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
-    { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
-#ifdef DEBUG
-    using size_type = decltype(C.size());
-    //Compute min of all index dimensions
-    auto minm = i1.m();
-    for(const auto& ind : is)
-        if(ind.m() < minm) minm = ind.m();
-    if(C.size() != size_type(minm))
-        {
-        Print(minm);
-        Print(C.size());
-        Error("Wrong size of data in diagonal ITensor constructor");
-        }
-#endif
-    using value_type = typename Container::value_type;
-    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
-    }
+//template<typename... Inds>
+//ITensor
+//diagTensor(Complex z, 
+//           const Index& i1,
+//           Inds&&... inds)
+//    { 
+//    IndexSet is(i1,std::forward<Inds>(inds)...);
+//    auto len = minM(is);
+//    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(len,z.real()));
+//    return ITensor(std::move(is),ITDiag<Complex>(len,z));
+//    }
+//
+//template<typename Container, typename... Inds>
+//auto
+//diagTensor(Container const& C, 
+//           Index const& i1,
+//           Inds &&... inds)
+//    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
+//    //types (such as Container==int) that don't have a value_type member type
+//    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
+//    { 
+//    IndexSet is(i1,std::forward<Inds>(inds)...);
+//#ifdef DEBUG
+//    using size_type = decltype(C.size());
+//    //Compute min of all index dimensions
+//    auto minm = i1.m();
+//    for(const auto& ind : is)
+//        if(ind.m() < minm) minm = ind.m();
+//    if(C.size() != size_type(minm))
+//        {
+//        Print(minm);
+//        Print(C.size());
+//        Error("Wrong size of data in diagonal ITensor constructor");
+//        }
+//#endif
+//    using value_type = typename Container::value_type;
+//    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
+//    }
 
 
 template<typename IndexT>

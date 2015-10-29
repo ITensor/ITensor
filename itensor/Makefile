@@ -16,22 +16,22 @@ SOURCES+= tensor/mat.cc
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
 SOURCES+= itdata/itreal.cc 
-SOURCES+= itdata/itcplx.cc 
+#SOURCES+= itdata/itcplx.cc 
 SOURCES+= itdata/itcombiner.cc 
-SOURCES+= itdata/itdiag.cc 
-SOURCES+= itdata/iqtreal.cc
-SOURCES+= itdata/iqtcombiner.cc 
-SOURCES+= itdata/iqtdiag.cc
-#SOURCES+= itdata/itlazy.cc
+#SOURCES+= itdata/itdiag.cc 
+#SOURCES+= itdata/iqtreal.cc
+#SOURCES+= itdata/iqtcombiner.cc 
+#SOURCES+= itdata/iqtdiag.cc
+##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
-SOURCES+= mps/mps.cc 
-SOURCES+= mps/mpo.cc 
-SOURCES+= mps/autompo.cc
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
+#SOURCES+= mps/mps.cc 
+#SOURCES+= mps/mpo.cc 
+#SOURCES+= mps/autompo.cc
 
 ####################################
 

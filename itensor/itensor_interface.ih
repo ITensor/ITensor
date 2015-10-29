@@ -7,7 +7,7 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/tensor/contract.h"
+#include "itensor/iqindex.h"
 
 //
 // Template Method Implementations
@@ -23,7 +23,7 @@ namespace detail {
 void inline
 allocReal(ITensor& T)
     {
-    T.store() = newITData<ITReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(area(T.inds()),0);
     }
 
 void inline
@@ -36,7 +36,7 @@ template<typename Container>
 void
 allocReal(ITensor& T, const Container& inds)
     {
-    T.store() = newITData<ITReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(area(T.inds()),0);
     }
 
 template<typename Container>
@@ -462,7 +462,7 @@ ITensorT<IndexT>& ITensorT<IndexT>::
 operator*=(Cplx z)
     {
     if(z.imag() == 0) return operator*=(z.real());
-    doTask(MultCplx{z},store_);
+    doTask(Mult<Cplx>{z},store_);
     return *this;
     }
 
@@ -479,9 +479,9 @@ fill(Cplx z)
         }
     scale_ = scale_type(1.);
     if(z.imag() == 0)
-        doTask(FillReal{z.real()},store_);
+        doTask(Fill<Real>{z.real()},store_);
     else
-        doTask(FillCplx{z},store_);
+        doTask(Fill<Cplx>{z},store_);
     return *this;
     }
 
@@ -553,7 +553,7 @@ scaleTo(scale_type const& newscale)
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
-    doTask(MultReal{scale_.real0()},store_);
+    doTask(Mult<Real>{scale_.real0()},store_);
     scale_ = newscale;
     }
 
@@ -838,8 +838,8 @@ read(std::istream& s, ITensorT<I>& T)
     read(s,type);
     ITensor::storage_ptr p;
     if(type==StorageType::Null) { /*intentionally left blank*/  }
-    else if(type==StorageType::ITReal) { p = readType<ITReal>(s); }
-    else if(type==StorageType::ITCplx) { p = readType<ITCplx>(s); }
+    else if(type==StorageType::DenseReal) { p = readType<DenseReal>(s); }
+    else if(type==StorageType::DenseCplx) { p = readType<DenseCplx>(s); }
     else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
     else if(type==StorageType::ITDiagReal) { p = readType<ITDiag<Real>>(s); }
     else if(type==StorageType::ITDiagCplx) { p = readType<ITDiag<Cplx>>(s); }
