@@ -816,7 +816,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2) const
     if(type_ == Diag)
         {
         if(iv1.i != iv2.i) return 0;
-        return r_->v.at(iv1.i-1);
+        return scale_.real()*r_->v.at(iv1.i-1);
         }
     return scale_.real()*r_->v[_ind2(iv1,iv2)];
     }
