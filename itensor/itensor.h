@@ -105,13 +105,13 @@ template <typename... Inds>
 ITensor
 randomTensor(Index const& i1, Inds&&... inds)
     {
-    return randomize(ITensor(i1,std::forward<Inds>(inds)...));
+    return random(ITensor(i1,std::forward<Inds>(inds)...));
     }
 template <typename... Inds>
 ITensor
 randomTensorC(Index const& i1, Inds&&... inds)
     {
-    return randomize(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
+    return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
     }
 
 template<typename IndexT>

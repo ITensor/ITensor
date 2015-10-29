@@ -380,8 +380,12 @@ Real
 norm(ITensorT<I> const& T);
 
 template<typename I>
+void
+randomize(ITensorT<I> & T, Args const& args = Args::global());
+
+template<typename I>
 ITensorT<I>
-randomize(ITensorT<I> T, Args const& args = Args::global());
+random(ITensorT<I> T, Args const& args = Args::global());
 
 template<typename I>
 ITensorT<I>

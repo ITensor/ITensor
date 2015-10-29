@@ -112,7 +112,7 @@ randomTensor(IQIndexVal const& iv1,
     {
     auto T = IQTensor(iv1,std::forward<IQIndVals>(ivs)...);
     try {
-        return randomize(T);
+        return random(T);
         }
     catch(ITError const& e)
         {
@@ -128,7 +128,7 @@ randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds)
     auto dat = IQTReal{is,q};
     auto T = IQTensor(std::move(is),std::move(dat));
     try {
-        return randomize(T);
+        return random(T);
         }
     catch(ITError const& e)
         {

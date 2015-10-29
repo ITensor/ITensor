@@ -764,15 +764,23 @@ norm(const ITensorT<I>& T)
     }
 
 template<typename I>
-ITensorT<I>
-randomize(ITensorT<I> T, const Args& args)
+void
+randomize(ITensorT<I> & T, const Args& args)
     {
     if(!T.store()) detail::allocReal(T);
 #ifdef DEBUG
     if(!T) Error("default initialized tensor in randomize");
 #endif
-    if(args.getBool("Complex",false)) T.generate(detail::quickranCplx);
-    else                              T.generate(detail::quickran);
+    auto cplx = args.getBool("Complex",false);
+    if(cplx) T.generate(detail::quickranCplx);
+    else     T.generate(detail::quickran);
+    }
+
+template<typename I>
+ITensorT<I>
+random(ITensorT<I> T, const Args& args)
+    {
+    randomize(T,args);
     return T;
     }
 
