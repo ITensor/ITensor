@@ -1,9 +1,9 @@
 #ifndef __J1J2_H
 #define __J1J2_H
 
-#include "core.h"
-#include "sites/spinhalf.h"
-#include "hams/J1J2Chain.h"
+#include "itensor/core.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/hams/J1J2Chain.h"
 
 namespace itensor {
 
