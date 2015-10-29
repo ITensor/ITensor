@@ -34,7 +34,8 @@ struct compBlock
     };
 
 QN
-calcDiv(IQIndexSet const& is, Label const& block_ind)
+calcDiv(IQIndexSet const& is, 
+        Label const& block_ind)
     {
     QN div;
     for(auto i : count(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
@@ -52,19 +53,6 @@ doTask(CalcDiv const& C,
     Label block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
-
-    //auto r = long(is.r());
-    //if(r==0) return div;
-
-    //for(long j = 0; j < r-1; ++j)
-    //    {
-    //    auto& J = is[j];
-    //    auto Ij = b % J.nindex();
-    //    div += J.dir()*J.qn(1+Ij);
-    //    b = (b-Ij)/J.nindex();
-    //    }
-    //div += is[r-1].dir()*is[r-1].qn(1+b);
-    //return div;
     }
 
 IQTReal::
