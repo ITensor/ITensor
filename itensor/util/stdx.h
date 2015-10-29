@@ -38,6 +38,24 @@ using conditional_t = typename std::conditional<B,T1,T2>::type;
 template<class T>
 using result_of_t = typename std::result_of<T>::type;
 
+
+template<typename Condition1, 
+         typename Condition2 = std::true_type,
+         typename Condition3 = std::true_type,
+         typename Condition4 = std::true_type>
+using require = typename std::enable_if<Condition1::value 
+                                     && Condition2::value
+                                     && Condition3::value
+                                     && Condition4::value
+                                     >::type;
+
+template<typename T>
+struct isRvalue
+    {
+    bool static constexpr value = std::is_rvalue_reference<T&&>::value;
+    constexpr operator bool() const noexcept { return value; }
+    };
+
 //
 //Useful for disabling candidate template functions
 //where if Expressions.. fail to compile (fail template
