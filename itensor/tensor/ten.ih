@@ -60,13 +60,6 @@ operator()(Inds&&... ii) const -> reference
     return d_[offset(*prange_,std::forward<Inds>(ii)...)]; 
     }
 
-//template<typename R>
-//template<typename Indices>
-//auto TenRefc<R>::
-//operator()(Indices const& ii) const 
-//  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
-//    { return d_[offset(*prange_,ii)]; }
-
 template<typename R,typename T>
 void TenRefc<R,T>::
 pointTo(tensor_type const& t)
@@ -144,18 +137,6 @@ transform(TenRefc<R1,T> const& from,
             }
         }
     }
-
-//template<typename T, typename R1, typename R2>
-//void
-//assignNonContig(TenRef<T,R1> const& to, TenRef<const T,R2> from)
-//    {
-//#ifdef DEBUG
-//    checkCompatible(to,from,"assignNonContig");
-//#endif 
-//    auto ti = to.begin();
-//    auto fi = from.begin();
-//    for(; ti.notDone(); ++ti, ++fi) *ti = *fi;
-//    }
 
 //Assign to referenced data
 template<typename R1, typename R2, typename T>
@@ -238,20 +219,6 @@ operator()(Inds&&... ii) -> reference
     { 
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
-
-//template<typename R,typename T>
-//template <typename Indices>
-//auto Ten<R,T>::
-//operator()(Indices const& ii) 
-//  -> stdx::if_compiles_return<reference,decltype(ii.begin())>
-//    { return data_[offset(range_,ii)]; }
-
-//template<typename R,typename T>
-//template <typename Indices>
-//auto Ten<R,T>::
-//operator()(Indices const& ii) const 
-//  -> stdx::if_compiles_return<const_reference,decltype(ii.begin())>
-//    { return const_reference(data_[offset(range_,ii)]); }
 
 template<typename R>
 Real

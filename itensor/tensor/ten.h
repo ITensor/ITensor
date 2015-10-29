@@ -135,10 +135,6 @@ class TenRefc
     reference
     operator()(Inds&&... ii) const;
 
-    //template<typename Indices>
-    //reference
-    //operator()(Indices const& ii) const;
-
     void
     clear() { d_.clear(); prange_ = nullptr; }
 
@@ -202,7 +198,11 @@ class TenRef : public TenRefc<range_type_,T>
         }
 
     TenRef&
-    operator=(TenRef const& t) { parent::operator=(t); return *this; }
+    operator=(TenRef const& t) 
+        { 
+        parent::operator=(t); 
+        return *this; 
+        }
 
     TenRef(TenRef && t)
         {
@@ -228,11 +228,10 @@ class TenRef : public TenRefc<range_type_,T>
 
     template <typename... Inds>
     reference
-    operator()(Inds&&... ii) const { return const_cast<reference>(parent::operator()(std::forward<Inds>(ii)...)); }
-
-    //template<typename Indices>
-    //reference
-    //operator()(Indices const& ii) const { return const_cast<reference>(parent::operator()(ii)); }
+    operator()(Inds&&... ii) const 
+        { 
+        return const_cast<reference>(parent::operator()(std::forward<Inds>(ii)...)); 
+        }
 
     iterator
     begin() const { return iterator(store(),parent::range()); }
@@ -287,9 +286,9 @@ makeTenRef(Real* p,
 
 template<typename range_type>
 auto
-makeTenRef(const Real* p,
+makeTenRef(Real const* p,
            size_t max_size,
-           const range_type* prange)
+           range_type const* prange)
     -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>,Real>
     {
     using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
@@ -300,7 +299,7 @@ template<typename range_type,
          class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
-makeTenRef(Real* p,
+makeTenRef(Real * p,
            size_t max_size,
            range_type && range)
     -> TenRef<stdx::decay_t<range_type>,Real>
@@ -314,7 +313,7 @@ template<typename range_type,
          class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
-makeTenRef(const Real* p,
+makeTenRef(Real const* p,
            size_t max_size,
            range_type && range)
     -> TenRefc<stdx::decay_t<range_type>,Real>
@@ -326,10 +325,10 @@ makeTenRef(const Real* p,
 
 template<typename range_type>
 auto
-makeTenRef(Real* p,
+makeTenRef(Real * p,
            size_t offset,
            size_t max_size,
-           const range_type* prange)
+           range_type const* prange)
     -> TenRef<stdx::decay_t<stdx::remove_pointer_t<range_type>>,Real>
     {
     using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
@@ -338,10 +337,10 @@ makeTenRef(Real* p,
 
 template<typename range_type>
 auto
-makeTenRef(const Real* p,
+makeTenRef(Real const* p,
            size_t offset,
            size_t max_size,
-           const range_type* prange)
+           range_type const* prange)
     -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>,Real>
     {
     using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
@@ -352,7 +351,7 @@ template<typename range_type,
          class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
-makeTenRef(Real* p,
+makeTenRef(Real * p,
            size_t offset,
            size_t max_size,
            range_type && range)
@@ -367,7 +366,7 @@ template<typename range_type,
          class = stdx::enable_if_t<std::is_rvalue_reference<range_type&&>::value
                                && !std::is_pointer<range_type>::value> >
 auto
-makeTenRef(const Real* p,
+makeTenRef(Real const* p,
            size_t offset,
            size_t max_size,
            range_type && range)
@@ -381,7 +380,7 @@ makeTenRef(const Real* p,
 template<typename range_type,typename T>
 auto
 makeRef(DataRange<T> const& store,
-        const range_type* prange)
+        range_type const* prange)
     -> TenRef<stdx::decay_t<stdx::remove_pointer_t<range_type>>,T>
     {
     using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
@@ -391,7 +390,7 @@ makeRef(DataRange<T> const& store,
 template<typename range_type,typename T>
 auto
 makeRef(DataRange<const T> const& store,
-        const range_type* prange)
+        range_type const* prange)
     -> TenRefc<stdx::decay_t<stdx::remove_pointer_t<range_type>>,T>
     {
     using R = stdx::decay_t<stdx::remove_pointer_t<range_type>>;
