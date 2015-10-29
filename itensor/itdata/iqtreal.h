@@ -192,6 +192,12 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& mp);
 
 void
+doTask(NCProd<IQIndex>& P,
+       IQTReal const& A,
+       IQTReal const& B,
+       ManageStore& m);
+
+void
 doTask(Conj, IQTReal const& d);
 
 bool inline
@@ -299,8 +305,8 @@ loopContractedBlocks(BlockSparseA const& A,
             BtoC[j] = ic;
             }
         }
-    for(int ia = 0; ia < rA; ++ia)
-    for(int ib = 0; ib < rB; ++ib)
+    for(decltype(rA) ia = 0; ia < rA; ++ia)
+    for(decltype(rB) ib = 0; ib < rB; ++ib)
         if(Ais[ia] == Bis[ib])
             {
             AtoB[ia] = ib;
@@ -335,8 +341,8 @@ loopContractedBlocks(BlockSparseA const& A,
             {
             //START_TIMER(33)
             //Check whether B contains non-zero block for this setting of couB
-            //TODO: check whether block is present by computing its QN flux,
-            //      could be faster than calling getBlock
+            //TODO: check whether block is present by storing all blocks
+            //      but most have null pointers to data
             auto bblock = getBlock(B,Bis,couB.i);
             if(!bblock) continue;
 
@@ -348,14 +354,11 @@ loopContractedBlocks(BlockSparseA const& A,
                 Bblockind[ib] = couB.i[ib];
                 }
 
-            START_TIMER(33)
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
-            STOP_TIMER(33)
 
             auto ablock = cData(A.data(),aio.offset,A.size());
             assert(ablock);
-            //STOP_TIMER(33)
 
             callback(ablock,Ablockind,
                      bblock,Bblockind,

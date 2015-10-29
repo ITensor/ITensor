@@ -158,16 +158,16 @@ combine(Storage  const& d,
 
 void
 doTask(Contract<Index>& C,
-       const ITReal& d,
-       const ITCombiner& cmb,
+       ITReal const& d,
+       ITCombiner const& cmb,
        ManageStore& m)
     {
     combine(d,C.Lis,C.Ris,C.Nis,m);
     }
 void
 doTask(Contract<Index>& C,
-       const ITCombiner& cmb,
-       const ITReal& d,
+       ITCombiner const& cmb,
+       ITReal const& d,
        ManageStore& m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);

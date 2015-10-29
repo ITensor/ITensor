@@ -254,6 +254,96 @@ doTask(Contract<IQIndex>& Con,
     }
 
 void
+doTask(NCProd<IQIndex>& P,
+       IQTReal const& A,
+       IQTReal const& B,
+       ManageStore& m)
+    {
+    auto& Ais = P.Lis;
+    auto& Bis = P.Ris;
+    auto& Cis = P.Nis;
+    auto rA = rank(Ais);
+    auto rB = rank(Bis);
+    Label Aind,
+          Bind,
+          Cind;
+    computeLabels(Ais,rA,Bis,rB,Aind,Bind);
+    ncprod(Ais,Aind,Bis,Bind,Cis,Cind);
+
+    Label BtoA(rA,-1);
+    for(auto ia : count(rA))
+    for(auto ib : count(rB))
+        if(Bis[ib] == Ais[ia])
+            {
+            BtoA[ib] = ia;
+            break;
+            }
+
+    auto Cdiv = QN{};
+        {
+        Cdiv = doTask(CalcDiv{Ais},A);
+        auto Ablock_ind = Label(rA);
+        computeBlockInd(A.offsets.front().block,Ais,Ablock_ind);
+        auto Bblock_ind = Label(rB);
+        for(auto& bo : B.offsets)
+            {
+            computeBlockInd(bo.block,Bis,Bblock_ind);
+            bool matchesA = true;
+            for(auto n : count(rB))
+                {
+                if(Bind[n] < 0 && Ablock_ind[BtoA[n]] != Bind[n])
+                    {
+                    matchesA = false;
+                    break;
+                    }
+                }
+            if(matchesA) break;
+            }
+        //Only account for unique indices of B
+        for(auto n : count(rB))
+            if(Bind[n] > 0) //unique
+                {
+                Cdiv += Bis[n].dir()*Bis[n].qn(1+Bblock_ind[n]);
+                }
+        }
+
+    //Allocate storage for C
+    auto& C = *m.makeNewData<IQTReal>(Cis,Cdiv);
+
+    auto do_ncprod = 
+        [&P,&Aind,&Bind,&Cind]
+        (cData ablock, Label const& Ablockind,
+         cData bblock, Label const& Bblockind,
+         Data  cblock, Label const& Cblockind)
+        {
+        Range Arange,
+              Brange,
+              Crange;
+        //Construct range objects for aref,bref,cref
+        //using IndexDim helper objects
+        Arange.init(make_indexdim(P.Lis,Ablockind));
+        Brange.init(make_indexdim(P.Ris,Bblockind));
+        Crange.init(make_indexdim(P.Nis,Cblockind));
+
+        //"Wire up" TensorRef's pointing to blocks of A,B, and C
+        //we are working with
+        auto aref = TensorRefc(ablock,&Arange),
+             bref = TensorRefc(bblock,&Brange);
+        auto cref = TensorRef(cblock,&Crange);
+
+        //Compute cref += aref*bref
+        ncprod(aref,Aind,bref,Bind,cref,Cind);
+        };
+
+    loopContractedBlocks(A,Ais,
+                         B,Bis,
+                         C,Cis,
+                         do_ncprod);
+
+    P.scalefac = computeScalefac(C);
+    }
+
+void
 doTask(Conj, IQTReal const& d) { }
 
 
