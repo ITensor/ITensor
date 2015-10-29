@@ -175,12 +175,12 @@ operator+=(Ten<Range,T> & A, TenRefc<R,T> const& B)
     transform(B,makeRef(A),[](T b, T& a){ a += b; });
     }
 
-template<typename R, typename T>
-void
-operator+=(Ten<R,T> & A, Ten<R,T> const& B)
-    {
-    transform(makeRef(B),makeRef(A),[](T b, T& a){ a += b; });
-    }
+//template<typename R, typename T>
+//void
+//operator+=(Ten<R,T> & A, Ten<R,T> const& B)
+//    {
+//    transform(makeRef(B),makeRef(A),[](T b, T& a){ a += b; });
+//    }
 
 template<typename R,typename T>
 auto inline Ten<R,T>::

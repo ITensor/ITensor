@@ -30,8 +30,26 @@ using TensorRefc = TenRefc<Range>;
 template<typename Ten_, typename range_type = Range>
 using ref_type = typename stdx::decay_t<Ten_>::template ref_type<range_type>;
 
+template<typename Ten_>
+using val_type = typename stdx::decay_t<Ten_>::value_type;
+
+template<typename TA, typename TB>
+using common_type = stdx::conditional_t<(std::is_same<val_type<TA>,Cplx>::value || std::is_same<val_type<TB>,Cplx>::value),
+                                        Cplx,
+                                        Real>;
+
+
+class TensorType { };
+
+template<typename Derived>
+struct isTensor
+    {
+    bool static constexpr value = std::is_base_of<TensorType,Derived>::value;
+    constexpr operator bool() const noexcept { return value; }
+    };
+
 template<typename range_type_,typename T>
-class TenRefc
+class TenRefc : public TensorType
     { 
     public:
     using range_type = stdx::remove_const_t<range_type_>;
@@ -263,9 +281,9 @@ template<typename R,typename T>
 void
 operator+=(Ten<Range,T> & a, TenRefc<R,T> const& b);
 
-template<typename R, typename T>
-void
-operator+=(Ten<R,T> & a, Ten<R,T> const& b);
+//template<typename R, typename T>
+//void
+//operator+=(Ten<R,T> & a, Ten<R,T> const& b);
 
 template<typename R1, typename R2, typename T, typename Op>
 void
@@ -426,7 +444,7 @@ makeRef(DataRange<const T> const& store,
     }
 
 template<typename range_type_, typename T>
-class Ten
+class Ten : public TensorType
     {
     public:
     using value_type = T;
@@ -737,6 +755,29 @@ template<typename R, typename V>
 void
 randomize(Ten<R,V> & t);
 
+template<typename R>
+Data
+realData(TenRef<R,Real> const& t) { return Data(t.data(),t.size()); }
+
+template<typename R>
+Datac
+realData(TenRefc<R,Real> const& t) { return Datac(t.data(),t.size()); }
+
+template<typename R>
+Data
+realData(TenRef<R,Cplx> const& t) { return Data(reinterpret_cast<Real*>(t.data()),2*t.size()); }
+
+template<typename R>
+Datac
+realData(TenRefc<R,Cplx> const& t) { return Datac(reinterpret_cast<const Real*>(t.data()),2*t.size()); }
+
+template<typename T, class = stdx::require<isTensor<T>> >
+bool inline constexpr
+isReal(T const& t) { return std::is_same<typename T::value_type,Real>::value; }
+
+template<typename T, class = stdx::require<isTensor<T>> >
+bool inline constexpr
+isCplx(T const& t) { return std::is_same<typename T::value_type,Cplx>::value; }
 
 template<typename R, typename V>
 std::ostream&

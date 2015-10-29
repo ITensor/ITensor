@@ -25,13 +25,13 @@ apply(Iter1 it1,
         }
     }
 
-template<typename Func, typename Iter>
+template<typename V, typename Func, typename Iter>
 void
-apply(MatrixRef const& v,
+apply(MatRef<V> const& M,
       Iter it,
       Func const& f)
     {
-    for(auto& el : v) 
+    for(auto& el : M) 
         {
         f(el,*it);
         ++it;
@@ -59,40 +59,64 @@ operator&=(MatrixRef const& a, MatrixRefc const& b)
         }
     }
 
+template<typename V>
 void 
-operator*=(MatrixRef const& A, Real fac)
+multReal(MatRef<V> const& M, Real fac)
     {
-    if(isContiguous(A))
+    if(isContiguous(M))
         {
 #ifdef DEBUG
-        if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        if(M.size() > std::numeric_limits<LAPACK_INT>::max()) 
             throw std::runtime_error("MatrixRef overflow of size beyond LAPACK_INT range");
 #endif
-        dscal_wrapper(A.size(),fac,A.data());
+        auto d = realData(M);
+        dscal_wrapper(d.size(),fac,d.data());
         }
     else
         {
-        for(auto& el : A) el *= fac;
+        for(auto& el : M) el *= fac;
         }
     }
 
 void 
-operator/=(MatrixRef const& A, Real fac)
+operator*=(MatrixRef const& M, Real fac)
     {
-    //if(fac == 0) throw std::runtime_error("MatrixRef /=: divide by zero");
-    //operator*=(A,1./fac);
-    if(isContiguous(A))
+    multReal(M,fac);
+    }
+void 
+operator*=(CMatrixRef const& M, Real fac)
+    {
+    multReal(M,fac);
+    }
+
+template<typename V>
+void 
+divReal(MatRef<V> const& M, Real fac)
+    {
+    if(isContiguous(M))
         {
-        auto ae = A.data()+A.size();
-        for(auto a = A.data(); a != ae; ++a)
+        auto d = realData(M);
+        auto mend = d.data()+d.size();
+        for(auto m = d.data(); m != mend; ++m)
             {
-            *a /= fac;
+            *m /= fac;
             }
         }
     else
         {
-        for(auto& el : A) el /= fac;
+        for(auto& el : M) el /= fac;
         }
+    }
+
+void 
+operator/=(MatrixRef const& M, Real fac)
+    {
+    divReal(M,fac);
+    }
+void 
+operator/=(CMatrixRef const& M, Real fac)
+    {
+    divReal(M,fac);
     }
 
 template<typename MatT1, typename MatT2>
@@ -101,18 +125,20 @@ call_daxpy(MatT1& A, MatT2 const& B, Real alpha_)
     {
     LAPACK_REAL alpha = alpha_;
     LAPACK_INT inc = 1;
-    LAPACK_INT size = A.size();
+    auto Ad = realData(A);
+    auto Bd = realData(B);
 #ifdef DEBUG
-    if(A.size() != B.size())
+    if(Ad.size() != Bd.size())
         throw std::runtime_error("mismatched sizes in MatrixRef/Matrix call_daxpy");
-    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+    if(Ad.size() > std::numeric_limits<LAPACK_INT>::max()) 
         throw std::runtime_error("overflow of size beyond LAPACK_INT range");
 #endif
-    daxpy_wrapper(size,alpha,B.data(),inc,A.data(),inc);
+    daxpy_wrapper(Ad.size(),alpha,Bd.data(),inc,Ad.data(),inc);
     }
 
+template<typename V>
 void
-operator+=(MatrixRef const& A, MatrixRefc const& B)
+add(MatRef<V> const& A, MatRefc<V> const& B)
     {
 #ifdef DEBUG
     if(!(ncols(A)==ncols(B) && nrows(A)==nrows(B))) 
@@ -124,13 +150,35 @@ operator+=(MatrixRef const& A, MatrixRefc const& B)
         }
     else
         {
-        auto pluseq = [](Real& x, Real y) { x += y; };
+        auto pluseq = [](V& x, V y) { x += y; };
         apply(A,B.cbegin(),pluseq);
         }
     }
-
 void
-operator-=(MatrixRef const& A, MatrixRefc const& B)
+operator+=(MatrixRef const& A, MatrixRefc const& B)
+    {
+    add(A,B);
+    }
+void
+operator+=(MatrixRef const& A, Matrix && B)
+    {
+    add(A,makeRef(B));
+    }
+void
+operator+=(CMatrixRef const& A, CMatrixRefc const& B)
+    {
+    add(A,B);
+    }
+void
+operator+=(CMatrixRef const& A, CMatrix && B)
+    {
+    add(A,makeRef(B));
+    }
+
+
+template<typename V>
+void
+subtract(MatRef<V> const& A, MatRefc<V> const& B)
     {
 #ifdef DEBUG
     if(!(ncols(A)==ncols(B) && nrows(A)==nrows(B))) 
@@ -142,9 +190,29 @@ operator-=(MatrixRef const& A, MatrixRefc const& B)
         }
     else
         {
-        auto minuseq = [](Real& x, Real y) { x -= y; };
+        auto minuseq = [](V& x, V y) { x -= y; };
         apply(A,B.cbegin(),minuseq);
         }
+    }
+void
+operator-=(MatrixRef const& A, MatrixRefc const& B)
+    {
+    subtract(A,B);
+    }
+void
+operator-=(MatrixRef const& A, Matrix && B)
+    {
+    subtract(A,makeRef(B));
+    }
+void
+operator-=(CMatrixRef const& A, CMatrixRefc const& B)
+    {
+    subtract(A,B);
+    }
+void
+operator-=(CMatrixRef const& A, CMatrix && B)
+    {
+    subtract(A,makeRef(B));
     }
 
 void
@@ -152,45 +220,51 @@ randomize(MatrixRef const& M)
     {
     for(auto& el : M) el = detail::quickran();
     }
-
 void
 randomize(Matrix & M)
     {
     for(auto& el : M) el = detail::quickran();
     }
+void
+randomize(CMatrixRef const& M)
+    {
+    for(auto& el : M) el = Cplx(detail::quickran(),detail::quickran());
+    }
+void
+randomize(CMatrix & M)
+    {
+    for(auto& el : M) el = Cplx(detail::quickran(),detail::quickran());
+    }
 
+
+template<typename V>
+void
+printMatrix(std::ostream& s, MatRefc<V> const& M)
+    {
+    for(auto r : count(nrows(M)))
+        {
+        s << "|";
+        for(auto c : count(ncols(M)))
+            {
+            s << detail::printVal(M(r,c));
+            s << (1+c == ncols(M) ? "|" : " ");
+            }
+        if(r < nrows(M)) s << "\n";
+        }
+    }
 
 template<>
 std::ostream&
 operator<<(std::ostream& s, MatrixRefc const& M)
     {
-    for(auto r : count(nrows(M)))
-        {
-        s << "|";
-        for(auto c : count(ncols(M)))
-            {
-            s << detail::printVal(M(r,c));
-            s << (1+c == ncols(M) ? "|" : " ");
-            }
-        if(r < nrows(M)) s << "\n";
-        }
+    printMatrix(s,M);
     return s;
     }
-
 template<>
 std::ostream&
 operator<<(std::ostream& s, CMatrixRefc const& M)
     {
-    for(auto r : count(nrows(M)))
-        {
-        s << "|";
-        for(auto c : count(ncols(M)))
-            {
-            s << detail::printVal(M(r,c));
-            s << (1+c == ncols(M) ? "|" : " ");
-            }
-        if(r < nrows(M)) s << "\n";
-        }
+    printMatrix(s,M);
     return s;
     }
 
@@ -261,24 +335,9 @@ mult(CMatrixRefc A,
     }
 
 void
-reduceCols(Matrix & M, size_t new_ncols)
-    {
-#ifdef DEBUG
-    if(new_ncols > ncols(M)) throw std::runtime_error("new ncols > old ncols in reduceCols");
-#endif
-    M.resize(MatRange(nrows(M),new_ncols));
-    }
-
-void
-resize(Matrix & M, size_t nrows, size_t ncols)
-    {
-    M.resize(MatRange(nrows,ncols));
-    }
-
-void
-call_dgemv(const MatrixRefc& M,
-           const VectorRefc& x, 
-           VectorRef& y,
+call_dgemv(MatrixRefc const& M,
+           VectorRefc const& x, 
+           VectorRef       & y,
            Real alpha,
            Real beta,
            bool fromleft)
@@ -344,147 +403,5 @@ multSub(MatrixRefc M,
     call_dgemv(M,x,y,-1,1,fromleft);
     }
 
-Matrix 
-operator*(MatrixRefc const& A, Real fac)
-    { 
-    Matrix res(A);
-    res *= fac; 
-    return res; 
-    }
-
-Matrix 
-operator*(Real fac, MatrixRefc const& A)
-    { 
-    Matrix res(A);
-    res *= fac; 
-    return res; 
-    }
-
-Matrix 
-operator*(Matrix && A, Real fac)
-    { 
-    Matrix res(std::move(A));
-    res *= fac; 
-    return res; 
-    }
-
-Matrix 
-operator*(Real fac, Matrix && A)
-    { 
-    Matrix res(std::move(A));
-    res *= fac; 
-    return res; 
-    }
-
-Matrix 
-operator/(MatrixRefc const& A, Real fac)
-    { 
-    Matrix res(A);
-    res /= fac; 
-    return res; 
-    }
-
-Matrix 
-operator/(Matrix && A, Real fac)
-    { 
-    Matrix res(std::move(A));
-    res /= fac; 
-    return res; 
-    }
-
-Matrix 
-operator+(MatrixRefc const& A, MatrixRefc const& B)
-    { 
-    Matrix res(A);
-    res += B; 
-    return res; 
-    }
-
-Matrix 
-operator+(MatrixRefc const& A, Matrix && B) 
-    { 
-    Matrix res(std::move(B)); 
-    res += A; 
-    return res; 
-    }
-
-Matrix 
-operator+(Matrix && A, MatrixRefc const& B) 
-    { 
-    Matrix res(std::move(A)); 
-    res += B; 
-    return res; 
-    }
-
-Matrix 
-operator+(Matrix && A, Matrix && B)
-    {
-    Matrix mA(std::move(A)); 
-    Matrix mB(std::move(B)); 
-    mA += mB; 
-    return mA; 
-    }
-
-Matrix 
-operator-(MatrixRefc const& A, MatrixRefc const& B)
-    { 
-    Matrix res(A);
-    res -= B; 
-    return res; 
-    }
-
-Matrix 
-operator-(MatrixRefc const& A, Matrix && B) 
-    { 
-    Matrix res(std::move(B)); 
-    res *= -1;
-    res += A; 
-    return res; 
-    }
-
-Matrix 
-operator-(Matrix && A, MatrixRefc const& B) 
-    { 
-    Matrix res(std::move(A)); 
-    res -= B; 
-    return res; 
-    }
-
-Matrix 
-operator-(Matrix && A, Matrix && B)
-    {
-    Matrix mA(std::move(A)); 
-    Matrix mB(std::move(B)); 
-    mA -= mB; 
-    return mA; 
-    }
-
-Matrix 
-matrixMult(MatrixRefc const& A,
-           MatrixRefc const& B)
-    {
-    Matrix C(nrows(A),ncols(B));
-    call_gemm(A,B,makeRef(C),1.,0.);
-    return C;
-    }
-
-Vector
-operator*(MatrixRefc const& A,
-          VectorRefc const& v)
-    {
-    Vector res(nrows(A));
-    mult(A,v,res);
-    return res;
-    }
-
-Vector
-operator*(VectorRefc const& v,
-          MatrixRefc const& A)
-    {
-    Vector res(ncols(A));
-    bool fromleft = true;
-    mult(A,v,res,fromleft);
-    return res;
-    }
 
 } //namespace itensor
