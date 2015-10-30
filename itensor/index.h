@@ -176,6 +176,11 @@ class Index
     id_type
     id() const { return id_; }
 
+    IndexVal
+    begin() const;
+
+    IndexVal
+    end() const;
 
     private:
 
@@ -241,11 +246,14 @@ class IndexVal
 
     };
 
-bool inline
-operator==(const Index& I, const IndexVal& iv)
-    {
-    return iv.operator==(I);
-    }
+IndexVal&
+operator++(IndexVal& iv);
+
+IndexVal&
+operator*(IndexVal& iv);
+
+bool
+operator==(Index const& I, IndexVal const& iv);
 
 Index inline
 dag(Index res) { res.dag(); return res; }
