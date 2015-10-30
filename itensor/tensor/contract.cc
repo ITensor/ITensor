@@ -724,20 +724,6 @@ contract(CProps const& p,
          Real alpha = 1.,
          Real beta = 0.)
     {
-    //println();
-    //println("------------------------------------------");
-    //
-    // Optimizations TODO
-    //
-    // o Allocate memory for newA, newB, and newC in a single 
-    //   allocation. Use a helper object (with std::array of
-    //   ptrs and sizes) to manage.
-    //   This will also make newA-C into MatrixRef's, avoiding
-    //   having to allocate any Ranges.
-    // 
-
-    //cpu_time cpu;
-
     MultAlloc<value_t,3> alloc;
     alloc.add(p.permuteA() ? area(p.newArange) : 0);
     alloc.add(p.permuteB() ? area(p.newBrange) : 0);
@@ -747,7 +733,6 @@ contract(CProps const& p,
     MatRefc<value_t> aref;
     if(p.permuteA())
         {
-        //println("Calling permute A");
         SCOPED_TIMER(12)
         auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
         tref &= permute(A,p.PA);
@@ -755,10 +740,8 @@ contract(CProps const& p,
         }
     else
         {
-        //println("A is matrix already, making aref");
         if(p.Atrans())
             {
-            //println("  Transposing aref");
             aref = transpose(makeMatRefc(A.store(),p.dmid,p.dleft));
             }
         else
@@ -770,7 +753,6 @@ contract(CProps const& p,
     MatRefc<value_t> bref;
     if(p.permuteB())
         {
-        //println("Calling permute B");
         SCOPED_TIMER(13)
         auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
         tref &= permute(B,p.PB);
@@ -778,10 +760,8 @@ contract(CProps const& p,
         }
     else
         {
-        //println("B is matrix already, making bref");
         if(p.Btrans())
             {
-            //println("  Transposing bref");
             bref = transpose(makeMatRefc(B.store(),p.dright,p.dmid));
             }
         else
@@ -789,17 +769,6 @@ contract(CProps const& p,
             bref = makeMatRefc(B.store(),p.dmid,p.dright);
             }
         }
-
-    //println("A and B permuted, took ",cpu.sincemark());
-
-#ifdef DEBUG
-    if(C.size() != nrows(aref)*ncols(bref))
-        {
-        println("C.size() = ",C.size());
-        printfln("ncols(aref)*nrows(bref) = %d*%d = %d",ncols(aref),nrows(bref),ncols(aref)*nrows(bref));
-        throw std::runtime_error("incorrect size of C in contract");
-        }
-#endif
 
     MatRef<value_t> cref;
     TenRef<Range,value_t> newC;
@@ -820,17 +789,9 @@ contract(CProps const& p,
             }
         }
 
-    //cpu.mark();
-    //printfln("Multiplying a %dx%d%s * %dx%d%s = %dx%d%s",
-    //         nrows(aref),ncols(aref),isTransposed(aref)?"(t)":"",
-    //         nrows(bref),ncols(bref),isTransposed(bref)?"(t)":"",
-    //         nrows(cref),ncols(cref),isTransposed(cref)?"(t)":"");
-
     START_TIMER(11)
-    call_gemm(aref,bref,cref,alpha,beta);
+    gemm(aref,bref,cref,alpha,beta);
     STOP_TIMER(11)
-
-    //println("Matrix multiply done, took ",cpu.sincemark());
 
     if(p.permuteC())
         {
@@ -840,8 +801,6 @@ contract(CProps const& p,
 #endif
         C &= permute(newC,p.PC);
         }
-    //println("------------------------------------------");
-    //println();
     }
 
 template<typename R, typename T>
@@ -996,8 +955,6 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
         contract(A,ai,B,bi,C,ci);
         return;
         }
-    //println();
-    //println("Loop start--------------------------------");
     CProps p(ai,bi,ci);
     p.computeNactive();
     //printfln("nactive A, B, C are %d %d %d",p.nactiveA,p.nactiveB,p.nactiveC);
@@ -1015,19 +972,6 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     long ra = ai.size(),
          rb = bi.size(),
          rc = ci.size();
-
-    //vector<long> cdims(rc);
-    //for(int i = 0; i < ra; ++i)
-    //    if(p.AtoC[i] >= 0)
-    //        {
-    //        cdims[p.AtoC[i]] = A.extent(i);
-    //        }
-    //for(int j = 0; j < rb; ++j)
-    //    if(p.BtoC[j] >= 0)
-    //        {
-    //        cdims[p.BtoC[j]] = B.extent(j);
-    //        }
-    //C = Ten(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
@@ -1104,19 +1048,15 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
 
             if(nfo.Bfirst)
                 {
-                //mult_add(sB,sA,sC);
                 cabq.addtask(sB,sA,sC,offC+1);
                 }
             else
                 {
-                //mult_add(sA,sB,sC);
                 cabq.addtask(sA,sB,sC,offC+1);
                 }
             }
         }
     cabq.run(nthread);
-    //println("Loop end----------------------------------");
-    //println();
     }
 template
 void 

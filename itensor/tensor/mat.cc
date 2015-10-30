@@ -271,11 +271,11 @@ operator<<(std::ostream& s, CMatrixRefc const& M)
 // C = alpha*A*B + beta*C
 template<typename V>
 void
-call_gemm(MatRefc<V> A, 
-          MatRefc<V> B, 
-          MatRef<V>  C,
-          Real alpha,
-          Real beta)
+gemm(MatRefc<V> A, 
+     MatRefc<V> B, 
+     MatRef<V>  C,
+     Real alpha,
+     Real beta)
     {
 #ifdef DEBUG
     if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
@@ -315,7 +315,7 @@ mult(MatrixRefc A,
      MatrixRefc B, 
      MatrixRef  C)
     {
-    call_gemm(A,B,C,1.,0.);
+    gemm(A,B,C,1.,0.);
     }
 
 void
@@ -323,7 +323,7 @@ multAdd(MatrixRefc A,
         MatrixRefc B, 
         MatrixRef  C)
     {
-    call_gemm(A,B,C,1.,1.);
+    gemm(A,B,C,1.,1.);
     }
 
 void
@@ -331,7 +331,7 @@ mult(CMatrixRefc A,
      CMatrixRefc B,
      CMatrixRef  C)
     {
-    call_gemm(A,B,C,1.,0.);
+    gemm(A,B,C,1.,0.);
     }
 
 void

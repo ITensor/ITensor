@@ -89,13 +89,14 @@ operator&=(MatrixRef const& A, MatrixRefc const& B);
 void inline
 operator&=(MatrixRef const& A, Matrix const& B) { A &= makeRefc(B); }
 
+// C = beta*C + alpha*A*B
 template<typename V>
 void
-call_gemm(MatRefc<V> A, 
-          MatRefc<V> B, 
-          MatRef<V>  C,
-          Real alpha,
-          Real beta);
+gemm(MatRefc<V> A, 
+     MatRefc<V> B, 
+     MatRef<V>  C,
+     Real alpha,
+     Real beta);
 
 void
 mult(MatrixRefc A,
@@ -178,10 +179,12 @@ template<typename MatA,typename MatB,class>
 auto
 operator-(MatA && A, MatB && B) -> Mat<common_type<MatA,MatB>>;
 
-template<typename V>
-Mat<V> 
-mult(MatRefc<V> const& A,
-     MatRefc<V> const& B);
+template<typename MatA,
+         typename MatB,
+         class = stdx::require<hasMatRange<MatA>,hasMatRange<MatB>> >
+Mat<common_type<MatA,MatB>> 
+mult(MatA const& A,
+     MatB const& B);
 
 Vector
 operator*(MatrixRefc const& A,
