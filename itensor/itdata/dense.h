@@ -87,19 +87,14 @@ class Dense
     
     const_iterator
     cbegin() const { return store.cbegin(); }
-
     const_iterator
     cend() const { return store.cend(); }
-
     const_iterator
     begin() const { return store.begin(); }
-
     const_iterator
     end() const { return store.end(); }
-
     iterator
     begin() { return store.begin(); }
-
     iterator
     end() { return store.end(); }
     };
@@ -262,13 +257,13 @@ doTask(Write& W, DenseCplx const& d);
 //       Dense<T1> const& a1,
 //       Dense<T2> const& a2,
 //       ManageStore& m);
-//
-//template<typename T1, typename T2>
-//void
-//doTask(PlusEQ<Index> const& P,
-//       Dense<T1> const& a1,
-//       Dense<T2> const& a2,
-//       ManageStore & m);
+
+template<typename T1, typename T2>
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<T1> const& D1,
+       Dense<T2> const& D2,
+       ManageStore & m);
 
 template<typename T>
 bool constexpr

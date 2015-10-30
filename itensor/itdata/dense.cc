@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/itdata/itreal.h"
+#include "itensor/itdata/dense.h"
 #include "itensor/itdata/itdata.h"
 //#include "itensor/itdata/itcplx.h"
 #include "itensor/itdata/itlazy.h"
@@ -329,27 +329,83 @@ doTask(Write& W, DenseCplx const& d)
 //
 //    if(rsize > 1) P.scalefac = computeScalefac(*nd);
 //    }
-//
-//void
-//doTask(PlusEQ<Index> const& P,
-//       Dense & a1,
-//       Dense const& a2)
-//    {
-//#ifdef DEBUG
-//    if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
-//#endif
-//    if(isTrivial(P.perm()))
-//        {
-//        daxpy_wrapper(a1.size(),P.fac(),a2.data(),1,a1.data(),1);
-//        }
-//    else
-//        {
-//        auto ref1 = makeTenRef(a1.data(),a1.size(),&P.is1());
-//        auto ref2 = makeTenRef(a2.data(),a2.size(),&P.is2());
-//        auto f = P.fac();
-//        auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
-//        transform(permute(ref2,P.perm()),ref1,add);
-//        }
-//    }
+
+struct Adder
+    {
+    const Real f = 1.;
+    Adder(Real f_) : f(f_) { }
+    void operator()(Real v2, Real& v1) { v1 += f*v2; }
+    void operator()(Real v2, Cplx& v1) { v1 += f*v2; }
+    void operator()(Cplx v2, Cplx& v1) { v1 += f*v2; }
+    void operator()(Cplx v2, Real& v1) { }
+    };
+
+template<typename T1, typename T2>
+void
+add(PlusEQ<Index> const& P,
+    Dense<T1>          & D1,
+    Dense<T2>     const& D2)
+    {
+#ifdef DEBUG
+    if(D1.size() != D2.size()) Error("Mismatched sizes in plusEq");
+#endif
+    if(isTrivial(P.perm()) && std::is_same<T1,T2>::value)
+        {
+        auto d1 = realData(D1);
+        auto d2 = realData(D2);
+        daxpy_wrapper(d1.size(),P.fac(),d2.data(),1,d1.data(),1);
+        }
+    else
+        {
+        auto ref1 = makeTenRef(D1.data(),D1.size(),&P.is1());
+        auto ref2 = makeTenRef(D2.data(),D2.size(),&P.is2());
+        transform(permute(ref2,P.perm()),ref1,Adder{P.fac()});
+        }
+    }
+
+template<typename T1, typename T2>
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<T1> const& D1,
+       Dense<T2> const& D2,
+       ManageStore & m)
+    {
+    if(std::is_same<T1,Real>::value && std::is_same<T2,Cplx>::value)
+        {
+        auto *ncD1 = m.makeNewData<DenseCplx>(D1.begin(),D1.end());
+        add(P,*ncD1,D2);
+        }
+    else
+        {
+        auto *ncD1 = m.modifyData(D1);
+        add(P,*ncD1,D2);
+        }
+    }
+template
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<Real> const& D1,
+       Dense<Real> const& D2,
+       ManageStore & m);
+template
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<Real> const& D1,
+       Dense<Cplx> const& D2,
+       ManageStore & m);
+template
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<Cplx> const& D1,
+       Dense<Real> const& D2,
+       ManageStore & m);
+template
+void
+doTask(PlusEQ<Index> const& P,
+       Dense<Cplx> const& D1,
+       Dense<Cplx> const& D2,
+       ManageStore & m);
+
+    
 
 } // namespace itensor
