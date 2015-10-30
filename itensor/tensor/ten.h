@@ -30,18 +30,6 @@ using CTensor     = Ten<Range,Cplx>;
 using CTensorRef  = TenRef<Range,Cplx>;
 using CTensorRefc = TenRefc<Range,Cplx>;
 
-template<typename Ten_, typename range_type = Range>
-using ref_type = typename stdx::decay_t<Ten_>::template ref_type<range_type>;
-
-template<typename Ten_>
-using val_type = typename stdx::decay_t<Ten_>::value_type;
-
-template<typename TA, typename TB>
-using common_type = stdx::conditional_t<(std::is_same<val_type<TA>,Cplx>::value || std::is_same<val_type<TB>,Cplx>::value),
-                                        Cplx,
-                                        Real>;
-
-
 class TensorType { };
 
 template<typename Derived>
@@ -50,6 +38,24 @@ struct isTensor
     bool static constexpr value = std::is_base_of<TensorType,Derived>::value;
     constexpr operator bool() const noexcept { return value; }
     };
+
+template<typename Ten_, typename range_type = Range>
+using ref_type = typename stdx::decay_t<Ten_>::template ref_type<range_type>;
+
+
+template<typename T, bool istensor = isTensor<T>{} >
+struct ValTypeHelper { using type = typename stdx::decay_t<T>::value_type; };
+template<typename T>
+struct ValTypeHelper<T,false> { using type = T; };
+template<typename T>
+using val_type = typename ValTypeHelper<T>::type;
+
+template<typename TA, typename TB>
+using common_type = stdx::conditional_t<(std::is_same<val_type<TA>,Cplx>::value || std::is_same<val_type<TB>,Cplx>::value),
+                                        Cplx,
+                                        Real>;
+
+
 
 template<typename range_type_,typename value_type_>
 class TenRefc : public TensorType
@@ -292,10 +298,12 @@ operator+=(Ten<Range,T> & a, TenRefc<R,T> const& b);
 //void
 //operator+=(Ten<R,T> & a, Ten<R,T> const& b);
 
-template<typename R1, typename R2, typename T, typename Op>
+template<typename R1, typename T1, 
+         typename R2, typename T2, 
+         typename Op>
 void
-transform(TenRefc<R1,T>  const& from, 
-          TenRef<R2,T> const& to,
+transform(TenRefc<R1,T1> const& from, 
+          TenRef<R2,T2>  const& to,
           Op&& op);
 
 template<typename V, typename range_type>

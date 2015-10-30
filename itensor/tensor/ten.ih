@@ -69,10 +69,11 @@ pointTo(tensor_type const& t)
     range_ = range_type{};
     }
 
-template<typename R1, typename R2, typename T>
+template<typename R1, typename T1, 
+         typename R2, typename T2>
 void
-checkCompatible(TenRefc<R1,T> const& A, 
-                TenRefc<R2,T> const& B,
+checkCompatible(TenRefc<R1,T1> const& A, 
+                TenRefc<R2,T2> const& B,
                 std::string methodName = "")
     {
     auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
@@ -85,10 +86,12 @@ checkCompatible(TenRefc<R1,T> const& A,
             }
     }
 
-template<typename R1, typename R2, typename T, typename Op>
+template<typename R1, typename T1, 
+         typename R2, typename T2, 
+         typename Op>
 void
-transform(TenRefc<R1,T> const& from, 
-          TenRef<R2,T> const& to,
+transform(TenRefc<R1,T1> const& from, 
+          TenRef<R2,T2>  const& to,
           Op&& op)
     {
 #ifdef DEBUG
@@ -98,7 +101,7 @@ transform(TenRefc<R1,T> const& from,
     auto r = to.r();
     if(r == 0)
         {
-        *to.data() = *from.data();
+        op(*(from.data()),*(to.data()));
         return;
         }
 

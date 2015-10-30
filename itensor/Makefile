@@ -15,7 +15,7 @@ SOURCES+= tensor/vec.cc
 SOURCES+= tensor/mat.cc 
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
-SOURCES+= itdata/itreal.cc 
+SOURCES+= itdata/dense.cc 
 #SOURCES+= itdata/itcplx.cc 
 SOURCES+= itdata/itcombiner.cc 
 #SOURCES+= itdata/itdiag.cc 
@@ -94,9 +94,9 @@ GDEPHEADERS+= tensor/permutation.h tensor/slicerange.h tensor/sliceten.h \
 tensor/contract.h itdata/task_types.h indexset.ih indexset.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
-ITDEPHEADERS= itdata/itreal.h
-itdata/itreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/itreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS= itdata/dense.h
+itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/itcplx.h
 itdata/itcplx.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/itcplx.o: $(ITDEPHEADERS) $(GDEPHEADERS)
@@ -122,7 +122,7 @@ ITDEPHEADERS+= indexset.ih indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= itensor_interface.h itensor_interface.ih \
-itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
+itensor.ih itensor.h itdata/itdata.h itdata/dense.h itdata/itdiag.h itdata/itcplx.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= qn.h iqindex.h

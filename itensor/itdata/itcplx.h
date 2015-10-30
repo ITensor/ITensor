@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITCPLX_H
 #define __ITENSOR_ITCPLX_H
 
-#include "itensor/itdata/itreal.h"
+#include "itensor/itdata/dense.h"
 
 namespace itensor {
 

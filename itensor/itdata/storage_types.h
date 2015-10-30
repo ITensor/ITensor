@@ -58,7 +58,7 @@ ITCombiner
 
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/itreal.h"
+#include "itensor/itdata/dense.h"
 //#include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itcombiner.h"
 //#include "itensor/itdata/iqtreal.h"
