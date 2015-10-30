@@ -222,11 +222,11 @@ struct CProps
         }
     public:
 
-    template<typename RangeT>
+    template<typename R, typename V>
     void
-    compute(TenRefc<RangeT> A,
-            TenRefc<RangeT> B,
-            TenRefc<RangeT> C)
+    compute(TenRefc<R,V> A,
+            TenRefc<R,V> B,
+            TenRefc<R,V> C)
         {
         // Optimizations TODO
         //
@@ -715,13 +715,12 @@ class CABqueue
     };
 
 
-
-template<typename RangeT>
+template<typename range_t, typename value_t>
 void 
 contract(CProps const& p,
-         TenRefc<RangeT> A, 
-         TenRefc<RangeT> B, 
-         TenRef<RangeT>  C,
+         TenRefc<range_t,value_t> A,
+         TenRefc<range_t,value_t> B,
+         TenRef<range_t,value_t>  C,
          Real alpha = 1.,
          Real beta = 0.)
     {
@@ -739,13 +738,13 @@ contract(CProps const& p,
 
     //cpu_time cpu;
 
-    MultAlloc<Real,3> alloc;
+    MultAlloc<value_t,3> alloc;
     alloc.add(p.permuteA() ? area(p.newArange) : 0);
     alloc.add(p.permuteB() ? area(p.newBrange) : 0);
     alloc.add(p.permuteC() ? area(p.newCrange) : 0);
     alloc.allocate();
 
-    MatrixRefc aref;
+    MatRefc<value_t> aref;
     if(p.permuteA())
         {
         //println("Calling permute A");
@@ -768,7 +767,7 @@ contract(CProps const& p,
             }
         }
 
-    MatrixRefc bref;
+    MatRefc<value_t> bref;
     if(p.permuteB())
         {
         //println("Calling permute B");
@@ -802,8 +801,8 @@ contract(CProps const& p,
         }
 #endif
 
-    MatrixRef cref;
-    TensorRef newC;
+    MatRef<value_t> cref;
+    TenRef<Range,value_t> newC;
     if(p.permuteC())
         {
         newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
@@ -845,27 +844,27 @@ contract(CProps const& p,
     //println();
     }
 
-template<typename RangeT>
+template<typename R, typename T>
 void 
-contractScalar(Real a, 
-               TenRefc<RangeT> B, Label const& bi, 
-               TenRef<RangeT>  C, Label const& ci,
+contractScalar(T a, 
+               TenRefc<R,T> B, Label const& bi, 
+               TenRef<R,T>  C, Label const& ci,
                Real alpha,
                Real beta)
     {
     auto fac = alpha*a;
     auto PB = permute(B,calcPerm(bi,ci));
     if(beta == 0)
-        transform(PB,C,[fac](Real b, Real& c){ c = fac*b; });
+        transform(PB,C,[fac](T b, T& c){ c = fac*b; });
     else
-        transform(PB,C,[fac,beta](Real b, Real& c){ c = fac*b+beta*c; });
+        transform(PB,C,[fac,beta](T b, T& c){ c = fac*b+beta*c; });
     }
 
-template<typename RangeT>
+template<typename range_t, typename value_t>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci,
+contract(TenRefc<range_t,value_t> A, Label const& ai, 
+         TenRefc<range_t,value_t> B, Label const& bi, 
+         TenRef<range_t,value_t>  C, Label const& ci,
          Real alpha,
          Real beta)
     {
@@ -887,15 +886,27 @@ contract(TenRefc<RangeT> A, Label const& ai,
 
 //Explicit template instantiations:
 template void 
-contract(TenRefc<Range>, Label const&, 
-         TenRefc<Range>, Label const&, 
-         TenRef<Range>,  Label const&,
+contract(TenRefc<Range,Real>, Label const&, 
+         TenRefc<Range,Real>, Label const&, 
+         TenRef<Range,Real>,  Label const&,
          Real alpha,
          Real beta);
 template void 
-contract(TenRefc<IndexSet>, Label const&, 
-         TenRefc<IndexSet>, Label const&, 
-         TenRef<IndexSet>,  Label const&,
+contract(TenRefc<IndexSet,Real>, Label const&, 
+         TenRefc<IndexSet,Real>, Label const&, 
+         TenRef<IndexSet,Real>,  Label const&,
+         Real alpha,
+         Real beta);
+template void 
+contract(TenRefc<Range,Cplx>, Label const&, 
+         TenRefc<Range,Cplx>, Label const&, 
+         TenRef<Range,Cplx>,  Label const&,
+         Real alpha,
+         Real beta);
+template void 
+contract(TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRef<IndexSet,Cplx>,  Label const&,
          Real alpha,
          Real beta);
 

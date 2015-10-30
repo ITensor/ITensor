@@ -11,11 +11,11 @@
 
 namespace itensor {
 
-template<typename RangeT>
+template<typename range_t, typename value_t>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci,
+contract(TenRefc<range_t,value_t> A, Label const& ai, 
+         TenRefc<range_t,value_t> B, Label const& bi, 
+         TenRef<range_t,value_t>  C, Label const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 
@@ -115,10 +115,11 @@ find_index(InfArray<T,MaxSize> const& v,
 /// Implementations
 ///
 
-void inline
-contract(Tensor const& A, Label const& ai, 
-         Tensor const& B, Label const& bi, 
-         Tensor      & C, Label const& ci,
+template<typename value_t>
+void
+contract(Ten<Range,value_t> const& A, Label const& ai, 
+         Ten<Range,value_t> const& B, Label const& bi, 
+         Ten<Range,value_t>      & C, Label const& ci,
          Real alpha,
          Real beta)
     {
