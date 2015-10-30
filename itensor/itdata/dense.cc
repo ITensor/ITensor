@@ -4,7 +4,6 @@
 //
 #include "itensor/itdata/dense.h"
 #include "itensor/itdata/itdata.h"
-//#include "itensor/itdata/itcplx.h"
 #include "itensor/itdata/itlazy.h"
 #include "itensor/indexset.h"
 #include "itensor/util/count.h"
@@ -334,9 +333,8 @@ struct Adder
     {
     const Real f = 1.;
     Adder(Real f_) : f(f_) { }
-    void operator()(Real v2, Real& v1) { v1 += f*v2; }
-    void operator()(Real v2, Cplx& v1) { v1 += f*v2; }
-    void operator()(Cplx v2, Cplx& v1) { v1 += f*v2; }
+    template<typename T1, typename T2>
+    void operator()(T2 v2, T1& v1) { v1 += f*v2; }
     void operator()(Cplx v2, Real& v1) { }
     };
 
@@ -370,7 +368,7 @@ doTask(PlusEQ<Index> const& P,
        Dense<T2> const& D2,
        ManageStore & m)
     {
-    if(std::is_same<T1,Real>::value && std::is_same<T2,Cplx>::value)
+    if(isReal(D1) && isCplx(D2))
         {
         auto *ncD1 = m.makeNewData<DenseCplx>(D1.begin(),D1.end());
         add(P,*ncD1,D2);

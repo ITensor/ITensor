@@ -21,6 +21,8 @@ using DenseCplx = Dense<Cplx>;
 template<typename T>
 class Dense
     {
+    static_assert(not std::is_const<T>::value,
+                  "Template argument to Dense storage should not be const");
     public:
     using value_type = T;
     using storage_type = std::vector<value_type>;
@@ -107,11 +109,11 @@ realData(DenseReal const& d) { return Datac(d.data(),d.size()); }
 
 template<typename T>
 bool inline constexpr
-isReal(Dense<T> const& t) { return std::is_same<typename T::value_type,Real>::value; }
+isReal(Dense<T> const& t) { return std::is_same<T,Real>::value; }
 
 template<typename T>
 bool inline constexpr
-isCplx(Dense<T> const& t) { return std::is_same<typename T::value_type,Cplx>::value; }
+isCplx(Dense<T> const& t) { return std::is_same<T,Cplx>::value; }
 
 Data inline
 realData(DenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
@@ -216,7 +218,7 @@ void
 doTask(Conj,DenseReal const& d);
 
 void
-doTask(Conj,DenseCplx const& d);
+doTask(Conj,DenseCplx & d);
 
 void
 doTask(TakeReal, DenseReal const& );
@@ -229,6 +231,10 @@ doTask(TakeImag, DenseReal & d);
 
 void
 doTask(TakeImag, DenseCplx & d);
+
+template<typename T>
+bool constexpr
+doTask(CheckComplex, Dense<T> const& d) { return isCplx(d); }
 
 template<typename T>
 void
@@ -265,9 +271,6 @@ doTask(PlusEQ<Index> const& P,
        Dense<T2> const& D2,
        ManageStore & m);
 
-template<typename T>
-bool constexpr
-doTask(CheckComplex, Dense<T> const& d) { return isCplx(d); }
 
 } //namespace itensor
 
