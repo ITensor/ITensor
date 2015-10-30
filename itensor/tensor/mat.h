@@ -245,52 +245,58 @@ operator<<(std::ostream& s, Ten<MatRange,V> const& M) { return s << makeRefc(M);
 // makeMatRef functions
 //
 
-auto inline
-makeMatRef(Real* p,
+template<typename T>
+auto
+makeMatRef(T* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
-    -> MatrixRef
+    -> MatRef<T>
     {
-    return MatrixRef({p,max_offset},MatRange{nrows,ncols});
+    return MatRef<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(const Real* p,
+template<typename T>
+auto
+makeMatRef(T const* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
+    return MatRefc<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRefc(const Real* p,
+template<typename T>
+auto
+makeMatRefc(T const* p,
             size_t max_offset,
             size_t nrows,
             size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
+    return MatRefc<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(Data const& D,
+template<typename T, 
+         class = stdx::enable_if_t<not std::is_const<T>::value> >
+auto
+makeMatRef(DataRange<T> const& D,
            size_t nrows,
            size_t ncols)
-    -> MatrixRef
+    -> MatRef<T>
     {
-    return MatrixRef(D,MatRange{nrows,ncols});
+    return MatRef<T>(D,MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(Datac const& D,
+template<typename T>
+auto
+makeMatRef(DataRange<const T> const& D,
            size_t nrows,
            size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc(D,MatRange{nrows,ncols});
+    return MatRefc<T>(D,MatRange{nrows,ncols});
     }
 
 template<typename T>
@@ -298,9 +304,9 @@ auto
 makeMatRefc(DataRange<T> const& D,
             size_t nrows,
             size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<stdx::remove_const_t<T>>
     {
-    return MatrixRefc(DataRange<const T>(D),MatRange{nrows,ncols});
+    return MatRefc<stdx::remove_const_t<T>>(DataRange<const T>{D},MatRange{nrows,ncols});
     }
 
 } //namespace itensor

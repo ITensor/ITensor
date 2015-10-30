@@ -51,18 +51,20 @@ struct isTensor
     constexpr operator bool() const noexcept { return value; }
     };
 
-template<typename range_type_,typename T>
+template<typename range_type_,typename value_type_>
 class TenRefc : public TensorType
     { 
+    static_assert(not std::is_const<value_type_>::value,
+                  "value type template argument of TenRefc should not be const");
     public:
     using range_type = stdx::remove_const_t<range_type_>;
-    using value_type = T;
+    using value_type = value_type_;
     using iterator = TenIter<const value_type*,range_type>;
     using const_iterator = iterator;
     using pointer = const value_type*;
     using reference = const value_type&;
     using size_type = size_t;
-    using tensor_type = Ten<range_type,T>;
+    using tensor_type = Ten<range_type,value_type>;
     using storage_type = DataRange<const value_type>;
     template<typename R_>
     using ref_type = TenRefc<R_,value_type>;
@@ -175,11 +177,13 @@ class TenRefc : public TensorType
     pointTo(tensor_type const& t);
     };
 
-template<typename range_type_, typename T>
-class TenRef : public TenRefc<range_type_,T>
+template<typename range_type_, typename value_type_>
+class TenRef : public TenRefc<range_type_,value_type_>
     { 
+    static_assert(not std::is_const<value_type_>::value,
+                  "value type template argument of TenRef should not be const");
     public:
-    using parent = TenRefc<range_type_,T>;
+    using parent = TenRefc<range_type_,value_type_>;
     using range_type = typename parent::range_type;
     using value_type = typename parent::value_type;
     using iterator = TenIter<value_type*,range_type>;
@@ -199,12 +203,12 @@ class TenRef : public TenRefc<range_type_,T>
     TenRef() { }
 
     TenRef(storage_type dat,
-            range_type const& range)
+           range_type const& range)
       : parent(dat,range)
         { }
 
     TenRef(storage_type dat,
-            range_type && range)
+           range_type && range)
       : parent(dat,std::move(range))
         { }
 
@@ -446,11 +450,11 @@ makeRef(DataRange<const T> const& store,
     return TenRefc<R,T>(store,std::move(range));
     }
 
-template<typename range_type_, typename T>
+template<typename range_type_, typename value_type_>
 class Ten : public TensorType
     {
     public:
-    using value_type = T;
+    using value_type = value_type_;
     using storage_type = std::vector<value_type>;
     using ref_storage_type = DataRange<value_type>;
     using const_ref_storage_type = DataRange<const value_type>;
@@ -466,7 +470,9 @@ class Ten : public TensorType
     template<typename R_>
     using const_ref_type = TenRefc<R_,value_type>;
     using size_type = typename ref_type<range_type>::size_type;
-    public:
+    private:
+    static_assert(not std::is_const<value_type>::value,
+                  "value type template argument of Ten should not be const");
     range_type range_;
     storage_type data_;
     public:
