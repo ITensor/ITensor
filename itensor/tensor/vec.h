@@ -37,8 +37,14 @@ stride(Vector const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 VectorRef
 operator*=(VectorRef v, Real fac);
 
+CVectorRef
+operator*=(CVectorRef v, Real fac);
+
 VectorRef
 operator/=(VectorRef v, Real fac);
+
+CVectorRef
+operator/=(CVectorRef v, Real fac);
 
 VectorRef
 operator+=(VectorRef a, VectorRefc b);
@@ -46,9 +52,12 @@ operator+=(VectorRef a, VectorRefc b);
 VectorRef
 operator-=(VectorRef a, VectorRefc b);
 
-//Copy data referenced by b to memory referenced by a
-VectorRef
-operator&=(VectorRef a, VectorRefc b);
+//Copy data referenced by b to data referenced by a
+void
+operator&=(VectorRef a, VectorRefc const& b);
+
+void
+operator&=(CVectorRef a, CVectorRefc const& b);
 
 //Dot product
 Real
@@ -156,6 +165,9 @@ randomize(VectorRef v);
 Vector
 randomVec(long size);
 
+CVector
+randomCVec(long size);
+
 Real
 sumels(VectorRefc v);
 
@@ -194,53 +206,59 @@ operator<<(std::ostream& s, Vector const& v) { return operator<<(s,makeRefc(v));
 // makeVecRef functions
 //
 
-auto inline
-makeVecRef(Real* p,
+template<typename T>
+auto
+makeVecRef(T * p,
            size_t size)
-    -> VectorRef
+    -> VecRef<T>
     {
-    return VectorRef({p,size},VecRange(size));
+    return VecRef<T>({p,size},VecRange(size));
     }
 
-auto inline
-makeVecRef(const Real* p,
+template<typename T>
+auto
+makeVecRef(T const* p,
            size_t size)
-    -> VectorRefc
+    -> VecRefc<T>
     {
-    return VectorRefc({p,size},VecRange(size));
+    return VecRefc<T>({p,size},VecRange(size));
     }
 
-auto inline
-makeVecRefc(const Real* p,
+template<typename T>
+auto
+makeVecRefc(T const* p,
             size_t size)
-    -> VectorRefc
+    -> VecRefc<T>
     {
     return makeVecRef(p,size);
     }
 
-auto inline
-makeVecRef(Real* p,
+template<typename T>
+auto
+makeVecRef(T* p,
            size_t size,
            size_t stride)
-    -> VectorRef
+    -> VecRef<T>
     {
-    return VectorRef({p,size*stride},VecRange(size,stride));
+    return VecRef<T>({p,size*stride},VecRange(size,stride));
     }
 
-auto inline
-makeVecRef(const Real* p,
+template<typename T>
+auto
+makeVecRef(T const* p,
            size_t size,
            size_t stride)
-    -> VectorRefc
+    -> VecRefc<T>
     {
-    return VectorRefc({p,size*stride},VecRange(size,stride));
+    return VecRefc<T>({p,size*stride},VecRange(size,stride));
     }
 
-auto inline
-makeVecRefc(const Real* p,
+template<typename T>
+auto
+makeVecRefc(T const* p,
             size_t size,
             size_t stride)
-    -> VectorRefc
+    -> VecRefc<T>
     {
     return makeVecRef(p,size);
     }

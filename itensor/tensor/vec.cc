@@ -18,9 +18,9 @@ namespace itensor {
 //
 //
 
-template<typename Func, typename Iter>
+template<typename T, typename Func, typename Iter>
 void
-apply(VectorRef& v,
+apply(VecRef<T> const& v,
       Iter it,
       Func const& f)
     {
@@ -31,53 +31,94 @@ apply(VectorRef& v,
         }
     }
 
-VectorRef
-operator&=(VectorRef a, VectorRefc b)
+template<typename T>
+void
+refAssign(VecRef<T> const& a, VecRefc<T> const& b)
     {
 #ifdef DEBUG
     if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VectorRef operator&=");
 #endif
-    auto assign = [](Real& x, Real y) { x = y; };
+    auto assign = [](T& x, T y) { x = y; };
     if(isContiguous(b)) apply(a,b.data(),assign);
     else                apply(a,b.cbegin(),assign);
-    return a;
     }
 
-VectorRef 
-operator*=(VectorRef a, Real fac)
+void
+operator&=(VectorRef a, VectorRefc const& b)
     {
-    if(isContiguous(a))
+    refAssign(a,b);
+    }
+void
+operator&=(CVectorRef a, CVectorRefc const& b)
+    {
+    refAssign(a,b);
+    }
+
+template<typename V>
+void 
+multReal(VecRef<V> const& v, Real fac)
+    {
+    if(isContiguous(v))
         {
 #ifdef DEBUG
-        if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        if(v.size() > std::numeric_limits<LAPACK_INT>::max()) 
             throw std::runtime_error("VectorRef overflow of size beyond LAPACK_INT range");
 #endif
-        dscal_wrapper(a.size(),fac,a.data());
+        auto d = realData(v);
+        dscal_wrapper(d.size(),fac,d.data());
         }
     else
         {
-        for(auto& el : a) el *= fac;
+        for(auto& el : v) el *= fac;
         }
-    return a;
     }
 
-VectorRef 
-operator/=(VectorRef a, Real fac)
+VectorRef
+operator*=(VectorRef v, Real fac)
+    {
+    multReal(v,fac);
+    return v;
+    }
+
+CVectorRef
+operator*=(CVectorRef v, Real fac)
+    {
+    multReal(v,fac);
+    return v;
+    }
+
+template<typename T>
+void
+divReal(VecRef<T> V, Real fac)
     {
     if(fac == 0) throw std::runtime_error("VectorRef /=: divide by zero");
-    if(isContiguous(a))
+    if(isContiguous(V))
         {
-        auto ae = a.data()+a.size();
-        for(auto i = a.data(); i != ae; ++i)
+        auto d = realData(V);
+        auto vend = d.data()+d.size();
+        for(auto i = d.data(); i != vend; ++i)
             {
             *i /= fac;
             }
         }
     else
         {
-        for(auto& el : a) el /= fac;
+        for(auto& el : V) el /= fac;
         }
-    return a;
+    }
+
+VectorRef
+operator/=(VectorRef v, Real fac)
+    {
+    divReal(v,fac);
+    return v;
+    }
+
+CVectorRef
+operator/=(CVectorRef v, Real fac)
+    {
+    divReal(v,fac);
+    return v;
     }
 
 void
@@ -163,6 +204,12 @@ randomize(VectorRef v)
     for(auto& el : v) el = detail::quickran();
     }
 
+void
+randomize(CVectorRef v)
+    {
+    for(auto& el : v) el = Cplx(detail::quickran(),detail::quickran());
+    }
+
 //
 //
 //  \       /   /----   /-----
@@ -178,6 +225,14 @@ Vector
 randomVec(long size)
     {
     Vector v(size);
+    randomize(v);
+    return v;
+    }
+
+CVector
+randomCVec(long size)
+    {
+    CVector v(size);
     randomize(v);
     return v;
     }
