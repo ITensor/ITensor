@@ -11,194 +11,76 @@ namespace itensor {
 
 namespace detail {
 
-template<typename F,typename Ret>
-struct ApplyFunc
-    { 
-    using function_type = F;
-    F& f;
-    Ret r;
-    ApplyFunc(F&& f_) : f(f_) { }
-    template<typename S>
-    void
-    operator()(S& s) 
-        { 
-        r = f(s); 
-        }
-    operator Ret() const { return std::move(r); }
+template<typename FuncObj>
+struct FuncHolder
+    {
+    FuncObj& f;
+    FuncHolder(FuncObj&& f_) : f(f_) { }
     };
 
-template<typename F>
-struct ApplyFunc<F,void>
-    { 
-    using function_type = F;
-    F& f;
-    ApplyFunc(F&& f_) : f(f_) { }
-    template<typename S>
-    void
-    operator()(S& s) { f(s); }
-    };
-
-template<typename F, typename R, typename Storage>
+template<typename F, typename Storage>
 void
-applyFunc_impl(stdx::choice<3>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
+applyFunc_impl(stdx::choice<5>, FuncHolder<F>& H, Storage const& s, ManageStore& m)
     {
     throw ITError("applyFunc: function object has no operator() method for storage type");
     }
-
-template<typename F, typename R, typename Storage>
+template<typename F, typename Storage>
 auto
-applyFunc_impl(stdx::choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
-    -> decltype(A.f(s), void())
+applyFunc_impl(stdx::choice<4>, FuncHolder<F>& H, Storage const& s, ManageStore& m)
+    -> stdx::enable_if_t<not std::is_void<decltype(H.f(*m.modifyData(s)))>::value,decltype((H.f(*m.modifyData(s))))>
     {
-    Storage& ncs = m.modifyData();
-    A(ncs);
+    auto *ncs = m.modifyData(s);
+    H.f(*ncs);
     }
-
-template<typename F, typename R, typename Storage>
+template<typename F, typename Storage>
 auto
-applyFunc_impl(stdx::choice<1>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
-    -> decltype(A.f(s), void())
+applyFunc_impl(stdx::choice<3>, FuncHolder<F>& H, Storage const& s, ManageStore& m)
+    -> stdx::enable_if_t<std::is_void<decltype(H.f(*m.modifyData(s)))>::value,void>
     {
-    A(s);
+    auto *ncs = m.modifyData(s);
+    H.f(*ncs);
+    }
+template<typename F, typename Storage>
+auto
+applyFunc_impl(stdx::choice<2>, FuncHolder<F>& H, Storage const& s, ManageStore& m) 
+    -> stdx::enable_if_t<not std::is_void<decltype(H.f(s))>::value,decltype(H.f(s))>
+    {
+    return H.f(s);
+    }
+template<typename F, typename Storage>
+auto
+applyFunc_impl(stdx::choice<1>, FuncHolder<F>& H, Storage const& s, ManageStore& m) 
+    -> stdx::enable_if_t<std::is_void<decltype(H.f(s))>::value,void>
+    {
+    H.f(s);
     }
 
 } //namespace detail
 
-template<typename F, typename R, typename Storage>
-void
-doTask(detail::ApplyFunc<F,R> & A, Storage const& s, ManageStore & m) 
+
+template<typename FuncObj, typename Storage>
+auto
+doTask(detail::FuncHolder<FuncObj> & H, Storage const& s, ManageStore & m) 
+    -> decltype(detail::applyFunc_impl(stdx::select_overload{},H,s,m))
     { 
-    detail::applyFunc_impl(stdx::select_overload{},A,s,m);
+    return detail::applyFunc_impl(stdx::select_overload{},H,s,m);
     }
 
+template<typename F>
+auto
+applyFunc(F&& f, PData & store)
+    -> decltype(doTask(detail::FuncHolder<F>{std::forward<F>(f)},store))
+    {
+    return doTask(detail::FuncHolder<F>{std::forward<F>(f)},store);
+    }
 
-//template<typename F>
-//F
-//applyFunc(F&& f, PData & store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-//
-//template<typename F>
-//F
-//applyFunc(F&& f, CPData const& store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-
-//template<typename F>
-//auto
-//applyFunc(F&& f, PData & store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-//
-//template<typename F>
-//auto
-//applyFunc(F&& f, CPData const& store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-
-
-//template<typename F>
-//F
-//applyFunc(F&& f, PData & store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-//
-//template<typename F>
-//F
-//applyFunc(F&& f, CPData const& store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-
-//template<typename F>
-//auto
-//applyFunc(F&& f, PData & store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-//
-//template<typename F>
-//auto
-//applyFunc(F&& f, CPData const& store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-//template<typename F>
-//F
-//applyFunc(F&& f, PData & store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-//
-//template<typename F>
-//F
-//applyFunc(F&& f, CPData const& store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-
-//template<typename F>
-//auto
-//applyFunc(F&& f, PData & store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-//
-//template<typename F>
-//auto
-//applyFunc(F&& f, CPData const& store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-
-//template<typename F>
-//F
-//applyFunc(F&& f, PData & store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-//
-//template<typename F>
-//F
-//applyFunc(F&& f, CPData const& store)
-//    {
-//    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-//    return f;
-//    }
-
-//template<typename F>
-//auto
-//applyFunc(F&& f, PData & store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
-//
-//template<typename F>
-//auto
-//applyFunc(F&& f, CPData const& store)
-//    -> decltype(doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store))
-//    {
-//    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-//    }
+template<typename F>
+auto
+applyFunc(F&& f, CPData const& store)
+    -> decltype(doTask(detail::FuncHolder<F>{std::forward<F>(f)},store))
+    {
+    return doTask(detail::FuncHolder<F>{std::forward<F>(f)},store);
+    }
 
 } //namespace itensor
 
