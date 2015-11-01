@@ -625,12 +625,12 @@ template<typename Task>
 auto
 doTask(Task&& t,
        CPData arg)
-    -> typename detail::RegisterTask<detail::OneArg<CPData>,decltype(t),TaskReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    using Ret = TaskReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&(arg.p));
     detail::RegisterTask<detail::OneArg<CPData>,decltype(t),Ret> r{std::forward<Task>(t),std::move(m)};
     arg->plugInto(r);
@@ -641,12 +641,12 @@ template<typename Task>
 auto
 doTask(Task&& t,
        PData& arg)
-    -> typename detail::RegisterTask<detail::OneArg<PData>,decltype(t),TaskReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<PData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    using Ret = TaskReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&arg);
     detail::RegisterTask<detail::OneArg<PData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
@@ -658,13 +658,13 @@ auto
 doTask(Task&& t,
        CPData arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),TaskReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    using Ret = TaskReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&(arg1.p),&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
@@ -676,13 +676,13 @@ auto
 doTask(Task&& t,
        PData& arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),TaskReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    using Ret = TaskReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&arg1,&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);

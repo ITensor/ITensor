@@ -85,7 +85,7 @@ struct GetRType<Task,TypeList<>>
 } //namespace detail
 
 template<typename Task, typename TList>
-using TaskReturnType = typename detail::GetRType<stdx::remove_reference_t<Task>,TList>::RType;
+using DoTaskReturn = typename detail::GetRType<stdx::remove_reference_t<Task>,TList>::RType;
 
 } //namespace itensor
 
