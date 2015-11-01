@@ -195,10 +195,10 @@ void
 doTask(Fill<Real> const& f, DenseCplx const& d, ManageStore & m);
 
 void
-doTask(Fill<Cplx> const& f, DenseReal & d);
+doTask(Fill<Cplx> const& f, DenseReal const& D, ManageStore & m);
 
 void
-doTask(Fill<Cplx> const& f, DenseCplx const& d, ManageStore & m);
+doTask(Fill<Cplx> const& f, DenseCplx & D);
 
 template<typename T>
 void
