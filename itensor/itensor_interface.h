@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITENSOR_INTERFACE_H
 #define __ITENSOR_ITENSOR_INTERFACE_H
 #include "itensor/detail/algs.h"
-#include "itensor/itdata/dotask.h"
+#include "itensor/itdata/applyfunc.h"
 #include "itensor/indexset.h"
 #define REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/storage_types.h"
