@@ -90,7 +90,7 @@ template<typename IndexT>
 ITensorT<IndexT>
 randomTensor(const IndexSetT<IndexT>& inds)
     {
-    return randomize(ITensorT<IndexT>{inds});
+    return random(ITensorT<IndexT>{inds});
     }
 
 
