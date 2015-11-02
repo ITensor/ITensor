@@ -11,11 +11,12 @@
 
 namespace itensor {
 
-template<typename range_t, typename value_t>
+template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<range_t,value_t> A, Label const& ai, 
-         TenRefc<range_t,value_t> B, Label const& bi, 
-         TenRef<range_t,value_t>  C, Label const& ci,
+contract(TenRefc<RangeT,VA> A, Label const& ai, 
+         TenRefc<RangeT,VB> B, Label const& bi, 
+         TenRef<RangeT,common_type<VA,VB>>  C, 
+         Label const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 

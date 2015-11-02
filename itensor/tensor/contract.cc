@@ -222,11 +222,11 @@ struct CProps
         }
     public:
 
-    template<typename R, typename V>
+    template<typename R, typename V1, typename V2>
     void
-    compute(TenRefc<R,V> A,
-            TenRefc<R,V> B,
-            TenRefc<R,V> C)
+    compute(TenRefc<R,V1> A,
+            TenRefc<R,V2> B,
+            TenRefc<R,common_type<V1,V2>> C)
         {
         // Optimizations TODO
         //
@@ -715,26 +715,34 @@ class CABqueue
     };
 
 
-template<typename range_t, typename value_t>
+template<typename range_t, typename VA, typename VB>
 void 
 contract(CProps const& p,
-         TenRefc<range_t,value_t> A,
-         TenRefc<range_t,value_t> B,
-         TenRef<range_t,value_t>  C,
+         TenRefc<range_t,VA> A,
+         TenRefc<range_t,VB> B,
+         TenRef<range_t,common_type<VA,VB>>  C,
          Real alpha = 1.,
          Real beta = 0.)
     {
-    MultAlloc<value_t,3> alloc;
-    alloc.add(p.permuteA() ? area(p.newArange) : 0);
-    alloc.add(p.permuteB() ? area(p.newBrange) : 0);
-    alloc.add(p.permuteC() ? area(p.newCrange) : 0);
-    alloc.allocate();
+    using VC = common_type<VA,VB>;
+    auto Asize = p.permuteA() ? area(p.newArange) : 0ul;
+    auto Bsize = p.permuteB() ? area(p.newBrange) : 0ul;
+    auto Csize = p.permuteC() ? area(p.newCrange) : 0ul;
+    auto Abufsize = isCplx(A) ? 2ul*Asize : Asize;
+    auto Bbufsize = isCplx(B) ? 2ul*Bsize : Bsize;
+    auto Cbufsize = isCplx(C) ? 2ul*Csize : Csize;
 
-    MatRefc<value_t> aref;
+    auto d = std::vector<Real>(Abufsize+Bbufsize+Cbufsize);
+    auto ab = MAKE_SAFE_PTR(d.data(),d.size());
+    auto bb = ab+Abufsize;
+    auto cb = bb+Bbufsize;
+
+    MatRefc<VA> aref;
     if(p.permuteA())
         {
         SCOPED_TIMER(12)
-        auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
+        auto aptr = SAFE_REINTERPRET(VA,ab);
+        auto tref = makeTenRef(SAFE_PTR_GET(aptr,Asize),Asize,&p.newArange);
         tref &= permute(A,p.PA);
         aref = transpose(makeMatRefc(tref.store(),p.dmid,p.dleft));
         }
@@ -750,11 +758,12 @@ contract(CProps const& p,
             }
         }
 
-    MatRefc<value_t> bref;
+    MatRefc<VB> bref;
     if(p.permuteB())
         {
         SCOPED_TIMER(13)
-        auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
+        auto bptr = SAFE_REINTERPRET(VB,bb);
+        auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bsize),Bsize,&p.newBrange);
         tref &= permute(B,p.PB);
         bref = makeMatRefc(tref.store(),p.dmid,p.dright);
         }
@@ -770,11 +779,12 @@ contract(CProps const& p,
             }
         }
 
-    MatRef<value_t> cref;
-    TenRef<Range,value_t> newC;
+    MatRef<VC> cref;
+    TenRef<Range,VC> newC;
     if(p.permuteC())
         {
-        newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
+        auto cptr = SAFE_REINTERPRET(VC,cb);
+        newC = makeTenRef(SAFE_PTR_GET(cptr,Csize),Csize,&p.newCrange);
         cref = makeMatRef(newC.store(),nrows(aref),ncols(bref));
         }
     else
@@ -803,27 +813,29 @@ contract(CProps const& p,
         }
     }
 
-template<typename R, typename T>
+template<typename R, typename T1, typename T2>
 void 
-contractScalar(T a, 
-               TenRefc<R,T> B, Label const& bi, 
-               TenRef<R,T>  C, Label const& ci,
+contractScalar(T1 a, 
+               TenRefc<R,T2> B, Label const& bi, 
+               TenRef<R,common_type<T1,T2>>  C, Label const& ci,
                Real alpha,
                Real beta)
     {
+    using T3 = common_type<T1,T2>;
     auto fac = alpha*a;
     auto PB = permute(B,calcPerm(bi,ci));
     if(beta == 0)
-        transform(PB,C,[fac](T b, T& c){ c = fac*b; });
+        transform(PB,C,[fac](T2 b, T3& c){ c = fac*b; });
     else
-        transform(PB,C,[fac,beta](T b, T& c){ c = fac*b+beta*c; });
+        transform(PB,C,[fac,beta](T2 b, T3& c){ c = fac*b+beta*c; });
     }
 
-template<typename range_t, typename value_t>
+template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<range_t,value_t> A, Label const& ai, 
-         TenRefc<range_t,value_t> B, Label const& bi, 
-         TenRef<range_t,value_t>  C, Label const& ci,
+contract(TenRefc<RangeT,VA> A, Label const& ai, 
+         TenRefc<RangeT,VB> B, Label const& bi, 
+         TenRef<RangeT,common_type<VA,VB>>  C, 
+         Label const& ci,
          Real alpha,
          Real beta)
     {
@@ -847,27 +859,43 @@ contract(TenRefc<range_t,value_t> A, Label const& ai,
 template void 
 contract(TenRefc<Range,Real>, Label const&, 
          TenRefc<Range,Real>, Label const&, 
-         TenRef<Range,Real>,  Label const&,
-         Real alpha,
-         Real beta);
+         TenRef<Range,Real> , Label const&,
+         Real,Real);
 template void 
-contract(TenRefc<IndexSet,Real>, Label const&, 
-         TenRefc<IndexSet,Real>, Label const&, 
-         TenRef<IndexSet,Real>,  Label const&,
-         Real alpha,
-         Real beta);
+contract(TenRefc<Range,Cplx>, Label const&, 
+         TenRefc<Range,Real>, Label const&, 
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<Range,Real>, Label const&, 
+         TenRefc<Range,Cplx>, Label const&, 
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
 template void 
 contract(TenRefc<Range,Cplx>, Label const&, 
          TenRefc<Range,Cplx>, Label const&, 
-         TenRef<Range,Cplx>,  Label const&,
-         Real alpha,
-         Real beta);
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Real>, Label const&, 
+         TenRefc<IndexSet,Real>, Label const&, 
+         TenRef<IndexSet,Real> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRefc<IndexSet,Real>, Label const&, 
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Real>, Label const&, 
+         TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
 template void 
 contract(TenRefc<IndexSet,Cplx>, Label const&, 
          TenRefc<IndexSet,Cplx>, Label const&, 
-         TenRef<IndexSet,Cplx>,  Label const&,
-         Real alpha,
-         Real beta);
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
 
 
 struct MultInfo
@@ -878,7 +906,7 @@ struct MultInfo
     MultInfo() {} 
     };
 
-MultInfo
+MultInfo static
 computeMultInfo(Label const& ai,
                 Label const& bi, 
                 Label const& ci)
