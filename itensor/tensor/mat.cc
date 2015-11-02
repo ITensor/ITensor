@@ -268,47 +268,68 @@ operator<<(std::ostream& s, CMatrixRefc const& M)
     return s;
     }
 
-// C = alpha*A*B + beta*C
-template<typename V>
-void
-gemm(MatRefc<V> A, 
-     MatRefc<V> B, 
-     MatRef<V>  C,
-     Real alpha,
-     Real beta)
-    {
-#ifdef DEBUG
-    if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
-        throw std::runtime_error("multiplication of non-contiguous MatrixRefs not currently supported");
-#endif
-    if(isTransposed(C))
-        {
-        //Do C = Bt*At instead of Ct=A*B
-        //Recall that C.data() points to elements of C, not C.t()
-        //regardless of whether C.transpose()==true or false
-        std::swap(A,B);
-        A = transpose(A);
-        B = transpose(B);
-        C = transpose(C);
-        }
 
-#ifdef DEBUG
-    if(ncols(A) != nrows(B))
-        throw std::runtime_error("matrices A, B incompatible");
-    if(nrows(A) != nrows(C) || ncols(B) != ncols(C))
-        {
-        printfln("A is %dx%d",nrows(A),ncols(A));
-        printfln("B is %dx%d",nrows(B),ncols(B));
-        printfln("C is %dx%d",nrows(C),ncols(C));
-        throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
-        }
-#endif
-    START_TIMER(33)
-    gemm_wrapper(isTransposed(A),isTransposed(B),
-                 nrows(A),ncols(B),ncols(A),
-                 alpha,A.data(),B.data(),beta,C.data());
-    STOP_TIMER(33)
-    }
+//#ifdef METHOD2
+//    if(not (alpha == Cplx(1.,0.) && beta == Cplx(0.,0.)))
+//        {
+//        throw std::runtime_error("alpha,beta must be 1,0");
+//        }
+//
+//    auto aCsize = m*k;
+//    auto bCsize = k*n;
+//    auto cCsize = m*n;
+//    //WARNING: logically const, not thread safe!
+//    auto Ad = reinterpret_cast<Real*>(const_cast<Cplx*>(A));
+//    auto Bd = reinterpret_cast<Real*>(const_cast<Cplx*>(B));
+//    auto Cd = reinterpret_cast<Real*>(C);
+//    auto arb = Ad;
+//    auto aib = Ad+aCsize;
+//    auto brb = Bd;
+//    auto bib = Bd+bCsize;
+//    auto crb = Cd;
+//    auto cib = Cd+cCsize;
+//        //print("re(A):");
+//        //for(auto i = arb; i != aib; ++i)
+//        //    {
+//        //    print(" ",*i);
+//        //    }
+//        //println();
+//        //print("im(A):");
+//        //for(auto i = aib; i != aib+aCsize; ++i)
+//        //    {
+//        //    print(" ",*i);
+//        //    }
+//        //println();
+//    toCplx(Ad,aCsize,false);
+//    toCplx(Bd,bCsize,false);
+//
+//    //print("re(A):");
+//    //for(auto i = arb; i != aib; ++i)
+//    //    {
+//    //    print(" ",*i);
+//    //    }
+//    //println();
+//    //print("im(A):");
+//    //for(auto i = aib; i != aib+aCsize; ++i)
+//    //    {
+//    //    print(" ",*i);
+//    //    }
+//    //println();
+//
+//    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,brb,ldb,0.,crb,m);
+//    cblas_dgemm(CblasColMajor,at,bt,m,n,k,-1,aib,lda,bib,ldb,1.,crb,m);
+//    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,bib,ldb,0.,cib,m);
+//    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,aib,lda,brb,ldb,1.,cib,m);
+//    toCplx(Ad,aCsize,true);
+//    toCplx(Bd,bCsize,true);
+//    toCplx(Cd,cCsize,true);
+//#endif //METHOD2
+
+
+
+
+
+
 
 void
 mult(MatrixRefc A, 

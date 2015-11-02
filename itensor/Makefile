@@ -13,6 +13,7 @@ SOURCES+= util/cputime.cc
 SOURCES+= tensor/lapack_wrap.cc 
 SOURCES+= tensor/vec.cc 
 SOURCES+= tensor/mat.cc 
+SOURCES+= tensor/gemm.cc 
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
 SOURCES+= itdata/dense.cc 

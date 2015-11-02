@@ -27,12 +27,6 @@ using CMatrix = Mat<Cplx>;
 template<typename M>
 using hasMatRange = std::is_same<MatRange,typename stdx::decay_t<M>::range_type>;
 
-//template<typename M>
-//using requireMatrix = stdx::enable_if_t<isMatrix<M>::value>;
-//
-//template<typename M>
-//using requireMatrixRvalue = stdx::enable_if_t<isMatrix<M>::value && std::is_rvalue_reference<M>::value>;
-
 template<typename Mat_>
 auto
 nrows(Mat_ const& M) -> MatRange::size_type { return M.range().rn; }
@@ -90,11 +84,11 @@ void inline
 operator&=(MatrixRef const& A, Matrix const& B) { A &= makeRefc(B); }
 
 // C = beta*C + alpha*A*B
-template<typename V>
+template<typename VA, typename VB>
 void
-gemm(MatRefc<V> A, 
-     MatRefc<V> B, 
-     MatRef<V>  C,
+gemm(MatRefc<VA> A, 
+     MatRefc<VB> B, 
+     MatRef<common_type<VA,VB>>  C,
      Real alpha,
      Real beta);
 
