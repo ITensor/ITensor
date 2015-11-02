@@ -64,8 +64,8 @@ doTask(CheckComplex, ITCombiner const& d);
 void
 doTask(PrintIT<Index>& P, ITCombiner const& d);
 
-void
-doTask(Write& W, ITCombiner const& d);
+auto inline
+doTask(StorageType const& S, ITCombiner const& d) ->StorageType::Type { return StorageType::ITCombiner; }
 
 QN 
 doTask(CalcDiv const& C, ITCombiner const& d);

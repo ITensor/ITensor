@@ -208,12 +208,6 @@ doTask(PrintIT<IQIndex>& P, ITCombiner const& d)
     P.s << "ITCombiner";
     }
 
-void
-doTask(Write& W, const ITCombiner& d) 
-    { 
-    W.writeType(StorageType::ITCombiner,d); 
-    }
-
 QN 
 doTask(CalcDiv const& C, 
        ITCombiner const& d)

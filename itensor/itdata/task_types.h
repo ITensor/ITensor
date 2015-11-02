@@ -287,19 +287,46 @@ struct NCProd
         { }
     };
 
-enum class 
-StorageType
-    { 
-    Null=0, 
-    DenseReal=1, 
-    DenseCplx=2, 
-    ITCombiner=3, 
-    ITDiagReal=4, 
-    ITDiagCplx=5,
-    IQTReal=6,
-    IQTCombiner=7,
-    IQTDiag=8
-    }; 
+struct StorageType
+    {
+    enum Type
+        { 
+        Null=0, 
+        DenseReal=1, 
+        DenseCplx=2, 
+        ITCombiner=3, 
+        DiagReal=4, 
+        DiagCplx=5,
+        IQTReal=6,
+        IQTCombiner=7,
+        IQTDiag=8
+        }; 
+    //const char*
+    //name(Type t)
+    //    {
+    //    switch(t)
+    //        {
+    //        case DenseReal: return "DenseReal";
+    //        case DenseCplx: return "DenseCplx";
+    //        case ITCombiner: return "ICombiner";
+    //        case DiagReal: return "DiagReal";
+    //        case DiagCplx: return "DiagCplx";
+    //        case IQTReal: return "IQTReal";
+    //        case IQTReal: return "IQTReal";
+    //        case IQTCombiner: return "IQTCombiner";
+    //        case IQTDiag: return "IQTDiag";
+    //        default: return "Null";
+    //        }
+    //    }
+    //auto operator()(Dense<Real> const&) ->Type { return DenseReal_; }
+    //auto operator()(Dense<Cplx> const&) ->Type { return DenseCplx_; }
+    //auto operator()(ITCombiner  const&) ->Type { return ITCombiner_; }
+    //auto operator()(Diag<Real>  const&) ->Type { return DiagReal_; }
+    //auto operator()(Diag<Cplx>  const&) ->Type { return DiagCplx_; }
+    //auto operator()(IQTReal     const&) ->Type { return IQTReal_; }
+    //auto operator()(IQTCombiner const&) ->Type { return IQTCombiner_; }
+    //auto operator()(IQTDiag     const&) ->Type { return IQTDiag_; }
+    };
 
 class Write
     {
@@ -310,12 +337,19 @@ class Write
 
     template<class T>
     void
-    writeType(StorageType type, const T& data)
+    writeType(T const& data)
         {
-        write(s,type);
+        write(s,doTask(StorageType{},data));
         write(s,data); 
         }
     };
+
+template<typename T>
+void
+doTask(Write & W, T const& D)
+    {
+    W.writeType(D);
+    }
 
 
 namespace detail {

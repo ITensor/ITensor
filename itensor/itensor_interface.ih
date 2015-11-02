@@ -823,8 +823,8 @@ read(std::istream& s, ITensorT<I>& T)
     else if(type==StorageType::DenseReal) { p = readType<DenseReal>(s); }
     else if(type==StorageType::DenseCplx) { p = readType<DenseCplx>(s); }
     else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
-    else if(type==StorageType::ITDiagReal) { p = readType<ITDiag<Real>>(s); }
-    else if(type==StorageType::ITDiagCplx) { p = readType<ITDiag<Cplx>>(s); }
+    else if(type==StorageType::DiagReal) { p = readType<Diag<Real>>(s); }
+    else if(type==StorageType::DiagCplx) { p = readType<Diag<Cplx>>(s); }
     else if(type==StorageType::IQTReal) { p = readType<IQTReal>(s); }
     else
         {

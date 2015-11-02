@@ -232,18 +232,6 @@ template
 Cplx
 doTask(SumEls<Index>, DenseCplx const& d);
 
-void
-doTask(Write& W, DenseReal const& d)
-    { 
-    W.writeType(StorageType::DenseReal,d); 
-    }
-
-void
-doTask(Write& W, DenseCplx const& d)
-    { 
-    W.writeType(StorageType::DenseCplx,d); 
-    }
-
 template<typename T1,typename T2>
 void
 doTask(Contract<Index> & C,
