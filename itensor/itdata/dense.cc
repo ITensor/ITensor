@@ -307,28 +307,33 @@ template void doTask(Contract<Index>&,DenseCplx const&,DenseReal const&,ManageSt
 template void doTask(Contract<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
 template void doTask(Contract<Index>&,DenseCplx const&,DenseCplx const&,ManageStore&);
 
-//void
-//doTask(NCProd<Index>& P,
-//       Dense const& d1,
-//       Dense const& d2,
-//       ManageStore& m)
-//    {
-//    Label Lind,
-//          Rind,
-//          Nind;
-//    computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);
-//    ncprod(P.Lis,Lind,P.Ris,Rind,P.Nis,Nind);
-//
-//    auto t1 = makeTenRef(d1.data(),d1.size(),&P.Lis),
-//         t2 = makeTenRef(d2.data(),d2.size(),&P.Ris);
-//    auto rsize = area(P.Nis);
-//    auto nd = m.makeNewData<Dense>(rsize);
-//    auto tr = makeTenRef(nd->data(),nd->size(),&(P.Nis));
-//
-//    ncprod(t1,Lind,t2,Rind,tr,Nind);
-//
-//    if(rsize > 1) P.scalefac = computeScalefac(*nd);
-//    }
+template<typename VL, typename VR>
+void
+doTask(NCProd<Index>& P,
+       Dense<VL> const& L,
+       Dense<VR> const& R,
+       ManageStore& m)
+    {
+    Label Lind,
+          Rind,
+          Nind;
+    computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);
+    ncprod(P.Lis,Lind,P.Ris,Rind,P.Nis,Nind);
+
+    auto tL = makeTenRef(L.data(),L.size(),&P.Lis);
+    auto tR = makeTenRef(R.data(),R.size(),&P.Ris);
+    auto rsize = area(P.Nis);
+    auto nd = m.makeNewData<Dense<common_type<VL,VR>>>(rsize);
+    auto tN = makeTenRef(nd->data(),nd->size(),&(P.Nis));
+
+    ncprod(tL,Lind,tR,Rind,tN,Nind);
+
+    if(rsize > 1) P.scalefac = computeScalefac(*nd);
+    }
+template void doTask(NCProd<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
+template void doTask(NCProd<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
+template void doTask(NCProd<Index>&,DenseCplx const&,DenseReal const&,ManageStore&);
+template void doTask(NCProd<Index>&,DenseCplx const&,DenseCplx const&,ManageStore&);
 
 struct Adder
     {

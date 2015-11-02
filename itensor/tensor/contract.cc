@@ -1174,11 +1174,11 @@ class PtrInd
     };
 
 //Non-contracting product
-template<typename R>
+template<typename R, typename VA, typename VB>
 void 
-ncprod(TenRefc<R> A, Label const& ai, 
-       TenRefc<R> B, Label const& bi, 
-       TenRef<R>  C, Label const& ci)
+ncprod(TenRefc<R,VA> A, Label const& ai, 
+       TenRefc<R,VB> B, Label const& bi, 
+       TenRef<R,common_type<VA,VB>>  C, Label const& ci)
     {
     auto rA = rank(A),
          rB = rank(B),
@@ -1220,14 +1220,37 @@ ncprod(TenRefc<R> A, Label const& ai,
         pc[cb.offset()] = pa[offset(A,aind)] * pb[offset(B,bind)];
         }
     }
-
 template void 
-ncprod(TenRefc<Range> A, Label const& ai, 
-       TenRefc<Range> B, Label const& bi, 
-       TenRef<Range>  C, Label const& ci);
+ncprod(TenRefc<Range,Real> A, Label const& ai, 
+       TenRefc<Range,Real> B, Label const& bi, 
+       TenRef<Range,Real>  C, Label const& ci);
 template void 
-ncprod(TenRefc<IndexSet> A, Label const& ai, 
-       TenRefc<IndexSet> B, Label const& bi, 
-       TenRef<IndexSet>  C, Label const& ci);
+ncprod(TenRefc<Range,Real> A, Label const& ai, 
+       TenRefc<Range,Cplx> B, Label const& bi, 
+       TenRef<Range,Cplx>  C, Label const& ci);
+template void 
+ncprod(TenRefc<Range,Cplx> A, Label const& ai, 
+       TenRefc<Range,Real> B, Label const& bi, 
+       TenRef<Range,Cplx>  C, Label const& ci);
+template void 
+ncprod(TenRefc<Range,Cplx> A, Label const& ai, 
+       TenRefc<Range,Cplx> B, Label const& bi, 
+       TenRef<Range,Cplx>  C, Label const& ci);
+template void 
+ncprod(TenRefc<IndexSet,Real> A, Label const& ai, 
+       TenRefc<IndexSet,Real> B, Label const& bi, 
+       TenRef<IndexSet,Real>  C, Label const& ci);
+template void 
+ncprod(TenRefc<IndexSet,Real> A, Label const& ai, 
+       TenRefc<IndexSet,Cplx> B, Label const& bi, 
+       TenRef<IndexSet,Cplx>  C, Label const& ci);
+template void 
+ncprod(TenRefc<IndexSet,Cplx> A, Label const& ai, 
+       TenRefc<IndexSet,Real> B, Label const& bi, 
+       TenRef<IndexSet,Cplx>  C, Label const& ci);
+template void 
+ncprod(TenRefc<IndexSet,Cplx> A, Label const& ai, 
+       TenRefc<IndexSet,Cplx> B, Label const& bi, 
+       TenRef<IndexSet,Cplx>  C, Label const& ci);
 
 } //namespace itensor

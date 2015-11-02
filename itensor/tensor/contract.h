@@ -58,11 +58,11 @@ contractDiagPartial(DiagElsA const& A,  Label const& ai,
                     TenRef<RangeT>  C, Label const& ci);
 
 //Non-contracting product
-template<typename R>
+template<typename R, typename VA, typename VB>
 void 
-ncprod(TenRefc<R> A, Label const& ai, 
-       TenRefc<R> B, Label const& bi, 
-       TenRef<R>  C, Label const& ci);
+ncprod(TenRefc<R,VA> A, Label const& ai, 
+       TenRefc<R,VB> B, Label const& bi, 
+       TenRef<R,common_type<VA,VB>>  C, Label const& ci);
 
 template<typename Inds, typename Func>
 long

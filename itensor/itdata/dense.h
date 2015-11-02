@@ -257,12 +257,12 @@ doTask(Contract<Index> & C,
        Dense<T2> const& R,
        ManageStore & m);
 
-//template<typename T1, typename T2>
-//void
-//doTask(NCProd<Index>& NCP,
-//       Dense<T1> const& a1,
-//       Dense<T2> const& a2,
-//       ManageStore& m);
+template<typename T1, typename T2>
+void
+doTask(NCProd<Index>& NCP,
+       Dense<T1> const& D1,
+       Dense<T2> const& D2,
+       ManageStore& m);
 
 template<typename T1, typename T2>
 void
@@ -275,4 +275,3 @@ doTask(PlusEQ<Index> const& P,
 } //namespace itensor
 
 #endif
-
