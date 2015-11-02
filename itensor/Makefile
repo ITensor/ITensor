@@ -81,12 +81,14 @@ clean:
 
 GDEPHEADERS=real.h global.h index.h util/readwrite.h
 GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten.ih \
-tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h
+tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h util/safe_ptr.h
 tensor/vec.o: $(GDEPHEADERS)
 .debug_objs/tensor/vec.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/matrange.h  tensor/mat.h
 tensor/mat.o: $(GDEPHEADERS)
 .debug_objs/tensor/mat.o: $(GDEPHEADERS)
+tensor/gemm.o: $(GDEPHEADERS)
+.debug_objs/tensor/gemm.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/slicemat.h tensor/algs.h
 tensor/algs.o: $(GDEPHEADERS)
 .debug_objs/tensor/algs.o: $(GDEPHEADERS)
