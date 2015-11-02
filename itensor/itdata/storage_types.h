@@ -59,7 +59,7 @@ Diag<Cplx>
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/dense.h"
-#include "itensor/itdata/itdiag.h"
+#include "itensor/itdata/diag.h"
 #include "itensor/itdata/itcombiner.h"
 //#include "itensor/itdata/iqtreal.h"
 //#include "itensor/itdata/iqtcombiner.h"
