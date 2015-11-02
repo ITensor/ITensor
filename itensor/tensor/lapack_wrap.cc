@@ -15,7 +15,7 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
               LAPACK_REAL* Y,       //pointer to head of vector Y
               LAPACK_INT incy)     //increment with which to step through Y
     {
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     cblas_daxpy(n,alpha,X,incx,Y,incy);
 #else
     auto Xnc = const_cast<LAPACK_REAL*>(X);
@@ -31,7 +31,7 @@ dnrm2_wrapper(LAPACK_INT N,
               const LAPACK_REAL* X,
               LAPACK_INT incx)
     {
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     return cblas_dnrm2(N,X,incx);
 #else
     auto *Xnc = const_cast<LAPACK_REAL*>(X);
@@ -50,7 +50,7 @@ ddot_wrapper(LAPACK_INT N,
              const LAPACK_REAL* Y,
              LAPACK_INT incy)
     {
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     return cblas_ddot(N,X,incx,Y,incy);
 #else
     auto *Xnc = const_cast<LAPACK_REAL*>(X);
@@ -70,14 +70,14 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              LAPACK_REAL alpha,
-             const LAPACK_REAL* A,
-             const LAPACK_REAL* B,
+             LAPACK_REAL const* A,
+             LAPACK_REAL const* B,
              LAPACK_REAL beta,
-             LAPACK_REAL* C)
+             LAPACK_REAL * C)
     {
     LAPACK_INT lda = m,
                ldb = k;
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     auto at = CblasNoTrans,
          bt = CblasNoTrans;
     if(transa)
@@ -127,7 +127,7 @@ gemm_wrapper(bool transa,
     {
     LAPACK_INT lda = m,
                ldb = k;
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     auto at = CblasNoTrans,
          bt = CblasNoTrans;
     if(transa)
@@ -140,204 +140,11 @@ gemm_wrapper(bool transa,
         bt = CblasTrans;
         ldb = n;
         }
-//#define USE_ZGEMM
-#define METHOD1
-//#define METHOD2
-
-#ifdef USE_ZGEMM
     TIMER_START(31)
     auto palpha = (void*)(&alpha); 
     auto pbeta = (void*)(&beta); 
     cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
     TIMER_STOP(31)
-#endif
-
-#ifdef METHOD2
-    if(not (alpha == Cplx(1.,0.) && beta == Cplx(0.,0.)))
-        {
-        throw std::runtime_error("alpha,beta must be 1,0");
-        }
-
-    auto aCsize = m*k;
-    auto bCsize = k*n;
-    auto cCsize = m*n;
-    //WARNING: logically const, not thread safe!
-    auto Ad = reinterpret_cast<Real*>(const_cast<Cplx*>(A));
-    auto Bd = reinterpret_cast<Real*>(const_cast<Cplx*>(B));
-    auto Cd = reinterpret_cast<Real*>(C);
-    auto arb = Ad;
-    auto aib = Ad+aCsize;
-    auto brb = Bd;
-    auto bib = Bd+bCsize;
-    auto crb = Cd;
-    auto cib = Cd+cCsize;
-        //print("re(A):");
-        //for(auto i = arb; i != aib; ++i)
-        //    {
-        //    print(" ",*i);
-        //    }
-        //println();
-        //print("im(A):");
-        //for(auto i = aib; i != aib+aCsize; ++i)
-        //    {
-        //    print(" ",*i);
-        //    }
-        //println();
-    toCplx(Ad,aCsize,false);
-    toCplx(Bd,bCsize,false);
-
-    //print("re(A):");
-    //for(auto i = arb; i != aib; ++i)
-    //    {
-    //    print(" ",*i);
-    //    }
-    //println();
-    //print("im(A):");
-    //for(auto i = aib; i != aib+aCsize; ++i)
-    //    {
-    //    print(" ",*i);
-    //    }
-    //println();
-
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,brb,ldb,0.,crb,m);
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,-1,aib,lda,bib,ldb,1.,crb,m);
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,bib,ldb,0.,cib,m);
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,aib,lda,brb,ldb,1.,cib,m);
-    toCplx(Ad,aCsize,true);
-    toCplx(Bd,bCsize,true);
-    toCplx(Cd,cCsize,true);
-#endif //METHOD2
-
-#ifdef METHOD1
-    if(not (alpha == Cplx(1.,0.) && beta == Cplx(0.,0.)))
-        {
-        throw std::runtime_error("alpha,beta must be 1,0");
-        }
-
-    auto arsize = m*k;
-    auto brsize = k*n;
-    auto crsize = m*n;
-    //TIMER_START(32)
-    //auto a = std::vector<Real>(2*arsize);
-    //auto b = std::vector<Real>(2*brsize);
-    //auto c = std::vector<Real>(2*crsize);
-    //Real* const arb = a.data();
-    //Real* const aib = arb+arsize;
-    //Real* const brb = b.data();
-    //Real* const bib = brb+brsize;
-    //Real* const crb = c.data();
-    //Real* const cib = crb+crsize;
-
-    //auto d = std::vector<Real>(2*(arsize+brsize+crsize));
-    //Real* const arb = d.data();
-    //Real* const aib = arb+arsize;
-    //Real* const brb = aib+arsize;
-    //Real* const bib = brb+brsize;
-    //Real* const crb = bib+brsize;
-    //Real* const cib = crb+crsize;
-
-    auto d = std::vector<Real>(arsize+brsize+crsize);
-    Real* const ab = d.data();
-    Real* const ae = d.data()+arsize;
-    Real* const bb = ae;
-    Real* const be = bb+brsize;
-    Real* const cb = be;
-    Real* const ce = cb+crsize;
-    //TIMER_STOP(32)
-
-    struct Task
-        {
-        bool copyC = false;
-        size_t Apart = 0,
-               Bpart = 0,
-               Cpart = 0;
-        Real alpha = 0,
-             beta  = 0;
-        Task(size_t Ap,
-             size_t Bp,
-             size_t Cp,
-             Real a,
-             Real b)
-          : Apart(Ap),
-            Bpart(Bp),
-            Cpart(Cp),
-            alpha(a),
-            beta(b)
-            { }
-        Task(size_t Cp)
-           : copyC(true),Cpart(Cp)
-            { }
-        };
-    //beta is zero because we're writing c to a buffer
-    std::array<Task,6> tasks = {{Task(1,1,0,-1.,0.),
-                                 Task(0,0,0,+1.,1.),
-                                 Task(0),
-                                 Task(1,0,1,+1.,0.),
-                                 Task(0,1,1,+1.,1.),
-                                 Task(1)
-                                }};
-
-    auto Ad = reinterpret_cast<const Real*>(A);
-    auto Bd = reinterpret_cast<const Real*>(B);
-    auto Cd = reinterpret_cast<Real*>(C);
-    for(auto t : tasks)
-        {
-        if(t.copyC)
-            {
-            auto Cb = Cd+t.Cpart;
-            for(auto cb_=cb; cb_ != ce; ++cb_,Cb+=2)
-                {
-                *Cb = *cb_;
-                }
-            }
-        else
-            {
-            auto Ab = Ad+t.Apart;
-            for(auto ab_=ab; ab_ != ae; ++ab_,Ab+=2)
-                {
-                *ab_ = *Ab;
-                }
-            auto Bb = Bd+t.Bpart;
-            for(auto bb_=bb; bb_ != be; ++bb_,Bb+=2)
-                {
-                *bb_ = *Bb;
-                }
-            cblas_dgemm(CblasColMajor,at,bt,m,n,k,t.alpha,ab,lda,bb,ldb,t.beta,cb,m);
-            }
-        }
-
-    //TIMER_START(35)
-    //cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,brb,ldb,1.,crb,m);
-    //cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,aib,lda,brb,ldb,0.,cib,m);
-    //cblas_dgemm(CblasColMajor,at,bt,m,n,k,+1,arb,lda,bib,ldb,1.,cib,m);
-    //TIMER_STOP(35)
-
-    //TIMER_START(34)
-    //auto Ab = A;
-    //for(auto arb_=arb,aib_=aib; arb_ != aib; ++arb_,++aib_,++Ab)
-    //    {
-    //    *arb_ = reinterpret_cast<const Real*>(Ab)[0];
-    //    *aib_ = reinterpret_cast<const Real*>(Ab)[1];
-    //    }
-    //auto Bb = B;
-    //for(auto brb_=brb,bib_=bib; brb_ != bib; ++brb_,++bib_,++Bb)
-    //    {
-    //    *brb_ = reinterpret_cast<const Real*>(Bb)[0];
-    //    *bib_  = reinterpret_cast<const Real*>(Bb)[1];
-    //    }
-    //TIMER_STOP(34)
-    //cblas_dgemm(CblasColMajor,at,bt,m,n,k,-1,aib,lda,bib,ldb,0.,crb,m);
-    //TIMER_START(34)
-    //auto Cb = C;
-    //for(auto crb_=crb,cib_=cib; crb_ != cib; ++crb_,++cib_,++Cb)
-    //    {
-    //    reinterpret_cast<Real*>(Cb)[0] = *crb_;
-    //    reinterpret_cast<Real*>(Cb)[1] = *cib_;
-    //    }
-    //TIMER_STOP(34)
-
-#endif//METHOD1
-
 #else //use Fortran zgemm
     auto *npA = const_cast<Cplx*>(A);
     auto *npB = const_cast<Cplx*>(B);
@@ -377,7 +184,7 @@ dgemv_wrapper(bool trans,
               LAPACK_REAL* y,
               LAPACK_INT incy)
     {
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
     cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
 #else
@@ -425,7 +232,7 @@ dscal_wrapper(LAPACK_INT N,
               LAPACK_REAL* data,
               LAPACK_INT inc)
     {
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
     cblas_dscal(N,alpha,data,inc);
 #else
     F77NAME(dscal)(&N,&alpha,data,&inc);

@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_lapack_wrap_h
-#define __ITENSOR_lapack_wrap_h
+#ifndef __ITENSOR_LAPACK_WRAP_h
+#define __ITENSOR_LAPACK_WRAP_h
 
 #include <vector>
 #include "itensor/types.h"
@@ -13,78 +13,98 @@
 // Headers and typedefs
 //
 
+//
+//
+// Generic Linux LAPACK
+//
+//
 #ifdef PLATFORM_lapack
 
 #define LAPACK_REQUIRE_EXTERN
 
-#include <complex>
-
 namespace itensor {
-using LAPACK_INT = int;
-using LAPACK_REAL = double;
-typedef struct
-{
-  double real, imag;
-} LAPACK_COMPLEX;
+    using LAPACK_INT = int;
+    using LAPACK_REAL = double;
+    typedef struct
+    {
+    LAPACK_REAL real, imag;
+    } LAPACK_COMPLEX;
 }
 
+//
+//
+// Apple Accelerate/vecLib
+//
+//
 #elif defined PLATFORM_macos
 
+#define ITENSOR_USE_CBLAS
+//#define ITENSOR_USE_ZGEMM
+
 #include <Accelerate/Accelerate.h>
-namespace itensor {
-using LAPACK_INT = __CLPK_integer;
-using LAPACK_REAL = __CLPK_doublereal;
-using LAPACK_COMPLEX = __CLPK_doublecomplex;
+    namespace itensor {
+    using LAPACK_INT = __CLPK_integer;
+    using LAPACK_REAL = __CLPK_doublereal;
+    using LAPACK_COMPLEX = __CLPK_doublecomplex;
 
-inline LAPACK_REAL& 
-realRef(LAPACK_COMPLEX & z) { return z.r; }
+    inline LAPACK_REAL& 
+    realRef(LAPACK_COMPLEX & z) { return z.r; }
 
-inline LAPACK_REAL& 
-imagRef(LAPACK_COMPLEX & z) { return z.i; }
+    inline LAPACK_REAL& 
+    imagRef(LAPACK_COMPLEX & z) { return z.i; }
+    }
 
-}
+//
+//
+// Intel MKL
+//
+//
+#elif defined PLATFORM_mkl
 
+#define ITENSOR_USE_CBLAS
+#define ITENSOR_USE_ZGEMM
+
+#include "mkl_cblas.h"
+#include "mkl_lapack.h"
+    namespace itensor {
+    using LAPACK_INT = MKL_INT;
+    using LAPACK_REAL = double;
+    using LAPACK_COMPLEX = MKL_Complex16;
+
+    inline LAPACK_REAL& 
+    realRef(LAPACK_COMPLEX & z) { return z.real; }
+
+    inline LAPACK_REAL& 
+    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+    }
+
+//
+//
+// AMD ACML
+//
+//
 #elif defined PLATFORM_acml
 
 #define LAPACK_REQUIRE_EXTERN
-
 //#include "acml.h"
-namespace itensor {
-using LAPACK_INT = int;
-using LAPACK_REAL = double;
-typedef struct
-{
-  double real, imag;
-} LAPACK_COMPLEX;
+    namespace itensor {
+    using LAPACK_INT = int;
+    using LAPACK_REAL = double;
+    typedef struct
+    {
+    LAPACK_REAL real, imag;
+    } LAPACK_COMPLEX;
 
-inline LAPACK_REAL& 
-realRef(LAPACK_COMPLEX & z) { return z.real; }
+    inline LAPACK_REAL& 
+    realRef(LAPACK_COMPLEX & z) { return z.real; }
 
-inline LAPACK_REAL& 
-imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+    inline LAPACK_REAL& 
+    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+    }
 
-}
+#endif // different PLATFORM types
 
-#elif defined PLATFORM_mkl
 
-#define FORTRAN_NO_TRAILING_UNDERSCORE
-
-#include "mkl_blas.h"
-#include "mkl_lapack.h"
-namespace itensor {
-using LAPACK_INT = MKL_INT;
-using LAPACK_REAL = double;
-using LAPACK_COMPLEX = MKL_Complex16;
-
-inline LAPACK_REAL& 
-realRef(LAPACK_COMPLEX & z) { return z.real; }
-
-inline LAPACK_REAL& 
-imagRef(LAPACK_COMPLEX & z) { return z.imag; }
-
-}
-
-#endif
 
 #ifdef FORTRAN_NO_TRAILING_UNDERSCORE
 #define F77NAME(x) x
@@ -102,14 +122,14 @@ namespace itensor {
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 LAPACK_REAL cblas_dnrm2(LAPACK_INT N, LAPACK_REAL *X, LAPACK_INT incX);
 #else
 LAPACK_REAL F77NAME(dnrm2)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx);
 #endif
 
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
 #else
 void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha, 
@@ -117,14 +137,14 @@ void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 LAPACK_REAL 
 cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, const LAPACK_REAL *Y, const LAPACK_INT incy);
 #else
 LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 void cblas_dgemm(const enum CBLAS_ORDER __Order,
         const enum CBLAS_TRANSPOSE __TransA,
         const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
@@ -137,7 +157,7 @@ void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
             LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
 #endif
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 void cblas_zgemm(const enum CBLAS_ORDER __Order,
         const enum CBLAS_TRANSPOSE __TransA,
         const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
@@ -150,7 +170,7 @@ void F77NAME(zgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
             LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
 #endif
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 void cblas_dgemv(const enum CBLAS_ORDER Order,
         const enum CBLAS_TRANSPOSE TransA, const LAPACK_INT M, const LAPACK_INT N,
         const LAPACK_REAL alpha, const LAPACK_REAL *A, const LAPACK_INT lda,
@@ -173,7 +193,7 @@ void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, dou
             LAPACK_INT* info );
 #endif
 
-#ifdef PLATFORM_macos
+#ifdef ITENSOR_USE_CBLAS
 void cblas_dscal(const LAPACK_INT N, const LAPACK_REAL alpha, LAPACK_REAL* X,const LAPACK_INT incX);
 #else
 void F77NAME(dscal)(LAPACK_INT* N, LAPACK_REAL* alpha, LAPACK_REAL* X,LAPACK_INT* incX);
@@ -289,10 +309,10 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              LAPACK_REAL alpha,
-             const LAPACK_REAL* A,
-             const LAPACK_REAL* B,
+             LAPACK_REAL const* A,
+             LAPACK_REAL const* B,
              LAPACK_REAL beta,
-             LAPACK_REAL* C);
+             LAPACK_REAL * C);
 
 //
 // zgemm
@@ -304,10 +324,10 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              Cplx alpha,
-             const Cplx* A,
-             const Cplx* B,
+             Cplx const* A,
+             Cplx const* B,
              Cplx beta,
-             Cplx* C);
+             Cplx * C);
 
 //
 // dgemv - matrix*vector multiply
