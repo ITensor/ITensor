@@ -1,4 +1,4 @@
-#include "itensor/itdata/itdiag.h"
+#include "itensor/itdata/diag.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/count.h"
@@ -22,31 +22,34 @@ doTask(GetElt<Index> const& g, Diag<T> const& d)
 template Cplx doTask(GetElt<Index> const&, DiagReal const&);
 template Cplx doTask(GetElt<Index> const&, DiagCplx const&);
 
+template<typename T>
 class UnifVecWrapper
     {
-    Real val_;
+    T val_;
     size_t size_;
     public:
-    UnifVecWrapper(Real v, size_t s) : val_(v), size_(s) { }
+    UnifVecWrapper(T v, size_t s) : val_(v), size_(s) { }
 
     size_t
     size() const { return size_; }
 
-    Real
+    T
     operator()(size_t j) const { return val_; }
     };
 
+template<typename T1, typename T2>
 void
-contractDiagDense(DiagReal  const& d,
+contractDiagDense(Diag<T1>  const& d,
                   IndexSet  const& dis,
                   Label     const& dind,
-                  DenseReal const& t,
+                  Dense<T2> const& t,
                   IndexSet  const& tis,
                   Label     const& tind,
                   Label     const& Nind,
                   IndexSet  const& Nis,
                   ManageStore    & m)
     {
+    using T3 = common_type<T1,T2>;
     bool t_has_uncontracted = false;
     for(auto j : index(tind)) 
         if(tind[j] >= 0)
@@ -59,11 +62,11 @@ contractDiagDense(DiagReal  const& d,
 
     if(t_has_uncontracted)
         {
-        auto nd = m.makeNewData<DenseReal>(area(Nis),0.);
+        auto nd = m.makeNewData<Dense<T3>>(area(Nis),0.);
         auto Nref = makeTenRef(nd->data(),nd->size(),&Nis);
         if(d.allSame())
             {
-            auto dref = UnifVecWrapper(d.val,d.length);
+            auto dref = UnifVecWrapper<decltype(d.val)>(d.val,d.length);
             contractDiagPartial(dref,dind,
                                 Tref,tind,
                                 Nref,Nind);
@@ -85,12 +88,13 @@ contractDiagDense(DiagReal  const& d,
             }
 
         size_t nsize = (d_ustride==0) ? 1 : d.length;
-        auto nstore = DiagReal::storage_type(nsize,0);
+        using nstorage_type = typename Diag<T3>::storage_type;
+        auto nstore = nstorage_type(nsize,0);
         auto Nref = makeVecRef(nstore.data(),nsize);
 
         if(d.allSame())
             {
-            auto dref = UnifVecWrapper(d.val,d.length);
+            auto dref = UnifVecWrapper<decltype(d.val)>(d.val,d.length);
             contractDiagFull(dref,dind,
                              Tref,tind,
                              Nref,Nind);
@@ -103,16 +107,17 @@ contractDiagDense(DiagReal  const& d,
                              Nref,Nind);
             }
         if(nsize==1)
-            m.makeNewData<DiagReal>(1,nstore.front());
+            m.makeNewData<Diag<T3>>(1,nstore.front());
         else
-            m.makeNewData<DiagReal>(std::move(nstore));
+            m.makeNewData<Diag<T3>>(std::move(nstore));
         }
     }
 
+template<typename T1, typename T2>
 void
 doTask(Contract<Index> & C,
-       DenseReal  const& t,
-       DiagReal   const& d,
+       Dense<T1>  const& t,
+       Diag<T2>   const& d,
        ManageStore     & m)
     { 
     Label Lind,
@@ -123,10 +128,16 @@ doTask(Contract<Index> & C,
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
     }
+template void doTask(Contract<Index>&, Dense<Real> const&, Diag<Real> const&, ManageStore&);
+template void doTask(Contract<Index>&, Dense<Real> const&, Diag<Cplx> const&, ManageStore&);
+template void doTask(Contract<Index>&, Dense<Cplx> const&, Diag<Real> const&, ManageStore&);
+template void doTask(Contract<Index>&, Dense<Cplx> const&, Diag<Cplx> const&, ManageStore&);
+
+template<typename T1, typename T2>
 void
 doTask(Contract<Index> & C,
-       DiagReal   const& d,
-       DenseReal  const& t,
+       Diag<T1>   const& d,
+       Dense<T2>  const& t,
        ManageStore     & m)
     {
     Label Lind,
@@ -137,6 +148,10 @@ doTask(Contract<Index> & C,
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
     }
+template void doTask(Contract<Index>&, Diag<Real> const&, Dense<Real> const&, ManageStore&);
+template void doTask(Contract<Index>&, Diag<Real> const&, Dense<Cplx> const&, ManageStore&);
+template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Real> const&, ManageStore&);
+template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Cplx> const&, ManageStore&);
 
 void
 doTask(PlusEQ<Index> const& P,

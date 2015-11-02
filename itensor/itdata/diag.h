@@ -150,16 +150,19 @@ template <typename T>
 Cplx
 doTask(GetElt<Index> const& g, Diag<T> const& d);
 
+template<typename T1, typename T2>
 void
-doTask(Contract<Index>& C,
-       DenseReal const& T,
-       DiagReal  const& D,
-       ManageStore    & m);
+doTask(Contract<Index> & C,
+       Dense<T1>  const& t,
+       Diag<T2>   const& d,
+       ManageStore     & m);
+
+template<typename T1, typename T2>
 void
-doTask(Contract<Index>& C,
-       DiagReal  const& D,
-       DenseReal const& T,
-       ManageStore    & m);
+doTask(Contract<Index> & C,
+       Diag<T1>   const& d,
+       Dense<T2>  const& t,
+       ManageStore     & m);
 
 void
 doTask(PlusEQ<Index> const& P,
