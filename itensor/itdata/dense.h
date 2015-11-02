@@ -101,19 +101,19 @@ class Dense
     end() { return store.end(); }
     };
 
+template<typename T>
+bool constexpr
+isReal(Dense<T> const& t) { return std::is_same<T,Real>::value; }
+
+template<typename T>
+bool constexpr
+isCplx(Dense<T> const& t) { return std::is_same<T,Cplx>::value; }
+
 Data inline
 realData(DenseReal & d) { return Data(d.data(),d.size()); }
 
 Datac inline
 realData(DenseReal const& d) { return Datac(d.data(),d.size()); }
-
-template<typename T>
-bool inline constexpr
-isReal(Dense<T> const& t) { return std::is_same<T,Real>::value; }
-
-template<typename T>
-bool inline constexpr
-isCplx(Dense<T> const& t) { return std::is_same<T,Cplx>::value; }
 
 Data inline
 realData(DenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
@@ -244,11 +244,11 @@ template<typename T>
 Cplx
 doTask(SumEls<Index>, Dense<T> const& d);
 
-void
-doTask(Write& W, DenseReal const& d);
+auto inline
+doTask(StorageType const& S, DenseReal const& d) ->StorageType::Type { return StorageType::DenseReal; }
 
-void
-doTask(Write& W, DenseCplx const& d);
+auto inline
+doTask(StorageType const& S, DenseCplx const& d) ->StorageType::Type { return StorageType::DenseCplx; }
 
 template<typename T1,typename T2>
 void
