@@ -1,5 +1,4 @@
 #include "itensor/itdata/itdiag.h"
-#include "itensor/itdata/itdata.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/count.h"
@@ -10,7 +9,7 @@ namespace itensor {
 
 template <typename T>
 Cplx
-doTask(const GetElt<Index>& g, const ITDiag<T>& d)
+doTask(GetElt<Index> const& g, Diag<T> const& d)
     {
     auto first_i = (g.inds.empty() ? 0 : g.inds.front());
     //Check if inds_ reference an
@@ -20,8 +19,8 @@ doTask(const GetElt<Index>& g, const ITDiag<T>& d)
     if(d.allSame()) return d.val;
     return d.store.at(first_i);
     }
-template Cplx doTask(const GetElt<Index>& g, const ITDiag<Real>& d);
-template Cplx doTask(const GetElt<Index>& g, const ITDiag<Cplx>& d);
+template Cplx doTask(GetElt<Index> const&, DiagReal const&);
+template Cplx doTask(GetElt<Index> const&, DiagCplx const&);
 
 class UnifVecWrapper
     {
@@ -38,15 +37,15 @@ class UnifVecWrapper
     };
 
 void
-diagDense(ITDiag<Real> const& d,
-          IndexSet const& dis,
-          Label const& dind,
-          ITReal const& t,
-          IndexSet const& tis,
-          Label const& tind,
-          Label const& Nind,
-          IndexSet const& Nis,
-          ManageStore & m)
+contractDiagDense(DiagReal  const& d,
+                  IndexSet  const& dis,
+                  Label     const& dind,
+                  DenseReal const& t,
+                  IndexSet  const& tis,
+                  Label     const& tind,
+                  Label     const& Nind,
+                  IndexSet  const& Nis,
+                  ManageStore    & m)
     {
     bool t_has_uncontracted = false;
     for(auto j : index(tind)) 
@@ -60,7 +59,7 @@ diagDense(ITDiag<Real> const& d,
 
     if(t_has_uncontracted)
         {
-        auto nd = m.makeNewData<ITReal>(area(Nis),0.);
+        auto nd = m.makeNewData<DenseReal>(area(Nis),0.);
         auto Nref = makeTenRef(nd->data(),nd->size(),&Nis);
         if(d.allSame())
             {
@@ -86,7 +85,7 @@ diagDense(ITDiag<Real> const& d,
             }
 
         size_t nsize = (d_ustride==0) ? 1 : d.length;
-        auto nstore = ITDiag<Real>::storage_type(nsize,0);
+        auto nstore = DiagReal::storage_type(nsize,0);
         auto Nref = makeVecRef(nstore.data(),nsize);
 
         if(d.allSame())
@@ -104,17 +103,17 @@ diagDense(ITDiag<Real> const& d,
                              Nref,Nind);
             }
         if(nsize==1)
-            m.makeNewData<ITDiag<Real>>(1,nstore.front());
+            m.makeNewData<DiagReal>(1,nstore.front());
         else
-            m.makeNewData<ITDiag<Real>>(std::move(nstore));
+            m.makeNewData<DiagReal>(std::move(nstore));
         }
     }
 
 void
 doTask(Contract<Index> & C,
-       ITReal const& t,
-       ITDiag<Real> const& d,
-       ManageStore & m)
+       DenseReal  const& t,
+       DiagReal   const& d,
+       ManageStore     & m)
     { 
     Label Lind,
           Rind,
@@ -122,13 +121,13 @@ doTask(Contract<Index> & C,
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
     bool sortIndices = false;
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
-    diagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
+    contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
     }
 void
 doTask(Contract<Index> & C,
-       ITDiag<Real> const& d,
-       ITReal const& t,
-       ManageStore & m)
+       DiagReal   const& d,
+       DenseReal  const& t,
+       ManageStore     & m)
     {
     Label Lind,
           Rind,
@@ -136,65 +135,75 @@ doTask(Contract<Index> & C,
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
     bool sortIndices = false;
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
-    diagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
+    contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
     }
 
 void
 doTask(PlusEQ<Index> const& P,
-       ITDiag<Real>& a1,
-       const ITDiag<Real>& a2)
+       DiagReal           & D1,
+       DiagReal      const& D2)
     {
 #ifdef DEBUG
-    if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
+    if(D1.size() != D2.size()) Error("Mismatched sizes in plusEq");
 #endif
-    if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
-    daxpy_wrapper(a1.size(),P.fac(),a2.data(),1,a1.data(),1);
+    if(D1.allSame() || D2.allSame()) Error("Diag plusEq allSame case not implemented");
+    daxpy_wrapper(D1.size(),P.fac(),D2.data(),1,D1.data(),1);
     }
 
-template<typename T>
+template<typename N, typename T>
 void
-doTask(const FillReal& f, const ITDiag<T>& d, ManageStore& m)
+doTask(Fill<N>  const& f, 
+       Diag<T>  const& d, 
+       ManageStore   & m)
     {
-    m.makeNewData<ITDiag<Real>>(d.length,f.r);
+    m.makeNewData<Diag<N>>(d.length,f.x);
     }
-template void doTask(const FillReal& f, const ITDiag<Real>& d, ManageStore& m);
-template void doTask(const FillReal& f, const ITDiag<Cplx>& d, ManageStore& m);
+template void doTask(Fill<Real> const& f, DiagReal const& d, ManageStore& m);
+template void doTask(Fill<Real> const& f, DiagCplx const& d, ManageStore& m);
+template void doTask(Fill<Cplx> const& f, DiagReal const& d, ManageStore& m);
+template void doTask(Fill<Cplx> const& f, DiagCplx const& d, ManageStore& m);
 
-template<typename T>
+template<typename T1, typename T2>
 void
-doTask(const FillCplx& f, const ITDiag<T>& d, ManageStore& m)
+doMult(T1 fac, Diag<T2> & D)
     {
-    m.makeNewData<ITDiag<Cplx>>(d.length,f.z);
+    D.val *= fac;
+    for(auto& elt : D.store) elt *= fac;
     }
-template void doTask(const FillCplx& f, const ITDiag<Real>& d, ManageStore& m);
-template void doTask(const FillCplx& f, const ITDiag<Cplx>& d, ManageStore& m);
 
-template<typename T>
+template<typename T1, typename T2>
 void
-doTask(const MultReal& m, ITDiag<T>& d)
+doTask(Mult<T1> const& M, Diag<T2> & D)
     {
-    d.val *= m.r;
-    //use BLAS algorithm?
-    for(auto& elt : d.store) elt *= m.r;
+    doMult(M.x,D);
     }
-template void doTask(const MultReal& m, ITDiag<Real>& d);
-template void doTask(const MultReal& m, ITDiag<Cplx>& d);
+template void doTask(Mult<Real> const&, Diag<Real> &);
+template void doTask(Mult<Real> const&, Diag<Cplx> &);
+template void doTask(Mult<Cplx> const&, Diag<Cplx> &);
+
+void
+doTask(Mult<Cplx> const& M, Diag<Real> const& D, ManageStore & m)
+    {
+    auto *nD = m.makeNewData<DiagCplx>(D);
+    doMult(M.x,*nD);
+    }
 
 template<typename T>
 Real
-doTask(NormNoScale, const ITDiag<T>& d)
+doTask(NormNoScale, Diag<T> const& D)
     {
-    if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(d.length);
-    Real nrm = 0;
-    for(auto& elt : d.store) 
-        nrm += std::norm(elt); //conj(elt)*elt
-    return std::sqrt(nrm);
+    if(D.allSame()) return std::sqrt(std::norm(D.val))*std::sqrt(D.length);
+    auto d = realData(D);
+    return dnrm2_wrapper(d.size(),d.data());
     }
-template Real doTask(NormNoScale, const ITDiag<Real>& d);
-template Real doTask(NormNoScale, const ITDiag<Cplx>& d);
+template Real doTask(NormNoScale, Diag<Real> const& d);
+template Real doTask(NormNoScale, Diag<Cplx> const& d);
 
 void
-doTask(Conj, ITDiag<Cplx>& d) 
+doTask(Conj, DiagReal const& d) { }
+
+void
+doTask(Conj, DiagCplx & d) 
     { 
     if(d.allSame()) 
         {
@@ -207,37 +216,48 @@ doTask(Conj, ITDiag<Cplx>& d)
         }
     }
 
-void
-doTask(Conj,const ITDiag<Real>& d) { }
 
 void
-doTask(TakeReal,const ITDiag<Cplx>& d, ManageStore& m) 
+doTask(TakeReal, DiagReal const& D) { }
+
+void
+doTask(TakeReal, DiagCplx const& D, ManageStore& m) 
     { 
-    if(d.allSame()) m.makeNewData<ITDiag<Real>>(d.length,d.val.real());
+    if(D.allSame()) 
+        {
+        m.makeNewData<DiagReal>(D.length,D.val.real());
+        }
     else            
         {
-        auto nd = m.makeNewData<ITDiag<Real>>(d.size());
-        for(auto i : index(d.store)) nd->store[i] = d.store[i].real();
+        auto nD = m.makeNewData<DiagReal>(D.size());
+        for(auto i : index(D.store)) nD->store[i] = D.store[i].real();
         }
     }
 
 void
-doTask(TakeReal, const ITDiag<Real>& ) { }
+doTask(TakeImag, DiagReal & D)
+    {
+    D.val = 0.;
+    for(auto& el : D.store) el = 0.;
+    }
 
 void
-doTask(TakeImag,const ITDiag<Cplx>& d, ManageStore& m) 
+doTask(TakeImag, DiagCplx const& D, ManageStore& m) 
     { 
-    if(d.allSame()) m.makeNewData<ITDiag<Real>>(d.length,d.val.imag());
+    if(D.allSame()) 
+        {
+        m.makeNewData<DiagReal>(D.length,D.val.imag());
+        }
     else            
         {
-        auto nd = m.makeNewData<ITDiag<Real>>(d.size());
-        for(auto i : index(d.store)) nd->store[i] = d.store[i].imag();
+        auto nD = m.makeNewData<DiagReal>(D.size());
+        for(auto i : index(D.store)) nD->store[i] = D.store[i].imag();
         }
     }
 
 template<typename T>
 void
-doTask(PrintIT<Index>& P, const ITDiag<T>& d)
+doTask(PrintIT<Index>& P, Diag<T> const& d)
     {
     auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
@@ -269,18 +289,12 @@ doTask(PrintIT<Index>& P, const ITDiag<T>& d)
             }
         }
     }
-template void doTask(PrintIT<Index>& P, const ITDiag<Real>& d);
-template void doTask(PrintIT<Index>& P, const ITDiag<Cplx>& d);
-
-bool
-doTask(CheckComplex,const ITDiag<Real>& d) { return false; }
-
-bool
-doTask(CheckComplex,const ITDiag<Cplx>& d) { return true; }
+template void doTask(PrintIT<Index>& P, DiagReal const& d);
+template void doTask(PrintIT<Index>& P, DiagCplx const& d);
 
 template <class T>
 Cplx
-doTask(SumEls<Index> S, const ITDiag<T>& d) 
+doTask(SumEls<Index> S, Diag<T> const& d) 
     { 
     if(d.allSame()) return Real(minM(S.is))*d.val;
     T sum = 0;
@@ -288,19 +302,7 @@ doTask(SumEls<Index> S, const ITDiag<T>& d)
         sum += elt;
     return sum;
     }
-template Cplx doTask(SumEls<Index> S, const ITDiag<Real>& d);
-template Cplx doTask(SumEls<Index> S, const ITDiag<Cplx>& d);
-
-void
-doTask(Write& W, const ITDiag<Real>& d)
-    { 
-    W.writeType(StorageType::ITDiagReal,d); 
-    }
-
-void
-doTask(Write& W, const ITDiag<Cplx>& d)
-    { 
-    W.writeType(StorageType::ITDiagCplx,d); 
-    }
+template Cplx doTask(SumEls<Index> S, DiagReal const& d);
+template Cplx doTask(SumEls<Index> S, DiagCplx const& d);
 
 } //namespace itensor

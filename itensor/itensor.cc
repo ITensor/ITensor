@@ -44,9 +44,9 @@ ITensorT(Cplx val)
     else
         store_ = newITData<DenseCplx>(1,val);
     //if(val.imag() == 0)
-    //    store_ = newITData<ITDiag<Real>>(1,val.real());
+    //    store_ = newITData<Diag<Real>>(1,val.real());
     //else
-    //    store_ = newITData<ITDiag<Cplx>>(1,val);
+    //    store_ = newITData<Diag<Cplx>>(1,val);
     }
 
 

@@ -2,53 +2,68 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITDIAG_H
-#define __ITENSOR_ITDIAG_H
+#ifndef __ITENSOR_DIAG_H
+#define __ITENSOR_DIAG_H
 
 #include "itensor/itdata/dense.h"
 
 namespace itensor {
 
 template<typename T>
-class ITDiag
+class Diag;
+
+using DiagReal = Diag<Real>;
+using DiagCplx = Diag<Cplx>;
+
+template<typename T>
+class Diag
     {
     public:
-    using storage_type = typename std::vector<T>;
+    using value_type = stdx::decay_t<T>;
+    using storage_type = std::vector<value_type>;
     using size_type = typename storage_type::size_type;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
-    using value_type = T;
 
     storage_type store;
     T val = 0;
     size_type length = 0;
 
-    ITDiag() { }
+    Diag() { }
 
     //Special "all same" case, no
     //storage allocated since elements
     //all the same (== val)
-    ITDiag(size_t length_, T val_)
+    Diag(size_t length_, T val_)
       : val(val_),
         length(length_)
         { }
 
-    ITDiag(size_t size)
+    Diag(size_t size)
       : store(size,0),
         length(size)
         { }
 
     template<typename InputIterator>
-    ITDiag(InputIterator b, InputIterator e)
+    Diag(InputIterator b, InputIterator e)
       : store(b,e),
         length(store.size())
         { }
 
     explicit
-    ITDiag(storage_type&& data)
+    Diag(storage_type&& data)
       : store(std::move(data)),
         length(store.size())
         { }
+
+    template<typename V>
+    explicit
+    Diag(Diag<V> const& D)
+      : store(D.begin(),D.end()),
+        val(D.val),
+        length(D.length)
+        {
+        }
 
     bool
     allSame() const { return store.empty(); }
@@ -59,10 +74,10 @@ class ITDiag
     bool
     empty() const { return store.empty(); }
 
-    Real*
+    value_type*
     data() { return store.data(); }
 
-    const Real*
+    value_type const*
     data() const { return store.data(); }
     
     const_iterator
@@ -78,19 +93,29 @@ class ITDiag
     end() { return store.end(); }
     };
 
-//template<typename T>
-//ITDiag<T>
-//makeDiagAllSame(T val, size_t length)
-//    {
-//    ITDiag<T> res;
-//    res.val = val;
-//    res.length = length;
-//    return res;
-//    }
+template<typename T>
+bool constexpr
+isReal(Diag<T> const& D) { return isReal<T>(); }
+
+template<typename T>
+bool constexpr
+isCplx(Diag<T> const& D) { return isCplx<T>(); }
+
+Data inline
+realData(DiagReal & d) { return Data(d.data(),d.size()); }
+
+Datac inline
+realData(DiagReal const& d) { return Datac(d.data(),d.size()); }
+
+Data inline
+realData(DiagCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
+
+Datac inline
+realData(DiagCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
 
 template<typename T>
 void
-read(std::istream& s, ITDiag<T>& dat)
+read(std::istream& s, Diag<T>& dat)
     {
     itensor::read(s,dat.val);
     itensor::read(s,dat.length);
@@ -99,7 +124,7 @@ read(std::istream& s, ITDiag<T>& dat)
 
 template<typename T>
 void
-write(std::ostream& s, const ITDiag<T>& dat)
+write(std::ostream& s, const Diag<T>& dat)
     {
     itensor::write(s,dat.val);
     itensor::write(s,dat.length);
@@ -107,9 +132,9 @@ write(std::ostream& s, const ITDiag<T>& dat)
     }
 
 template <typename F, typename T,
-          typename std::enable_if<std::is_same<T,stdx::result_of_t<F(T)>>::value>::type* = nullptr>
+          class = stdx::require<std::is_same<T,stdx::result_of_t<F(T)>>> >
 void
-doTask(ApplyIT<F>& A, ITDiag<T>& d) 
+doTask(ApplyIT<F>& A, Diag<T>& d) 
     { 
     if(d.allSame()) 
         {
@@ -123,74 +148,74 @@ doTask(ApplyIT<F>& A, ITDiag<T>& d)
 
 template <typename T>
 Cplx
-doTask(const GetElt<Index>& g, const ITDiag<T>& d);
+doTask(GetElt<Index> const& g, Diag<T> const& d);
 
 void
 doTask(Contract<Index>& C,
-       const ITReal& t,
-       const ITDiag<Real>& d,
-       ManageStore& m);
+       DenseReal const& T,
+       DiagReal  const& D,
+       ManageStore    & m);
 void
 doTask(Contract<Index>& C,
-       const ITDiag<Real>& d,
-       const ITReal& t,
-       ManageStore& m);
+       DiagReal  const& D,
+       DenseReal const& T,
+       ManageStore    & m);
 
 void
-doTask(const PlusEQ<Index>& P,
-       ITDiag<Real>& a1,
-       const ITDiag<Real>& a2);
+doTask(PlusEQ<Index> const& P,
+       DiagReal           & D1,
+       DiagReal      const& D2);
 
-template<typename T>
+template<typename N, typename T>
 void
-doTask(const FillReal& f, const ITDiag<T>& d, ManageStore& m);
+doTask(Fill<N> const& f, Diag<T> const& d, ManageStore& m);
 
-template<typename T>
+template<typename T1, typename T2>
 void
-doTask(const FillCplx& f, const ITDiag<T>& d, ManageStore& m);
+doTask(Mult<T1> const& M, Diag<T2> & D);
 
-template<typename T>
 void
-doTask(const MultReal& m, ITDiag<T>& d);
+doTask(Mult<Cplx> const& M, DiagReal const& D, ManageStore & m);
 
 template<typename T>
 Real
-doTask(NormNoScale, const ITDiag<T>& d);
+doTask(NormNoScale, Diag<T> const& d);
 
 void
-doTask(Conj, ITDiag<Cplx>& d);
+doTask(Conj, DiagReal const& d);
 
 void
-doTask(Conj,const ITDiag<Real>& d);
+doTask(Conj, DiagCplx & d);
 
 void
-doTask(TakeReal,const ITDiag<Cplx>& d, ManageStore& m);
+doTask(TakeReal, DiagReal const& D);
 
 void
-doTask(TakeReal, const ITDiag<Real>& );
+doTask(TakeReal, DiagCplx const& D, ManageStore& m);
 
 void
-doTask(TakeImag,const ITDiag<Cplx>& d, ManageStore& m);
+doTask(TakeImag, DiagReal & D);
+
+void
+doTask(TakeImag, DiagCplx const& D, ManageStore& m);
 
 template<typename T>
 void
-doTask(PrintIT<Index>& P, const ITDiag<T>& d);
+doTask(PrintIT<Index> & P, Diag<T> const& d);
 
+template<typename T>
 bool
-doTask(CheckComplex,const ITDiag<Real>& d);
-
-bool
-doTask(CheckComplex,const ITDiag<Cplx>& d);
+doTask(CheckComplex, Diag<T> const& d) { return isCplx<T>(); }
 
 template <class T>
 Cplx
-doTask(SumEls<Index> S, const ITDiag<T>& d);
+doTask(SumEls<Index> S, Diag<T> const& d);
 
-void
-doTask(Write& W, const ITDiag<Real>& d);
+auto inline
+doTask(StorageType const& S, DiagReal const& d) ->StorageType::Type { return StorageType::DiagReal; }
 
-void
-doTask(Write& W, const ITDiag<Cplx>& d);
+auto inline
+doTask(StorageType const& S, DiagCplx const& d) ->StorageType::Type { return StorageType::DiagCplx; }
 
 
 } //namespace itensor

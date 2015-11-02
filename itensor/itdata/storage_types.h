@@ -25,7 +25,7 @@ template<typename T>
 class Dense;
 
 template<typename T>
-class ITDiag;
+class Diag;
 
 class ITCombiner;
 
@@ -44,9 +44,9 @@ StorageTypes = TypeList<
 //(2) Register storage type names
 Dense<Real>,
 Dense<Cplx>,
-ITCombiner
-//ITDiag<Real>,
-//ITDiag<Cplx>,
+ITCombiner,
+Diag<Real>,
+Diag<Cplx>
 //IQTReal,
 //IQTCombiner,
 //IQTDiag
@@ -59,7 +59,7 @@ ITCombiner
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/dense.h"
-//#include "itensor/itdata/itdiag.h"
+#include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itcombiner.h"
 //#include "itensor/itdata/iqtreal.h"
 //#include "itensor/itdata/iqtcombiner.h"
