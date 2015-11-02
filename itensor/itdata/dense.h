@@ -250,13 +250,13 @@ doTask(Write& W, DenseReal const& d);
 void
 doTask(Write& W, DenseCplx const& d);
 
-//template<typename T1, typename T2>
-//void
-//doTask(Contract<Index>& C,
-//       Dense<T1> const& a1,
-//       Dense<T2> const& a2,
-//       ManageStore& m);
-//
+template<typename T1,typename T2>
+void
+doTask(Contract<Index> & C,
+       Dense<T1> const& L,
+       Dense<T2> const& R,
+       ManageStore & m);
+
 //template<typename T1, typename T2>
 //void
 //doTask(NCProd<Index>& NCP,

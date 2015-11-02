@@ -244,68 +244,69 @@ doTask(Write& W, DenseCplx const& d)
     W.writeType(StorageType::DenseCplx,d); 
     }
 
-//template<typename T1,
-//         typename T2>
-//void
-//doTask(Contract<Index> & C,
-//       Dense<T1> const& a1,
-//       Dense<T2> const& a2,
-//       ManageStore & m)
-//    {
-//    //if(not C.needresult)
-//    //    {
-//    //    m.makeNewData<ITLazy>(C.Lis,m.parg1(),C.Ris,m.parg2());
-//    //    return;
-//    //    }
-//    Label Lind,
-//          Rind,
-//          Nind;
-//    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
-//    if(not C.Nis)
-//        {
-//        //Optimization TODO:
-//        //  Test different scenarios where having sortInds=true or false
-//        //  can improve performance. Having sorted inds can make adding
-//        //  quicker and let contractloop run in parallel more often in principle.
-//        bool sortInds = false; //whether to sort indices of result
-//        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortInds);
-//        }
-//    else
-//        {
-//        Nind.resize(C.Nis.r());
-//        for(auto i : count(C.Nis.r()))
-//            {
-//            auto j = findindex(C.Lis,C.Nis[i]);
-//            if(j >= 0)
-//                {
-//                Nind[i] = Lind[j];
-//                }
-//            else
-//                {
-//                j = findindex(C.Ris,C.Nis[i]);
-//                Nind[i] = Rind[j];
-//                }
-//            }
-//        }
-//    auto t1 = makeTenRef(a1.data(),a1.size(),&C.Lis),
-//         t2 = makeTenRef(a2.data(),a2.size(),&C.Ris);
-//    auto rsize = area(C.Nis);
-//    using Ctype = common_type<decltype(t1),decltype(t2)>;
-//    START_TIMER(4)
-//    auto nd = m.makeNewData<Dense<Ctype>>(rsize);
-//    STOP_TIMER(4)
-//    auto tr = makeTenRef(nd->data(),nd->size(),&(C.Nis));
-//
-//    START_TIMER(2)
-//    //contractloop(t1,Lind,t2,Rind,tr,Nind);
-//    contract(t1,Lind,t2,Rind,tr,Nind);
-//    STOP_TIMER(2)
-//
-//    START_TIMER(3)
-//    if(rsize > 1) C.scalefac = computeScalefac(*nd);
-//    STOP_TIMER(3)
-//    }
-//
+template<typename T1,typename T2>
+void
+doTask(Contract<Index> & C,
+       Dense<T1> const& L,
+       Dense<T2> const& R,
+       ManageStore & m)
+    {
+    //if(not C.needresult)
+    //    {
+    //    m.makeNewData<ITLazy>(C.Lis,m.parg1(),C.Ris,m.parg2());
+    //    return;
+    //    }
+    Label Lind,
+          Rind,
+          Nind;
+    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    if(not C.Nis)
+        {
+        //Optimization TODO:
+        //  Test different scenarios where having sortInds=true or false
+        //  can improve performance. Having sorted inds can make adding
+        //  quicker and let contractloop run in parallel more often in principle.
+        bool sortInds = false; //whether to sort indices of result
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortInds);
+        }
+    else
+        {
+        Nind.resize(C.Nis.r());
+        for(auto i : count(C.Nis.r()))
+            {
+            auto j = findindex(C.Lis,C.Nis[i]);
+            if(j >= 0)
+                {
+                Nind[i] = Lind[j];
+                }
+            else
+                {
+                j = findindex(C.Ris,C.Nis[i]);
+                Nind[i] = Rind[j];
+                }
+            }
+        }
+    auto tL = makeTenRef(L.data(),L.size(),&C.Lis);
+    auto tR = makeTenRef(R.data(),R.size(),&C.Ris);
+    auto rsize = area(C.Nis);
+    START_TIMER(4)
+    auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
+    STOP_TIMER(4)
+    auto tN = makeTenRef(nd->data(),nd->size(),&(C.Nis));
+
+    START_TIMER(2)
+    contract(tL,Lind,tR,Rind,tN,Nind);
+    STOP_TIMER(2)
+
+    START_TIMER(3)
+    if(rsize > 1) C.scalefac = computeScalefac(*nd);
+    STOP_TIMER(3)
+    }
+template void doTask(Contract<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
+template void doTask(Contract<Index>&,DenseCplx const&,DenseReal const&,ManageStore&);
+template void doTask(Contract<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
+template void doTask(Contract<Index>&,DenseCplx const&,DenseCplx const&,ManageStore&);
+
 //void
 //doTask(NCProd<Index>& P,
 //       Dense const& d1,
@@ -379,30 +380,10 @@ doTask(PlusEQ<Index> const& P,
         add(P,*ncD1,D2);
         }
     }
-template
-void
-doTask(PlusEQ<Index> const& P,
-       Dense<Real> const& D1,
-       Dense<Real> const& D2,
-       ManageStore & m);
-template
-void
-doTask(PlusEQ<Index> const& P,
-       Dense<Real> const& D1,
-       Dense<Cplx> const& D2,
-       ManageStore & m);
-template
-void
-doTask(PlusEQ<Index> const& P,
-       Dense<Cplx> const& D1,
-       Dense<Real> const& D2,
-       ManageStore & m);
-template
-void
-doTask(PlusEQ<Index> const& P,
-       Dense<Cplx> const& D1,
-       Dense<Cplx> const& D2,
-       ManageStore & m);
+template void doTask(PlusEQ<Index> const&,Dense<Real> const&,Dense<Real> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Dense<Real> const&,Dense<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Dense<Cplx> const&,Dense<Real> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Dense<Cplx> const&,Dense<Cplx> const&,ManageStore &);
 
     
 
