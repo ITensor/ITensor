@@ -63,12 +63,18 @@ class SafePtr
     offsetEnd() const { return offset_end_; }
     bool
     validOffset() const { return (offset_ < offset_end_); }
+    size_t
+    range() const 
+        { 
+        if(validOffset()) return (offset_end_-offset_);
+        return 0ul;
+        }
 
     pointer
     get() const 
         { 
         if(!p_) return nullptr;
-        return p_+offset_; 
+        return (p_+offset_); 
         }
 
     pointer
@@ -231,10 +237,9 @@ SafePtr<NewType>
 reinterpret(SafePtr<OldType> const& p)
     {
     //if(!p.validOffset()) throw std::runtime_error("SafePtr: invalid offset found before attempting reinterpret_cast");
-    auto curr_end = p.offsetEnd();
-    auto new_end = (curr_end*sizeof(OldType))/sizeof(NewType);
     auto nptr = reinterpret_cast<NewType*>(p.get());
-    return makeSafePtr(nptr,p.offset(),new_end);
+    auto new_end = (p.range()*sizeof(OldType))/sizeof(NewType);
+    return makeSafePtr(nptr,new_end);
     }
 
 

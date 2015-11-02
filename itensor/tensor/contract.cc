@@ -725,24 +725,30 @@ contract(CProps const& p,
          Real beta = 0.)
     {
     using VC = common_type<VA,VB>;
-    auto Asize = p.permuteA() ? area(p.newArange) : 0ul;
-    auto Bsize = p.permuteB() ? area(p.newBrange) : 0ul;
-    auto Csize = p.permuteC() ? area(p.newCrange) : 0ul;
-    auto Abufsize = isCplx(A) ? 2ul*Asize : Asize;
-    auto Bbufsize = isCplx(B) ? 2ul*Bsize : Bsize;
-    auto Cbufsize = isCplx(C) ? 2ul*Csize : Csize;
+    auto Apsize = p.permuteA() ? area(p.newArange) : 0ul;
+    auto Bpsize = p.permuteB() ? area(p.newBrange) : 0ul;
+    auto Cpsize = p.permuteC() ? area(p.newCrange) : 0ul;
+    auto Abufsize = isCplx(A) ? 2ul*Apsize : Apsize;
+    auto Bbufsize = isCplx(B) ? 2ul*Bpsize : Bpsize;
+    auto Cbufsize = isCplx(C) ? 2ul*Cpsize : Cpsize;
 
     auto d = std::vector<Real>(Abufsize+Bbufsize+Cbufsize);
     auto ab = MAKE_SAFE_PTR(d.data(),d.size());
     auto bb = ab+Abufsize;
     auto cb = bb+Bbufsize;
+    //printfln("ab %d,%d",ab.offset(),ab.offsetEnd());
+    //printfln("bb %d,%d",bb.offset(),bb.offsetEnd());
+    //printfln("cb %d,%d",cb.offset(),cb.offsetEnd());
+    //Print(p.permuteA());
+    //Print(p.permuteB());
+    //Print(p.permuteC());
 
     MatRefc<VA> aref;
     if(p.permuteA())
         {
         SCOPED_TIMER(12)
         auto aptr = SAFE_REINTERPRET(VA,ab);
-        auto tref = makeTenRef(SAFE_PTR_GET(aptr,Asize),Asize,&p.newArange);
+        auto tref = makeTenRef(SAFE_PTR_GET(aptr,Apsize),Apsize,&p.newArange);
         tref &= permute(A,p.PA);
         aref = transpose(makeMatRefc(tref.store(),p.dmid,p.dleft));
         }
@@ -763,7 +769,7 @@ contract(CProps const& p,
         {
         SCOPED_TIMER(13)
         auto bptr = SAFE_REINTERPRET(VB,bb);
-        auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bsize),Bsize,&p.newBrange);
+        auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bpsize),Bpsize,&p.newBrange);
         tref &= permute(B,p.PB);
         bref = makeMatRefc(tref.store(),p.dmid,p.dright);
         }
@@ -784,7 +790,7 @@ contract(CProps const& p,
     if(p.permuteC())
         {
         auto cptr = SAFE_REINTERPRET(VC,cb);
-        newC = makeTenRef(SAFE_PTR_GET(cptr,Csize),Csize,&p.newCrange);
+        newC = makeTenRef(SAFE_PTR_GET(cptr,Cpsize),Cpsize,&p.newCrange);
         cref = makeMatRef(newC.store(),nrows(aref),ncols(bref));
         }
     else
