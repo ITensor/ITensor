@@ -44,18 +44,18 @@ contractloop(Ten<range_type> const& A, Label const& ai,
 
 //All indices of B contracted
 //(A can have some uncontracted indices)
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA const& A, Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VectorRef          C, Label const& ci);
+contractDiagFull(DiagElsA           const& A, Label const& ai, 
+                 TenRefc<RangeT,VB> const& B, Label const& bi, 
+                 VecRef<VC>         const& C, Label const& ci);
 
 //Some indices of B uncontracted
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA const& A,  Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci);
+contractDiagPartial(DiagElsA           const& A, Label const& ai,
+                    TenRefc<RangeT,VB> const& B, Label const& bi, 
+                    TenRef<RangeT,VC>  const& C, Label const& ci);
 
 //Non-contracting product
 template<typename R, typename VA, typename VB>
@@ -203,11 +203,11 @@ computeLabels(Inds const& Lis,
 //Some indices of B uncontracted
 //DiagElsA is any function object returning
 //diagonal elements of A (such as a VectorRefc)
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA const& A,  Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci)
+contractDiagPartial(DiagElsA           const& A, Label const& ai,
+                    TenRefc<RangeT,VB> const& B, Label const& bi, 
+                    TenRef<RangeT,VC>  const& C, Label const& ci)
     {
     using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
@@ -267,11 +267,11 @@ contractDiagPartial(DiagElsA const& A,  Label const& ai,
         }
     }
 
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA const& A,  Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VectorRef          C,  Label const& ci)
+contractDiagFull(DiagElsA           const& A, Label const& ai, 
+                 TenRefc<RangeT,VB> const& B, Label const& bi, 
+                 VecRef<VC>         const& C, Label const& ci)
     {
     using A_size_type = decltype(A.size());
 
