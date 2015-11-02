@@ -8,7 +8,7 @@
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/teniter.h"
 #include "itensor/tensor/range.h"
-#include "itensor/tensor/lapack_wrap.h"
+//#include "itensor/tensor/lapack_wrap.h"
 
 namespace itensor {
 
