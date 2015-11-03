@@ -28,11 +28,13 @@ using CVectorRefc = VecRefc<Cplx>;
 template<typename V>
 using hasVecRange = std::is_same<VecRange,typename stdx::decay_t<V>::range_type>;
 
-auto inline
-stride(VectorRefc const& v) -> decltype(v.stride(0)) { return v.stride(0); }
+template<typename V>
+auto
+stride(VecRefc<V> const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 
-auto inline
-stride(Vector const& v) -> decltype(v.stride(0)) { return v.stride(0); }
+template<typename V>
+auto
+stride(Vec<V> const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 
 VectorRef
 operator*=(VectorRef v, Real fac);
