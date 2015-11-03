@@ -13,6 +13,19 @@
 // Headers and typedefs
 //
 
+namespace itensor {
+
+// Helper functions for working with various
+// complex data types, see other version below
+
+inline Real& 
+realRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[0]; }
+
+inline Real& 
+imagRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[1]; }
+
+} 
+
 //
 //
 // Generic Linux LAPACK
@@ -412,9 +425,9 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
 LAPACK_INT 
-zheev_wrapper(LAPACK_INT N,        //number of cols of A
-              LAPACK_COMPLEX *A,    //matrix A, on return contains eigenvectors
-              LAPACK_REAL *d);       //eigenvalues on return
+zheev_wrapper(LAPACK_INT    N,  //number of cols of A
+              Cplx        * A,  //matrix A, on return contains eigenvectors
+              LAPACK_REAL * d); //eigenvalues on return
 
 //
 // dsygv

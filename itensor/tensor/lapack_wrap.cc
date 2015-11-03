@@ -315,9 +315,9 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
 LAPACK_INT 
-zheev_wrapper(LAPACK_INT N,        //number of cols of A
-              LAPACK_COMPLEX *A,    //matrix A, on return contains eigenvectors
-              LAPACK_REAL *d)       //eigenvalues on return
+zheev_wrapper(LAPACK_INT      N,  //number of cols of A
+              Cplx          * A,  //matrix A, on return contains eigenvectors
+              LAPACK_REAL   * d)  //eigenvalues on return
     {
     char jobz = 'V';
     char uplo = 'U';
@@ -325,12 +325,14 @@ zheev_wrapper(LAPACK_INT N,        //number of cols of A
     std::vector<LAPACK_COMPLEX> work(lwork);
     std::vector<LAPACK_REAL> rwork(lwork);
     LAPACK_INT info = 0;
+    static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
     LAPACK_INT uplo_len = 1;
-    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
+    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
 #else
-    F77NAME(zheev)(&jobz,&uplo,&N,A,&N,d,work.data(),&lwork,rwork.data(),&info);
+    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info);
 #endif
     return info;
     }
