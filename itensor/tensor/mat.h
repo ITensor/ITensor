@@ -188,25 +188,29 @@ Vector
 operator*(VectorRefc const& a,
           MatrixRefc const& B);
 
-template<typename V>
-Mat<V> 
-operator*(MatRefc<V> const& A, MatRefc<V> const& B) { return mult(A,B); }
+template<typename VA, typename VB>
+auto
+operator*(MatRefc<VA> const& A, MatRefc<VB> const& B) -> decltype(mult(A,B))
+    { return mult(A,B); }
 
-template<typename V>
-Mat<V> 
-operator*(Mat<V> const& A, MatRefc<V> const& B) { return mult(makeRef(A),B); }
+template<typename VA, typename VB>
+auto
+operator*(Mat<VA> const& A, MatRefc<VB> const& B) -> decltype(mult(makeRef(A),B))
+    { return mult(makeRef(A),B); }
 
-template<typename V>
-Mat<V> 
-operator*(MatRefc<V> const& A, Mat<V> const& B) { return mult(A,makeRef(B)); }
+template<typename VA, typename VB>
+auto
+operator*(MatRefc<VA> const& A, Mat<VB> const& B) -> decltype(mult(A,makeRef(B)))
+    { return mult(A,makeRef(B)); }
 
-template<typename V>
-Mat<V> 
-operator*(Mat<V> const& A, Mat<V> const& B) { return mult(makeRef(A),makeRef(B)); }
+template<typename VA, typename VB>
+auto
+operator*(Mat<VA> const& A, Mat<VB> const& B) -> decltype(mult(makeRef(A),makeRef(B)))
+    { return mult(makeRef(A),makeRef(B)); }
 
-template<typename V>
-Mat<V>&
-operator*=(Mat<V> & A, MatRefc<V> const& B) { A = mult(makeRef(A),B); return A; }
+template<typename VA, typename VB>
+Mat<VA>&
+operator*=(Mat<VA> & A, MatRefc<VB> const& B) { A = mult(makeRef(A),B); return A; }
 
 void
 randomize(MatrixRef const& M);
