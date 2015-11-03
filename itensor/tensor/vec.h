@@ -58,6 +58,8 @@ operator&=(VectorRef a, VectorRefc const& b);
 
 void
 operator&=(CVectorRef a, CVectorRefc const& b);
+void
+operator&=(CVectorRef a, VectorRefc const& b);
 
 //Dot product
 Real

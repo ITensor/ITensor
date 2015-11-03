@@ -32,14 +32,14 @@ apply(VecRef<T> const& v,
         }
     }
 
-template<typename T>
+template<typename T1, typename T2>
 void
-refAssign(VecRef<T> const& a, VecRefc<T> const& b)
+refAssign(VecRef<T1> const& a, VecRefc<T2> const& b)
     {
 #ifdef DEBUG
     if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VectorRef operator&=");
 #endif
-    auto assign = [](T& x, T y) { x = y; };
+    auto assign = [](T1& x, T2 y) { x = y; };
     if(isContiguous(b)) apply(a,b.data(),assign);
     else                apply(a,b.cbegin(),assign);
     }
@@ -51,6 +51,11 @@ operator&=(VectorRef a, VectorRefc const& b)
     }
 void
 operator&=(CVectorRef a, CVectorRefc const& b)
+    {
+    refAssign(a,b);
+    }
+void
+operator&=(CVectorRef a, VectorRefc const& b)
     {
     refAssign(a,b);
     }
