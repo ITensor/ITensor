@@ -195,6 +195,15 @@ void F77NAME(dgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_REAL* alpha,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+#ifdef ITENSOR_USE_CBLAS
+void cblas_zgemv(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE trans, const LAPACK_INT m, 
+                 const LAPACK_INT n, const void *alpha, const void *a, const LAPACK_INT lda, 
+                 const void *x, const LAPACK_INT incx, const void *beta, void *y, const LAPACK_INT incy);
+#else
+void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,void* alpha, LAPACK_REAL* A,
+                    LAPACK_INT* LDA, void* X, LAPACK_INT* incx, void* beta,
+                    void* Y, LAPACK_INT* incy);
+#endif
 
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
@@ -346,16 +355,31 @@ gemm_wrapper(bool transa,
 // dgemv - matrix*vector multiply
 //
 void
-dgemv_wrapper(bool trans, 
-              LAPACK_REAL alpha,
-              LAPACK_REAL beta,
-              LAPACK_INT m,
-              LAPACK_INT n,
-              const LAPACK_REAL* A,
-              const LAPACK_REAL* x,
-              LAPACK_INT incx,
-              LAPACK_REAL* y,
-              LAPACK_INT incy);
+gemv_wrapper(bool trans, 
+             LAPACK_REAL alpha,
+             LAPACK_REAL beta,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             const LAPACK_REAL* A,
+             const LAPACK_REAL* x,
+             LAPACK_INT incx,
+             LAPACK_REAL* y,
+             LAPACK_INT incy);
+
+//
+// zgemv - matrix*vector multiply
+//
+void
+gemv_wrapper(bool trans, 
+             Cplx alpha,
+             Cplx beta,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             Cplx const* A,
+             Cplx const* x,
+             LAPACK_INT incx,
+             Cplx* y,
+             LAPACK_INT incy);
 
 
 //

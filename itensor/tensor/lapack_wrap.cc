@@ -169,20 +169,17 @@ gemm_wrapper(bool transa,
 #endif
     }
 
-//
-// dgemv - matrix*vector multiply
-//
 void 
-dgemv_wrapper(bool trans, 
-              LAPACK_REAL alpha,
-              LAPACK_REAL beta,
-              LAPACK_INT m,
-              LAPACK_INT n,
-              const LAPACK_REAL* A,
-              const LAPACK_REAL* x,
-              LAPACK_INT incx,
-              LAPACK_REAL* y,
-              LAPACK_INT incy)
+gemv_wrapper(bool trans, 
+             LAPACK_REAL alpha,
+             LAPACK_REAL beta,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             const LAPACK_REAL* A,
+             const LAPACK_REAL* x,
+             LAPACK_INT incx,
+             LAPACK_REAL* y,
+             LAPACK_INT incy)
     {
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
@@ -190,6 +187,29 @@ dgemv_wrapper(bool trans,
 #else
     char Tr = trans ? 'T' : 'N';
     F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
+#endif
+    }
+
+void
+gemv_wrapper(bool trans, 
+             Cplx alpha,
+             Cplx beta,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             Cplx const* A,
+             Cplx const* x,
+             LAPACK_INT incx,
+             Cplx* y,
+             LAPACK_INT incy)
+    {
+#ifdef ITENSOR_USE_CBLAS
+    auto Tr = trans ? CblasTrans : CblasNoTrans;
+    auto palpha = (void*)(&alpha); 
+    auto pbeta = (void*)(&beta); 
+    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,(void*)A,m,(void*)x,incx,pbeta,(void*)y,incy);
+#else
+    char Tr = trans ? 'T' : 'N';
+    F77NAME(dgemv)(&Tr,&m,&n,&alpha,(void*)A,&m,(void*)x,&incx,&beta,(void*)y,&incy);
 #endif
     }
 
