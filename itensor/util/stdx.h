@@ -39,15 +39,21 @@ template<class T>
 using result_of_t = typename std::result_of<T>::type;
 
 
-template<typename Condition1, 
-         typename Condition2 = std::true_type,
-         typename Condition3 = std::true_type,
-         typename Condition4 = std::true_type>
-using require = typename std::enable_if<Condition1::value 
-                                     && Condition2::value
-                                     && Condition3::value
-                                     && Condition4::value
-                                     >::type;
+template<typename... Conds>
+struct all
+    {
+    bool static constexpr value = true;
+    constexpr operator bool() const noexcept { return value; }
+    };
+template<typename Cond, typename... Conds>
+struct all<Cond,Conds...> : all<Conds...>
+    {
+    bool static constexpr value = Cond::value && all<Conds...>::value;
+    constexpr operator bool() const noexcept { return value; }
+    };
+
+template<typename... Conditions>
+using require = enable_if_t<all<Conditions...>::value>;
 
 template<typename T>
 struct isRvalue
