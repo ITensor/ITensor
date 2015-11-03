@@ -223,16 +223,17 @@ operator()(Inds&&... ii) -> reference
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename R>
+template<typename R, typename V>
 Real
-norm(TenRefc<R,Real> const& t)
+norm(TenRefc<R,V> const& t)
     {
     if(isContiguous(t))
         {
-        return dnrm2_wrapper(t.size(),t.data());
+        auto d = realData(t);
+        return dnrm2_wrapper(d.size(),d.data());
         }
     Real nrm = 0;
-    for(auto& el : t) nrm += el*el;
+    for(auto& el : t) nrm += std::norm(el);
     return std::sqrt(nrm);
     }
 
@@ -272,6 +273,55 @@ void
 randomize(Ten<R,V> & t)
     {
     for(auto& el : t) el = detail::random<V>();
+    }
+
+template<typename R, typename V>
+void
+conjugate(TenRef<R,V> const& T)
+    {
+    if(isCplx<V>())
+        {
+        if(isContiguous(T))
+            {
+            auto de = T.data()+T.size();
+            for(auto d = T.data(); d != de; ++d)
+                {
+                *d = std::conj(*d);
+                }
+            }
+        else
+            {
+            for(auto& el : T)
+                {
+                el = std::conj(el);
+                }
+            }
+        }
+    }
+
+template<typename R, typename V>
+void
+conjugate(Ten<R,V> & T)
+    {
+    conjugate(makeRef(T));
+    }
+
+//return conjugated copy
+template<typename R, typename V>
+Ten<R,V>
+conj(TenRefc<R,V> const& T)
+    {
+    auto CT = Ten<R,V>{T};
+    conjugate(CT);
+    return CT;
+    }
+
+template<typename R, typename V>
+Ten<R,V>
+conj(Ten<R,V> T)
+    {
+    conjugate(T);
+    return T;
     }
 
 namespace detail {

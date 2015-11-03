@@ -8,7 +8,7 @@
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/teniter.h"
 #include "itensor/tensor/range.h"
-//#include "itensor/tensor/lapack_wrap.h"
+#include "itensor/tensor/lapack_wrap.h"
 
 namespace itensor {
 
@@ -744,9 +744,9 @@ template<typename R,typename T>
 auto
 rank(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
 
-template<typename R>
+template<typename R, typename V>
 Real
-norm(TenRefc<R,Real> const& t);
+norm(TenRefc<R,V> const& t);
 
 template<typename R, typename T>
 Real
@@ -795,6 +795,24 @@ isReal(T const& t) { return std::is_same<typename T::value_type,Real>::value; }
 template<typename T, class = stdx::require<isTensor<T>> >
 bool inline constexpr
 isCplx(T const& t) { return std::is_same<typename T::value_type,Cplx>::value; }
+
+//conjugate in-place, modifying elements
+template<typename R, typename V>
+void
+conjugate(TenRef<R,V> const& T);
+
+template<typename R, typename V>
+void
+conjugate(Ten<R,V> & T);
+
+//return conjugated copy
+template<typename R, typename V>
+Ten<R,V>
+conj(TenRefc<R,V> const& T);
+
+template<typename R, typename V>
+Ten<R,V>
+conj(Ten<R,V> T);
 
 template<typename R, typename V>
 std::ostream&
