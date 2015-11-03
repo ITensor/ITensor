@@ -276,6 +276,7 @@ SVDRefImpl(MatRefc<T> const& M,
         {
         SVDRefImpl(transpose(M),V,D,U,thresh,depth);
         conjugate(V);
+        conjugate(U);
 #ifdef CHKSVD
         checksvd(M,U,D,V);
 #endif
