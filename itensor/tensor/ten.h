@@ -275,12 +275,12 @@ class TenRef : public TenRefc<range_type_,value_type_>
 //Assign to referenced data
 template<typename R1, typename R2, typename T>
 void 
-operator&=(TenRef<R1,T> const& a, TenRefc<R2,T> const& b);
+operator&=(TenRef<R1,T> const& A, TenRefc<R2,T> const& B);
 
 //Assign to referenced data
-template<typename R,typename T>
+template<typename R1, typename R2, typename T>
 void
-operator&=(TenRef<R,T> const& a, Tensor const& t);
+operator&=(TenRef<R1,T> const& A, Ten<R2,T> const& B);
 
 template<typename R1, typename R2, typename T>
 void 
@@ -789,11 +789,11 @@ Datac
 realData(TenRefc<R,Cplx> const& t) { return Datac(reinterpret_cast<const Real*>(t.data()),2*t.size()); }
 
 template<typename T, class = stdx::require<isTensor<T>> >
-bool inline constexpr
+bool constexpr
 isReal(T const& t) { return std::is_same<typename T::value_type,Real>::value; }
 
 template<typename T, class = stdx::require<isTensor<T>> >
-bool inline constexpr
+bool constexpr
 isCplx(T const& t) { return std::is_same<typename T::value_type,Cplx>::value; }
 
 //conjugate in-place, modifying elements

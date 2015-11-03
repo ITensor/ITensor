@@ -150,9 +150,9 @@ operator&=(TenRef<R1,T> const& A, TenRefc<R2,T> const& B)
     }
 
 //Assign to referenced data
-template<typename R, typename T>
+template<typename R1, typename R2, typename T>
 void
-operator&=(TenRef<R,T> const& A, Ten<Range,T> const& B)
+operator&=(TenRef<R1,T> const& A, Ten<R2,T> const& B)
     {
     transform(makeRef(B),A,[](T b, T& a){ a = b; });
     }
@@ -263,7 +263,7 @@ random() -> stdx::enable_if_t<std::is_same<X,Cplx>::value,Cplx>
 
 template<typename R,typename V>
 void
-randomize(TenRef<R> const& t)
+randomize(TenRef<R,V> const& t)
     {
     for(auto& el : t) el = detail::random<V>();
     }
@@ -274,6 +274,16 @@ randomize(Ten<R,V> & t)
     {
     for(auto& el : t) el = detail::random<V>();
     }
+
+namespace detail {
+
+void inline
+conjEl(Real & r) { }
+
+void inline
+conjEl(Cplx & z) { imagRef(z) *= -1; }
+
+}
 
 template<typename R, typename V>
 void
@@ -286,14 +296,14 @@ conjugate(TenRef<R,V> const& T)
             auto de = T.data()+T.size();
             for(auto d = T.data(); d != de; ++d)
                 {
-                *d = std::conj(*d);
+                detail::conjEl(*d);
                 }
             }
         else
             {
             for(auto& el : T)
                 {
-                el = std::conj(el);
+                detail::conjEl(el);
                 }
             }
         }
