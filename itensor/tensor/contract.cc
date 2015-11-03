@@ -736,12 +736,6 @@ contract(CProps const& p,
     auto ab = MAKE_SAFE_PTR(d.data(),d.size());
     auto bb = ab+Abufsize;
     auto cb = bb+Bbufsize;
-    //printfln("ab %d,%d",ab.offset(),ab.offsetEnd());
-    //printfln("bb %d,%d",bb.offset(),bb.offsetEnd());
-    //printfln("cb %d,%d",cb.offset(),cb.offsetEnd());
-    //Print(p.permuteA());
-    //Print(p.permuteB());
-    //Print(p.permuteC());
 
     MatRefc<VA> aref;
     if(p.permuteA())
