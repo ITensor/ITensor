@@ -155,7 +155,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 
 
 Spectrum 
-svdRank2(ITensor A, const Index& ui, const Index& vi,
+svdRank2(ITensor const& A, const Index& ui, const Index& vi,
          ITensor& U, ITensor& D, ITensor& V,
          const Args& args = Global::args());
 

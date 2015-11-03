@@ -24,36 +24,38 @@ using std::tie;
 
 ///////////////
 
-struct ToMatrixRefc
+template<typename V>
+struct ToMatRefc
     {
+    using value_type = V;
     long nrows=0,
          ncols=0;
     bool transpose=false;
-    ToMatrixRefc(long nr, long nc, bool trans=false) 
+    ToMatRefc(long nr, long nc, bool trans=false) 
         : nrows(nr), ncols(nc), transpose(trans)
         { }
     };
-
-MatrixRefc
-doTask(ToMatrixRefc const& T, 
-       ITReal const& d)
+template<typename V>
+MatRefc<V>
+doTask(ToMatRefc<V> const& T, 
+       Dense<V> const& d)
     {
     auto res = makeMatRef(d.data(),d.size(),T.nrows,T.ncols);
     if(T.transpose) return transpose(res);
     return res;
     }
 
-
-MatrixRefc
-toMatrixRefc(ITensor const& T, 
+template<typename V>
+MatRefc<V>
+toMatRefc(ITensor const& T, 
           Index const& i1, 
           Index const& i2)
     {
     if(i1 == T.inds().front())
         {
-        return doTask(ToMatrixRefc{i1.m(),i2.m()},T.store());
+        return doTask(ToMatRefc<V>{i1.m(),i2.m()},T.store());
         }
-    return doTask(ToMatrixRefc{i2.m(),i1.m(),true},T.store());
+    return doTask(ToMatRefc<V>{i2.m(),i1.m(),true},T.store());
     }
 
 /////////////
@@ -213,14 +215,16 @@ showEigs(Vector const& P,
     println();
     } // showEigs
 
-Spectrum 
-svdRank2(ITensor A, 
-         Index const& ui, 
-         Index const& vi,
-         ITensor & U, 
-         ITensor & D, 
-         ITensor & V,
-         Args const& args)
+
+template<typename T>
+Spectrum
+svd(ITensor const& A,
+    Index const& ui, 
+    Index const& vi,
+    ITensor & U, 
+    ITensor & D, 
+    ITensor & V,
+    Args const& args)
     {
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -229,7 +233,6 @@ svdRank2(ITensor A,
     auto do_truncate = args.getBool("Truncate",true);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    auto cplx = isComplex(A);
     auto lname = args.getString("LeftIndexName","ul");
     auto rname = args.getString("RightIndexName","vl");
     auto itype = getIndexType(args,"IndexType",Link);
@@ -237,35 +240,28 @@ svdRank2(ITensor A,
     auto ritype = getIndexType(args,"RightIndexType",itype);
     auto show_eigs = args.getBool("ShowEigs",false);
 
-    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
+    auto M = toMatRefc<T>(A,ui,vi);
 
-    Matrix UU,VV,
-           iUU,iVV;
+    Mat<T> UU,VV;
     Vector DD;
 
-    if(!cplx)
-        {
-        auto M = toMatrixRefc(A,ui,vi);
-        SCOPED_TIMER(6)
-        SVD(M,UU,DD,VV,thresh);
-        }
-    else
-        {
-        auto Are = realPart(A),
-             Aim = imagPart(A);
-        //Are.scaleTo(A.scale());
-        //Aim.scaleTo(A.scale());
-        auto Mre = toMatrixRefc(Are,ui,vi);
-        auto Mim = toMatrixRefc(Aim,ui,vi);
-        SCOPED_TIMER(6)
-        SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
-        }
+    TIMER_START(6)
+    SVD(M,UU,DD,VV,thresh);
+    TIMER_STOP(6)
+
+    ////Check:
+    //Matrix DM(DD.size(),DD.size());
+    //diagonal(DM) &= DD;
+    //Print(norm(M-UU*DM*conj(transpose(VV))));
+
+
+    //conjugate VV so later we can just do
+    //U*D*V to reconstruct ITensor A:
+    conjugate(VV);
 
     //
     // Truncate
     //
-
-
     Vector probs;
     if(do_truncate || show_eigs)
         {
@@ -308,31 +304,15 @@ svdRank2(ITensor A,
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
 
     D = ITensor({uL,vL},
-                ITDiag<Real>{DD.begin(),DD.end()},
+                Diag<Real>{DD.begin(),DD.end()},
                 A.scale()*signfix);
-
-    if(cplx)
-        {
-        auto Ustore = ITCplx(UU.size());
-        std::copy(UU.cbegin(),UU.cend(),Ustore.rstart());
-        std::copy(iUU.cbegin(),iUU.cend(),Ustore.istart());
-        auto Vstore = ITCplx(VV.size());
-        std::copy(VV.cbegin(),VV.cend(),Vstore.rstart());
-        std::copy(iVV.cbegin(),iVV.cend(),Vstore.istart());
-        U = ITensor({ui,uL},move(Ustore),LogNum(signfix));
-        V = ITensor({vi,vL},move(Vstore));
-        }
-    else
-        {
-        U = ITensor({ui,uL},ITReal(move(UU.storage())),LogNum(signfix));
-        V = ITensor({vi,vL},ITReal(move(VV.storage())));
-        }
+    U = ITensor({ui,uL},Dense<T>(move(UU.storage())),LogNum(signfix));
+    V = ITensor({vi,vL},Dense<T>(move(VV.storage())));
 
 
     //Square all singular values
     //since convention is to report
     //density matrix eigs
-
     for(auto& el : DD) el = sqr(el);
 
     if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
@@ -341,8 +321,24 @@ svdRank2(ITensor A,
     spec.eigsKept(move(DD));
 
     return spec;
+    }
 
-    } // svdRank2 ITensor
+Spectrum 
+svdRank2(ITensor const& A, 
+         Index const& ui, 
+         Index const& vi,
+         ITensor & U, 
+         ITensor & D, 
+         ITensor & V,
+         Args const& args)
+    {
+    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
+    if(isComplex(A))
+        {
+        return svd<Cplx>(A,ui,vi,U,D,V,args);
+        }
+    return svd<Real>(A,ui,vi,U,D,V,args);
+    }
 
 Spectrum
 svdRank2(IQTensor A, 
@@ -650,8 +646,8 @@ diag_hermitian(ITensor rho,
     Matrix UU,iUU;
     if(!cplx)
         {
-        auto R = toMatrixRefc(rho,active,prime(active));
-        diagSymmetric(R,UU,DD);
+        auto R = toMatRefc<Real>(rho,active,prime(active));
+        diagHermitian(R,UU,DD);
         }
     else
         {
@@ -711,8 +707,8 @@ diag_hermitian(ITensor rho,
 
     if(not cplx)
         {
-        U = ITensor({active,newmid},ITReal{move(UU.storage())}); 
-        D = ITensor({prime(newmid),newmid},ITDiag<Real>{DD.begin(),DD.end()},rho.scale());
+        U = ITensor({active,newmid},DenseReal{move(UU.storage())}); 
+        D = ITensor({prime(newmid),newmid},DiagReal{DD.begin(),DD.end()},rho.scale());
         }
     else
         {
@@ -813,7 +809,7 @@ diag_hermitian(IQTensor    rho,
 
         if(!cplx)
             {
-            diagSymmetric(makeRef(M),UU,d);
+            diagHermitian(M,UU,d);
             }
         else
             {
