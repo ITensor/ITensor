@@ -157,41 +157,30 @@ combine(Storage  const& d,
         }
     }
 
+template<typename V>
 void
-doTask(Contract<Index>& C,
-       DenseReal const& d,
+doTask(Contract<Index> & C,
+       Dense<V>   const& d,
        ITCombiner const& cmb,
-       ManageStore& m)
+       ManageStore     & m)
     {
     combine(d,C.Lis,C.Ris,C.Nis,m);
     }
-void
-doTask(Contract<Index>& C,
-       ITCombiner const& cmb,
-       DenseReal const& d,
-       ManageStore& m)
-    { 
-    combine(d,C.Ris,C.Lis,C.Nis,m);
-    if(!m.newData()) m.assignPointerRtoL();
-    }
+template void doTask(Contract<Index> &,DenseReal const&,ITCombiner const&,ManageStore&);
+template void doTask(Contract<Index> &,DenseCplx const&,ITCombiner const&,ManageStore&);
 
-void
-doTask(Contract<Index> & C,
-       DenseCplx  const& d,
-       ITCombiner const& cmb,
-       ManageStore     & m)
-    {
-    combine(d,C.Lis,C.Ris,C.Nis,m);
-    }
+template<typename V>
 void
 doTask(Contract<Index> & C,
        ITCombiner const& cmb,
-       DenseCplx  const& d,
+       Dense<V>   const& d,
        ManageStore     & m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);
     if(!m.newData()) m.assignPointerRtoL();
     }
+template void doTask(Contract<Index> &,ITCombiner const&,DenseReal const&,ManageStore&);
+template void doTask(Contract<Index> &,ITCombiner const&,DenseCplx const&,ManageStore&);
 
 bool
 doTask(CheckComplex, ITCombiner const& d) { return false; }

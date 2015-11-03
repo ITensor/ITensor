@@ -34,29 +34,19 @@ doTask(NormNoScale, const ITCombiner& d);
 void
 doTask(Conj,const ITCombiner& d);
 
+template<typename V>
 void
-doTask(Contract<Index>& C,
-       DenseReal const& d,
+doTask(Contract<Index> & C,
+       Dense<V>   const& d,
        ITCombiner const& cmb,
-       ManageStore& m);
+       ManageStore     & m);
 
+template<typename V>
 void
-doTask(Contract<Index>& C,
+doTask(Contract<Index> & C,
        ITCombiner const& cmb,
-       DenseReal const& d,
-       ManageStore& m);
-
-//void
-//doTask(Contract<Index> & C,
-//       ITCplx     const& d,
-//       ITCombiner const& cmb,
-//       ManageStore     & m);
-//
-//void
-//doTask(Contract<Index> & C,
-//       ITCombiner const& cmb,
-//       ITCplx     const& d,
-//       ManageStore     & m);
+       Dense<V>   const& d,
+       ManageStore     & m);
 
 bool
 doTask(CheckComplex, ITCombiner const& d);
