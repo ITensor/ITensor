@@ -331,13 +331,14 @@ operator<<(std::ostream& s, CMatrixRefc const& M)
 
 
 
-void
-mult(MatrixRefc A, 
-     MatrixRefc B, 
-     MatrixRef  C)
-    {
-    gemm(A,B,C,1.,0.);
-    }
+
+//void
+//mult(CMatrixRefc A,
+//     CMatrixRefc B,
+//     CMatrixRef  C)
+//    {
+//    gemm(A,B,C,1.,0.);
+//    }
 
 void
 multAdd(MatrixRefc A, 
@@ -347,21 +348,15 @@ multAdd(MatrixRefc A,
     gemm(A,B,C,1.,1.);
     }
 
-void
-mult(CMatrixRefc A,
-     CMatrixRefc B,
-     CMatrixRef  C)
-    {
-    gemm(A,B,C,1.,0.);
-    }
 
+template<typename V>
 void
-call_dgemv(MatrixRefc const& M,
-           VectorRefc const& x, 
-           VectorRef       & y,
-           Real alpha,
-           Real beta,
-           bool fromleft)
+call_gemv(MatRefc<V> const& M,
+          VecRefc<V> const& x, 
+          VecRef<V>       & y,
+          Real alpha,
+          Real beta,
+          bool fromleft)
     {
 #ifdef DEBUG
     if(!isContiguous(M))
@@ -376,13 +371,17 @@ call_dgemv(MatrixRefc const& M,
         m = ncols(M);
         n = nrows(M);
         }
-    dgemv_wrapper(trans,alpha,beta,m,n,M.data(),x.data(),stride(x),y.data(),stride(y));
+    gemv_wrapper(trans,alpha,beta,m,n,M.data(),x.data(),stride(x),y.data(),stride(y));
     }
+template void call_gemv(MatRefc<Real> const&,VecRefc<Real> const&, VecRef<Real>&,Real,Real,bool);
+template void call_gemv(MatRefc<Cplx> const&,VecRefc<Cplx> const&, VecRef<Cplx>&,Real,Real,bool);
 
+
+template<typename V>
 void
-mult(MatrixRefc M,
-     VectorRefc x,
-     VectorRef y,
+mult(MatRefc<V> M,
+     VecRefc<V> x,
+     VecRef<V> y,
      bool fromleft)
     {
 #ifdef DEBUG
@@ -391,13 +390,16 @@ mult(MatrixRefc M,
     if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
         throw std::runtime_error("matrix vector mult: wrong size for result (y) vec");
 #endif
-    call_dgemv(M,x,y,1,0,fromleft);
+    call_gemv(M,x,y,1,0,fromleft);
     }
+template void mult(MatRefc<Real>,VecRefc<Real>,VecRef<Real>,bool);
+template void mult(MatRefc<Cplx>,VecRefc<Cplx>,VecRef<Cplx>,bool);
 
+template<typename V>
 void
-multAdd(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multAdd(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft)
     {
 #ifdef DEBUG
@@ -406,13 +408,17 @@ multAdd(MatrixRefc M,
     if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
         throw std::runtime_error("multAdd: wrong size for result (y) vec");
 #endif
-    call_dgemv(M,x,y,1,1,fromleft);
+    call_gemv(M,x,y,1,1,fromleft);
     }
+template void multAdd(MatRefc<Real>,VecRefc<Real>,VecRef<Real>,bool);
+template void multAdd(MatRefc<Cplx>,VecRefc<Cplx>,VecRef<Cplx>,bool);
 
+
+template<typename V>
 void
-multSub(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multSub(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft)
     {
 #ifdef DEBUG
@@ -421,8 +427,10 @@ multSub(MatrixRefc M,
     if(fromleft ? ncols(M)!=y.size() : nrows(M)!=y.size())
         throw std::runtime_error("multSub: wrong size for result (y) vec");
 #endif
-    call_dgemv(M,x,y,-1,1,fromleft);
+    call_gemv(M,x,y,-1,1,fromleft);
     }
+template void multSub(MatRefc<Real>,VecRefc<Real>,VecRef<Real>,bool);
+template void multSub(MatRefc<Cplx>,VecRefc<Cplx>,VecRef<Cplx>,bool);
 
 
 } //namespace itensor

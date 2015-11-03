@@ -136,7 +136,7 @@ operator*(MatrixRefc const& A,
           VectorRefc const& b)
     {
     Vector res(nrows(A));
-    mult(A,b,res);
+    mult(A,b,makeRef(res));
     return res;
     }
 
@@ -146,7 +146,7 @@ operator*(VectorRefc const& a,
     {
     Vector res(ncols(B));
     bool fromleft = true;
-    mult(B,a,res,fromleft);
+    mult(B,a,makeRef(res),fromleft);
     return res;
     }
 

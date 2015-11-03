@@ -92,10 +92,25 @@ gemm(MatRefc<VA> A,
      Real alpha,
      Real beta);
 
+template<typename VA, typename VB>
 void
-mult(MatrixRefc A,
-     MatrixRefc B,
-     MatrixRef  C);
+mult(MatRefc<VA> A, 
+     MatRefc<VB> B, 
+     MatRef<common_type<VA,VB>> C);
+
+template<typename MatA, 
+         typename MatB,
+         typename MatC,
+class=stdx::require<hasMatRange<MatA>,
+                    hasMatRange<MatB>,
+                    hasMatRange<MatC>>>
+void
+mult(MatA const& A, 
+     MatB const& B, 
+     MatC      & C)
+    {
+    gemm(makeRef(A),makeRef(B),makeRef(C),1.,0.);
+    }
 
 
 // compute matrix multiply (dgemm) A*B
@@ -105,30 +120,33 @@ multAdd(MatrixRefc A,
         MatrixRefc B, 
         MatrixRef  C);
 
+template<typename V>
 void
-mult(MatrixRefc M,
-     VectorRefc x,
-     VectorRef y,
+mult(MatRefc<V> M,
+     VecRefc<V> x,
+     VecRef<V> y,
      bool fromleft = false);
 
 //y = y+M*x
+template<typename V>
 void
-multAdd(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multAdd(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft = false);
 
 //y = y-M*x
+template<typename V>
 void
-multSub(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multSub(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft = false);
 
-void
-mult(CMatrixRefc A,
-     CMatrixRefc B,
-     CMatrixRef  C);
+//void
+//mult(CMatrixRefc A,
+//     CMatrixRefc B,
+//     CMatrixRef  C);
 
 //Reducing number of columns does not affect
 //remaining data (column major storage)
@@ -139,6 +157,18 @@ reduceCols(Mat<V> & M, size_t new_ncols);
 template<typename V>
 void
 resize(Mat<V> & M, size_t nrows, size_t ncols);
+
+template<typename T>
+void 
+resize(MatRefc<T> const& M, size_t nr, size_t nc)
+    {
+    if((nrows(M)!=nr) || (ncols(M)!=nc))
+        {
+        auto msg = format("Matrix ref has wrong size, expected=%dx%d, actual=%dx%d",
+                          nr,nc,nrows(M),ncols(M));
+        throw std::runtime_error(msg);
+        }
+    }
 
 
 template<typename V>
