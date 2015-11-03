@@ -242,15 +242,6 @@ template<typename VA, typename VB>
 Mat<VA>&
 operator*=(Mat<VA> & A, MatRefc<VB> const& B) { A = mult(makeRef(A),B); return A; }
 
-void
-randomize(MatrixRef const& M);
-void
-randomize(Matrix & M);
-void
-randomize(CMatrixRef const& M);
-void
-randomize(CMatrix & M);
-
 template<typename... CtrArgs>
 Matrix
 randomMat(CtrArgs&&... args);

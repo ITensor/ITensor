@@ -163,9 +163,6 @@ template<>
 Real
 norm(VectorRefc const& v);
 
-void
-randomize(VectorRef v);
-
 Vector
 randomVec(long size);
 

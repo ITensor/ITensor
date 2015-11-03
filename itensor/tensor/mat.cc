@@ -215,28 +215,6 @@ operator-=(CMatrixRef const& A, CMatrix && B)
     subtract(A,makeRef(B));
     }
 
-void
-randomize(MatrixRef const& M)
-    {
-    for(auto& el : M) el = detail::quickran();
-    }
-void
-randomize(Matrix & M)
-    {
-    for(auto& el : M) el = detail::quickran();
-    }
-void
-randomize(CMatrixRef const& M)
-    {
-    for(auto& el : M) el = Cplx(detail::quickran(),detail::quickran());
-    }
-void
-randomize(CMatrix & M)
-    {
-    for(auto& el : M) el = Cplx(detail::quickran(),detail::quickran());
-    }
-
-
 template<typename V>
 void
 printMatrix(std::ostream& s, MatRefc<V> const& M)

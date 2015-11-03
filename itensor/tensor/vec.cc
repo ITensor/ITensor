@@ -204,17 +204,6 @@ operator*(VectorRefc a, VectorRefc b)
     return ddot_wrapper(a.size(),a.data(),stride(a),b.data(),stride(b));
     }
 
-void
-randomize(VectorRef v)
-    {
-    for(auto& el : v) el = detail::quickran();
-    }
-
-void
-randomize(CVectorRef v)
-    {
-    for(auto& el : v) el = Cplx(detail::quickran(),detail::quickran());
-    }
 
 //
 //
@@ -253,6 +242,13 @@ sumels(VectorRefc v)
 
 void
 resize(Vector & v,
+       size_t newsize)
+    {
+    v.resize(VecRange(newsize));
+    }
+
+void
+resize(CVector & v,
        size_t newsize)
     {
     v.resize(VecRange(newsize));
