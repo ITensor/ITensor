@@ -143,9 +143,9 @@ doTask(SumEls<IQIndex>, IQTReal const& d)
     }
 
 void
-doTask(MultReal const& M, IQTReal & d)
+doTask(Mult<Real> const& M, IQTReal & d)
     {
-    dscal_wrapper(d.store.size(),M.r,d.store.data());
+    dscal_wrapper(d.store.size(),M.x,d.store.data());
     }
 
 
@@ -431,12 +431,6 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
         }
     }
 
-
-void
-doTask(Write& W, IQTReal const& d)
-    {
-    W.writeType(StorageType::IQTReal,d); 
-    }
 
 } //namespace itensor
 

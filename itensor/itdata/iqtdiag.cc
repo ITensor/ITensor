@@ -94,11 +94,11 @@ doTask(SumEls<IQIndex>, IQTDiag const& d)
     }
 
 void
-doTask(MultReal & M, IQTDiag & d)
+doTask(Mult<Real> & M, IQTDiag & d)
     {
     //use BLAS algorithm?
     for(auto& elt : d.store)
-        elt *= M.r;
+        elt *= M.x;
     }
 
 void
@@ -283,12 +283,6 @@ doTask(PrintIT<IQIndex> & P,
                 }
             }
         }
-    }
-
-void
-doTask(Write & W, IQTDiag const& d)
-    {
-    W.writeType(StorageType::IQTDiag,d); 
     }
 
 } //namespace itensor

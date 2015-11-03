@@ -162,7 +162,7 @@ Cplx
 doTask(SumEls<IQIndex>, IQTDiag const& d);
 
 void
-doTask(MultReal & M, IQTDiag & d);
+doTask(Mult<Real> & M, IQTDiag & d);
 
 void
 doTask(Contract<IQIndex>& Con,
@@ -188,8 +188,8 @@ doTask(NormNoScale, IQTDiag const& d);
 void
 doTask(PrintIT<IQIndex> & P, IQTDiag const& d);
 
-void
-doTask(Write & W, IQTReal const& d);
+auto inline
+doTask(StorageType const& S, IQTDiag const& d) ->StorageType::Type { return StorageType::IQTDiag; }
 
 } //namespace itensor
 

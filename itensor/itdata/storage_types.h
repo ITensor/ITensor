@@ -46,10 +46,10 @@ Dense<Real>,
 Dense<Cplx>,
 ITCombiner,
 Diag<Real>,
-Diag<Cplx>
-//IQTReal,
-//IQTCombiner,
-//IQTDiag
+Diag<Cplx>,
+IQTReal,
+IQTCombiner,
+IQTDiag
 //ITLazy
 //-----------
 >;
@@ -61,8 +61,8 @@ Diag<Cplx>
 #include "itensor/itdata/dense.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/diag.h"
-//#include "itensor/itdata/iqtreal.h"
-//#include "itensor/itdata/iqtcombiner.h"
-//#include "itensor/itdata/iqtdiag.h"
+#include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/iqtcombiner.h"
+#include "itensor/itdata/iqtdiag.h"
 ////#include "itensor/itdata/itlazy.h"
 #endif

@@ -178,7 +178,7 @@ Cplx
 doTask(SumEls<IQIndex>, IQTReal const& d);
 
 void
-doTask(MultReal const& M, IQTReal& d);
+doTask(Mult<Real> const& M, IQTReal& d);
 
 void
 doTask(PlusEQ<IQIndex> const& P,
@@ -210,7 +210,7 @@ void inline
 doTask(TakeImag, IQTReal & d) 
     { 
     //Set all elements to zero
-    doTask(MultReal{0.},d);
+    doTask(Mult<Real>{0.},d);
     }
 
 Real
@@ -219,8 +219,8 @@ doTask(NormNoScale, IQTReal const& d);
 void
 doTask(PrintIT<IQIndex>& P, IQTReal const& d);
 
-void
-doTask(Write& W, IQTReal const& d);
+auto inline
+doTask(StorageType const& S, IQTReal const& d) ->StorageType::Type { return StorageType::IQTReal; }
 
 IQTReal::BlOf inline
 make_blof(long b, long o)
