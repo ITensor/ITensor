@@ -48,6 +48,10 @@ template<typename V>
 void 
 orthog(MatRef<V> M, size_t numpass = 2);
 
+template<typename Mat_,class=stdx::require<hasMatRange<Mat_>>>
+void 
+orthog(Mat_ && M, size_t numpass = 2) { orthog(makeRef(M),numpass); }
+
 
 //
 // Compute U,D,V such that 
