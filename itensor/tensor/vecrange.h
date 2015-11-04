@@ -8,12 +8,13 @@
 #include <iterator> 
 #include "itensor/util/print.h"
 #include "itensor/util/error.h"
+#include "itensor/tensor/range.h"
 
 namespace itensor {
 
 class VecRangeIter;
 
-class VecRange
+class VecRange : public RangeType
     {
     public:
     using size_type = size_t;
@@ -62,8 +63,11 @@ class VecRange
         return stride_; 
         }
 
-    size_type 
+    size_type constexpr
     r() const { return 1; }
+
+    size_type constexpr
+    size() const { return 1; }
 
     iterator
     begin() const;
@@ -80,6 +84,9 @@ class VecRange
 
     };
 
+VecRange::size_type inline constexpr
+rank(VecRange const& R) { return 1; }
+
 //make VecRange with same extent but stride()==1
 VecRange inline
 normalRange(VecRange const& vr)
@@ -87,13 +94,21 @@ normalRange(VecRange const& vr)
     return VecRange{vr.extent()};
     }
 
-//0-indexed
-auto inline
-offset(VecRange const& vr, VecRange::size_type ind)
-    -> VecRange::size_type
-    {
-    return vr.stride()*ind;
-    }
+////0-indexed
+//auto inline
+//offset(VecRange const& vr, VecRange::size_type ind)
+//    -> VecRange::size_type
+//    {
+//    return vr.stride()*ind;
+//    }
+//
+//template<typename Inds>
+//auto
+//offset(VecRange const& vr, Inds const& i)
+//    -> stdx::if_compiles_return<VecRange::size_type,decltype(i[0])>
+//    {
+//    return vr.stride()*i[0];
+//    }
 
 auto inline
 area(VecRange const& vr)
