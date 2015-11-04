@@ -244,7 +244,7 @@ checkSVDDone(VectorRefc const& D,
     auto N = D.size();
     if(N <= 1 || thresh <= 0) 
         {
-        println("Got zero thresh");
+        //println("Got zero thresh");
         return make_tuple(true,1);
         }
     auto D1t = D(0)*thresh;
