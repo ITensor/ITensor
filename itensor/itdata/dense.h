@@ -224,7 +224,7 @@ void
 doTask(TakeReal, DenseReal const& );
 
 void
-doTask(TakeReal, DenseCplx const& );
+doTask(TakeReal, DenseCplx const& D, ManageStore & m);
 
 void
 doTask(TakeImag, DenseReal & d);
