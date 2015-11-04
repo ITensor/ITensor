@@ -29,9 +29,9 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-#SOURCES+= mps/mps.cc 
-#SOURCES+= mps/mpo.cc 
-#SOURCES+= mps/autompo.cc
+SOURCES+= mps/mps.cc 
+SOURCES+= mps/mpo.cc 
+SOURCES+= mps/autompo.cc
 
 ####################################
 
