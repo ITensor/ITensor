@@ -263,7 +263,7 @@ complexDavidson(const BigMatrixT& A,
             else
                 {
                 MrefR *= -1;
-                diagSymmetric(MrefR,UR,D);
+                diagHermitian(MrefR,UR,D);
                 MrefR *= -1;
                 D *= -1;
                 //println("D = \n",D);
@@ -423,7 +423,7 @@ complexDavidson(const BigMatrixT& A,
                 if(debug_level_ >= 2)
                     println("Vector not independent, randomizing");
                 q = V.at(ni-1);
-                q = randomize(q);
+                randomize(q);
 
                 if(ni >= maxsize)
                     {
