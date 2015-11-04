@@ -218,13 +218,13 @@ showEigs(Vector const& P,
 
 template<typename T>
 Spectrum
-svd(ITensor const& A,
-    Index const& ui, 
-    Index const& vi,
-    ITensor & U, 
-    ITensor & D, 
-    ITensor & V,
-    Args const& args)
+svdImpl(ITensor const& A,
+        Index const& ui, 
+        Index const& vi,
+        ITensor & U, 
+        ITensor & D, 
+        ITensor & V,
+        Args const& args)
     {
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -248,12 +248,6 @@ svd(ITensor const& A,
     TIMER_START(6)
     SVD(M,UU,DD,VV,thresh);
     TIMER_STOP(6)
-
-    ////Check:
-    //Matrix DM(DD.size(),DD.size());
-    //diagonal(DM) &= DD;
-    //Print(norm(M-UU*DM*conj(transpose(VV))));
-
 
     //conjugate VV so later we can just do
     //U*D*V to reconstruct ITensor A:
@@ -309,7 +303,6 @@ svd(ITensor const& A,
     U = ITensor({ui,uL},Dense<T>(move(UU.storage())),LogNum(signfix));
     V = ITensor({vi,vL},Dense<T>(move(VV.storage())));
 
-
     //Square all singular values
     //since convention is to report
     //density matrix eigs
@@ -335,9 +328,9 @@ svdRank2(ITensor const& A,
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
     if(isComplex(A))
         {
-        return svd<Cplx>(A,ui,vi,U,D,V,args);
+        return svdImpl<Cplx>(A,ui,vi,U,D,V,args);
         }
-    return svd<Real>(A,ui,vi,U,D,V,args);
+    return svdImpl<Real>(A,ui,vi,U,D,V,args);
     }
 
 Spectrum
