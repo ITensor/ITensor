@@ -10,8 +10,17 @@
 #include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/timers.h"
+#include "itensor/types.h"
 
 namespace itensor {
+
+template<typename T>
+bool inline constexpr
+isReal() { return std::is_same<stdx::decay_t<T>,Real>::value; }
+
+template<typename T>
+bool inline constexpr
+isCplx() { return std::is_same<stdx::decay_t<T>,Cplx>::value; }
 
 using Label = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
 //using Label = VarArray<long,15ul>; //sizeof(VarArray<long,15ul>)==128
@@ -21,8 +30,11 @@ using Label = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
 template<typename T>
 class DataRange;
 
-using Data  = DataRange<double>;
-using cData = DataRange<const double>;
+using Data  = DataRange<Real>;
+using Datac = DataRange<const Real>;
+
+using CData = DataRange<Cplx>;
+using CDatac = DataRange<const Cplx>;
 
 template<typename T>
 class DataRange

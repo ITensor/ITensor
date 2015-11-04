@@ -40,13 +40,13 @@ ITensorT(Cplx val)
   : scale_(1.)
     { 
     if(val.imag() == 0)
-        store_ = newITData<ITReal>(1,val.real());
+        store_ = newITData<DenseReal>(1,val.real());
     else
-        store_ = newITData<ITCplx>(1,val);
+        store_ = newITData<DenseCplx>(1,val);
     //if(val.imag() == 0)
-    //    store_ = newITData<ITDiag<Real>>(1,val.real());
+    //    store_ = newITData<Diag<Real>>(1,val.real());
     //else
-    //    store_ = newITData<ITDiag<Cplx>>(1,val);
+    //    store_ = newITData<Diag<Cplx>>(1,val);
     }
 
 
@@ -105,7 +105,7 @@ operator<<(ostream & s, const ITensor& t)
 ITensor
 matrixTensor(Matrix&& M, const Index& i1, const Index& i2)
     {
-    auto res = ITensor({i1,i2},ITReal{std::move(M.storage())});
+    auto res = ITensor({i1,i2},DenseReal{std::move(M.storage())});
     M.clear();
     return res;
     }

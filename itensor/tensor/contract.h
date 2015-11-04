@@ -7,15 +7,17 @@
 
 #include "itensor/tensor/vec.h"
 #include "itensor/util/args.h"
+#include "itensor/util/count.h"
 #include "itensor/detail/gcounter.h"
 
 namespace itensor {
 
-template<typename RangeT>
+template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci,
+contract(TenRefc<RangeT,VA> A, Label const& ai, 
+         TenRefc<RangeT,VB> B, Label const& bi, 
+         TenRef<RangeT,common_type<VA,VB>>  C, 
+         Label const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 
@@ -43,25 +45,25 @@ contractloop(Ten<range_type> const& A, Label const& ai,
 
 //All indices of B contracted
 //(A can have some uncontracted indices)
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA const& A, Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VectorRef          C, Label const& ci);
+contractDiagFull(DiagElsA           const& A, Label const& ai, 
+                 TenRefc<RangeT,VB> const& B, Label const& bi, 
+                 VecRef<VC>         const& C, Label const& ci);
 
 //Some indices of B uncontracted
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA const& A,  Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci);
+contractDiagPartial(DiagElsA           const& A, Label const& ai,
+                    TenRefc<RangeT,VB> const& B, Label const& bi, 
+                    TenRef<RangeT,VC>  const& C, Label const& ci);
 
 //Non-contracting product
-template<typename R>
+template<class TA, class TB, class TC>
 void 
-ncprod(TenRefc<R> A, Label const& ai, 
-       TenRefc<R> B, Label const& bi, 
-       TenRef<R>  C, Label const& ci);
+ncprod(TA && A, Label const& ai, 
+       TB && B, Label const& bi, 
+       TC && C, Label const& ci);
 
 template<typename Inds, typename Func>
 long
@@ -115,10 +117,11 @@ find_index(InfArray<T,MaxSize> const& v,
 /// Implementations
 ///
 
-void inline
-contract(Tensor const& A, Label const& ai, 
-         Tensor const& B, Label const& bi, 
-         Tensor      & C, Label const& ci,
+template<typename value_t>
+void
+contract(Ten<Range,value_t> const& A, Label const& ai, 
+         Ten<Range,value_t> const& B, Label const& bi, 
+         Ten<Range,value_t>      & C, Label const& ci,
          Real alpha,
          Real beta)
     {
@@ -201,11 +204,11 @@ computeLabels(Inds const& Lis,
 //Some indices of B uncontracted
 //DiagElsA is any function object returning
 //diagonal elements of A (such as a VectorRefc)
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA const& A,  Label const& ai,
-                    TenRefc<RangeT> B, Label const& bi, 
-                    TenRef<RangeT>  C, Label const& ci)
+contractDiagPartial(DiagElsA           const& A, Label const& ai,
+                    TenRefc<RangeT,VB> const& B, Label const& bi, 
+                    TenRef<RangeT,VC>  const& C, Label const& ci)
     {
     using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
@@ -265,11 +268,11 @@ contractDiagPartial(DiagElsA const& A,  Label const& ai,
         }
     }
 
-template<typename DiagElsA, typename RangeT>
+template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA const& A,  Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VectorRef          C,  Label const& ci)
+contractDiagFull(DiagElsA           const& A, Label const& ai, 
+                 TenRefc<RangeT,VB> const& B, Label const& bi, 
+                 VecRef<VC>         const& C, Label const& ci)
     {
     using A_size_type = decltype(A.size());
 
@@ -293,5 +296,7 @@ contractDiagFull(DiagElsA const& A,  Label const& ai,
     }
 
 } //namespace itensor
+
+#include "itensor/tensor/contract.ih"
 
 #endif

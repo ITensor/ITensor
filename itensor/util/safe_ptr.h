@@ -24,10 +24,17 @@ class SafePtr
     size_t offset_end_ = 0;
     public:
 
+    //Defined non-explicit so we can write
+    //SAFE_PTR_OF(T) sp = nullptr;
+    SafePtr(T* pt = nullptr)
+        {
+        if(pt) throw std::runtime_error("SafePtr: single-arg constructor only accepts nullptr");
+        }
+
     SafePtr(T* pt, size_t offset_end)
         : p_(pt), offset_(0), offset_end_(offset_end)
         { 
-        if(!p_) throw std::runtime_error("SafePtr: pointer is null");
+        //if(!p_) throw std::runtime_error("SafePtr: pointer is null");
         }
 
     SafePtr(T* pt, size_t offset, size_t offset_end)
@@ -36,27 +43,60 @@ class SafePtr
         if(!p_) throw std::runtime_error("SafePtr: pointer is null");
         }
 
+    //Allow automatic conversion SafePtr<T> -> SafePtr<const T>
+    SafePtr(SafePtr<value_type> const& P)
+        { 
+        operator=(P);
+        }
+    SafePtr&
+    operator=(SafePtr<value_type> const& P)
+        {
+        p_ = P.getStart();
+        offset_ = P.offset();
+        offset_end_ = P.offsetEnd();
+        return *this;
+        }
+
     size_t
     offset() const { return offset_; }
     size_t
     offsetEnd() const { return offset_end_; }
     bool
     validOffset() const { return (offset_ < offset_end_); }
+    size_t
+    range() const 
+        { 
+        if(validOffset()) return (offset_end_-offset_);
+        return 0ul;
+        }
 
     pointer
     get() const 
         { 
         if(!p_) return nullptr;
-        return p_+offset_; 
+        return (p_+offset_); 
         }
 
     pointer
-    safeGet() const 
+    safeGet(size_t expected_range)
         {
-        if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
+        if(!p_) 
+            {
+            throw std::runtime_error("SafePtr: dereferencing null pointer");
+            }
         if(!validOffset())
             {
-            auto error_msg = format("SafePtr: offset >= offset_end (%d >= %d)",offset_,offset_end_);
+            auto error_msg = 
+            format("SafePtr: offset >= offset_end (%d >= %d)",
+                   offset_,offset_end_);
+            throw std::runtime_error(error_msg);
+            }
+        auto actual_range = offsetEnd()-offset();
+        if(expected_range > actual_range)
+            {
+            auto error_msg = 
+            format("SafePtr: expected_range > actual_range (%d > %d)",
+                    expected_range,actual_range);
             throw std::runtime_error(error_msg);
             }
         return (p_+offset_);
@@ -67,7 +107,10 @@ class SafePtr
     SafePtr&
     operator+=(size_t shift)
         {
-        if(!p_) throw std::runtime_error("SafePtr: incrementing (+=) null pointer");
+        //if(!p_) 
+        //    {
+        //    throw std::runtime_error("SafePtr: incrementing (+=) null pointer");
+        //    }
         offset_ += shift;
         return *this;
         }
@@ -75,7 +118,7 @@ class SafePtr
     SafePtr&
     operator-=(size_t shift)
         {
-        if(!p_) throw std::runtime_error("SafePtr: decrementing (-=) null pointer");
+        //if(!p_) throw std::runtime_error("SafePtr: decrementing (-=) null pointer");
         offset_ -= shift;
         return *this;
         }
@@ -83,7 +126,7 @@ class SafePtr
     SafePtr&
     operator++()
         {
-        if(!p_) throw std::runtime_error("SafePtr: incrementing null pointer");
+        //if(!p_) throw std::runtime_error("SafePtr: incrementing null pointer");
         ++offset_;
         return *this;
         }
@@ -91,7 +134,7 @@ class SafePtr
     SafePtr&
     operator++(int)
         {
-        if(!p_) throw std::runtime_error("SafePtr: incrementing null pointer");
+        //if(!p_) throw std::runtime_error("SafePtr: incrementing null pointer");
         ++offset_;
         return *this;
         }
@@ -99,7 +142,7 @@ class SafePtr
     SafePtr&
     operator--()
         {
-        if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
+        //if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
         --offset_;
         return *this;
         }
@@ -107,16 +150,16 @@ class SafePtr
     SafePtr&
     operator--(int)
         {
-        if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
+        //if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
         --offset_;
         return *this;
         }
 
     reference
-    operator*() { return *safeGet(); }
+    operator*() { return *safeFront(); }
 
     pointer
-    operator->() { return safeGet(); }
+    operator->() { return safeFront(); }
 
     reference
     operator[](size_t ind)
@@ -132,10 +175,38 @@ class SafePtr
         }
 
     bool
-    operator!=(const SafePtr& other) const { return get() != other.get(); }
+    operator!=(SafePtr const& other) const 
+        { 
+        if(p_ != other.p_)
+            throw std::runtime_error("SafePtr: error, comparing two different starting pointers");
+        return (offset_ != other.offset_);
+        }
 
-    bool
-    operator!=(const_pointer other) const { return get() != other; }
+    //bool
+    //operator!=(const_pointer other) const { return get() != other; }
+
+
+    pointer
+    getStart() const 
+        { 
+        return p_;
+        }
+
+    private:
+
+    pointer
+    safeFront() const 
+        {
+        if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
+        if(!validOffset())
+            {
+            auto error_msg = 
+            format("SafePtr: offset >= offset_end (%d >= %d)",
+                   offset_,offset_end_);
+            throw std::runtime_error(error_msg);
+            }
+        return (p_+offset_);
+        }
 
     };
 
@@ -161,12 +232,39 @@ makeSafePtr(T* pt, size_t offset, size_t offset_end)
     return SafePtr<T>(pt,offset,offset_end);
     }
 
+template<typename NewType, typename OldType>
+SafePtr<NewType>
+reinterpret(SafePtr<OldType> const& p)
+    {
+    //if(!p.validOffset()) throw std::runtime_error("SafePtr: invalid offset found before attempting reinterpret_cast");
+    auto nptr = reinterpret_cast<NewType*>(p.get());
+    auto new_end = (p.range()*sizeof(OldType))/sizeof(NewType);
+    return makeSafePtr(nptr,new_end);
+    }
+
+
+//use like SAFE_PTR_CHECK_SIZE(sp,assumed_size);
+//checks if SafePtr sp has assumed_size elements in its range
+#define SAFE_PTR_CHECK_SIZE(SP,SZ) assert(SP.validOffset() && ((SP.offsetEnd())-(SP.offset()))==SZ)
+
 #ifdef DEBUG
-#define MAKE_SAFE_PTR(X,Y) makeSafePtr(X,Y)
-#define MAKE_SAFE_PTR_OFFSET(X,Y,Z) makeSafePtr(X,Y,Z)
+
+//SafePtr versions of macros
+#define MAKE_SAFE_PTR(P,SZ) makeSafePtr(P,SZ)
+#define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) makeSafePtr(P,OFF,SZ)
+#define SAFE_REINTERPRET(NT,SP) reinterpret<NT>(SP)
+#define SAFE_PTR_GET(SP,SZ) SP.safeGet(SZ)
+#define SAFE_PTR_OF(T) SafePtr<T>
+
 #else
-#define MAKE_SAFE_PTR(X,Y) (X)
-#define MAKE_SAFE_PTR_OFFSET(X,Y,Z) ((X)+(Y))
+
+//bare pointer versions of macros
+#define MAKE_SAFE_PTR(P,SZ) (P)
+#define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) ((P)+(OFF))
+#define SAFE_PTR_GET(P,SZ) P
+#define SAFE_REINTERPRET(NT,SP) reinterpret_cast<NT*>(SP)
+#define SAFE_PTR_OF(T) T*
+
 #endif
 
 

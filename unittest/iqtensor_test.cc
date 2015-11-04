@@ -215,7 +215,7 @@ SECTION("RandomizeTest")
     {
     IQTensor T(L1(1),S1(1),L2(4),S2(2));
     const QN D = div(T);
-    T = randomize(T);
+    randomize(T);
     CHECK_EQUAL(D,div(T));
     }
 

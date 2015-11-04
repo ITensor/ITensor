@@ -222,11 +222,11 @@ struct CProps
         }
     public:
 
-    template<typename RangeT>
+    template<typename R, typename V1, typename V2>
     void
-    compute(TenRefc<RangeT> A,
-            TenRefc<RangeT> B,
-            TenRefc<RangeT> C)
+    compute(TenRefc<R,V1> A,
+            TenRefc<R,V2> B,
+            TenRefc<R,common_type<V1,V2>> C)
         {
         // Optimizations TODO
         //
@@ -715,51 +715,41 @@ class CABqueue
     };
 
 
-
-template<typename RangeT>
+template<typename range_t, typename VA, typename VB>
 void 
 contract(CProps const& p,
-         TenRefc<RangeT> A, 
-         TenRefc<RangeT> B, 
-         TenRef<RangeT>  C,
+         TenRefc<range_t,VA> A,
+         TenRefc<range_t,VB> B,
+         TenRef<range_t,common_type<VA,VB>>  C,
          Real alpha = 1.,
          Real beta = 0.)
     {
-    //println();
-    //println("------------------------------------------");
-    //
-    // Optimizations TODO
-    //
-    // o Allocate memory for newA, newB, and newC in a single 
-    //   allocation. Use a helper object (with std::array of
-    //   ptrs and sizes) to manage.
-    //   This will also make newA-C into MatrixRef's, avoiding
-    //   having to allocate any Ranges.
-    // 
+    using VC = common_type<VA,VB>;
+    auto Apsize = p.permuteA() ? area(p.newArange) : 0ul;
+    auto Bpsize = p.permuteB() ? area(p.newBrange) : 0ul;
+    auto Cpsize = p.permuteC() ? area(p.newCrange) : 0ul;
+    auto Abufsize = isCplx(A) ? 2ul*Apsize : Apsize;
+    auto Bbufsize = isCplx(B) ? 2ul*Bpsize : Bpsize;
+    auto Cbufsize = isCplx(C) ? 2ul*Cpsize : Cpsize;
 
-    //cpu_time cpu;
+    auto d = std::vector<Real>(Abufsize+Bbufsize+Cbufsize);
+    auto ab = MAKE_SAFE_PTR(d.data(),d.size());
+    auto bb = ab+Abufsize;
+    auto cb = bb+Bbufsize;
 
-    MultAlloc<Real,3> alloc;
-    alloc.add(p.permuteA() ? area(p.newArange) : 0);
-    alloc.add(p.permuteB() ? area(p.newBrange) : 0);
-    alloc.add(p.permuteC() ? area(p.newCrange) : 0);
-    alloc.allocate();
-
-    MatrixRefc aref;
+    MatRefc<VA> aref;
     if(p.permuteA())
         {
-        //println("Calling permute A");
         SCOPED_TIMER(12)
-        auto tref = makeTenRef(alloc[0],alloc.data_size(),&p.newArange);
+        auto aptr = SAFE_REINTERPRET(VA,ab);
+        auto tref = makeTenRef(SAFE_PTR_GET(aptr,Apsize),Apsize,&p.newArange);
         tref &= permute(A,p.PA);
         aref = transpose(makeMatRefc(tref.store(),p.dmid,p.dleft));
         }
     else
         {
-        //println("A is matrix already, making aref");
         if(p.Atrans())
             {
-            //println("  Transposing aref");
             aref = transpose(makeMatRefc(A.store(),p.dmid,p.dleft));
             }
         else
@@ -768,21 +758,19 @@ contract(CProps const& p,
             }
         }
 
-    MatrixRefc bref;
+    MatRefc<VB> bref;
     if(p.permuteB())
         {
-        //println("Calling permute B");
         SCOPED_TIMER(13)
-        auto tref = makeTenRef(alloc[1],alloc.data_size(),&p.newBrange);
+        auto bptr = SAFE_REINTERPRET(VB,bb);
+        auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bpsize),Bpsize,&p.newBrange);
         tref &= permute(B,p.PB);
         bref = makeMatRefc(tref.store(),p.dmid,p.dright);
         }
     else
         {
-        //println("B is matrix already, making bref");
         if(p.Btrans())
             {
-            //println("  Transposing bref");
             bref = transpose(makeMatRefc(B.store(),p.dright,p.dmid));
             }
         else
@@ -791,22 +779,12 @@ contract(CProps const& p,
             }
         }
 
-    //println("A and B permuted, took ",cpu.sincemark());
-
-#ifdef DEBUG
-    if(C.size() != nrows(aref)*ncols(bref))
-        {
-        println("C.size() = ",C.size());
-        printfln("ncols(aref)*nrows(bref) = %d*%d = %d",ncols(aref),nrows(bref),ncols(aref)*nrows(bref));
-        throw std::runtime_error("incorrect size of C in contract");
-        }
-#endif
-
-    MatrixRef cref;
-    TensorRef newC;
+    MatRef<VC> cref;
+    TenRef<Range,VC> newC;
     if(p.permuteC())
         {
-        newC = makeTenRef(alloc[2],alloc.data_size(),&p.newCrange);
+        auto cptr = SAFE_REINTERPRET(VC,cb);
+        newC = makeTenRef(SAFE_PTR_GET(cptr,Cpsize),Cpsize,&p.newCrange);
         cref = makeMatRef(newC.store(),nrows(aref),ncols(bref));
         }
     else
@@ -821,17 +799,9 @@ contract(CProps const& p,
             }
         }
 
-    //cpu.mark();
-    //printfln("Multiplying a %dx%d%s * %dx%d%s = %dx%d%s",
-    //         nrows(aref),ncols(aref),isTransposed(aref)?"(t)":"",
-    //         nrows(bref),ncols(bref),isTransposed(bref)?"(t)":"",
-    //         nrows(cref),ncols(cref),isTransposed(cref)?"(t)":"");
-
     START_TIMER(11)
-    call_gemm(aref,bref,cref,alpha,beta);
+    gemm(aref,bref,cref,alpha,beta);
     STOP_TIMER(11)
-
-    //println("Matrix multiply done, took ",cpu.sincemark());
 
     if(p.permuteC())
         {
@@ -841,31 +811,31 @@ contract(CProps const& p,
 #endif
         C &= permute(newC,p.PC);
         }
-    //println("------------------------------------------");
-    //println();
     }
 
-template<typename RangeT>
+template<typename R, typename T1, typename T2>
 void 
-contractScalar(Real a, 
-               TenRefc<RangeT> B, Label const& bi, 
-               TenRef<RangeT>  C, Label const& ci,
+contractScalar(T1 a, 
+               TenRefc<R,T2> B, Label const& bi, 
+               TenRef<R,common_type<T1,T2>>  C, Label const& ci,
                Real alpha,
                Real beta)
     {
+    using T3 = common_type<T1,T2>;
     auto fac = alpha*a;
     auto PB = permute(B,calcPerm(bi,ci));
     if(beta == 0)
-        transform(PB,C,[fac](Real b, Real& c){ c = fac*b; });
+        transform(PB,C,[fac](T2 b, T3& c){ c = fac*b; });
     else
-        transform(PB,C,[fac,beta](Real b, Real& c){ c = fac*b+beta*c; });
+        transform(PB,C,[fac,beta](T2 b, T3& c){ c = fac*b+beta*c; });
     }
 
-template<typename RangeT>
+template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<RangeT> A, Label const& ai, 
-         TenRefc<RangeT> B, Label const& bi, 
-         TenRef<RangeT>  C, Label const& ci,
+contract(TenRefc<RangeT,VA> A, Label const& ai, 
+         TenRefc<RangeT,VB> B, Label const& bi, 
+         TenRef<RangeT,common_type<VA,VB>>  C, 
+         Label const& ci,
          Real alpha,
          Real beta)
     {
@@ -887,17 +857,45 @@ contract(TenRefc<RangeT> A, Label const& ai,
 
 //Explicit template instantiations:
 template void 
-contract(TenRefc<Range>, Label const&, 
-         TenRefc<Range>, Label const&, 
-         TenRef<Range>,  Label const&,
-         Real alpha,
-         Real beta);
+contract(TenRefc<Range,Real>, Label const&, 
+         TenRefc<Range,Real>, Label const&, 
+         TenRef<Range,Real> , Label const&,
+         Real,Real);
 template void 
-contract(TenRefc<IndexSet>, Label const&, 
-         TenRefc<IndexSet>, Label const&, 
-         TenRef<IndexSet>,  Label const&,
-         Real alpha,
-         Real beta);
+contract(TenRefc<Range,Cplx>, Label const&, 
+         TenRefc<Range,Real>, Label const&, 
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<Range,Real>, Label const&, 
+         TenRefc<Range,Cplx>, Label const&, 
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<Range,Cplx>, Label const&, 
+         TenRefc<Range,Cplx>, Label const&, 
+         TenRef<Range,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Real>, Label const&, 
+         TenRefc<IndexSet,Real>, Label const&, 
+         TenRef<IndexSet,Real> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRefc<IndexSet,Real>, Label const&, 
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Real>, Label const&, 
+         TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
+template void 
+contract(TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRefc<IndexSet,Cplx>, Label const&, 
+         TenRef<IndexSet,Cplx> , Label const&,
+         Real,Real);
 
 
 struct MultInfo
@@ -908,7 +906,7 @@ struct MultInfo
     MultInfo() {} 
     };
 
-MultInfo
+MultInfo static
 computeMultInfo(Label const& ai,
                 Label const& bi, 
                 Label const& ci)
@@ -985,8 +983,6 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
         contract(A,ai,B,bi,C,ci);
         return;
         }
-    //println();
-    //println("Loop start--------------------------------");
     CProps p(ai,bi,ci);
     p.computeNactive();
     //printfln("nactive A, B, C are %d %d %d",p.nactiveA,p.nactiveB,p.nactiveC);
@@ -1004,19 +1000,6 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     long ra = ai.size(),
          rb = bi.size(),
          rc = ci.size();
-
-    //vector<long> cdims(rc);
-    //for(int i = 0; i < ra; ++i)
-    //    if(p.AtoC[i] >= 0)
-    //        {
-    //        cdims[p.AtoC[i]] = A.extent(i);
-    //        }
-    //for(int j = 0; j < rb; ++j)
-    //    if(p.BtoC[j] >= 0)
-    //        {
-    //        cdims[p.BtoC[j]] = B.extent(j);
-    //        }
-    //C = Ten(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
@@ -1093,19 +1076,15 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
 
             if(nfo.Bfirst)
                 {
-                //mult_add(sB,sA,sC);
                 cabq.addtask(sB,sA,sC,offC+1);
                 }
             else
                 {
-                //mult_add(sA,sB,sC);
                 cabq.addtask(sA,sB,sC,offC+1);
                 }
             }
         }
     cabq.run(nthread);
-    //println("Loop end----------------------------------");
-    //println();
     }
 template
 void 
@@ -1159,96 +1138,6 @@ contractDiagFull(VectorRefc        A, Label const& ai,
 //
 //
 
-//Holds an container of pointers to value_type,
-//PtrInter interface pretends this is an actual 
-//container of values (not pointers) instead
-template<typename value_type_, size_t ArrSize>
-class PtrInd
-    {
-    public:
-    using value_type = value_type_;
-    using pointer_type = value_type const*;
-    using storage_type = InfArray<pointer_type,ArrSize>;
-    using size_type = typename storage_type::size_type;
-    private:
-    storage_type ptrs_;
-    public:
 
-    PtrInd(size_type size)
-      : ptrs_(size,nullptr)
-        { }
-
-    size_type
-    size() const { return ptrs_.size(); }
-
-    void
-    set(size_type n, pointer_type p)
-        {
-        ptrs_[n] = p;
-        }
-
-    value_type const&
-    operator[](size_type n) const
-        {
-        return *(ptrs_[n]);
-        }
-    };
-
-//Non-contracting product
-template<typename R>
-void 
-ncprod(TenRefc<R> A, Label const& ai, 
-       TenRefc<R> B, Label const& bi, 
-       TenRef<R>  C, Label const& ci)
-    {
-    auto rA = rank(A),
-         rB = rank(B),
-         rC = rank(C);
-
-    auto cb = rangeBegin(C.range());
-    auto ce = rangeEnd(C.range());
-
-    using value_type = stdx::remove_reference_t<decltype(cb[0])>;
-    using PtrIndType = PtrInd<value_type,Label::arr_size()>;
-    auto aind = PtrIndType(rA);
-    auto bind = PtrIndType(rB);
-
-    for(auto nc : count(rC))
-        {
-        for(auto na : count(rA))
-            {
-            if(ci[nc] == ai[na])
-                {
-                aind.set(na,&cb[nc]);
-                break;
-                }
-            }
-        for(auto nb : count(rB))
-            {
-            if(ci[nc] == bi[nb])
-                {
-                bind.set(nb,&cb[nc]);
-                break;
-                }
-            }
-        }
-
-    auto pa = MAKE_SAFE_PTR(A.data(),A.size());
-    auto pb = MAKE_SAFE_PTR(B.data(),B.size());
-    auto pc = MAKE_SAFE_PTR(C.data(),C.size());
-    for(; cb != ce; ++cb)
-        {
-        pc[cb.offset()] = pa[offset(A,aind)] * pb[offset(B,bind)];
-        }
-    }
-
-template void 
-ncprod(TenRefc<Range> A, Label const& ai, 
-       TenRefc<Range> B, Label const& bi, 
-       TenRef<Range>  C, Label const& ci);
-template void 
-ncprod(TenRefc<IndexSet> A, Label const& ai, 
-       TenRefc<IndexSet> B, Label const& bi, 
-       TenRef<IndexSet>  C, Label const& ci);
 
 } //namespace itensor

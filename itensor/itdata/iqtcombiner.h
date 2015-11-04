@@ -97,8 +97,8 @@ void inline
 doTask(PrintIT<IQIndex> & P, 
        IQTCombiner const& d) { P.s << "IQTCombiner "; }
 
-void 
-doTask(Write& W, IQTCombiner const& d);
+auto inline
+doTask(StorageType const& S, IQTCombiner const& d) ->StorageType::Type { return StorageType::IQTCombiner; }
 
 QN inline
 doTask(CalcDiv const& C, IQTCombiner const& d) { return QN{}; }

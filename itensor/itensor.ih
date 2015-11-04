@@ -42,7 +42,7 @@ ITensorT(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = newITData<ITReal>(area(is_),0.);
+    store_ = newITData<DenseReal>(area(is_),0.);
     set(iv1,rest...,1.);
     }
 
@@ -54,18 +54,17 @@ diagTensor(Complex z,
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
     auto len = minM(is);
-    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(len,z.real()));
-    return ITensor(std::move(is),ITDiag<Complex>(len,z));
+    if(z.imag() == 0) return ITensor(std::move(is),Diag<Real>(len,z.real()));
+    return ITensor(std::move(is),Diag<Complex>(len,z));
     }
 
-template<typename Container, typename... Inds>
-auto
+template<typename Container, typename... Inds, class>
+ITensor
 diagTensor(Container const& C, 
            Index const& i1,
            Inds &&... inds)
-    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
-    //types (such as Container==int) that don't have a value_type member type
-    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
+    //-> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
+    //-> stdx::enable_if_t<std::is_same<typename Container::value_type,Real>::value,ITensor>
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
@@ -82,7 +81,7 @@ diagTensor(Container const& C,
         }
 #endif
     using value_type = typename Container::value_type;
-    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
+    return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
     }
 
 
@@ -90,7 +89,7 @@ template<typename IndexT>
 ITensorT<IndexT>
 randomTensor(const IndexSetT<IndexT>& inds)
     {
-    return randomize(ITensorT<IndexT>{inds});
+    return random(ITensorT<IndexT>{inds});
     }
 
 

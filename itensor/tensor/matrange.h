@@ -11,7 +11,7 @@ namespace itensor {
 
 class MatRangeIter;
 
-struct MatRange
+struct MatRange : public RangeType
     {
     public:
     using size_type = size_t;
@@ -64,6 +64,9 @@ struct MatRange
         }
 
     };
+
+MatRange::size_type inline constexpr
+rank(MatRange const& R) { return 2; }
 
 //make MatRange with same extents 
 //but usual strides

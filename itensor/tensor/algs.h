@@ -12,8 +12,9 @@ namespace itensor {
 static const Real SVD_THRESH = 1E-5;
 
 //
-// diagSymmetric diagonalizes a (real)
-// symmetric matrix M and return U, d
+// diagHermitian diagonalizes a
+// Hermitian (and/or real symmetric) matrix M 
+// and return U, d
 // such that:
 // o Elements of d are the eigenvalues in 
 //   decreasing order.
@@ -21,119 +22,61 @@ static const Real SVD_THRESH = 1E-5;
 //
 // In other words, the following holds:
 //
-//   diagSymmetric(M,U,d);
+//   diagHermitian(M,U,d);
 //   auto D = Matrix(nrows(M),ncols(M));
 //   diagonal(D) &= d;
-//   M == U*D*transpose(U); //<-- pseudo code
+//   //Cplx case:
+//   norm(M-U*D*conj(transpose(U))); //is small
+//   //Real case:
+//   norm(M-U*D*transpose(U)); //is small
 //
-//
-
+template<class MatM, class MatU,class Vecd,
+         class = stdx::require<
+         hasMatRange<MatM>,
+         hasMatRange<MatU>,
+         hasVecRange<Vecd>
+         >>
 void
-diagSymmetric(MatrixRefc const& M,
-              Matrix          & U,
-              Vector          & d);
+diagHermitian(MatM && M,
+              MatU && U,
+              Vecd && d);
 
-void
-diagSymmetric(MatrixRefc const& M,
-              Matrix          & U,
-              VectorRef  const& d);
-
-void
-diagSymmetric(MatrixRefc const& M,
-              MatrixRef  const& U,
-              VectorRef  const& d);
-
-//
-// diagHermitian diagonalizes a 
-// hermitian matrix with real part Mre (symmetric)
-// and imaginary part Mim (antisymmetric)
-// such that:
-// o Elements of d are the (real) eigenvalues in 
-//   decreasing order.
-// o Columns of Ure and Uim are the real and imag
-//   parts of the corresponding eigenvectors
-//
-// In other words, the following holds:
-//
-//   diagHermitian(Mre,Mim,Ure,Uim,d);
-//   auto D = Matrix(nrows(Mre),ncols(Mre));
-//   diagonal(D) &= d;
-//   Mre == Ure*D*transpose(Ure) + Uim*D*transpose(Uim); //<-- pseudo code
-//   Mim == Uim*D*transpose(Ure) - Ure*D*transpose(Uim); //<-- pseudo code
-//
-
-void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              MatrixRef  const& Ure,
-              MatrixRef  const& Uim,
-              VectorRef  const& d);
-
-void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              Matrix          & Ure,
-              Matrix          & Uim,
-              VectorRef  const& d);
-
-void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              Matrix          & Ure,
-              Matrix          & Uim,
-              Vector          & d);
 
 //orthogonalize the columns of a matrixref M, optionally
 //repeating numpass times to reduce roundoff errors
+template<typename V>
 void 
-orthog(MatrixRef M, size_t numpass = 2);
+orthog(MatRef<V> M, size_t numpass = 2);
 
-//Compute U,D,V such that 
-//norm(A-U*DD*transpose(V)) < epsilon
-//where DD is matrix with D on diagonal
-void
-SVDRef(MatrixRefc const& M,
-       MatrixRef  const& U, 
-       VectorRef  const& D, 
-       MatrixRef  const& V,
-       Real thresh = SVD_THRESH);
+template<typename Mat_,class=stdx::require<hasMatRange<Mat_>>>
+void 
+orthog(Mat_ && M, size_t numpass = 2) { orthog(makeRef(M),numpass); }
 
-//Compute U,D,V such that 
-//norm(A-U*D*transpose(V)) < epsilon
-//where DD is matrix with D on diagonal
+
+//
+// Compute U,D,V such that 
+// norm(A-U*DD*conj(transpose(V))) < epsilon
+// where DD is matrix with D on diagonal
+// diagonal(DD) &= D;
+// (for Real case can leave out conj of V)
+//
+template<class MatM, class MatU,class VecD,class MatV,
+         class = stdx::require<
+         hasMatRange<MatM>,
+         hasMatRange<MatU>,
+         hasVecRange<VecD>,
+         hasMatRange<MatV>
+         >>
 void
-SVD(MatrixRefc const& A,
-    Matrix & U, 
-    Vector & D, 
-    Matrix & V,
+SVD(MatM && M,
+    MatU && U, 
+    VecD && D, 
+    MatV && V,
     Real thresh = SVD_THRESH);
 
-void 
-checksvd(MatrixRefc const& A, 
-         MatrixRefc const& U, 
-         VectorRefc const& D, 
-         MatrixRefc const& V);
-
-void
-SVDRef(MatrixRefc const& Mre,
-       MatrixRefc const& Mim,
-       MatrixRef  const& Ure, 
-       MatrixRef  const& Uim, 
-       VectorRef  const& D, 
-       MatrixRef  const& Vre,
-       MatrixRef  const& Vim,
-       Real thresh = SVD_THRESH);
-
-void
-SVD(MatrixRefc const& Mre,
-    MatrixRefc const& Mim,
-    Matrix & Ure, 
-    Matrix & Uim, 
-    Vector & D, 
-    Matrix & Vre,
-    Matrix & Vim,
-    Real thresh = SVD_THRESH);
 
 } //namespace itensor
+
+#include "itensor/tensor/algs.ih"
 
 #endif

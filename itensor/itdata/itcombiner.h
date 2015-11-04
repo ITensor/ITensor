@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITCOMBINER_H
 #define __ITENSOR_ITCOMBINER_H
 
-#include "itensor/itdata/itreal.h"
+#include "itensor/itdata/dense.h"
 
 namespace itensor {
 
@@ -34,38 +34,28 @@ doTask(NormNoScale, const ITCombiner& d);
 void
 doTask(Conj,const ITCombiner& d);
 
-void
-doTask(Contract<Index>& C,
-       const ITReal& d,
-       const ITCombiner& cmb,
-       ManageStore& m);
-
-void
-doTask(Contract<Index>& C,
-       const ITCombiner& cmb,
-       const ITReal& d,
-       ManageStore& m);
-
+template<typename V>
 void
 doTask(Contract<Index> & C,
-       ITCplx     const& d,
+       Dense<V>   const& d,
        ITCombiner const& cmb,
        ManageStore     & m);
 
+template<typename V>
 void
 doTask(Contract<Index> & C,
        ITCombiner const& cmb,
-       ITCplx     const& d,
+       Dense<V>   const& d,
        ManageStore     & m);
 
 bool
-doTask(CheckComplex, const ITCombiner& d);
+doTask(CheckComplex, ITCombiner const& d);
 
 void
-doTask(PrintIT<Index>& P, const ITCombiner& d);
+doTask(PrintIT<Index>& P, ITCombiner const& d);
 
-void
-doTask(Write& W, const ITCombiner& d);
+auto inline
+doTask(StorageType const& S, ITCombiner const& d) ->StorageType::Type { return StorageType::ITCombiner; }
 
 QN 
 doTask(CalcDiv const& C, ITCombiner const& d);

@@ -47,9 +47,9 @@ ITensorT(Complex val)
     { 
     //TODO: change storage type to IQTDiag?
     if(val.imag()==0)
-        store_ = newITData<ITDiag<Real>>(1,val.real());
+        store_ = newITData<Diag<Real>>(1,val.real());
     else
-        store_ = newITData<ITDiag<Complex>>(1,val);
+        store_ = newITData<Diag<Complex>>(1,val);
     }
 
 //IQTensor::
@@ -153,7 +153,7 @@ struct AddITensor
 void
 doTask(AddITensor & A, 
        IQTReal & d, 
-       ITReal const& t)
+       DenseReal const& t)
     {
     auto ddiv = doTask(CalcDiv{A.iqis},d);
     if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
@@ -240,7 +240,7 @@ doTask(ToITensor & T,
        IQTReal const& d)
     {
     auto r = T.is.r();
-    auto nd = ITReal(area(T.is),0);
+    auto nd = DenseReal(area(T.is),0);
     auto *pd = d.data();
     auto *pn = nd.data();
     vector<long> block(r,0);

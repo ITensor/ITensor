@@ -20,10 +20,6 @@ doTask(GetElt<IQIndex> const& g, IQTCombiner const& c)
     return Cplx(1.,0.);
     }
 
-void 
-doTask(Write& W, IQTCombiner const& d)
-    { W.writeType(StorageType::IQTCombiner,d);}
-
 void
 permuteIQ(const Permutation& P,
           const IQIndexSet& Ais,

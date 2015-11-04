@@ -16,13 +16,16 @@ using MatRef = TenRef<MatRange,V>;
 template<typename V>
 using Mat = Ten<MatRange,V>;
 
-using MatrixRef = TenRef<MatRange>;
-using MatrixRefc = TenRefc<MatRange>;
-using Matrix = Ten<MatRange>;
+using MatrixRef = MatRef<Real>;
+using MatrixRefc = MatRefc<Real>;
+using Matrix = Mat<Real>;
 
-using CMatrixRef  = TenRef<MatRange,Cplx>;
-using CMatrixRefc = TenRefc<MatRange,Cplx>;
-using CMatrix     = Ten<MatRange,Cplx>;
+using CMatrixRef = MatRef<Cplx>;
+using CMatrixRefc = MatRefc<Cplx>;
+using CMatrix = Mat<Cplx>;
+
+template<typename M>
+using hasMatRange = std::is_same<MatRange,typename stdx::decay_t<M>::range_type>;
 
 template<typename Mat_>
 auto
@@ -44,18 +47,33 @@ template<typename Mat_>
 bool
 isTransposed(Mat_ const& M) { return isTransposed(M.range()); }
 
-
 void
 operator*=(MatrixRef const& M, Real fac);
+void
+operator*=(CMatrixRef const& M, Real fac);
 
 void
 operator/=(MatrixRef const& M, Real fac);
+void
+operator/=(CMatrixRef const& M, Real fac);
 
 void
 operator+=(MatrixRef const& A, MatrixRefc const& B);
+void
+operator+=(MatrixRef const& A, Matrix && B);
+void
+operator+=(CMatrixRef const& A, CMatrixRefc const& B);
+void
+operator+=(CMatrixRef const& A, CMatrix && B);
 
 void
 operator-=(MatrixRef const& A, MatrixRefc const& B);
+void
+operator-=(MatrixRef const& A, Matrix && B);
+void
+operator-=(CMatrixRef const& A, CMatrixRefc const& B);
+void
+operator-=(CMatrixRef const& A, CMatrix && B);
 
 //Copy data referenced by B to memory referenced by A
 void
@@ -65,18 +83,34 @@ operator&=(MatrixRef const& A, MatrixRefc const& B);
 void inline
 operator&=(MatrixRef const& A, Matrix const& B) { A &= makeRefc(B); }
 
-template<typename V>
+// C = beta*C + alpha*A*B
+template<typename VA, typename VB>
 void
-call_gemm(MatRefc<V> A, 
-          MatRefc<V> B, 
-          MatRef<V>  C,
-          Real alpha,
-          Real beta);
+gemm(MatRefc<VA> A, 
+     MatRefc<VB> B, 
+     MatRef<common_type<VA,VB>>  C,
+     Real alpha,
+     Real beta);
 
+template<typename VA, typename VB>
 void
-mult(MatrixRefc A,
-     MatrixRefc B,
-     MatrixRef  C);
+mult(MatRefc<VA> A, 
+     MatRefc<VB> B, 
+     MatRef<common_type<VA,VB>> C);
+
+template<typename MatA, 
+         typename MatB,
+         typename MatC,
+class=stdx::require<hasMatRange<MatA>,
+                    hasMatRange<MatB>,
+                    hasMatRange<MatC>>>
+void
+mult(MatA const& A, 
+     MatB const& B, 
+     MatC      & C)
+    {
+    gemm(makeRef(A),makeRef(B),makeRef(C),1.,0.);
+    }
 
 
 // compute matrix multiply (dgemm) A*B
@@ -86,114 +120,131 @@ multAdd(MatrixRefc A,
         MatrixRefc B, 
         MatrixRef  C);
 
+template<typename V>
 void
-mult(MatrixRefc M,
-     VectorRefc x,
-     VectorRef y,
+mult(MatRefc<V> M,
+     VecRefc<V> x,
+     VecRef<V> y,
      bool fromleft = false);
 
 //y = y+M*x
+template<typename V>
 void
-multAdd(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multAdd(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft = false);
 
 //y = y-M*x
+template<typename V>
 void
-multSub(MatrixRefc M,
-        VectorRefc x,
-        VectorRef y,
+multSub(MatRefc<V> M,
+        VecRefc<V> x,
+        VecRef<V> y,
         bool fromleft = false);
 
-void
-mult(CMatrixRefc A,
-     CMatrixRefc B,
-     CMatrixRef  C);
+//void
+//mult(CMatrixRefc A,
+//     CMatrixRefc B,
+//     CMatrixRef  C);
 
 //Reducing number of columns does not affect
 //remaining data (column major storage)
+template<typename V>
 void
-reduceCols(Matrix & M, size_t new_ncols);
+reduceCols(Mat<V> & M, size_t new_ncols);
 
+template<typename V>
 void
-resize(Matrix & M, size_t nrows, size_t ncols);
+resize(Mat<V> & M, size_t nrows, size_t ncols);
+
+template<typename T>
+void 
+resize(MatRefc<T> const& M, size_t nr, size_t nc)
+    {
+    if((nrows(M)!=nr) || (ncols(M)!=nc))
+        {
+        auto msg = format("Matrix ref has wrong size, expected=%dx%d, actual=%dx%d",
+                          nr,nc,nrows(M),ncols(M));
+        throw std::runtime_error(msg);
+        }
+    }
 
 
-Matrix 
-operator*(MatrixRefc const& A, Real fac);
+template<typename V>
+Mat<V> 
+operator*(MatRefc<V> const& A, Real fac);
 
-Matrix 
-operator*(Real fac, MatrixRefc const& A);
+template<typename V>
+Mat<V> 
+operator*(Real fac, MatRefc<V> const& A);
 
-Matrix 
-operator*(Matrix && A, Real fac);
+template<typename V>
+Mat<V> 
+operator*(Mat<V> && A, Real fac);
 
-Matrix 
-operator*(Real fac, Matrix && A);
+template<typename V>
+Mat<V> 
+operator*(Real fac, Mat<V> && A);
 
-Matrix 
-operator/(MatrixRefc const& A, Real fac);
+template<typename V>
+Mat<V> 
+operator/(MatRefc<V> const& A, Real fac);
 
-Matrix 
-operator/(Matrix && A, Real fac);
+template<typename V>
+Mat<V> 
+operator/(Mat<V> && A, Real fac);
 
-Matrix 
-operator+(MatrixRefc const& A, MatrixRefc const& B);
+template<typename MatA,typename MatB,class>
+auto
+operator+(MatA && A, MatB && B) -> Mat<common_type<MatA,MatB>>;
 
-Matrix 
-operator+(MatrixRefc const& A, Matrix && B);
+template<typename MatA,typename MatB,class>
+auto
+operator-(MatA && A, MatB && B) -> Mat<common_type<MatA,MatB>>;
 
-Matrix 
-operator+(Matrix && A, MatrixRefc const& B);
-
-Matrix 
-operator+(Matrix && A, Matrix && B);
-
-Matrix 
-operator-(MatrixRefc const& A, MatrixRefc const& B);
-
-Matrix 
-operator-(MatrixRefc const& A, Matrix && B);
-
-Matrix 
-operator-(Matrix && A, MatrixRefc const& B);
-
-Matrix 
-operator-(Matrix && A, Matrix && B);
-
-Matrix 
-matrixMult(MatrixRefc const& A,
-           MatrixRefc const& B);
-
-Matrix inline
-operator*(MatrixRefc const& A, MatrixRefc const& B) { return matrixMult(A,B); }
-
-Matrix inline
-operator*(Matrix const& A, MatrixRefc const& B) { return matrixMult(A,B); }
-
-Matrix inline
-operator*(MatrixRefc const& A, Matrix const& B) { return matrixMult(A,B); }
-
-Matrix inline
-operator*(Matrix const& A, Matrix const& B) { return matrixMult(A,B); }
-
-inline Matrix&
-operator*=(Matrix & A, MatrixRefc const& B) { A = matrixMult(A,B); return A; }
+template<typename MatA,
+         typename MatB,
+         class = stdx::require<hasMatRange<MatA>,hasMatRange<MatB>> >
+Mat<common_type<MatA,MatB>> 
+mult(MatA const& A,
+     MatB const& B);
 
 Vector
 operator*(MatrixRefc const& A,
-          VectorRefc const& v);
+          VectorRefc const& b);
 
 Vector
-operator*(VectorRefc const& v,
-          MatrixRefc const& A);
+operator*(VectorRefc const& a,
+          MatrixRefc const& B);
 
+template<typename VA, typename VB>
+auto
+operator*(MatRefc<VA> const& A, MatRefc<VB> const& B) -> decltype(mult(A,B))
+    { return mult(A,B); }
 
-void
-randomize(MatrixRef const& M);
-void
-randomize(Matrix & M);
+template<typename VA, typename VB>
+auto
+operator*(Mat<VA> const& A, MatRefc<VB> const& B) -> decltype(mult(makeRef(A),B))
+    { return mult(makeRef(A),B); }
+
+template<typename VA, typename VB>
+auto
+operator*(MatRefc<VA> const& A, Mat<VB> const& B) -> decltype(mult(A,makeRef(B)))
+    { return mult(A,makeRef(B)); }
+
+template<typename VA, typename VB>
+auto
+operator*(Mat<VA> const& A, Mat<VB> const& B) -> decltype(mult(makeRef(A),makeRef(B)))
+    { return mult(makeRef(A),makeRef(B)); }
+
+template<typename VA, typename VB>
+Mat<VA>&
+operator*=(Mat<VA> & A, MatRefc<VB> const& B) { A = mult(makeRef(A),B); return A; }
+
+template<typename... CtrArgs>
+Matrix
+randomMat(CtrArgs&&... args);
 
 template<>
 std::ostream&
@@ -211,65 +262,63 @@ template<typename V>
 std::ostream&
 operator<<(std::ostream& s, Ten<MatRange,V> const& M) { return s << makeRefc(M); }
 
-template<typename... CtrArgs>
-Matrix
-randomMat(CtrArgs&&... args)
-    {
-    Matrix M(std::forward<CtrArgs>(args)...);
-    randomize(M);
-    return M;
-    }
 
 //
 // makeMatRef functions
 //
 
-auto inline
-makeMatRef(Real* p,
+template<typename T>
+auto
+makeMatRef(T* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
-    -> MatrixRef
+    -> MatRef<T>
     {
-    return MatrixRef({p,max_offset},MatRange{nrows,ncols});
+    return MatRef<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(const Real* p,
+template<typename T>
+auto
+makeMatRef(T const* p,
            size_t max_offset,
            size_t nrows,
            size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
+    return MatRefc<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRefc(const Real* p,
+template<typename T>
+auto
+makeMatRefc(T const* p,
             size_t max_offset,
             size_t nrows,
             size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc({p,max_offset},MatRange{nrows,ncols});
+    return MatRefc<T>({p,max_offset},MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(Data const& D,
+template<typename T, 
+         class = stdx::enable_if_t<not std::is_const<T>::value> >
+auto
+makeMatRef(DataRange<T> const& D,
            size_t nrows,
            size_t ncols)
-    -> MatrixRef
+    -> MatRef<T>
     {
-    return MatrixRef(D,MatRange{nrows,ncols});
+    return MatRef<T>(D,MatRange{nrows,ncols});
     }
 
-auto inline
-makeMatRef(cData const& D,
+template<typename T>
+auto
+makeMatRef(DataRange<const T> const& D,
            size_t nrows,
            size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<T>
     {
-    return MatrixRefc(D,MatRange{nrows,ncols});
+    return MatRefc<T>(D,MatRange{nrows,ncols});
     }
 
 template<typename T>
@@ -277,11 +326,13 @@ auto
 makeMatRefc(DataRange<T> const& D,
             size_t nrows,
             size_t ncols)
-    -> MatrixRefc
+    -> MatRefc<stdx::remove_const_t<T>>
     {
-    return MatrixRefc(DataRange<const T>(D),MatRange{nrows,ncols});
+    return MatRefc<stdx::remove_const_t<T>>(DataRange<const T>{D},MatRange{nrows,ncols});
     }
 
 } //namespace itensor
+
+#include "mat.ih"
 
 #endif

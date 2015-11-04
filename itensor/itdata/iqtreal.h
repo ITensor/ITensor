@@ -178,7 +178,7 @@ Cplx
 doTask(SumEls<IQIndex>, IQTReal const& d);
 
 void
-doTask(MultReal const& M, IQTReal& d);
+doTask(Mult<Real> const& M, IQTReal& d);
 
 void
 doTask(PlusEQ<IQIndex> const& P,
@@ -210,7 +210,7 @@ void inline
 doTask(TakeImag, IQTReal & d) 
     { 
     //Set all elements to zero
-    doTask(MultReal{0.},d);
+    doTask(Mult<Real>{0.},d);
     }
 
 Real
@@ -219,8 +219,8 @@ doTask(NormNoScale, IQTReal const& d);
 void
 doTask(PrintIT<IQIndex>& P, IQTReal const& d);
 
-void
-doTask(Write& W, IQTReal const& d);
+auto inline
+doTask(StorageType const& S, IQTReal const& d) ->StorageType::Type { return StorageType::IQTReal; }
 
 IQTReal::BlOf inline
 make_blof(long b, long o)
@@ -357,7 +357,7 @@ loopContractedBlocks(BlockSparseA const& A,
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
 
-            auto ablock = cData(A.data(),aio.offset,A.size());
+            auto ablock = Datac(A.data(),aio.offset,A.size());
             assert(ablock);
 
             callback(ablock,Ablockind,
@@ -369,13 +369,13 @@ loopContractedBlocks(BlockSparseA const& A,
     }
 
 template<typename BlockSparseStore, typename Indexable>
-cData
+Datac
 getBlock(BlockSparseStore const& d,
          IQIndexSet const& is,
          Indexable const& block_ind)
     {
     auto r = long(block_ind.size());
-    if(r == 0) return cData(d.data(),d.size());
+    if(r == 0) return Datac(d.data(),d.size());
 #ifdef DEBUG
     if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in getBlock");
 #endif
@@ -389,8 +389,8 @@ getBlock(BlockSparseStore const& d,
     //Do binary search to see if there
     //is a block with block index ii
     auto boff = offsetOf(d.offsets,ii);
-    if(boff >= 0) return cData(d.data(),boff,d.size());
-    return cData{};
+    if(boff >= 0) return Datac(d.data(),boff,d.size());
+    return Datac{};
     }
 
 template<typename BlockSparseStore, typename Indexable>

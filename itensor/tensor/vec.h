@@ -10,21 +10,43 @@
 
 namespace itensor {
 
-using Vector     = Ten<VecRange>;
-using VectorRef  = TenRef<VecRange>;
-using VectorRefc = TenRefc<VecRange>;
+template<typename V>
+using VecRefc = TenRefc<VecRange,V>;
+template<typename V>
+using VecRef = TenRef<VecRange,V>;
+template<typename V>
+using Vec = Ten<VecRange,V>;
 
-auto inline
-stride(VectorRefc const& v) -> decltype(v.stride(0)) { return v.stride(0); }
+using Vector     = Vec<Real>;
+using VectorRef  = VecRef<Real>;
+using VectorRefc = VecRefc<Real>;
 
-auto inline
-stride(Vector const& v) -> decltype(v.stride(0)) { return v.stride(0); }
+using CVector     = Vec<Cplx>;
+using CVectorRef  = VecRef<Cplx>;
+using CVectorRefc = VecRefc<Cplx>;
+
+template<typename V>
+using hasVecRange = std::is_same<VecRange,typename stdx::decay_t<V>::range_type>;
+
+template<typename V>
+auto
+stride(VecRefc<V> const& v) -> decltype(v.stride(0)) { return v.stride(0); }
+
+template<typename V>
+auto
+stride(Vec<V> const& v) -> decltype(v.stride(0)) { return v.stride(0); }
 
 VectorRef
 operator*=(VectorRef v, Real fac);
 
+CVectorRef
+operator*=(CVectorRef v, Real fac);
+
 VectorRef
 operator/=(VectorRef v, Real fac);
+
+CVectorRef
+operator/=(CVectorRef v, Real fac);
 
 VectorRef
 operator+=(VectorRef a, VectorRefc b);
@@ -32,9 +54,14 @@ operator+=(VectorRef a, VectorRefc b);
 VectorRef
 operator-=(VectorRef a, VectorRefc b);
 
-//Copy data referenced by b to memory referenced by a
-VectorRef
-operator&=(VectorRef a, VectorRefc b);
+//Copy data referenced by b to data referenced by a
+void
+operator&=(VectorRef a, VectorRefc const& b);
+
+void
+operator&=(CVectorRef a, CVectorRefc const& b);
+void
+operator&=(CVectorRef a, VectorRefc const& b);
 
 //Dot product
 Real
@@ -136,17 +163,31 @@ template<>
 Real
 norm(VectorRefc const& v);
 
-void
-randomize(VectorRef v);
-
 Vector
 randomVec(long size);
+
+CVector
+randomCVec(long size);
 
 Real
 sumels(VectorRefc v);
 
 void 
 resize(Vector & v, size_t newsize);
+
+void 
+resize(CVector & v, size_t newsize);
+
+template<typename T>
+void 
+resize(VecRefc<T> const& v, size_t newsize)
+    {
+    if(v.size() != newsize)
+        {
+        auto msg = format("Vector ref has wrong size, expected=%d, actual=%d",newsize,v.size());
+        throw std::runtime_error(msg);
+        }
+    }
 
 
 //
@@ -180,53 +221,59 @@ operator<<(std::ostream& s, Vector const& v) { return operator<<(s,makeRefc(v));
 // makeVecRef functions
 //
 
-auto inline
-makeVecRef(Real* p,
+template<typename T>
+auto
+makeVecRef(T * p,
            size_t size)
-    -> VectorRef
+    -> VecRef<T>
     {
-    return VectorRef({p,size},VecRange(size));
+    return VecRef<T>({p,size},VecRange(size));
     }
 
-auto inline
-makeVecRef(const Real* p,
+template<typename T>
+auto
+makeVecRef(T const* p,
            size_t size)
-    -> VectorRefc
+    -> VecRefc<T>
     {
-    return VectorRefc({p,size},VecRange(size));
+    return VecRefc<T>({p,size},VecRange(size));
     }
 
-auto inline
-makeVecRefc(const Real* p,
+template<typename T>
+auto
+makeVecRefc(T const* p,
             size_t size)
-    -> VectorRefc
+    -> VecRefc<T>
     {
     return makeVecRef(p,size);
     }
 
-auto inline
-makeVecRef(Real* p,
+template<typename T>
+auto
+makeVecRef(T* p,
            size_t size,
            size_t stride)
-    -> VectorRef
+    -> VecRef<T>
     {
-    return VectorRef({p,size*stride},VecRange(size,stride));
+    return VecRef<T>({p,size*stride},VecRange(size,stride));
     }
 
-auto inline
-makeVecRef(const Real* p,
+template<typename T>
+auto
+makeVecRef(T const* p,
            size_t size,
            size_t stride)
-    -> VectorRefc
+    -> VecRefc<T>
     {
-    return VectorRefc({p,size*stride},VecRange(size,stride));
+    return VecRefc<T>({p,size*stride},VecRange(size,stride));
     }
 
-auto inline
-makeVecRefc(const Real* p,
+template<typename T>
+auto
+makeVecRefc(T const* p,
             size_t size,
             size_t stride)
-    -> VectorRefc
+    -> VecRefc<T>
     {
     return makeVecRef(p,size);
     }

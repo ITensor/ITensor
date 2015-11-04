@@ -7,7 +7,7 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/tensor/contract.h"
+#include "itensor/iqindex.h"
 
 //
 // Template Method Implementations
@@ -23,7 +23,7 @@ namespace detail {
 void inline
 allocReal(ITensor& T)
     {
-    T.store() = newITData<ITReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(area(T.inds()),0);
     }
 
 void inline
@@ -36,7 +36,7 @@ template<typename Container>
 void
 allocReal(ITensor& T, const Container& inds)
     {
-    T.store() = newITData<ITReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(area(T.inds()),0);
     }
 
 template<typename Container>
@@ -322,12 +322,6 @@ operator*=(ITensorT const& R)
 
     if(!L || !R) Error("Default constructed ITensor in product");
 
-    if(&L == &R)
-        {
-        L = ITensorT(sqr(norm(L)));
-        return L;
-        }
-
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 
     auto C = doTask(Contract<index_type>{L.inds(),R.inds()},
@@ -355,17 +349,6 @@ operator/=(ITensorT const& R)
     auto& L = *this;
 
     if(!L || !R) Error("Default constructed ITensor in product");
-
-    if(&L == &R)
-        {
-        struct Sqr
-            {
-            Real operator()(Real x) const { return x*x; }
-            Cplx operator()(Cplx z) const { return z*z; }
-            };
-        L.apply(Sqr{});
-        return L;
-        }
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds(),true);
 
@@ -462,7 +445,7 @@ ITensorT<IndexT>& ITensorT<IndexT>::
 operator*=(Cplx z)
     {
     if(z.imag() == 0) return operator*=(z.real());
-    doTask(MultCplx{z},store_);
+    doTask(Mult<Cplx>{z},store_);
     return *this;
     }
 
@@ -479,9 +462,9 @@ fill(Cplx z)
         }
     scale_ = scale_type(1.);
     if(z.imag() == 0)
-        doTask(FillReal{z.real()},store_);
+        doTask(Fill<Real>{z.real()},store_);
     else
-        doTask(FillCplx{z},store_);
+        doTask(Fill<Cplx>{z},store_);
     return *this;
     }
 
@@ -553,7 +536,7 @@ scaleTo(scale_type const& newscale)
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
-    doTask(MultReal{scale_.real0()},store_);
+    doTask(Mult<Real>{scale_.real0()},store_);
     scale_ = newscale;
     }
 
@@ -576,7 +559,6 @@ operator*(ITensorT<I> A, ITensorT<I> const& B) { A *= B; return A; }
 template<typename I>
 ITensorT<I>
 operator*(ITensorT<I> const& A, ITensorT<I>&& B) { B *= A; return B; }
-
 template<typename I>
 ITensorT<I> 
 operator*(ITensorT<I> T, Real fac) { T *= fac; return T; }
@@ -764,15 +746,23 @@ norm(const ITensorT<I>& T)
     }
 
 template<typename I>
-ITensorT<I>
-randomize(ITensorT<I> T, const Args& args)
+void
+randomize(ITensorT<I> & T, const Args& args)
     {
     if(!T.store()) detail::allocReal(T);
 #ifdef DEBUG
     if(!T) Error("default initialized tensor in randomize");
 #endif
-    if(args.getBool("Complex",false)) T.generate(detail::quickranCplx);
-    else                              T.generate(detail::quickran);
+    auto cplx = args.getBool("Complex",false);
+    if(cplx) T.generate(detail::quickranCplx);
+    else     T.generate(detail::quickran);
+    }
+
+template<typename I>
+ITensorT<I>
+random(ITensorT<I> T, const Args& args)
+    {
+    randomize(T,args);
     return T;
     }
 
@@ -830,11 +820,11 @@ read(std::istream& s, ITensorT<I>& T)
     read(s,type);
     ITensor::storage_ptr p;
     if(type==StorageType::Null) { /*intentionally left blank*/  }
-    else if(type==StorageType::ITReal) { p = readType<ITReal>(s); }
-    else if(type==StorageType::ITCplx) { p = readType<ITCplx>(s); }
+    else if(type==StorageType::DenseReal) { p = readType<DenseReal>(s); }
+    else if(type==StorageType::DenseCplx) { p = readType<DenseCplx>(s); }
     else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
-    else if(type==StorageType::ITDiagReal) { p = readType<ITDiag<Real>>(s); }
-    else if(type==StorageType::ITDiagCplx) { p = readType<ITDiag<Cplx>>(s); }
+    else if(type==StorageType::DiagReal) { p = readType<Diag<Real>>(s); }
+    else if(type==StorageType::DiagCplx) { p = readType<Diag<Cplx>>(s); }
     else if(type==StorageType::IQTReal) { p = readType<IQTReal>(s); }
     else
         {

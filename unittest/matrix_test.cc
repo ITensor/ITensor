@@ -8,18 +8,20 @@
 using namespace itensor;
 using namespace std;
 
-autovector<Real>
+template<typename T>
+autovector<T>
 randomData(long first, long last)
     {
-    autovector<Real> data(first,last);
+    autovector<T> data(first,last);
     for(auto& el : data) el = Global::random();
     return data;
     }
 
-autovector<Real>
+template<typename T>
+autovector<T>
 randomData(long size)
     {
-    autovector<Real> data(0,size-1);
+    autovector<T> data(0,size-1);
     for(auto& el : data) el = Global::random();
     return data;
     }
@@ -30,7 +32,7 @@ TEST_CASE("Test VectorRef and Vector")
 SECTION("Test makeRef")
     {
     auto size = 10;
-    auto data = randomData(size);
+    auto data = randomData<Real>(size);
 
     auto vr = makeVecRef(data.begin(),size);
     auto cvr = makeVecRefc(data.begin(),size);
@@ -61,7 +63,7 @@ SECTION("Test makeRef")
 SECTION("Constructors")
     {
     auto size = 10;
-    auto data = randomData(size);
+    auto data = randomData<Real>(size);
     auto vr = makeVecRef(data.begin(),size);
     CHECK(vr);
     CHECK(vr.size() == size);
@@ -86,8 +88,8 @@ SECTION("Constructors")
 SECTION("VectorRef Conversion")
     {
     auto size = 10;
-    auto data1 = randomData(size);
-    auto data2 = randomData(size);
+    auto data1 = randomData<Real>(size);
+    auto data2 = randomData<Real>(size);
     auto vr1 = makeVecRef(data1.begin(),size);
     auto cvr2 = makeVecRef(data2.begin(),size);
 
@@ -163,74 +165,144 @@ SECTION("Vector to Ref Conversion")
 SECTION("Construct and assign from VectorRef")
     {
     auto size = 10;
-    auto data = randomData(size);
-    auto vr = makeVecRef(data.begin(),size);
-
-    //print("data = "); for(auto& el : data) print(el," "); println();
-    //print("vr = "); for(auto& el : vr) print(el," "); println();
-
-    Vector v1(vr);
-    CHECK(v1.size() == size);
-    for(auto i : count(size))
+    SECTION("Real Case")
         {
-        CHECK_CLOSE(v1(i),data(i));
+        auto data = randomData<Real>(size);
+        auto vr = makeVecRef(data.begin(),size);
+        Vector v1(vr);
+        CHECK(v1.size() == size);
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),data(i));
+            }
+
+        Vector v2(size+2);
+        v2 = vr;
+        CHECK(v2.size() == size);
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v2(i),data(i));
+            }
         }
 
-    Vector v2(size+2);
-    v2 = vr;
-    CHECK(v2.size() == size);
-    for(auto i : count(size))
+    SECTION("Cplx Case")
         {
-        CHECK_CLOSE(v2(i),data(i));
+        auto data = randomData<Cplx>(size);
+        auto vr = makeVecRef(data.begin(),size);
+
+        CVector v1(vr);
+        CHECK(v1.size() == size);
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),data(i));
+            }
         }
     }
 
 SECTION("Copy data")
     {
     auto size = 10;
-    auto data1 = randomData(size);
-    auto data2 = randomData(size);
-    auto vr1 = makeVecRef(data1.begin(),size);
-    auto vr2 = makeVecRef(data2.begin(),size);
-    auto v1 = randomVec(size);
-    auto v2 = randomVec(4*size);
 
-    vr1 &= v1;
-    for(auto i : count(size))
-        CHECK_CLOSE(data1(i),v1(i));
+    SECTION("Real Case")
+        {
+        auto data1 = randomData<Real>(size);
+        auto data2 = randomData<Real>(size);
+        auto vr1 = makeVecRef(data1.begin(),size);
+        auto vr2 = makeVecRef(data2.begin(),size);
+        auto v1 = randomVec(size);
+        auto v2 = randomVec(4*size);
 
-    vr2 &= makeVecRef(v2.data(),size,4);
-    for(auto i : count(size))
-        CHECK_CLOSE(data2(i),v2(4*i));
+        vr1 &= v1;
+        for(auto i : count(size))
+            CHECK_CLOSE(data1(i),v1(i));
+
+        vr2 &= makeVecRef(v2.data(),size,4);
+        for(auto i : count(size))
+            CHECK_CLOSE(data2(i),v2(4*i));
+        }
+
+    SECTION("Cplx Case")
+        {
+        auto data1 = randomData<Cplx>(size);
+        auto data2 = randomData<Cplx>(size);
+        auto vr1 = makeVecRef(data1.begin(),size);
+        auto vr2 = makeVecRef(data2.begin(),size);
+        auto v1 = randomCVec(size);
+        auto v2 = randomCVec(4*size);
+
+        vr1 &= v1;
+        for(auto i : count(size))
+            CHECK_CLOSE(data1(i),v1(i));
+
+        vr2 &= makeVecRef(v2.data(),size,4);
+        for(auto i : count(size))
+            CHECK_CLOSE(data2(i),v2(4*i));
+        }
     }
 
 SECTION("Scalar multiply, divide")
     {
     auto size = 10;
-    auto data = randomData(size);
-    auto origdata = data;
-    auto vr = makeVecRef(data.begin(),size);
-    auto fac = Global::random();
-
-    vr *= fac;
-    for(auto i : count(size))
+    SECTION("Real Case")
         {
-        CHECK_CLOSE(data(i),fac*origdata(i));
+        auto data = randomData<Real>(size);
+        auto origdata = data;
+        auto vr = makeVecRef(data.begin(),size);
+        auto fac = Global::random();
+
+        vr *= fac;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(data(i),fac*origdata(i));
+            }
+
+        Vector v1(vr);
+        v1 *= fac;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),fac*data(i));
+            }
+
+        v1 /= 2.;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),fac*data(i)/2.);
+            }
         }
 
-    Vector v1(vr);
-    v1 *= fac;
-    for(auto i : count(size))
+    SECTION("Cplx Case")
         {
-        CHECK_CLOSE(v1(i),fac*data(i));
+        auto data = randomData<Cplx>(size);
+        auto origdata = data;
+        auto vr = makeVecRef(data.begin(),size);
+        auto fac = Global::random();
+
+        vr *= fac;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(data(i),fac*origdata(i));
+            }
+
+        CVector v1(vr);
+        v1 *= fac;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),fac*data(i));
+            }
+
+        v1 /= 2.;
+        for(auto i : count(size))
+            {
+            CHECK_CLOSE(v1(i),fac*data(i)/2.);
+            }
         }
     }
 
 SECTION("Test += -= operators")
     {
     auto size = 10;
-    auto dataA = randomData(size);
-    auto dataB = randomData(size);
+    auto dataA = randomData<Real>(size);
+    auto dataB = randomData<Real>(size);
     auto origdataA = dataA;
     auto A = makeVecRef(dataA.begin(),size);
     auto B = makeVecRef(dataB.begin(),size);
@@ -243,7 +315,7 @@ SECTION("Test += -= operators")
 
     dataA = origdataA;
     auto cstride = 3;
-    auto dataC = randomData(cstride*size);
+    auto dataC = randomData<Real>(cstride*size);
     //Only access every third element:
     auto C = makeVecRef(dataC.begin(),size,cstride);
     A -= C;
@@ -432,7 +504,7 @@ SECTION("Constructors")
         {
         auto Ar = 3,
              Ac = 4;
-        auto data = randomData(Ar*Ac);
+        auto data = randomData<Real>(Ar*Ac);
         CHECK(data.size() == Ar*Ac);
         auto A = makeMatRef(data.begin(),data.size(),Ar,Ac);
 
@@ -447,7 +519,7 @@ SECTION("Constructors")
 //        {
 //        auto Ar = 3,
 //             Ac = 4;
-//        auto data = randomData(1,Ar*Ac);
+//        auto data = randomData<Real>(1,Ar*Ac);
 //        CHECK(data.size() == Ar*Ac);
 //
 //        //auto MC = MatrixRef(data.begin(),Ar,Ac,true);
@@ -484,8 +556,8 @@ SECTION("Constructors")
 SECTION("Automatic Conversion")
     {
     auto N = 10;
-    auto data1 = randomData(N*N);
-    auto data2 = randomData(N*N);
+    auto data1 = randomData<Real>(N*N);
+    auto data2 = randomData<Real>(N*N);
     auto mr1 = makeMatRef(data1.begin(),data1.size(),N,N);
     auto cmr2 = makeMatRefc(data2.begin(),data2.size(),N,N);
 
@@ -505,7 +577,7 @@ SECTION("Automatic Conversion")
 SECTION("Test makeRef")
     {
     auto N = 10;
-    auto data = randomData(N*N);
+    auto data = randomData<Real>(N*N);
 
     auto Mr = makeMatRef(data.begin(),data.size(),N,N);
     auto cMr = makeMatRefc(data.begin(),data.size(),N,N);
@@ -537,8 +609,8 @@ SECTION("Test makeRef")
 SECTION("Test += -= operators")
     {
     auto N = 5;
-    auto dataA = randomData(N*N);
-    auto dataB = randomData(N*N);
+    auto dataA = randomData<Real>(N*N);
+    auto dataB = randomData<Real>(N*N);
     auto origdataA = dataA;
 
     auto A = makeMatRef(dataA.begin(),dataA.size(),N,N);
@@ -604,8 +676,8 @@ SECTION("Test MatrixRef mult")
         auto Ar = 3,
              K  = 4,
              Bc = 5;
-        auto dataA = randomData(Ar*K);
-        auto dataB = randomData(K*Bc);
+        auto dataA = randomData<Real>(Ar*K);
+        auto dataB = randomData<Real>(K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
@@ -627,8 +699,8 @@ SECTION("Test MatrixRef mult")
         auto Ac = 3,
              K  = 4,
              Bc = 5;
-        auto dataA = randomData(K*Ac);
-        auto dataB = randomData(K*Bc);
+        auto dataA = randomData<Real>(K*Ac);
+        auto dataB = randomData<Real>(K*Bc);
         auto dataC = autovector<Real>(1,Ac*Bc);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
@@ -651,8 +723,8 @@ SECTION("Test MatrixRef mult")
         auto Ar = 3,
              K =  4,
              Br = 5;
-        auto dataA = randomData(Ar*K);
-        auto dataB = randomData(Br*K);
+        auto dataA = randomData<Real>(Ar*K);
+        auto dataB = randomData<Real>(Br*K);
         auto dataC = autovector<Real>(1,Ar*Br);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
@@ -675,8 +747,8 @@ SECTION("Test MatrixRef mult")
         auto Ac = 3,
              K =  4,
              Br = 5;
-        auto dataA = randomData(K*Ac);
-        auto dataB = randomData(Br*K);
+        auto dataA = randomData<Real>(K*Ac);
+        auto dataB = randomData<Real>(Br*K);
         auto dataC = autovector<Real>(1,Ac*Br);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
@@ -700,8 +772,8 @@ SECTION("Test MatrixRef mult")
         auto Ar = 3,
              K =  4,
              Bc = 5;
-        auto dataA = randomData(Ar*K);
-        auto dataB = randomData(K*Bc);
+        auto dataA = randomData<Real>(Ar*K);
+        auto dataB = randomData<Real>(K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
@@ -724,8 +796,8 @@ SECTION("Test MatrixRef mult")
         auto Ac = 3,
              K =  4,
              Bc = 5;
-        auto dataA = randomData(K*Ac);
-        auto dataB = randomData(K*Bc);
+        auto dataA = randomData<Real>(K*Ac);
+        auto dataB = randomData<Real>(K*Bc);
         auto dataC = autovector<Real>(1,Bc*Ac);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
@@ -749,8 +821,8 @@ SECTION("Test MatrixRef mult")
         auto Ar = 3,
              K =  4,
              Br = 5;
-        auto dataA = randomData(Ar*K);
-        auto dataB = randomData(Br*K);
+        auto dataA = randomData<Real>(Ar*K);
+        auto dataB = randomData<Real>(Br*K);
         auto dataC = autovector<Real>(1,Br*Ar);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
@@ -774,8 +846,8 @@ SECTION("Test MatrixRef mult")
         auto Ac = 3,
              K =  4,
              Br = 5;
-        auto dataA = randomData(K*Ac);
-        auto dataB = randomData(Br*K);
+        auto dataA = randomData<Real>(K*Ac);
+        auto dataB = randomData<Real>(Br*K);
         auto dataC = autovector<Real>(1,Br*Ac);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),K,Ac);
@@ -798,8 +870,8 @@ SECTION("Test MatrixRef mult")
     SECTION("Multipy with self")
         {
         auto N = 8;
-        auto dataA = randomData(N*N);
-        auto dataC = randomData(N*N);
+        auto dataA = randomData<Real>(N*N);
+        auto dataC = randomData<Real>(N*N);
 
         auto A = makeMatRef(dataA.begin(),dataA.size(),N,N);
         auto C = makeMatRef(dataC.begin(),dataC.size(),N,N);
@@ -820,8 +892,8 @@ SECTION("Test multAdd")
     auto Ar = 3,
          K  = 4,
          Bc = 5;
-    auto dataA = randomData(Ar*K);
-    auto dataB = randomData(K*Bc);
+    auto dataA = randomData<Real>(Ar*K);
+    auto dataB = randomData<Real>(K*Bc);
     auto dataC = autovector<Real>(1,Ar*Bc);
 
     auto A = makeMatRef(dataA.begin(),dataA.size(),Ar,K);
@@ -1269,7 +1341,7 @@ SECTION("Sub Matrix")
 
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
-SECTION("diagSymmetric")
+SECTION("diagHermitian Real")
     {
     auto N = 10;
     auto M = randomMat(N,N);
@@ -1278,7 +1350,7 @@ SECTION("diagSymmetric")
 
     Matrix U;
     Vector d;
-    diagSymmetric(M,U,d);
+    diagHermitian(M,U,d);
 
     auto D = Matrix(N,N);
     diagonal(D) &= d;
@@ -1292,27 +1364,27 @@ SECTION("diagSymmetric")
     CHECK(norm(R-M) < 1E-12*norm(M));
     }
 
-SECTION("diagHermitian")
-    {
-    auto N = 10;
-    auto Mre = Matrix(N,N);
-    auto Mim = Matrix(N,N);
-    randomize(Mre);
-    randomize(Mim);
-    Mre = Mre+transpose(Mre);
-    Mim = Mim-transpose(Mim);
-    Mre /= 2.;
-    Mim /= 2.;
-
-    auto Ure = Matrix(N,N);
-    auto Uim = Matrix(N,N);
-    auto d = Vector(N);
-    diagHermitian(makeRef(Mre),makeRef(Mim),makeRef(Ure),makeRef(Uim),makeRef(d));
-    auto DD = Matrix(N,N);
-    diagonal(DD) &= d;
-    CHECK(norm(Ure*DD*transpose(Ure) + Uim*DD*transpose(Uim) - Mre) < 1E-11);
-    CHECK(norm(Uim*DD*transpose(Ure)-Ure*DD*transpose(Uim)-Mim) < 1E-11);
-    }
+//SECTION("diagHermitian")
+//    {
+//    auto N = 10;
+//    auto Mre = Matrix(N,N);
+//    auto Mim = Matrix(N,N);
+//    randomize(Mre);
+//    randomize(Mim);
+//    Mre = Mre+transpose(Mre);
+//    Mim = Mim-transpose(Mim);
+//    Mre /= 2.;
+//    Mim /= 2.;
+//
+//    auto Ure = Matrix(N,N);
+//    auto Uim = Matrix(N,N);
+//    auto d = Vector(N);
+//    diagHermitian(makeRef(Mre),makeRef(Mim),makeRef(Ure),makeRef(Uim),makeRef(d));
+//    auto DD = Matrix(N,N);
+//    diagonal(DD) &= d;
+//    CHECK(norm(Ure*DD*transpose(Ure) + Uim*DD*transpose(Uim) - Mre) < 1E-11);
+//    CHECK(norm(Uim*DD*transpose(Ure)-Ure*DD*transpose(Uim)-Mim) < 1E-11);
+//    }
 
 SECTION("Orthogonalize")
     {
@@ -1428,82 +1500,82 @@ SECTION("Singular Value Decomp")
         }
     }
 
-SECTION("Complex SVD")
-    {
-    SECTION("One Pass Case")
-        {
-        auto n = 15,
-             m = 5;
-        auto Mre = Matrix(n,m);
-        auto Mim = Matrix(n,m);
-        randomize(Mre);
-        randomize(Mim);
-
-        Matrix Ure,Uim,Vre,Vim;
-        Vector d;
-        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
-
-        auto ns = d.size();
-        auto DD = Matrix(ns,ns);
-        diagonal(DD) &= d;
-
-        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
-        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
-        }
-    SECTION("One Pass Case - Tranpose")
-        {
-        auto n = 5,
-             m = 15;
-        auto Mre = Matrix(n,m);
-        auto Mim = Matrix(n,m);
-        randomize(Mre);
-        randomize(Mim);
-
-        Matrix Ure,Uim,Vre,Vim;
-        Vector d;
-        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
-
-        auto ns = d.size();
-        auto DD = Matrix(ns,ns);
-        diagonal(DD) &= d;
-
-        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
-        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
-        }
-    SECTION("Two Pass Case")
-        {
-        auto n = 5,
-             m = 5;
-        auto Mre = Matrix(n,m);
-        auto Mim = Matrix(n,m);
-        randomize(Mre);
-        randomize(Mim);
-
-        Matrix Ure,Uim,Vre,Vim;
-        Vector d;
-        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
-
-        //Make svals decay quickly
-        d(0) = 0.9;
-        d(1) = 1E-2;
-        d(2) = 1E-4;
-        d(3) = 1E-4;
-        d(4) = 1E-4;
-
-        //Put M back together with new svals
-        auto ns = d.size();
-        auto DD = Matrix(ns,ns);
-        diagonal(DD) &= d;
-        Mre = Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim);
-        Mim = Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim);
-
-        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,1E-1);
-        diagonal(DD) &= d;
-
-        auto nrmre = norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre)/norm(Mre);
-        CHECK(nrmre < 1E-13);
-        auto nrmim = norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim)/norm(Mim);
-        CHECK(nrmim < 1E-13);
-        }
-    }
+//SECTION("Complex SVD")
+//    {
+//    SECTION("One Pass Case")
+//        {
+//        auto n = 15,
+//             m = 5;
+//        auto Mre = Matrix(n,m);
+//        auto Mim = Matrix(n,m);
+//        randomize(Mre);
+//        randomize(Mim);
+//
+//        Matrix Ure,Uim,Vre,Vim;
+//        Vector d;
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+//
+//        auto ns = d.size();
+//        auto DD = Matrix(ns,ns);
+//        diagonal(DD) &= d;
+//
+//        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
+//        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
+//        }
+//    SECTION("One Pass Case - Tranpose")
+//        {
+//        auto n = 5,
+//             m = 15;
+//        auto Mre = Matrix(n,m);
+//        auto Mim = Matrix(n,m);
+//        randomize(Mre);
+//        randomize(Mim);
+//
+//        Matrix Ure,Uim,Vre,Vim;
+//        Vector d;
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+//
+//        auto ns = d.size();
+//        auto DD = Matrix(ns,ns);
+//        diagonal(DD) &= d;
+//
+//        CHECK(norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre) < 1E-13);
+//        CHECK(norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim) < 1E-13);
+//        }
+//    SECTION("Two Pass Case")
+//        {
+//        auto n = 5,
+//             m = 5;
+//        auto Mre = Matrix(n,m);
+//        auto Mim = Matrix(n,m);
+//        randomize(Mre);
+//        randomize(Mim);
+//
+//        Matrix Ure,Uim,Vre,Vim;
+//        Vector d;
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim);
+//
+//        //Make svals decay quickly
+//        d(0) = 0.9;
+//        d(1) = 1E-2;
+//        d(2) = 1E-4;
+//        d(3) = 1E-4;
+//        d(4) = 1E-4;
+//
+//        //Put M back together with new svals
+//        auto ns = d.size();
+//        auto DD = Matrix(ns,ns);
+//        diagonal(DD) &= d;
+//        Mre = Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim);
+//        Mim = Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim);
+//
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,1E-1);
+//        diagonal(DD) &= d;
+//
+//        auto nrmre = norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre)/norm(Mre);
+//        CHECK(nrmre < 1E-13);
+//        auto nrmim = norm(Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim)-Mim)/norm(Mim);
+//        CHECK(nrmim < 1E-13);
+//        }
+//    }
 } //Test matrix algorithms

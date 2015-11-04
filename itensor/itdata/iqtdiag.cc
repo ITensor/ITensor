@@ -94,11 +94,11 @@ doTask(SumEls<IQIndex>, IQTDiag const& d)
     }
 
 void
-doTask(MultReal & M, IQTDiag & d)
+doTask(Mult<Real> & M, IQTDiag & d)
     {
     //use BLAS algorithm?
     for(auto& elt : d.store)
-        elt *= M.r;
+        elt *= M.x;
     }
 
 void
@@ -133,8 +133,8 @@ blockDiagDense(IQTDiag const& D,
 
         auto do_contract =
             [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
-            (cData dblock, Label const& Dblockind,
-             cData tblock, Label const& Tblockind,
+            (Datac dblock, Label const& Dblockind,
+             Datac tblock, Label const& Tblockind,
              Data  cblock, Label const& Cblockind)
             {
             Range Trange,
@@ -283,12 +283,6 @@ doTask(PrintIT<IQIndex> & P,
                 }
             }
         }
-    }
-
-void
-doTask(Write & W, IQTDiag const& d)
-    {
-    W.writeType(StorageType::IQTDiag,d); 
     }
 
 } //namespace itensor

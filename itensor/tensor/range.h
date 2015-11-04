@@ -11,6 +11,9 @@
 
 namespace itensor {
 
+//Parent type for all ranges
+class RangeType { };
+
 template<typename index_type>
 class RangeT;
 
@@ -19,6 +22,13 @@ class RangeBuilderT;
 
 using Range = RangeT<unsigned long>;
 using RangeBuilder = RangeBuilderT<Range>;
+
+template<typename Derived>
+struct isRange
+    {
+    bool static constexpr value = std::is_base_of<RangeType,Derived>::value;
+    constexpr operator bool() const noexcept { return value; }
+    };
 
 //Storage type for RangeT
 template<typename index_type>
@@ -47,7 +57,7 @@ struct IndStr
     };
 
 template<typename index_type_>
-class RangeT
+class RangeT : public RangeType
     {
     public:
     using index_type = index_type_;
@@ -352,9 +362,9 @@ class RangeBuilderT
 namespace detail {
 
     //Implementation of offset for Iterables supporting iteration (begin/end)
-    template<typename index_type, typename Iterable>
+    template<typename Range_, typename Iterable>
     auto
-    offsetImpl(stdx::choice<1>,RangeT<index_type> const& r, Iterable const& inds)
+    offsetImpl(stdx::choice<1>, Range_ const& r, Iterable const& inds)
         //Constrain this template to only work for inds that have a begin() method
         -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds.begin())>
         //...if so make the return type to be decltype(r.extent(1))
@@ -375,9 +385,9 @@ namespace detail {
         }
 
     //Implementation of offset for Iterables supporting .operator[] and .size()
-    template<typename index_type, typename Iterable>
+    template<typename Range_, typename Iterable>
     auto
-    offsetImpl(stdx::choice<2>,RangeT<index_type> const& r, Iterable const& inds)
+    offsetImpl(stdx::choice<2>, Range_ const& r, Iterable const& inds)
         //Constrain this template to only work for inds that have .operator[] and .size()
         -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds[0]),decltype(inds.size())>
         //...if so make the return type to be decltype(r.extent(0))
@@ -395,10 +405,10 @@ namespace detail {
         return I;
         }
 
-    template<typename index_type>
+    template<typename Range_>
     struct ComputeOffset
         {
-        using range_type = RangeT<index_type>;
+        using range_type = Range_;
         using size_type = typename range_type::size_type;
 
         range_type const& r;
@@ -432,25 +442,29 @@ namespace detail {
 
 
 //0-indexed
-template<typename index_type, typename Iterable>
+template<typename Range_, typename Iterable,
+         class=stdx::enable_if_t<isRange<Range_>::value 
+                              && not std::is_integral<Iterable>::value>>
 auto
-offset(RangeT<index_type> const& r, Iterable const& inds)
-    -> typename RangeT<index_type>::size_type
+offset(Range_ const& r, Iterable const& inds)
+    -> typename Range_::size_type
     {
     return detail::offsetImpl(stdx::select_overload{},r,inds);
     }
 
 //0-indexed
-template<typename index_type, typename... Inds>
+template<typename Range_, 
+         class=stdx::require<isRange<Range_>>,
+         typename... Inds>
 auto
-offset(RangeT<index_type> const& r, size_t i1, Inds... inds)
+offset(Range_ const& r, size_t i1, Inds... inds)
     -> decltype(r.stride(0))
     {
 #ifdef DEBUG
     if(1+sizeof...(inds) != rank(r)) 
         throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
 #endif
-    return detail::ComputeOffset<index_type>(r)(i1,inds...);
+    return detail::ComputeOffset<Range_>(r)(i1,inds...);
     }
 
 template<typename index_type>

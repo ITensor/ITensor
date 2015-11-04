@@ -420,7 +420,9 @@ random_tensors(std::vector<ITensor>& A_)
     { 
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i)
-        A_[i] = randomize(A_[i]); 
+        {
+        randomize(A_[i]); 
+        }
     }
 template
 void MPSt<ITensor>::random_tensors(std::vector<ITensor>& A_);

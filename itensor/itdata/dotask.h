@@ -8,74 +8,9 @@
 #include <cassert>
 #include "itensor/itdata/itdata.h"
 #include "itensor/util/print.h"
-#include "itensor/util/stdx.h"
+#include "itensor/itdata/returntype.h"
 
 namespace itensor {
-
-///////////////////
-
-namespace detail {
-
-template<typename F,typename Ret>
-struct ApplyFunc
-    { 
-    using function_type = F;
-    F& f;
-    Ret r;
-    ApplyFunc(F&& f_) : f(f_) { }
-    template<typename S>
-    void
-    operator()(S& s) 
-        { 
-        r = f(s); 
-        }
-    operator Ret() const { return std::move(r); }
-    };
-
-template<typename F>
-struct ApplyFunc<F,void>
-    { 
-    using function_type = F;
-    F& f;
-    ApplyFunc(F&& f_) : f(f_) { }
-    template<typename S>
-    void
-    operator()(S& s) { f(s); }
-    };
-
-template<typename F, typename R, typename Storage>
-void
-applyFunc_impl(stdx::choice<3>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
-    {
-    throw ITError("applyFunc: function object has no operator() method for storage type");
-    }
-
-template<typename F, typename R, typename Storage>
-auto
-applyFunc_impl(stdx::choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
-    -> decltype(A.f(s), void())
-    {
-    Storage& ncs = m.modifyData();
-    A(ncs);
-    }
-
-template<typename F, typename R, typename Storage>
-auto
-applyFunc_impl(stdx::choice<1>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
-    -> decltype(A.f(s), void())
-    {
-    A(s);
-    }
-
-} //namespace detail
-
-template<typename F, typename R, typename Storage>
-void
-doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
-    { 
-    detail::applyFunc_impl(stdx::select_overload{},A,s,m);
-    }
-
 
 namespace detail {
 
@@ -235,76 +170,32 @@ class CallWrap : public FuncT<CallWrap<RT,Task,D1,Return,PType1,PType2>,StorageT
 // Implementations
 //
 
-template<typename Ret>
-using RetOrNone = stdx::conditional_t<std::is_void<Ret>::value,NoneType,Ret>;
-
-template<typename Task, typename Storage>
-NoneType
-testRetImpl(stdx::choice<3>, Task& t, Storage& s, ManageStore& m)
-    {
-    return NoneType{};
-    }
-template<typename Task, typename Storage>
-auto 
-testRetImpl(stdx::choice<2>, Task& t, Storage& s, ManageStore& m)
-    -> RetOrNone<decltype(doTask(t,s))>
-    {
-    using Ret = RetOrNone<decltype(doTask(t,s))>;
-    return Ret{};
-    }
-template<typename Task, typename Storage>
-auto 
-testRetImpl(stdx::choice<1>, Task& t, Storage& s, ManageStore& m)
-    -> RetOrNone<decltype(doTask(t,s,m))>
-    {
-    using Ret = RetOrNone<decltype(doTask(t,s,m))>;
-    return Ret{};
-    }
-template<typename Task, typename Storage>
-struct TestRet
-    {
-    Task& t;
-    Storage& s;
-    ManageStore& m;
-    TestRet(Task& t_, Storage& s_, ManageStore& m_)
-        : t(t_), s(s_), m(m_) 
-        { }
-    auto
-    operator()() -> decltype(testRetImpl(stdx::select_overload{},t,s,m))
-        {
-        return testRetImpl(stdx::select_overload{},t,s,m);
-        }
-    };
 
 /////////////
 
-//If ActualRet!=void this gets called
-template<typename Ret, typename ActualRet>
-class FixRet
+template<typename Ret>
+class CatchRet
     {
-    Ret& ret_;
+    Ret & ret_;
     public:
 
-    FixRet(Ret& ret) : ret_(ret) { }
+    CatchRet(Ret & ret) : ret_(ret) { }
 
+    //Case where doTask returns something
     template<typename... VArgs>
-    void
+    auto
     operator()(VArgs&&... vargs)
+        -> stdx::enable_if_t<not std::is_same<decltype(doTask(std::forward<VArgs>(vargs)...)),void>::value,void>
         {
         ret_ = doTask(std::forward<VArgs>(vargs)...);
         }
-    };
-//If ActualRet==void this gets called
-template<typename Ret>
-class FixRet<Ret,void>
-    {
-    public:
 
-    FixRet(Ret& ret) { }
-
+    //Case where doTask returns void 
+    //(and assigning it to a value would not compile)
     template<typename... VArgs>
-    void
+    auto
     operator()(VArgs&&... vargs)
+        -> stdx::enable_if_t<std::is_same<decltype(doTask(std::forward<VArgs>(vargs)...)),void>::value,void>
         {
         doTask(std::forward<VArgs>(vargs)...);
         }
@@ -312,28 +203,28 @@ class FixRet<Ret,void>
 
 /////////////
 
-template <typename Task, typename Storage, typename Ret>
+template <typename Task, typename Storage, typename Return>
 void
-callDoTask_Impl(stdx::choice<3>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+callDoTask_Impl(stdx::choice<3>, Task& t, Storage& s, ManageStore& m, Return& ret)
     {
     static_assert(containsType<StorageTypes,stdx::decay_t<Storage>>{},"Data type not in list of registered storage types");
     throw ITError("1 parameter doTask not defined for specified task or data type [1]");
     }
-template <typename Task, typename Storage, typename Ret>
+template <typename Task, typename Storage, typename Return>
 auto 
-callDoTask_Impl(stdx::choice<2>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+callDoTask_Impl(stdx::choice<2>, Task& t, Storage& s, ManageStore& m, Return& ret)
     -> stdx::if_compiles_return<void,decltype(doTask(t,s))>
     {
     static_assert(containsType<StorageTypes,stdx::decay_t<Storage>>{},"Data type not in list of registered storage types");
-    FixRet<Ret,decltype(doTask(t,s))>{ret}(t,s);
+    CatchRet<Return>{ret}(t,s);
     }
-template <typename Task, typename Storage, typename Ret>
+template <typename Task, typename Storage, typename Return>
 auto 
-callDoTask_Impl(stdx::choice<1>, Task& t, Storage& s, ManageStore& m, Ret& ret)
+callDoTask_Impl(stdx::choice<1>, Task& t, Storage& s, ManageStore& m, Return& ret)
     -> stdx::if_compiles_return<void,decltype(doTask(t,s,m))>
     {
     static_assert(containsType<StorageTypes,stdx::decay_t<Storage>>{},"Data type not in list of registered storage types");
-    FixRet<Ret,decltype(doTask(t,s,m))>{ret}(t,s,m);
+    CatchRet<Return>{ret}(t,s,m);
     }
 template<typename Task, typename Storage, typename Return>
 void
@@ -356,14 +247,14 @@ auto
 callDoTask_Impl(stdx::choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
     -> stdx::if_compiles_return<void,decltype(doTask(t,d1,d2))>
     {
-    FixRet<Ret,decltype(doTask(t,d1,d2))>{ret}(t,d1,d2);
+    CatchRet<Ret>{ret}(t,d1,d2);
     }
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
 callDoTask_Impl(stdx::choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
     -> stdx::if_compiles_return<void,decltype(doTask(t,d1,d2,m))>
     {
-    FixRet<Ret,decltype(doTask(t,d1,d2,m))>{ret}(t,d1,d2,m);
+    CatchRet<Ret>{ret}(t,d1,d2,m);
     }
 template<typename Ret, typename Task, typename D1, typename D2>
 void
@@ -433,8 +324,9 @@ struct HasDoTask
 /////////////////////
 
 template<typename Task, typename D1, typename D2>
-std::false_type
+auto
 testDTImpl(stdx::choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m)
+    -> std::false_type
     {
     return std::false_type{};
     }
@@ -492,8 +384,9 @@ struct HasDoTask2Arg
 /////////////////////
 
 template<typename D>
-std::false_type 
+auto
 testEvalImpl(stdx::choice<2>, D& d)
+    -> std::false_type
     {
     return std::false_type{};
     }
@@ -566,12 +459,12 @@ checkHasResult(const D& d)
 
 
 void inline
-check(const PData& p)
+check(PData const& p)
     {
     if(!p) Error("doTask called on unallocated store pointer");
     }
 void inline
-check(const CPData& p)
+check(CPData const& p)
     {
     if(!p) Error("doTask called on unallocated store pointer");
     }
@@ -712,26 +605,9 @@ applyToImpl(D2& d2)
         }
     }
 
-template<typename Task, typename TList>
-struct GetRType : GetRType<Task,popFront<TList>>
-    {
-    using Test = stdx::result_of_t<TestRet<Task,frontType<TList>>()>;
-    using Parent = GetRType<Task,popFront<TList>>;
-    using RType = stdx::conditional_t<not std::is_same<Test,NoneType>::value,
-                                     Test,
-                                     typename Parent::RType>;
-    };
-
-template<typename Task>
-struct GetRType<Task,TypeList<>>
-    {
-    using RType = NoneType;
-    };
 
 } //namespace detail
 
-template<typename Task, typename TList>
-using ReturnType = typename detail::GetRType<stdx::remove_reference_t<Task>,TList>::RType;
 
 //////
 ////// doTask methods
@@ -749,12 +625,12 @@ template<typename Task>
 auto
 doTask(Task&& t,
        CPData arg)
-    -> typename detail::RegisterTask<detail::OneArg<CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    using Ret = ReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&(arg.p));
     detail::RegisterTask<detail::OneArg<CPData>,decltype(t),Ret> r{std::forward<Task>(t),std::move(m)};
     arg->plugInto(r);
@@ -765,12 +641,12 @@ template<typename Task>
 auto
 doTask(Task&& t,
        PData& arg)
-    -> typename detail::RegisterTask<detail::OneArg<PData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::OneArg<PData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    using Ret = ReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&arg);
     detail::RegisterTask<detail::OneArg<PData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
@@ -782,13 +658,13 @@ auto
 doTask(Task&& t,
        CPData arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    using Ret = ReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&(arg1.p),&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<CPData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
@@ -800,49 +676,19 @@ auto
 doTask(Task&& t,
        PData& arg1,
        CPData arg2)
-    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),ReturnType<Task,StorageTypes>>::return_type
+    -> typename detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),DoTaskReturn<Task,StorageTypes>>::return_type
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    using Ret = ReturnType<Task,StorageTypes>;
+    using Ret = DoTaskReturn<Task,StorageTypes>;
     ManageStore m(&arg1,&(arg2.p));
     detail::RegisterTask<detail::TwoArgs<PData,CPData>,decltype(t),Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
     return r.getReturn();
     }
 
-
-template<typename F>
-F
-applyFunc(F&& f, PData& store)
-    {
-    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-    return f;
-    }
-
-template<typename F>
-F
-applyFunc(F&& f, const CPData& store)
-    {
-    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
-    return f;
-    }
-
-template<typename Ret, typename F>
-Ret
-applyFunc(F&& f, PData& store)
-    {
-    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-    }
-
-template<typename Ret, typename F>
-Ret
-applyFunc(F&& f, const CPData& store)
-    {
-    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
-    }
 
 } //namespace itensor
 

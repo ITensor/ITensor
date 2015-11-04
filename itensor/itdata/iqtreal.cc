@@ -143,9 +143,9 @@ doTask(SumEls<IQIndex>, IQTReal const& d)
     }
 
 void
-doTask(MultReal const& M, IQTReal & d)
+doTask(Mult<Real> const& M, IQTReal & d)
     {
-    dscal_wrapper(d.store.size(),M.r,d.store.data());
+    dscal_wrapper(d.store.size(),M.x,d.store.data());
     }
 
 
@@ -216,8 +216,8 @@ doTask(Contract<IQIndex>& Con,
     //contracted blocks of A and B
     auto do_contract = 
         [&Con,&Lind,&Rind,&Cind]
-        (cData ablock, Label const& Ablockind,
-         cData bblock, Label const& Bblockind,
+        (Datac ablock, Label const& Ablockind,
+         Datac bblock, Label const& Bblockind,
          Data  cblock, Label const& Cblockind)
         {
         Range Arange,
@@ -312,8 +312,8 @@ doTask(NCProd<IQIndex>& P,
 
     auto do_ncprod = 
         [&P,&Aind,&Bind,&Cind]
-        (cData ablock, Label const& Ablockind,
-         cData bblock, Label const& Bblockind,
+        (Datac ablock, Label const& Ablockind,
+         Datac bblock, Label const& Bblockind,
          Data  cblock, Label const& Cblockind)
         {
         Range Arange,
@@ -431,12 +431,6 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
         }
     }
 
-
-void
-doTask(Write& W, IQTReal const& d)
-    {
-    W.writeType(StorageType::IQTReal,d); 
-    }
 
 } //namespace itensor
 

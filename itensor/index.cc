@@ -116,8 +116,21 @@ read(std::istream& s)
     return *this;
     }
 
+IndexVal Index::
+begin() const
+    {
+    return IndexVal(*this,1);
+    }
+
+IndexVal Index::
+end() const
+    {
+    return IndexVal(*this,1+m());
+    }
+
+
 std::ostream& 
-operator<<(std::ostream& s, const Index& t)
+operator<<(std::ostream & s, Index const& t)
     {
     s << "(" << t.rawname() << "," << t.m() << ","
       << t.type().c_str() << ")"; 
@@ -165,6 +178,22 @@ bool IndexVal::
 operator==(const IndexVal& other) const
     {
     return (index == other.index && val == other.val);
+    }
+
+IndexVal&
+operator++(IndexVal& iv)
+    {
+    ++iv.val;
+    return iv;
+    }
+
+IndexVal&
+operator*(IndexVal& iv) { return iv; }
+
+bool
+operator==(Index const& I, IndexVal const& iv)
+    {
+    return iv.operator==(I);
     }
 
 

@@ -1,0 +1,125 @@
+namespace itensor {
+
+
+//Helper for diagHermitian
+template<typename Iter, typename V>
+void
+copyNegElts(Iter m,
+            MatRef<V> const& U)
+    {
+    auto ue = U.data()+U.size();
+    for(auto u = U.data(); u != ue; ++u,++m)
+        {
+        *u = -(*m);
+        }
+    }
+
+//Helper for diagHermitian
+template<typename Iter>
+void
+copyNegElts(Iter mre,
+            Iter mim,
+            std::vector<Cplx> & Mc)
+    {
+    for(auto& z : Mc)
+        {
+        realRef(z) = -(*mre);
+        imagRef(z) = -(*mim);
+        ++mre;
+        ++mim;
+        }
+    }
+
+template<class MatM, 
+         class MatU,
+         class Vecd,
+         class>
+void
+diagHermitian(MatM && M,
+              MatU && U,
+              Vecd && d)
+    {
+    using Mval = typename stdx::decay_t<MatM>::value_type;
+    using Uval = typename stdx::decay_t<MatU>::value_type;
+    static_assert((isReal<Mval>() && isReal<Uval>()) || (isCplx<Mval>() && isCplx<Uval>()),
+                  "M and U must be both real or both complex in diagHermitian");
+    auto N = ncols(M);
+    if(N < 1) throw std::runtime_error("diagHermitian: 0 dimensional matrix");
+    if(N != nrows(M))
+        {
+        printfln("M is %dx%d",nrows(M),ncols(M));
+        throw std::runtime_error("diagHermitian: Input Matrix must be square");
+        }
+
+    resize(U,nrows(M),ncols(M));
+    resize(d,nrows(M));
+
+#ifdef DEBUG
+    if(!isContiguous(U))
+        throw std::runtime_error("diagHermitian: U must be contiguous");
+    if(!isContiguous(d))
+        throw std::runtime_error("diagHermitian: d must be contiguous");
+#endif
+
+    //Set U = -M so eigenvalues will be sorted from largest to smallest
+    if(isContiguous(M)) copyNegElts(M.data(),makeRef(U));
+    else                copyNegElts(M.cbegin(),makeRef(U));
+
+    struct Diag
+        {
+        LAPACK_INT static
+        call(LAPACK_INT N, Real *Udata, Real *ddata)
+            {
+            LAPACK_INT info = 0;
+            dsyev_wrapper('V','U',N,Udata,ddata,info);
+            return info;
+            }
+        LAPACK_INT static
+        call(LAPACK_INT N, Cplx *Udata,Real *ddata)
+            {
+            return zheev_wrapper(N,Udata,ddata);
+            }
+        };
+
+    auto info = Diag::call(N,U.data(),d.data());
+    if(info != 0) 
+        {
+        println("M = \n",M);
+        throw std::runtime_error("Error condition in diagHermitian");
+        }
+
+    //Correct the signs of the eigenvalues:
+    d *= -1;
+    }
+
+template<typename T>
+void
+SVDRef(MatRefc<T> const& M,
+       MatRef<T>  const& U, 
+       VectorRef  const& D, 
+       MatRef<T>  const& V,
+       Real thresh);
+
+template<class MatM, 
+         class MatU,
+         class VecD,
+         class MatV,
+         class>
+void
+SVD(MatM && M,
+    MatU && U, 
+    VecD && D, 
+    MatV && V,
+    Real thresh)
+    {
+    auto Mr = nrows(M),
+         Mc = ncols(M);
+    auto nsv = std::min(Mr,Mc);
+    resize(U,Mr,nsv);
+    resize(V,Mc,nsv);
+    resize(D,nsv);
+    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
+    }
+
+} //namespace itensor
+

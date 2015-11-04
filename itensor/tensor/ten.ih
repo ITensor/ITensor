@@ -69,10 +69,11 @@ pointTo(tensor_type const& t)
     range_ = range_type{};
     }
 
-template<typename R1, typename R2, typename T>
+template<typename R1, typename T1, 
+         typename R2, typename T2>
 void
-checkCompatible(TenRefc<R1,T> const& A, 
-                TenRefc<R2,T> const& B,
+checkCompatible(TenRefc<R1,T1> const& A, 
+                TenRefc<R2,T2> const& B,
                 std::string methodName = "")
     {
     auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
@@ -85,10 +86,12 @@ checkCompatible(TenRefc<R1,T> const& A,
             }
     }
 
-template<typename R1, typename R2, typename T, typename Op>
+template<typename R1, typename T1, 
+         typename R2, typename T2, 
+         typename Op>
 void
-transform(TenRefc<R1,T> const& from, 
-          TenRef<R2,T> const& to,
+transform(TenRefc<R1,T1> const& from, 
+          TenRef<R2,T2>  const& to,
           Op&& op)
     {
 #ifdef DEBUG
@@ -98,7 +101,7 @@ transform(TenRefc<R1,T> const& from,
     auto r = to.r();
     if(r == 0)
         {
-        *to.data() = *from.data();
+        op(*(from.data()),*(to.data()));
         return;
         }
 
@@ -147,9 +150,9 @@ operator&=(TenRef<R1,T> const& A, TenRefc<R2,T> const& B)
     }
 
 //Assign to referenced data
-template<typename R, typename T>
+template<typename R1, typename R2, typename T>
 void
-operator&=(TenRef<R,T> const& A, Ten<Range,T> const& B)
+operator&=(TenRef<R1,T> const& A, Ten<R2,T> const& B)
     {
     transform(makeRef(B),A,[](T b, T& a){ a = b; });
     }
@@ -175,12 +178,12 @@ operator+=(Ten<Range,T> & A, TenRefc<R,T> const& B)
     transform(B,makeRef(A),[](T b, T& a){ a += b; });
     }
 
-template<typename R, typename T>
-void
-operator+=(Ten<R,T> & A, Ten<R,T> const& B)
-    {
-    transform(makeRef(B),makeRef(A),[](T b, T& a){ a += b; });
-    }
+//template<typename R, typename T>
+//void
+//operator+=(Ten<R,T> & A, Ten<R,T> const& B)
+//    {
+//    transform(makeRef(B),makeRef(A),[](T b, T& a){ a += b; });
+//    }
 
 template<typename R,typename T>
 auto inline Ten<R,T>::
@@ -220,16 +223,17 @@ operator()(Inds&&... ii) -> reference
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
     }
 
-template<typename R>
+template<typename R, typename V>
 Real
-norm(TenRefc<R,Real> const& t)
+norm(TenRefc<R,V> const& t)
     {
     if(isContiguous(t))
         {
-        return dnrm2_wrapper(t.size(),t.data());
+        auto d = realData(t);
+        return dnrm2_wrapper(d.size(),d.data());
         }
     Real nrm = 0;
-    for(auto& el : t) nrm += el*el;
+    for(auto& el : t) nrm += std::norm(el);
     return std::sqrt(nrm);
     }
 
@@ -259,7 +263,7 @@ random() -> stdx::enable_if_t<std::is_same<X,Cplx>::value,Cplx>
 
 template<typename R,typename V>
 void
-randomize(TenRef<R> const& t)
+randomize(TenRef<R,V> const& t)
     {
     for(auto& el : t) el = detail::random<V>();
     }
@@ -269,6 +273,65 @@ void
 randomize(Ten<R,V> & t)
     {
     for(auto& el : t) el = detail::random<V>();
+    }
+
+namespace detail {
+
+void inline
+conjEl(Real & r) { }
+
+void inline
+conjEl(Cplx & z) { imagRef(z) *= -1; }
+
+}
+
+template<typename R, typename V>
+void
+conjugate(TenRef<R,V> const& T)
+    {
+    if(isCplx<V>())
+        {
+        if(isContiguous(T))
+            {
+            auto de = T.data()+T.size();
+            for(auto d = T.data(); d != de; ++d)
+                {
+                detail::conjEl(*d);
+                }
+            }
+        else
+            {
+            for(auto& el : T)
+                {
+                detail::conjEl(el);
+                }
+            }
+        }
+    }
+
+template<typename R, typename V>
+void
+conjugate(Ten<R,V> & T)
+    {
+    conjugate(makeRef(T));
+    }
+
+//return conjugated copy
+template<typename R, typename V>
+Ten<R,V>
+conj(TenRefc<R,V> const& T)
+    {
+    auto CT = Ten<R,V>{T};
+    conjugate(CT);
+    return CT;
+    }
+
+template<typename R, typename V>
+Ten<R,V>
+conj(Ten<R,V> T)
+    {
+    conjugate(T);
+    return T;
     }
 
 namespace detail {

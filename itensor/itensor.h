@@ -61,14 +61,14 @@ diagTensor(Real r,
 
 //Construct diagonal ITensor,
 //diagonal elements given by container C
-template<typename Container, typename... Inds>
-auto //->return type is ITensor
+template<typename Container, 
+         typename... Inds,
+         class = stdx::enable_if_t<std::is_same<typename Container::value_type,Real>::value
+                                || std::is_same<typename Container::value_type,Cplx>::value> >
+ITensor
 diagTensor(const Container& C,
            const Index& i1,
-           Inds&&... inds) 
-        //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
-        //types (such as Container==int) that don't have a value_type member type
-        -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type;
+           Inds&&... inds);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
@@ -105,13 +105,13 @@ template <typename... Inds>
 ITensor
 randomTensor(Index const& i1, Inds&&... inds)
     {
-    return randomize(ITensor(i1,std::forward<Inds>(inds)...));
+    return random(ITensor(i1,std::forward<Inds>(inds)...));
     }
 template <typename... Inds>
 ITensor
 randomTensorC(Index const& i1, Inds&&... inds)
     {
-    return randomize(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
+    return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
     }
 
 template<typename IndexT>

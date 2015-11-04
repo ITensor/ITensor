@@ -21,12 +21,11 @@ namespace itensor
 
 //(1) Forward declare storage types
 
-class ITReal;
-
-class ITCplx;
+template<typename T>
+class Dense;
 
 template<typename T>
-class ITDiag;
+class Diag;
 
 class ITCombiner;
 
@@ -43,11 +42,11 @@ using
 StorageTypes = TypeList< 
 //-----------
 //(2) Register storage type names
-ITReal,
-ITCplx,
-ITDiag<Real>,
-ITDiag<Cplx>,
+Dense<Real>,
+Dense<Cplx>,
 ITCombiner,
+Diag<Real>,
+Diag<Cplx>,
 IQTReal,
 IQTCombiner,
 IQTDiag
@@ -59,12 +58,11 @@ IQTDiag
 
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/itreal.h"
-#include "itensor/itdata/itcplx.h"
-#include "itensor/itdata/itdiag.h"
+#include "itensor/itdata/dense.h"
 #include "itensor/itdata/itcombiner.h"
+#include "itensor/itdata/diag.h"
 #include "itensor/itdata/iqtreal.h"
 #include "itensor/itdata/iqtcombiner.h"
 #include "itensor/itdata/iqtdiag.h"
-//#include "itensor/itdata/itlazy.h"
+////#include "itensor/itdata/itlazy.h"
 #endif
