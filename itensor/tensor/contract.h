@@ -7,6 +7,7 @@
 
 #include "itensor/tensor/vec.h"
 #include "itensor/util/args.h"
+#include "itensor/util/count.h"
 #include "itensor/detail/gcounter.h"
 
 namespace itensor {
@@ -58,11 +59,11 @@ contractDiagPartial(DiagElsA           const& A, Label const& ai,
                     TenRef<RangeT,VC>  const& C, Label const& ci);
 
 //Non-contracting product
-template<typename R, typename VA, typename VB>
+template<class TA, class TB, class TC>
 void 
-ncprod(TenRefc<R,VA> A, Label const& ai, 
-       TenRefc<R,VB> B, Label const& bi, 
-       TenRef<R,common_type<VA,VB>>  C, Label const& ci);
+ncprod(TA && A, Label const& ai, 
+       TB && B, Label const& bi, 
+       TC && C, Label const& ci);
 
 template<typename Inds, typename Func>
 long
@@ -295,5 +296,7 @@ contractDiagFull(DiagElsA           const& A, Label const& ai,
     }
 
 } //namespace itensor
+
+#include "itensor/tensor/contract.ih"
 
 #endif
