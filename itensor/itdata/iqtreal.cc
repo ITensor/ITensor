@@ -20,7 +20,6 @@ namespace itensor {
 //on offset vectors below
 struct compBlock
     {
-    using BlOf = typename IQTReal::BlOf;
     bool
     operator()(const BlOf& bo1,
                const BlOf& bo2) const
@@ -42,30 +41,37 @@ calcDiv(IQIndexSet const& is,
     return div;
     }
 
+template<typename T>
 QN
 doTask(CalcDiv const& C,
-       IQTReal const& D)
+       QDense<T> const& D)
     {
 #ifdef DEBUG
-    if(D.offsets.empty()) Error("Default constructed IQTReal in doTask(CalcDiv,IQTReal)");
+    if(D.offsets.empty()) Error("Default constructed QDense in doTask(CalcDiv,QDense)");
 #endif
     auto b = D.offsets.front().block;
     Label block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
+template QN doTask(CalcDiv const&,QDense<Real> const&);
+template QN doTask(CalcDiv const&,QDense<Cplx> const&);
 
-IQTReal::
-IQTReal(const IQIndexSet& is, 
-        const QN& div)
+template<typename T>
+QDense<T>::
+QDense(IQIndexSet const& is, 
+       QN         const& div)
     {
     auto totalsize = updateOffsets(is,div);
-    store.assign(totalsize,0);
+    store.assign(totalsize,0.);
     }
+template QDense<Real>::QDense(IQIndexSet const&, QN const&);
+template QDense<Cplx>::QDense(IQIndexSet const&, QN const&);
 
-long IQTReal::
-updateOffsets(const IQIndexSet& is,
-              const QN& div)
+template<typename T>
+long QDense<T>::
+updateOffsets(IQIndexSet const& is,
+              QN         const& div)
     {
     offsets.clear();
 
@@ -110,7 +116,7 @@ updateOffsets(const IQIndexSet& is,
     }
 
 long
-offsetOf(std::vector<IQTReal::BlOf> const& offsets,
+offsetOf(std::vector<BlOf> const& offsets,
          long blockind)
     {
     auto blk = detail::binaryFind(offsets,blockind,compBlock());
@@ -118,246 +124,152 @@ offsetOf(std::vector<IQTReal::BlOf> const& offsets,
     return -1;
     }
 
+template<typename T>
 Cplx
-doTask(GetElt<IQIndex>& G, const IQTReal& d)
+doTask(GetElt<IQIndex>& G, QDense<T> const& d)
     {
     auto* pelt = d.getElt(G.is,G.inds);
     if(pelt) return *pelt;
     return 0;
     }
+template Cplx doTask(GetElt<IQIndex>&, QDense<Real> const&);
+template Cplx doTask(GetElt<IQIndex>&, QDense<Cplx> const&);
 
+template<typename E, typename T>
 void
-doTask(SetElt<Real,IQIndex>& S, IQTReal& d)
+setEltImpl(SetElt<E,IQIndex> & S, QDense<T> & d)
     {
     auto* pelt = d.getElt(S.is,S.inds);
     if(pelt) *pelt = S.elt;
     else     Error("Setting IQTensor element non-zero would violate its symmetry.");
     }
 
+template<typename T>
+void
+doTask(SetElt<Real,IQIndex>& S, QDense<T>& d)
+    {
+    setEltImpl<Real,T>(S,d);
+    }
+template void doTask(SetElt<Real,IQIndex>&, QDense<Real>&);
+template void doTask(SetElt<Real,IQIndex>&, QDense<Cplx>&);
+
+void
+doTask(SetElt<Cplx,IQIndex>& S, QDenseCplx & d)
+    {
+    setEltImpl<Cplx,Cplx>(S,d);
+    }
+
+void
+doTask(SetElt<Cplx,IQIndex>& S, QDenseReal const& d, ManageStore & m)
+    {
+    auto *nd = m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
+    setEltImpl<Cplx,Cplx>(S,*nd);
+    }
+
+template<typename T>
 Cplx
-doTask(SumEls<IQIndex>, IQTReal const& d)
+doTask(SumEls<IQIndex>, QDense<T> const& d)
     {
-    Real s = 0.;
+    Cplx s = 0.;
     for(auto& el : d.store) s += el;
-    return Cplx(s,0.);
+    return s;
+    }
+template Cplx doTask(SumEls<IQIndex>, QDense<Real> const&);
+template Cplx doTask(SumEls<IQIndex>, QDense<Cplx> const&);
+
+template<typename T>
+void
+doTask(Mult<Real> const& M, QDense<T>& D)
+    {
+    auto d = realData(D);
+    dscal_wrapper(d.size(),M.x,d.data());
+    }
+template void doTask(Mult<Real> const&, QDenseReal&);
+template void doTask(Mult<Real> const&, QDenseCplx&);
+
+
+void
+doTask(Mult<Cplx> const& M, QDense<Cplx> & d)
+    {
+    for(auto& el : d) el *= M.x;
     }
 
 void
-doTask(Mult<Real> const& M, IQTReal & d)
+doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m)
     {
-    dscal_wrapper(d.store.size(),M.x,d.store.data());
+    auto *nd = m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
+    doTask(M,*nd);
     }
+
+template<typename T>
+void
+doTask(Fill<T> const& F, QDense<T> & d)
+    {
+    stdx::fill(d,F.x);
+    }
+template void doTask(Fill<Real> const&, QDense<Real> &);
+template void doTask(Fill<Cplx> const&, QDense<Cplx> &);
+
+template<typename FT, typename DT,class>
+void
+doTask(Fill<FT> const& F, QDense<DT> const& d, ManageStore & m)
+    {
+    auto *nd = m.makeNewData<QDense<FT>>(d.offsets,d.size());
+    doTask(F,*nd);
+    }
+template void doTask(Fill<Real> const& F, QDense<Cplx> const&, ManageStore &);
+template void doTask(Fill<Cplx> const& F, QDense<Real> const&, ManageStore &);
 
 
 void
-doTask(PlusEQ<IQIndex> const& P,
-       IQTReal & A,
-       IQTReal const& B)
+doTask(Conj, QDenseCplx & d)
     {
-#ifdef DEBUG
-    if(A.store.size() != B.store.size()) Error("Mismatched sizes in plusEq");
-#endif
-    if(isTrivial(P.perm()))
+    for(auto& el : d) applyConj(el);
+    }
+
+void
+doTask(TakeReal, QDenseCplx const& d, ManageStore & m)
+    {
+    auto *nd = m.makeNewData<QDenseReal>(d.offsets,d.size());
+    for(auto i : index(d))
         {
-        daxpy_wrapper(A.store.size(),P.fac(),B.data(),1,A.data(),1);
+        nd->store[i] = d.store[i].real();
         }
-    else
-        {
-        auto r = P.is1().r();
-        Label Ablock(r,0),
-              Bblock(r,0);
-        Range Arange,
-              Brange;
-        for(auto& aio : A.offsets)
-            {
-            computeBlockInd(aio.block,P.is1(),Ablock);
-            for(int i = 0; i < r; ++i)
-                Bblock[i] = Ablock[P.perm().dest(i)];
-            Arange.init(make_indexdim(P.is1(),Ablock));
-            Brange.init(make_indexdim(P.is2(),Bblock));
-
-            auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
-
-            auto bblock = getBlock(B,P.is2(),Bblock);
-            auto bref = TensorRefc(bblock,&Brange);
-
-            //aref += permute(bref,P.perm());
-            auto f = P.fac();
-            auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
-            transform(permute(bref,P.perm()),aref,add);
-            }
-        }
-    }
-
-
-void
-doTask(Contract<IQIndex>& Con,
-       IQTReal const& A,
-       IQTReal const& B,
-       ManageStore& m)
-    {
-    Label Lind,
-          Rind;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
-    //compute new index set (Con.Nis):
-    Label Cind;
-    const bool sortResult = false;
-    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
-
-    auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
-
-    //Allocate storage for C
-    START_TIMER(33)
-    auto nd = m.makeNewData<IQTReal>(Con.Nis,Cdiv);
-    STOP_TIMER(33)
-    auto& C = *nd;
-
-    //Function to execute for each pair of
-    //contracted blocks of A and B
-    auto do_contract = 
-        [&Con,&Lind,&Rind,&Cind]
-        (Datac ablock, Label const& Ablockind,
-         Datac bblock, Label const& Bblockind,
-         Data  cblock, Label const& Cblockind)
-        {
-        Range Arange,
-              Brange,
-              Crange;
-        //Construct range objects for aref,bref,cref
-        //using IndexDim helper objects
-        Arange.init(make_indexdim(Con.Lis,Ablockind));
-        Brange.init(make_indexdim(Con.Ris,Bblockind));
-        Crange.init(make_indexdim(Con.Nis,Cblockind));
-
-        //"Wire up" TensorRef's pointing to blocks of A,B, and C
-        //we are working with
-        auto aref = TensorRefc(ablock,&Arange),
-             bref = TensorRefc(bblock,&Brange);
-        auto cref = TensorRef(cblock,&Crange);
-
-        //Compute cref += aref*bref
-        START_TIMER(2)
-        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
-        STOP_TIMER(2)
-        };
-
-    START_TIMER(20)
-    loopContractedBlocks(A,Con.Lis,
-                         B,Con.Ris,
-                         C,Con.Nis,
-                         do_contract);
-    STOP_TIMER(20)
-
-    START_TIMER(21)
-    Con.scalefac = computeScalefac(C);
-    STOP_TIMER(21)
     }
 
 void
-doTask(NCProd<IQIndex>& P,
-       IQTReal const& A,
-       IQTReal const& B,
-       ManageStore& m)
-    {
-    auto& Ais = P.Lis;
-    auto& Bis = P.Ris;
-    auto& Cis = P.Nis;
-    auto rA = rank(Ais);
-    auto rB = rank(Bis);
-    Label Aind,
-          Bind,
-          Cind;
-    computeLabels(Ais,rA,Bis,rB,Aind,Bind);
-    ncprod(Ais,Aind,Bis,Bind,Cis,Cind);
-
-    Label BtoA(rA,-1);
-    for(auto ia : count(rA))
-    for(auto ib : count(rB))
-        if(Bis[ib] == Ais[ia])
-            {
-            BtoA[ib] = ia;
-            break;
-            }
-
-    auto Cdiv = QN{};
-        {
-        Cdiv = doTask(CalcDiv{Ais},A);
-        auto Ablock_ind = Label(rA);
-        computeBlockInd(A.offsets.front().block,Ais,Ablock_ind);
-        auto Bblock_ind = Label(rB);
-        for(auto& bo : B.offsets)
-            {
-            computeBlockInd(bo.block,Bis,Bblock_ind);
-            bool matchesA = true;
-            for(auto n : count(rB))
-                {
-                if(Bind[n] < 0 && Ablock_ind[BtoA[n]] != Bind[n])
-                    {
-                    matchesA = false;
-                    break;
-                    }
-                }
-            if(matchesA) break;
-            }
-        //Only account for unique indices of B
-        for(auto n : count(rB))
-            if(Bind[n] > 0) //unique
-                {
-                Cdiv += Bis[n].dir()*Bis[n].qn(1+Bblock_ind[n]);
-                }
-        }
-
-    //Allocate storage for C
-    auto& C = *m.makeNewData<IQTReal>(Cis,Cdiv);
-
-    auto do_ncprod = 
-        [&P,&Aind,&Bind,&Cind]
-        (Datac ablock, Label const& Ablockind,
-         Datac bblock, Label const& Bblockind,
-         Data  cblock, Label const& Cblockind)
-        {
-        Range Arange,
-              Brange,
-              Crange;
-        //Construct range objects for aref,bref,cref
-        //using IndexDim helper objects
-        Arange.init(make_indexdim(P.Lis,Ablockind));
-        Brange.init(make_indexdim(P.Ris,Bblockind));
-        Crange.init(make_indexdim(P.Nis,Cblockind));
-
-        //"Wire up" TensorRef's pointing to blocks of A,B, and C
-        //we are working with
-        auto aref = TensorRefc(ablock,&Arange),
-             bref = TensorRefc(bblock,&Brange);
-        auto cref = TensorRef(cblock,&Crange);
-
-        //Compute cref += aref*bref
-        ncprod(aref,Aind,bref,Bind,cref,Cind);
-        };
-
-    loopContractedBlocks(A,Ais,
-                         B,Bis,
-                         C,Cis,
-                         do_ncprod);
-
-    P.scalefac = computeScalefac(C);
-    }
-
-void
-doTask(Conj, IQTReal const& d) { }
-
-
-Real
-doTask(NormNoScale, IQTReal const& d) 
+doTask(TakeImag, QDenseReal & d)
     { 
+    //Set all elements to zero
+    doTask(Fill<Real>{0.},d);
+    }
+
+void
+doTask(TakeImag, QDenseCplx const& d, ManageStore & m)
+    {
+    auto *nd = m.makeNewData<QDenseReal>(d.offsets,d.size());
+    for(auto i : index(d))
+        {
+        nd->store[i] = d.store[i].imag();
+        }
+    }
+
+template<typename T>
+Real
+doTask(NormNoScale, QDense<T> const& D)
+    { 
+    auto d = realData(D);
     return dnrm2_wrapper(d.size(),d.data());
     }
+template Real doTask(NormNoScale, QDense<Real> const& D);
+template Real doTask(NormNoScale, QDense<Cplx> const& D);
 
-
+template<typename T>
 void
-doTask(PrintIT<IQIndex>& P, IQTReal const& d)
+doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
     {
-    P.s << "IQTReal {" << d.offsets.size() << " blocks; Data size = " << d.store.size() << "}\n\n";
+    P.s << format("QDense %s {%d blocks; data size %d}\n",
+                  typeName<T>(),d.offsets.size(),d.size());
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -366,7 +278,7 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
     if(rank == 0) 
         {
         P.s << "  ";
-        P.printVal(scalefac*d.store.front());
+        P.s << formatVal(scalefac*d.store.front()) << "\n";
         return;
         }
         
@@ -425,11 +337,244 @@ doTask(PrintIT<IQIndex>& P, IQTReal const& d)
                 //    }
                 //P.s << "] ";
 
-                P.printVal(val);
+                P.s << formatVal(val) << "\n";
                 }
             }
         }
     }
+template void doTask(PrintIT<IQIndex>& P, QDense<Real> const& d);
+template void doTask(PrintIT<IQIndex>& P, QDense<Cplx> const& d);
+
+struct Adder
+    {
+    const Real f = 1.;
+    Adder(Real f_) : f(f_) { }
+    template<typename T1, typename T2>
+    void operator()(T2 v2, T1& v1) { v1 += f*v2; }
+    void operator()(Cplx v2, Real& v1) { }
+    };
+
+template<typename T1, typename T2>
+void
+add(PlusEQ<IQIndex> const& P,
+    QDense<T1>            & A,
+    QDense<T2>       const& B)
+    {
+#ifdef DEBUG
+    if(A.store.size() != B.store.size()) Error("Mismatched sizes in plusEq");
+#endif
+    if(isTrivial(P.perm()) && std::is_same<T1,T2>::value)
+        {
+        auto dA = realData(A);
+        auto dB = realData(B);
+        daxpy_wrapper(dA.size(),P.fac(),dB.data(),1,dA.data(),1);
+        }
+    else
+        {
+        auto r = P.is1().r();
+        Label Ablock(r,0),
+              Bblock(r,0);
+        Range Arange,
+              Brange;
+        for(auto& aio : A.offsets)
+            {
+            computeBlockInd(aio.block,P.is1(),Ablock);
+            for(int i = 0; i < r; ++i)
+                Bblock[i] = Ablock[P.perm().dest(i)];
+            Arange.init(make_indexdim(P.is1(),Ablock));
+            Brange.init(make_indexdim(P.is2(),Bblock));
+
+            auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
+            auto bblock = getBlock(B,P.is2(),Bblock);
+            auto bref = makeRef(bblock,&Brange);
+            transform(permute(bref,P.perm()),aref,Adder{P.fac()});
+            }
+        }
+    }
+
+template<typename TA, typename TB>
+void
+doTask(PlusEQ<IQIndex> const& P,
+       QDense<TA>      const& A,
+       QDense<TB>      const& B,
+       ManageStore          & m)
+    {
+    if(isReal(A) && isCplx(B))
+        {
+        auto *nA = m.makeNewData<QDenseCplx>(A.offsets,A.begin(),A.end());
+        add(P,*nA,B);
+        }
+    else
+        {
+        auto *mA = m.modifyData(A);
+        add(P,*mA,B);
+        }
+    }
+template void doTask(PlusEQ<IQIndex> const&, QDense<Real> const&, QDense<Real> const&, ManageStore&);
+template void doTask(PlusEQ<IQIndex> const&, QDense<Real> const&, QDense<Cplx> const&, ManageStore&);
+template void doTask(PlusEQ<IQIndex> const&, QDense<Cplx> const&, QDense<Real> const&, ManageStore&);
+template void doTask(PlusEQ<IQIndex> const&, QDense<Cplx> const&, QDense<Cplx> const&, ManageStore&);
+
+
+template<typename VA, typename VB>
+void
+doTask(Contract<IQIndex>& Con,
+       QDense<VA> const& A,
+       QDense<VB> const& B,
+       ManageStore& m)
+    {
+    using VC = common_type<VA,VB>;
+    Label Lind,
+          Rind;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
+    //compute new index set (Con.Nis):
+    Label Cind;
+    const bool sortResult = false;
+    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
+
+    auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
+
+    //Allocate storage for C
+    START_TIMER(33)
+    auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
+    STOP_TIMER(33)
+    auto& C = *nd;
+
+    //Function to execute for each pair of
+    //contracted blocks of A and B
+    auto do_contract = 
+        [&Con,&Lind,&Rind,&Cind]
+        (DataRange<const VA> ablock, Label const& Ablockind,
+         DataRange<const VB> bblock, Label const& Bblockind,
+         DataRange<VC>       cblock, Label const& Cblockind)
+        {
+        Range Arange,
+              Brange,
+              Crange;
+        //Construct range objects for aref,bref,cref
+        //using IndexDim helper objects
+        Arange.init(make_indexdim(Con.Lis,Ablockind));
+        Brange.init(make_indexdim(Con.Ris,Bblockind));
+        Crange.init(make_indexdim(Con.Nis,Cblockind));
+
+        //"Wire up" TensorRef's pointing to blocks of A,B, and C
+        //we are working with
+        auto aref = makeRef(ablock,&Arange);
+        auto bref = makeRef(bblock,&Brange);
+        auto cref = makeRef(cblock,&Crange);
+
+        //Compute cref += aref*bref
+        START_TIMER(2)
+        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
+        STOP_TIMER(2)
+        };
+
+    START_TIMER(20)
+    loopContractedBlocks(A,Con.Lis,
+                         B,Con.Ris,
+                         C,Con.Nis,
+                         do_contract);
+    STOP_TIMER(20)
+
+    START_TIMER(21)
+    Con.scalefac = computeScalefac(C);
+    STOP_TIMER(21)
+    }
+template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Real> const&,ManageStore&);
+template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
+template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
+template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
+
+//void
+//doTask(NCProd<IQIndex>& P,
+//       IQTReal const& A,
+//       IQTReal const& B,
+//       ManageStore& m)
+//    {
+//    auto& Ais = P.Lis;
+//    auto& Bis = P.Ris;
+//    auto& Cis = P.Nis;
+//    auto rA = rank(Ais);
+//    auto rB = rank(Bis);
+//    Label Aind,
+//          Bind,
+//          Cind;
+//    computeLabels(Ais,rA,Bis,rB,Aind,Bind);
+//    ncprod(Ais,Aind,Bis,Bind,Cis,Cind);
+//
+//    Label BtoA(rA,-1);
+//    for(auto ia : count(rA))
+//    for(auto ib : count(rB))
+//        if(Bis[ib] == Ais[ia])
+//            {
+//            BtoA[ib] = ia;
+//            break;
+//            }
+//
+//    auto Cdiv = QN{};
+//        {
+//        Cdiv = doTask(CalcDiv{Ais},A);
+//        auto Ablock_ind = Label(rA);
+//        computeBlockInd(A.offsets.front().block,Ais,Ablock_ind);
+//        auto Bblock_ind = Label(rB);
+//        for(auto& bo : B.offsets)
+//            {
+//            computeBlockInd(bo.block,Bis,Bblock_ind);
+//            bool matchesA = true;
+//            for(auto n : count(rB))
+//                {
+//                if(Bind[n] < 0 && Ablock_ind[BtoA[n]] != Bind[n])
+//                    {
+//                    matchesA = false;
+//                    break;
+//                    }
+//                }
+//            if(matchesA) break;
+//            }
+//        //Only account for unique indices of B
+//        for(auto n : count(rB))
+//            if(Bind[n] > 0) //unique
+//                {
+//                Cdiv += Bis[n].dir()*Bis[n].qn(1+Bblock_ind[n]);
+//                }
+//        }
+//
+//    //Allocate storage for C
+//    auto& C = *m.makeNewData<IQTReal>(Cis,Cdiv);
+//
+//    auto do_ncprod = 
+//        [&P,&Aind,&Bind,&Cind]
+//        (Datac ablock, Label const& Ablockind,
+//         Datac bblock, Label const& Bblockind,
+//         Data  cblock, Label const& Cblockind)
+//        {
+//        Range Arange,
+//              Brange,
+//              Crange;
+//        //Construct range objects for aref,bref,cref
+//        //using IndexDim helper objects
+//        Arange.init(make_indexdim(P.Lis,Ablockind));
+//        Brange.init(make_indexdim(P.Ris,Bblockind));
+//        Crange.init(make_indexdim(P.Nis,Cblockind));
+//
+//        //"Wire up" TensorRef's pointing to blocks of A,B, and C
+//        //we are working with
+//        auto aref = TensorRefc(ablock,&Arange),
+//             bref = TensorRefc(bblock,&Brange);
+//        auto cref = TensorRef(cblock,&Crange);
+//
+//        //Compute cref += aref*bref
+//        ncprod(aref,Aind,bref,Bind,cref,Cind);
+//        };
+//
+//    loopContractedBlocks(A,Ais,
+//                         B,Bis,
+//                         C,Cis,
+//                         do_ncprod);
+//
+//    P.scalefac = computeScalefac(C);
+//    }
+
 
 
 } //namespace itensor

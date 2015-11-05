@@ -23,9 +23,9 @@ doTask(GetElt<IQIndex> const& g, IQTCombiner const& c)
 void
 permuteIQ(const Permutation& P,
           const IQIndexSet& Ais,
-          const IQTReal& dA,
+          const QDenseReal& dA,
           IQIndexSet& Bis,
-          IQTReal& dB)
+          QDenseReal& dB)
     {
 #ifdef DEBUG
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
@@ -37,7 +37,7 @@ permuteIQ(const Permutation& P,
         bind.setIndex(P.dest(i),Ais[i]);
         }
     Bis = bind.build();
-    dB = IQTReal(Bis,doTask(CalcDiv{Ais},dA));
+    dB = QDenseReal(Bis,doTask(CalcDiv{Ais},dA));
 
     Label Ablock(r,-1),
           Bblock(r,-1);
@@ -76,8 +76,9 @@ replaceInd(IQIndexSet const& is,
     return newind.build();
     }
 
+template<typename T>
 void
-combine(IQTReal     const& d,
+combine(QDense<T>   const& d,
         IQTCombiner const& C,
         IQIndexSet  const& dis,
         IQIndexSet  const& Cis,
@@ -120,7 +121,7 @@ combine(IQTReal     const& d,
     Nis = newind.build();
 
     //Allocate new data
-    auto& nd = *m.makeNewData<IQTReal>(Nis,doTask(CalcDiv{dis},d));
+    auto& nd = *m.makeNewData<QDense<T>>(Nis,doTask(CalcDiv{dis},d));
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
@@ -140,7 +141,7 @@ combine(IQTReal     const& d,
 
         //Permute combined indices to front, then
         //group the first ncomb indices into one
-        auto Pdref = Tensor{permute(dref,dperm)};
+        auto Pdref = Ten<Range,T>{permute(dref,dperm)};
         auto gPdref = groupInds(Pdref,0,ncomb);
 
         //Figure out "block index" where this block will
@@ -161,7 +162,7 @@ combine(IQTReal     const& d,
         nrange.init(make_indexdim(Nis,nblock));
         auto nb = getBlock(nd,Nis,nblock);
         assert(nb.data() != nullptr);
-        auto nref = TensorRef(nb,&nrange);
+        auto nref = makeRef(nb,&nrange);
 
         //Slice this new-storage block to get subblock where data will go
         auto nsub = subIndex(nref,0,start,end);
@@ -196,8 +197,9 @@ combReplaceIndex(IQIndexSet  const& dis,
         }
     }
 
+template<typename T>
 void
-uncombine(IQTReal     const& d,
+uncombine(QDense<T>   const& d,
           IQTCombiner const& C,
           IQIndexSet  const& dis,
           IQIndexSet  const& Cis,
@@ -229,7 +231,7 @@ uncombine(IQTReal     const& d,
     Nis = newind.build();
 
     //Allocate new data
-    auto& nd = *m.makeNewData<IQTReal>(Nis,doTask(CalcDiv{dis},d));
+    auto& nd = *m.makeNewData<QDense<T>>(Nis,doTask(CalcDiv{dis},d));
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
@@ -277,7 +279,7 @@ uncombine(IQTReal     const& d,
             nrange.init(make_indexdim(Nis,nblock));
             auto nb = getBlock(nd,Nis,nblock);
             assert(nb.data() != nullptr);
-            auto nref = TensorRef(nb,&nrange);
+            auto nref = makeRef(nb,&nrange);
             auto nslice = groupInds(nref,jc,jc+ncomb);
 
             nslice &= dsub;
@@ -286,11 +288,12 @@ uncombine(IQTReal     const& d,
         } //for blocks of d
     }//uncombine
 
+template<typename T>
 void
-doTask(Contract<IQIndex>      & C,
-       IQTReal           const& d,
-       IQTCombiner        const& cmb,
-       ManageStore            & m)
+doTask(Contract<IQIndex> & C,
+       QDense<T>    const& d,
+       IQTCombiner  const& cmb,
+       ManageStore       & m)
     {
     if(C.Ris.r()==2)
         {
@@ -305,12 +308,15 @@ doTask(Contract<IQIndex>      & C,
         combine(d,cmb,C.Lis,C.Ris,C.Nis,m);
         }
     }
+template void doTask(Contract<IQIndex> &,QDense<Real> const&,IQTCombiner const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,QDense<Cplx> const&,IQTCombiner const&,ManageStore &);
 
+template<typename T>
 void
-doTask(Contract<IQIndex>      & C,
-       IQTCombiner       const& cmb,
-       IQTReal           const& d,
-       ManageStore            & m)
+doTask(Contract<IQIndex> & C,
+       IQTCombiner  const& cmb,
+       QDense<T>    const& d,
+       ManageStore       & m)
     { 
     if(C.Lis.r()==2)
         {
@@ -326,6 +332,8 @@ doTask(Contract<IQIndex>      & C,
         combine(d,cmb,C.Ris,C.Lis,C.Nis,m);
         }
     }
+template void doTask(Contract<IQIndex> &,IQTCombiner const&,QDense<Real> const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,IQTCombiner const&,QDense<Cplx> const&,ManageStore &);
 
 
 } //namespace itensor

@@ -12,15 +12,19 @@ using std::move;
 
 namespace itensor {
 
-IQTDiag::
-IQTDiag(IQIndexSet const& is, 
-        QN const& div)
+template<typename T>
+QDiag<T>::
+QDiag(IQIndexSet const& is, 
+      QN const& div)
     {
     auto totalsize = updateOffsets(is,div);
     store.assign(totalsize,0);
     }
+template QDiag<Real>::QDiag(IQIndexSet const& is, QN const& div);
+template QDiag<Cplx>::QDiag(IQIndexSet const& is, QN const& div);
 
-long IQTDiag::
+template<typename T>
+long QDiag<T>::
 updateOffsets(IQIndexSet const& is,
               QN const& div)
     {
@@ -64,174 +68,93 @@ updateOffsets(IQIndexSet const& is,
         }
     return totalsize;
     }
+template long QDiag<Real>::updateOffsets(IQIndexSet const& is,QN const& div);
+template long QDiag<Cplx>::updateOffsets(IQIndexSet const& is,QN const& div);
 
+template<typename T>
 Cplx
-doTask(GetElt<IQIndex>& G, IQTDiag const& D)
+doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
     {
     auto* pelt = getElt(D,G.is,G.inds);
     if(pelt) return *pelt;
-    return 0;
+    return 0.;
     }
+template Cplx doTask(GetElt<IQIndex>& G, QDiag<Real> const& D);
+template Cplx doTask(GetElt<IQIndex>& G, QDiag<Cplx> const& D);
 
+template<typename T>
 QN
-doTask(CalcDiv const& C, IQTDiag const& d)
+doTask(CalcDiv const& C, QDiag<T> const& d)
     {
 #ifdef DEBUG
-    if(d.offsets.empty()) Error("Default constructed IQTReal in doTask(CalcDiv,IQTReal)");
+    if(d.offsets.empty()) Error("Default constructed QDiag in doTask(CalcDiv,QDiag)");
 #endif
     auto b = d.offsets.front().block;
     Label block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
+template QN doTask(CalcDiv const& C, QDiag<Real> const& d);
+template QN doTask(CalcDiv const& C, QDiag<Cplx> const& d);
 
+template<typename T>
 Cplx
-doTask(SumEls<IQIndex>, IQTDiag const& d)
+doTask(SumEls<IQIndex>, QDiag<T> const& d)
     {
-    Real s = 0.;
-    for(auto& el : d.store) s += el;
-    return Cplx(s,0.);
+    T s = 0.;
+    for(auto& el : d) s += el;
+    return s;
+    }
+template Cplx doTask(SumEls<IQIndex>, QDiag<Real> const& d);
+template Cplx doTask(SumEls<IQIndex>, QDiag<Cplx> const& d);
+
+template<typename T>
+void
+doTask(Mult<Real> const& M, QDiag<T>& D)
+    {
+    auto d = realData(D);
+    dscal_wrapper(d.size(),M.x,d.data());
+    }
+template void doTask(Mult<Real> const&, QDiagReal&);
+template void doTask(Mult<Real> const&, QDiagCplx&);
+
+void
+doTask(Mult<Cplx> const& M, QDiag<Cplx> & d)
+    {
+    for(auto& el : d) el *= M.x;
     }
 
 void
-doTask(Mult<Real> & M, IQTDiag & d)
+doTask(Mult<Cplx> const& M, QDiag<Real> const& d, ManageStore & m)
     {
-    //use BLAS algorithm?
-    for(auto& elt : d.store)
-        elt *= M.x;
+    auto *nd = m.makeNewData<QDiagCplx>(d.offsets,d.begin(),d.end());
+    doTask(M,*nd);
     }
 
 void
-blockDiagDense(IQTDiag const& D,
-               IQIndexSet const& Dis,
-               Label const& Dind,
-               IQTReal const& T,
-               IQIndexSet const& Tis,
-               Label const& Tind,
-               IQIndexSet const& Cis,
-               Label const& Cind,
-               ManageStore & m)
+doTask(Conj, QDiagCplx & d)
     {
-#ifdef DEBUG
-    if(Dis.r() == 0) Error("IQTDiag rank 0 case not handled");
-#endif
-
-    bool T_has_uncontracted = false;
-    for(auto j : index(Tind)) 
-        if(Tind[j] >= 0)
-            {
-            T_has_uncontracted = true;
-            break;
-            }
-
-    auto Cdiv = doTask(CalcDiv{Dis},D)+doTask(CalcDiv{Tis},T);
-
-    if(T_has_uncontracted)
-        {
-        auto *nd = m.makeNewData<IQTReal>(Cis,Cdiv);
-        auto& C = *nd;
-
-        auto do_contract =
-            [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
-            (Datac dblock, Label const& Dblockind,
-             Datac tblock, Label const& Tblockind,
-             Data  cblock, Label const& Cblockind)
-            {
-            Range Trange,
-                  Crange;
-            Trange.init(make_indexdim(Tis,Tblockind));
-            auto Tref = TensorRefc(tblock,&Trange);
-            Crange.init(make_indexdim(Cis,Cblockind));
-            auto Cref = TensorRef(cblock,&Crange);
-
-            auto Ddim = make_indexdim(Dis,Dblockind);
-            auto Dminm = std::numeric_limits<size_t>::max();
-            for(decltype(Ddim.size()) j = 0; j < Ddim.size(); ++j)
-                {
-                Dminm = std::min(Dminm,Ddim[j]);
-                }
-
-            auto Dref = makeVecRef(dblock.data(),Dminm);
-
-            contractDiagPartial(Dref,Dind,
-                                Tref,Tind,
-                                Cref,Cind);
-            };
-
-        loopContractedBlocks(D,Dis,
-                             T,Tis,
-                             C,Cis,
-                             do_contract);
-        }
-    else
-        {
-        Error("Fully contracted IQTDiag*IQTReal not yet implemented");
-        //auto nd = m.makeNewData<IQTDiag>(Cis,Cdiv);
-        //auto& C = *nd;
-
-        //loopContractedBlocks(D,Dis,
-        //                     T,Tis,
-        //                     C,Cis,
-        //                     do_contract);
-        }
+    for(auto& el : d) applyConj(el);
     }
 
-void
-doTask(Contract<IQIndex>& Con,
-       IQTDiag const& A,
-       IQTReal const& B,
-       ManageStore& m)
-    {
-    Label Aind,
-          Bind,
-          Cind;
-    bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
-    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
-    blockDiagDense(A,Con.Lis,Aind,
-                   B,Con.Ris,Bind,
-                   Con.Nis,Cind,m);
-    }
 
-void
-doTask(Contract<IQIndex>& Con,
-       IQTReal const& A,
-       IQTDiag const& B,
-       ManageStore& m)
-    {
-    Label Aind,
-          Bind,
-          Cind;
-    bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
-    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
-    blockDiagDense(B,Con.Ris,Bind,
-                   A,Con.Lis,Aind,
-                   Con.Nis,Cind,m);
-    }
-
-void
-doTask(Conj, IQTDiag const& d) { }
-
-
+template<typename T>
 Real
-doTask(NormNoScale, 
-       IQTDiag const& d) 
+doTask(NormNoScale, QDiag<T> const& D)
     { 
-    Real nrm = 0;
-    for(auto& elt : d.store)
-        {
-        nrm += elt*elt;
-        }
-    return std::sqrt(nrm);
+    auto d = realData(D);
+    return dnrm2_wrapper(d.size(),d.data());
     }
+template Real doTask(NormNoScale, QDiag<Real> const& D);
+template Real doTask(NormNoScale, QDiag<Cplx> const& D);
 
 
+template<typename T>
 void
-doTask(PrintIT<IQIndex> & P, 
-       IQTDiag const& d)
+doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
     {
-    P.s << "IQTDiag {" << d.offsets.size() << " blocks; Data size = " << d.store.size() << "}\n\n";
+    P.s << format("QDiag %s {%d blocks; data size %d}\n",
+                  typeName<T>(),d.offsets.size(),d.size());
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -240,7 +163,7 @@ doTask(PrintIT<IQIndex> & P,
     if(rank == 0) 
         {
         P.s << "  ";
-        P.printVal(scalefac*d.store.front());
+        P.s << formatVal(scalefac*d.store.front()) << "\n";
         return;
         }
         
@@ -279,11 +202,134 @@ doTask(PrintIT<IQIndex> & P,
                     if(ii < rank) P.s << ",";
                     }
                 P.s << ") ";
-                P.printVal(val);
+                P.s << formatVal(val) << "\n";
                 }
             }
         }
     }
+template void doTask(PrintIT<IQIndex>& P, QDiag<Real> const& d);
+template void doTask(PrintIT<IQIndex>& P, QDiag<Cplx> const& d);
+
+template<typename VD, typename VT>
+void
+blockDiagDense(QDiag<VD> const& D,
+               IQIndexSet const& Dis,
+               Label const& Dind,
+               QDense<VT> const& T,
+               IQIndexSet const& Tis,
+               Label const& Tind,
+               IQIndexSet const& Cis,
+               Label const& Cind,
+               ManageStore & m)
+    {
+    using VC = common_type<VT,VD>;
+#ifdef DEBUG
+    if(Dis.r() == 0) Error("IQTDiag rank 0 case not handled");
+#endif
+
+    bool T_has_uncontracted = false;
+    for(auto j : index(Tind)) 
+        if(Tind[j] >= 0)
+            {
+            T_has_uncontracted = true;
+            break;
+            }
+
+    auto Cdiv = doTask(CalcDiv{Dis},D)+doTask(CalcDiv{Tis},T);
+
+    if(T_has_uncontracted)
+        {
+        auto *nd = m.makeNewData<QDense<VC>>(Cis,Cdiv);
+        auto& C = *nd;
+
+        auto do_contract =
+            [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
+            (DataRange<const VD> dblock, Label const& Dblockind,
+             DataRange<const VT> tblock, Label const& Tblockind,
+             DataRange<VC>       cblock, Label const& Cblockind)
+            {
+            Range Trange,
+                  Crange;
+            Trange.init(make_indexdim(Tis,Tblockind));
+            auto Tref = makeRef(tblock,&Trange);
+            Crange.init(make_indexdim(Cis,Cblockind));
+            auto Cref = makeRef(cblock,&Crange);
+
+            auto Ddim = make_indexdim(Dis,Dblockind);
+            auto Dminm = std::numeric_limits<size_t>::max();
+            for(decltype(Ddim.size()) j = 0; j < Ddim.size(); ++j)
+                {
+                Dminm = std::min(Dminm,Ddim[j]);
+                }
+
+            auto Dref = makeVecRef(dblock.data(),Dminm);
+
+            contractDiagPartial(Dref,Dind,
+                                Tref,Tind,
+                                Cref,Cind);
+            };
+
+        loopContractedBlocks(D,Dis,
+                             T,Tis,
+                             C,Cis,
+                             do_contract);
+        }
+    else
+        {
+        Error("Fully contracted IQTDiag*IQTReal not yet implemented");
+        //auto nd = m.makeNewData<IQTDiag>(Cis,Cdiv);
+        //auto& C = *nd;
+
+        //loopContractedBlocks(D,Dis,
+        //                     T,Tis,
+        //                     C,Cis,
+        //                     do_contract);
+        }
+    }
+
+template<typename VA, typename VB>
+void
+doTask(Contract<IQIndex>& Con,
+       QDiag<VA> const& A,
+       QDense<VB> const& B,
+       ManageStore& m)
+    {
+    Label Aind,
+          Bind,
+          Cind;
+    bool sortInds = false;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
+    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
+    blockDiagDense(A,Con.Lis,Aind,
+                   B,Con.Ris,Bind,
+                   Con.Nis,Cind,m);
+    }
+template void doTask(Contract<IQIndex>& Con,QDiag<Real> const& A,QDense<Real> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDiag<Cplx> const& A,QDense<Real> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDiag<Real> const& A,QDense<Cplx> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDiag<Cplx> const& A,QDense<Cplx> const& B,ManageStore& m);
+
+template<typename VA, typename VB>
+void
+doTask(Contract<IQIndex>& Con,
+       QDense<VA> const& A,
+       QDiag<VB> const& B,
+       ManageStore& m)
+    {
+    Label Aind,
+          Bind,
+          Cind;
+    bool sortInds = false;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
+    contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
+    blockDiagDense(B,Con.Ris,Bind,
+                   A,Con.Lis,Aind,
+                   Con.Nis,Cind,m);
+    }
+template void doTask(Contract<IQIndex>& Con,QDense<Real> const& A,QDiag<Real> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const& A,QDiag<Real> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDense<Real> const& A,QDiag<Cplx> const& B,ManageStore& m);
+template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const& A,QDiag<Cplx> const& B,ManageStore& m);
 
 } //namespace itensor
 

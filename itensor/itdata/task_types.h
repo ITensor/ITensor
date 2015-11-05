@@ -359,9 +359,11 @@ struct StorageType
         ITCombiner=3, 
         DiagReal=4, 
         DiagCplx=5,
-        IQTReal=6,
-        IQTCombiner=7,
-        IQTDiag=8
+        QDenseReal=6,
+        QDenseCplx=7,
+        IQTCombiner=8,
+        QDiagReal=9,
+        QDiagCplx=10
         }; 
     //const char*
     //name(Type t)

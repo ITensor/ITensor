@@ -81,16 +81,18 @@ doTask(NormNoScale, IQTCombiner const& d) { return 0; }
 void inline
 doTask(Conj,IQTCombiner const& d) { }
 
+template<typename T>
 void
 doTask(Contract<IQIndex> & C,
-       IQTReal      const& d,
+       QDense<T>    const& d,
        IQTCombiner  const& cmb,
        ManageStore       & m);
 
+template<typename T>
 void
 doTask(Contract<IQIndex> & C,
        IQTCombiner  const& cmb,
-       IQTReal      const& d,
+       QDense<T>    const& d,
        ManageStore       & m);
 
 void inline

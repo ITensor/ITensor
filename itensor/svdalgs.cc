@@ -60,8 +60,10 @@ toMatRefc(ITensor const& T,
 
 /////////////
 
+template<typename T>
 struct GetBlocks
     {
+    using value_type = T;
     IQIndexSet const& is;
     bool transpose = false;
 
@@ -75,19 +77,21 @@ struct GetBlocks
         }
     };
 
+template<typename T>
 struct Rank2Block
     {
-    MatrixRefc M;
+    MatRefc<T> M;
     long i1 = 0,
          i2 = 0;
     };
 
-vector<Rank2Block>
-doTask(GetBlocks const& G, 
-       IQTReal const& d)
+template<typename T>
+vector<Rank2Block<T>>
+doTask(GetBlocks<T> const& G, 
+       QDense<T> const& d)
     {
-    if(G.is.r() != 2) Error("doTask(GetBlocks,IQTReal) only supports rank 2");
-    vector<Rank2Block> res{d.offsets.size()};
+    if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports rank 2");
+    vector<Rank2Block<T>> res{d.offsets.size()};
     Label dblock(2,0);
     size_t n = 0;
     for(auto& dio : d.offsets)
@@ -316,33 +320,17 @@ svdImpl(ITensor const& A,
     return spec;
     }
 
-Spectrum 
-svdRank2(ITensor const& A, 
-         Index const& ui, 
-         Index const& vi,
-         ITensor & U, 
-         ITensor & D, 
-         ITensor & V,
-         Args const& args)
-    {
-    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
-    if(isComplex(A))
-        {
-        return svdImpl<Cplx>(A,ui,vi,U,D,V,args);
-        }
-    return svdImpl<Real>(A,ui,vi,U,D,V,args);
-    }
 
+template<typename T>
 Spectrum
-svdRank2(IQTensor A, 
-         IQIndex const& uI, 
-         IQIndex const& vI,
-         IQTensor & U, 
-         IQTensor & D, 
-         IQTensor & V,
-         Args const& args)
+svdImpl(IQTensor A, 
+        IQIndex const& uI, 
+        IQIndex const& vI,
+        IQTensor & U, 
+        IQTensor & D, 
+        IQTensor & V,
+        Args const& args)
     {
-    auto cplx = isComplex(A);
     auto thresh = args.getReal("SVDThreshold",1E-4);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
@@ -354,7 +342,7 @@ svdRank2(IQTensor A,
 
     if(A.r() != 2) Error("A must be matrix-like");
 
-    auto blocks = doTask(GetBlocks{A.inds(),uI,vI},A.store());
+    auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
 
     auto Nblock = blocks.size();
     if(Nblock == 0) throw ResultIsZero("IQTensor has no blocks");
@@ -362,15 +350,8 @@ svdRank2(IQTensor A,
     //TODO: optimize allocation/lookup of Umats,Vmats
     //      etc. by allocating memory ahead of time (see algs.cc)
     //      and making Umats a vector of MatrixRef's to this memory
-    vector<Matrix> Umats(Nblock),
-                   Vmats(Nblock),
-                   iUmats,
-                   iVmats;
-    if(cplx)
-        {
-        iUmats.resize(Nblock);
-        iVmats.resize(Nblock);
-        }
+    vector<Mat<T>> Umats(Nblock),
+                   Vmats(Nblock);
 
     //TODO: allocate dvecs in a single allocation
     //      make dvecs a vector<VecRef>
@@ -390,31 +371,11 @@ svdRank2(IQTensor A,
 
         //printfln("Block %d = \n%s",b,M);
 
-        if(!cplx)
-            {
-            SVD(M,UU,d,VV,thresh);
-            }
-        else
-            {
-            Error("Complex IQTensor SVD not yet implemented");
+        SVD(M,UU,d,VV,thresh);
 
-            //ITensor ret = realPart(t),
-            //        imt = imagPart(t);
-            //Matrix Mre(ui->m(),vi->m()),
-            //       Mim(ui->m(),vi->m());
-            //ret.toMatrix11NoScale(*ui,*vi,Mre);
-            //imt.toMatrix11NoScale(*ui,*vi,Mim);
-
-            ////SVDComplex(Mre,Mim,
-            ////           UU,iUmatrix.at(itenind),
-            ////           d,
-            ////           VV,iVmatrix.at(itenind));
-            //SVD(Mre,Mim,
-            //    UU,iUmatrix.at(itenind),
-            //    d,
-            //    VV,iVmatrix.at(itenind),
-            //    thresh);
-            }
+        //conjugate VV so later we can just do
+        //U*D*V to reconstruct ITensor A:
+        conjugate(VV);
 
         alleig.insert(alleig.end(),d.begin(),d.end());
         }
@@ -485,7 +446,6 @@ svdRank2(IQTensor A,
             continue; 
             }
 
-
         resize(d,this_m);
 
         Liq.emplace_back(Index("l",this_m),uI.qn(1+B.i1));
@@ -503,10 +463,10 @@ svdRank2(IQTensor A,
     //Print(Dis);
     //Print(Vis);
 
-    IQTReal Ustore(Uis,QN()),
-            Vstore(Vis,QN());
+    QDense<T> Ustore(Uis,QN()),
+              Vstore(Vis,QN());
 
-    IQTDiag Dstore(Dis,div(A));
+    QDiagReal Dstore(Dis,div(A));
 
     long n = 0;
     for(auto b : count(Nblock))
@@ -588,7 +548,31 @@ svdRank2(IQTensor A,
 
     return Spectrum(move(probs),Args("Truncerr",truncerr));
 
-    } // svdRank2 IQTensor
+    } // svdImpl IQTensor
+
+template<typename IndexT>
+Spectrum 
+svdRank2(ITensorT<IndexT> const& A, 
+         IndexT const& ui, 
+         IndexT const& vi,
+         ITensorT<IndexT> & U, 
+         ITensorT<IndexT> & D, 
+         ITensorT<IndexT> & V,
+         Args const& args)
+    {
+    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
+    if(isComplex(A))
+        {
+        return svdImpl<Cplx>(A,ui,vi,U,D,V,args);
+        }
+    return svdImpl<Real>(A,ui,vi,U,D,V,args);
+    }
+template Spectrum 
+svdRank2(ITensor const&,Index const&,Index const&,
+         ITensor &,ITensor &,ITensor &,Args const&);
+template Spectrum 
+svdRank2(IQTensor const&,IQIndex const&,IQIndex const&,
+         IQTensor &,IQTensor &,IQTensor &,Args const&);
 
 
 Spectrum
@@ -766,7 +750,7 @@ diag_hermitian(IQTensor    rho,
 
     if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
-    auto blocks = doTask(GetBlocks{rho.inds(),ai,prime(ai)},rho.store());
+    auto blocks = doTask(GetBlocks<Real>{rho.inds(),ai,prime(ai)},rho.store());
     auto Nblock = blocks.size();
 
     size_t totaldsize = 0,
@@ -907,8 +891,8 @@ diag_hermitian(IQTensor    rho,
     IQIndexSet Uis(dag(ai),dag(d)),
                Dis(prime(d),dag(d));
 
-    IQTReal Ustore(Uis,QN());
-    IQTDiag Dstore(Dis,div(rho));
+    QDenseReal Ustore(Uis,QN());
+    QDiagReal Dstore(Dis,div(rho));
 
     long n = 0;
     for(auto b : count(Nblock))

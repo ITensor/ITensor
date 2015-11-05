@@ -9,36 +9,53 @@
 
 namespace itensor {
 
-class ManageStore;
 class ITCombiner;
-class IQTReal;
 
+template<typename T>
+class QDiag;
 
-class IQTDiag
+using QDiagReal = QDiag<Real>;
+using QDiagCplx = QDiag<Cplx>;
+
+template<typename T>
+class QDiag
     {
+    static_assert(not std::is_const<T>::value,
+                  "Template argument of QDense must be non-const");
     public:
+    using value_type = T;
+    using storage_type = std::vector<value_type>;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
 
     //////////////
-    std::vector<IQTReal::BlOf> offsets;
+    std::vector<BlOf> offsets;
         //^ Block index / data offset pairs.
         //  Assumed that block indices are
         //  in increasing order.
 
-    std::vector<Real> store;
+    storage_type store;
         //^ *diagonal* tensor data stored contiguously
     //////////////
 
-    IQTDiag() { }
+    QDiag() { }
 
-    IQTDiag(IQIndexSet const& is, 
-            QN const& div_);
+    QDiag(IQIndexSet const& is, 
+          QN const& div_);
+
+    template<typename... SArgs>
+    QDiag(std::vector<BlOf> const& off,
+          SArgs&&... sargs)
+         : offsets(off),
+           store(std::forward<SArgs>(sargs)...)
+           { }
 
     explicit operator bool() const { return !store.empty(); }
 
-    Real*
+    value_type*
     data() { return store.data(); }
 
-    const Real*
+    value_type const*
     data() const { return store.data(); }
 
     size_t
@@ -48,12 +65,43 @@ class IQTDiag
     updateOffsets(IQIndexSet const& is,
                   QN const& div);
 
+    iterator
+    begin() { return store.begin(); }
+
+    iterator
+    end() { return store.end(); }
+
+    const_iterator
+    begin() const { return store.begin(); }
+
+    const_iterator
+    end() const { return store.end(); }
+
     };
 
+template<typename T>
+bool constexpr
+isReal(QDiag<T> const& t) { return std::is_same<T,Real>::value; }
 
-template<typename Indexable>
-const Real*
-getElt(IQTDiag const& D,
+template<typename T>
+bool constexpr
+isCplx(QDiag<T> const& t) { return std::is_same<T,Cplx>::value; }
+
+Data inline
+realData(QDiagReal & d) { return Data(d.data(),d.size()); }
+
+Datac inline
+realData(QDiagReal const& d) { return Datac(d.data(),d.size()); }
+
+Data inline
+realData(QDiagCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
+
+Datac inline
+realData(QDiagCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
+
+template<typename T, typename Indexable>
+T const*
+getElt(QDiag<T> const& D,
        IQIndexSet const& is,
        Indexable const& ind)
     {
@@ -99,97 +147,135 @@ getElt(IQTDiag const& D,
     return nullptr;
     }
 
-template<typename Indexable>
-Real*
-getElt(IQTDiag & D,
-       IndexSetT<IQIndex> const& is,
-       Indexable const& ind)
-    {
-    return const_cast<Real*>(getElt(D,is,ind));
-    }
+//template<typename Indexable>
+//Real*
+//getElt(IQTDiag & D,
+//       IndexSetT<IQIndex> const& is,
+//       Indexable const& ind)
+//    {
+//    return const_cast<Real*>(getElt(D,is,ind));
+//    }
 
-void inline
-write(std::ostream & s, IQTDiag const& dat)
+template<typename T>
+void
+write(std::ostream & s, QDiag<T> const& dat)
     {
     itensor::write(s,dat.offsets);
     itensor::write(s,dat.store);
     }
 
-void inline
-read(std::istream & s, IQTDiag & dat)
+template<typename T>
+void
+read(std::istream & s, QDiag<T> & dat)
     {
     itensor::read(s,dat.offsets);
     itensor::read(s,dat.store);
     }
  
+template<typename T>
 Cplx
-doTask(GetElt<IQIndex>& G, IQTDiag const& D);
+doTask(GetElt<IQIndex>& G, QDiag<T> const& D);
 
+template<typename T>
 QN
-doTask(CalcDiv const& C, IQTDiag const& d);
+doTask(CalcDiv const& C, QDiag<T> const& d);
 
-template<typename F>
+template<typename F, typename T>
 void
-doTask(ApplyIT<F> & A, IQTDiag & d)
+doTask(ApplyIT<F> & A, QDiag<T> & d)
     {
-    for(auto& elt : d.store)
-        elt = A.f(elt);
+    for(auto& el : d.store) A(el);
+    }
+
+template<typename F, typename T>
+void
+doTask(VisitIT<F> & V, QDiag<T> const& d)
+    {
+    for(auto& elt : d.store) detail::call<void>(V.f,elt*V.scale_fac);
     }
 
 template<typename F>
 void
-doTask(VisitIT<F> & V, IQTDiag const& d)
+doTask(GenerateIT<F,Real>& G, QDiagReal & D)
     {
-    for(auto& elt : d.store)
-        V.f(elt*V.scale_fac);
+    stdx::generate(D,G.f);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real> & G, IQTDiag & d)
+doTask(GenerateIT<F,Real>& G, QDiagCplx const& D, ManageStore & m)
     {
-    std::generate(d.store.begin(),d.store.end(),G.f);
+    auto *nD = m.makeNewData<QDiagReal>(D.offsets,D.size());
+    stdx::generate(*nD,G.f);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx> & G, IQTDiag const& cd, ManageStore & mp)
+doTask(GenerateIT<F,Cplx>& G, QDiagReal const& D, ManageStore & m)
     {
-    Error("Complex version of IQTensor generate not yet supported");
+    auto *nD = m.makeNewData<QDiagCplx>(D.offsets,D.size());
+    stdx::generate(*nD,G.f);
     }
 
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, QDiagCplx & D)
+    {
+    stdx::generate(D,G.f);
+    }
+
+template<typename T>
 Cplx
-doTask(SumEls<IQIndex>, IQTDiag const& d);
+doTask(SumEls<IQIndex>, QDiag<T> const& d);
+
+template<typename T>
+void
+doTask(Mult<Real> const& M, QDiag<T>& D);
 
 void
-doTask(Mult<Real> & M, IQTDiag & d);
+doTask(Mult<Cplx> const& M, QDiag<Cplx> & d);
 
 void
-doTask(Contract<IQIndex>& Con,
-       IQTReal const& A,
-       IQTDiag const& B,
-       ManageStore & mp);
+doTask(Mult<Cplx> const& M, QDiag<Real> const& d, ManageStore & m);
+
+
+void inline
+doTask(Conj, QDiagReal const& d) { }
 
 void
-doTask(Contract<IQIndex>& Con,
-       IQTDiag const& A,
-       IQTReal const& B,
-       ManageStore & mp);
+doTask(Conj, QDiagCplx & d);
 
-void
-doTask(Conj, IQTDiag const& d);
+template<typename T>
+bool constexpr
+doTask(CheckComplex, QDiag<T> const& d) { return isCplx(d); }
 
-bool inline
-doTask(CheckComplex, IQTDiag const& d) { return false; }
-
+template<typename T>
 Real
-doTask(NormNoScale, IQTDiag const& d);
+doTask(NormNoScale, QDiag<T> const& d);
 
+template<typename T>
 void
-doTask(PrintIT<IQIndex> & P, IQTDiag const& d);
+doTask(PrintIT<IQIndex>& P, QDiag<T> const& d);
 
-auto inline
-doTask(StorageType const& S, IQTDiag const& d) ->StorageType::Type { return StorageType::IQTDiag; }
+auto inline constexpr
+doTask(StorageType const& S, QDiagReal const& d) ->StorageType::Type { return StorageType::QDiagReal; }
+
+auto inline constexpr
+doTask(StorageType const& S, QDiagCplx const& d) ->StorageType::Type { return StorageType::QDiagCplx; }
+
+template<typename VA, typename VB>
+void
+doTask(Contract<IQIndex>& Con,
+       QDiag<VA> const& A,
+       QDense<VB> const& B,
+       ManageStore& m);
+
+template<typename VA, typename VB>
+void
+doTask(Contract<IQIndex>& Con,
+       QDense<VA> const& A,
+       QDiag<VB> const& B,
+       ManageStore& m);
 
 } //namespace itensor
 

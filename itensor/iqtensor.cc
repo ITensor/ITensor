@@ -150,23 +150,53 @@ struct AddITensor
         { }
     };
 
+struct Adder
+    {
+    const Real f = 1.;
+    Adder(Real f_) : f(f_) { }
+    template<typename T1, typename T2>
+    void operator()(T2 v2, T1& v1) { v1 += f*v2; }
+    void operator()(Cplx v2, Real& v1) { }
+    };
+
+template<typename T1, typename T2>
 void
-doTask(AddITensor & A, 
-       IQTReal & d, 
-       DenseReal const& t)
+addIT(AddITensor & A, 
+      QDense<T1> & d, 
+      Dense<T2> const& t)
     {
     auto ddiv = doTask(CalcDiv{A.iqis},d);
     if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
     Range drange;
     drange.init(make_indexdim(A.iqis,A.block_ind));
     auto dblock = getBlock(d,A.iqis,A.block_ind);
-
-    auto dref = TensorRef(dblock,&drange);
+    auto dref = makeRef(dblock,&drange);
     auto tref = makeTenRef(t.data(),t.size(),&A.is);
-    auto f = A.fac;
-    auto add = [f](Real r2, Real& r1) { r1 += f*r2; };
-    transform(permute(tref,A.P),dref,add);
+    transform(permute(tref,A.P),dref,Adder{A.fac});
     }
+
+template<typename T1, typename T2>
+void
+doTask(AddITensor & A, 
+       QDense<T1> const& d, 
+       Dense<T2> const& t,
+       ManageStore & m)
+    {
+    if(isReal(d) && isCplx(t))
+        {
+        auto *nd = m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
+        addIT(A,*nd,t);
+        }
+    else
+        {
+        auto *ncd = m.modifyData(d);
+        addIT(A,*ncd,t);
+        }
+    }
+template void doTask(AddITensor &, QDense<Real> const&, Dense<Real> const&, ManageStore &);
+template void doTask(AddITensor &, QDense<Real> const&, Dense<Cplx> const&, ManageStore &);
+template void doTask(AddITensor &, QDense<Cplx> const&, Dense<Real> const&, ManageStore &);
+template void doTask(AddITensor &, QDense<Cplx> const&, Dense<Cplx> const&, ManageStore &);
 
 
 IQTensor&
@@ -199,8 +229,8 @@ operator+=(IQTensor & T,
     if(!T.store()) 
         {
         //allocate data to add this ITensor into
-        if(!isComplex(t)) T.store() = newITData<IQTReal>(T.inds(),tdiv);
-        else              Error("Initializing complex IQTensor in +=ITensor not yet implemented");
+        if(!isComplex(t)) T.store() = newITData<QDenseReal>(T.inds(),tdiv);
+        else              T.store() = newITData<QDenseCplx>(T.inds(),tdiv);
         }
 
     Real scalefac = 1;
@@ -235,12 +265,13 @@ struct ToITensor
         { }
     };
 
+template<typename V>
 ITensor
 doTask(ToITensor & T, 
-       IQTReal const& d)
+       QDense<V> const& d)
     {
     auto r = T.is.r();
-    auto nd = DenseReal(area(T.is),0);
+    auto nd = Dense<V>(area(T.is),0);
     auto *pd = d.data();
     auto *pn = nd.data();
     vector<long> block(r,0);
@@ -266,6 +297,8 @@ doTask(ToITensor & T,
     for(decltype(r) j = 0; j < r; ++j) inds.setIndex(j,T.is[j]);
     return ITensor(inds.build(),std::move(nd),T.scale);
     }
+template ITensor doTask(ToITensor & T, QDense<Real> const& d);
+template ITensor doTask(ToITensor & T, QDense<Cplx> const& d);
 
 //template<typename D>
 //ITensor

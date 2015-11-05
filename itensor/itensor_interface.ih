@@ -49,7 +49,7 @@ allocReal(IQTensor& T, const Container& inds)
         auto iv = (T.inds()[i])(1+inds[i]);
         div += iv.qn()*iv.index.dir();
         }
-    T.store() = newITData<IQTReal>(T.inds(),div);
+    T.store() = newITData<QDenseReal>(T.inds(),div);
     }
 
 void inline
@@ -825,7 +825,8 @@ read(std::istream& s, ITensorT<I>& T)
     else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
     else if(type==StorageType::DiagReal) { p = readType<Diag<Real>>(s); }
     else if(type==StorageType::DiagCplx) { p = readType<Diag<Cplx>>(s); }
-    else if(type==StorageType::IQTReal) { p = readType<IQTReal>(s); }
+    else if(type==StorageType::QDenseReal) { p = readType<QDense<Real>>(s); }
+    else if(type==StorageType::QDenseCplx) { p = readType<QDense<Cplx>>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");

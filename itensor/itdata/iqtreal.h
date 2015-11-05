@@ -11,53 +11,33 @@
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/types.h"
 #include "itensor/detail/gcounter.h"
+#include "itensor/detail/call_rewrite.h"
 
 namespace itensor {
 
-class ManageStore;
-class IQTReal;
+template<typename T>
+class QDense;
 
+using QDenseReal = QDense<Real>;
+using QDenseCplx = QDense<Cplx>;
 
-QN
-calcDiv(IQIndexSet const& is, Label const& block_ind);
-
-// For a block index (0,1,...,Nblocks-1),
-// as in the offsets array of an IQTReal,
-// computes the zero-indexed location of
-// the given block (e.g. 5 -> {1,0,2})
-// storing the resulting indices in the 
-// container "ind". The jth index of ind
-// can range from 0 to is[j].nindex(), 
-// such that these indices correspond to
-// viewing the IQTReal storage as a 
-// "tensor of tensors"
-template<typename Container>
-void
-computeBlockInd(long block,
-                IQIndexSet const& is,
-                Container & ind)
+struct BlOf
     {
-    using size_type = decltype(ind.size());
-    size_type r = ind.size();
-    assert(r == size_type(is.r()));
-    for(size_type j = 0; j < r-1; ++j)
-        {
-        auto res = std::ldiv(block,is[j].nindex());
-        ind[j] = res.rem;
-        block = res.quot;
-        }
-    ind[r-1] = block;
-    }
+    long block;
+    long offset;
+    };
 
-class IQTReal
+template<typename T>
+class QDense
     {
+    static_assert(not std::is_const<T>::value,
+                  "Template argument of QDense must be non-const");
     public:
+    using value_type = T;
+    using storage_type = std::vector<value_type>;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
 
-    struct BlOf
-        {
-        long block;
-        long offset;
-        };
 
     //////////////
     std::vector<BlOf> offsets;
@@ -65,38 +45,64 @@ class IQTReal
         //  Assumed that block indices are
         //  in increasing order.
 
-    std::vector<Real> store;
+    storage_type store;
         //^ tensor data stored contiguously
     //////////////
 
-    IQTReal() { }
+    QDense() { }
 
-    IQTReal(IQIndexSet const& is, 
-            QN const& div_);
+    QDense(IQIndexSet const& is, 
+           QN const& div_);
+
+    //template<typename InputIter>
+    //QDense(std::vector<BlOf> const& off,
+    //       InputIter && b, InputIter && c)
+    //     : offsets(off),
+    //       store(b,c)
+    //       { }
+
+    template<typename... StoreArgs>
+    QDense(std::vector<BlOf> const& off,
+           StoreArgs&&... sargs)
+         : offsets(off),
+           store(std::forward<StoreArgs>(sargs)...)
+           { }
 
     explicit operator bool() const { return !store.empty() && !offsets.empty(); }
 
-    Real*
+    value_type *
     data() { return store.data(); }
 
-    const Real*
+    value_type const*
     data() const { return store.data(); }
 
     size_t
     size() const { return store.size(); }
 
+    iterator
+    begin() { return store.begin(); }
+
+    iterator
+    end() { return store.end(); }
+
+    const_iterator
+    begin() const { return store.begin(); }
+
+    const_iterator
+    end() const { return store.end(); }
+
     template<typename Indexable>
-    const Real*
+    value_type const*
     getElt(IndexSetT<IQIndex> const& is,
            Indexable const& ind) const;
 
     template<typename Indexable>
-    Real*
+    value_type *
     getElt(IndexSetT<IQIndex> const& is,
            Indexable const& ind)
         {
         const auto& cthis = *this;
-        return const_cast<Real*>(cthis.getElt(is,ind));
+        return const_cast<value_type*>(cthis.getElt(is,ind));
         }
 
     long
@@ -105,127 +111,214 @@ class IQTReal
 
     };
 
+//QDenseCplx inline
+//makeCplx(QDenseReal const& DR)
+//    {
+//    auto DC = QDenseCplx{};
+//    DC.offsets = DR.offsets;
+//    }
 
-void inline
-write(std::ostream & s, IQTReal const& dat)
+template<typename T>
+bool constexpr
+isReal(QDense<T> const& t) { return std::is_same<T,Real>::value; }
+
+template<typename T>
+bool constexpr
+isCplx(QDense<T> const& t) { return std::is_same<T,Cplx>::value; }
+
+Data inline
+realData(QDenseReal & d) { return Data(d.data(),d.size()); }
+
+Datac inline
+realData(QDenseReal const& d) { return Datac(d.data(),d.size()); }
+
+Data inline
+realData(QDenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size()); }
+
+Datac inline
+realData(QDenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
+
+
+template<typename T>
+void
+write(std::ostream & s, QDense<T> const& dat)
     {
     itensor::write(s,dat.offsets);
     itensor::write(s,dat.store);
     }
 
-void inline
-read(std::istream & s, IQTReal & dat)
+template<typename T>
+void
+read(std::istream & s, QDense<T> & dat)
     {
     itensor::read(s,dat.offsets);
     itensor::read(s,dat.store);
     }
 
-void inline
-swap(IQTReal & d1,
-     IQTReal & d2)
+template<typename T>
+void
+swap(QDense<T> & d1,
+     QDense<T> & d2)
     {
     d1.offsets.swap(d2.offsets);
     d1.store.swap(d2.store);
     }
 
+template<typename T>
 QN
-doTask(CalcDiv const& C, IQTReal const& D);
+doTask(CalcDiv const& C, QDense<T> const& D);
 
-template <typename F>
+template <typename F, typename T>
 void
-doTask(ApplyIT<F>& A, IQTReal& d)
+doTask(ApplyIT<F>& A, QDense<T>& d)
     {
-    if(!d) throw ITError("Empty storage in IQTReal apply");
-    for(auto& elt : d.store)
-        elt = A.f(elt);
+    if(!d) throw ITError("Empty storage in QDense apply");
+    //for(auto& elt : d.store)
+    //    elt = A.f(elt);
+    for(auto& el : d.store) A(el);
     }
 
-template <typename F>
+template <typename F, typename T>
 void
-doTask(VisitIT<F>& V, const IQTReal& d)
+doTask(VisitIT<F>& V, QDense<T> const& d)
     {
-    if(!d) throw ITError("Empty storage in IQTReal visit");
-    for(const auto& elt : d.store)
-        V.f(elt*V.scale_fac);
-    }
-
-template<typename F>
-void
-doTask(GenerateIT<F,Real>& G, IQTReal & d)
-    {
-    if(!d) throw ITError("Empty storage in IQTReal generate");
-    std::generate(d.store.begin(),d.store.end(),G.f);
+    if(!d) throw ITError("Empty storage in QDense visit");
+    for(const auto& el : d.store)
+        {
+        detail::call<void>(V.f,el*V.scale_fac);
+        }
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, IQTReal const& cd, ManageStore& mp)
+doTask(GenerateIT<F,Real>& G, QDenseReal & D)
     {
-    Error("Complex version of IQTensor generate not yet supported");
+    stdx::generate(D,G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, QDenseCplx const& D, ManageStore & m)
+    {
+    auto *nD = m.makeNewData<QDenseReal>(D.offsets,D.size());
+    stdx::generate(*nD,G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, QDenseReal const& D, ManageStore & m)
+    {
+    auto *nD = m.makeNewData<QDenseCplx>(D.offsets,D.size());
+    stdx::generate(*nD,G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, QDenseCplx & D)
+    {
+    stdx::generate(D,G.f);
     }
 
 
+template<typename T>
 Cplx
-doTask(GetElt<IQIndex>& G, const IQTReal& d);
+doTask(GetElt<IQIndex>& G, QDense<T> const& d);
+
+template<typename T>
+void
+doTask(SetElt<Real,IQIndex>& S, QDense<T>& d);
 
 void
-doTask(SetElt<Real,IQIndex>& S, IQTReal& d);
-
-//void
-//doTask(SetElt<Cplx,IQIndex>& S, IQTReal& d);
-
-Cplx
-doTask(SumEls<IQIndex>, IQTReal const& d);
+doTask(SetElt<Cplx,IQIndex>& S, QDenseReal const& d, ManageStore & m);
 
 void
-doTask(Mult<Real> const& M, IQTReal& d);
+doTask(SetElt<Cplx,IQIndex>& S, QDenseCplx & d);
 
+template<typename T>
+Cplx
+doTask(SumEls<IQIndex>, QDense<T> const& d);
+
+template<typename T>
+void
+doTask(Mult<Real> const& M, QDense<T>& d);
+
+void
+doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m);
+
+void
+doTask(Mult<Cplx> const& M, QDense<Cplx> & d);
+
+template<typename T>
+void
+doTask(Fill<T> const& F, QDense<T> & d);
+
+template<typename FT, typename DT,
+         class=stdx::require_not<std::is_same<FT,DT>> >
+void
+doTask(Fill<FT> const& F, QDense<DT> const& d, ManageStore & m);
+
+
+void inline
+doTask(Conj, QDenseReal const& d) { }
+
+void
+doTask(Conj, QDenseCplx & d);
+
+template<typename T>
+bool constexpr
+doTask(CheckComplex, QDense<T> const& d) { return isCplx(d); }
+
+void inline
+doTask(TakeReal, QDenseReal const& d) { }
+
+void
+doTask(TakeReal, QDenseCplx const& d, ManageStore & m);
+
+void
+doTask(TakeImag, QDenseReal & d);
+
+void
+doTask(TakeImag, QDenseCplx const& d, ManageStore & m);
+
+template<typename T>
+Real
+doTask(NormNoScale, QDense<T> const& D);
+
+template<typename T>
+void
+doTask(PrintIT<IQIndex>& P, QDense<T> const& d);
+
+auto inline constexpr
+doTask(StorageType const& S, QDenseReal const& d) ->StorageType::Type { return StorageType::QDenseReal; }
+
+auto inline constexpr
+doTask(StorageType const& S, QDenseCplx const& d) ->StorageType::Type { return StorageType::QDenseCplx; }
+
+template<typename TA, typename TB>
 void
 doTask(PlusEQ<IQIndex> const& P,
-       IQTReal& A,
-       IQTReal const& B);
+       QDense<TA>      const& A,
+       QDense<TB>      const& B,
+       ManageStore          & m);
 
+template<typename VA, typename VB>
 void
 doTask(Contract<IQIndex>& Con,
-       IQTReal const& A,
-       IQTReal const& B,
-       ManageStore& mp);
-
-void
-doTask(NCProd<IQIndex>& P,
-       IQTReal const& A,
-       IQTReal const& B,
+       QDense<VA> const& A,
+       QDense<VB> const& B,
        ManageStore& m);
 
-void
-doTask(Conj, IQTReal const& d);
+//void
+//doTask(NCProd<IQIndex>& P,
+//       IQTReal const& A,
+//       IQTReal const& B,
+//       ManageStore& m);
 
-bool inline
-doTask(CheckComplex,IQTReal const& d) { return false; }
 
-void inline
-doTask(TakeReal, IQTReal const& d) { }
-
-void inline
-doTask(TakeImag, IQTReal & d) 
-    { 
-    //Set all elements to zero
-    doTask(Mult<Real>{0.},d);
-    }
-
-Real
-doTask(NormNoScale, IQTReal const& d);
-
-void
-doTask(PrintIT<IQIndex>& P, IQTReal const& d);
-
-auto inline
-doTask(StorageType const& S, IQTReal const& d) ->StorageType::Type { return StorageType::IQTReal; }
-
-IQTReal::BlOf inline
+BlOf inline
 make_blof(long b, long o)
     {
-    IQTReal::BlOf B;
+    BlOf B;
     B.block = b;
     B.offset = o;
     return B;
@@ -236,13 +329,13 @@ make_blof(long b, long o)
 // If so, return the corresponding data offset,
 // otherwise return -1
 long
-offsetOf(std::vector<IQTReal::BlOf> const& offsets,
+offsetOf(std::vector<BlOf> const& offsets,
          long blockind);
 
 
 //
 // Helper object for treating
-// IQTReal storage as a "tensor of tensors"
+// QDense storage as a "tensor of tensors"
 //
 template<typename Indexable>
 class IndexDim
@@ -270,6 +363,34 @@ make_indexdim(IQIndexSet const& is, Indexable const& ind)
     -> IndexDim<Indexable>
     { 
     return IndexDim<Indexable>(is,ind); 
+    }
+
+// For a block index (0,1,...,Nblocks-1),
+// as in the offsets array of an QDense,
+// computes the zero-indexed location of
+// the given block (e.g. 5 -> {1,0,2})
+// storing the resulting indices in the 
+// container "ind". The jth index of ind
+// can range from 0 to is[j].nindex(), 
+// such that these indices correspond to
+// viewing the QDense storage as a 
+// "tensor of tensors"
+template<typename Container>
+void
+computeBlockInd(long block,
+                IQIndexSet const& is,
+                Container & ind)
+    {
+    using size_type = decltype(ind.size());
+    size_type r = ind.size();
+    assert(r == size_type(is.r()));
+    for(size_type j = 0; j < r-1; ++j)
+        {
+        auto res = std::ldiv(block,is[j].nindex());
+        ind[j] = res.rem;
+        block = res.quot;
+        }
+    ind[r-1] = block;
     }
 
 template<typename BlockSparseA, 
@@ -319,9 +440,10 @@ loopContractedBlocks(BlockSparseA const& A,
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto& aio : A.offsets)
         {
+        TIMER_START(19)
         //Reconstruct indices labeling this block of A, put into Ablock
         //TODO: optimize away need to call computeBlockInd by
-        //      storing block indices directly in IQTReal
+        //      storing block indices directly in QDense
         //      Taking 10% of running time in S=1 N=100 DMRG tests (maxm=100)
         computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
@@ -336,9 +458,11 @@ loopContractedBlocks(BlockSparseA const& A,
             //Begin computing elements of Cblock(=destination of this block-block contraction)
             if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
             }
+        TIMER_STOP(19)
         //Loop over blocks of B which contract with current block of A
         for(;couB.notDone(); ++couB)
             {
+            TIMER_START(19)
             //START_TIMER(33)
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by storing all blocks
@@ -357,8 +481,9 @@ loopContractedBlocks(BlockSparseA const& A,
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
 
-            auto ablock = Datac(A.data(),aio.offset,A.size());
+            auto ablock = makeDataRange(A.data(),aio.offset,A.size());
             assert(ablock);
+            TIMER_STOP(19)
 
             callback(ablock,Ablockind,
                      bblock,Bblockind,
@@ -369,13 +494,14 @@ loopContractedBlocks(BlockSparseA const& A,
     }
 
 template<typename BlockSparseStore, typename Indexable>
-Datac
-getBlock(BlockSparseStore const& d,
+auto
+getBlock(BlockSparseStore & d,
          IQIndexSet const& is,
          Indexable const& block_ind)
+    -> decltype(makeDataRange(d.data(),d.size()))
     {
     auto r = long(block_ind.size());
-    if(r == 0) return Datac(d.data(),d.size());
+    if(r == 0) return makeDataRange(d.data(),d.size());
 #ifdef DEBUG
     if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in getBlock");
 #endif
@@ -389,24 +515,27 @@ getBlock(BlockSparseStore const& d,
     //Do binary search to see if there
     //is a block with block index ii
     auto boff = offsetOf(d.offsets,ii);
-    if(boff >= 0) return Datac(d.data(),boff,d.size());
-    return Datac{};
+    if(boff >= 0) return makeDataRange(d.data(),boff,d.size());
+    using data_range_type = decltype(makeDataRange(d.data(),d.size()));
+    return data_range_type{};
     }
 
-template<typename BlockSparseStore, typename Indexable>
-Data
-getBlock(BlockSparseStore & d,
-         IQIndexSet const& is,
-         Indexable const& block_ind)
-    {
-    auto const& cd = d;
-    //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
-    return getBlock(cd,is,block_ind).cast_away_const();
-    }
+//template<typename BlockSparseStore, typename Indexable>
+//auto
+//getBlock(BlockSparseStore & d,
+//         IQIndexSet const& is,
+//         Indexable const& block_ind)
+//    -> decltype(getBlock(std::declval<const BlockSparseStore>(),is,block_ind).cast_away_const())
+//    {
+//    auto const& cd = d;
+//    //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
+//    return getBlock(cd,is,block_ind).cast_away_const();
+//    }
 
 
+template<typename T>
 template<typename Indexable>
-const Real* IQTReal::
+T const* QDense<T>::
 getElt(IQIndexSet const& is,
        Indexable const& ind) const
     {
@@ -450,6 +579,10 @@ getElt(IQIndexSet const& is,
         }
     return nullptr;
     }
+
+QN
+calcDiv(IQIndexSet const& is, 
+        Label const& block_ind);
 
 } //namespace itensor
 

@@ -154,15 +154,15 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 //////////////////////////
 
 
+template<typename IndexT>
 Spectrum 
-svdRank2(ITensor const& A, const Index& ui, const Index& vi,
-         ITensor& U, ITensor& D, ITensor& V,
-         const Args& args = Global::args());
-
-Spectrum 
-svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
-         IQTensor& U, IQTensor& D, IQTensor& V,
-         const Args& args = Global::args());
+svdRank2(ITensorT<IndexT> const& A, 
+         IndexT const& ui, 
+         IndexT const& vi,
+         ITensorT<IndexT> & U, 
+         ITensorT<IndexT> & D, 
+         ITensorT<IndexT> & V,
+         Args const& args = Args::global());
 
 template<class Tensor>
 Spectrum 

@@ -29,11 +29,13 @@ class Diag;
 
 class ITCombiner;
 
-class IQTReal;
+template<typename T>
+class QDense;
 
 class IQTCombiner;
 
-class IQTDiag;
+template<typename T>
+class QDiag;
 
 //class ITLazy;
 
@@ -47,9 +49,11 @@ Dense<Cplx>,
 ITCombiner,
 Diag<Real>,
 Diag<Cplx>,
-IQTReal,
+QDense<Real>,
+QDense<Cplx>,
 IQTCombiner,
-IQTDiag
+QDiag<Real>,
+QDiag<Cplx>
 //ITLazy
 //-----------
 >;
