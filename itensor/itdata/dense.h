@@ -137,9 +137,22 @@ write(std::ostream& s, Dense<T> const& dat)
 
 template<typename F, typename T>
 void
-doTask(ApplyIT<F>& A, Dense<T>& d)
+doTask(ApplyIT<F>& A, Dense<T> const& d, ManageStore & m)
     { 
-    for(auto& elt : d) elt = detail::call<T>(A.f,elt);
+    using new_type = ApplyIT_result_of<T,F>;
+    if(switchesType<T>(A))
+        {
+        auto *nd = m.makeNewData<Dense<new_type>>(d.size());
+        for(auto i : index(d))
+            {
+            A(d.store[i],nd->store[i]);
+            }
+        }
+    else
+        {
+        auto *md = m.modifyData(d);
+        for(auto& el : *md) A(el);
+        }
     }
 
 template<typename F, typename T>
@@ -151,14 +164,14 @@ doTask(VisitIT<F>& V, Dense<T> const& d)
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, Dense<Real> & D)
+doTask(GenerateIT<F,Real>& G, DenseReal & D)
     {
     stdx::generate(D,G.f);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, Dense<Cplx> const& D, ManageStore & m)
+doTask(GenerateIT<F,Real>& G, DenseCplx const& D, ManageStore & m)
     {
     auto *nD = m.makeNewData<DenseReal>(D.size());
     stdx::generate(*nD,G.f);

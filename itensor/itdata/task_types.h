@@ -86,29 +86,6 @@ struct PrintIT
             }
         s << " (" << type_name << ")}\n";
         }
-
-    void
-    printVal(double val)
-        {
-        if(std::fabs(val) > 1E-10)
-            s << val << "\n";
-        else
-            s << format("%.8E\n",val);
-        }
-
-    void
-    printVal(Cplx const& val)
-        {
-        auto sgn = (val.imag() < 0 ? '-' : '+');
-        if(std::norm(val) > 1E-10)
-            {
-            s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
-            }
-        else
-            {
-            s << format("%.8E%s%.8E\n",val.real(),sgn,std::fabs(val.imag()));
-            }
-        }
     };
 
 struct Conj { };
@@ -122,17 +99,102 @@ struct SumEls
     SumEls(IndexSetT<IndexT> const& is_) : is(is_) { }
     };
 
+
 template<typename F>
 struct ApplyIT
     {
     F& f;
+
     ApplyIT(F&& f_) : f(f_)  { }
-    bool constexpr static 
-    realToComplex()
+
+    template<typename T>
+    void
+    operator()(T& el)
         {
-        return std::is_same<typename std::result_of<F(Real)>::type,Cplx>::value;
+        applyITImpl(stdx::select_overload{},el,el);
+        }
+
+    template<typename T1, typename T2>
+    void
+    operator()(T1 from, T2& to)
+        {
+        applyITImpl(stdx::select_overload{},from,to);
+        }
+
+    private:
+
+    template<typename T1, typename T2>
+    void
+    applyITImpl(stdx::choice<2>,T1, T2 &)
+        {
+        auto msg = format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>());
+        Error(msg);
+        }
+    template<typename T1, typename T2>
+    auto
+    applyITImpl(stdx::choice<1>,T1 from, T2 & to)
+        -> stdx::if_compiles_return<void,decltype(to = f(from))>
+        {
+        to = f(from);
         }
     };
+
+namespace detail {
+
+template<typename F, typename T>
+void
+applyType(F&&,T,long) { }
+
+template<typename F, typename T>
+auto
+applyType(F&& f,T from,int)
+    -> decltype(f(from))
+    {
+    return f(from);
+    }
+}
+
+/// Traits for ApplyIT ///
+
+template<typename F>
+bool constexpr
+realToCplx(ApplyIT<F> & A)
+    {
+    return std::is_same<decltype(detail::applyType(A.f,0.,0)),Cplx>::value;
+    }
+
+template<typename F>
+bool constexpr
+cplxToReal(ApplyIT<F> & A)
+    {
+    return std::is_same<decltype(detail::applyType(A.f,Cplx(0.),0)),Real>::value;
+    }
+
+template<typename T, typename F>
+bool constexpr
+switchesType(ApplyIT<F> & A)
+    {
+    return isReal<T>() ? realToCplx(A) : cplxToReal(A);
+    }
+
+template<typename T, typename F>
+auto constexpr
+resultTypeHelper(ApplyIT<F> const& A)
+    -> stdx::conditional_t<std::is_void<decltype(detail::applyType(A.f,T{0.},0))>::value,
+                           T,
+                           decltype(detail::applyType(A.f,T{0.},0))>
+    {
+    using return_type = stdx::conditional_t<std::is_void<decltype(detail::applyType(A.f,T{0.},0))>::value,
+                                            T,
+                                            decltype(detail::applyType(A.f,T{0.},0))>;
+    return return_type{0.};
+    }
+
+template<typename T,typename F>
+using ApplyIT_result_of = decltype(resultTypeHelper<T>(std::declval<ApplyIT<F>>()));
+
+///////////////////
+
 
 template<typename F, typename T = typename std::result_of<F()>::type>
 struct GenerateIT

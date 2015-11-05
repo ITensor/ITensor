@@ -54,6 +54,9 @@ struct all<Cond,Conds...> : all<Conds...>
 template<typename... Conditions>
 using require = enable_if_t<all<Conditions...>::value>;
 
+template<typename... Conditions>
+using require_not = enable_if_t<not all<Conditions...>::value>;
+
 template<typename T>
 struct isRvalue
     {
