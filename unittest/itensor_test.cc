@@ -182,7 +182,6 @@ SECTION("Rank 2")
 SECTION("Rank 3")
     {
     ITensor t3(l1,l2,l3);
-    //CHECK(typeOf(t3) == DenseReal);
     CHECK_EQUAL(t3.r(),3);
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,l2));
@@ -452,78 +451,99 @@ CHECK_DIFF(sumels(t3),t1sum,1E-10);
 
 SECTION("ScalarMultiply")
 {
-A *= -1;
-auto s1P = prime(s1);
-CHECK_EQUAL(A.real(s1(1),s1P(1)),-11);
-CHECK_EQUAL(A.real(s1(1),s1P(2)),-12);
-CHECK_EQUAL(A.real(s1(2),s1P(1)),-21);
-CHECK_EQUAL(A.real(s1(2),s1P(2)),-22);
+SECTION("Real")
+    {
+    A *= -1;
+    auto s1P = prime(s1);
+    CHECK_EQUAL(A.real(s1(1),s1P(1)),-11);
+    CHECK_EQUAL(A.real(s1(1),s1P(2)),-12);
+    CHECK_EQUAL(A.real(s1(2),s1P(1)),-21);
+    CHECK_EQUAL(A.real(s1(2),s1P(2)),-22);
 
-Real f = Global::random();
-A *= -f;
-CHECK_DIFF(A.real(s1(1),s1P(1)),11*f,1E-10);
-CHECK_DIFF(A.real(s1(1),s1P(2)),12*f,1E-10);
-CHECK_DIFF(A.real(s1(2),s1P(1)),21*f,1E-10);
-CHECK_DIFF(A.real(s1(2),s1P(2)),22*f,1E-10);
+    Real f = Global::random();
+    A *= -f;
+    CHECK_DIFF(A.real(s1(1),s1P(1)),11*f,1E-10);
+    CHECK_DIFF(A.real(s1(1),s1P(2)),12*f,1E-10);
+    CHECK_DIFF(A.real(s1(2),s1P(1)),21*f,1E-10);
+    CHECK_DIFF(A.real(s1(2),s1P(2)),22*f,1E-10);
 
-B /= f;
-CHECK_DIFF(B.real(s1(1),s2(1)),110/f,1E-10);
-CHECK_DIFF(B.real(s1(1),s2(2)),120/f,1E-10);
-CHECK_DIFF(B.real(s1(2),s2(1)),210/f,1E-10);
-CHECK_DIFF(B.real(s1(2),s2(2)),220/f,1E-10);
-}
-
+    B /= f;
+    CHECK_DIFF(B.real(s1(1),s2(1)),110/f,1E-10);
+    CHECK_DIFF(B.real(s1(1),s2(2)),120/f,1E-10);
+    CHECK_DIFF(B.real(s1(2),s2(1)),210/f,1E-10);
+    CHECK_DIFF(B.real(s1(2),s2(2)),220/f,1E-10);
+    }
 SECTION("Complex Scalar Multiply")
-{
-CHECK(typeOf(A) == Type::DenseReal);
-A *= 1_i;
-CHECK(typeOf(A) == Type::DenseCplx);
-auto s1P = prime(s1);
-CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
-CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
-CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
-CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
+    {
+    CHECK(typeOf(A) == Type::DenseReal);
+    A *= 1_i;
+    CHECK(typeOf(A) == Type::DenseCplx);
+    auto s1P = prime(s1);
+    CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
+    CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
+    CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
+    CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
 
-auto T = random(A);
-CHECK(typeOf(T) == Type::DenseReal);
-CHECK(typeOf(A) == Type::DenseCplx);
+    auto T = random(A);
+    CHECK(typeOf(T) == Type::DenseReal);
+    CHECK(typeOf(A) == Type::DenseCplx);
 
-randomize(T,"Complex");
-CHECK(typeOf(T) == Type::DenseCplx);
+    randomize(T,"Complex");
+    CHECK(typeOf(T) == Type::DenseCplx);
 
-auto z = 2.2-3.1_i;
-auto cT = T;
-T *= z;
-CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
-CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
-CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
-CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
+    auto z = 2.2-3.1_i;
+    auto cT = T;
+    T *= z;
+    CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
+    CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
+    CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
+    CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
+    }
 }
+
 
 SECTION("Apply / Visit / Generate")
 {
 // class Functor and the function Func
 // are defined in test.h
 
-ITensor A1(A);
-Functor f;
-A1.apply(f);
-auto s1P = prime(s1);
-for(int n1 = 1; n1 <= s1.m(); ++n1)
-for(int n2 = 1; n2 <= s1P.m(); ++n2)
+SECTION("Apply Function Obj")
     {
-    CHECK_DIFF( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
+    ITensor A1(A);
+    Functor f;
+    A1.apply(f);
+    auto s1P = prime(s1);
+    for(int n1 = 1; n1 <= s1.m(); ++n1)
+    for(int n2 = 1; n2 <= s1P.m(); ++n2)
+        {
+        CHECK_DIFF( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
+        }
     }
 
-//apply a function that only accepts Real argument to real ITensor
-auto rfunc = [](Real r) { return 2*r; };
-auto A2 = randomTensor(b4,l2);
-A2.apply(rfunc);
+SECTION("Apply Real Lambda")
+    {
+    //apply a function that only accepts Real argument to real ITensor
+    auto rfunc = [](Real r) { return 2*r; };
+    auto T = randomTensor(b4,l2);
+    T.apply(rfunc);
+    }
 
-//apply a function that only accepts Real argument to real ITensor
-Real prod = 1;
-auto rvfunc = [&prod](Real r) { prod *= r; };
-A2.visit(rvfunc);
+SECTION("Visit Real")
+    {
+    //use visitor function that only accepts Real argument to real ITensor
+    auto T = randomTensor(b4,l2);
+    Real prod = 1;
+    T *= 2.; //modify T's scale factor
+    auto rvfunc = [&prod](Real r) { prod *= r; };
+    T.visit(rvfunc);
+
+    Real prod_check = 1;
+    for(auto b4i : b4) for(auto l2i : l2)
+        {
+        prod_check *= T.real(b4i,l2i);
+        }
+    CHECK_CLOSE(prod,prod_check);
+    }
 
 }
 
