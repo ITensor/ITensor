@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/util/count.h"
-#include "itensor/itdata/itcombiner.h"
+#include "itensor/itdata/combiner.h"
 #include "itensor/itdata/itdata.h"
 //#include "itensor/itdata/itcplx.h"
 #include "itensor/tensor/contract.h"
@@ -15,17 +15,17 @@ using std::vector;
 namespace itensor {
 
 Cplx
-doTask(GetElt<Index> const& g, ITCombiner const& c)
+doTask(GetElt<Index> const& g, Combiner const& c)
     {
-    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
+    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar Combiner storage");
     return Cplx(1.,0.);
     }
 
 Real
-doTask(NormNoScale, ITCombiner const& d) { return 0; }
+doTask(NormNoScale, Combiner const& d) { return 0; }
 
 void
-doTask(Conj,ITCombiner const& d) { }
+doTask(Conj,Combiner const& d) { }
 
 template<typename T>
 void
@@ -161,45 +161,45 @@ template<typename V>
 void
 doTask(Contract<Index> & C,
        Dense<V>   const& d,
-       ITCombiner const& cmb,
+       Combiner const& cmb,
        ManageStore     & m)
     {
     combine(d,C.Lis,C.Ris,C.Nis,m);
     }
-template void doTask(Contract<Index> &,DenseReal const&,ITCombiner const&,ManageStore&);
-template void doTask(Contract<Index> &,DenseCplx const&,ITCombiner const&,ManageStore&);
+template void doTask(Contract<Index> &,DenseReal const&,Combiner const&,ManageStore&);
+template void doTask(Contract<Index> &,DenseCplx const&,Combiner const&,ManageStore&);
 
 template<typename V>
 void
 doTask(Contract<Index> & C,
-       ITCombiner const& cmb,
+       Combiner const& cmb,
        Dense<V>   const& d,
        ManageStore     & m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m);
     if(!m.newData()) m.assignPointerRtoL();
     }
-template void doTask(Contract<Index> &,ITCombiner const&,DenseReal const&,ManageStore&);
-template void doTask(Contract<Index> &,ITCombiner const&,DenseCplx const&,ManageStore&);
+template void doTask(Contract<Index> &,Combiner const&,DenseReal const&,ManageStore&);
+template void doTask(Contract<Index> &,Combiner const&,DenseCplx const&,ManageStore&);
 
 bool
-doTask(CheckComplex, ITCombiner const& d) { return false; }
+doTask(CheckComplex, Combiner const& d) { return false; }
 
 void
-doTask(PrintIT<Index>& P, ITCombiner const& d)
+doTask(PrintIT<Index>& P, Combiner const& d)
     {
     P.printInfo(d,"Combiner");
     }
 
 void
-doTask(PrintIT<IQIndex>& P, ITCombiner const& d)
+doTask(PrintIT<IQIndex>& P, Combiner const& d)
     {
-    P.s << "ITCombiner";
+    P.s << "Combiner";
     }
 
 QN 
 doTask(CalcDiv const& C, 
-       ITCombiner const& d)
+       Combiner const& d)
     {
     return QN{};
     }

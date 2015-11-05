@@ -4,7 +4,7 @@
 //
 #include "itensor/util/count.h"
 #include "itensor/tensor/sliceten.h"
-#include "itensor/itdata/iqtcombiner.h"
+#include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/iqindex.h"
 
@@ -14,9 +14,9 @@ using std::tie;
 namespace itensor {
 
 Cplx
-doTask(GetElt<IQIndex> const& g, IQTCombiner const& c)
+doTask(GetElt<IQIndex> const& g, QCombiner const& c)
     {
-    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar IQTCombiner storage");
+    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar QCombiner storage");
     return Cplx(1.,0.);
     }
 
@@ -79,7 +79,7 @@ replaceInd(IQIndexSet const& is,
 template<typename T>
 void
 combine(QDense<T>   const& d,
-        IQTCombiner const& C,
+        QCombiner const& C,
         IQIndexSet  const& dis,
         IQIndexSet  const& Cis,
         IQIndexSet       & Nis,
@@ -200,7 +200,7 @@ combReplaceIndex(IQIndexSet  const& dis,
 template<typename T>
 void
 uncombine(QDense<T>   const& d,
-          IQTCombiner const& C,
+          QCombiner const& C,
           IQIndexSet  const& dis,
           IQIndexSet  const& Cis,
           IQIndexSet       & Nis,
@@ -292,7 +292,7 @@ template<typename T>
 void
 doTask(Contract<IQIndex> & C,
        QDense<T>    const& d,
-       IQTCombiner  const& cmb,
+       QCombiner  const& cmb,
        ManageStore       & m)
     {
     if(C.Ris.r()==2)
@@ -308,13 +308,13 @@ doTask(Contract<IQIndex> & C,
         combine(d,cmb,C.Lis,C.Ris,C.Nis,m);
         }
     }
-template void doTask(Contract<IQIndex> &,QDense<Real> const&,IQTCombiner const&,ManageStore &);
-template void doTask(Contract<IQIndex> &,QDense<Cplx> const&,IQTCombiner const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,QDense<Real> const&,QCombiner const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,QDense<Cplx> const&,QCombiner const&,ManageStore &);
 
 template<typename T>
 void
 doTask(Contract<IQIndex> & C,
-       IQTCombiner  const& cmb,
+       QCombiner  const& cmb,
        QDense<T>    const& d,
        ManageStore       & m)
     { 
@@ -332,8 +332,8 @@ doTask(Contract<IQIndex> & C,
         combine(d,cmb,C.Ris,C.Lis,C.Nis,m);
         }
     }
-template void doTask(Contract<IQIndex> &,IQTCombiner const&,QDense<Real> const&,ManageStore &);
-template void doTask(Contract<IQIndex> &,IQTCombiner const&,QDense<Cplx> const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,QCombiner const&,QDense<Real> const&,ManageStore &);
+template void doTask(Contract<IQIndex> &,QCombiner const&,QDense<Cplx> const&,ManageStore &);
 
 
 } //namespace itensor

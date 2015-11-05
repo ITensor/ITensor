@@ -2,14 +2,12 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_IQTDIAG_H
-#define __ITENSOR_IQTDIAG_H
+#ifndef __ITENSOR_QDIAG_H
+#define __ITENSOR_QDIAG_H
 
-#include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/qdense.h"
 
 namespace itensor {
-
-class ITCombiner;
 
 template<typename T>
 class QDiag;

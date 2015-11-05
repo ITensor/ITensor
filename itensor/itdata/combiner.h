@@ -11,54 +11,54 @@ namespace itensor {
 
 class QN;
 
-class ITCombiner
+class Combiner
     {
     public:
 
-    ITCombiner() { }
+    Combiner() { }
 
     };
 
 void inline
-read(std::istream& s, ITCombiner& dat) { }
+read(std::istream& s, Combiner& dat) { }
 
 void inline
-write(std::ostream& s, const ITCombiner& dat) { }
+write(std::ostream& s, const Combiner& dat) { }
 
 Cplx
-doTask(const GetElt<Index>& g, const ITCombiner& c);
+doTask(const GetElt<Index>& g, const Combiner& c);
 
 Real
-doTask(NormNoScale, const ITCombiner& d);
+doTask(NormNoScale, const Combiner& d);
 
 void
-doTask(Conj,const ITCombiner& d);
+doTask(Conj,const Combiner& d);
 
 template<typename V>
 void
 doTask(Contract<Index> & C,
        Dense<V>   const& d,
-       ITCombiner const& cmb,
+       Combiner const& cmb,
        ManageStore     & m);
 
 template<typename V>
 void
 doTask(Contract<Index> & C,
-       ITCombiner const& cmb,
+       Combiner const& cmb,
        Dense<V>   const& d,
        ManageStore     & m);
 
 bool
-doTask(CheckComplex, ITCombiner const& d);
+doTask(CheckComplex, Combiner const& d);
 
 void
-doTask(PrintIT<Index>& P, ITCombiner const& d);
+doTask(PrintIT<Index>& P, Combiner const& d);
 
 auto inline
-doTask(StorageType const& S, ITCombiner const& d) ->StorageType::Type { return StorageType::ITCombiner; }
+doTask(StorageType const& S, Combiner const& d) ->StorageType::Type { return StorageType::Combiner; }
 
 QN 
-doTask(CalcDiv const& C, ITCombiner const& d);
+doTask(CalcDiv const& C, Combiner const& d);
 
 } //namespace itensor
 

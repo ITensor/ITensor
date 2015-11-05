@@ -2,17 +2,17 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_IQTCOMBINER_H
-#define __ITENSOR_IQTCOMBINER_H
+#ifndef __ITENSOR_QCOMBINER_H
+#define __ITENSOR_QCOMBINER_H
 
-#include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/qdense.h"
 #include <tuple>
 
 namespace itensor {
 
 class QN;
 
-class IQTCombiner
+class QCombiner
     {
     struct BlockRange
         {
@@ -30,7 +30,7 @@ class IQTCombiner
     
     template<typename IQInds>
     explicit
-    IQTCombiner(IQInds const& cinds)
+    QCombiner(IQInds const& cinds)
         { 
         //set up range to sum over all possible
         //blocks that can be formed out of combined inds
@@ -67,46 +67,46 @@ class IQTCombiner
     };
 
 void inline
-read(std::istream& s, IQTCombiner & dat) { }
+read(std::istream& s, QCombiner & dat) { }
 
 void inline
-write(std::ostream& s, IQTCombiner const& dat) { }
+write(std::ostream& s, QCombiner const& dat) { }
 
 Cplx
-doTask(GetElt<IQIndex> const& g, IQTCombiner const& c);
+doTask(GetElt<IQIndex> const& g, QCombiner const& c);
 
 Real inline
-doTask(NormNoScale, IQTCombiner const& d) { return 0; }
+doTask(NormNoScale, QCombiner const& d) { return 0; }
 
 void inline
-doTask(Conj,IQTCombiner const& d) { }
+doTask(Conj,QCombiner const& d) { }
 
 template<typename T>
 void
 doTask(Contract<IQIndex> & C,
        QDense<T>    const& d,
-       IQTCombiner  const& cmb,
+       QCombiner  const& cmb,
        ManageStore       & m);
 
 template<typename T>
 void
 doTask(Contract<IQIndex> & C,
-       IQTCombiner  const& cmb,
+       QCombiner  const& cmb,
        QDense<T>    const& d,
        ManageStore       & m);
 
 void inline
 doTask(PrintIT<IQIndex> & P, 
-       IQTCombiner const& d) { P.s << "IQTCombiner "; }
+       QCombiner const& d) { P.s << "QCombiner "; }
 
 auto inline
-doTask(StorageType const& S, IQTCombiner const& d) ->StorageType::Type { return StorageType::IQTCombiner; }
+doTask(StorageType const& S, QCombiner const& d) ->StorageType::Type { return StorageType::QCombiner; }
 
 QN inline
-doTask(CalcDiv const& C, IQTCombiner const& d) { return QN{}; }
+doTask(CalcDiv const& C, QCombiner const& d) { return QN{}; }
 
 bool inline
-doTask(CheckComplex, IQTCombiner const& d) { return false; }
+doTask(CheckComplex, QCombiner const& d) { return false; }
 
 } //namespace itensor
 

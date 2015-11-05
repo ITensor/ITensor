@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/itdata/iqtdiag.h"
+#include "itensor/itdata/qdiag.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/count.h"
@@ -224,7 +224,7 @@ blockDiagDense(QDiag<VD> const& D,
     {
     using VC = common_type<VT,VD>;
 #ifdef DEBUG
-    if(Dis.r() == 0) Error("IQTDiag rank 0 case not handled");
+    if(Dis.r() == 0) Error("QDiag rank 0 case not handled");
 #endif
 
     bool T_has_uncontracted = false;
@@ -276,8 +276,8 @@ blockDiagDense(QDiag<VD> const& D,
         }
     else
         {
-        Error("Fully contracted IQTDiag*IQTReal not yet implemented");
-        //auto nd = m.makeNewData<IQTDiag>(Cis,Cdiv);
+        Error("Fully contracted QDiag*QDense not yet implemented");
+        //auto nd = m.makeNewData<QDiag>(Cis,Cdiv);
         //auto& C = *nd;
 
         //loopContractedBlocks(D,Dis,

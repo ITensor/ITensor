@@ -8,7 +8,7 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/qdense.h"
 
 using std::vector;
 using std::move;

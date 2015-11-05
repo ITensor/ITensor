@@ -356,40 +356,15 @@ struct StorageType
         Null=0, 
         DenseReal=1, 
         DenseCplx=2, 
-        ITCombiner=3, 
+        Combiner=3, 
         DiagReal=4, 
         DiagCplx=5,
         QDenseReal=6,
         QDenseCplx=7,
-        IQTCombiner=8,
+        QCombiner=8,
         QDiagReal=9,
         QDiagCplx=10
         }; 
-    //const char*
-    //name(Type t)
-    //    {
-    //    switch(t)
-    //        {
-    //        case DenseReal: return "DenseReal";
-    //        case DenseCplx: return "DenseCplx";
-    //        case ITCombiner: return "ICombiner";
-    //        case DiagReal: return "DiagReal";
-    //        case DiagCplx: return "DiagCplx";
-    //        case IQTReal: return "IQTReal";
-    //        case IQTReal: return "IQTReal";
-    //        case IQTCombiner: return "IQTCombiner";
-    //        case IQTDiag: return "IQTDiag";
-    //        default: return "Null";
-    //        }
-    //    }
-    //auto operator()(Dense<Real> const&) ->Type { return DenseReal_; }
-    //auto operator()(Dense<Cplx> const&) ->Type { return DenseCplx_; }
-    //auto operator()(ITCombiner  const&) ->Type { return ITCombiner_; }
-    //auto operator()(Diag<Real>  const&) ->Type { return DiagReal_; }
-    //auto operator()(Diag<Cplx>  const&) ->Type { return DiagCplx_; }
-    //auto operator()(IQTReal     const&) ->Type { return IQTReal_; }
-    //auto operator()(IQTCombiner const&) ->Type { return IQTCombiner_; }
-    //auto operator()(IQTDiag     const&) ->Type { return IQTDiag_; }
     };
 
 class Write

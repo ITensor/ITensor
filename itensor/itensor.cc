@@ -131,7 +131,7 @@ combiner(std::vector<Index> inds, const Args& args)
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",Link);
     inds.front() = Index(cname,rm,itype);
-    return ITensor(IndexSet(std::move(inds)),ITCombiner());
+    return ITensor(IndexSet(std::move(inds)),Combiner());
     }
 
 ITensor
@@ -140,7 +140,7 @@ deltaTensor(const Index& i1, const Index& i2)
 #ifdef DEBUG
     if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
 #endif
-    return ITensor({i1,i2},ITCombiner());
+    return ITensor({i1,i2},Combiner());
     }
 
 

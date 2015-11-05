@@ -48,7 +48,7 @@ typeOf(ITensor const& t)
         Type operator()(DenseCplx const& d) { return Type::DenseCplx; }
         Type operator()(Diag<Real> const& d) { return d.allSame() ? Type::DiagRealAllSame : Type::DiagReal; }
         Type operator()(Diag<Cplx> const& d) { return d.allSame() ? Type::DiagCplxAllSame : Type::DiagCplx; }
-        Type operator()(ITCombiner const& d) { return Type::Combiner; }
+        Type operator()(Combiner const& d) { return Type::Combiner; }
         };
     return applyFunc(GetType{},t.store()); 
     }

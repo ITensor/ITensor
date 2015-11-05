@@ -822,11 +822,14 @@ read(std::istream& s, ITensorT<I>& T)
     if(type==StorageType::Null) { /*intentionally left blank*/  }
     else if(type==StorageType::DenseReal) { p = readType<DenseReal>(s); }
     else if(type==StorageType::DenseCplx) { p = readType<DenseCplx>(s); }
-    else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
+    else if(type==StorageType::Combiner) { p = readType<Combiner>(s); }
     else if(type==StorageType::DiagReal) { p = readType<Diag<Real>>(s); }
     else if(type==StorageType::DiagCplx) { p = readType<Diag<Cplx>>(s); }
     else if(type==StorageType::QDenseReal) { p = readType<QDense<Real>>(s); }
     else if(type==StorageType::QDenseCplx) { p = readType<QDense<Cplx>>(s); }
+    else if(type==StorageType::QDiagReal) { p = readType<QDiag<Real>>(s); }
+    else if(type==StorageType::QDiagCplx) { p = readType<QDiag<Cplx>>(s); }
+    //else if(type==StorageType::QCombiner) { p = readType<QCombiner>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");

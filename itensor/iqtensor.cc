@@ -345,7 +345,7 @@ combiner(std::vector<IQIndex> cinds,
     auto cr = cinds.size();
     auto cdir = cinds.front().dir();
 
-    auto C = IQTCombiner{cinds};
+    auto C = QCombiner{cinds};
 
     //Build the combined IQIndex,
     //saving information about

@@ -17,11 +17,11 @@ SOURCES+= tensor/gemm.cc
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
 SOURCES+= itdata/dense.cc 
-SOURCES+= itdata/itcombiner.cc 
+SOURCES+= itdata/combiner.cc 
 SOURCES+= itdata/diag.cc 
-SOURCES+= itdata/iqtreal.cc
-SOURCES+= itdata/iqtcombiner.cc 
-SOURCES+= itdata/iqtdiag.cc
+SOURCES+= itdata/qdense.cc
+SOURCES+= itdata/qcombiner.cc 
+SOURCES+= itdata/qdiag.cc
 ##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
@@ -102,18 +102,18 @@ itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/diag.h
 itdata/diag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/diag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/itcombiner.h
-itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/iqtreal.h
-itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/iqtcombiner.h
-itdata/iqtcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/iqtcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/iqtdiag.h
-itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/iqtdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/combiner.h
+itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/qdense.h
+itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/qcombiner.h
+itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/qdiag.h
+itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)

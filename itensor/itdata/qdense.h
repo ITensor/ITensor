@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_IQTDATA_H
-#define __ITENSOR_IQTDATA_H
+#ifndef __ITENSOR_QDENSE_H
+#define __ITENSOR_QDENSE_H
 
 #include <vector>
 #include "itensor/itdata/task_types.h"
