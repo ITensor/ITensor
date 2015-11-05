@@ -40,10 +40,10 @@ template<typename T>
 class DataRange
     {
     public:
-    using value_type = typename std::decay<T>::type;
-    using pointer = T*;
-    using reference = T&;
-    using const_reference = const T&;
+    using value_type = typename std::remove_reference<T>::type;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
     private:
     pointer pdata_;
     size_t  size_;
@@ -135,6 +135,34 @@ class DataRange
         return DataRange<value_type>{const_cast<value_type*>(pdata_),size_};
         }
     };
+
+template<typename T>
+DataRange<T>
+makeDataRange(T * p, size_t size)
+    {
+    return DataRange<T>(p,size);
+    }
+
+template<typename T>
+DataRange<const T>
+makeDataRange(T const* p, size_t size)
+    {
+    return DataRange<const T>(p,size);
+    }
+
+template<typename T>
+DataRange<T>
+makeDataRange(T * p, size_t offset, size_t size)
+    {
+    return DataRange<T>(p,offset,size);
+    }
+
+template<typename T>
+DataRange<const T>
+makeDataRange(T const* p, size_t offset, size_t size)
+    {
+    return DataRange<const T>(p,offset,size);
+    }
 
 
 template<typename T, size_t N>
