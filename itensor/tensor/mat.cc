@@ -224,7 +224,7 @@ printMatrix(std::ostream& s, MatRefc<V> const& M)
         s << "|";
         for(auto c : count(ncols(M)))
             {
-            s << detail::printVal(M(r,c));
+            s << formatVal(M(r,c));
             s << (1+c == ncols(M) ? "|" : " ");
             }
         if(r < nrows(M)) s << "\n";

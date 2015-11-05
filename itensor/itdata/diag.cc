@@ -283,7 +283,7 @@ doTask(PrintIT<Index>& P, Diag<T> const& d)
     if(r == 0) 
         {
         P.s << "  ";
-        P.printVal(P.scalefac*(d.empty() ? d.val : d.store.front()));
+        P.s << formatVal(P.scalefac*(d.empty() ? d.val : d.store.front())) << "\n";
         return;
         }
 
@@ -300,7 +300,7 @@ doTask(PrintIT<Index>& P, Diag<T> const& d)
                 P.s << (1+i) << ",";
                 }
             P.s << (1+i) << ") ";
-            P.printVal(val);
+            P.s << formatVal(val) << "\n";
             }
         }
     }

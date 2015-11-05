@@ -259,7 +259,6 @@ gemm(MatRefc<VA> A,
         throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
         }
 #endif
-    START_TIMER(33)
     if(isTransposed(C))
         {
         //Do C = Bt*At instead of Ct=A*B
@@ -271,7 +270,6 @@ gemm(MatRefc<VA> A,
         {
         gemm_impl(A,B,C,alpha,beta);
         }
-    STOP_TIMER(33)
     }
 template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
 template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);

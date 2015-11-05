@@ -183,7 +183,7 @@ doTask(PrintIT<Index>& P,
     if(rank == 0) 
         {
         P.s << "  ";
-        P.printVal(P.scalefac*D.store.front());
+        P.s << formatVal(P.scalefac*D.store.front()) << "\n";
         return;
         }
 
@@ -206,16 +206,12 @@ doTask(PrintIT<Index>& P,
                 }
             P.s << ") ";
 
-            P.printVal(val);
+            P.s << formatVal(val) << "\n";
             }
         }
     }
-template
-void
-doTask(PrintIT<Index>& P, DenseReal const& d);
-template
-void
-doTask(PrintIT<Index>& P, DenseCplx const& d);
+template void doTask(PrintIT<Index>& P, DenseReal const& d);
+template void doTask(PrintIT<Index>& P, DenseCplx const& d);
 
 template<typename T>
 Cplx

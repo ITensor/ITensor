@@ -13,19 +13,6 @@
 // Headers and typedefs
 //
 
-namespace itensor {
-
-// Helper functions for working with various
-// complex data types, see other version below
-
-inline Real& 
-realRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[0]; }
-
-inline Real& 
-imagRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[1]; }
-
-} 
-
 //
 //
 // Generic Linux LAPACK

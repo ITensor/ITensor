@@ -275,16 +275,6 @@ randomize(Ten<R,V> & t)
     for(auto& el : t) el = detail::random<V>();
     }
 
-namespace detail {
-
-void inline
-conjEl(Real & r) { }
-
-void inline
-conjEl(Cplx & z) { imagRef(z) *= -1; }
-
-}
-
 template<typename R, typename V>
 void
 conjugate(TenRef<R,V> const& T)
@@ -296,14 +286,14 @@ conjugate(TenRef<R,V> const& T)
             auto de = T.data()+T.size();
             for(auto d = T.data(); d != de; ++d)
                 {
-                detail::conjEl(*d);
+                applyConj(*d);
                 }
             }
         else
             {
             for(auto& el : T)
                 {
-                detail::conjEl(el);
+                applyConj(el);
                 }
             }
         }
@@ -334,32 +324,6 @@ conj(Ten<R,V> T)
     return T;
     }
 
-namespace detail {
-
-std::string inline
-printVal(double val)
-    {
-    if(std::fabs(val) > 1E-10)
-        return format("%s",val);
-    return format("%.8E",val);
-    }
-
-std::string inline
-printVal(Cplx const& val)
-    {
-    auto sgn = (val.imag() < 0 ? '-' : '+');
-    auto nrm = std::norm(val);
-    if(nrm == 0. || nrm > 1E-10)
-        {
-        return format("%f%s%fi",val.real(),sgn,std::fabs(val.imag()));
-        }
-    else
-        {
-        return format("%.8E%s%.8Ei",val.real(),sgn,std::fabs(val.imag()));
-        }
-    }
-} //namespace detail
-
 template<typename R, typename V>
 std::ostream&
 printTensor(std::ostream & s, 
@@ -376,7 +340,7 @@ printTensor(std::ostream & s,
     auto e = rangeEnd(T.range());
     for(auto i = rangeBegin(T.range()); i != e; ++i)
         {
-        s << "(" << i.index() << ") " << detail::printVal(T(i)) << "\n";
+        s << "(" << i.index() << ") " << formatVal(T(i)) << "\n";
         }
     return s;
     }

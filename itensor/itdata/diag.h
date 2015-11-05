@@ -136,13 +136,21 @@ template <typename F, typename T,
 void
 doTask(ApplyIT<F>& A, Diag<T>& d) 
     { 
+    //if(d.allSame()) 
+    //    {
+    //    d.val = detail::call<T>(A.f,d.val);
+    //    }
+    //else
+    //    {
+    //    for(auto& elt : d.store) elt = detail::call<T>(A.f,elt);
+    //    }
     if(d.allSame()) 
         {
-        d.val = detail::call<T>(A.f,d.val);
+        A(d.val);
         }
     else
         {
-        for(auto& elt : d.store) elt = detail::call<T>(A.f,elt);
+        for(auto& el : d.store) A(el);
         }
     }
 
