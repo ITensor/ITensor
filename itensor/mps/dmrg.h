@@ -233,7 +233,9 @@ DMRGWorker(MPSt<Tensor>& psi,
                 printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,(b+1));
                 }
 
+            TIMER_START(49)
             PH.position(b,psi);
+            TIMER_STOP(49)
 
             START_TIMER(50)
             auto phi = psi.A(b)*psi.A(b+1);
