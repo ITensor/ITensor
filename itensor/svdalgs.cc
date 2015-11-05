@@ -149,19 +149,26 @@ truncate(Vector & P,
 
     if(absoluteCutoff) //absoluteCutoff is typically false
         {
-        //Truncate all probability weights below cutoff (or m==minm)
-        for(; P(n) < cutoff && n >= minm; --n) truncerr += P(n);
+        //Test if individual prob. weights fall below cutoff
+        //rather than using *sum* of discarded weights
+        for(; P(n) < cutoff && n >= minm; --n) 
+            {
+            truncerr += P(n);
+            }
         }
     else
         {
-        Real scale = doRelCutoff ? P(1) : 1.0;
+        Real scale = 1.0;
+        //if doRelCutoff, use normalized P's when truncating
+        if(doRelCutoff) scale = sumels(P);
+
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==minm)
         for(;truncerr+P(n) < cutoff*scale && n >= minm; --n)
             {
             truncerr += P(n);
             }
-        truncerr = (P(1) == 0 ? 0 : truncerr/scale);
+        truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
 
     if(n < 0) n = 0;
@@ -187,7 +194,7 @@ showEigs(Vector const& P,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
 
     println();
@@ -336,7 +343,7 @@ svdImpl(IQTensor A,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
 
@@ -585,7 +592,7 @@ diag_hermitian(ITensor rho,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",false);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto cplx = isComplex(rho);
     auto showeigs = args.getBool("ShowEigs",false);
@@ -716,7 +723,7 @@ diag_hermitian(IQTensor    rho,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",false);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
     auto cplx = isComplex(rho);
