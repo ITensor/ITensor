@@ -476,14 +476,19 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 
 void 
-plussers(const Index& l1, const Index& l2, 
-         Index& sumind, 
-         ITensor& first, ITensor& second)
+plussers(Index const& l1, 
+         Index const& l2, 
+         Index      & sumind, 
+         ITensor    & first, 
+         ITensor    & second)
     {
-    sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
+    auto m = l1.m()+l2.m();
+    if(m <= 0) m = 1;
+    sumind = Index(sumind.rawname(),m);
+
     first = diagTensor(1,l1,sumind);
-    Matrix S(l2.m(),sumind.m());
-    for(int i = 1; i <= l2.m(); ++i) 
+    auto S = Matrix(l2.m(),sumind.m());
+    for(auto i : count(l2.m()))
         {
         S(i,l1.m()+i) = 1;
         }
@@ -491,19 +496,19 @@ plussers(const Index& l1, const Index& l2,
     }
 
 void 
-plussers(const IQIndex& l1, const IQIndex& l2, 
+plussers(IQIndex const& l1, IQIndex const& l2, 
          IQIndex& sumind, 
          IQTensor& first, IQTensor& second)
     {
     map<Index,Index> l1map, l2map;
     vector<IndexQN> iq;
-    for(const IndexQN& x : l1)
+    for(IndexQN const& x : l1)
         {
         Index jj(x.rawname(),x.m(),x.type());
         l1map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    for(const IndexQN& x : l2)
+    for(IndexQN const& x : l2)
         {
         Index jj(x.rawname(),x.m(),x.type());
         l2map[x] = jj;
@@ -511,14 +516,14 @@ plussers(const IQIndex& l1, const IQIndex& l2,
         }
     sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(const Index& il1 : l1)
+    for(Index const& il1 : l1)
         {
         Index& s1 = l1map[il1];
         auto t = diagTensor(1,il1,s1);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
-    for(const Index& il2 : l2)
+    for(Index const& il2 : l2)
         {
         Index& s2 = l2map[il2];
         auto t = diagTensor(1,il2,s2);

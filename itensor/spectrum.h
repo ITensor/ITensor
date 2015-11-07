@@ -44,14 +44,14 @@ class Spectrum
     QN
     qn(int n) const;
 
-    const QNStorage&
+    QNStorage const&
     qns() const { return qns_; }
 
     //1-indexed
     Real
     eig(int n) const { return eigs_(n-1); }
 
-    const Vector&
+    Vector const&
     eigs() const { return eigs_; }
 
     Real 
