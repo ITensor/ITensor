@@ -380,38 +380,32 @@ SVDRefImpl(MatRefc<T> const& M,
      //   nv &= tmpv;
      //   }
 
-    //reuse storage of rho to hold mv=M*columns(V,start,Mr)
+    //reuse rho's storage to avoid allocation
     auto mv = move(rho);
     reduceCols(mv,n);
 
-    auto u = columns(U,start,Mr);
-    auto v = columns(V,start,Mr);
+    auto u = columns(U,start,ncols(U));
+    auto v = columns(V,start,ncols(V));
 
     //b should be close to diagonal
     //but may not be perfect - fix it up below
     mult(M,v,mv);
     Mat<T> b;
-    if(isCplx(M))
-        {
-        b = conj(transpose(u))*mv;
-        }
-    else
-        {
-        b = transpose(u)*mv;
-        }
-   
+    if(isCplx(M)) b = conj(transpose(u))*mv;
+    else          b = transpose(u)*mv;
+
     auto d = subVector(D,start,Mr);
     Mat<T> bu(n,n),
            bv(n,n);
     SVDRef(makeRef(b),makeRef(bu),d,makeRef(bv),thresh);
 
-    //reuse storage to avoid allocations
+    //reuse mv's storage to avoid allocation
     auto W = move(mv);
     mult(u,bu,W);
     u &= W;
 
-    mult(v,bv,W);
-    v &= W;
+    auto X = v*bv;
+    v &= X;
 
 #ifdef CHKSVD
 	checksvd(M,U,D,V);
