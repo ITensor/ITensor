@@ -469,12 +469,25 @@ leftLinkInd(const MPST& psi, int i)
 
 template <typename MPST>
 int
-averageM(const MPST& psi)
+averageM(MPST const& psi)
     {
     Real avgm = 0;
     for(int b = 1; b < psi.N(); ++b) avgm += linkInd(psi,b).m();
     avgm /= (psi.N()-1);
     return int(avgm);
+    }
+
+template <typename MPST>
+int
+maxM(MPST const& psi)
+    {
+    int maxM_ = 0;
+    for(int b = 1; b < psi.N(); ++b) 
+        {
+        int mb = linkInd(psi,b).m();
+        maxM_ = std::max(mb,maxM_);
+        }
+    return maxM_;
     }
 
 //
@@ -659,9 +672,9 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit);
 
 template <class Tensor>
 MPSt<Tensor>
-sum(const MPSt<Tensor>& L, 
-    const MPSt<Tensor>& R, 
-    const Args& args = Global::args())
+sum(MPSt<Tensor> const& L, 
+    MPSt<Tensor> const& R, 
+    Args const& args = Global::args())
     {
     MPSt<Tensor> res(L);
     res.plusEq(R,args);
@@ -680,10 +693,10 @@ sum(const MPSt<Tensor>& L,
 //
 template <typename MPSType>
 MPSType 
-sum(const std::vector<MPSType>& terms, 
-    const Args& args = Global::args())
+sum(std::vector<MPSType> const& terms, 
+    Args const& args = Global::args())
     {
-    const int Nt = terms.size();
+    auto Nt = terms.size();
     if(Nt == 2)
         { 
         return sum(terms.at(0),terms.at(1),args);
@@ -696,10 +709,10 @@ sum(const std::vector<MPSType>& terms,
     else 
     if(Nt > 2)
         {
-        //Add all MPS's in pairs
-        const int nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
+        //Add all MPS in pairs
+        auto nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
         std::vector<MPSType> newterms(nsize); 
-        for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
+        for(decltype(Nt) n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
             newterms.at(np) = sum(terms.at(n),terms.at(n+1),args);
             }
