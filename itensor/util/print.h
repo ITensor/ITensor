@@ -64,7 +64,7 @@ print(const T& arg1, VArgs&&... vargs)
     print(std::forward<VArgs>(vargs)...);
     }
 
-#define Print(X)  PrintNice(#X,X)
+#define Print(X)  itensor::PrintNice(#X,X)
 
 template<typename T>
 void
