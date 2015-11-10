@@ -132,21 +132,23 @@ end() const
 std::ostream& 
 operator<<(std::ostream & s, Index const& t)
     {
-    s << "(" << t.rawname() << "," << t.m() << ","
-      << t.type().c_str() << ")"; 
+    s << "(" << t.rawname();
+    s << "," << t.m();
+    s << "," << t.type().c_str();
+    if(Global::showIDs()) s << "," << (t.id() % 1000);
+    s << ")"; 
     if(t.primeLevel() > 0) 
-      {
-      if(t.primeLevel() > 3)
         {
-        s << "'" << t.primeLevel();
+        if(t.primeLevel() > 3)
+            {
+            s << "'" << t.primeLevel();
+            }
+        else
+            {
+            for(int n = 1; n <= t.primeLevel(); ++n)
+                s << "'";
+            }
         }
-      else
-        {
-        for(int n = 1; n <= t.primeLevel(); ++n)
-          s << "'";
-        }
-      }
-    //{" << (t.id() % 1000) << "}";
     return s;
     }
 

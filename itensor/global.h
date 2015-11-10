@@ -126,6 +126,12 @@ class Global
         static Real printScale_ = 1E-10;
         return printScale_;
         }
+    static bool& 
+    showIDs()
+        {
+        static bool showIDs_ = false;
+        return showIDs_;
+        }
     static Real
     random(int seed = 0)
         {
