@@ -101,20 +101,26 @@ checkSameDiv(IQTensor const& T1,
 
 template<typename IndexT>
 ITensorT<IndexT>::
-ITensorT(const IndexT& i1) { Error("ITensorT(i1) not implemented"); }
+ITensorT(IndexT const& i1) { Error("ITensorT(i1) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
-ITensorT(const IndexT& i1,
-         const IndexT& i2) { Error("ITensorT(i1,i2) not implemented"); }
+ITensorT(IndexT const& i1,
+         IndexT const& i2) { Error("ITensorT(i1,i2) not implemented"); }
 
 template<typename IndexT>
 template <typename... Indices>
 ITensorT<IndexT>::
-ITensorT(const IndexT& i1,
-         const IndexT& i2, 
-         const IndexT& i3, 
-         const Indices&... rest) { Error("ITensorT(i1,i2,i3,...) not implemented"); }
+ITensorT(IndexT  const& i1,
+         IndexT  const& i2, 
+         IndexT  const& i3, 
+         Indices const&... rest) { Error("ITensorT(i1,i2,i3,...) not implemented"); }
+
+template<typename IndexT>
+template<typename IndxContainer,
+         class>
+ITensorT<IndexT>::
+ITensorT(IndxContainer && c) { Error("ITensorT(IndxContainer) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -123,12 +129,12 @@ ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
 template<typename IndexT>
 template <typename... IVals>
 ITensorT<IndexT>::
-ITensorT(const indexval_type& iv1, 
-         const IVals&... rest) { Error("ITensorT(iv1,...) not implemented"); }
+ITensorT(indexval_type const& iv1, 
+         IVals const&... rest) { Error("ITensorT(iv1,...) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
-ITensorT(const indexset_type& is) { Error("ITensorT(IndexSetT) not implemented"); }
+ITensorT(indexset_type const& is) { Error("ITensorT(IndexSetT) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -648,6 +654,17 @@ findtype(const ITensorT<IndexT>& T, IndexType type)
     {
     for(auto& i : T.inds())
         if(i.type()==type) return i;
+    return IndexT{};
+    }
+
+template<typename IndexT,
+         typename Cond>
+IndexT
+findindex(ITensorT<IndexT> const& T, 
+          Cond && cond)
+    {
+    for(auto& i : T.inds())
+        if(cond(i)) return i;
     return IndexT{};
     }
 

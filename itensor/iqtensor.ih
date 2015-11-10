@@ -15,6 +15,14 @@ ITensorT(const IQIndex& i1,
          const IQIndex& i2);
 
 template<>
+template<typename IndxContainer,class>
+IQTensor::
+ITensorT(IndxContainer && c)
+  : is_(std::forward<IndxContainer>(c)),
+    scale_(1.)
+    { }
+
+template<>
 IQTensor::
 ITensorT(Complex val);
 

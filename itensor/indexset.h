@@ -69,12 +69,10 @@ class IndexSetT : public RangeT<index_type_>
       : parent(i1,std::forward<Inds>(rest)...)
         { }
 
+    template<typename IndxContainer>
     explicit
-    IndexSetT(std::vector<index_type> const& ii) : parent(ii) { }
-
-    template<size_t N>
-    explicit
-    IndexSetT(std::array<index_type,N> const& ii) : parent(ii) { }
+    IndexSetT(IndxContainer && ii) 
+      : parent(std::forward<IndxContainer>(ii)) { }
 
     IndexSetT(std::initializer_list<index_type> ii) : parent(ii) { }
 

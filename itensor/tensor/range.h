@@ -83,22 +83,16 @@ class RangeT : public RangeType
         }
 
     explicit
-    RangeT(std::vector<index_type> const& v)
-        {
-        init(v);
-        }
-
-    template<size_t size>
-    explicit
-    RangeT(std::array<index_type,size> const& a)
-        {
-        init(a);
-        }
-
-    explicit
     RangeT(storage_type && store)
       : store_(std::move(store))
         { }
+
+    template<typename Container>
+    explicit
+    RangeT(Container const& a)
+        {
+        init(a);
+        }
 
     RangeT(std::initializer_list<index_type> ii) { init(ii); }
 
@@ -147,7 +141,7 @@ class RangeT : public RangeType
     value_type*
     data() { return store_.data(); }
 
-    const value_type*
+    value_type const*
     data() const { return store_.data(); }
 
     storage_type const&
@@ -156,12 +150,9 @@ class RangeT : public RangeType
     void
     swap(RangeT& other) { store_.swap(other.store_); }
 
-    template<typename Indexable>
+    template<typename Container>
     void 
-    init(Indexable const& v);
-
-    void 
-    init(std::initializer_list<index_type> il);
+    init(Container const& c);
 
     void
     resize(size_type nsize) { store_.resize(nsize); }
@@ -185,11 +176,18 @@ class RangeT : public RangeType
         }
     };
 
-template<typename index_type>
-template<typename Indexable>
-void RangeT<index_type>::
-init(Indexable const& v)
+namespace detail {
+
+template<typename index_type,
+         typename Indexable,
+         typename storage_type = typename RangeT<index_type>::storage_type>
+auto
+initImpl(stdx::choice<2>,
+         Indexable && v,
+         storage_type & store_)
+    -> stdx::if_compiles_return<void,decltype(v[0]),decltype(v.size())>
     {
+    using size_type = typename RangeT<index_type>::size_type;
     store_.resize(v.size());
     size_type str = 1;
     for(decltype(v.size()) i = 0; i < v.size(); ++i)
@@ -200,22 +198,37 @@ init(Indexable const& v)
         }
     }
 
-template<typename index_type>
-void RangeT<index_type>::
-init(std::initializer_list<index_type> il)
+template<typename index_type,
+         typename Iterable,
+         typename storage_type = typename RangeT<index_type>::storage_type>
+auto
+initImpl(stdx::choice<1>,
+         Iterable && v,
+         storage_type & store_)
+    -> stdx::if_compiles_return<void,decltype(v.begin())>
     {
-    store_.resize(il.size());
+    using size_type = typename RangeT<index_type>::size_type;
+    store_.resize(v.size());
     size_type str = 1;
     size_type i = 0;
-    for(auto& el : il)
+    for(auto& vel : v)
         {
-        store_[i].ind = el;
+        store_[i].ind = vel;
         store_[i].str = str;
-        str *= static_cast<size_type>(el);
+        str *= static_cast<size_type>(vel);
         ++i;
         }
     }
 
+} //namespace detail
+
+template<typename index_type>
+template<typename Container>
+void RangeT<index_type>::
+init(Container const& c)
+    {
+    detail::initImpl<index_type>(stdx::select_overload{},c,store_);
+    }
 
 template<typename index_type>
 auto

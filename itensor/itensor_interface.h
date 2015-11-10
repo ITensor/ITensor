@@ -30,6 +30,10 @@ using IQTensor = ITensorT<IQIndex>;
 
 struct ITData;
 
+template<typename index_type, typename C>
+using test_indxcont = 
+   stdx::require<std::is_same<stdx::decay_t<decltype(*std::declval<C>().begin())>,index_type>>;
+
 template<typename index_type_>
 class ITensorT
     {
@@ -68,6 +72,11 @@ class ITensorT
              index_type  const& i3, 
              Indices const&... rest);
 
+    template<typename IndxContainer,
+             class=test_indxcont<index_type,IndxContainer> >
+    explicit
+    ITensorT(IndxContainer && c);
+
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit
@@ -93,7 +102,7 @@ class ITensorT
     r() const { return is_.r(); }
 
     //Access index set
-    const indexset_type&
+    indexset_type const&
     inds() const { return is_; }
 
     //evaluates to false if default constructed
@@ -321,6 +330,11 @@ hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type&
 template<typename IndexT>
 IndexT
 findtype(const ITensorT<IndexT>& T, IndexType type);
+
+template<typename IndexT,
+         typename Cond>
+IndexT
+findindex(ITensorT<IndexT> const& T, Cond && cond);
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B
