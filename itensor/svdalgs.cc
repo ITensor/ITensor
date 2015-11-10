@@ -347,8 +347,6 @@ svdImpl(IQTensor A,
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
 
-    if(A.r() != 2) Error("A must be matrix-like");
-
     auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
 
     auto Nblock = blocks.size();
@@ -567,7 +565,11 @@ svdRank2(ITensorT<IndexT> const& A,
          ITensorT<IndexT> & V,
          Args const& args)
     {
-    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
+    if(A.r() != 2) 
+        {
+        Print(A);
+        Error("A must be matrix-like (rank 2)");
+        }
     if(isComplex(A))
         {
         return svdImpl<Cplx>(A,ui,vi,U,D,V,args);
