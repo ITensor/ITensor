@@ -18,7 +18,7 @@
 
 namespace itensor {
 
-enum Direction { Fromright, Fromleft, Both, None };
+enum Direction { Fromright, Fromleft, BothDir, NoDir };
 
 static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;

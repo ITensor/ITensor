@@ -278,9 +278,9 @@ denmatDecomp(Tensor const& AA,
 
     auto mid = commonIndex(A,B,Link);
 
-    //If dir==None, put the O.C. on the side
+    //If dir==NoDir, put the O.C. on the side
     //that keeps mid's arrow the same
-    if(dir == None)
+    if(dir == NoDir)
         {
         dir = (mid.dir() == Out ? Fromright : Fromleft);
         }
