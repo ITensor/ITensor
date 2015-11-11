@@ -165,9 +165,9 @@ void cblas_zgemm(const enum CBLAS_ORDER __Order,
         const void *__B, const int __ldb, const void *__beta, void *__C,
         const int __ldc);
 #else
-void F77NAME(zgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
-            LAPACK_COMPLEX*,LAPACK_COMPLEX*,LAPACK_INT*,LAPACK_COMPLEX*,
-            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
+void F77NAME(zgemm)(char* transa,char* transb,LAPACK_INT* m,LAPACK_INT* n,LAPACK_INT* k,
+            LAPACK_COMPLEX* alpha,LAPACK_COMPLEX* A,LAPACK_INT* LDA,LAPACK_COMPLEX* B,
+            LAPACK_INT* LDB,LAPACK_COMPLEX* beta,LAPACK_COMPLEX* C,LAPACK_INT* LDC);
 #endif
 
 #ifdef ITENSOR_USE_CBLAS
@@ -187,9 +187,9 @@ void cblas_zgemv(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE trans, const LAP
                  const LAPACK_INT n, const void *alpha, const void *a, const LAPACK_INT lda, 
                  const void *x, const LAPACK_INT incx, const void *beta, void *y, const LAPACK_INT incy);
 #else
-void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,void* alpha, LAPACK_REAL* A,
-                    LAPACK_INT* LDA, void* X, LAPACK_INT* incx, void* beta,
-                    void* Y, LAPACK_INT* incy);
+void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_COMPLEX* alpha, LAPACK_COMPLEX* A,
+                    LAPACK_INT* LDA, LAPACK_COMPLEX* X, LAPACK_INT* incx, LAPACK_COMPLEX* beta,
+                    LAPACK_COMPLEX* Y, LAPACK_INT* incy);
 #endif
 
 #ifdef PLATFORM_acml

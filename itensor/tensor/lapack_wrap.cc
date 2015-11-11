@@ -146,10 +146,10 @@ gemm_wrapper(bool transa,
     cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
     TIMER_STOP(31)
 #else //use Fortran zgemm
-    auto *npA = const_cast<Cplx*>(A);
-    auto *npB = const_cast<Cplx*>(B);
-    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(npA);
-    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(npB);
+    auto *ncA = const_cast<Cplx*>(A);
+    auto *ncB = const_cast<Cplx*>(B);
+    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA);
+    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(ncB);
     auto *pC = reinterpret_cast<LAPACK_COMPLEX*>(C);
     auto *palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
     auto *pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
@@ -204,12 +204,19 @@ gemv_wrapper(bool trans,
     {
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
-    auto palpha = (void*)(&alpha); 
-    auto pbeta = (void*)(&beta); 
+    auto palpha = reinterpret_cast<void*>(&alpha); 
+    auto pbeta = reinterpret_cast<void*>(&beta); 
     cblas_zgemv(CblasColMajor,Tr,m,n,palpha,(void*)A,m,(void*)x,incx,pbeta,(void*)y,incy);
 #else
     char Tr = trans ? 'T' : 'N';
-    F77NAME(dgemv)(&Tr,&m,&n,&alpha,(void*)A,&m,(void*)x,&incx,&beta,(void*)y,&incy);
+    auto ncA = const_cast<Cplx*>(A); 
+    auto ncx = const_cast<Cplx*>(x); 
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA); 
+    auto px = reinterpret_cast<LAPACK_COMPLEX*>(ncx); 
+    auto py = reinterpret_cast<LAPACK_COMPLEX*>(y); 
+    auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha); 
+    auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta); 
+    F77NAME(zgemv)(&Tr,&m,&n,palpha,pA,&m,px,&incx,pbeta,py,&incy);
 #endif
     }
 
