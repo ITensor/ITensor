@@ -70,8 +70,6 @@ ITensor
 diagTensor(Container const& C, 
            Index const& i1,
            Inds &&... inds)
-    //-> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
-    //-> stdx::enable_if_t<std::is_same<typename Container::value_type,Real>::value,ITensor>
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG

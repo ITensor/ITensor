@@ -63,8 +63,8 @@ diagTensor(Real r,
 //diagonal elements given by container C
 template<typename Container, 
          typename... Inds,
-         class = stdx::enable_if_t<std::is_same<typename Container::value_type,Real>::value
-                                || std::is_same<typename Container::value_type,Cplx>::value> >
+         class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
+                                || stdx::containerOf<Cplx,Container>::value> >
 ITensor
 diagTensor(const Container& C,
            const Index& i1,
