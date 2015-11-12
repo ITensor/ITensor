@@ -63,10 +63,10 @@ class VecRange : public RangeType
         return stride_; 
         }
 
-    size_type constexpr
+    size_type
     r() const { return 1; }
 
-    size_type constexpr
+    size_type
     size() const { return 1; }
 
     iterator
@@ -84,7 +84,7 @@ class VecRange : public RangeType
 
     };
 
-VecRange::size_type inline constexpr
+VecRange::size_type inline
 rank(VecRange const& R) { return 1; }
 
 //make VecRange with same extent but stride()==1

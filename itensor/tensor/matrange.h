@@ -65,7 +65,7 @@ struct MatRange : public RangeType
 
     };
 
-MatRange::size_type inline constexpr
+MatRange::size_type inline
 rank(MatRange const& R) { return 2; }
 
 //make MatRange with same extents 
