@@ -76,52 +76,6 @@ operator/(Mat<V> && A, Real fac)
 
 template<typename MatA,
          typename MatB,
-         class = stdx::require<hasMatRange<MatA>,
-                               hasMatRange<MatB>> >
-auto
-operator+(MatA && A, MatB && B)
-    -> Mat<common_type<MatA,MatB>>
-    {
-    using ResType = Mat<common_type<MatA,MatB>>;
-    ResType res;
-    if(stdx::isRvalue<MatB>() || (isCplx(B) && isReal(A)))
-        {
-        res = ResType(std::forward<MatB>(B));
-        operator+=(res,std::forward<MatA>(A));
-        }
-    else
-        {
-        res = ResType(std::forward<MatA>(A));
-        operator+=(res,std::forward<MatB>(B));
-        }
-    return res;
-    }
-
-template<typename MatA,
-         typename MatB,
-         class = stdx::require<hasMatRange<MatA>,hasMatRange<MatB>> >
-auto
-operator-(MatA && A, MatB && B)
-    -> Mat<common_type<MatA,MatB>>
-    {
-    using ResType = Mat<common_type<MatA,MatB>>;
-    ResType res;
-    if(stdx::isRvalue<MatB>() || (isCplx(B) && isReal(A)))
-        {
-        res = ResType(std::forward<MatB>(B));
-        res *= -1;
-        operator+=(res,std::forward<MatA>(A));
-        }
-    else
-        {
-        res = ResType(std::forward<MatA>(A));
-        operator-=(res,std::forward<MatB>(B));
-        }
-    return res;
-    }
-
-template<typename MatA,
-         typename MatB,
          class>
 Mat<common_type<MatA,MatB>> 
 mult(MatA const& A,

@@ -42,6 +42,10 @@ struct isTensor
 template<typename Ten_, typename range_type = Range>
 using ref_type = typename stdx::decay_t<Ten_>::template ref_type<range_type>;
 
+template<typename Ten_>
+using range_type = typename stdx::decay_t<Ten_>::range_type;
+
+
 
 template<typename T, bool istensor = isTensor<T>{} >
 struct ValTypeHelper { using type = typename stdx::decay_t<T>::value_type; };

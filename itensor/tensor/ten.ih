@@ -366,6 +366,53 @@ operator<<(std::ostream & s, Ten<R,V> const& T)
     return printTensor(s,makeRefc(T),"Tensor");
     }
 
+template<typename TenA, typename TenB,
+         class = stdx::require<isTensor<TenA>,
+                               isTensor<TenB>,
+                               std::is_same<range_type<TenA>,range_type<TenB>>> >
+auto
+operator+(TenA && A, TenB && B)
+    -> Ten<range_type<TenA>,common_type<TenA,TenB>>
+    {
+    using ResType = Ten<range_type<TenA>,common_type<TenA,TenB>>;
+    ResType res;
+    if(stdx::isRvalue<TenB>() || (isCplx(B) && isReal(A)))
+        {
+        res = ResType(std::forward<TenB>(B));
+        operator+=(res,std::forward<TenA>(A));
+        }
+    else
+        {
+        res = ResType(std::forward<TenA>(A));
+        operator+=(res,std::forward<TenB>(B));
+        }
+    return res;
+    }
+
+template<typename TenA, typename TenB,
+         class = stdx::require<isTensor<TenA>,
+                               isTensor<TenB>,
+                               std::is_same<range_type<TenA>,range_type<TenB>>> >
+auto
+operator-(TenA && A, TenB && B)
+    -> Ten<range_type<TenA>,common_type<TenA,TenB>>
+    {
+    using ResType = Ten<range_type<TenA>,common_type<TenA,TenB>>;
+    ResType res;
+    if(stdx::isRvalue<TenB>() || (isCplx(B) && isReal(A)))
+        {
+        res = ResType(std::forward<TenB>(B));
+        res *= -1;
+        operator+=(res,std::forward<TenA>(A));
+        }
+    else
+        {
+        res = ResType(std::forward<TenA>(A));
+        operator-=(res,std::forward<TenB>(B));
+        }
+    return res;
+    }
+
 } //namespace itensor
 
 #endif
