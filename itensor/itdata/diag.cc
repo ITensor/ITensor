@@ -292,7 +292,7 @@ doTask(PrintIT<Index>& P, Diag<T> const& d)
     for(auto i : count(d.length))
         {
         auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
-        if(std::norm(val) > Global::printScale())
+        if(std::norm(val) >= Global::printScale())
             {
             P.s << "(";
             for(decltype(r) j = 1; j < r; ++j)

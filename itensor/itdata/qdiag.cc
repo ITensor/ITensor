@@ -182,7 +182,7 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
         for(auto n : count(blockm))
             {
             auto val = scalefac*d.store[os++];
-            if(std::norm(val) > Global::printScale())
+            if(std::norm(val) >= Global::printScale())
                 {
                 if(!indices_printed)
                     {

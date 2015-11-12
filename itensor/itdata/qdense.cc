@@ -308,7 +308,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
             auto val = scalefac*d.store[os];
-            if(std::norm(val) > Global::printScale())
+            if(std::norm(val) >= Global::printScale())
                 {
                 if(!indices_printed)
                     {

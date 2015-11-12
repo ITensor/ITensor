@@ -196,7 +196,7 @@ doTask(PrintIT<Index>& P,
     for(; gc.notDone(); ++gc)
         {
         auto val = P.scalefac*D[offset(P.is,gc.i)];
-        if(std::norm(val) > Global::printScale())
+        if(std::norm(val) >= Global::printScale())
             {
             P.s << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
