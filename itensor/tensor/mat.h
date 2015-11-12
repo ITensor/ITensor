@@ -328,7 +328,7 @@ makeMatRefc(DataRange<T> const& D,
             size_t ncols)
     -> MatRefc<stdx::remove_const_t<T>>
     {
-    return MatRefc<stdx::remove_const_t<T>>(DataRange<const T>{D},MatRange{nrows,ncols});
+    return MatRefc<stdx::remove_const_t<T>>(DataRange<const T>(D),MatRange{nrows,ncols});
     }
 
 } //namespace itensor

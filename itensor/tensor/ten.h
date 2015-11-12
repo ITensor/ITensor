@@ -35,7 +35,7 @@ class TensorType { };
 template<typename Derived>
 struct isTensor
     {
-    bool static constexpr value = std::is_base_of<TensorType,Derived>::value;
+    bool static constexpr value = std::is_base_of<TensorType,stdx::decay_t<Derived>>::value;
     constexpr operator bool() const noexcept { return value; }
     };
 

@@ -76,7 +76,8 @@ operator/(Mat<V> && A, Real fac)
 
 template<typename MatA,
          typename MatB,
-         class = stdx::require<hasMatRange<MatA>,hasMatRange<MatB>> >
+         class = stdx::require<hasMatRange<MatA>,
+                               hasMatRange<MatB>> >
 auto
 operator+(MatA && A, MatB && B)
     -> Mat<common_type<MatA,MatB>>
