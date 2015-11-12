@@ -27,12 +27,7 @@ class IQIndex;
 using ITensor  = ITensorT<Index>;
 using IQTensor = ITensorT<IQIndex>;
 
-
 struct ITData;
-
-template<typename index_type, typename C>
-using test_indxcont = 
-   stdx::require<std::is_same<stdx::decay_t<decltype(*std::declval<C>().begin())>,index_type>>;
 
 template<typename index_type_>
 class ITensorT
@@ -72,10 +67,10 @@ class ITensorT
              index_type  const& i3, 
              Indices const&... rest);
 
-    template<typename IndxContainer,
-             class=test_indxcont<index_type,IndxContainer> >
+    template<typename IndxCont,
+    class=stdx::require<stdx::containerOf<index_type,IndxCont>>>
     explicit
-    ITensorT(IndxContainer && c);
+    ITensorT(IndxCont && c);
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real

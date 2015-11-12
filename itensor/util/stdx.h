@@ -57,13 +57,6 @@ using require = enable_if_t<all<Conditions...>::value>;
 template<typename... Conditions>
 using require_not = enable_if_t<not all<Conditions...>::value>;
 
-template<typename T>
-struct isRvalue
-    {
-    bool static constexpr value = std::is_rvalue_reference<T&&>::value;
-    constexpr operator bool() const noexcept { return value; }
-    };
-
 //
 //Useful for disabling candidate template functions
 //where if Expressions.. fail to compile (fail template
@@ -104,6 +97,65 @@ template<>
 struct choice<10> { constexpr choice(){} };
 
 struct select_overload : choice<1> { constexpr select_overload(){} };
+
+
+
+//
+// Traits
+//
+
+template<typename T>
+struct isRvalue
+    {
+    bool static constexpr value = std::is_rvalue_reference<T&&>::value;
+    constexpr operator bool() const noexcept { return value; }
+    };
+
+template<typename C>
+auto
+isIterImpl(choice<2>, C const&)
+    -> std::false_type
+    { return std::false_type{}; }
+template<typename C>
+auto
+isIterImpl(choice<1>, C const& t)
+    -> if_compiles_return<std::true_type,
+       decltype(t.begin()), //check if t.begin() compiles
+       decltype(t.end())>   //check if t.end() compiles
+    { return std::true_type{}; }
+template<typename C>
+using isIterable = decltype(isIterImpl(select_overload{},std::declval<C>()));
+
+template<typename C>
+auto
+isIndexableImpl(choice<2>, C const&)
+    -> std::false_type
+    { return std::false_type{}; }
+template<typename C>
+auto
+isIndexableImpl(choice<1>, C const& t)
+    -> if_compiles_return<std::true_type,
+       decltype(t[0])> //check if t[0] compiles
+    { return std::true_type{}; }
+template<typename C>
+using isIndexable = decltype(isIndexableImpl(select_overload{},std::declval<C>()));
+
+template<typename Val, typename C>
+void
+containerOfImpl(choice<3>, C const&) { }
+template<typename Val, typename C>
+auto
+containerOfImpl(choice<2>, C const& c) -> if_compiles_return<Val,decltype(c[0])>
+    { return c[0]; }
+template<typename Val, typename C>
+auto
+containerOfImpl(choice<1>, C const& c) -> if_compiles_return<Val,decltype(c.begin())> 
+    { return *(c.begin()); }
+template<typename Val, typename C>
+using containerOf = conditional_t<std::is_same<stdx::decay_t<Val>,
+                                               decltype(containerOfImpl<Val,C>(select_overload{},std::declval<C>()))>::value,
+                                        std::true_type,
+                                        std::false_type>;
 
 
 template<typename... VArgs>
