@@ -12,32 +12,6 @@
 namespace itensor {
 
 template<>
-template <typename... Indices>
-ITensor::
-ITensorT(const Index& i1, 
-         const Index& i2,
-         const Index& i3,
-         const Indices&... rest)
-  : is_(i1,i2,i3,rest...),
-    scale_(1.)
-	{ }
-
-template<>
-template<typename IndxContainer,class>
-ITensor::
-ITensorT(IndxContainer && c)
-  : is_(std::forward<IndxContainer>(c)),
-    scale_(1.)
-    { }
-
-template<>
-inline ITensor::
-ITensorT(const IndexSet& is)
-  : is_(is),
-    scale_(1.)
-	{ }
-
-template<>
 template <typename... IVals>
 ITensor::
 ITensorT(const IndexVal& iv1, 

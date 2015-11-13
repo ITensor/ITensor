@@ -100,27 +100,35 @@ checkSameDiv(IQTensor const& T1,
 } //namespace detail
 
 template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(IndexT const& i1) { Error("ITensorT(i1) not implemented"); }
-
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(IndexT const& i1,
-         IndexT const& i2) { Error("ITensorT(i1,i2) not implemented"); }
-
-template<typename IndexT>
-template <typename... Indices>
+template <typename... index_types>
 ITensorT<IndexT>::
 ITensorT(IndexT  const& i1,
-         IndexT  const& i2, 
-         IndexT  const& i3, 
-         Indices const&... rest) { Error("ITensorT(i1,i2,i3,...) not implemented"); }
+         index_types const&... i2etc)
+  : is_(i1,i2etc...),
+    scale_(1.)
+    { }
 
 template<typename IndexT>
-template<typename IndxContainer,
-         class>
 ITensorT<IndexT>::
-ITensorT(IndxContainer && c) { Error("ITensorT(IndxContainer) not implemented"); }
+ITensorT(std::vector<index_type> const& inds)
+  : is_(inds),
+    scale_(1.)
+    { }
+
+template<typename IndexT>
+template<size_t N> 
+ITensorT<IndexT>::
+ITensorT(std::array<index_type,N> const& inds)
+  : is_(inds),
+    scale_(1.)
+    { }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(std::initializer_list<index_type> inds)
+  : is_(inds),
+    scale_(1.)
+    { }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -134,7 +142,10 @@ ITensorT(indexval_type const& iv1,
 
 template<typename IndexT>
 ITensorT<IndexT>::
-ITensorT(indexset_type const& is) { Error("ITensorT(IndexSetT) not implemented"); }
+ITensorT(indexset_type const& is)
+  : is_(is),
+    scale_(1.)
+    { }
 
 template<typename IndexT>
 ITensorT<IndexT>::

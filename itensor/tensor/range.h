@@ -87,11 +87,17 @@ class RangeT : public RangeType
       : store_(std::move(store))
         { }
 
-    template<typename Container>
     explicit
-    RangeT(Container const& a)
+    RangeT(std::vector<index_type> const& inds)
         {
-        init(a);
+        init(inds);
+        }
+
+    template<size_t N>
+    explicit
+    RangeT(std::array<index_type,N> const& inds)
+        {
+        init(inds);
         }
 
     RangeT(std::initializer_list<index_type> ii) { init(ii); }

@@ -52,25 +52,20 @@ class ITensorT
     //Default constructed tensor will evaluate to false in boolean context
     ITensorT() { }
 
-    //Construct rank 1 tensor, all elements set to zero
-    explicit
-    ITensorT(index_type const& i1);
-
-    //Construct rank 2 tensor, all elements set to zero
-    ITensorT(index_type const& i1,
-             index_type const& i2);
-
     //Construct rank n tensor, all elements set to zero
-    template <typename... Indices>
+    //Usage: ITensor(i1,i2,i3,...)
+    template <typename... index_types>
     ITensorT(index_type  const& i1,
-             index_type  const& i2, 
-             index_type  const& i3, 
-             Indices const&... rest);
+             index_types const&... i2etc);
 
-    template<typename IndxCont,
-    class=stdx::require<stdx::containerOf<index_type,IndxCont>>>
     explicit
-    ITensorT(IndxCont && c);
+    ITensorT(std::vector<index_type> const& inds);
+
+    template<size_t N> 
+    explicit
+    ITensorT(std::array<index_type,N> const& inds);
+
+    ITensorT(std::initializer_list<index_type> inds);
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real

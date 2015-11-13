@@ -18,21 +18,6 @@ namespace itensor {
 // ITensor Constructors
 //
 
-
-template<>
-ITensor::
-ITensorT(const Index& i1) 
-  : is_(i1),
-    scale_(1.)
-	{ }
-
-
-template<>
-ITensor::
-ITensorT(const Index& i1,const Index& i2) 
-  : is_(i1,i2),
-    scale_(1.)
-	{ }
     
 template<>
 ITensor::

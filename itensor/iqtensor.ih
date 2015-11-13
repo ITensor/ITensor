@@ -7,35 +7,9 @@
 
 namespace itensor {
 
-template<> IQTensor::
-ITensorT(const IQIndex& i1);
-
-template<> IQTensor::
-ITensorT(const IQIndex& i1,
-         const IQIndex& i2);
-
-template<>
-template<typename IndxContainer,class>
-IQTensor::
-ITensorT(IndxContainer && c)
-  : is_(std::forward<IndxContainer>(c)),
-    scale_(1.)
-    { }
-
 template<>
 IQTensor::
 ITensorT(Complex val);
-
-template<>
-template<typename... IQIndices>
-IQTensor::
-ITensorT(const IQIndex& i1,
-         const IQIndex& i2,
-         const IQIndex& i3,
-         const IQIndices&... rest)
-  : is_(i1,i2,i3,rest...),
-    scale_(1.)
-    { }
 
 template<> 
 template <typename... IQIVals>

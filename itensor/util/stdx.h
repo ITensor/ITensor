@@ -157,6 +157,32 @@ using containerOf = conditional_t<std::is_same<stdx::decay_t<Val>,
                                         std::true_type,
                                         std::false_type>;
 
+template <typename Container>
+struct is_vector_impl : std::false_type { };
+template <typename... Ts> struct is_vector_impl<std::vector<Ts...>> : std::true_type { };
+template<typename C>
+using is_vector = is_vector_impl<stdx::decay_t<C>>;
+
+template <typename Container>
+struct is_array_impl : std::false_type { };
+template <typename T, size_t N> struct is_array_impl<std::array<T,N>> : std::true_type { };
+template<typename C>
+using is_array = is_array_impl<stdx::decay_t<C>>;
+
+template <typename Container>
+struct is_initializer_list_impl : std::false_type { };
+template <typename... Ts> struct is_initializer_list_impl<std::initializer_list<Ts...>> : std::true_type { };
+template<typename C>
+using is_initializer_list = is_initializer_list_impl<stdx::decay_t<C>>;
+
+template<typename Val, typename Container>
+using value_type_is = std::is_same<Val,stdx::decay_t<typename Container::value_type>>;
+
+
+//
+// Convenience functions
+//
+
 
 template<typename... VArgs>
 auto

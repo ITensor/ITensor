@@ -125,12 +125,6 @@ std::ostream&
 operator<<(std::ostream & s, const ITensor& T);
 
 template<> ITensor::
-ITensorT(const Index& i1);
-
-template<> ITensor::
-ITensorT(const Index& i1,const Index& i2);
-
-template<> ITensor::
 ITensorT(Cplx val);
 
 template<> inline
