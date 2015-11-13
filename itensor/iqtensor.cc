@@ -24,21 +24,6 @@ using std::move;
 
 
 
-
-template<> IQTensor::
-ITensorT(const IQIndex& i1) :
-    is_(i1),
-    scale_(1.)
-    { }
-
-template<> IQTensor::
-ITensorT(const IQIndex& i1,
-         const IQIndex& i2) :
-    is_(i1,i2),
-    scale_(1.)
-    { }
-
-
 template<>
 IQTensor::
 ITensorT(Complex val) 

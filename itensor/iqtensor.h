@@ -23,19 +23,19 @@ IQTensor& IQTensor::dag();
 // (similar to summing against a Kronecker
 // delta tensor \delta_{J,n})
 inline IQTensor& 
-operator*=(IQTensor& T, const IQIndexVal& iv) { return T *= IQTensor(iv); } 
+operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= IQTensor(iv); } 
 IQTensor inline
-operator*(IQTensor T, const IQIndexVal& iv) { T *= iv; return T; }
+operator*(IQTensor T, IQIndexVal const& iv) { T *= iv; return T; }
 IQTensor inline
-operator*(const IQIndexVal& iv, const IQTensor& T) { return IQTensor(iv) * T; }
+operator*(IQIndexVal const& iv, IQTensor const& T) { return IQTensor(iv) * T; }
 
 
 //Add ITensor to corresponding block of IQTensor
 IQTensor& 
-operator+=(IQTensor& A, const ITensor& B);
+operator+=(IQTensor& A, ITensor const& B);
 
 ITensor 
-toITensor(const IQTensor& T);
+toITensor(IQTensor const& T);
 
 template<> inline
 IQTensor::
