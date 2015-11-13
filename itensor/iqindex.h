@@ -11,7 +11,7 @@
 namespace itensor {
 
 // Forward declarations
-class IndexQN;
+struct IndexQN;
 class IQIndexDat;
 class IQIndexVal;
 template<typename IndexT>
@@ -107,24 +107,43 @@ class IQIndex : public Index
 // IndexQN
 //
 
-class IndexQN : public Index
+struct IndexQN //: public Index
     {
-    public:
-    
     using IndexValT = IQIndexVal;
 
+    Index index;
     QN qn;
 
     IndexQN() { }
 
-    IndexQN(const Index& i, const QN& q) : Index(i), qn(q) { }
+    IndexQN(Index const& i, QN const& q) : index(i), qn(q) { }
+
+    explicit operator Index() const { return index; }
+
+    void
+    dag() { index.dag(); }
+
+    auto
+    m() const -> decltype(index.m()) { return index.m(); }
+
+    IndexType
+    type() const { return index.type(); }
 
     void 
-    write(std::ostream& s) const { Index::write(s); qn.write(s); }
+    write(std::ostream& s) const { index.write(s); qn.write(s); }
 
     void 
-    read(std::istream& s) { Index::read(s); qn.read(s); }
+    read(std::istream& s) { index.read(s); qn.read(s); }
     };
+
+bool inline
+operator==(IndexQN const& iq, Index const& i) { return iq.index == i; }
+bool inline
+operator==(Index const& i, IndexQN const& iq) { return iq.index == i; }
+bool inline
+operator!=(IndexQN const& iq, Index const& i) { return iq.index != i; }
+bool inline
+operator!=(Index const& i, IndexQN const& iq) { return iq.index != i; }
 
 
 //
@@ -300,19 +319,19 @@ class IQIndexDat
     IQIndexDat(const IQIndexDat&) = delete;
 
     void 
-    operator=(const IQIndexDat&) = delete;
+    operator=(IQIndexDat const&) = delete;
 
-    const storage&
+    storage const&
     inds() const { return iq_; }
 
     long
     size() { return iq_.size(); }
 
-    const Index&
-    index(long i) { return iq_[i-1]; }
+    Index const&
+    index(long i) { return iq_[i-1].index; }
 
-    const Index&
-    operator[](long i) { return iq_[i]; }
+    Index const&
+    operator[](long i) { return iq_[i].index; }
 
     const QN&
     qn(long i) { return iq_[i-1].qn; }
@@ -410,7 +429,7 @@ IQIndex(const std::string& name,
         storage&& ind_qn, 
         Arrow dir, int plev) 
     : 
-    Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
+    Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
     pd(std::make_shared<IQIndexDat>(std::move(ind_qn))),
     dir_(dir)
     { }

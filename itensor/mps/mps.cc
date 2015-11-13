@@ -504,29 +504,29 @@ plussers(IQIndex const& l1, IQIndex const& l2,
     vector<IndexQN> iq;
     for(IndexQN const& x : l1)
         {
-        Index jj(x.rawname(),x.m(),x.type());
-        l1map[x] = jj;
+        Index jj(x.index.rawname(),x.m(),x.type());
+        l1map[x.index] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
     for(IndexQN const& x : l2)
         {
-        Index jj(x.rawname(),x.m(),x.type());
-        l2map[x] = jj;
+        Index jj(x.index.rawname(),x.m(),x.type());
+        l2map[x.index] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
     sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(Index const& il1 : l1)
+    for(IndexQN const& il1 : l1)
         {
-        Index& s1 = l1map[il1];
-        auto t = diagTensor(1,il1,s1);
+        Index& s1 = l1map[il1.index];
+        auto t = diagTensor(1,il1.index,s1);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
-    for(Index const& il2 : l2)
+    for(IndexQN const& il2 : l2)
         {
-        Index& s2 = l2map[il2];
-        auto t = diagTensor(1,il2,s2);
+        Index& s2 = l2map[il2.index];
+        auto t = diagTensor(1,il2.index,s2);
         second += t;
         }
     }
@@ -651,30 +651,29 @@ plusEq(const MPSt<IQTensor>& R, const Args& args);
 //
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-addAssumeOrth(const MPSt<Tensor>& R,
-              const Args& args)
+addAssumeOrth(MPSt<Tensor> const& R,
+              Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
-
+    auto& L = *this;
     primelinks(0,4);
 
     vector<Tensor> first(N_), 
                    second(N_);
-    for(int i = 1; i < N_; ++i)
+    for(auto i : count1(N_-1))
         {
-        IndexT l1 = rightLinkInd(*this,i);
-        IndexT l2 = rightLinkInd(R,i);
-        IndexT r(l1);
+        auto l1 = rightLinkInd(*this,i);
+        auto l2 = rightLinkInd(R,i);
+        auto r = l1;
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    Anc(1) = A(1) * first[1] + R.A(1) * second[1];
-    for(int i = 2; i < N_; ++i)
+    Anc(1) = L.A(1) * first[1] + R.A(1) * second[1];
+    for(auto i : count1(2,N_-1))
         {
-        Anc(i) = dag(first[i-1]) * A(i) * first[i] 
+        Anc(i) = dag(first[i-1]) * L.A(i) * first[i] 
                      + dag(second[i-1]) * R.A(i) * second[i];
         }
-    Anc(N_) = dag(first[N_-1]) * A(N_) + dag(second[N_-1]) * R.A(N_);
+    Anc(N_) = dag(first[N_-1]) * L.A(N_) + dag(second[N_-1]) * R.A(N_);
 
     noprimelink();
 

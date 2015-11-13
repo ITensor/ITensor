@@ -103,9 +103,9 @@ totalM(const IQIndexDat::storage& storage)
     long tm = 0;
     for(const IndexQN& iq : storage)
         {
-        tm += iq.m();
+        tm += iq.index.m();
 #ifdef DEBUG
-        if(iq.type() != storage.front().type())
+        if(iq.index.type() != storage.front().type())
             Error("Indices must have the same type");
 #endif
         }
@@ -343,9 +343,9 @@ operator()(long val) const
     }
 
 bool
-hasindex(const IQIndex& J, const Index& i)
+hasindex(IQIndex const& J, Index const& i)
     { 
-    for(const Index& j : J)
+    for(auto& j : J)
         {
         if(j == i) return true;
         }
@@ -394,10 +394,9 @@ qn(const IQIndex& I, const Index& i)
 Index
 findByQN(const IQIndex& I, const QN& qn)
     { 
-    for(const IndexQN& jq : I)
+    for(auto& iq : I)
         { 
-        if(jq.qn == qn) 
-            return jq;
+        if(iq.qn == qn) return Index(iq);
         }
     println("I = ",I);
     println("qn = ",qn);
@@ -420,18 +419,16 @@ operator<<(ostream &o, const IQIndex& I)
     }
 
 std::ostream& 
-operator<<(std::ostream &s, const IndexQN& x)
+operator<<(std::ostream &s, IndexQN const& x)
     { 
-    const Index& i = x;
-    return s << "IndexQN: " << i
+    return s << "IndexQN: " << x.index
              << " (" << x.qn << ")\n";
     }
 
 std::ostream& 
-operator<<(std::ostream& s, const IQIndexVal& iv)
+operator<<(std::ostream& s, IQIndexVal const& iv)
     { 
-    const IQIndex& I = iv.index;
-    return s << "IQIndexVal: val = " << iv.val << " for IQIndex:\n  " << I << "\n"; 
+    return s << "IQIndexVal: val = " << iv.val << " for IQIndex:\n  " << iv.index << "\n"; 
     }
 
 } //namespace itensor
