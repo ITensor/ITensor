@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 
     IQMPS psi(initState);
 
-    println(totalQN(psi));
+    Print(totalQN(psi));
 
     //
     // Begin the DMRG calculation
@@ -99,23 +99,23 @@ int main(int argc, char* argv[])
     for(int j = 1; j <= N; ++j)
         {
         psi.position(j);
-        upd(j) = Dot(conj(primed(psi.A(j),Site)),sites.op("Nup",j)*psi.A(j));
-        dnd(j) = Dot(conj(primed(psi.A(j),Site)),sites.op("Ndn",j)*psi.A(j));
+        upd(j-1) = (dag(prime(psi.A(j),Site))*sites.op("Nup",j)*psi.A(j)).real();
+        dnd(j-1) = (dag(prime(psi.A(j),Site))*sites.op("Ndn",j)*psi.A(j)).real();
         }
 
     println("Up Density:");
     for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,upd(j));
+        printfln("%d %.10f",j,upd(j-1));
     println();
 
     println("Dn Density:");
     for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,dnd(j));
+        printfln("%d %.10f",j,dnd(j-1));
     println();
 
     println("Total Density:");
     for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,(upd(j)+dnd(j)));
+        printfln("%d %.10f",j,(upd(j-1)+dnd(j-1)));
     println();
 
     //
