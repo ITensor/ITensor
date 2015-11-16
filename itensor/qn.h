@@ -250,6 +250,11 @@ electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
 QN inline
 elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
 
+//"clock" degree of freedom
+//for example Z3 clock QNs are clock(0,3); clock(1,3); clock(2,3);
+QN inline
+clock(int n, int N) { return QN(QNVal(n,N)); }
+
 //returns -1 if any sector of the QN is fermionic and odd-parity
 //otherwise returns +1
 int
