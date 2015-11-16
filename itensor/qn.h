@@ -17,6 +17,38 @@ namespace itensor {
 // Quantum number label for IQIndexes.
 //
 
+class QN;
+
+//
+// QN Convenience Constructor Functions
+//
+
+//Sz in units of spin 1/2
+//(1 => 1/2, 2 => 1, -1 => -1/2, etc.)
+QN spin(int Sz);
+
+//spinless hard-core boson
+QN boson(int Nb);
+
+//hard-core boson with spin
+//Sz in units of spin 1/2
+QN spinboson(int Sz, int Nb);
+
+//spinless fermion
+QN fermion(int Nf);
+
+//fermion with spin
+//Sz in units of spin 1/2
+QN electron(int Sz, int Nf);
+
+//QN conserving electron spin and parity, not total charge
+//Sz in units of spin 1/2
+QN elparity(int Sz, int Pf);
+
+//"clock" degree of freedom
+//for example Z3 clock QNs are clock(0,3); clock(1,3); clock(2,3);
+QN clock(int n, int N);
+
 size_t inline constexpr
 QNSize() { return 4ul; }
 
@@ -55,6 +87,10 @@ struct QNVal
     QNVal&
     operator-() { val_ = -val_; return *this; }
     };
+
+//
+// QN - quantum number label for IQIndex sectors
+//
 
 class QN
     {
@@ -227,34 +263,6 @@ operator*(Arrow dir, QN q) { q *= dir; return q; }
 std::ostream& 
 operator<<(std::ostream & s, QN const& q);
 
-//Sz in units of spin 1/2
-QN inline
-spin(int Sz) { return QN(Sz); }
-
-QN inline
-boson(int Nb) { return QN(Nb); }
-
-//Sz in units of spin 1/2
-QN inline
-spinboson(int Sz, int Nb) { return QN(Sz,Nb); }
-
-QN inline
-fermion(int Nf) { return QN(QNVal(Nf,-1)); }
-
-//Sz in units of spin 1/2
-QN inline
-electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
-
-//QN conserving electron spin and parity, not total charge
-//Sz in units of spin 1/2
-QN inline
-elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
-
-//"clock" degree of freedom
-//for example Z3 clock QNs are clock(0,3); clock(1,3); clock(2,3);
-QN inline
-clock(int n, int N) { return QN(QNVal(n,N)); }
-
 //returns -1 if any sector of the QN is fermionic and odd-parity
 //otherwise returns +1
 int
@@ -271,6 +279,33 @@ write(std::ostream & s, QN const& q);
 
 void
 printFull(QN const& q);
+
+
+//
+// QN Convenience Constructor Functions
+//
+
+QN inline
+spin(int Sz) { return QN(Sz); }
+
+QN inline
+boson(int Nb) { return QN(Nb); }
+
+QN inline
+spinboson(int Sz, int Nb) { return QN(Sz,Nb); }
+
+QN inline
+fermion(int Nf) { return QN(QNVal(Nf,-1)); }
+
+QN inline
+electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
+
+QN inline
+elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
+
+QN inline
+clock(int n, int N) { return QN(QNVal(n,N)); }
+
 
 } //namespace itensor
 
