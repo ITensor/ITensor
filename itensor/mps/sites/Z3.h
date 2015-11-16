@@ -10,12 +10,13 @@ namespace itensor {
 
 class Z3 : public SiteSet
     {
+    int N_;
+    std::vector<IQIndex> site_;
     public:
 
     Z3();
 
     Z3(int N);
-
 
     Complex static
     Omega()
@@ -24,22 +25,19 @@ class Z3 : public SiteSet
         return w;
         }
 
-
-    //Operators
-
     private:
 
     int
     getN() const;
 
-    const IQIndex&
+    IQIndex const&
     getSi(int i) const;
 
     virtual IQIndexVal
-    getState(int i, const String& state) const;
+    getState(int i, String const& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const Args& opts) const;
+    getOp(int i, String const& opname, Args const& args) const;
 
     void
     doRead(std::istream& s);
@@ -50,20 +48,12 @@ class Z3 : public SiteSet
     void
     constructSites();
         
-    //Data members -----------------
-
-    int N_;
-
-    std::vector<IQIndex> site_;
-
     };
 
 inline Z3::
 Z3()
     : N_(-1)
-    { 
-    QN::Nmax() = 3;
-    }
+    { }
 
 inline Z3::
 Z3(int N)
@@ -71,20 +61,18 @@ Z3(int N)
     N_(N),
     site_(N_+1)
     { 
-    QN::Nmax() = 3;
     constructSites();
     }
 
 void inline Z3::
 constructSites()
     {
-    QN::Nmax() = 3;
     for(int i = 1; i <= N_; ++i)
         {
         site_.at(i) = IQIndex(nameint("Z3 site=",i),
-        Index(nameint("0|site",i),1,Site),QN(0,0,0),
-        Index(nameint("1|site",i),1,Site),QN(0,0,1),
-        Index(nameint("2|site",i),1,Site),QN(0,0,2));
+        Index(nameint("0|site",i),1,Site),clock(0,3),
+        Index(nameint("1|site",i),1,Site),clock(1,3),
+        Index(nameint("2|site",i),1,Site),clock(2,3));
         }
     }
 
@@ -110,12 +98,12 @@ getN() const
     { return N_; }
 
 inline 
-const IQIndex& Z3::
+IQIndex const& Z3::
 getSi(int i) const
     { return site_.at(i); }
 
 inline IQIndexVal Z3::
-getState(int i, const String& state) const
+getState(int i, String const& state) const
     {
     int st = -1;
     if(state == "0") 
@@ -140,12 +128,10 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor Z3::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, String const& opname, Args const& args) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s = si(i);
+    auto sP = prime(s);
 
     IQIndexVal Zer(s(1)),
                ZerP(sP(1)),
@@ -158,63 +144,63 @@ getOp(int i, const String& opname, const Args& opts) const
 
     if(opname == "N")
         {
-        Op(One,OneP) = 1;
-        Op(Two,TwoP) = 2;
+        Op.set(One,OneP,1);
+        Op.set(Two,TwoP,2);
         }
     else
     if(opname == "Sig")
         {
-        Op(Zer,TwoP) = 1;
-        Op(One,ZerP) = 1;
-        Op(Two,OneP) = 1;
+        Op.set(Zer,TwoP,1);
+        Op.set(One,ZerP,1);
+        Op.set(Two,OneP,1);
         }
     else
     if(opname == "SigDag")
         {
-        Op(Two,ZerP) = 1;
-        Op(Zer,OneP) = 1;
-        Op(One,TwoP) = 1;
+        Op.set(Two,ZerP,1);
+        Op.set(Zer,OneP,1);
+        Op.set(One,TwoP,1);
         }
     else
     if(opname == "Tau")
         {
-        Op(Zer,ZerP) = 1;
-        Op(One,OneP) = cos(2.*Pi/3.);
-        Op(Two,TwoP) = cos(4.*Pi/3.);
+        Op.set(Zer,ZerP,1);
+        Op.set(One,OneP,cos(2.*Pi/3.));
+        Op.set(Two,TwoP,cos(4.*Pi/3.));
 
         IQTensor TauI(s,sP);
-        TauI(One,OneP) = sin(2.*Pi/3.);
-        TauI(Two,TwoP) = sin(4.*Pi/3.);
+        TauI(One,OneP,sin(2.*Pi/3.));
+        TauI(Two,TwoP,sin(4.*Pi/3.));
 
         Op += TauI*Complex_i;
         }
     else
     if(opname == "TauDag")
         {
-        Op(Zer,ZerP) = 1;
-        Op(One,OneP) = cos(2.*Pi/3.);
-        Op(Two,TwoP) = cos(4.*Pi/3.);
+        Op.set(Zer,ZerP,1);
+        Op.set(One,OneP,cos(2.*Pi/3.));
+        Op.set(Two,TwoP,cos(4.*Pi/3.));
 
         IQTensor TauI(s,sP);
-        TauI(One,OneP) = -sin(2.*Pi/3.);
-        TauI(Two,TwoP) = -sin(4.*Pi/3.);
+        TauI(One,OneP,-sin(2.*Pi/3.));
+        TauI(Two,TwoP,-sin(4.*Pi/3.));
 
         Op += TauI*Complex_i;
         }
     else
     if(opname == "Proj0")
         {
-        Op(Zer,ZerP) = 1;
+        Op.set(Zer,ZerP,1);
         }
     else
     if(opname == "Proj1")
         {
-        Op(One,OneP) = 1;
+        Op.set(One,OneP,1);
         }
     else
     if(opname == "Proj2")
         {
-        Op(Two,TwoP) = 1;
+        Op.set(Two,TwoP,1);
         }
     else
         {
