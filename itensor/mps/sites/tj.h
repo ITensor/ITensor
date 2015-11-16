@@ -28,10 +28,10 @@ class tJ : public SiteSet
     getSiP(int i) const { return prime(getSi(i)); }
 
     IQIndexVal
-    getState(int i, const String& state) const;
+    getState(int i, String const& state) const;
 
     IQTensor
-    getOp(int i, const String& opname, const Args& opts) const;
+    getOp(int i, String const& opname, Args const& args) const;
 
     virtual void
     doRead(std::istream& s);
@@ -68,9 +68,9 @@ constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         site_.at(j) = IQIndex(nameint("tJ site=",j),
-            Index(nameint("Emp for site ",j),1,Site),  QN( 0,0,0),
-            Index(nameint("Up for site ",j),1,Site),   QN(+1,1,1),
-            Index(nameint("Dn for site ",j),1,Site),   QN(-1,1,1));
+            Index(nameint("Emp for site ",j),1,Site), electron( 0,0),
+            Index(nameint("Up for site ",j),1,Site),  electron(+1,1),
+            Index(nameint("Dn for site ",j),1,Site),  electron(-1,1));
     }
 
 void inline tJ::
@@ -99,7 +99,7 @@ getSi(int i) const
     { return site_.at(i); }
 
 IQIndexVal inline tJ::
-getState(int i, const String& state) const
+getState(int i, String const& state) const
     {
     if(state == "0" || state == "Emp") 
         {
@@ -124,12 +124,10 @@ getState(int i, const String& state) const
 
 
 IQTensor inline tJ::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, String const& opname, Args const& args) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s = si(i);
+    auto sP = prime(s);
 
     IQIndexVal Em(s(1)),
                EmP(sP(1)),
@@ -142,94 +140,94 @@ getOp(int i, const String& opname, const Args& opts) const
 
     if(opname == "TReverse")
         {
-        Op(Em,EmP) = +1;
-        Op(Dn,UpP) = -1; //correct?
-        Op(Up,DnP) = +1;
+        Op.set(Em,EmP,+1);
+        Op.set(Dn,UpP,-1); //correct?
+        Op.set(Up,DnP,+1);
         }
     else
     if(opname == "Nup")
         {
-        Op(Up,UpP) = 1;
+        Op.set(Up,UpP,1);
         }
     else
     if(opname == "Ndn")
         {
-        Op(Dn,DnP) = 1;
+        Op.set(Dn,DnP,1);
         }
     else
     if(opname == "Ntot")
         {
-        Op(Up,UpP) = 1;
-        Op(Dn,DnP) = 1;
+        Op.set(Up,UpP,1);
+        Op.set(Dn,DnP,1);
         }
     else
     if(opname == "Cup")
         {
-        Op(Up,EmP) = 1; 
+        Op.set(Up,EmP,1); 
         }
     else
     if(opname == "Cdagup")
         {
-        Op(Em,UpP) = 1; 
+        Op.set(Em,UpP,1); 
         }
     else
     if(opname == "Cdn")
         {
-        Op(Dn,EmP) = 1; 
+        Op.set(Dn,EmP,1); 
         }
     else
     if(opname == "Cdagdn")
         {
-        Op(Em,DnP) = 1; 
+        Op.set(Em,DnP,1); 
         }
     else
     if(opname == "Aup")
         {
-        Op(Up,EmP) = 1; 
+        Op.set(Up,EmP,1); 
         }
     else
     if(opname == "Adagup")
         {
-        Op(Em,UpP) = 1; 
+        Op.set(Em,UpP,1); 
         }
     else
     if(opname == "Adn")
         {
-        Op(Dn,EmP) = 1; 
+        Op.set(Dn,EmP,1); 
         }
     else
     if(opname == "Adagdn")
         {
-        Op(Em,DnP) = 1; 
+        Op.set(Em,DnP,1); 
         }
     else
     if(opname == "FermiPhase" || opname == "F")
         {
-        Op(Em,EmP) = +1; 
-        Op(Up,UpP) = -1;
-        Op(Dn,DnP) = -1;
+        Op.set(Em,EmP,+1); 
+        Op.set(Up,UpP,-1);
+        Op.set(Dn,DnP,-1);
         }
     else
     if(opname == "Sz")
         {
-        Op(Up,UpP) = +0.5; 
-        Op(Dn,DnP) = -0.5;
+        Op.set(Up,UpP,+0.5); 
+        Op.set(Dn,DnP,-0.5);
         }
     else
     if(opname == "Sx")
         {
-        Op(Up,DnP) = 1; 
-        Op(Dn,UpP) = 1;
+        Op.set(Up,DnP,1); 
+        Op.set(Dn,UpP,1);
         }
     else
     if(opname == "Sp")
         {
-        Op(Dn,UpP) = 1;
+        Op.set(Dn,UpP,1);
         }
     else
     if(opname == "Sm")
         {
-        Op(Up,DnP) = 1;
+        Op.set(Up,DnP,1);
         }
     else
         {

@@ -130,10 +130,10 @@ struct IndexQN //: public Index
     type() const { return index.type(); }
 
     void 
-    write(std::ostream& s) const { index.write(s); qn.write(s); }
+    write(std::ostream& s) const { index.write(s); itensor::write(s,qn); }
 
     void 
-    read(std::istream& s) { index.read(s); qn.read(s); }
+    read(std::istream& s) { index.read(s); itensor::read(s,qn); }
     };
 
 bool inline

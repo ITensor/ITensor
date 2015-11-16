@@ -15,7 +15,7 @@ class Hubbard : public SiteSet
     Hubbard();
 
     Hubbard(int N, 
-            const Args& opts = Global::opts());
+            Args const& args = Global::args());
 
     bool
     conserveNf() const { return conserveNf_; }
@@ -29,13 +29,13 @@ class Hubbard : public SiteSet
     getSi(int i) const;
 
     virtual IQIndexVal
-    getState(int i, const String& state) const;
+    getState(int i, String const& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const Args& opts = Global::opts()) const;
+    getOp(int i, String const& opname, Args const& args = Global::args()) const;
 
     DefaultOpsT
-    getDefaultOps(const Args& opts) const;
+    getDefaultOps(Args const& args) const;
 
     void 
     constructSites();
@@ -77,29 +77,43 @@ Hubbard()
     { }
 
 inline Hubbard::
-Hubbard(int N, const Args& opts)
+Hubbard(int N, Args const& args)
     : N_(N),
       site_(N_+1)
     { 
-    conserveNf_ = opts.getBool("ConserveNf",true);
-    conserveSz_ = opts.getBool("ConserveSz",true);
+    conserveNf_ = args.getBool("ConserveNf",true);
+    conserveSz_ = args.getBool("ConserveSz",true);
     constructSites();
     }
 
 void inline Hubbard::
 constructSites()
     {
-    const int One = (conserveNf_ ? 1 : 0),
-              Two = 2*One,
-              Up = (conserveSz_ ? +1 : 0),
-              Dn = -Up;
-    for(int j = 1; j <= N_; ++j)
+    int Up = (conserveSz_ ? +1 : 0),
+        Dn = -Up;
+    if(conserveNf_)
         {
-        site_.at(j) = IQIndex(nameint("Hubbard site=",j),
-            Index(nameint("Emp for site ",j),1,Site),  QN( 0,0,0),
-            Index(nameint("Up for site ",j),1,Site),   QN(Up,One,1),
-            Index(nameint("Dn for site ",j),1,Site),   QN(Dn,One,1),
-            Index(nameint("UpDn for site ",j),1,Site), QN( 0,Two,0));
+        for(auto j : count1(N_))
+            {
+            site_.at(j) = IQIndex(nameint("Hubbard site=",j),
+                Index(nameint("Emp for site ",j),1,Site), electron( 0,0),
+                Index(nameint("Up for site ",j),1,Site),  electron(Up,1),
+                Index(nameint("Dn for site ",j),1,Site),  electron(Dn,1),
+                Index(nameint("UpDn for site ",j),1,Site),electron( 0,2));
+            }
+        }
+    else //don't conserve Nf, only fermion parity
+        {
+        if(!conserveSz_) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
+
+        for(auto j : count1(N_))
+            {
+            site_.at(j) = IQIndex(nameint("Hubbard site=",j),
+                Index(nameint("Emp for site ",j),1,Site), elparity( 0,0),
+                Index(nameint("Up for site ",j),1,Site),  elparity(+1,1),
+                Index(nameint("Dn for site ",j),1,Site),  elparity(-1,1),
+                Index(nameint("UpDn for site ",j),1,Site),elparity( 0,0));
+            }
         }
     }
 
@@ -110,10 +124,8 @@ doRead(std::istream& s)
     site_.resize(N_+1);
     for(int j = 1; j <= N_; ++j) 
         site_.at(j).read(s);
-    if(site_.at(1).qn(2).Nf() == 1)
-        conserveNf_ = true;
-    else
-        conserveNf_ = false;
+
+    conserveNf_ = (site_.at(1).qn(2)(2) == 1);
     }
 
 void inline Hubbard::
@@ -133,7 +145,7 @@ getSi(int i) const
     { return site_.at(i); }
 
 inline IQIndexVal Hubbard::
-getState(int i, const String& state) const
+getState(int i, String const& state) const
     {
     if(state == "0" || state == "Emp") 
         {
@@ -164,12 +176,10 @@ getState(int i, const String& state) const
 
 
 inline IQTensor Hubbard::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, String const& opname, Args const& args) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s = si(i);
+    auto sP = prime(s);
 
     IQIndexVal Em(s(1)),
                EmP(sP(1)),
@@ -182,112 +192,103 @@ getOp(int i, const String& opname, const Args& opts) const
 
     IQTensor Op(dag(s),sP);
 
-    if(opname == "TReverse")
-        {
-        Op(Em,EmP) = +1;
-        Op(UD,UDP) = -1;
-        //should one of the following two lines be a -1?
-        Op(Dn,UpP) = +1;
-        Op(Up,DnP) = +1;
-        }
-    else
     if(opname == "Nup")
         {
-        Op(Up,UpP) = 1;
-        Op(UD,UDP) = 1;
+        Op.set(Up,UpP,1);
+        Op.set(UD,UDP,1);
         }
     else
     if(opname == "Ndn")
         {
-        Op(Dn,DnP) = 1;
-        Op(UD,UDP) = 1;
+        Op.set(Dn,DnP,1);
+        Op.set(UD,UDP,1);
         }
     else
     if(opname == "Nupdn")
         {
-        Op(UD,UDP) = 1;
+        Op.set(UD,UDP,1);
         }
     else
     if(opname == "Ntot")
         {
-        Op(Up,UpP) = 1;
-        Op(Dn,DnP) = 1;
-        Op(UD,UDP) = 2;
+        Op.set(Up,UpP,1);
+        Op.set(Dn,DnP,1);
+        Op.set(UD,UDP,2);
         }
     else
     if(opname == "Cup")
         {
-        Op(Up,EmP) = 1; 
-        Op(UD,DnP) = 1; 
+        Op.set(Up,EmP,1); 
+        Op.set(UD,DnP,1); 
         }
     else
     if(opname == "Cdagup")
         {
-        Op(Em,UpP) = 1; 
-        Op(Dn,UDP) = 1;
+        Op.set(Em,UpP,1); 
+        Op.set(Dn,UDP,1);
         }
     else
     if(opname == "Cdn")
         {
-        Op(Dn,EmP) = 1; 
-        Op(UD,UpP) = -1; 
+        Op.set(Dn,EmP,1); 
+        Op.set(UD,UpP,-1); 
         }
     else
     if(opname == "Cdagdn")
         {
-        Op(Em,DnP) = 1; 
-        Op(Up,UDP) = -1;
+        Op.set(Em,DnP,1); 
+        Op.set(Up,UDP,-1);
         }
     else
     if(opname == "Aup")
         {
-        Op(Up,EmP) = 1; 
-        Op(UD,DnP) = 1; 
+        Op.set(Up,EmP,1); 
+        Op.set(UD,DnP,1); 
         }
     else
     if(opname == "Adagup")
         {
-        Op(Em,UpP) = 1; 
-        Op(Dn,UDP) = 1;
+        Op.set(Em,UpP,1); 
+        Op.set(Dn,UDP,1);
         }
     else
     if(opname == "Adn")
         {
-        Op(Dn,EmP) = 1; 
-        Op(UD,UpP) = 1; 
+        Op.set(Dn,EmP,1); 
+        Op.set(UD,UpP,1); 
         }
     else
     if(opname == "Adagdn")
         {
-        Op(Em,DnP) = 1; 
-        Op(Up,UDP) = 1;
+        Op.set(Em,DnP,1); 
+        Op.set(Up,UDP,1);
         }
     else
     if(opname == "FermiPhase" || opname == "F")
         {
-        Op(Em,EmP) = +1; 
-        Op(Up,UpP) = -1;
-        Op(Dn,DnP) = -1;
-        Op(UD,UDP) = +1;
+        Op.set(Em,EmP,+1); 
+        Op.set(Up,UpP,-1);
+        Op.set(Dn,DnP,-1);
+        Op.set(UD,UDP,+1);
         }
     else
     if(opname == "Sz")
         {
-        Op(Up,UpP) = +0.5; 
-        Op(Dn,DnP) = -0.5;
+        Op.set(Up,UpP,+0.5); 
+        Op.set(Dn,DnP,-0.5);
         }
     else
     if(opname == "Sx")
         {
-        Op(Up,DnP) = 1; 
-        Op(Dn,UpP) = 1;
+        Op.set(Up,DnP,1); 
+        Op.set(Dn,UpP,1);
         }
     else
     if(opname == "S2")
         {
         //S dot S on-site
-        Op(Up,UpP) = 0.75; 
-        Op(Dn,DnP) = 0.75;
+        Op.set(Up,UpP,0.75); 
+        Op.set(Dn,DnP,0.75);
         }
     else
         {
@@ -298,7 +299,7 @@ getOp(int i, const String& opname, const Args& opts) const
     }
 
 Hubbard::DefaultOpsT inline Hubbard::
-getDefaultOps(const Args& opts) const
+getDefaultOps(Args const& args) const
     {
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;
