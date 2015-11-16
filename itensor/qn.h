@@ -5,222 +5,385 @@
 #ifndef __ITENSOR_QN_H
 #define __ITENSOR_QN_H
 
-#define DEF_NMAX 2
-
 namespace itensor {
 
 //
 // QN
 //
 // Quantum number label for IQIndexes.
-// 
-// For a QN "q", 
 //
-// q.sz() tracks the Sz eigenvalue mz in
-// units of 1/2 (i.e. sz() == 1 is mz = 1/2,
-// sz() == -1 is mz = -1/2, sz() == 2 is mz = 1, etc.)
 //
-// q.Nf() tracks the number of particles
-//
-// q.Nfp() tracks the fermion parity, which is
-// just the particle number mod 2 (always 0 or 1).
-// This is useful e.g. for superconductors which
-// respect parity but do not conserve Nf.
-// If Nmax is set > 2, then Nfp runs from 0 up to Nmax-1;
-// this is useful for conserving charge mod Nmax as in a 
-// Potts/parafermion model.
-//
+
+int
+qnrem(int v, int m);
+
+struct QNVal
+    {
+    using qn_t = int;
+    private:
+    qn_t val_ = 0,
+         mod_ = 0;
+    public:
+
+    QNVal() { }
+
+    QNVal(qn_t v) : val_(v), mod_(1) { }
+
+    QNVal(qn_t v, qn_t m) : mod_(m) { set(v); }
+
+    qn_t
+    mod() const { return mod_; }
+
+    qn_t
+    val() const { return val_; }
+
+    void
+    set(qn_t v)
+        { 
+        if(std::abs(mod_) > 1) 
+            {
+            val_ = std::abs(v%mod_);
+            }
+        else                   
+            {
+            val_ = v;
+            }
+        }
+
+    QNVal&
+    operator-() { val_ = -val_; return *this; }
+    };
+
+size_t inline constexpr
+QNSize() { return 4ul; }
 
 class QN
     {
     public:
+    using qn_t = QNVal::qn_t;
+    using storage_type = std::array<QNVal,QNSize()>;
+    using iterator = storage_type::iterator;
+    using const_iterator = storage_type::const_iterator;
+    private:
+    storage_type qn_{};
+    public:
 
-    QN(int sz = 0, int Nf = 0);
+    QN() { }
 
-    QN(int sz, int Nf, int Nfp);
-
-    //sz is measured in units of 1/2
-    //(sz==1 is 1/2, sz==2 is 1, etc.)
-    int 
-    sz() const { return sz_; }
-
-    //Number of particles
-    int 
-    Nf() const { return Nf_; }
-
-    //Fermion parity
-    //Nfp is either 0 or 1
-    //(or can range up to Nmax-1 if Nmax > 2)
-    int 
-    Nfp() const { return Nfp_; }
-
-    QN& 
-    operator+=(const QN &other);
-
-    QN& 
-    operator-=(const QN &other);
-
-    QN 
-    operator-() const;
-
-    const QN&
-    operator+() const { return *this; }
-    
-    // Multiplication by Arrows can change QN sign
-    QN& 
-    operator*=(Arrow dir);
-
-    std::string 
-    toString() const;
-
-    void 
-    write(std::ostream& s) const;
-
-    void 
-    read(std::istream& s);
-
-    static int&
-    Nmax()
-        {
-        static int Nmax_ = 2;
-        return Nmax_;
+    template<typename... VArgs>
+    explicit
+    QN(QNVal v0,
+        VArgs&&... vals)
+      : qn_{{v0,QNVal(vals)...}}
+        { 
+        static_assert(1+sizeof...(VArgs) <= QNSize(),"Too many arguments to QN constructor");
         }
 
-    private:
+    template<typename... Qs>
+    explicit
+    QN(qn_t q0,
+        Qs&&... qs)
+      : qn_{{QNVal(q0),QNVal(qs)...}}
+        { 
+        static_assert(1+sizeof...(Qs) <= QNSize(),"Too many arguments to QN constructor");
+        }
 
-    int sz_, 
-        Nf_, 
-        Nfp_; //Nfp_ stands for fermion number parity, 
-              //and tracks whether Nf is even or odd
-              //(can't just calculate Nfp from Nf on the fly
-              //because we may not be tracking Nf, i.e. Nf==0)
+    explicit operator bool() const { return qn_.front().mod() != 0; }
+
+//    qn_t &
+//    operator[](size_t n) 
+//        { 
+//#ifdef DEBUG
+//        return qn_.at(n).val(); 
+//#else
+//        return qn_[n].val(); 
+//#endif
+//        }
+
+    qn_t
+    operator[](size_t n) const
+        { 
+#ifdef DEBUG
+        return qn_.at(n).val(); 
+#else
+        return qn_[n].val(); 
+#endif
+        }
+
+//    //1-indexed
+//    qn_t & 
+//    operator()(size_t n) { return operator[](n-1); }
+
+    //1-indexed
+    qn_t
+    operator()(size_t n) const { return operator[](n-1); }
+
+    //1-indexed
+    qn_t
+    mod(size_t n) const { return qn_.at(n-1).mod(); }
+
+    size_t
+    size() const { return qn_.size(); }
+
+    //0-indexed
+    QNVal &
+    val0(size_t n)
+        { 
+#ifdef DEBUG
+        return qn_.at(n); 
+#else
+        return qn_[n]; 
+#endif
+        }
+
+    //0-indexed
+    QNVal const&
+    val0(size_t n) const 
+        { 
+#ifdef DEBUG
+        return qn_.at(n); 
+#else
+        return qn_[n]; 
+#endif
+        }
+
+    void
+    modAssign(QN const& qo)
+        {
+        for(size_t n = 0; n < QNSize(); ++n)
+            {
+            qn_[n] = QNVal(qn_[n].val(),qo.qn_[n].mod());
+            }
+        }
+
+
+    storage_type &
+    store() { return qn_; }
+
+    storage_type const&
+    store() const { return qn_; }
     };
 
-inline QN::
-QN(int sz, int Nf)
-    :
-    sz_(sz),
-    Nf_(Nf),
-    Nfp_(abs(Nf%DEF_NMAX))
-    { }
+bool inline
+isFermionic(QNVal const& qv) { return qv.mod() < 0; }
 
-inline QN::
-QN(int sz, int Nf, int Nfp)
-    : 
-    sz_(sz), 
-    Nf_(Nf), 
-    Nfp_(abs(Nfp%Nmax()))
+bool inline
+isActive(QNVal const& qv) { return qv.mod() != 0; }
+
+void inline
+operator+=(QNVal& qva, QNVal const& qvb) 
     { 
-#ifdef DEBUG
-    if(Nf_ != 0 && abs(Nf_%Nmax()) != Nfp_)
+    assert(qva.mod() == qvb.mod());
+    qva.set(qva.val()+qvb.val());
+    }
+
+void inline
+operator-=(QNVal& qva, QNVal const& qvb) 
+    { 
+    assert(qva.mod() == qvb.mod());
+    qva.set(qva.val()-qvb.val());
+    }
+
+void inline
+operator*=(QNVal& qva, Arrow dir)
+    { 
+    qva.set(qva.val() * static_cast<int>(dir));
+    }
+
+bool inline
+operator==(QNVal const& qva, QNVal const& qvb)
+    {
+    assert(qva.mod() == qvb.mod());
+    return qva.val() == qvb.val();
+    }
+
+bool inline
+operator!=(QNVal const& qva, QNVal const& qvb)
+    {
+    assert(qva.mod() == qvb.mod());
+    return qva.val() != qvb.val();
+    }
+
+bool
+isActive(QN const& q, size_t n) { return isActive(q.val0(n-1)); }
+
+bool inline
+isFermionic(QN const& q, size_t n) { return q.mod(n) < 0; }
+
+bool inline
+operator==(QN const& qa, QN const& qb)
+    {
+    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
         {
-        Print(Nmax());
-        Error("Nfp should equal abs(Nf%Nmax)");
+        if(qa.val0(n).val() != qb.val0(n).val()) return false;
         }
-#endif
+    return true;
+    }
+
+bool inline
+operator!=(QN const& qa, QN const& qb) { return !operator==(qa,qb); }
+
+void inline
+operator+=(QN & qa, QN const& qb) 
+    { 
+    if(!qa) qa.modAssign(qb); 
+    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
+        {
+        qa.val0(n) += qb.val0(n);
+        }
+    }
+
+void inline
+operator-=(QN & qa, QN const& qb) 
+    { 
+    if(!qa) qa.modAssign(qb);
+    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
+        {
+        qa.val0(n) -= qb.val0(n);
+        }
+    }
+
+void inline
+operator*=(QN & qa, Arrow dir)
+    { 
+    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
+        {
+        qa.val0(n) *= dir;
+        }
     }
 
 QN inline
-operator+(QN A, const QN& B) { A += B; return A; }
-
+operator+(QN qa, QN const& qb) { qa += qb; return qa; }
 QN inline
-operator-(QN A, const QN& B) { A -= B; return A; }
-
-inline
-QN& QN::
-operator+=(const QN &other)
-    {
-    sz_ += other.sz_; 
-    Nf_ += other.Nf_; 
-    Nfp_ = abs(Nfp_+other.Nfp_)%Nmax();
-    return *this;
-    }
-
-inline
-QN& QN::
-operator-=(const QN &other)
-    {
-    sz_ -= other.sz_; 
-    Nf_ -= other.Nf_; 
-    Nfp_ = abs(Nfp_-other.Nfp_)%Nmax();
-    return *this;
-    }
-
-QN inline QN::
-operator-() const 
-    { 
-    return QN(-sz_,-Nf_,(Nmax()-Nfp_)%Nmax()); 
-    }
-
-inline
-QN& QN::
-operator*=(Arrow dir) 
-    { 
-    const int i = dir;
-    sz_*=i; 
-    Nf_*=i; 
-    if(i == -1) Nfp_ = (Nmax()-Nfp_)%Nmax();
-    return *this; 
-    }
-
+operator-(QN qa, QN const& qb) { qa -= qb; return qa; }
 QN inline
 operator*(QN q, Arrow dir) { q *= dir; return q; }
-
-void inline QN::
-write(std::ostream& s) const 
-    { 
-    s.write((char*)&sz_,sizeof(sz_)); 
-    s.write((char*)&Nf_,sizeof(Nf_)); 
-    s.write((char*)&Nfp_,sizeof(Nfp_)); 
-    }
-
-void inline QN::
-read(std::istream& s) 
-    { 
-    s.read((char*)&sz_,sizeof(sz_)); 
-    s.read((char*)&Nf_,sizeof(Nf_)); 
-    s.read((char*)&Nfp_,sizeof(Nfp_)); 
-    }
-
-std::string inline QN::
-toString() const
-    { return format("(%+d:%d)",sz_,Nf_); }
+QN inline
+operator*(Arrow dir, QN q) { q *= dir; return q; }
 
 inline std::ostream& 
-operator<<(std::ostream &o, const QN &q)
-    { 
-    return o << format("(sz=%d, Nf=%d, p=%d)",q.sz(),q.Nf(),q.Nfp());
+operator<<(std::ostream & s, QN const& q)
+    {
+    s << "QN(";
+    if(q.mod(1) == 1 && !isActive(q,2))
+        {
+        //spin or spinless boson
+        s << q(1);
+        }
+    else
+    if(q.mod(1) == -1 && !isActive(q,2))
+        {
+        //spinless fermion
+        s << "Nf=" << q(1);
+        }
+    else
+    if(q.mod(1) == 1 && q.mod(2) == -1 && !isActive(q,3))
+        {
+        //electron
+        s << "Sz=" << q(1) << ",Nf=" << q(2);
+        }
+    else
+    if(q.mod(1) == 1 && q.mod(2) == -2 && !isActive(q,3))
+        {
+        //"superconducting" electron (parity conservation only)
+        s << "Sz=" << q(1) << ",Pf=" << q(2);
+        }
+    else
+        {
+        //catch-all behavior
+        for(auto n : count1(QNSize()))
+            {
+            if(!isActive(q,n)) break;
+            if(n > 1) s << ",";
+            if(q.mod(n) != 1)
+                {
+                s << "{" << q(n) << "," << q.mod(n) << "}";
+                }
+            else
+                {
+                s << q(n);
+                }
+            }
+        }
+    return s << ")";
     }
 
-bool inline
-operator==(const QN &a,const QN &b)
-    { 
-    return a.sz() == b.sz() 
-        && a.Nf() == b.Nf() 
-        && a.Nfp() == b.Nfp(); 
+template<typename T> 
+int 
+sgn(T val) 
+    {
+    return (T(0) < val) - (val < T(0));
     }
 
-bool inline
-operator!=(const QN &a,const QN &b)
-    { 
-    return a.sz() != b.sz() 
-        || a.Nf() != b.Nf() 
-        || a.Nfp() != b.Nfp(); 
-    }
-
-bool inline
-operator<(const QN &a,const QN &b)
-    { 
-    return a.sz() < b.sz() 
-        || (a.sz() == b.sz() && a.Nf() < b.Nf()) 
-        || (a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() < b.Nfp()); 
-    }
+//Sz in units of spin 1/2
+QN inline
+spin(int Sz) { return QN(Sz); }
 
 QN inline
-operator*(Arrow dir, QN q)
-    { 
-    q *= dir;
-    return q;
+boson(int Nb) { return QN(Nb); }
+
+//Sz in units of spin 1/2
+QN inline
+spinboson(int Sz, int Nb) { return QN(Sz,Nb); }
+
+QN inline
+fermion(int Nf) { return QN(QNVal(Nf,-1)); }
+
+//Sz in units of spin 1/2
+QN inline
+electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
+
+//QN conserving electron spin and parity, not total charge
+//Sz in units of spin 1/2
+QN inline
+elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
+
+int inline
+parity(QN const& q)
+    {
+    int p = 1;
+    for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
+        {
+        if(isFermionic(q.val0(n)) && std::abs(q[n])%2==1)
+            {
+            p *= -1;
+            }
+        }
+    return p;
+    }
+
+bool inline
+isFermionic(QN const q) { return parity(q) == -1; }
+
+void inline
+read(std::istream & s, QNVal & q)
+    {
+    QNVal::qn_t v = 0,
+                m = 0;
+    itensor::read(s,v);
+    itensor::read(s,m);
+    q = QNVal(v,m);
+    }
+
+void inline
+write(std::ostream & s, QNVal const& q)
+    {
+    itensor::write(s,q.val());
+    itensor::write(s,q.mod());
+    }
+
+void inline
+read(std::istream & s, QN & q)
+    {
+    for(auto& el : q.store())
+        itensor::read(s,el);
+    }
+
+void inline
+write(std::ostream & s, QN const& q)
+    {
+    for(auto& el : q.store())
+        itensor::write(s,el);
     }
 
 } //namespace itensor
