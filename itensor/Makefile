@@ -25,6 +25,7 @@ SOURCES+= itdata/qdiag.cc
 ##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
+SOURCES+= qn.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
@@ -124,7 +125,10 @@ ITDEPHEADERS+= itensor_interface.h itensor_interface.ih \
 itensor.ih itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= qn.h iqindex.h
+ITDEPHEADERS+= qn.h
+qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= iqindex.h
 iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= iqtensor.ih iqtensor.h detail/skip_iterator.h

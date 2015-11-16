@@ -5,6 +5,10 @@
 #ifndef __ITENSOR_QN_H
 #define __ITENSOR_QN_H
 
+#include "itensor/global.h"
+#include "itensor/arrow.h"
+#include "itensor/util/readwrite.h"
+
 namespace itensor {
 
 //
@@ -12,11 +16,19 @@ namespace itensor {
 //
 // Quantum number label for IQIndexes.
 //
+
+size_t inline constexpr
+QNSize() { return 4ul; }
+
+//QNVal: storage element type for QN
+//Represents a number with a Z (integer)
+//or Z_M (integer mod M) addition rule
 //
-
-int
-qnrem(int v, int m);
-
+// Meaning of mod field:
+// mod == 1  => Z addition
+// mod >  1  => Z_M addition
+// mod <  0  => same as above, fermionic
+// mod == 0  => inactive/not used
 struct QNVal
     {
     using qn_t = int;
@@ -38,24 +50,11 @@ struct QNVal
     val() const { return val_; }
 
     void
-    set(qn_t v)
-        { 
-        if(std::abs(mod_) > 1) 
-            {
-            val_ = std::abs(v%mod_);
-            }
-        else                   
-            {
-            val_ = v;
-            }
-        }
+    set(qn_t v);
 
     QNVal&
     operator-() { val_ = -val_; return *this; }
     };
-
-size_t inline constexpr
-QNSize() { return 4ul; }
 
 class QN
     {
@@ -70,35 +69,31 @@ class QN
 
     QN() { }
 
-    template<typename... VArgs>
-    explicit
-    QN(QNVal v0,
-        VArgs&&... vals)
-      : qn_{{v0,QNVal(vals)...}}
-        { 
-        static_assert(1+sizeof...(VArgs) <= QNSize(),"Too many arguments to QN constructor");
-        }
-
+    // Takes up to QNSize integers, making a QN
+    // with these values and integer (Z) addition
+    // rules i.e. a mod factor of 1
     template<typename... Qs>
     explicit
     QN(qn_t q0,
-        Qs&&... qs)
+       Qs&&... qs)
       : qn_{{QNVal(q0),QNVal(qs)...}}
         { 
         static_assert(1+sizeof...(Qs) <= QNSize(),"Too many arguments to QN constructor");
         }
 
-    explicit operator bool() const { return qn_.front().mod() != 0; }
+    // Takes up to QNSize QNVals which
+    // specify both a qn value in each
+    // sector and a mod factor
+    template<typename... VArgs>
+    explicit
+    QN(QNVal v0,
+       VArgs&&... vals)
+      : qn_{{v0,QNVal(vals)...}}
+        { 
+        static_assert(1+sizeof...(VArgs) <= QNSize(),"Too many arguments to QN constructor");
+        }
 
-//    qn_t &
-//    operator[](size_t n) 
-//        { 
-//#ifdef DEBUG
-//        return qn_.at(n).val(); 
-//#else
-//        return qn_[n].val(); 
-//#endif
-//        }
+    explicit operator bool() const { return qn_.front().mod() != 0; }
 
     qn_t
     operator[](size_t n) const
@@ -109,10 +104,6 @@ class QN
         return qn_[n].val(); 
 #endif
         }
-
-//    //1-indexed
-//    qn_t & 
-//    operator()(size_t n) { return operator[](n-1); }
 
     //1-indexed
     qn_t
@@ -148,14 +139,7 @@ class QN
         }
 
     void
-    modAssign(QN const& qo)
-        {
-        for(size_t n = 0; n < QNSize(); ++n)
-            {
-            qn_[n] = QNVal(qn_[n].val(),qo.qn_[n].mod());
-            }
-        }
-
+    modAssign(QN const& qo);
 
     storage_type &
     store() { return qn_; }
@@ -164,156 +148,84 @@ class QN
     store() const { return qn_; }
     };
 
+
+//
+// QNVal functions
+// 
+
 bool inline
 isFermionic(QNVal const& qv) { return qv.mod() < 0; }
 
 bool inline
 isActive(QNVal const& qv) { return qv.mod() != 0; }
 
-void inline
-operator+=(QNVal& qva, QNVal const& qvb) 
-    { 
-    assert(qva.mod() == qvb.mod());
-    qva.set(qva.val()+qvb.val());
-    }
+void
+operator+=(QNVal& qva, QNVal const& qvb);
 
-void inline
-operator-=(QNVal& qva, QNVal const& qvb) 
-    { 
-    assert(qva.mod() == qvb.mod());
-    qva.set(qva.val()-qvb.val());
-    }
+void
+operator-=(QNVal& qva, QNVal const& qvb);
 
-void inline
-operator*=(QNVal& qva, Arrow dir)
-    { 
-    qva.set(qva.val() * static_cast<int>(dir));
-    }
-
-bool inline
-operator==(QNVal const& qva, QNVal const& qvb)
-    {
-    assert(qva.mod() == qvb.mod());
-    return qva.val() == qvb.val();
-    }
-
-bool inline
-operator!=(QNVal const& qva, QNVal const& qvb)
-    {
-    assert(qva.mod() == qvb.mod());
-    return qva.val() != qvb.val();
-    }
+void
+operator*=(QNVal& qva, Arrow dir);
 
 bool
+operator==(QNVal const& qva, QNVal const& qvb);
+
+bool
+operator!=(QNVal const& qva, QNVal const& qvb);
+
+void
+read(std::istream & s, QNVal & q);
+
+void
+write(std::ostream & s, QNVal const& q);
+
+
+//
+// QN functions
+// 
+
+bool inline
 isActive(QN const& q, size_t n) { return isActive(q.val0(n-1)); }
 
 bool inline
 isFermionic(QN const& q, size_t n) { return q.mod(n) < 0; }
 
-bool inline
-operator==(QN const& qa, QN const& qb)
-    {
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
-        {
-        if(qa.val0(n).val() != qb.val0(n).val()) return false;
-        }
-    return true;
-    }
+bool
+operator==(QN const& qa, QN const& qb);
 
 bool inline
 operator!=(QN const& qa, QN const& qb) { return !operator==(qa,qb); }
 
-void inline
-operator+=(QN & qa, QN const& qb) 
-    { 
-    if(!qa) qa.modAssign(qb); 
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
-        {
-        qa.val0(n) += qb.val0(n);
-        }
-    }
+bool
+operator<(QN const& qa, QN const& qb);
 
-void inline
-operator-=(QN & qa, QN const& qb) 
-    { 
-    if(!qa) qa.modAssign(qb);
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
-        {
-        qa.val0(n) -= qb.val0(n);
-        }
-    }
+QN
+operator-(QN q);
 
-void inline
-operator*=(QN & qa, Arrow dir)
-    { 
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
-        {
-        qa.val0(n) *= dir;
-        }
-    }
+void
+operator+=(QN & qa, QN const& qb);
+
+void
+operator-=(QN & qa, QN const& qb);
+
+void
+operator*=(QN & qa, Arrow dir);
 
 QN inline
 operator+(QN qa, QN const& qb) { qa += qb; return qa; }
+
 QN inline
 operator-(QN qa, QN const& qb) { qa -= qb; return qa; }
+
 QN inline
 operator*(QN q, Arrow dir) { q *= dir; return q; }
+
 QN inline
 operator*(Arrow dir, QN q) { q *= dir; return q; }
 
-inline std::ostream& 
-operator<<(std::ostream & s, QN const& q)
-    {
-    s << "QN(";
-    if(q.mod(1) == 1 && !isActive(q,2))
-        {
-        //spin or spinless boson
-        s << q(1);
-        }
-    else
-    if(q.mod(1) == -1 && !isActive(q,2))
-        {
-        //spinless fermion
-        s << "Nf=" << q(1);
-        }
-    else
-    if(q.mod(1) == 1 && q.mod(2) == -1 && !isActive(q,3))
-        {
-        //electron
-        s << "Sz=" << q(1) << ",Nf=" << q(2);
-        }
-    else
-    if(q.mod(1) == 1 && q.mod(2) == -2 && !isActive(q,3))
-        {
-        //"superconducting" electron (parity conservation only)
-        s << "Sz=" << q(1) << ",Pf=" << q(2);
-        }
-    else
-        {
-        //catch-all behavior
-        for(auto n : count1(QNSize()))
-            {
-            if(!isActive(q,n)) break;
-            if(n > 1) s << ",";
-            if(q.mod(n) != 1)
-                {
-                s << "{" << q(n) << "," << q.mod(n) << "}";
-                }
-            else
-                {
-                s << q(n);
-                }
-            }
-        }
-    return s << ")";
-    }
-
-template<typename T> 
-int 
-sgn(T val) 
-    {
-    return (T(0) < val) - (val < T(0));
-    }
+std::ostream& 
+operator<<(std::ostream & s, QN const& q);
 
 //Sz in units of spin 1/2
 QN inline
@@ -338,56 +250,23 @@ electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
 QN inline
 elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
 
-int inline
-parity(QN const& q)
-    {
-    int p = 1;
-    for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
-        {
-        if(isFermionic(q.val0(n)) && std::abs(q[n])%2==1)
-            {
-            p *= -1;
-            }
-        }
-    return p;
-    }
+//returns -1 if any sector of the QN is fermionic and odd-parity
+//otherwise returns +1
+int
+parity(QN const& q);
 
 bool inline
 isFermionic(QN const q) { return parity(q) == -1; }
 
-void inline
-read(std::istream & s, QNVal & q)
-    {
-    QNVal::qn_t v = 0,
-                m = 0;
-    itensor::read(s,v);
-    itensor::read(s,m);
-    q = QNVal(v,m);
-    }
+void
+read(std::istream & s, QN & q);
 
-void inline
-write(std::ostream & s, QNVal const& q)
-    {
-    itensor::write(s,q.val());
-    itensor::write(s,q.mod());
-    }
+void
+write(std::ostream & s, QN const& q);
 
-void inline
-read(std::istream & s, QN & q)
-    {
-    for(auto& el : q.store())
-        itensor::read(s,el);
-    }
-
-void inline
-write(std::ostream & s, QN const& q)
-    {
-    for(auto& el : q.store())
-        itensor::write(s,el);
-    }
+void
+printFull(QN const& q);
 
 } //namespace itensor
-
-#undef DEF_NMAX
 
 #endif
