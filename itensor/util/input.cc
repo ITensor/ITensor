@@ -4,6 +4,7 @@
 //
 #include <algorithm>
 #include "itensor/util/input.h"
+#include "itensor/util/print.h"
 
 using std::ostream;
 using std::istream;
@@ -114,9 +115,9 @@ InputGroup(std::string filename,
       quiet(false)
     {
     infile.set_managed(new InputFile(filename));
-    std::cout << "Making input group " << name_;
-    if(c) std::cout << ": " << c;
-    std::cout << std::endl;
+    //std::cout << "Making input group " << name_;
+    //if(c) std::cout << ": " << c;
+    //std::cout << std::endl;
     }
 
 InputGroup::
@@ -128,9 +129,9 @@ InputGroup(InputFile& inf,
       quiet(false)
     {
     infile.set_external(&inf);
-    std::cout << "Making input group " << name_;
-    if(c) std::cout << ": " << c;
-    std::cout << std::endl;
+    //std::cout << "Making input group " << name_;
+    //if(c) std::cout << ": " << c;
+    //std::cout << std::endl;
     }
 
 InputGroup::
@@ -142,9 +143,9 @@ InputGroup(InputGroup& par,
       quiet(false)
     {
     infile.set_external(&(*par.infile));
-    std::cout << "Making input group " << parent->name_ << "." << name_;
-    if(c) std::cout << ": " << c;
-    std::cout << std::endl;
+    //std::cout << "Making input group " << parent->name_ << "." << name_;
+    //if(c) std::cout << ": " << c;
+    //std::cout << std::endl;
     }
 
 InputGroup::
@@ -241,111 +242,81 @@ int InputGroup::GotoToken(string s)
 	}
     }
 
-int InputGroup::GetInt(string s, int& res,const char* c)
+int InputGroup::
+GetInt(string s, 
+       int& res,
+       bool hasdf,
+       int df)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
-	{
-	if(!quiet) 
-    {
-    cout << "Couldnt get " << name_ << "." << s;
-	if(c) cout  << ": " << c;
-	cout << endl;
-    }
-	return 0;
-	}
-    if(!quiet) 
-    {
-    cout << "Got " << name_ << "." << s << " = " << res;
-    if(c) cout  << ": " << c;
-    cout << endl;
-    }
+        {
+        if(!quiet && hasdf) printfln("Def %s.%s = %s",name_,s,df);
+        return 0;
+        }
+    if(!quiet) printfln("Got %s.%s = %s",name_,s,res);
     return 1;
     }
 
-int InputGroup::GetLong(string s, long& res,const char* c)
+int InputGroup::
+GetLong(string s, 
+        long& res,
+        bool hasdf,
+        long df)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
-	{
-	if(!quiet) 
-    {
-    cout << "Couldnt get " << name_ << "." << s;
-	if(c) cout  << ": " << c;
-	cout << endl;
-    }
-	return 0;
-	}
-    if(!quiet) 
-    {
-    cout << "Got " << name_ << "." << s << " = " << res;
-    if(c) cout  << ": " << c;
-    cout << endl;
-    }
+        {
+        if(!quiet && hasdf) printfln("Def %s.%s = %s",name_,s,df);
+        return 0;
+        }
+    if(!quiet) printfln("Got %s.%s = %s",name_,s,res);
     return 1;
     }
 
-int InputGroup::GetReal(string s, Real& res,const char* c)
+int InputGroup::
+GetReal(string s, 
+        Real& res,
+        bool hasdf,
+        Real df)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
-	{
-	if(!quiet) 
-    {
-    cout << "Couldnt get " << name_ << "." << s;
-	if(c) cout  << ": " << c;
-	cout << endl;
-    }
-	return 0;
-	}
-    if(!quiet) 
-    {
-    cout << "Got " << name_ << "." << s << " = " << res;
-    if(c) cout  << ": " << c;
-    cout << endl;
-    }
+        {
+        if(!quiet && hasdf) printfln("Def %s.%s = %s",name_,s,df);
+        return 0;
+        }
+    if(!quiet) printfln("Got %s.%s = %s",name_,s,res);
     return 1;
     }
 
-int InputGroup::GetString(string s, string& res,const char* c)
+int InputGroup::
+GetString(string s, 
+          string& res,
+          bool hasdf,
+          string df)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
-	{
-	if(!quiet) 
-    {
-    cout << "Couldnt get " << name_ << "." << s;
-	if(c) cout  << ": " << c;
-	cout << endl;
-    }
-	return 0;
-	}
-    if(!quiet) 
-    {
-    cout << "Got " << name_ << "." << s << " = " << res;
-    if(c) cout  << ": " << c;
-    cout << endl;
-    }
+        {
+        if(!quiet && hasdf) printfln("Def %s.%s = %s",name_,s,df);
+        return 0;
+        }
+    if(!quiet) printfln("Got %s.%s = %s",name_,s,res);
     return 1;
     }
 
 char mydolower(char c) { return tolower(c); }
 
-int InputGroup::GetYesNo(string s, int& yes,const char* c)
+int InputGroup::
+GetYesNo(string s, 
+         int& yes,
+         bool hasdf,
+         int df)
     {
     string res;
     if(!GotoToken(s) || !(infile->file() >> res)) 
         {
-        if(!quiet) 
-            {
-            cout << "Couldnt get " << name_ << "." << s;
-            if(c) cout  << ": " << c;
-            cout << endl;
-            }
+        if(!quiet && hasdf) printfln("Def %s.%s = %s",name_,s,df);
         return 0;
         }
-    if(!quiet) 
-        {
-        cout << "Got " << name_ << "." << s << " = " << res;
-        if(c) cout  << ": " << c;
-        cout << endl;
-        }
+    if(!quiet) printfln("Got %s.%s = %s",name_,s,res);
     transform(res.begin(),res.end(),res.begin(),mydolower);
     if(res == "yes" || res == "y" || res == "true")
         {
@@ -361,10 +332,13 @@ int InputGroup::GetYesNo(string s, int& yes,const char* c)
     }
 
 int InputGroup::
-GetYesNo(string s, bool& yes,const char* c)
+GetYesNo(string s, 
+         bool& yes,
+         bool hasdf,
+         bool df)
     {
     int resi = 0;
-    int got = GetYesNo(s,resi,c);
+    int got = GetYesNo(s,resi,hasdf,df);
     yes = (resi==1);
     return got;
     }
@@ -381,7 +355,7 @@ int InputGroup::
 getInt(std::string s, int def)
     {
     int res = 0;
-    int got = GetInt(s,res);
+    int got = GetInt(s,res,true,def);
     if(!got) return def;
     return res;
     }
@@ -390,7 +364,7 @@ Real InputGroup::
 getReal(std::string s, Real def)
     {
     Real res = 0;
-    int got = GetReal(s,res);
+    int got = GetReal(s,res,true,def);
     if(!got) return def;
     return res;
     }
@@ -399,7 +373,7 @@ std::string  InputGroup::
 getString(std::string s, std::string def)
     {
     std::string res;
-    int got = GetString(s,res);
+    int got = GetString(s,res,true,def);
     if(!got) return def;
     return res;
     }
@@ -408,7 +382,7 @@ bool  InputGroup::
 getYesNo(std::string s, bool def)
     {
     bool res = false;
-    int got = GetYesNo(s,res,0);
+    int got = GetYesNo(s,res,true,def);
     if(!got) return def;
     return res;
     }
@@ -445,33 +419,39 @@ getYesNo(std::string s)
     return bool(res);
     }
 
-void InputGroup::GetIntM(string s, int& res,const char* c)
+void InputGroup::
+GetIntM(string s, 
+        int& res)
     {
-    if(!GetInt(s,res,c))
+    if(!GetInt(s,res))
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetLongM(string s, long& res,const char* c)
+void InputGroup::
+GetLongM(string s, long& res)
     {
-    if(!GetLong(s,res,c))
+    if(!GetLong(s,res))
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetRealM(string s, Real& res,const char* c)
+void InputGroup::
+GetRealM(string s, Real& res)
     {
-    if(!GetReal(s,res,c))
+    if(!GetReal(s,res))
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetStringM(string s, string& res,const char* c)
+void InputGroup::
+GetStringM(string s, string& res)
     {
-    if(!GetString(s,res,c))
+    if(!GetString(s,res))
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetYesNoM(string s, int& yes,const char* c)
+void InputGroup::
+GetYesNoM(string s, int& yes)
     {
-    if(!GetYesNo(s,yes,c))
+    if(!GetYesNo(s,yes))
         error("mandatory item: " + s + ", exiting");
     }
 
