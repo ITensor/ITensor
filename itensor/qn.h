@@ -117,17 +117,16 @@ class QN
         static_assert(1+sizeof...(Qs) <= QNSize(),"Too many arguments to QN constructor");
         }
 
-    // Takes up to QNSize QNVals which
-    // specify both a qn value in each
+    // Takes QNVal arguments,
+    // specifying both a qn value in each
     // sector and a mod factor
-    template<typename... VArgs>
     explicit
     QN(QNVal v0,
-       VArgs&&... vals)
-      : qn_{{v0,QNVal(vals)...}}
-        { 
-        static_assert(1+sizeof...(VArgs) <= QNSize(),"Too many arguments to QN constructor");
-        }
+       QNVal v1 = QNVal{},
+       QNVal v2 = QNVal{},
+       QNVal v3 = QNVal{}) 
+     : qn_{{v0,v1,v2,v3}} 
+       { }
 
     explicit operator bool() const { return qn_.front().mod() != 0; }
 
