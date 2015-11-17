@@ -308,11 +308,12 @@ doTask(Contract<IQIndex>& Con,
        QDense<VB> const& B,
        ManageStore& m);
 
-//void
-//doTask(NCProd<IQIndex>& P,
-//       IQTReal const& A,
-//       IQTReal const& B,
-//       ManageStore& m);
+template<typename VA, typename VB>
+void
+doTask(NCProd<IQIndex>& P,
+       QDense<VA> const& A,
+       QDense<VB> const& B,
+       ManageStore& m);
 
 
 BlOf inline
