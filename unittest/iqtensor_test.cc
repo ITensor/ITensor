@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/iqtensor.h"
 #include "itensor/util/set_scoped.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using namespace itensor;
 using namespace std;

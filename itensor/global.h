@@ -10,7 +10,7 @@
 #include <cstring>
 #include <random>
 #include <unistd.h>
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/util/error.h"
 #include "itensor/util/args.h"
 #include "itensor/real.h"

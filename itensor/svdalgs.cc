@@ -92,7 +92,7 @@ doTask(GetBlocks<T> const& G,
     {
     if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports rank 2");
     vector<Rank2Block<T>> res{d.offsets.size()};
-    Label dblock(2,0);
+    Labels dblock(2,0);
     size_t n = 0;
     for(auto& dio : d.offsets)
         {

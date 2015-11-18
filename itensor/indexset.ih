@@ -604,9 +604,9 @@ contractIS(IndexSetT<IndexT> const& Lis,
            IndexSetT<IndexT> & Nis,
            bool sortResult)
     {
-    Label Lind,
-          Rind,
-          Nind;
+    Labels Lind,
+           Rind,
+           Nind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
     contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
     }

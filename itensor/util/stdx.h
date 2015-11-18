@@ -183,13 +183,14 @@ using value_type_is = std::is_same<Val,stdx::decay_t<typename Container::value_t
 // Convenience functions
 //
 
-
-template<typename... VArgs>
-auto
-make_array(VArgs&&... vargs)
-    -> std::array<typename std::common_type<VArgs...>::type,sizeof...(VArgs)>
+template <typename V = void, typename... Ts>
+auto constexpr
+make_array(Ts&&... t)
+    -> std::array<stdx::conditional_t<std::is_void<V>::value,
+                  typename std::common_type<Ts...>::type,V>,
+                  sizeof...(Ts)>
     {
-    return {{ std::forward<VArgs>(vargs)... }};
+    return {{ std::forward<Ts>(t)... }};
     }
 
 template<typename T>

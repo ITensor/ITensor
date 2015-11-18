@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/iqtensor.h"
 #include "itensor/tensor/algs.h"
 

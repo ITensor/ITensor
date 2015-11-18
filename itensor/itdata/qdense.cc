@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/util/count.h"
+//#include "itensor/util/range.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/lapack_wrap.h"
@@ -34,7 +34,7 @@ struct compBlock
 
 QN
 calcDiv(IQIndexSet const& is, 
-        Label const& block_ind)
+        Labels const& block_ind)
     {
     QN div;
     for(auto i : range(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
@@ -50,7 +50,7 @@ doTask(CalcDiv const& C,
     if(D.offsets.empty()) Error("Default constructed QDense in doTask(CalcDiv,QDense)");
 #endif
     auto b = D.offsets.front().block;
-    Label block_ind(C.is.r());
+    Labels block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
@@ -282,7 +282,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
         return;
         }
         
-    Label block(rank,0);
+    Labels block(rank,0);
     auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
@@ -294,7 +294,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
         //this non-zero block is located)
         computeBlockInd(io.block,P.is,block);
 
-        Label boff(rank,0);
+        Labels boff(rank,0);
         for(auto i : range(rank))
             {
             for(auto j : range(block[i]))
@@ -372,7 +372,7 @@ add(PlusEQ<IQIndex> const& P,
     else
         {
         auto r = P.is1().r();
-        Label Ablock(r,0),
+        Labels Ablock(r,0),
               Bblock(r,0);
         Range Arange,
               Brange;
@@ -424,11 +424,11 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& m)
     {
     using VC = common_type<VA,VB>;
-    Label Lind,
+    Labels Lind,
           Rind;
     computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
     //compute new index set (Con.Nis):
-    Label Cind;
+    Labels Cind;
     const bool sortResult = false;
     contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
 
@@ -444,9 +444,9 @@ doTask(Contract<IQIndex>& Con,
     //contracted blocks of A and B
     auto do_contract = 
         [&Con,&Lind,&Rind,&Cind]
-        (DataRange<const VA> ablock, Label const& Ablockind,
-         DataRange<const VB> bblock, Label const& Bblockind,
-         DataRange<VC>       cblock, Label const& Cblockind)
+        (DataRange<const VA> ablock, Labels const& Ablockind,
+         DataRange<const VB> bblock, Labels const& Bblockind,
+         DataRange<VC>       cblock, Labels const& Cblockind)
         {
         Range Arange,
               Brange,
@@ -498,13 +498,13 @@ doTask(NCProd<IQIndex>& P,
     auto& Cis = P.Nis;
     auto rA = rank(Ais);
     auto rB = rank(Bis);
-    Label Aind,
+    Labels Aind,
           Bind,
           Cind;
     computeLabels(Ais,rA,Bis,rB,Aind,Bind);
     ncprod(Ais,Aind,Bis,Bind,Cis,Cind);
 
-    Label BtoA(rA,-1);
+    Labels BtoA(rA,-1);
     for(auto ia : range(rA))
     for(auto ib : range(rB))
         if(Bis[ib] == Ais[ia])
@@ -516,9 +516,9 @@ doTask(NCProd<IQIndex>& P,
     auto Cdiv = QN{};
         {
         Cdiv = doTask(CalcDiv{Ais},A);
-        auto Ablock_ind = Label(rA);
+        auto Ablock_ind = Labels(rA);
         computeBlockInd(A.offsets.front().block,Ais,Ablock_ind);
-        auto Bblock_ind = Label(rB);
+        auto Bblock_ind = Labels(rB);
         for(auto& bo : B.offsets)
             {
             computeBlockInd(bo.block,Bis,Bblock_ind);
@@ -546,9 +546,9 @@ doTask(NCProd<IQIndex>& P,
 
     auto do_ncprod = 
         [&P,&Aind,&Bind,&Cind]
-        (DataRange<const VA> ablock, Label const& Ablockind,
-         DataRange<const VB> bblock, Label const& Bblockind,
-         DataRange<VC>       cblock, Label const& Cblockind)
+        (DataRange<const VA> ablock, Labels const& Ablockind,
+         DataRange<const VB> bblock, Labels const& Bblockind,
+         DataRange<VC>       cblock, Labels const& Cblockind)
         {
         Range Arange,
               Brange,

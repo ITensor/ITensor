@@ -411,9 +411,9 @@ loopContractedBlocks(BlockSparseA const& A,
          rB = Bis.r(),
          rC = Cis.r();
 
-    Label AtoB(rA,-1),
-          AtoC(rA,-1),
-          BtoC(rB,-1);
+    Labels AtoB(rA,-1),
+           AtoC(rA,-1),
+           BtoC(rB,-1);
     for(decltype(rC) ic = 0; ic < rC; ++ic)
         {
         auto j = findindex(Ais,Cis[ic]);
@@ -436,7 +436,7 @@ loopContractedBlocks(BlockSparseA const& A,
             }
 
     detail::GCounter couB(rB);
-    Label Ablockind(rA,0),
+    Labels Ablockind(rA,0),
           Cblockind(rC,0);
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto& aio : A.offsets)
@@ -472,7 +472,7 @@ loopContractedBlocks(BlockSparseA const& A,
             if(!bblock) continue;
 
             //Finish making Cblockind and Bblockind
-            Label Bblockind(rB,0);
+            Labels Bblockind(rB,0);
             for(decltype(rB) ib = 0; ib < rB; ++ib)
                 {
                 if(BtoC[ib] != -1) Cblockind[BtoC[ib]] = couB.i[ib];
@@ -583,7 +583,7 @@ getElt(IQIndexSet const& is,
 
 QN
 calcDiv(IQIndexSet const& is, 
-        Label const& block_ind);
+        Labels const& block_ind);
 
 } //namespace itensor
 

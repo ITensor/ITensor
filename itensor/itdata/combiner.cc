@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/itdata/combiner.h"
 #include "itensor/itdata/itdata.h"
 //#include "itensor/itdata/itcplx.h"

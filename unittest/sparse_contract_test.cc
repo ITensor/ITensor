@@ -1,6 +1,6 @@
 #include "test.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using namespace itensor;
 

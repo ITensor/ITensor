@@ -121,14 +121,14 @@ class small_map
 // struct analyzing index pattern for C = A * B
 struct CProps
     {
-    Label ai, 
+    Labels ai, 
           bi, 
           ci;
     int nactiveA = 0, 
         nactiveB = 0, 
         nactiveC = 0;
     private:
-    Label AtoB_, 
+    Labels AtoB_, 
           AtoC_, 
           BtoC_;
     bool permuteA_ = false,
@@ -152,9 +152,9 @@ struct CProps
           newBrange,
           newCrange;
     
-    CProps(Label const& ai_, 
-           Label const& bi_, 
-           Label const& ci_) 
+    CProps(Labels const& ai_, 
+           Labels const& bi_, 
+           Labels const& ci_) 
         : 
         ai(ai_),bi(bi_),ci(ci_),
         Acstart(ai_.size()),
@@ -542,9 +542,9 @@ struct CProps
             nb = bi.size(), 
             nc = ci.size();
 
-        AtoB_ = Label(na,-1);
-        AtoC_ = Label(na,-1);
-        BtoC_ = Label(nb,-1);
+        AtoB_ = Labels(na,-1);
+        AtoC_ = Labels(na,-1);
+        BtoC_ = Labels(nb,-1);
         for(int i = 0; i < na; ++i)
             {
             for(int j = 0; j < nb; ++j)
@@ -816,8 +816,8 @@ contract(CProps const& p,
 template<typename R, typename T1, typename T2>
 void 
 contractScalar(T1 a, 
-               TenRefc<R,T2> B, Label const& bi, 
-               TenRef<R,common_type<T1,T2>>  C, Label const& ci,
+               TenRefc<R,T2> B, Labels const& bi, 
+               TenRef<R,common_type<T1,T2>>  C, Labels const& ci,
                Real alpha,
                Real beta)
     {
@@ -832,10 +832,10 @@ contractScalar(T1 a,
 
 template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<RangeT,VA> A, Label const& ai, 
-         TenRefc<RangeT,VB> B, Label const& bi, 
+contract(TenRefc<RangeT,VA> A, Labels const& ai, 
+         TenRefc<RangeT,VB> B, Labels const& bi, 
          TenRef<RangeT,common_type<VA,VB>>  C, 
-         Label const& ci,
+         Labels const& ci,
          Real alpha,
          Real beta)
     {
@@ -859,44 +859,44 @@ contract(TenRefc<RangeT,VA> A, Label const& ai,
 
 //Explicit template instantiations:
 template void 
-contract(TenRefc<Range,Real>, Label const&, 
-         TenRefc<Range,Real>, Label const&, 
-         TenRef<Range,Real> , Label const&,
+contract(TenRefc<Range,Real>, Labels const&, 
+         TenRefc<Range,Real>, Labels const&, 
+         TenRef<Range,Real> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<Range,Cplx>, Label const&, 
-         TenRefc<Range,Real>, Label const&, 
-         TenRef<Range,Cplx> , Label const&,
+contract(TenRefc<Range,Cplx>, Labels const&, 
+         TenRefc<Range,Real>, Labels const&, 
+         TenRef<Range,Cplx> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<Range,Real>, Label const&, 
-         TenRefc<Range,Cplx>, Label const&, 
-         TenRef<Range,Cplx> , Label const&,
+contract(TenRefc<Range,Real>, Labels const&, 
+         TenRefc<Range,Cplx>, Labels const&, 
+         TenRef<Range,Cplx> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<Range,Cplx>, Label const&, 
-         TenRefc<Range,Cplx>, Label const&, 
-         TenRef<Range,Cplx> , Label const&,
+contract(TenRefc<Range,Cplx>, Labels const&, 
+         TenRefc<Range,Cplx>, Labels const&, 
+         TenRef<Range,Cplx> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<IndexSet,Real>, Label const&, 
-         TenRefc<IndexSet,Real>, Label const&, 
-         TenRef<IndexSet,Real> , Label const&,
+contract(TenRefc<IndexSet,Real>, Labels const&, 
+         TenRefc<IndexSet,Real>, Labels const&, 
+         TenRef<IndexSet,Real> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<IndexSet,Cplx>, Label const&, 
-         TenRefc<IndexSet,Real>, Label const&, 
-         TenRef<IndexSet,Cplx> , Label const&,
+contract(TenRefc<IndexSet,Cplx>, Labels const&, 
+         TenRefc<IndexSet,Real>, Labels const&, 
+         TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<IndexSet,Real>, Label const&, 
-         TenRefc<IndexSet,Cplx>, Label const&, 
-         TenRef<IndexSet,Cplx> , Label const&,
+contract(TenRefc<IndexSet,Real>, Labels const&, 
+         TenRefc<IndexSet,Cplx>, Labels const&, 
+         TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
 template void 
-contract(TenRefc<IndexSet,Cplx>, Label const&, 
-         TenRefc<IndexSet,Cplx>, Label const&, 
-         TenRef<IndexSet,Cplx> , Label const&,
+contract(TenRefc<IndexSet,Cplx>, Labels const&, 
+         TenRefc<IndexSet,Cplx>, Labels const&, 
+         TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
 
 
@@ -909,9 +909,9 @@ struct MultInfo
     };
 
 MultInfo static
-computeMultInfo(Label const& ai,
-                Label const& bi, 
-                Label const& ci)
+computeMultInfo(Labels const& ai,
+                Labels const& bi, 
+                Labels const& ci)
     {
     MultInfo I;
     if(ai[1] == ci[1])
@@ -975,9 +975,9 @@ computeMultInfo(Label const& ai,
 
 template<typename RangeT>
 void 
-contractloop(TenRefc<RangeT> A, Label const& ai, 
-             TenRefc<RangeT> B, Label const& bi, 
-             TenRef<RangeT>  C, Label const& ci,
+contractloop(TenRefc<RangeT> A, Labels const& ai, 
+             TenRefc<RangeT> B, Labels const& bi, 
+             TenRef<RangeT>  C, Labels const& ci,
              Args const& args)
     {
     if(ai.empty() || bi.empty())
@@ -1024,7 +1024,7 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     for(int j = 2; j < rb; ++j)
         couB.setRange(j,0,B.extent(j)-1);
 
-    Label aind(ra,0), 
+    Labels aind(ra,0), 
           bind(rb,0), 
           cind(rc,0);
 
@@ -1090,15 +1090,15 @@ contractloop(TenRefc<RangeT> A, Label const& ai,
     }
 template
 void 
-contractloop(TenRefc<Range> A, Label const& ai, 
-             TenRefc<Range> B, Label const& bi, 
-             TenRef<Range>  C, Label const& ci,
+contractloop(TenRefc<Range> A, Labels const& ai, 
+             TenRefc<Range> B, Labels const& bi, 
+             TenRef<Range>  C, Labels const& ci,
              Args const& args);
 template
 void 
-contractloop(TenRefc<IndexSet> A, Label const& ai, 
-             TenRefc<IndexSet> B, Label const& bi, 
-             TenRef<IndexSet>  C, Label const& ci,
+contractloop(TenRefc<IndexSet> A, Labels const& ai, 
+             TenRefc<IndexSet> B, Labels const& bi, 
+             TenRef<IndexSet>  C, Labels const& ci,
              Args const& args);
 
 
@@ -1108,22 +1108,22 @@ contractloop(TenRefc<IndexSet> A, Label const& ai,
 //(A can have some uncontracted indices)
 template<typename RangeT>
 void 
-contractDiagFull(VectorRefc A,         Label const& ai, 
-                 TenRefc<RangeT> B, Label const& bi, 
-                 VectorRef          C, Label const& ci)
+contractDiagFull(VectorRefc A,         Labels const& ai, 
+                 TenRefc<RangeT> B, Labels const& bi, 
+                 VectorRef          C, Labels const& ci)
     {
     Error("contractDiagFull not yet implemented");
     }
 template
 void 
-contractDiagFull(VectorRefc     A, Label const& ai, 
-                 TenRefc<Range> B, Label const& bi, 
-                 VectorRef      C, Label const& ci);
+contractDiagFull(VectorRefc     A, Labels const& ai, 
+                 TenRefc<Range> B, Labels const& bi, 
+                 VectorRef      C, Labels const& ci);
 template
 void 
-contractDiagFull(VectorRefc        A, Label const& ai, 
-                 TenRefc<IndexSet> B, Label const& bi, 
-                 VectorRef         C, Label const& ci);
+contractDiagFull(VectorRefc        A, Labels const& ai, 
+                 TenRefc<IndexSet> B, Labels const& bi, 
+                 VectorRef         C, Labels const& ci);
 
 ////////////////////////////////////////////
 

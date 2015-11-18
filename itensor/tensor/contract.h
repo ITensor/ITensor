@@ -7,39 +7,39 @@
 
 #include "itensor/tensor/vec.h"
 #include "itensor/util/args.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/detail/gcounter.h"
 
 namespace itensor {
 
 template<typename RangeT, typename VA, typename VB>
 void 
-contract(TenRefc<RangeT,VA> A, Label const& ai, 
-         TenRefc<RangeT,VB> B, Label const& bi, 
+contract(TenRefc<RangeT,VA> A, Labels const& ai, 
+         TenRefc<RangeT,VB> B, Labels const& bi, 
          TenRef<RangeT,common_type<VA,VB>>  C, 
-         Label const& ci,
+         Labels const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 
 void 
-contract(Tensor const& A, Label const& ai, 
-         Tensor const& B, Label const& bi, 
-         Tensor      & C, Label const& ci,
+contract(Tensor const& A, Labels const& ai, 
+         Tensor const& B, Labels const& bi, 
+         Tensor      & C, Labels const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 
 template<typename range_type>
 void 
-contractloop(TenRefc<range_type> A, Label const& ai, 
-             TenRefc<range_type> B, Label const& bi, 
-             TenRef<range_type>  C, Label const& ci,
+contractloop(TenRefc<range_type> A, Labels const& ai, 
+             TenRefc<range_type> B, Labels const& bi, 
+             TenRef<range_type>  C, Labels const& ci,
              Args const& args = Args::global());
 
 template<typename range_type>
 void 
-contractloop(Ten<range_type> const& A, Label const& ai, 
-             Ten<range_type> const& B, Label const& bi, 
-             Ten<range_type>      & C, Label const& ci,
+contractloop(Ten<range_type> const& A, Labels const& ai, 
+             Ten<range_type> const& B, Labels const& bi, 
+             Ten<range_type>      & C, Labels const& ci,
              Args const& args = Args::global());
 
 
@@ -47,23 +47,23 @@ contractloop(Ten<range_type> const& A, Label const& ai,
 //(A can have some uncontracted indices)
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA           const& A, Label const& ai, 
-                 TenRefc<RangeT,VB> const& B, Label const& bi, 
-                 VecRef<VC>         const& C, Label const& ci);
+contractDiagFull(DiagElsA           const& A, Labels const& ai, 
+                 TenRefc<RangeT,VB> const& B, Labels const& bi, 
+                 VecRef<VC>         const& C, Labels const& ci);
 
 //Some indices of B uncontracted
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA           const& A, Label const& ai,
-                    TenRefc<RangeT,VB> const& B, Label const& bi, 
-                    TenRef<RangeT,VC>  const& C, Label const& ci);
+contractDiagPartial(DiagElsA           const& A, Labels const& ai,
+                    TenRefc<RangeT,VB> const& B, Labels const& bi, 
+                    TenRef<RangeT,VC>  const& C, Labels const& ci);
 
 //Non-contracting product
 template<class TA, class TB, class TC>
 void 
-ncprod(TA && A, Label const& ai, 
-       TB && B, Label const& bi, 
-       TC && C, Label const& ci);
+ncprod(TA && A, Labels const& ai, 
+       TB && B, Labels const& bi, 
+       TC && C, Labels const& ci);
 
 template<typename Inds, typename Func>
 long
@@ -71,8 +71,8 @@ computeLabels(Inds const& Lis,
               long rL,
               Inds const& Ris,
               long rR,
-              Label& Lind,
-              Label& Rind,
+              Labels& Lind,
+              Labels& Rind,
               Func const& checkCont);
 
 template<typename Inds>
@@ -81,8 +81,8 @@ computeLabels(Inds const& Lis,
               long rL,
               Inds const& Ris,
               long rR,
-              Label & Lind,
-              Label & Rind);
+              Labels & Lind,
+              Labels & Rind);
 
 template<typename T>
 long 
@@ -119,9 +119,9 @@ find_index(InfArray<T,MaxSize> const& v,
 
 template<typename value_t>
 void
-contract(Ten<Range,value_t> const& A, Label const& ai, 
-         Ten<Range,value_t> const& B, Label const& bi, 
-         Ten<Range,value_t>      & C, Label const& ci,
+contract(Ten<Range,value_t> const& A, Labels const& ai, 
+         Ten<Range,value_t> const& B, Labels const& bi, 
+         Ten<Range,value_t>      & C, Labels const& ci,
          Real alpha,
          Real beta)
     {
@@ -130,9 +130,9 @@ contract(Ten<Range,value_t> const& A, Label const& ai,
 
 template<typename range_type>
 void
-contractloop(Ten<range_type> const& A, Label const& ai, 
-             Ten<range_type> const& B, Label const& bi, 
-             Ten<range_type>      & C, Label const& ci,
+contractloop(Ten<range_type> const& A, Labels const& ai, 
+             Ten<range_type> const& B, Labels const& bi, 
+             Ten<range_type>      & C, Labels const& ci,
              Args const& args)
     {
     contractloop(makeRefc(A),ai,makeRefc(B),bi,makeRef(C),ci,args);
@@ -144,8 +144,8 @@ computeLabels(Inds const& Lis,
               long rL,
               Inds const& Ris,
               long rR,
-              Label& Lind,
-              Label& Rind,
+              Labels& Lind,
+              Labels& Rind,
               Func const& checkCont)
     {
     //Set Lind, Rind to zero. Special value 0 marks
@@ -193,8 +193,8 @@ computeLabels(Inds const& Lis,
               long rL,
               Inds const& Ris,
               long rR,
-              Label & Lind,
-              Label & Rind)
+              Labels & Lind,
+              Labels & Rind)
     {
     using ind = typename Inds::value_type;
     auto nocheck = [](const ind& li,const ind& ri) { };
@@ -206,9 +206,9 @@ computeLabels(Inds const& Lis,
 //diagonal elements of A (such as a VectorRefc)
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA           const& A, Label const& ai,
-                    TenRefc<RangeT,VB> const& B, Label const& bi, 
-                    TenRef<RangeT,VC>  const& C, Label const& ci)
+contractDiagPartial(DiagElsA           const& A, Labels const& ai,
+                    TenRefc<RangeT,VB> const& B, Labels const& bi, 
+                    TenRef<RangeT,VC>  const& C, Labels const& ci)
     {
     using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
@@ -228,7 +228,7 @@ contractDiagPartial(DiagElsA           const& A, Label const& ai,
         if(j >= 0) a_ustride += C.stride(i);
         }
 
-    Label bstride(nbu,0),
+    Labels bstride(nbu,0),
           cstride(nbu,0);
     detail::GCounter GC(nbu);
     int n = 0;
@@ -270,9 +270,9 @@ contractDiagPartial(DiagElsA           const& A, Label const& ai,
 
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA           const& A, Label const& ai, 
-                 TenRefc<RangeT,VB> const& B, Label const& bi, 
-                 VecRef<VC>         const& C, Label const& ci)
+contractDiagFull(DiagElsA           const& A, Labels const& ai, 
+                 TenRefc<RangeT,VB> const& B, Labels const& bi, 
+                 VecRef<VC>         const& C, Labels const& ci)
     {
     using A_size_type = decltype(A.size());
 

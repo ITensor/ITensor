@@ -7,7 +7,7 @@
 #include <tuple>
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/algs.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using std::move;
 using std::sqrt;

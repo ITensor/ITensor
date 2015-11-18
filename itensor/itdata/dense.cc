@@ -6,7 +6,7 @@
 #include "itensor/itdata/itdata.h"
 #include "itensor/itdata/itlazy.h"
 #include "itensor/indexset.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/lapack_wrap.h"
@@ -240,7 +240,7 @@ doTask(Contract<Index> & C,
     //    m.makeNewData<ITLazy>(C.Lis,m.parg1(),C.Ris,m.parg2());
     //    return;
     //    }
-    Label Lind,
+    Labels Lind,
           Rind,
           Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
@@ -298,7 +298,7 @@ doTask(NCProd<Index>& P,
        Dense<VR> const& R,
        ManageStore& m)
     {
-    Label Lind,
+    Labels Lind,
           Rind,
           Nind;
     computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);

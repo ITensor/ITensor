@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/itdata.h"
@@ -39,7 +39,7 @@ permuteIQ(const Permutation& P,
     Bis = bind.build();
     dB = QDenseReal(Bis,doTask(CalcDiv{Ais},dA));
 
-    Label Ablock(r,-1),
+    Labels Ablock(r,-1),
           Bblock(r,-1);
     Range Arange,
           Brange;
@@ -103,7 +103,7 @@ combine(QDense<T>   const& d,
     auto ncomb = rank(Cis)-1;
     auto nr = dr-ncomb+1;
 
-    auto dperm = Label(dr,-1);
+    auto dperm = Labels(dr,-1);
     auto uncomb_dest = ncomb;
     for(auto i : range(dr)) 
         {
@@ -125,9 +125,9 @@ combine(QDense<T>   const& d,
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
-    auto dblock = Label(dr), //block index of current storage
-         nblock = Label(nr), //block index of new storage
-         cblock = Label(ncomb); //corresponding subblock of combiner
+    auto dblock = Labels(dr), //block index of current storage
+         nblock = Labels(nr), //block index of new storage
+         cblock = Labels(ncomb); //corresponding subblock of combiner
     size_t start = 0, //offsets within sector of combined
            end   = 0; //IQIndex where block will go
     for(auto io : d.offsets) //loop over non-zero blocks
@@ -235,8 +235,8 @@ uncombine(QDense<T>   const& d,
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
-    auto dblock = Label(dr), //block index of current storage
-         nblock = Label(nr); //block index of new storage
+    auto dblock = Labels(dr), //block index of current storage
+         nblock = Labels(nr); //block index of new storage
     for(auto io : d.offsets) //loop over non-zero blocks
         {
         //Figure out this block's "block index"

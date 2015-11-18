@@ -6,7 +6,6 @@
 #define __ITENSOR_QCOMBINER_H
 
 #include "itensor/itdata/qdense.h"
-#include "itensor/util/count.h"
 #include <tuple>
 
 namespace itensor {

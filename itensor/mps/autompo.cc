@@ -4,7 +4,7 @@
 //
 #include <algorithm>
 #include "itensor/mps/autompo.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using std::find;
 using std::cout;
@@ -454,7 +454,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     //the unique operator types occurring on the site
     //and starting a string of operators (i.e. first op of an HTerm)
     for(auto& ht : am.terms())
-    for(auto n : count(ht.first().i,ht.last().i))
+    for(auto n : range(ht.first().i,ht.last().i))
         {
         auto& bn = basis.at(n);
         auto test_has_first = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
@@ -533,7 +533,7 @@ toMPO<IQTensor>(const AutoMPO& am,
         ht_by_n.at(st.i).push_back(ht);
         }
 
-    for(auto n : count1(N))
+    for(auto n : range1(N))
         {
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
@@ -544,8 +544,8 @@ toMPO<IQTensor>(const AutoMPO& am,
 
         W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        for(auto r : count(row.m()))
-        for(auto c : count(col.m()))
+        for(auto r : range(row.m()))
+        for(auto c : range(col.m()))
             {
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;

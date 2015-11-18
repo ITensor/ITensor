@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/itensor.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"

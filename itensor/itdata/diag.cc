@@ -1,7 +1,7 @@
 #include "itensor/itdata/diag.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using std::vector;
 
@@ -41,11 +41,11 @@ template<typename T1, typename T2>
 void
 contractDiagDense(Diag<T1>  const& d,
                   IndexSet  const& dis,
-                  Label     const& dind,
+                  Labels     const& dind,
                   Dense<T2> const& t,
                   IndexSet  const& tis,
-                  Label     const& tind,
-                  Label     const& Nind,
+                  Labels     const& tind,
+                  Labels     const& Nind,
                   IndexSet  const& Nis,
                   ManageStore    & m)
     {
@@ -120,7 +120,7 @@ doTask(Contract<Index> & C,
        Diag<T2>   const& d,
        ManageStore     & m)
     { 
-    Label Lind,
+    Labels Lind,
           Rind,
           Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
@@ -140,7 +140,7 @@ doTask(Contract<Index> & C,
        Dense<T2>  const& t,
        ManageStore     & m)
     {
-    Label Lind,
+    Labels Lind,
           Rind,
           Nind;
     computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);

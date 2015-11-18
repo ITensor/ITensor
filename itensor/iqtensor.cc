@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/util/stdx.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/sliceten.h"
@@ -91,7 +91,7 @@ ITensorT(Complex val)
 //            Error("Incompatible arrow directions in IQTensor contraction");
 //            }
 //        };
-//    Label Lind,
+//    Labels Lind,
 //          Rind;
 //    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 //
@@ -116,13 +116,13 @@ struct AddITensor
     const QN& tdiv;
     const IQIndexSet& iqis;
     const IndexSet& is;
-    const Label& block_ind;
+    const Labels& block_ind;
     const Permutation& P;
     Real fac = 0;
     AddITensor(QN const& tdiv_,
                IQIndexSet const& iqis_,
                IndexSet const& is_,
-               Label const& block_ind_,
+               Labels const& block_ind_,
                Permutation const& P_,
                Real scalefac_)
         :
@@ -196,7 +196,7 @@ operator+=(IQTensor & T,
 #endif
 
     Permutation P(rank);
-    Label block_ind(rank);
+    Labels block_ind(rank);
     for(auto i : range(rank))
     for(auto I : range(rank))
         {

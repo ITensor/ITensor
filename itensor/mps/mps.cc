@@ -3,7 +3,6 @@
 //    (See accompanying LICENSE file.)
 //
 #include <map>
-#include "itensor/util/count.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/localop.h"
 

@@ -1,6 +1,6 @@
 #include "test.h"
 #include "itensor/util/print.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/permutation.h"
 #include "itensor/tensor/sliceten.h"
@@ -138,7 +138,7 @@ SECTION("TensorRef")
             randomize(T2);
             auto CT1 = T1;
 
-            auto PT2 = permute(T2,Label{2,0,1});
+            auto PT2 = permute(T2,Labels{2,0,1});
             CHECK(PT2.extent(0) == T1.extent(0));
             CHECK(PT2.extent(1) == T1.extent(1));
             CHECK(PT2.extent(2) == T1.extent(2));
@@ -265,7 +265,7 @@ SECTION("Slicing")
 
         SECTION("Case 1")
             {
-            auto PT = permute(T,Label{0,2,1});
+            auto PT = permute(T,Labels{0,2,1});
             for(auto i0 : range(T.extent(0)))
             for(auto i1 : range(T.extent(1)))
             for(auto i2 : range(T.extent(2)))
@@ -293,7 +293,7 @@ SECTION("Slicing")
 
         SECTION("Case 2")
             {
-            auto PT = permute(T,Label{2,0,1});
+            auto PT = permute(T,Labels{2,0,1});
             for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[2],i[0],i[1]));
@@ -302,7 +302,7 @@ SECTION("Slicing")
 
         SECTION("Case 3")
             {
-            auto PT = permute(T,Label{2,1,0});
+            auto PT = permute(T,Labels{2,1,0});
             for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[2],i[1],i[0]));
@@ -311,7 +311,7 @@ SECTION("Slicing")
 
         SECTION("Case 4")
             {
-            auto PT = permute(T,Label{1,2,0});
+            auto PT = permute(T,Labels{1,2,0});
             for(auto& i : PT.range())
                 {
                 CHECK_CLOSE(PT(i), T(i[1],i[2],i[0]));
@@ -327,7 +327,7 @@ SECTION("Slicing")
 
         SECTION("Case 1")
             {
-            Label start = {0,0,0,0},
+            Labels start = {0,0,0,0},
                   stop  = {7,3,8,6};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -342,7 +342,7 @@ SECTION("Slicing")
 
         SECTION("Case 2")
             {
-            Label start = {1,0,1,0},
+            Labels start = {1,0,1,0},
                   stop  = {7,3,8,6};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -356,7 +356,7 @@ SECTION("Slicing")
 
         SECTION("Case 3")
             {
-            Label start = {1,0,1,0},
+            Labels start = {1,0,1,0},
                   stop  = {7,3,8,6};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -370,7 +370,7 @@ SECTION("Slicing")
 
         SECTION("Case 4")
             {
-            Label start = {2,1,1,2},
+            Labels start = {2,1,1,2},
                   stop  = {4,3,4,5};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -384,7 +384,7 @@ SECTION("Slicing")
 
         SECTION("Case 5")
             {
-            Label start = {5,2,7,5},
+            Labels start = {5,2,7,5},
                   stop  = {7,3,8,6};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())
@@ -398,7 +398,7 @@ SECTION("Slicing")
 
         SECTION("Case 6")
             {
-            Label start = {5,1,5,4},
+            Labels start = {5,1,5,4},
                   stop  = {6,2,7,5};
             auto S = subTensor(T,start,stop);
             for(auto& i : S.range())

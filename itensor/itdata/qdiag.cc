@@ -5,7 +5,7 @@
 #include "itensor/itdata/qdiag.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/tensor/contract.h"
-#include "itensor/util/count.h"
+#include "itensor/util/range.h"
 
 using std::vector;
 using std::move;
@@ -90,7 +90,7 @@ doTask(CalcDiv const& C, QDiag<T> const& d)
     if(d.offsets.empty()) Error("Default constructed QDiag in doTask(CalcDiv,QDiag)");
 #endif
     auto b = d.offsets.front().block;
-    Label block_ind(C.is.r());
+    Labels block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
@@ -167,7 +167,7 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
         return;
         }
         
-    Label block(rank,0);
+    Labels block(rank,0);
     auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
@@ -214,12 +214,12 @@ template<typename VD, typename VT>
 void
 blockDiagDense(QDiag<VD> const& D,
                IQIndexSet const& Dis,
-               Label const& Dind,
+               Labels const& Dind,
                QDense<VT> const& T,
                IQIndexSet const& Tis,
-               Label const& Tind,
+               Labels const& Tind,
                IQIndexSet const& Cis,
-               Label const& Cind,
+               Labels const& Cind,
                ManageStore & m)
     {
     using VC = common_type<VT,VD>;
@@ -244,9 +244,9 @@ blockDiagDense(QDiag<VD> const& D,
 
         auto do_contract =
             [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
-            (DataRange<const VD> dblock, Label const& Dblockind,
-             DataRange<const VT> tblock, Label const& Tblockind,
-             DataRange<VC>       cblock, Label const& Cblockind)
+            (DataRange<const VD> dblock, Labels const& Dblockind,
+             DataRange<const VT> tblock, Labels const& Tblockind,
+             DataRange<VC>       cblock, Labels const& Cblockind)
             {
             Range Trange,
                   Crange;
@@ -294,7 +294,7 @@ doTask(Contract<IQIndex>& Con,
        QDense<VB> const& B,
        ManageStore& m)
     {
-    Label Aind,
+    Labels Aind,
           Bind,
           Cind;
     bool sortInds = false;
@@ -316,7 +316,7 @@ doTask(Contract<IQIndex>& Con,
        QDiag<VB> const& B,
        ManageStore& m)
     {
-    Label Aind,
+    Labels Aind,
           Bind,
           Cind;
     bool sortInds = false;
