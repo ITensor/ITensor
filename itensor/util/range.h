@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_COUNT_H_
-#define __ITENSOR_COUNT_H_
+#ifndef __ITENSOR_RANGE_H_
+#define __ITENSOR_RANGE_H_
 
 #include <type_traits>
 
