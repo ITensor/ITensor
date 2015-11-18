@@ -424,6 +424,15 @@ namespace detail {
         return I;
         }
 
+    //Implementation of offset for Iterables exposing a .offset() method
+    template<typename Range_, typename Iterable>
+    auto
+    offsetImpl(stdx::choice<3>, Range_ const& r, Iterable const& I)
+        -> decltype(I.offset())
+        {
+        return I.offset();
+        }
+
     template<typename Range_>
     struct ComputeOffset
         {
