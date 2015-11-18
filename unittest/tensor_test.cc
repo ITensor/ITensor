@@ -123,8 +123,8 @@ SECTION("TensorRef")
 
             t1 += t2;
             CHECK(t1.r()==2);
-            for(auto i0 : count(ind.extent(0)))
-            for(auto i1 : count(ind.extent(1)))
+            for(auto i0 : range(ind.extent(0)))
+            for(auto i1 : range(ind.extent(1)))
                 {
                 CHECK_CLOSE(t1(i0,i1),ot1(i0,i1)+t2(i0,i1));
                 }
@@ -144,9 +144,9 @@ SECTION("TensorRef")
             CHECK(PT2.extent(2) == T1.extent(2));
 
             T1 += PT2;
-            for(auto i0 : count(T1.extent(0)))
-            for(auto i1 : count(T1.extent(1)))
-            for(auto i2 : count(T1.extent(2)))
+            for(auto i0 : range(T1.extent(0)))
+            for(auto i1 : range(T1.extent(1)))
+            for(auto i2 : range(T1.extent(2)))
                 {
                 CHECK_CLOSE(T1(i0,i1,i2),CT1(i0,i1,i2)+PT2(i0,i1,i2));
                 }
@@ -247,8 +247,8 @@ SECTION("Tensor")
         auto t2 = Tensor(5,2);
         randomize(t2);
         t2 = t1;
-        for(auto i0 : count(5))
-        for(auto i1 : count(2))
+        for(auto i0 : range(5))
+        for(auto i1 : range(2))
             {
             CHECK_CLOSE(t2(i0,i1), t1(i0,i1));
             }
@@ -266,9 +266,9 @@ SECTION("Slicing")
         SECTION("Case 1")
             {
             auto PT = permute(T,Label{0,2,1});
-            for(auto i0 : count(T.extent(0)))
-            for(auto i1 : count(T.extent(1)))
-            for(auto i2 : count(T.extent(2)))
+            for(auto i0 : range(T.extent(0)))
+            for(auto i1 : range(T.extent(1)))
+            for(auto i2 : range(T.extent(2)))
                 {
                 CHECK_CLOSE(PT(i0,i1,i2), T(i0,i2,i1));
                 }
@@ -283,9 +283,9 @@ SECTION("Slicing")
             //println("P=",P);
             //print("P="); for(auto el : P) print(el," "); println();
             auto PT = permute(T,P);
-            for(auto i0 : count(T.extent(0)))
-            for(auto i1 : count(T.extent(1)))
-            for(auto i2 : count(T.extent(2)))
+            for(auto i0 : range(T.extent(0)))
+            for(auto i1 : range(T.extent(1)))
+            for(auto i2 : range(T.extent(2)))
                 {
                 CHECK_CLOSE(PT(i0,i1,i2), T(i0,i2,i1));
                 }

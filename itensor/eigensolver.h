@@ -67,7 +67,7 @@ findEig(int which,        //zero-indexed; so is return value
 
     //Find maximum norm2 of all the eigs
     Real maxj = -1;
-    for(auto ii : count(L))
+    for(auto ii : range(L))
         {
         A2(ii) = sqr(DR(ii))+sqr(DI(ii));
         //A2(ii) = std::fabs(DR(ii));
@@ -82,7 +82,7 @@ findEig(int which,        //zero-indexed; so is return value
     for(int j = 1; j <= which; ++j)
         {
         Real nextmax = -1;
-        for(auto ii : count(L))
+        for(auto ii : range(L))
             {
             if(maxj > A2(ii) && A2(ii) > nextmax)
                 {
@@ -385,7 +385,7 @@ complexDavidson(const BigMatrixT& A,
         //        {
         //        return (theta==val) ? 0 : 1./(theta-val);
         //        };
-        //    auto cond(Adiag);
+        //    auto cond= Adiag;
         //    cond.apply(precond);
         //    q /= cond;
         //    }
@@ -398,15 +398,15 @@ complexDavidson(const BigMatrixT& A,
 
 
         int step = 0;
-        for(auto pass : count1(Npass))
+        for(auto pass : range1(Npass))
             {
             ++step;
-            for(auto k : count(ni))
+            for(auto k : range(ni))
                 {
                 Vq[k] = (dag(V[k])*q).cplx();
                 }
 
-            for(auto k : count(ni))
+            for(auto k : range(ni))
                 {
                 q += (-Vq[k].real())*V[k];
                 if(std::fabs(Vq[k].imag()) > 1E-13)
@@ -530,14 +530,14 @@ complexDavidson(const BigMatrixT& A,
         auto Nr = nrows(UR);
 
         phi_j = UR(0,t)*V[0];
-        for(auto k : count(Nr-1))
+        for(auto k : range(Nr-1))
             {
             phi_j += UR(k,1+t)*V[k];
             }
         if(complex_evec)
             {
             phi_j += Complex_i*UI(0,t)*V[0];
-            for(auto k : count(Nr-1))
+            for(auto k : range(Nr-1))
                 {
                 phi_j += Complex_i*UI(k,t)*V[k];
                 }

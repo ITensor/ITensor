@@ -86,7 +86,7 @@ void
 printFull(QN const& q)
     {
     print("QN(");
-    for(auto n : count1(QNSize()))
+    for(auto n : range1(QNSize()))
         {
         if(!isActive(q,n)) break;
         if(n > 1) print(",");
@@ -187,7 +187,7 @@ operator<<(std::ostream & s, QN const& q)
     else
         {
         //catch-all behavior
-        for(auto n : count1(QNSize()))
+        for(auto n : range1(QNSize()))
             {
             if(!isActive(q,n)) break;
             if(n > 1) s << ",";

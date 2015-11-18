@@ -72,7 +72,7 @@ combine(Storage  const& d,
         //dis has cind, replace with other inds
         auto newind = IndexSetBuilder(dis.r()+Cis.r()-2);
         long i = 0;
-        for(auto j : count(dis.r()))
+        for(auto j : range(dis.r()))
             if(j == jc)
                 {
                 for(size_t k = 1; k < Cis.size(); ++k)
@@ -112,10 +112,10 @@ combine(Storage  const& d,
             {
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
-            for(auto j : count(J1))
+            for(auto j : range(J1))
                 newind.setIndex(i++,dis[j]);
             newind.setIndex(i++,cind);
-            for(auto j : count(J1+Cis.r()-1, dis.r()))
+            for(auto j : range(J1+Cis.r()-1, dis.r()))
                 newind.setIndex(i++,dis[j]);
             Nis = newind.build();
             }
@@ -124,12 +124,12 @@ combine(Storage  const& d,
             auto P = Permutation(dis.r());
             //Set P destination values to -1 to mark
             //indices that need to be assigned destinations:
-            for(auto i : index(P)) P.setFromTo(i,-1);
+            for(auto i : range(P)) P.setFromTo(i,-1);
 
             //permute combined indices to the front, in same
             //order as in Cis:
             long ni = 0;
-            for(auto c : count(1,Cis.r()))
+            for(auto c : range(1,Cis.r()))
                 {
                 auto j = findindex(dis,Cis[c]);
                 if(j < 0) 
@@ -145,7 +145,7 @@ combine(Storage  const& d,
             auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
             long i = 0;
             newind.setIndex(i++,cind);
-            for(auto j : count(dis.r()))
+            for(auto j : range(dis.r()))
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);

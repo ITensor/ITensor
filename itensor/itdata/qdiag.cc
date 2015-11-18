@@ -37,14 +37,14 @@ updateOffsets(IQIndexSet const& is,
         }
 
     auto C = detail::GCounter(is.r());
-    for(auto j : count(is.r()))
+    for(auto j : range(is.r()))
         C.setRange(j,0,is[j].nindex()-1);
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
         {
         QN blockqn;
-        for(auto j : count(is.r()))
+        for(auto j : range(is.r()))
             {
             auto& J = is[j];
             blockqn += J.qn(1+C[j])*J.dir();
@@ -54,7 +54,7 @@ updateOffsets(IQIndexSet const& is,
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  minm = std::numeric_limits<long>::max();
-            for(auto j : count(is.r()))
+            for(auto j : range(is.r()))
                 {
                 auto& J = is[j];
                 auto i_j = C[j];
@@ -175,11 +175,11 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
         {
         computeBlockInd(io.block,P.is,block);
         auto blockm = blockIndex(0).m();
-        for(auto i : count(1,rank)) blockm = std::min(blockm,blockIndex(i).m());
+        for(auto i : range(1,rank)) blockm = std::min(blockm,blockIndex(i).m());
 
         bool indices_printed = false;
         auto os = io.offset;
-        for(auto n : count(blockm))
+        for(auto n : range(blockm))
             {
             auto val = scalefac*d.store[os++];
             if(std::norm(val) >= Global::printScale())
@@ -188,7 +188,7 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
                     {
                     indices_printed = true;
                     //Print Indices of this block
-                    for(auto i : count(rank))
+                    for(auto i : range(rank))
                         {
                         if(i > 0) P.s << ", ";
                         P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
@@ -228,7 +228,7 @@ blockDiagDense(QDiag<VD> const& D,
 #endif
 
     bool T_has_uncontracted = false;
-    for(auto j : index(Tind)) 
+    for(auto j : range(Tind)) 
         if(Tind[j] >= 0)
             {
             T_has_uncontracted = true;

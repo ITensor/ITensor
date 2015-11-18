@@ -69,7 +69,7 @@ SECTION("Constructors")
     CHECK(vr.size() == size);
     CHECK(isContiguous(vr));
 
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(vr(i),data(i));
         }
@@ -78,7 +78,7 @@ SECTION("Constructors")
     CHECK(v);
     CHECK(v.size() == size);
     const auto* p = v.data();
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v(i),p[i]);
         }
@@ -126,7 +126,7 @@ SECTION("Vector to Ref Conversion")
     //CHECK(f3(cv) == cv.data());
 
     f3(v);
-    for(auto j : count(size))
+    for(auto j : range(size))
         CHECK_CLOSE(v(j),2*origv(j));
 
     //Not allowed to convert/assign to either
@@ -171,7 +171,7 @@ SECTION("Construct and assign from VectorRef")
         auto vr = makeVecRef(data.begin(),size);
         Vector v1(vr);
         CHECK(v1.size() == size);
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),data(i));
             }
@@ -179,7 +179,7 @@ SECTION("Construct and assign from VectorRef")
         Vector v2(size+2);
         v2 = vr;
         CHECK(v2.size() == size);
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v2(i),data(i));
             }
@@ -192,7 +192,7 @@ SECTION("Construct and assign from VectorRef")
 
         CVector v1(vr);
         CHECK(v1.size() == size);
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),data(i));
             }
@@ -213,11 +213,11 @@ SECTION("Copy data")
         auto v2 = randomVec(4*size);
 
         vr1 &= v1;
-        for(auto i : count(size))
+        for(auto i : range(size))
             CHECK_CLOSE(data1(i),v1(i));
 
         vr2 &= makeVecRef(v2.data(),size,4);
-        for(auto i : count(size))
+        for(auto i : range(size))
             CHECK_CLOSE(data2(i),v2(4*i));
         }
 
@@ -231,11 +231,11 @@ SECTION("Copy data")
         auto v2 = randomCVec(4*size);
 
         vr1 &= v1;
-        for(auto i : count(size))
+        for(auto i : range(size))
             CHECK_CLOSE(data1(i),v1(i));
 
         vr2 &= makeVecRef(v2.data(),size,4);
-        for(auto i : count(size))
+        for(auto i : range(size))
             CHECK_CLOSE(data2(i),v2(4*i));
         }
     }
@@ -251,20 +251,20 @@ SECTION("Scalar multiply, divide")
         auto fac = Global::random();
 
         vr *= fac;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(data(i),fac*origdata(i));
             }
 
         Vector v1(vr);
         v1 *= fac;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),fac*data(i));
             }
 
         v1 /= 2.;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),fac*data(i)/2.);
             }
@@ -278,20 +278,20 @@ SECTION("Scalar multiply, divide")
         auto fac = Global::random();
 
         vr *= fac;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(data(i),fac*origdata(i));
             }
 
         CVector v1(vr);
         v1 *= fac;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),fac*data(i));
             }
 
         v1 /= 2.;
-        for(auto i : count(size))
+        for(auto i : range(size))
             {
             CHECK_CLOSE(v1(i),fac*data(i)/2.);
             }
@@ -308,7 +308,7 @@ SECTION("Test += -= operators")
     auto B = makeVecRef(dataB.begin(),size);
 
     A += B;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(A(i),B(i)+origdataA(i));
         }
@@ -319,7 +319,7 @@ SECTION("Test += -= operators")
     //Only access every third element:
     auto C = makeVecRef(dataC.begin(),size,cstride);
     A -= C;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(A(i),origdataA(i)-C(i));
         }
@@ -333,14 +333,14 @@ SECTION("Vector + and -")
     auto origv1 = v1;
 
     v1 = v1+v2;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),origv1(i)+v2(i));
         }
 
     v1 = origv1;
     v1 = v1-v2;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),origv1(i)-v2(i));
         }
@@ -349,7 +349,7 @@ SECTION("Vector + and -")
     auto origv2 = v2;
     v1 = v1+std::move(v2);
     CHECK(!v2);
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),origv1(i)+origv2(i));
         }
@@ -360,14 +360,14 @@ SECTION("Vector + and -")
     CHECK(ref1.data() == origv1.data());
     CHECK((std::is_same<decltype(ref1),VectorRef>::value));
     v1 += ref1;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),2*origv1(i));
         }
 
     v1 = origv1;
     v1 = v1+ref1;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),2*origv1(i));
         }
@@ -375,7 +375,7 @@ SECTION("Vector + and -")
     v1 = origv1;
     auto cref1 = makeRefc(origv1);
     v1 = cref1+ref1;
-    for(auto i : count(size))
+    for(auto i : range(size))
         {
         CHECK_CLOSE(v1(i),2*origv1(i));
         }
@@ -407,7 +407,7 @@ SECTION("Dot product")
 
     //auto dot = d1*d2;
     //Real val = 0;
-    //for(auto j : count(N))
+    //for(auto j : range(N))
     //    {
     //    val += M1(j,j)*M2(j,j);
     //    }
@@ -438,7 +438,7 @@ SECTION("Sub Vector")
          stop = 10;
     auto s = subVector(v,start,stop);
     size_t n = 0;
-    for(auto j : count(s.size()))
+    for(auto j : range(s.size()))
         {
         CHECK_CLOSE(s(j),v(start+j));
         ++n;
@@ -449,7 +449,7 @@ SECTION("Sub Vector")
     stop = 12;
     s = subVector(v,start,stop);
     n = 0;
-    for(auto j : count(s.size()))
+    for(auto j : range(s.size()))
         {
         CHECK_CLOSE(s(j),v(start+j));
         ++n;
@@ -458,7 +458,7 @@ SECTION("Sub Vector")
 
     //Set elements of v through s
     for(auto& el : s) el = -1;
-    for(auto j : count(start,stop))
+    for(auto j : range(start,stop))
         CHECK_CLOSE(-1,v(j));
 
     //Not allowed: would return ref to temporary
@@ -470,12 +470,12 @@ SECTION("Test Resize")
     {
     auto size = 20;
     auto v = Vector(size);
-    for(auto i : count(size)) v(i) = i*i;
+    for(auto i : range(size)) v(i) = i*i;
     auto origv = v;
 
     //Check that downsizing doesn't change any elements
     resize(v,size/2);
-    for(auto i : count(v.size())) 
+    for(auto i : range(v.size())) 
         {
         CHECK(v(i) == i*i);
         }
@@ -483,11 +483,11 @@ SECTION("Test Resize")
     //Check that upsizing pads with zeros
     v = origv;
     resize(v,2*size);
-    for(auto i : count(size)) 
+    for(auto i : range(size)) 
         {
         CHECK(v(i) == i*i);
         }
-    for(auto i : count(size+1,2*size)) 
+    for(auto i : range(size+1,2*size)) 
         {
         CHECK_CLOSE(v(i),0);
         }
@@ -508,8 +508,8 @@ SECTION("Constructors")
         CHECK(data.size() == Ar*Ac);
         auto A = makeMatRef(data.begin(),data.size(),Ar,Ac);
 
-        for(auto c : count(Ac))
-        for(auto r : count(Ar))
+        for(auto c : range(Ac))
+        for(auto r : range(Ar))
             {
             CHECK_CLOSE(A(r,c),data[r+Ar*c]);
             }
@@ -535,8 +535,8 @@ SECTION("Constructors")
 //
 //        auto A = MatrixRef(data.begin(),Ar,Ac,true);
 //        CHECK(A.transposed());
-//        for(auto r : count(Ar))
-//        for(auto c : count(Ac))
+//        for(auto r : range(Ar))
+//        for(auto c : range(Ac))
 //            {
 //            CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
 //            }
@@ -545,8 +545,8 @@ SECTION("Constructors")
 //        A2.applyTrans();
 //        CHECK(A2.transposed());
 //
-//        for(auto r : count(Ar))
-//        for(auto c : count(Ac))
+//        for(auto r : range(Ar))
+//        for(auto c : range(Ac))
 //            {
 //            CHECK_CLOSE(A2(c,r),data[r+Ar*(c-1)]);
 //            }
@@ -620,32 +620,32 @@ SECTION("Test += -= operators")
     auto Bt = transpose(makeMatRefc(dataB.cbegin(),dataB.size(),N,N));
 
     A += B;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
         }
 
     dataA = origdataA;
     At += Bt;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
         }
 
     dataA = origdataA;
     At += B;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
         }
 
     dataA = origdataA;
     A -= Bt;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
         }
@@ -661,8 +661,8 @@ SECTION("Test += -= operators")
 //    const matrixref& Mr2 = M;
 //
 //    Mr1 += Mr2;
-//    for(auto r : count(N)) 
-//    for(auto c : count(N)) 
+//    for(auto r : range(N)) 
+//    for(auto c : range(N)) 
 //        CHECK_CLOSE(M(r,c),2*origM(r,c));
 //
 //    Mr1 -= Mr2;
@@ -685,11 +685,11 @@ SECTION("Test MatrixRef mult")
         auto C = makeMatRef(dataC.begin(),dataC.size(),Ar,Bc);
 
         mult(A,B,C);
-        for(auto r : count(nrows(C)))
-        for(auto c : count(ncols(C)))
+        for(auto r : range(nrows(C)))
+        for(auto c : range(ncols(C)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += A(r,k)*B(k,c);
+            for(auto k : range(K)) val += A(r,k)*B(k,c);
             CHECK_CLOSE(C(r,c),val);
             }
         }
@@ -709,11 +709,11 @@ SECTION("Test MatrixRef mult")
 
         auto At = transpose(A);
         mult(At,B,C);
-        for(auto r : count(nrows(C)))
-        for(auto c : count(ncols(C)))
+        for(auto r : range(nrows(C)))
+        for(auto c : range(ncols(C)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += At(r,k)*B(k,c);
+            for(auto k : range(K)) val += At(r,k)*B(k,c);
             CHECK_CLOSE(C(r,c),val);
             }
         }
@@ -733,11 +733,11 @@ SECTION("Test MatrixRef mult")
 
         auto Bt = transpose(B);
         mult(A,Bt,C);
-        for(auto r : count(nrows(C)))
-        for(auto c : count(ncols(C)))
+        for(auto r : range(nrows(C)))
+        for(auto c : range(ncols(C)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += A(r,k)*Bt(k,c);
+            for(auto k : range(K)) val += A(r,k)*Bt(k,c);
             CHECK_CLOSE(C(r,c),val);
             }
         }
@@ -758,11 +758,11 @@ SECTION("Test MatrixRef mult")
         auto At = transpose(A);
         auto Bt = transpose(B);
         mult(At,Bt,C);
-        for(auto r : count(nrows(C)))
-        for(auto c : count(ncols(C)))
+        for(auto r : range(nrows(C)))
+        for(auto c : range(ncols(C)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += At(r,k)*Bt(k,c);
+            for(auto k : range(K)) val += At(r,k)*Bt(k,c);
             CHECK_CLOSE(C(r,c),val);
             }
         }
@@ -782,11 +782,11 @@ SECTION("Test MatrixRef mult")
 
         auto Ct = transpose(C);
         mult(A,B,Ct);
-        for(auto r : count(nrows(Ct)))
-        for(auto c : count(ncols(Ct)))
+        for(auto r : range(nrows(Ct)))
+        for(auto c : range(ncols(Ct)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += A(r,k)*B(k,c);
+            for(auto k : range(K)) val += A(r,k)*B(k,c);
             CHECK_CLOSE(Ct(r,c),val);
             }
         }
@@ -807,11 +807,11 @@ SECTION("Test MatrixRef mult")
         auto At = transpose(A);
         auto Ct = transpose(C);
         mult(At,B,Ct);
-        for(auto r : count(nrows(Ct)))
-        for(auto c : count(ncols(Ct)))
+        for(auto r : range(nrows(Ct)))
+        for(auto c : range(ncols(Ct)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += At(r,k)*B(k,c);
+            for(auto k : range(K)) val += At(r,k)*B(k,c);
             CHECK_CLOSE(Ct(r,c),val);
             }
         }
@@ -832,11 +832,11 @@ SECTION("Test MatrixRef mult")
         auto Bt = transpose(B);
         auto Ct = transpose(C);
         mult(A,Bt,Ct);
-        for(auto r : count(nrows(Ct)))
-        for(auto c : count(ncols(Ct)))
+        for(auto r : range(nrows(Ct)))
+        for(auto c : range(ncols(Ct)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += A(r,k)*Bt(k,c);
+            for(auto k : range(K)) val += A(r,k)*Bt(k,c);
             CHECK_CLOSE(Ct(r,c),val);
             }
         }
@@ -858,11 +858,11 @@ SECTION("Test MatrixRef mult")
         auto Bt = transpose(B);
         auto Ct = transpose(C);
         mult(At,Bt,Ct);
-        for(auto r : count(nrows(Ct)))
-        for(auto c : count(ncols(Ct)))
+        for(auto r : range(nrows(Ct)))
+        for(auto c : range(ncols(Ct)))
             {
             Real val = 0;
-            for(auto k : count(K)) val += At(r,k)*Bt(k,c);
+            for(auto k : range(K)) val += At(r,k)*Bt(k,c);
             CHECK_CLOSE(Ct(r,c),val);
             }
         }
@@ -877,11 +877,11 @@ SECTION("Test MatrixRef mult")
         auto C = makeMatRef(dataC.begin(),dataC.size(),N,N);
 
         mult(A,A,C);
-        for(auto r : count(nrows(C)))
-        for(auto c : count(ncols(C)))
+        for(auto r : range(nrows(C)))
+        for(auto c : range(ncols(C)))
             {
             Real val = 0;
-            for(auto k : count(N)) val += A(r,k)*A(k,c);
+            for(auto k : range(N)) val += A(r,k)*A(k,c);
             CHECK_CLOSE(C(r,c),val);
             }
         }
@@ -906,11 +906,11 @@ SECTION("Test multAdd")
     auto origC = makeMatRef(orig_dataC.begin(),orig_dataC.size(),Ar,Bc);
 
     multAdd(A,B,C);
-    for(auto r : count(nrows(C)))
-    for(auto c : count(ncols(C)))
+    for(auto r : range(nrows(C)))
+    for(auto c : range(ncols(C)))
         {
         Real val = 0;
-        for(auto k : count(K)) val += A(r,k)*B(k,c) + origC(r,c);
+        for(auto k : range(K)) val += A(r,k)*B(k,c) + origC(r,c);
         CHECK_CLOSE(C(r,c),val);
         }
     }
@@ -943,8 +943,8 @@ SECTION("Constructors")
         auto A = randomMat(Ar,Ac);
 
         const auto *data = A.data();
-        for(auto r : count(Ar))
-        for(auto c : count(Ac))
+        for(auto r : range(Ar))
+        for(auto c : range(Ac))
             {
             CHECK_CLOSE(A(r,c),data[r+Ar*c]);
             }
@@ -960,14 +960,14 @@ SECTION("Assign from ref")
     auto M1t = transpose(M1);
     M2 = M1t;
 
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         CHECK_CLOSE(M2(r,c),M1t(r,c));
 
     auto M1tt = transpose(transpose(M1));
     M2 = M1tt;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         CHECK_CLOSE(M2(r,c),M1tt(r,c));
     }
 
@@ -982,11 +982,11 @@ SECTION("Test Matrix multiplication")
     auto B = Matrix(K,Bc);
     auto C = Matrix(Ar,Bc);
     mult(A,B,C);
-    for(auto r : count(nrows(C)))
-    for(auto c : count(ncols(C)))
+    for(auto r : range(nrows(C)))
+    for(auto c : range(ncols(C)))
         {
         Real val = 0;
-        for(auto k : count(K)) val += A(r,k)*B(k,c);
+        for(auto k : range(K)) val += A(r,k)*B(k,c);
         CHECK_CLOSE(C(r,c),val);
         }
 
@@ -995,21 +995,21 @@ SECTION("Test Matrix multiplication")
     auto dataC = autovector<Real>(1,Ar*Bc);
     auto Cref = makeMatRef(dataC.begin(),dataC.size(),Ar,Bc);
     mult(A,B,Cref);
-    for(auto r : count(nrows(C)))
-    for(auto c : count(ncols(C)))
+    for(auto r : range(nrows(C)))
+    for(auto c : range(ncols(C)))
         {
         Real val = 0;
-        for(auto k : count(K)) val += A(r,k)*B(k,c);
+        for(auto k : range(K)) val += A(r,k)*B(k,c);
         CHECK_CLOSE(Cref(r,c),val);
         }
 
     //Use operator*
     auto R = A*B;
-    for(auto r : count(nrows(C)))
-    for(auto c : count(ncols(C)))
+    for(auto r : range(nrows(C)))
+    for(auto c : range(ncols(C)))
         {
         Real val = 0;
-        for(auto k : count(K)) val += A(r,k)*B(k,c);
+        for(auto k : range(K)) val += A(r,k)*B(k,c);
         CHECK_CLOSE(R(r,c),val);
         }
     }
@@ -1024,22 +1024,22 @@ SECTION("Addition / Subtraction")
 
     auto C = A;
     C += B;
-    for(auto r : count(Nr))
-    for(auto c : count(Nc))
+    for(auto r : range(Nr))
+    for(auto c : range(Nc))
         CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
 
     C = A;
     C -= B;
-    for(auto r : count(Nr))
-    for(auto c : count(Nc))
+    for(auto r : range(Nr))
+    for(auto c : range(Nc))
         CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
 
     auto D = B;
     C = A + std::move(D);
     CHECK(!D);
     CHECK(B);
-    for(auto r : count(Nr))
-    for(auto c : count(Nc))
+    for(auto r : range(Nr))
+    for(auto c : range(Nc))
         CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
 
     D = B;
@@ -1047,8 +1047,8 @@ SECTION("Addition / Subtraction")
     C = A - std::move(D);
     CHECK(!D);
     CHECK(B);
-    for(auto r : count(Nr))
-    for(auto c : count(Nc))
+    for(auto r : range(Nr))
+    for(auto c : range(Nc))
         CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
     }
 
@@ -1060,28 +1060,28 @@ SECTION("Scalar multiply, divide")
     auto fac = Global::random();
 
     A *= fac;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         CHECK_CLOSE(A(r,c),origA(r,c)*fac);
 
     A = origA;
     A /= fac;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         CHECK_CLOSE(A(r,c),origA(r,c)/fac);
 
     A = origA;
     auto At = transpose(A);
     At *= fac;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         CHECK_CLOSE(A(r,c),origA(r,c)*fac);
 
     A = origA;
     auto S = subMatrix(A,0,N/2,0,N/2);
     S *= fac;
-    for(auto r : count(N/2))
-    for(auto c : count(N/2))
+    for(auto r : range(N/2))
+    for(auto c : range(N/2))
         CHECK_CLOSE(A(r,c),origA(r,c)*fac);
     }
 
@@ -1094,44 +1094,44 @@ SECTION("Matrix-vector product")
         auto x = randomVec(N);
 
         auto y = M*x;
-        for(auto r : count(N))
+        for(auto r : range(N))
             {
             Real val = 0;
-            for(auto c : count(N)) val += M(r,c)*x(c);
+            for(auto c : range(N)) val += M(r,c)*x(c);
             CHECK_CLOSE(y(r),val);
             }
 
         y = transpose(M)*x;
-        for(auto r : count(N))
+        for(auto r : range(N))
             {
             Real val = 0;
-            for(auto c : count(N)) val += M(c,r)*x(c);
+            for(auto c : range(N)) val += M(c,r)*x(c);
             CHECK_CLOSE(y(r),val);
             }
 
         y = x*M;
-        for(auto c : count(N))
+        for(auto c : range(N))
             {
             Real val = 0;
-            for(auto r : count(N)) val += x(r)*M(r,c);
+            for(auto r : range(N)) val += x(r)*M(r,c);
             CHECK_CLOSE(y(c),val);
             }
 
         y = x*transpose(M);
-        for(auto c : count(N))
+        for(auto c : range(N))
             {
             Real val = 0;
-            for(auto r : count(N)) val += x(r)*M(c,r);
+            for(auto r : range(N)) val += x(r)*M(c,r);
             CHECK_CLOSE(y(c),val);
             }
 
         //Check a case where vector is strided
         auto d = diagonal(M);
         y = M*d;
-        for(auto r : count(N))
+        for(auto r : range(N))
             {
             Real val = 0;
-            for(auto c : count(N)) val += M(r,c)*M(c,c);
+            for(auto c : range(N)) val += M(r,c)*M(c,c);
             CHECK_CLOSE(y(r),val);
             }
         } //Square case
@@ -1145,34 +1145,34 @@ SECTION("Matrix-vector product")
         auto vL = randomVec(Ar);
 
         auto res = A*vR;
-        for(auto r : count(Ar))
+        for(auto r : range(Ar))
             {
             Real val = 0;
-            for(auto c : count(Ac)) val += A(r,c)*vR(c);
+            for(auto c : range(Ac)) val += A(r,c)*vR(c);
             CHECK_CLOSE(res(r),val);
             }
 
         res = vL*A;
-        for(auto c : count(Ac))
+        for(auto c : range(Ac))
             {
             Real val = 0;
-            for(auto r : count(Ar)) val += vL(r)*A(r,c);
+            for(auto r : range(Ar)) val += vL(r)*A(r,c);
             CHECK_CLOSE(res(c),val);
             }
 
         res = transpose(A)*vL;
-        for(auto c : count(Ac))
+        for(auto c : range(Ac))
             {
             Real val = 0;
-            for(auto r : count(Ar)) val += vL(r)*A(r,c);
+            for(auto r : range(Ar)) val += vL(r)*A(r,c);
             CHECK_CLOSE(res(c),val);
             }
 
         res = vR*transpose(A);
-        for(auto r : count(Ar))
+        for(auto r : range(Ar))
             {
             Real val = 0;
-            for(auto c : count(Ac)) val += A(r,c)*vR(c);
+            for(auto c : range(Ac)) val += A(r,c)*vR(c);
             CHECK_CLOSE(res(r),val);
             }
 
@@ -1187,8 +1187,8 @@ SECTION("Test reduceColsTo")
     auto origM = M;
 
     reduceCols(M,Nc/2);
-    for(auto r : count(Nr))
-    for(auto c : count(Nc/2))
+    for(auto r : range(Nr))
+    for(auto c : range(Nc/2))
         {
         CHECK_CLOSE(M(r,c),origM(r,c));
         }
@@ -1215,7 +1215,7 @@ SECTION("Diagonal")
     //Set diag els of A to 100 through d
     for(auto& el : d) el = 100;
 
-    for(auto j : count(d.size()))
+    for(auto j : range(d.size()))
         {
         CHECK_CLOSE(100,A(j,j));
         }
@@ -1237,7 +1237,7 @@ SECTION("Diagonal")
         CHECK_CLOSE(el,A(i,i));
         ++i;
         }
-    for(auto j : count(d.size()))
+    for(auto j : range(d.size()))
         {
         CHECK_CLOSE(d(j),A(j,j));
         }
@@ -1248,25 +1248,25 @@ SECTION("Row / Col Slicing")
     auto N = 10;
     auto A = randomMat(N,N);
 
-    for(auto r : count(N))
+    for(auto r : range(N))
         {
         auto R = row(A,r);
-        for(auto c : count(N))
+        for(auto c : range(N))
             CHECK_CLOSE(A(r,c),R(c));
         }
 
-    for(auto c : count(N))
+    for(auto c : range(N))
         {
         auto C = column(A,c);
-        for(auto r : count(N))
+        for(auto r : range(N))
             CHECK_CLOSE(A(r,c),C(r));
         }
 
     auto S = transpose(subMatrix(A,0,N/2,0,N/2));
-    for(auto c : count(N/2))
+    for(auto c : range(N/2))
         {
         auto C = column(S,c);
-        for(auto r : count(N/2))
+        for(auto r : range(N/2))
             CHECK_CLOSE(S(r,c),C(r));
         }
     }
@@ -1280,16 +1280,16 @@ SECTION("Transpose")
     CHECK(!isTransposed(A));
     CHECK(isTransposed(At));
 
-    for(auto i : count(nr))
-    for(auto j : count(nc))
+    for(auto i : range(nr))
+    for(auto j : range(nc))
         {
         CHECK_CLOSE(A(i,j),At(j,i));
         }
 
     auto B = randomMat(nc,nr);
     transpose(B) &= A;
-    for(auto i : count(nc))
-    for(auto j : count(nr))
+    for(auto i : range(nc))
+    for(auto j : range(nr))
         {
         CHECK_CLOSE(B(i,j),A(j,i));
         }
@@ -1307,8 +1307,8 @@ SECTION("Sub Matrix")
          cstart = 0,
          cstop = 4;
     auto S = subMatrix(A,rstart,rstop,cstart,cstop);
-    for(auto r : count(nrows(S)))
-    for(auto c : count(ncols(S)))
+    for(auto r : range(nrows(S)))
+    for(auto c : range(ncols(S)))
         {
         CHECK_CLOSE(S(r,c),A(rstart+r,cstart+c));
         }
@@ -1318,8 +1318,8 @@ SECTION("Sub Matrix")
     auto At = transpose(A);
     CHECK(isTransposed(At));
     S = subMatrix(At,rstart,rstop,cstart,cstop);
-    for(auto r : count(nrows(S)))
-    for(auto c : count(ncols(S)))
+    for(auto r : range(nrows(S)))
+    for(auto c : range(ncols(S)))
         {
         CHECK_CLOSE(S(r,c),At(rstart+r,cstart+c));
         }
@@ -1329,8 +1329,8 @@ SECTION("Sub Matrix")
     cstart = 4;
     cstop = 10;
     S = subMatrix(A,rstart,rstop,cstart,cstop);
-    for(auto r : count(nrows(S)))
-    for(auto c : count(ncols(S)))
+    for(auto r : range(nrows(S)))
+    for(auto c : range(ncols(S)))
         {
         CHECK_CLOSE(S(r,c),A(rstart+r,cstart+c));
         }
@@ -1356,8 +1356,8 @@ SECTION("diagHermitian Real")
     diagonal(D) &= d;
     auto R = U*D*transpose(U);
 
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         CHECK_CLOSE(R(r,c),M(r,c));
         }
@@ -1394,8 +1394,8 @@ SECTION("Orthogonalize")
     orthog(M);
 
     auto R = transpose(M)*M;
-    for(auto r : count(N))
-    for(auto c : count(N))
+    for(auto r : range(N))
+    for(auto c : range(N))
         {
         if(r == c) CHECK_CLOSE(R(r,c),1);
         else       CHECK(R(r,c) < 1E-12);
@@ -1481,7 +1481,7 @@ SECTION("Singular Value Decomp")
 
         //Change spectrum to be quickly decaying,
         //with lots of small singular vals
-        for(auto j : count(n))
+        for(auto j : range(n))
             {
             d(j) = pow(0.8,j);
             }

@@ -59,9 +59,9 @@ ncprod_impl(TenRefc<R,VA> A, Label const& ai,
     auto aind = PtrIndType(rA);
     auto bind = PtrIndType(rB);
 
-    for(auto nc : count(rC))
+    for(auto nc : range(rC))
         {
-        for(auto na : count(rA))
+        for(auto na : range(rA))
             {
             if(ci[nc] == ai[na])
                 {
@@ -69,7 +69,7 @@ ncprod_impl(TenRefc<R,VA> A, Label const& ai,
                 break;
                 }
             }
-        for(auto nb : count(rB))
+        for(auto nb : range(rB))
             {
             if(ci[nc] == bi[nb])
                 {

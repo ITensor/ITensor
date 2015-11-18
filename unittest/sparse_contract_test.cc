@@ -17,9 +17,9 @@ TEST_CASE("Non-Contracting Product Test")
         SECTION("Case 1")
             {
             ncprod(A,{0,1},B,{2,1},C,{0,1,2});
-            for(auto i0 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i2 : count(B.extent(0)))
+            for(auto i0 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i2 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i0,i1,i2), A(i0,i1)*B(i2,i1));
                 }
@@ -27,9 +27,9 @@ TEST_CASE("Non-Contracting Product Test")
         SECTION("Case 2")
             {
             ncprod(A,{0,1},B,{1,2},C,{0,1,2});
-            for(auto i0 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i2 : count(B.extent(0)))
+            for(auto i0 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i2 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i0,i1,i2), A(i0,i1)*B(i1,i2));
                 }
@@ -37,9 +37,9 @@ TEST_CASE("Non-Contracting Product Test")
         SECTION("Case 3")
             {
             ncprod(A,{1,0},B,{1,2},C,{0,1,2});
-            for(auto i0 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i2 : count(B.extent(0)))
+            for(auto i0 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i2 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i0,i1,i2), A(i1,i0)*B(i1,i2));
                 }
@@ -47,9 +47,9 @@ TEST_CASE("Non-Contracting Product Test")
         SECTION("Case 4")
             {
             ncprod(A,{1,0},B,{1,2},C,{2,1,0});
-            for(auto i0 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i2 : count(B.extent(0)))
+            for(auto i0 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i2 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i2,i1,i0), A(i1,i0)*B(i1,i2));
                 }
@@ -71,10 +71,10 @@ TEST_CASE("Non-Contracting Product Test")
             randomize(A);
             randomize(B);
             ncprod(A,{0,1,2},B,{3,1},C,{0,1,2,3});
-            for(auto i0 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i2 : count(A.extent(2)))
-            for(auto i3 : count(B.extent(0)))
+            for(auto i0 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i2 : range(A.extent(2)))
+            for(auto i3 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i0,i1,i2,i3), A(i0,i1,i2)*B(i3,i1));
                 }
@@ -88,10 +88,10 @@ TEST_CASE("Non-Contracting Product Test")
             randomize(A);
             randomize(B);
             ncprod(A,{2,1,0},B,{3,1},C,{0,1,2,3});
-            for(auto i2 : count(A.extent(0)))
-            for(auto i1 : count(A.extent(1)))
-            for(auto i0 : count(A.extent(2)))
-            for(auto i3 : count(B.extent(0)))
+            for(auto i2 : range(A.extent(0)))
+            for(auto i1 : range(A.extent(1)))
+            for(auto i0 : range(A.extent(2)))
+            for(auto i3 : range(B.extent(0)))
                 {
                 CHECK_CLOSE(C(i0,i1,i2,i3), A(i2,i1,i0)*B(i3,i1));
                 }

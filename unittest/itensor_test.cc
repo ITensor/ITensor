@@ -648,9 +648,9 @@ SECTION("Complex+-Complex")
 
         auto R = T1 + T2;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -663,9 +663,9 @@ SECTION("Complex+-Complex")
 
         auto R = T1 + T2;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -680,9 +680,9 @@ SECTION("Complex+-Complex")
 
         auto R = f1*T1 - f2*T2;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))-f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -701,9 +701,9 @@ SECTION("Real+-Complex")
         //println("Case 1");
         auto R = f1*T1 + f2*T2;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -715,9 +715,9 @@ SECTION("Real+-Complex")
         //println("Case 2");
         auto R = f1*T1 + f2*T2;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -729,9 +729,9 @@ SECTION("Real+-Complex")
         //println("Case 3");
         auto R = f2*T2 + f1*T1;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -743,9 +743,9 @@ SECTION("Real+-Complex")
         //println("Case 4");
         auto R = f2*T2 + f1*T1;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -757,9 +757,9 @@ SECTION("Real+-Complex")
         //println("Case 5");
         auto R = f2*T2 + f1*T1;
 
-        for(auto i2 : count1(l2.m()))
-        for(auto j2 : count1(b2.m()))
-        for(auto j4 : count1(b4.m()))
+        for(auto i2 : range1(l2.m()))
+        for(auto j2 : range1(b2.m()))
+        for(auto j4 : range1(b4.m()))
             {
             CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
             }
@@ -965,10 +965,10 @@ SECTION("Case 1")
     auto B = randomTensor(k,j,l);
     auto C = A/B;
     auto diff = 0.;
-    for(auto ii : count1(i.m()))
-    for(auto jj : count1(j.m()))
-    for(auto kk : count1(k.m()))
-    for(auto ll : count1(l.m()))
+    for(auto ii : range1(i.m()))
+    for(auto jj : range1(j.m()))
+    for(auto kk : range1(k.m()))
+    for(auto ll : range1(l.m()))
         {
         diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
         }
@@ -980,10 +980,10 @@ SECTION("Case 2")
     auto B = randomTensor(l,j,k);
     auto C = A/B;
     auto diff = 0.;
-    for(auto ii : count1(i.m()))
-    for(auto jj : count1(j.m()))
-    for(auto kk : count1(k.m()))
-    for(auto ll : count1(l.m()))
+    for(auto ii : range1(i.m()))
+    for(auto jj : range1(j.m()))
+    for(auto kk : range1(k.m()))
+    for(auto ll : range1(l.m()))
         {
         diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
         }
@@ -995,10 +995,10 @@ SECTION("Case 3")
     auto B = randomTensor(l,j,k);
     auto C = B/A;
     auto diff = 0.;
-    for(auto ii : count1(i.m()))
-    for(auto jj : count1(j.m()))
-    for(auto kk : count1(k.m()))
-    for(auto ll : count1(l.m()))
+    for(auto ii : range1(i.m()))
+    for(auto jj : range1(j.m()))
+    for(auto kk : range1(k.m()))
+    for(auto ll : range1(l.m()))
         {
         diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
         }
@@ -1010,8 +1010,8 @@ SECTION("Case 4")
     auto B = randomTensor(j);
     auto C = B/A;
     auto diff = 0.;
-    for(auto ii : count1(i.m()))
-    for(auto jj : count1(j.m()))
+    for(auto ii : range1(i.m()))
+    for(auto jj : range1(j.m()))
         {
         diff += C.real(i(ii),j(jj)) - A.real(i(ii))*B.real(j(jj));
         }
@@ -1023,9 +1023,9 @@ SECTION("Case 5")
     auto B = randomTensor(j,k);
     auto C = B/A;
     auto diff = 0.;
-    for(auto ii : count1(i.m()))
-    for(auto jj : count1(j.m()))
-    for(auto kk : count1(k.m()))
+    for(auto ii : range1(i.m()))
+    for(auto jj : range1(j.m()))
+    for(auto kk : range1(k.m()))
         {
         diff += C.real(k(kk),i(ii),j(jj)) - A.real(i(ii))*B.real(k(kk),j(jj));
         }
@@ -1489,9 +1489,9 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
 
-            for(auto i_ : count1(i.m()))
-            for(auto j_ : count1(j.m()))
-            for(auto k_ : count1(k.m()))
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
                 {
                 auto ci_ = i_ + i.m()*(j_-1);
                 CHECK_CLOSE(R.real(ci(ci_),k(k_)), T.real(i(i_),j(j_),k(k_)));
@@ -1506,9 +1506,9 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
 
-            for(auto i_ : count1(i.m()))
-            for(auto j_ : count1(j.m()))
-            for(auto k_ : count1(k.m()))
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
                 {
                 auto ci_ = i_ + i.m()*(k_-1);
                 CHECK_CLOSE(R.real(ci(ci_),j(j_)), T.real(i(i_),j(j_),k(k_)));
@@ -1523,9 +1523,9 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
 
-            for(auto i_ : count1(i.m()))
-            for(auto j_ : count1(j.m()))
-            for(auto k_ : count1(k.m()))
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
                 {
                 auto ci_ = k_ + k.m()*(j_-1);
                 CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
@@ -1536,9 +1536,9 @@ SECTION("Combiner")
         //Uncombine back:
         //auto TT = C * R;
 
-        //for(auto ii : count1(i.m()))
-        //for(auto ij : count1(j.m()))
-        //for(auto ik : count1(k.m()))
+        //for(auto ii : range1(i.m()))
+        //for(auto ij : range1(j.m()))
+        //for(auto ik : range1(k.m()))
         //    {
         //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik)), T.real(i(ii),j(ij),k(ik)));
         //    }
@@ -1562,11 +1562,11 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
             
-            for(auto i_ : count1(i.m()))
-            for(auto j_ : count1(j.m()))
-            for(auto k_ : count1(k.m()))
-            for(auto l_ : count1(l.m()))
-            for(auto m_ : count1(m.m()))
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
+            for(auto l_ : range1(l.m()))
+            for(auto m_ : range1(m.m()))
                 {
                 auto ci_ = i_+i.m()*((k_-1)+k.m()*(m_-1));
                 CHECK_CLOSE(R.real(ci(ci_),j(j_),l(l_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
@@ -1581,11 +1581,11 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
             
-            for(auto i_ : count1(i.m()))
-            for(auto j_ : count1(j.m()))
-            for(auto k_ : count1(k.m()))
-            for(auto l_ : count1(l.m()))
-            for(auto m_ : count1(m.m()))
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
+            for(auto l_ : range1(l.m()))
+            for(auto m_ : range1(m.m()))
                 {
                 auto ci_ = k_+k.m()*((j_-1)+j.m()*(l_-1));
                 CHECK_CLOSE(R.real(ci(ci_),i(i_),m(m_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
@@ -1595,11 +1595,11 @@ SECTION("Combiner")
         //Uncombine back:
         //auto TT = C * R;
 
-        //for(auto ii : count1(i.m()))
-        //for(auto ij : count1(j.m()))
-        //for(auto ik : count1(k.m()))
-        //for(auto il : count1(l.m()))
-        //for(auto im : count1(m.m()))
+        //for(auto ii : range1(i.m()))
+        //for(auto ij : range1(j.m()))
+        //for(auto ik : range1(k.m()))
+        //for(auto il : range1(l.m()))
+        //for(auto im : range1(m.m()))
         //    {
         //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
         //    }

@@ -6,6 +6,7 @@
 #define __ITENSOR_QCOMBINER_H
 
 #include "itensor/itdata/qdense.h"
+#include "itensor/util/count.h"
 #include <tuple>
 
 namespace itensor {
@@ -35,7 +36,7 @@ class QCombiner
         //set up range to sum over all possible
         //blocks that can be formed out of combined inds
         auto RB = RangeBuilder(cinds.size());
-        for(auto j : count(cinds.size()))
+        for(auto j : itensor::range(cinds))
             RB.nextIndex(cinds[j].nindex());
         R_ = RB.build();
         store_.resize(area(R_));

@@ -206,7 +206,7 @@ void MPSt<Tensor>::
 read(std::istream& s)
     {
     if(not sites_) Error("Can't read to default constructed MPS");
-    for(auto j : index(A_))
+    for(auto j : range(A_))
         {
         itensor::read(s,A_[j]);
         }
@@ -488,7 +488,7 @@ plussers(Index const& l1,
 
     first = diagTensor(1,l1,sumind);
     auto S = Matrix(l2.m(),sumind.m());
-    for(auto i : count(l2.m()))
+    for(auto i : range(l2.m()))
         {
         S(i,l1.m()+i) = 1;
         }
@@ -659,7 +659,7 @@ addAssumeOrth(MPSt<Tensor> const& R,
 
     vector<Tensor> first(N_), 
                    second(N_);
-    for(auto i : count1(N_-1))
+    for(auto i : range1(N_-1))
         {
         auto l1 = rightLinkInd(*this,i);
         auto l2 = rightLinkInd(R,i);
@@ -668,7 +668,7 @@ addAssumeOrth(MPSt<Tensor> const& R,
         }
 
     Anc(1) = L.A(1) * first[1] + R.A(1) * second[1];
-    for(auto i : count1(2,N_-1))
+    for(auto i : range1(2,N_-1))
         {
         Anc(i) = dag(first[i-1]) * L.A(i) * first[i] 
                      + dag(second[i-1]) * R.A(i) * second[i];
@@ -1081,7 +1081,7 @@ template <class Tensor>
 bool MPSt<Tensor>::
 isComplex() const
     { 
-    for(auto j : count1(N_))
+    for(auto j : range1(N_))
         {
         if(itensor::isComplex(A_[j])) return true;
         }

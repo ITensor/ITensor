@@ -51,7 +51,7 @@ contractDiagDense(Diag<T1>  const& d,
     {
     using T3 = common_type<T1,T2>;
     bool t_has_uncontracted = false;
-    for(auto j : index(tind)) 
+    for(auto j : range(tind)) 
         if(tind[j] >= 0)
             {
             t_has_uncontracted = true;
@@ -82,7 +82,7 @@ contractDiagDense(Diag<T1>  const& d,
     else //all inds of t contracted with d
         {
         long d_ustride = 0; //total result-stride of uncontracted inds of d
-        for(auto i : index(dind))
+        for(auto i : range(dind))
             {
             if(dind[i] >= 0) d_ustride += dis.stride(i);
             }
@@ -245,7 +245,7 @@ doTask(TakeReal, DiagCplx const& D, ManageStore& m)
     else            
         {
         auto nD = m.makeNewData<DiagReal>(D.size());
-        for(auto i : index(D.store)) nD->store[i] = D.store[i].real();
+        for(auto i : range(D.store)) nD->store[i] = D.store[i].real();
         }
     }
 
@@ -266,7 +266,7 @@ doTask(TakeImag, DiagCplx const& D, ManageStore& m)
     else            
         {
         auto nD = m.makeNewData<DiagReal>(D.size());
-        for(auto i : index(D.store)) nD->store[i] = D.store[i].imag();
+        for(auto i : range(D.store)) nD->store[i] = D.store[i].imag();
         }
     }
 
@@ -289,7 +289,7 @@ doTask(PrintIT<Index>& P, Diag<T> const& d)
 
     if(!P.print_data) return;
 
-    for(auto i : count(d.length))
+    for(auto i : range(d.length))
         {
         auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
         if(std::norm(val) >= Global::printScale())

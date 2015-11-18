@@ -158,7 +158,7 @@ operator<<(std::ostream & s, Spectrum const& spec)
         decltype(N) max_show = 20;
         auto stop = std::min(N,max_show);
         s << "  Eigs kept:";
-        for(auto j : count(stop))
+        for(auto j : range(stop))
             {
             s << format(eigs(j) > 1E-3 ? (" %.3f") : (" %.3E"), eigs(j));
             }

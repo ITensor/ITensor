@@ -34,8 +34,8 @@ TEST_CASE("Contract Test")
             // 3 4  7 8   43 50
             //
             contract(A,{1,2},B,{2,3},C,{1,3});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
                 for(int k = 0; k < 2; ++k)
@@ -55,11 +55,11 @@ TEST_CASE("Contract Test")
             //
             //println("Case 2:");
             contract(A,{1,2},B,{3,2},C,{1,3});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(r,k)*B(c,k);
                     }
@@ -70,11 +70,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 3")
             {
             contract(A,{1,2},B,{2,3},C,{3,1});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(r,k)*B(k,c);
                     }
@@ -85,11 +85,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 4")
             {
             contract(A,{1,2},B,{3,2},C,{3,1});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(r,k)*B(c,k);
                     }
@@ -100,11 +100,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 5")
             {
             contract(A,{2,1},B,{2,3},C,{1,3});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(k,r)*B(k,c);
                     }
@@ -115,11 +115,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 6")
             {
             contract(A,{2,1},B,{3,2},C,{1,3});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(k,r)*B(c,k);
                     }
@@ -130,11 +130,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 7")
             {
             contract(A,{2,1},B,{2,3},C,{3,1});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(k,r)*B(k,c);
                     }
@@ -145,11 +145,11 @@ TEST_CASE("Contract Test")
         SECTION("Case 8")
             {
             contract(A,{2,1},B,{3,2},C,{3,1});
-            for(auto r : count(2))
-            for(auto c : count(2))
+            for(auto r : range(2))
+            for(auto c : range(2))
                 {
                 Real val = 0;
-                for(auto k : count(2))
+                for(auto k : range(2))
                     {
                     val += A(k,r)*B(c,k);
                     }
@@ -168,12 +168,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{3,7,2},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4)*B(i3,i7,i2);
                     }
@@ -191,12 +191,12 @@ TEST_CASE("Contract Test")
             Global::debug3() = true;
             contract(A,{2,3,4},B,{3,7,2},C,{7,4});
             Global::debug3() = false;
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4)*B(i3,i7,i2);
                     }
@@ -212,12 +212,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,4,3},B,{3,7,2},C,{7,4});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i4,i3)*B(i3,i7,i2);
                     }
@@ -233,12 +233,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,4,3},B,{3,7,2},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i4,i3)*B(i3,i7,i2);
                     }
@@ -254,12 +254,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{7,3,2},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4)*B(i7,i3,i2);
                     }
@@ -279,14 +279,14 @@ TEST_CASE("Contract Test")
             REQUIRE(C.extent(1) == 4);
             REQUIRE(C.extent(2) == 6);
             REQUIRE(C.extent(3) == 7);
-            for(auto i4 : count(4))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
                     }
@@ -306,14 +306,14 @@ TEST_CASE("Contract Test")
             REQUIRE(C.extent(1) == 4);
             REQUIRE(C.extent(2) == 6);
             REQUIRE(C.extent(3) == 7);
-            for(auto i4 : count(4))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
                     }
@@ -329,16 +329,16 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(B,{8,7,5,6,9},A,{2,3,4,5,6,7},C,{2,8,4,3,9});
-            for(auto i2 : count(2))
-            for(auto i3 : count(3))
-            for(auto i4 : count(4))
-            for(auto i8 : count(8))
-            for(auto i9 : count(9))
+            for(auto i2 : range(2))
+            for(auto i3 : range(3))
+            for(auto i4 : range(4))
+            for(auto i8 : range(8))
+            for(auto i9 : range(9))
                 {
                 Real val = 0;
-                for(auto i5 : count(5))
-                for(auto i6 : count(6))
-                for(auto i7 : count(7))
+                for(auto i5 : range(5))
+                for(auto i6 : range(6))
+                for(auto i7 : range(7))
                     {
                     val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
                     }
@@ -355,16 +355,16 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(B,{8,7,5,6,9},A,{2,3,4,5,6,7},C,{4,9,2,3,8});
-            for(auto i2 : count(2))
-            for(auto i3 : count(3))
-            for(auto i4 : count(4))
-            for(auto i8 : count(8))
-            for(auto i9 : count(9))
+            for(auto i2 : range(2))
+            for(auto i3 : range(3))
+            for(auto i4 : range(4))
+            for(auto i8 : range(8))
+            for(auto i9 : range(9))
                 {
                 Real val = 0;
-                for(auto i5 : count(5))
-                for(auto i6 : count(6))
-                for(auto i7 : count(7))
+                for(auto i5 : range(5))
+                for(auto i6 : range(6))
+                for(auto i7 : range(7))
                     {
                     val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
                     }
@@ -385,12 +385,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{7,2,3},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4)*B(i7,i2,i3);
                     }
@@ -406,12 +406,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{4,2,3},B,{7,2,3},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i4,i2,i3)*B(i7,i2,i3);
                     }
@@ -427,12 +427,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{4,2,3},B,{2,3,7},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i4,i2,i3)*B(i2,i3,i7);
                     }
@@ -448,12 +448,12 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{2,3,7},C,{4,7});
-            for(auto i4 : count(4))
-            for(auto i7 : count(7))
+            for(auto i4 : range(4))
+            for(auto i7 : range(7))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
                     {
                     val += A(i2,i3,i4)*B(i2,i3,i7);
                     }
@@ -470,12 +470,12 @@ TEST_CASE("Contract Test")
             randomize(B);
             contract(A,{4,3,2},B,{5,4,3,2},C,{5});
             REQUIRE(C.extent(0) == 5);
-            for(auto i5 : count(5))
+            for(auto i5 : range(5))
                 {
                 Real val = 0;
-                for(auto i2 : count(2))
-                for(auto i3 : count(3))
-                for(auto i4 : count(4))
+                for(auto i2 : range(2))
+                for(auto i3 : range(3))
+                for(auto i4 : range(4))
                     {
                     val += A(i4,i3,i2)*B(i5,i4,i3,i2);
                     }
@@ -498,9 +498,9 @@ TEST_CASE("Contract Test")
             auto B = makeTenRef(Bdat.data(),Bdat.size(),&Br);
 
             contract(makeRefc(A),{4,3,2},makeRefc(B),{},makeRef(C),{2,4,3});
-            for(auto i2 : count(2))
-            for(auto i3 : count(3))
-            for(auto i4 : count(4))
+            for(auto i2 : range(2))
+            for(auto i3 : range(3))
+            for(auto i4 : range(4))
                 {
                 CHECK_CLOSE(C(i2,i4,i3),Bval * A(i4,i3,i2));
                 }
@@ -517,9 +517,9 @@ TEST_CASE("Contract Test")
             auto B = makeTenRef(Bdat.data(),Bdat.size(),&Br);
 
             contract<Range>(B,{},A,{2,3,4},C,{2,4,3});
-            for(auto i2 : count(2))
-            for(auto i3 : count(3))
-            for(auto i4 : count(4))
+            for(auto i2 : range(2))
+            for(auto i3 : range(3))
+            for(auto i4 : range(4))
                 {
                 CHECK_CLOSE(C(i2,i4,i3),Bval * A(i2,i3,i4));
                 }
@@ -539,14 +539,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop<Range>(A,{1,2,4,5},B,{3,1,4,6},C,{3,2,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i1,i2,i4,i5)*B(i3,i1,i4,i6);
                     }
@@ -565,14 +565,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{3,2,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }
@@ -591,14 +591,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{3,1,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i1,i2,i4,i5)*B(i3,i1,i4,i6);
                     }
@@ -617,14 +617,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }
@@ -643,14 +643,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{3,1,4,5},B,{2,1,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i3,i1,i4,i5)*B(i2,i1,i4,i6);
                     }
@@ -669,14 +669,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{2,1,4,5},B,{3,1,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i2,i1,i4,i5)*B(i3,i1,i4,i6);
                     }
@@ -695,14 +695,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{3,1,4,5},B,{1,2,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i3,i1,i4,i5)*B(i1,i2,i4,i6);
                     }
@@ -715,14 +715,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(Ap,{2,1,4,5},Bp,{1,3,4,6},Cp,{3,2,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += Ap(i2,i1,i4,i5)*Bp(i1,i3,i4,i6);
                     }
@@ -741,14 +741,14 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contractloop(A,{2,1,4,5},B,{1,3,4,6},C,{2,3,5,6});
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i2,i1,i4,i5)*B(i1,i3,i4,i6);
                     }
@@ -775,14 +775,14 @@ TEST_CASE("Contract Test")
             cpu_time cpu;
             contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
             println("Time = ",cpu.sincemark());
-            for(auto i2 : count(m2))
-            for(auto i3 : count(m3))
-            for(auto i5 : count(5))
-            for(auto i6 : count(6))
+            for(auto i2 : range(m2))
+            for(auto i3 : range(m3))
+            for(auto i5 : range(5))
+            for(auto i6 : range(6))
                 {
                 Real val = 0;
-                for(auto i1 : count(m1))
-                for(auto i4 : count(4))
+                for(auto i1 : range(m1))
+                for(auto i4 : range(4))
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }

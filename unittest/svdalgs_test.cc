@@ -33,7 +33,7 @@ SECTION("Truncate Test")
     size_t origm = 20;
     auto p = Vector(origm);
     
-    for(auto n : index(p))
+    for(auto n : range(p))
         {
         p(n) = exp(-2.*n)*(1+0.1*detail::quickran());
         }

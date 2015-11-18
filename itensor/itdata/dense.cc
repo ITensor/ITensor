@@ -153,7 +153,7 @@ void
 doTask(TakeReal, DenseCplx const& D, ManageStore & m) 
     { 
     auto& nD = *m.makeNewData<DenseReal>(D.size());
-    for(auto n : count(D.size()))
+    for(auto n : range(D.size()))
         {
         nD[n] = D[n].real();
         }
@@ -163,7 +163,7 @@ void
 doTask(TakeImag, DenseCplx const& D, ManageStore & m) 
     { 
     auto& nD = *m.makeNewData<DenseReal>(D.size());
-    for(auto n : count(D.size()))
+    for(auto n : range(D.size()))
         {
         nD[n] = D[n].imag();
         }
@@ -190,7 +190,7 @@ doTask(PrintIT<Index>& P,
     if(!P.print_data) return;
 
     auto gc = detail::GCounter(rank);
-    for(auto i : count(rank))
+    for(auto i : range(rank))
         gc.setRange(i,0,P.is.extent(i)-1);
 
     for(; gc.notDone(); ++gc)
@@ -256,7 +256,7 @@ doTask(Contract<Index> & C,
     else
         {
         Nind.resize(C.Nis.r());
-        for(auto i : count(C.Nis.r()))
+        for(auto i : range(C.Nis.r()))
             {
             auto j = findindex(C.Lis,C.Nis[i]);
             if(j >= 0)

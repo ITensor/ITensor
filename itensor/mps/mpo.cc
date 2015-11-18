@@ -442,7 +442,7 @@ exactApplyMPO(MPSt<Tensor> const& x,
     res = MPSt<Tensor>(x.sites());
 
     res.Anc(1) = x.A(1) * K.A(1);
-    for(auto j : count1(N-1))
+    for(auto j : range1(N-1))
         {
         //Compute product of MPS tensor and MPO tensor
         res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
@@ -550,7 +550,7 @@ fitApplyMPO(Real fac,
 
     res.position(1);
 
-    for(auto sw : count1(sweeps.nsweep()))
+    for(auto sw : range1(sweeps.nsweep()))
         {
         args.add("Sweep",sw);
         args.add("Cutoff",sweeps.cutoff(sw));

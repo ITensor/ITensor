@@ -271,7 +271,7 @@ svdImpl(ITensor const& A,
     if(do_truncate || show_eigs)
         {
         probs = DD;
-        for(auto j : index(probs)) probs(j) = sqr(probs(j));
+        for(auto j : range(probs)) probs(j) = sqr(probs(j));
         }
 
     Real truncerr = 0;
@@ -474,7 +474,7 @@ svdImpl(IQTensor A,
     QDiagReal Dstore(Dis,div(A));
 
     long n = 0;
-    for(auto b : count(Nblock))
+    for(auto b : range(Nblock))
         {
         auto& B = blocks[b];
         auto& UU = Umats.at(b);
@@ -764,7 +764,7 @@ diag_hermitian(IQTensor    rho,
 
     size_t totaldsize = 0,
            totalUsize = 0;
-    for(auto b : count(Nblock))
+    for(auto b : range(Nblock))
         {
         totaldsize += nrows(blocks[b].M);
         totalUsize += nrows(blocks[b].M)*ncols(blocks[b].M);
@@ -782,7 +782,7 @@ diag_hermitian(IQTensor    rho,
     //   Store results in mmatrix and mvector.
     totaldsize = 0;
     totalUsize = 0;
-    for(auto b : count(Nblock))
+    for(auto b : range(Nblock))
         {
         auto& M = blocks[b].M;
         auto& UU = Umats.at(b);
@@ -853,7 +853,7 @@ diag_hermitian(IQTensor    rho,
     IQIndex::storage iq;
     iq.reserve(Nblock);
 
-    for(auto b : count(Nblock))
+    for(auto b : range(Nblock))
         {
         auto& UU = Umats.at(b);
         auto& d = dvecs.at(b);
@@ -861,7 +861,7 @@ diag_hermitian(IQTensor    rho,
 
         //Count number of eigenvalues in the sector above docut
         long this_m = 0;
-        for(auto n : index(d))
+        for(auto n : range(d))
             {
             if(d(n) > docut) this_m += 1;
             else             break;
@@ -904,7 +904,7 @@ diag_hermitian(IQTensor    rho,
     QDiagReal Dstore(Dis,div(rho));
 
     long n = 0;
-    for(auto b : count(Nblock))
+    for(auto b : range(Nblock))
         {
         auto& B = blocks[b];
         auto& UU = Umats.at(b);

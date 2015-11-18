@@ -37,7 +37,7 @@ calcDiv(IQIndexSet const& is,
         Label const& block_ind)
     {
     QN div;
-    for(auto i : count(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
+    for(auto i : range(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
     return div;
     }
 
@@ -83,14 +83,14 @@ updateOffsets(IQIndexSet const& is,
 
     //Set up a Range to iterate over all blocks
     auto RB = RangeBuilder(is.r());
-    for(auto j : count(is.r()))
+    for(auto j : range(is.r()))
         RB.nextIndex(is[j].nindex());
 
     long totalsize = 0;
     for(auto I : RB.build())
         {
         auto blockqn = QN{};
-        for(auto j : count(is.r()))
+        for(auto j : range(is.r()))
             {
             auto& J = is[j];
             blockqn += J.qn(1+I[j])*J.dir();
@@ -100,7 +100,7 @@ updateOffsets(IQIndexSet const& is,
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  totm = 1;   //accumulate area of Indices
-            for(auto j : count(is.r()))
+            for(auto j : range(is.r()))
                 {
                 auto& J = is[j];
                 auto i_j = I[j];
@@ -231,7 +231,7 @@ void
 doTask(TakeReal, QDenseCplx const& d, ManageStore & m)
     {
     auto *nd = m.makeNewData<QDenseReal>(d.offsets,d.size());
-    for(auto i : index(d))
+    for(auto i : range(d))
         {
         nd->store[i] = d.store[i].real();
         }
@@ -248,7 +248,7 @@ void
 doTask(TakeImag, QDenseCplx const& d, ManageStore & m)
     {
     auto *nd = m.makeNewData<QDenseReal>(d.offsets,d.size());
-    for(auto i : index(d))
+    for(auto i : range(d))
         {
         nd->store[i] = d.store[i].imag();
         }
@@ -295,9 +295,9 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
         computeBlockInd(io.block,P.is,block);
 
         Label boff(rank,0);
-        for(auto i : count(rank))
+        for(auto i : range(rank))
             {
-            for(auto j : count(block[i]))
+            for(auto j : range(block[i]))
                 boff[i] += P.is[i][j].m();
             }
 
@@ -314,7 +314,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
                     {
                     indices_printed = true;
                     //Print Indices of this block
-                    for(auto i : count(rank))
+                    for(auto i : range(rank))
                         {
                         if(i > 0) P.s << " ";
                         P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
@@ -322,7 +322,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
                     P.s << "\n";
                     }
                 P.s << "(";
-                for(auto ii : count(rank))
+                for(auto ii : range(rank))
                     {
                     P.s << (1+boff[ii]+C[ii]);
                     if(1+ii != rank) P.s << ",";
@@ -330,7 +330,7 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
                 P.s << ") ";
 
                 //P.s << "[";
-                //for(auto ii : count(rank))
+                //for(auto ii : range(rank))
                 //    {
                 //    P.s << (1+C[ii]);
                 //    if(1+ii != rank) P.s << ",";
@@ -505,8 +505,8 @@ doTask(NCProd<IQIndex>& P,
     ncprod(Ais,Aind,Bis,Bind,Cis,Cind);
 
     Label BtoA(rA,-1);
-    for(auto ia : count(rA))
-    for(auto ib : count(rB))
+    for(auto ia : range(rA))
+    for(auto ib : range(rB))
         if(Bis[ib] == Ais[ia])
             {
             BtoA[ib] = ia;
@@ -523,7 +523,7 @@ doTask(NCProd<IQIndex>& P,
             {
             computeBlockInd(bo.block,Bis,Bblock_ind);
             bool matchesA = true;
-            for(auto n : count(rB))
+            for(auto n : range(rB))
                 {
                 if(Bind[n] < 0 && Ablock_ind[BtoA[n]] != Bind[n])
                     {
@@ -534,7 +534,7 @@ doTask(NCProd<IQIndex>& P,
             if(matchesA) break;
             }
         //Only account for unique indices of B
-        for(auto n : count(rB))
+        for(auto n : range(rB))
             if(Bind[n] > 0) //unique
                 {
                 Cdiv += Bis[n].dir()*Bis[n].qn(1+Bblock_ind[n]);

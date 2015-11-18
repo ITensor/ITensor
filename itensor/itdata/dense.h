@@ -143,7 +143,7 @@ doTask(ApplyIT<F>& A, Dense<T> const& d, ManageStore & m)
     if(switchesType<T>(A))
         {
         auto *nd = m.makeNewData<Dense<new_type>>(d.size());
-        for(auto i : index(d))
+        for(auto i : range(d))
             {
             A(d.store[i],nd->store[i]);
             }

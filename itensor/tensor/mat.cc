@@ -219,10 +219,10 @@ template<typename V>
 void
 printMatrix(std::ostream& s, MatRefc<V> const& M)
     {
-    for(auto r : count(nrows(M)))
+    for(auto r : range(nrows(M)))
         {
         s << "|";
-        for(auto c : count(ncols(M)))
+        for(auto c : range(ncols(M)))
             {
             s << formatVal(M(r,c));
             s << (1+c == ncols(M) ? "|" : " ");

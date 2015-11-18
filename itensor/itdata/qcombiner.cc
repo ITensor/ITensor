@@ -32,7 +32,7 @@ permuteIQ(const Permutation& P,
 #endif
     auto r = Ais.r();
     auto bind = IQIndexSetBuilder(r);
-    for(auto i : count(r))
+    for(auto i : range(r))
         {
         bind.setIndex(P.dest(i),Ais[i]);
         }
@@ -47,7 +47,7 @@ permuteIQ(const Permutation& P,
         {
         //Compute bi, new block index of blk
         computeBlockInd(aio.block,Ais,Ablock);
-        for(auto j : index(Ablock)) 
+        for(auto j : range(Ablock)) 
             Bblock.at(P.dest(j)) = Ablock[j];
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
@@ -86,7 +86,7 @@ combine(QDense<T>   const& d,
         ManageStore      & m)
     {
 #ifdef DEBUG
-    for(auto i : count(1,Cis.r()))
+    for(auto i : range(1,Cis.r()))
         {
         auto jc = findindex(dis,Cis[i]);
         if(jc == -1)
@@ -105,7 +105,7 @@ combine(QDense<T>   const& d,
 
     auto dperm = Label(dr,-1);
     auto uncomb_dest = ncomb;
-    for(auto i : count(dr)) 
+    for(auto i : range(dr)) 
         {
         auto jc = findindex(Cis,dis[i]);
         if(jc >= 0) dperm[i] = jc-1;
@@ -117,7 +117,7 @@ combine(QDense<T>   const& d,
     //Create new IQIndexSet
     auto newind = IQIndexSetBuilder(nr);
     newind.nextIndex(Cis[0]);
-    for(auto i : count(dr)) if(!combined(i)) newind.nextIndex(dis[i]);
+    for(auto i : range(dr)) if(!combined(i)) newind.nextIndex(dis[i]);
     Nis = newind.build();
 
     //Allocate new data
@@ -148,7 +148,7 @@ combine(QDense<T>   const& d,
         //go in new storage (nblock) and which sector of
         //combined indices maps to new combined index (cblock)
         size_t nu = 1;
-        for(auto i : count(dr)) 
+        for(auto i : range(dr)) 
             {
             if(combined(i)) cblock[dperm[i]] = dblock[i];
             else            nblock[nu++] = dblock[i];
@@ -216,12 +216,12 @@ uncombine(QDense<T>   const& d,
 
     decltype(dr) jc = 0;
     auto newind = IQIndexSetBuilder(nr);
-    for(auto n : count(dr)) 
+    for(auto n : range(dr)) 
         {
         if(dis[n] == cind)
             {
             jc = n;
-            for(auto n : count(1,cr)) newind.nextIndex(Cis[n]);
+            for(auto n : range(1,cr)) newind.nextIndex(Cis[n]);
             }
         else
             {
@@ -248,7 +248,7 @@ uncombine(QDense<T>   const& d,
 
         auto n = dblock[jc];
 
-        for(auto o : index(C.store_))
+        for(auto o : range(C.store_))
             {
             auto& br = C.store_[o];
 
@@ -262,7 +262,7 @@ uncombine(QDense<T>   const& d,
             //newly restored uncombined indices
             //using algorithm
             //similar to computeBlockInd
-            for(auto m : count(ncomb-1))
+            for(auto m : range(ncomb-1))
                 {
                 nblock[jc+m] = o % Cis[1+m].nindex();
                 o = (o-nblock[jc+m])/Cis[1+m].nindex();
@@ -270,8 +270,8 @@ uncombine(QDense<T>   const& d,
             nblock[jc+ncomb-1] = o;
 
             //fill out rest of nblock
-            for(auto m : count(jc)) nblock[m] = dblock[m];
-            for(auto m : count(1+jc,dr)) nblock[ncomb+m-1] = dblock[m];
+            for(auto m : range(jc)) nblock[m] = dblock[m];
+            for(auto m : range(1+jc,dr)) nblock[ncomb+m-1] = dblock[m];
 
             //Get subblock of d data
             auto dsub = subIndex(dref,jc,br.start,br.start+br.extent);

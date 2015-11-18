@@ -122,7 +122,7 @@ orthog(MatRef<V> M,
     {
     auto nkeep = std::min(nrows(M), ncols(M));
     auto dots = Vec<V>(nkeep);
-    for(auto i : count(nkeep))
+    for(auto i : range(nkeep))
         {
         //normalize column i
         auto coli = column(M,i);
@@ -137,7 +137,7 @@ orthog(MatRef<V> M,
 
         auto Mcols = columns(M,0,i);
         auto dotsref = subVector(dots,0,i);
-        for(auto pass : count1(numpass))
+        for(auto pass : range1(numpass))
             {
             // does dotsref &= dag(Mcols) * coli:
             auto ccoli = conj(coli);
@@ -175,7 +175,7 @@ template void orthog(MatRef<Cplx> M, size_t numpass);
 //        {
 //        return sqrt(sqr(norm(r))+sqr(norm(i)));
 //        };
-//    for(auto n : count(nkeep))
+//    for(auto n : range(nkeep))
 //        {
 //        //normalize column n
 //        auto cr = column(Mr,n);
@@ -195,7 +195,7 @@ template void orthog(MatRef<Cplx> M, size_t numpass);
 //        auto mi = columns(Mi,0,n);
 //        auto dr = subVector(Dr,0,n);
 //        auto di = subVector(Di,0,n);
-//        for(auto pass : count1(numpass))
+//        for(auto pass : range1(numpass))
 //            {
 //            //// does dotsref &= transpose(Mcols) * coli:
 //            //mult(transpose(Mcols),coli,dotsref);
@@ -231,7 +231,7 @@ checksvd(MatrixRefc const& A,
          MatrixRefc const& V)
     {
     Matrix Ach(U);
-    for(auto i : count1(D.size())) column(Ach,i) *= D(i);
+    for(auto i : range1(D.size())) column(Ach,i) *= D(i);
     Ach = Ach * transpose(V);
     Ach -= A;
     printfln("relative error with sqrt in low level svd is %.5E",norm(Ach)/norm(A));

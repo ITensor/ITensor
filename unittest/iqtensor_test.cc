@@ -149,9 +149,9 @@ SECTION("Contracting Product")
 
         auto R = Op * t;
 
-        for(auto i : count1(s.m()))
-        for(auto iP : count1(sP.m()))
-        for(auto j : count1(l1.m()))
+        for(auto i : range1(s.m()))
+        for(auto iP : range1(sP.m()))
+        for(auto j : range1(l1.m()))
             {
             auto val = Op.real(s(i),sP(iP)) * t.real(l0(1),l1(j));
             CHECK_CLOSE(val, R.real(s(i),sP(iP),l0(1),l1(j)) );
@@ -443,10 +443,10 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(R),norm(T));
 
         auto U = dag(C)*R;
-        for(auto l1 : count1(L1.m()))
-        for(auto l2 : count1(L1.m()))
-        for(auto s1 : count1(S1.m()))
-        for(auto s2 : count1(S2.m()))
+        for(auto l1 : range1(L1.m()))
+        for(auto l2 : range1(L1.m()))
+        for(auto s1 : range1(S1.m()))
+        for(auto s2 : range1(S2.m()))
             {
             CHECK_CLOSE(U.real(L1(l1),L2(l2),S1(s1),S2(s2)),T.real(L1(l1),L2(l2),S1(s1),S2(s2)));
             }
@@ -580,6 +580,47 @@ SECTION("Scalar")
     CHECK_CLOSE(val, S.real());
     CHECK_CLOSE(fabs(val), norm(S));
     }
+
+//SECTION("Non-contracting product")
+//    {
+//    SECTION("Case 1")
+//        {
+//        //This use case of ncprod may not
+//        //lead to a C with a well defined divergence!
+//        
+//        auto s = IQIndex("s",Index{"Up s",2,Site},QN(+1),
+//                             Index{"Dn s",2,Site},QN(-1));
+//        auto t = IQIndex("t",Index{"Up t",2,Site},QN(+1),
+//                             Index{"Dn t",2,Site},QN(-1));
+//        auto u = IQIndex("u",Index{"Up u",2,Site},QN(+1),
+//                             Index{"Dn u",2,Site},QN(-1));
+//
+//        auto h = IQIndex("h",Index{"h 0",3},QN(0),
+//                             Index{"h-1",3},QN(-1),
+//                             Index{"h-2",3},QN(-2),
+//                             Index{"h+2",3},QN(+2));
+//
+//        auto k = IQIndex("k",Index{"k+1",3},QN(1),
+//                             Index{"k-1",3},QN(-1),
+//                             Index{"k+2",3},QN(+2));
+//
+//        auto A = randomTensor(QN{-1},s,h);
+//        auto B = randomTensor(QN{0},h,k,t);
+//
+//        auto C = A/B;
+//
+//        auto diff = 0.;
+//        for(auto S : range1(s.m()))
+//        for(auto H : range1(h.m()))
+//        for(auto K : range1(k.m()))
+//        for(auto T : range1(t.m()))
+//            {
+//            diff += C.real(t(T),s(S),h(H),k(K)) - A.real(s(S),h(H))*B.real(h(H),k(K),t(T));
+//            }
+//        CHECK(diff < 1E-13);
+//        }
+//
+//    }
 
 
 

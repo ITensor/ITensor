@@ -197,8 +197,8 @@ operator+=(IQTensor & T,
 
     Permutation P(rank);
     Label block_ind(rank);
-    for(auto i : count(rank))
-    for(auto I : count(rank))
+    for(auto i : range(rank))
+    for(auto I : range(rank))
         {
         auto j = findindex(T.inds()[I],t.inds()[i]);
         if(j > 0)
@@ -345,7 +345,7 @@ combiner(std::vector<IQIndex> cinds,
         QNm qm;
         //For this sector, figure out the total QN (qm.q)
         //and combined sector size (qm.m)
-        for(auto j : count(cr))
+        for(auto j : range(cr))
             {
             qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
             qm.m *= cinds[j].index(1+I[j]).m();
@@ -367,7 +367,7 @@ combiner(std::vector<IQIndex> cinds,
         }
 
     auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
-    for(auto n : index(qms)) 
+    for(auto n : range(qms)) 
         cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
     auto cind = IQIndex{cname,std::move(cstore),cdir};
 
@@ -438,7 +438,7 @@ isZero(const IQTensor& T, const Args& args)
 //
 //    if(!P.print_data) return;
 //
-//    for(auto i : count(d.length))
+//    for(auto i : range(d.length))
 //        {
 //        auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
 //        if(std::norm(val) > Global::printScale())
