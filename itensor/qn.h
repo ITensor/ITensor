@@ -105,21 +105,13 @@ class QN
 
     QN() { }
 
-    // Takes up to QNSize integers, making a QN
-    // with these values and integer (Z) addition
-    // rules i.e. a mod factor of 1
-    template<typename... Qs>
-    explicit
-    QN(qn_t q0,
-       Qs&&... qs)
-      : qn_{{QNVal(q0),QNVal(qs)...}}
-        { 
-        static_assert(1+sizeof...(Qs) <= QNSize(),"Too many arguments to QN constructor");
-        }
-
     // Takes QNVal arguments,
     // specifying both a qn value in each
     // sector and a mod factor
+    // Since integer (qn_t) 
+    // or two-element initializer_list
+    // convertible to QNVal, can use
+    // as QN(3,4,5) or as QN({0,2},{1,2})
     explicit
     QN(QNVal v0,
        QNVal v1 = QNVal{},
@@ -285,25 +277,25 @@ printFull(QN const& q);
 //
 
 QN inline
-spin(int Sz) { return QN(Sz); }
+spin(int Sz) { return QN({Sz,1}); }
 
 QN inline
-boson(int Nb) { return QN(Nb); }
+boson(int Nb) { return QN({Nb,1}); }
 
 QN inline
-spinboson(int Sz, int Nb) { return QN(Sz,Nb); }
+spinboson(int Sz, int Nb) { return QN({Sz,1},{Nb,1}); }
 
 QN inline
-fermion(int Nf) { return QN(QNVal(Nf,-1)); }
+fermion(int Nf) { return QN({Nf,-1}); }
 
 QN inline
-electron(int Sz, int Nf) { return QN(QNVal(Sz),QNVal(Nf,-1)); }
+electron(int Sz, int Nf) { return QN({Sz,1},{Nf,-1}); }
 
 QN inline
-elparity(int Sz, int Pf) { return QN(QNVal(Sz),QNVal(Pf,-2)); }
+elparity(int Sz, int Pf) { return QN({Sz,1},{Pf,-2}); }
 
 QN inline
-clock(int n, int N) { return QN(QNVal(n,N)); }
+clock(int n, int N) { return QN({n,N}); }
 
 
 } //namespace itensor
