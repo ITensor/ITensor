@@ -93,7 +93,7 @@ constructSites()
         Dn = -Up;
     if(conserveNf_)
         {
-        for(auto j : count1(N_))
+        for(auto j : range1(N_))
             {
             site_.at(j) = IQIndex(nameint("Hubbard site=",j),
                 Index(nameint("Emp for site ",j),1,Site), electron( 0,0),
@@ -106,7 +106,7 @@ constructSites()
         {
         if(!conserveSz_) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
 
-        for(auto j : count1(N_))
+        for(auto j : range1(N_))
             {
             site_.at(j) = IQIndex(nameint("Hubbard site=",j),
                 Index(nameint("Emp for site ",j),1,Site), elparity( 0,0),
