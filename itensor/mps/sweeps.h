@@ -50,6 +50,9 @@ class Sweeps
     nsweep(int val);
 
     int 
+    size() const { return nsweep_; }
+
+    int 
     minm(int sw) const { return minm_.at(sw); }
     void 
     setminm(int sw, int val) { minm_.at(sw) = val; }
