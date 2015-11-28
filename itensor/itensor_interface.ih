@@ -391,7 +391,7 @@ ITensorT<IndexT>& ITensorT<IndexT>::
 operator+=(ITensorT const& R)
     {
     auto& L = *this;
-    if(!L) Error("Calling += on default constructed ITensor");
+    if(!L) { return (L=R); }
     if(!R) Error("Right-hand-side of ITensor += is default constructed");
     if(&L == &R) return operator*=(2.);
 
