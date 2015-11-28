@@ -8,6 +8,7 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/util/range.h"
+#include "itensor/global.h"
 
 using std::move;
 using std::sqrt;
@@ -314,16 +315,6 @@ SVDRefImpl(MatRefc<T> const& M,
         else       el = std::sqrt(el);
         }
 
-    size_t nlarge = 0;
-    auto rthresh = D(0)*thresh;
-    for(decltype(Mr) n = 0; n < Mr; ++n)
-        {
-        if(D(n) < rthresh)
-            {
-            nlarge = n;
-            break;
-            }
-        }
 
     //Put result of Mt*U==(V*D) in V storage
     if(isCplx(M))
@@ -331,17 +322,32 @@ SVDRefImpl(MatRefc<T> const& M,
     else
         mult(transpose(M),U,V);
 
-    for(decltype(nlarge) n = 0; n < nlarge; ++n)
-        {
-        column(V,n) /= D(n);
-        }
+    //size_t nlarge = 0;
+    //auto rthresh = D(0)*thresh;
+    //for(decltype(Mr) n = 0; n < Mr; ++n)
+    //    {
+    //    if(D(n) < rthresh)
+    //        {
+    //        nlarge = n;
+    //        break;
+    //        }
+    //    }
+    //for(decltype(nlarge) n = 0; n < nlarge; ++n)
+    //    {
+    //    column(V,n) /= D(n);
+    //    }
+    //if(nlarge < Mr)
+    //    {
+    //    //Much more accurate than dividing
+    //    //by smallest singular values
+    //    //TODO: buggy however, orthog may
+    //    //      not respect orthogonality
+    //    //      of "nlarge" columns relative
+    //    //      to rest of columns
+    //    orthog(columns(V,nlarge,Mr),2);
+    //    }
 
-    if(nlarge < Mr)
-        {
-        //Much more accurate than dividing
-        //by smallest singular values
-        orthog(columns(V,nlarge,Mr),2);
-        }
+    orthog(V,2);
 
     bool done = false;
     size_t start = 1;
