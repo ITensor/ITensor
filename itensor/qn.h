@@ -75,6 +75,13 @@ struct QNVal
 
     QNVal(qn_t v, qn_t m) : mod_(m) { set(v); }
 
+    QNVal(std::initializer_list<qn_t> qv)
+        {
+        if(qv.size() != 2) Error("initializer_list arg to QNVal must have two elements");
+        mod_ = *(qv.begin()+1);
+        set(*(qv.begin()));
+        }
+
     qn_t
     mod() const { return mod_; }
 
@@ -119,6 +126,12 @@ class QN
        QNVal v3 = QNVal{}) 
      : qn_{{v0,v1,v2,v3}} 
        { }
+
+    explicit
+    QN(std::initializer_list<qn_t> qv)
+        {
+        qn_[0] = qv;
+        }
 
     explicit operator bool() const { return qn_.front().mod() != 0; }
 
