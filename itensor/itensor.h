@@ -39,6 +39,16 @@ combiner(Index const& i1,
     return combiner(std::vector<Index>{i1,inds...});
     }
 
+//
+// Makes a kronecker delta like ITensor
+// with element specified by IndexVals
+// set to 1.0, all other elements zero
+//
+template <typename... IVals>
+ITensor
+delta(IndexVal const& iv1, 
+      IVals const&... rest);
+
 ITensor
 deltaTensor(const Index& i1, const Index& i2);
 

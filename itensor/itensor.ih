@@ -71,6 +71,20 @@ randomTensor(const IndexSetT<IndexT>& inds)
     return random(ITensorT<IndexT>{inds});
     }
 
+template <typename... IVals>
+ITensor
+delta(IndexVal const& iv1, 
+      IVals const&... rest)
+    {
+    const constexpr auto size = 1+sizeof...(rest);
+    auto ivs = stdx::make_array(iv1,rest...);
+    //try directly making inds as iv1.index,(rest.index)...
+    auto inds = std::array<Index,size>{};
+    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+    auto D = ITensor(IndexSet(inds));
+    D.set(iv1,rest...,1.);
+    return D;
+    }
 
 } //namespace itensor
 
