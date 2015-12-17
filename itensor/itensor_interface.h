@@ -291,8 +291,22 @@ class ITensorT
 
     }; // class ITensorT
 
+//
+// ITensorT special constructor functions
+//
+
+// Makes a kronecker-delta-like tensor
+// with element specified by IndexVals/IQIndexVals
+// set to 1.0, all other elements zero
+template <typename IVal, typename... IVals>
+ITensorT<typename IVal::index_type>
+delta(IVal const& iv1, 
+      IVals const&... rest);
 
 
+//
+// ITensorT prime level functions
+//
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
 prime(ITensorT<IndexT> A, 

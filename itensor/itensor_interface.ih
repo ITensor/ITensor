@@ -204,7 +204,7 @@ cplx(IVs&&... ivs) const
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
 	try {
-	    return z*scale_.real(); 
+	    return z*scale_.real0(); 
 	    }
 	catch(const TooBigForReal& e)
 	    {
@@ -568,6 +568,22 @@ swap(ITensorT & other)
     is_.swap(other.is_);
     store_.swap(other.store_);
     scale_.swap(other.scale_);
+    }
+
+template <typename IVal, typename... IVals>
+ITensorT<typename IVal::index_type>
+delta(IVal const& iv1, 
+      IVals const&... rest)
+    {
+    using index_type = typename IVal::index_type;
+    const constexpr auto size = 1+sizeof...(rest);
+    auto ivs = stdx::make_array(iv1,rest...);
+    //TODO: try directly making inds as iv1.index,(rest.index)...
+    auto inds = std::array<index_type,size>{};
+    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+    auto D = ITensorT<index_type>{IndexSetT<index_type>(inds)};
+    D.set(iv1,rest...,1.);
+    return D;
     }
 
 template<typename I>
