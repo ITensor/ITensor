@@ -320,7 +320,7 @@ svdImpl(ITensor const& A,
     for(auto& el : DD) el = sqr(el);
 
     if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
-    else                         println("Warning: scale not finite real");
+    else                         println("Warning: scale not finite real after SVD");
 
     spec.eigsKept(move(DD));
 
