@@ -15,31 +15,50 @@ struct idmrgRVal
     Real energy;
     Tensor HL;
     Tensor HR;
+    Tensor IL;
     Tensor V;
     };
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
-      const MPOt<Tensor>& H, 
-      const Sweeps& sweeps, 
-      const Args& args = Global::args());
+template<typename Tensor>
+void
+read(std::istream & s, idmrgRVal<Tensor> & rval);
+
+template<typename Tensor>
+void
+write(std::ostream & s, idmrgRVal<Tensor> const& rval);
 
 template <class Tensor>
 idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
-      const MPOt<Tensor>& H,
-      const Sweeps& sweeps,
-      DMRGObserver<Tensor>& obs,
-      const Args& args = Global::args());
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H, 
+      Sweeps       const& sweeps, 
+      Args         const& args = Global::args());
 
 template <class Tensor>
 idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
-      MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
-      Tensor IL,
-      const Sweeps& sweeps,
-      DMRGObserver<Tensor>& obs,
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H,
+      Sweeps       const& sweeps,
+      DMRGObserver<Tensor> & obs,
+      Args         const& args = Global::args());
+
+//For restarting idmrg calculations
+//from a previous run (creates a new DMRGObserver automatically)
+template <class Tensor>
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H, 
+      idmrgRVal<Tensor> const& last_res,
+      Sweeps       const& sweeps, 
+      Args         const& args);
+
+template <class Tensor>
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor> & psi, 
+      MPOt<Tensor> H,
+      idmrgRVal<Tensor> last_rval,
+      Sweeps const& sweeps,
+      DMRGObserver<Tensor> & obs,
       Args args = Global::args());
 
 
@@ -50,10 +69,10 @@ idmrg(MPSt<Tensor>& psi,
 //Very efficient: swap method only uses pointer swaps internally.
 template <class MPSType>
 void
-swapUnitCells(MPSType& psi)
+swapUnitCells(MPSType & psi)
     {
-    const int Nuc = psi.N()/2;
-    for(int n = 1; n <= Nuc; ++n)
+    auto Nuc = psi.N()/2;
+    for(auto n : range1(Nuc))
         {
         psi.Anc(n).swap(psi.Anc(Nuc+n));
         }
@@ -64,45 +83,68 @@ swapUnitCells(MPSType& psi)
 //
 
 
+namespace detail {
+
+struct PseudoInvert
+    {
+    Real cutoff = 0.;
+    PseudoInvert(Real cut) : cutoff(cut) { }
+
+    Real
+    operator()(Real x) const
+        {
+        return (x > cutoff) ? 1./x : 0.;
+        }
+    };
+
+} //namespace detail
+
 
 template <class Tensor>
 idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
+idmrg(MPSt<Tensor> & psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
-      Tensor IL,
-      const Sweeps& sweeps,
-      DMRGObserver<Tensor>& obs,
+      idmrgRVal<Tensor> last_rval,
+      Sweeps const& sweeps,
+      DMRGObserver<Tensor> & obs,
       Args args)
     {
-    const int olevel = args.getInt("OutputLevel",0);
-    const bool quiet = args.getBool("Quiet",olevel == 0);
-    const int nucsweeps = args.getInt("NUCSweeps",1);
-    const int nucs_decr = args.getInt("NUCSweepsDecrement",0);
-    const bool randomize = args.getBool("Randomize",false);
-    const auto show_overlap = args.getBool("ShowOverlap",false);
-    int actual_nucsweeps = nucsweeps;
+    auto olevel = args.getInt("OutputLevel",0);
+    auto quiet = args.getBool("Quiet",olevel == 0);
+    auto nucsweeps = args.getInt("NUCSweeps",1);
+    auto nucs_decr = args.getInt("NUCSweepsDecrement",0);
+    auto do_randomize = args.getBool("Randomize",false);
+    auto show_overlap = args.getBool("ShowOverlap",false);
+    auto actual_nucsweeps = nucsweeps;
 
-    const int N0 = psi.N(); //Number of sites in center
-    const int Nuc = N0/2;   //Number of sites in unit cell
-    int N = N0;             //Current system size
+    int N0 = psi.N(); //Number of sites in center
+    int Nuc = N0/2;   //Number of sites in unit cell
+    int N = N0;       //Current system size
 
     if(N0 == 2) args.add("CombineMPO",false);
 
     Real energy = NAN,
          lastenergy = 0;
 
-    Tensor lastV,
-           D;
+    auto lastV = last_rval.V;
+    Tensor D;
 
     if(psi.A(0))
         {
         lastV = dag(psi.A(0));
-        lastV /= lastV.norm();
-        lastV.pseudoInvert(0);
+        lastV /= norm(lastV);
+        lastV.apply(detail::PseudoInvert(0));
         }
 
-    Tensor HL(H.A(0)),
-           HR(H.A(N0+1));
+    Tensor HL(last_rval.HL),
+           HR(last_rval.HR);
+
+    auto IL = last_rval.IL;
+
+    //If last_rval is trivial,
+    //get edge tensors from MPO
+    if(not HL) HL = H.A(0);
+    if(not HR) HR = H.A(N0+1);
 
     int sw = 1;
 
@@ -113,7 +155,7 @@ idmrg(MPSt<Tensor>& psi,
             printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
-        Sweeps ucsweeps(actual_nucsweeps);
+        auto ucsweeps = Sweeps(actual_nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
@@ -126,12 +168,12 @@ idmrg(MPSt<Tensor>& psi,
                                "NSweep",ucsweeps.nsweep());
         energy = dmrg(psi,H,HL,HR,ucsweeps,obs,args + extra_args);
 
-        if(randomize)
+        if(do_randomize)
             {
             println("Randomizing psi");
             for(int j = 1; j <= psi.N(); ++j)
                 {
-                psi.Anc(j).randomize();
+                randomize(psi.Anc(j));
                 }
             psi.normalize();
             }
@@ -146,7 +188,7 @@ idmrg(MPSt<Tensor>& psi,
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
-        D /= D.norm();
+        D /= norm(D);
         
         //Prepare MPO for next step
         for(int j = 1; j <= Nuc; ++j)
@@ -181,7 +223,7 @@ idmrg(MPSt<Tensor>& psi,
 
     for(; sw <= sweeps.nsweep(); ++sw)
         {
-        Sweeps ucsweeps(actual_nucsweeps);
+        auto ucsweeps = Sweeps(actual_nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
@@ -195,15 +237,12 @@ idmrg(MPSt<Tensor>& psi,
 
         N += N0;
 
-        if(!quiet)
-            {
-            printfln("\niDMRG Step = %d, N=%d sites",sw,N);
-            }
+        if(!quiet) printfln("\niDMRG Step = %d, N=%d sites",sw,N);
 
-        const MPSt<Tensor> initPsi(psi);
+        auto initPsi = psi;
 
         lastenergy = energy;
-        LocalMPO<Tensor> PH(H,HL,HR,args);
+        auto PH = LocalMPO<Tensor>(H,HL,HR,args);
         
         auto extra_args = Args("Quiet",olevel<3,"NoMeasure",sw%2==0,"iDMRG_Step",sw,"NSweep",ucsweeps.nsweep());
         energy = DMRGWorker(psi,PH,ucsweeps,obs,args + extra_args);
@@ -223,8 +262,8 @@ idmrg(MPSt<Tensor>& psi,
 
         //Save last center matrix
         lastV = dag(D);
-        lastV /= lastV.norm();
-        lastV.pseudoInvert(0);
+        lastV /= norm(lastV);
+        lastV.apply(detail::PseudoInvert(0));
 
         //Calculate new center matrix
         psi.position(Nuc);
@@ -236,7 +275,7 @@ idmrg(MPSt<Tensor>& psi,
 
         D = Tensor();
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),args);
-        D /= D.norm();
+        D /= norm(D);
 
         //Prepare MPO for next step
         for(int j = 1; j <= Nuc; ++j)
@@ -304,10 +343,11 @@ idmrg(MPSt<Tensor>& psi,
 
         } //for loop over sw
     
-    idmrgRVal<Tensor> res;
+    auto res = idmrgRVal<Tensor>();
     res.energy = energy;
     res.HL = HL;
     res.HR = HR;
+    res.IL = IL;
     res.V = lastV;
 
     return res;
@@ -315,25 +355,63 @@ idmrg(MPSt<Tensor>& psi,
 
 template <class Tensor>
 idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
-      const MPOt<Tensor>& H,
-      const Sweeps& sweeps,
-      DMRGObserver<Tensor>& obs,
-      const Args& args)
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H,
+      Sweeps       const& sweeps,
+      DMRGObserver<Tensor> & obs,
+      Args         const& args)
     {
-    Tensor IL(dag(H.A(H.N()+1)));
-    return idmrg(psi,H,IL,sweeps,obs,args);
+    //Assumes H.A(N+1) contains vector
+    //picking out ending state of MPO
+    //automaton:
+    auto lval = idmrgRVal<Tensor>();
+    lval.IL = Tensor(dag(H.A(H.N()+1)));
+    return idmrg(psi,H,lval,sweeps,obs,args);
     }
 
 template <class Tensor>
 idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>& psi, 
-      const MPOt<Tensor>& H, 
-      const Sweeps& sweeps, 
-      const Args& args)
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H, 
+      Sweeps       const& sweeps, 
+      Args         const& args)
     {
-    DMRGObserver<Tensor> obs(psi);
+    auto obs = DMRGObserver<Tensor>(psi);
     return idmrg(psi,H,sweeps,obs,args);
+    }
+
+template <class Tensor>
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor>      & psi, 
+      MPOt<Tensor> const& H, 
+      idmrgRVal<Tensor> const& last_res,
+      Sweeps       const& sweeps, 
+      Args         const& args)
+    {
+    auto obs = DMRGObserver<Tensor>(psi);
+    return idmrg(psi,H,last_res,sweeps,obs,args);
+    }
+
+template<typename Tensor>
+void
+read(std::istream & s, idmrgRVal<Tensor> & R)
+    {
+    itensor::read(s,R.energy);
+    itensor::read(s,R.HL);
+    itensor::read(s,R.HR);
+    itensor::read(s,R.IL);
+    itensor::read(s,R.V);
+    }
+
+template<typename Tensor>
+void
+write(std::ostream & s, idmrgRVal<Tensor> const& R)
+    {
+    itensor::write(s,R.energy);
+    itensor::write(s,R.HL);
+    itensor::write(s,R.HR);
+    itensor::write(s,R.IL);
+    itensor::write(s,R.V);
     }
 
 } //namespace itensor
