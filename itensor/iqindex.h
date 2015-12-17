@@ -153,6 +153,7 @@ operator!=(Index const& i, IndexQN const& iq) { return iq.index != i; }
 class IQIndexVal
     {
     public:
+    using index_type = IQIndex;
 
     //////////
     IQIndex index;

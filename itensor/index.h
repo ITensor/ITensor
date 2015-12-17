@@ -206,6 +206,7 @@ class Index
 class IndexVal
     {
     public:
+    using index_type = Index;
 
     Index index;
     long val;
