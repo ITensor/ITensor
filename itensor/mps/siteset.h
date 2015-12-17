@@ -105,14 +105,22 @@ class SiteSet
     virtual int
     getN() const = 0;
 
-    virtual const IQIndex&
+    virtual IQIndex const&
     getSi(int i) const = 0;
 
     virtual IQIndexVal
-    getState(int i, const String& state) const = 0;
+    getState(int i, const String& state) const
+        {
+        Error("getState not defined in class derived from SiteSet");
+        return IQIndexVal();
+        }
 
     virtual IQTensor
-    getOp(int i, const String& opname, const Args& args) const = 0;
+    getOp(int i, String const& opname, Args const& args) const
+        {
+        Error("getOp not defined in class derived from SiteSet");
+        return IQTensor();
+        }
 
     virtual DefaultOpsT
     getDefaultOps(const Args& args) const { return DefaultOpsT(); }
@@ -120,10 +128,10 @@ class SiteSet
     protected:
 
     virtual void
-    doRead(std::istream& s) = 0;
+    doRead(std::istream& s) { Error("doRead not defined in class derived from SiteSet"); }
 
     virtual void
-    doWrite(std::ostream& s) const = 0;
+    doWrite(std::ostream& s) const { Error("doWrite not defined in class derived from SiteSet"); }
 
     private:
 
