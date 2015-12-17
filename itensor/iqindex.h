@@ -37,17 +37,21 @@ class IQIndex : public Index
 
     IQIndex();
 
+    //
+    //Construct IQIndex from name,
+    //collection of any number of 
+    //Index-QN pairs.
+    //Optional last argument can
+    //be Arrow direction of the IQIndex:
+    //IQIndex("name",i1,q1,i2,q2,In);
+    //
     template<typename... Rest>
     IQIndex(std::string const& name, 
             Index const& i1, QN const& q1, 
             Rest const&... etc);
 
-    template<typename... Rest>
-    IQIndex(std::string const& name, 
-            Arrow dir,
-            Index const& i1, QN const& q1, 
-            Rest const&... etc);
-
+    //Constructor taking a container
+    //of IndexQN's
     IQIndex(std::string const& name, 
             storage && ind_qn, 
             Arrow dir = Out, 
@@ -297,9 +301,9 @@ class IQIndexDat
 
     IQIndexDat() { }
 
-    template<typename... Args>
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Args&... args) 
+    template<typename... Rest>
+    IQIndexDat(Index const& i1, QN const& q1,
+               Rest const&... args) 
         { 
         constexpr auto size = sizeof...(args)/2+1;
         iq_.resize(size);
@@ -360,11 +364,13 @@ class IQIndexDat
 
     template<long J>
     void
-    fill() { }
+    fill(Arrow dir = Out) { }
 
-    template<long J, typename... Args>
+    template<long J, typename... Rest>
     void
-    fill(const Index& i, const QN& q, const Args&... rest)
+    fill(Index const& i, 
+         QN const& q, 
+         Rest const&... rest)
         {
 #ifdef DEBUG
         assert(J < iq_.size());
@@ -375,7 +381,7 @@ class IQIndexDat
     };
 
 long
-totalM(const IQIndexDat::storage& storage);
+totalM(IQIndexDat::storage const& storage);
 
 inline IQIndex::
 IQIndex() 
@@ -386,51 +392,54 @@ IQIndex()
 namespace detail {
 
 long inline
-totalM()
+totalM(Arrow dir = Out)
     {
     return 0;
     }
 
-template<typename... Args>
+template<typename... Rest>
 long
-totalM(const Index& i, const QN& q,
-       const Args&... args)
+totalM(Index const& i, 
+       QN const& q,
+       Rest const&... rest)
     {
-    return i.m()+detail::totalM(args...);
+    return i.m()+detail::totalM(rest...);
+    }
+
+Arrow inline
+getDir(Arrow dir = Out)
+    {
+    return dir;
+    }
+
+template<typename... Rest>
+Arrow
+getDir(Index const& i, 
+       QN const& q,
+       Rest const&... rest)
+    {
+    return detail::getDir(rest...);
     }
 
 } //namespace detail
 
 
-template<typename... Args>
+template<typename... Rest>
 IQIndex::
-IQIndex(const std::string& name, 
-        const Index& i1, const QN& q1, 
-        const Args&... rest)
-    : 
-    Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
+IQIndex(std::string const& name, 
+        Index const& i1, QN const& q1, 
+        Rest const&... rest)
+  : Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
     pd(std::make_shared<IQIndexDat>(i1,q1,rest...)),
-    dir_(Out)
-    { }
-
-template<typename... Args>
-IQIndex::
-IQIndex(const std::string& name, 
-        Arrow dir,
-        const Index& i1, const QN& q1, 
-        const Args&... rest)
-    : 
-    Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
-    pd(std::make_shared<IQIndexDat>(i1,q1,rest...)),
-    dir_(dir)
+    dir_(detail::getDir(rest...))
     { }
 
 inline IQIndex::
-IQIndex(const std::string& name, 
-        storage&& ind_qn, 
-        Arrow dir, int plev) 
-    : 
-    Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
+IQIndex(std::string const& name, 
+        storage && ind_qn, 
+        Arrow dir, 
+        int plev) 
+  : Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
     pd(std::make_shared<IQIndexDat>(std::move(ind_qn))),
     dir_(dir)
     { }
