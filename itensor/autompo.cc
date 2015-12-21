@@ -955,6 +955,8 @@ toMPO<IQTensor>(const AutoMPO& am,
         for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
         }
 
+    int max_d = 0;
+    
     vector<IQIndex> links(N+1);
     vector<IndexQN> inqn;
     for(int n = 0; n <= N; n++)
@@ -980,6 +982,8 @@ toMPO<IQTensor>(const AutoMPO& am,
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
         links.at(n) = IQIndex(nameint("Hl",n),inqn);
+        
+        max_d = max(max_d, links.at(n).m());
 
         //if(n <= 2 or n == N)
         //    {
@@ -989,6 +993,8 @@ toMPO<IQTensor>(const AutoMPO& am,
         //    printfln("IQIndex for site %d:\n%s",n,links.at(n));
         //    }
         }
+        
+        println("Maximal dimension is ", max_d);
 
 #ifdef SHOW_AUTOMPO
     static string ws[100][100];
