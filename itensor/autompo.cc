@@ -697,7 +697,7 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO,
             for(int c = 1; c <= nc; ++c)
                 for(const Term &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
                     {
-                    if(fabs(term.coef) < 1E-12)
+                    if(abs(term.coef) < 1E-12)
                         continue;
                         
                     IQTensor op = sites_.op(term.ops.front().op, n);
