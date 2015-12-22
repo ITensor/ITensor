@@ -127,6 +127,34 @@ gemm_wrapper(bool transa,
     {
     LAPACK_INT lda = m,
                ldb = k;
+#ifdef PLATFORM_openblas
+    auto at = CblasNoTrans,
+         bt = CblasNoTrans;
+    if(transa)
+        {
+        at = CblasTrans;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CblasTrans;
+        ldb = n;
+        }
+    //auto ralpha = realRef(alpha);
+    //auto ialpha = imagRef(alpha);
+    //auto rbeta = realRef(beta);
+    //auto ibeta = imagRef(beta);
+    //if(ialpha != 0.0 || ibeta != 0.0)
+    //    {
+    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
+    //    }
+    auto* palpha = reinterpret_cast<double*>(&alpha);
+    auto* pbeta = reinterpret_cast<double*>(&beta);
+    auto* pA = reinterpret_cast<const double*>(A);
+    auto* pB = reinterpret_cast<const double*>(B);
+    auto* pC = reinterpret_cast<double*>(C);
+	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
+#else //platform not openblas
 #ifdef ITENSOR_USE_CBLAS
     auto at = CblasNoTrans,
          bt = CblasNoTrans;
@@ -167,6 +195,7 @@ gemm_wrapper(bool transa,
         }
     F77NAME(zgemm)(&at,&bt,&m,&n,&k,palpha,pA,&lda,pB,&ldb,pbeta,pC,&m);
 #endif
+#endif
     }
 
 void 
@@ -202,6 +231,23 @@ gemv_wrapper(bool trans,
              Cplx* y,
              LAPACK_INT incy)
     {
+#ifdef PLATFORM_openblas
+    auto Tr = trans ? CblasTrans : CblasNoTrans;
+    //auto ralpha = realRef(alpha);
+    //auto ialpha = imagRef(alpha);
+    //auto rbeta = realRef(beta);
+    //auto ibeta = imagRef(beta);
+    //if(ialpha != 0.0 || ibeta != 0.0)
+    //    {
+    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
+    //    }
+	auto* palpha = reinterpret_cast<double*>(&alpha);
+	auto* pbeta = reinterpret_cast<double*>(&beta);
+	auto* pA = reinterpret_cast<const double*>(A);
+	auto* px = reinterpret_cast<const double*>(x);
+	auto* py = reinterpret_cast<double*>(y);
+    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,pA,m,px,incx,pbeta,py,incy);
+#else //platform other than openblas
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
     auto palpha = reinterpret_cast<void*>(&alpha); 
@@ -217,6 +263,7 @@ gemv_wrapper(bool trans,
     auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha); 
     auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta); 
     F77NAME(zgemv)(&Tr,&m,&n,palpha,pA,&m,px,&incx,pbeta,py,&incy);
+#endif
 #endif
     }
 
@@ -348,6 +395,10 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
     {
     char jobz = 'V';
     char uplo = 'U';
+#ifdef PLATFORM_lapacke
+std::vector<LAPACK_REAL> work(N);
+LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+#else
     LAPACK_INT lwork = std::max(1,3*N-1);//max(1, 1+6*N+2*N*N);
     std::vector<LAPACK_COMPLEX> work(lwork);
     std::vector<LAPACK_REAL> rwork(lwork);
@@ -361,6 +412,8 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
 #else
     F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info);
 #endif
+
+#endif //PLATFORM_lapacke
     return info;
     }
 

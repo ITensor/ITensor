@@ -30,6 +30,32 @@ namespace itensor {
     LAPACK_REAL real, imag;
     } LAPACK_COMPLEX;
 }
+#elif defined PLATFORM_openblas
+
+#define ITENSOR_USE_CBLAS
+
+#include "cblas.h"
+#include "lapacke.h"
+
+namespace itensor {
+using LAPACK_INT = lapack_int;
+using LAPACK_REAL = double;
+using LAPACK_COMPLEX = lapack_complex_double;
+
+inline LAPACK_REAL& 
+realRef(LAPACK_COMPLEX & z) 
+    { 
+    auto* p = reinterpret_cast<double*>(&z);
+    return p[0];
+    }
+
+inline LAPACK_REAL& 
+imagRef(LAPACK_COMPLEX & z) 
+    { 
+    auto* p = reinterpret_cast<double*>(&z);
+    return p[1];
+    }
+}
 
 //
 //
@@ -122,6 +148,7 @@ namespace itensor {
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
 
+//dnrm2 declaration
 #ifdef ITENSOR_USE_CBLAS
 LAPACK_REAL cblas_dnrm2(LAPACK_INT N, LAPACK_REAL *X, LAPACK_INT incX);
 #else
@@ -129,6 +156,7 @@ LAPACK_REAL F77NAME(dnrm2)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx);
 #endif
 
 
+//daxpy declaration
 #ifdef ITENSOR_USE_CBLAS
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
 #else
@@ -137,6 +165,7 @@ void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+//ddot declaration
 #ifdef ITENSOR_USE_CBLAS
 LAPACK_REAL 
 cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, const LAPACK_REAL *Y, const LAPACK_INT incy);
@@ -144,6 +173,7 @@ cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, cons
 LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+//dgemm declaration
 #ifdef ITENSOR_USE_CBLAS
 void cblas_dgemm(const enum CBLAS_ORDER __Order,
         const enum CBLAS_TRANSPOSE __TransA,
@@ -156,6 +186,24 @@ void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
             LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
             LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
 #endif
+
+//zgemm declaration
+#ifdef PLATFORM_openblas
+void cblas_zgemm(OPENBLAS_CONST enum CBLAS_ORDER Order, 
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA, 
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB, 
+                 OPENBLAS_CONST blasint M, 
+                 OPENBLAS_CONST blasint N, 
+                 OPENBLAS_CONST blasint K,
+                 OPENBLAS_CONST double *alpha, 
+                 OPENBLAS_CONST double *A, 
+                 OPENBLAS_CONST blasint lda, 
+                 OPENBLAS_CONST double *B, 
+                 OPENBLAS_CONST blasint ldb, 
+                 OPENBLAS_CONST double *beta, 
+                 double *C, 
+                 OPENBLAS_CONST blasint ldc);
+#else //platform not openblas
 
 #ifdef ITENSOR_USE_CBLAS
 void cblas_zgemm(const enum CBLAS_ORDER __Order,
@@ -170,6 +218,9 @@ void F77NAME(zgemm)(char* transa,char* transb,LAPACK_INT* m,LAPACK_INT* n,LAPACK
             LAPACK_INT* LDB,LAPACK_COMPLEX* beta,LAPACK_COMPLEX* C,LAPACK_INT* LDC);
 #endif
 
+#endif //zgemm declaration
+
+//dgemv declaration
 #ifdef ITENSOR_USE_CBLAS
 void cblas_dgemv(const enum CBLAS_ORDER Order,
         const enum CBLAS_TRANSPOSE TransA, const LAPACK_INT M, const LAPACK_INT N,
@@ -182,6 +233,21 @@ void F77NAME(dgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_REAL* alpha,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+//zgemv declaration
+#ifdef PLATFORM_openblas
+void cblas_zgemv(OPENBLAS_CONST enum CBLAS_ORDER order,  
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE trans,  
+                 OPENBLAS_CONST blasint m, 
+                 OPENBLAS_CONST blasint n,
+                 OPENBLAS_CONST double *alpha, 
+                 OPENBLAS_CONST double  *a, 
+                 OPENBLAS_CONST blasint lda,  
+                 OPENBLAS_CONST double  *x, 
+                 OPENBLAS_CONST blasint incx,  
+                 OPENBLAS_CONST double *beta,  
+                 double  *y, 
+                 OPENBLAS_CONST blasint incy);
+#else
 #ifdef ITENSOR_USE_CBLAS
 void cblas_zgemv(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE trans, const LAPACK_INT m, 
                  const LAPACK_INT n, const void *alpha, const void *a, const LAPACK_INT lda, 
@@ -191,6 +257,7 @@ void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_COMPLEX* alp
                     LAPACK_INT* LDA, LAPACK_COMPLEX* X, LAPACK_INT* incx, LAPACK_COMPLEX* beta,
                     LAPACK_COMPLEX* Y, LAPACK_INT* incy);
 #endif
+#endif //zgemv declaration
 
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
@@ -226,7 +293,10 @@ void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
                      LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
                      LAPACK_INT *info);
 
-#ifdef PLATFORM_acml
+#ifdef PLATFORM_lapacke
+lapack_int LAPACKE_zheev(int matrix_order, char jobz, char uplo, lapack_int n,
+                         lapack_complex_double* a, lapack_int lda, double* w);
+#elif PLATFORM_acml
 void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
             double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
             LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len);

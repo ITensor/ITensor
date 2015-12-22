@@ -42,6 +42,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 ##
 ## Example using a C interface to LAPACK on GNU/LINUX systems
+## (Path to lib/ folder may differ on your system)
 ##
 
 #PLATFORM=lapack
@@ -49,6 +50,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 ##
 ## Example using the Intel MKL library
+## (Path to lib/intel64/ and include/ folders may differ on your system)
 ##
 
 #PLATFORM=mkl
@@ -57,7 +59,17 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
 
 ##
+## Example using the OpenBLAS library (http://www.openblas.net/)
+## (Path to lib/ and include/ folders may differ on your system)
+##
+
+#PLATFORM=openblas
+#BLAS_LAPACK_LIBFLAGS=-L/usr/local/opt/openblas/lib -lopenblas
+#BLAS_LAPACK_INCLUDEFLAGS=-I/usr/local/opt/openblas/include
+
+##
 ## Example using the AMD ACML library
+## (Path to lib/ folder may differ on your system)
 ##
 
 #PLATFORM=acml
