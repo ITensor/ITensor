@@ -8,6 +8,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 namespace stdx {
 
@@ -200,6 +201,15 @@ reserve_vector(typename std::vector<T>::size_type size)
     std::vector<T> v;
     v.reserve(size);
     return v;
+    }
+
+template<typename Container,
+         typename T>
+T
+accumulate(Container && C,
+           T && init)
+    {
+    return std::accumulate(C.begin(),C.end(),std::forward<T>(init));
     }
 
 template<typename Container,
