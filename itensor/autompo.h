@@ -70,7 +70,16 @@ struct SiteTerm
     operator!=(const SiteTerm& other) const { return !operator==(other); }
     };
 
-typedef std::vector<SiteTerm> SiteTermProd;
+class SiteTermProd : public std::vector<SiteTerm>
+    {
+    public:        
+        SiteTermProd() {};
+        
+        SiteTermProd(const std::vector<SiteTerm>::const_iterator &first, 
+                        const std::vector<SiteTerm>::const_iterator &last) : 
+                        std::vector<SiteTerm>(first, last) {};
+        bool operator<(const SiteTermProd &other) const;        
+    };
 
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
 
@@ -109,6 +118,8 @@ struct HTerm : Term
     {
         
     HTerm() {};
+    
+    HTerm(Complex c, const SiteTermProd &prod) : Term(c, prod) {};
 
     void
     add(const std::string& op,
@@ -203,7 +214,7 @@ typedef std::vector<std::vector<TermSum>> MPOMatrix;
 class AutoMPO
     {
     const SiteSet& sites_;
-    std::vector<HTerm> terms_;
+    std::map<SiteTermProd, Complex> terms_;
     bool svd_;
     
     void DecomposeTerm(int n, const SiteTermProd &term, 
@@ -273,8 +284,8 @@ class AutoMPO
     const SiteSet&
     sites() const { return sites_; }
 
-    const std::vector<HTerm>&
-    terms() const { return terms_; }
+    std::vector<HTerm>
+    terms() const;
     
     bool usingSVD() const { return svd_; }
     

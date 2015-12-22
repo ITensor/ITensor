@@ -121,6 +121,20 @@ QN QuantumNumber(const SiteSet &sites, const SiteTermProd &prod)
     return qn;
     }
     
+bool SiteTermProd::operator<(const SiteTermProd &other) const
+    { 
+    if(size() != other.size())
+        return size() < other.size();
+        
+    for(unsigned i=0; i<size(); i++)
+        if(at(i).i != other.at(i).i)
+            return at(i).i < other.at(i).i;
+        else if(at(i).op != other.at(i).op)
+            return at(i).op < other.at(i).op;
+            
+    return false; // the two are equal
+    }
+    
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
     {
     SiteTermProd prod = first;
@@ -225,14 +239,8 @@ add(const HTerm& t)
     { 
     if(abs(t.coef) == 0)
         return; 
-    
-    // Check if a proportional term already exists
-    auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
-    auto it = find_if(terms_.begin(), terms_.end(), isProportional);
-    if(it == terms_.end())
-        terms_.push_back(t); 
-    else
-        it->coef += t.coef;
+        
+    terms_[t.ops] += t.coef;
     }
 
 
@@ -417,11 +425,24 @@ int AutoMPO::PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) c
     vec.push_back(ops);
     return vec.size();
     }
+
+// Translate terms map into a vector for backwards compatibility
+std::vector<HTerm> AutoMPO::terms() const
+    {
+        std::vector<HTerm> hterms;
+        hterms.reserve(terms_.size());
     
+        for(const std::pair<SiteTermProd, Complex> &t : terms_)
+            hterms.emplace_back(HTerm(t.second, t.first));
+        
+        return hterms;
+    }
+
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
 void AutoMPO::PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const
-    {    
-    for(const HTerm &ht : terms_)
+    {
+    std::vector<HTerm> hterms = terms();
+    for(const HTerm &ht : hterms)
         for(int n = ht.first().i; n <= ht.last().i; n++)
             {
             SiteTermProd left, onsite, right;
@@ -897,8 +918,10 @@ toMPO<IQTensor>(const AutoMPO& am,
     IQMPO H(sites);
     const int N = sites.N();
     const auto checkqn = args.getBool("CheckQNs",true);
+    
+    std::vector<HTerm> terms = am.terms();
 
-    for(auto& t : am.terms())
+    for(auto& t : terms)
         if(t.Nops() > 2) 
             Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO when SVD option is set to false.");
         else if(t.Nops() > 1)
@@ -925,7 +948,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
     //and starting a string of operators (i.e. first op of an HTerm)
-    for(const auto& ht : am.terms())
+    for(const auto& ht : terms)
     for(int n = ht.first().i; n < ht.last().i; ++n)
         {
         auto& bn = basis.at(n);
@@ -1005,7 +1028,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     //all HTerms (operator strings) which begin on,
     //end on, or cross site "j"
     vector<vector<HTerm>> ht_by_n(N+1);
-    for(const HTerm& ht : am.terms()) 
+    for(const HTerm& ht : terms) 
     for(const auto& st : ht.ops)
         {
         ht_by_n.at(st.i).push_back(ht);
@@ -1156,7 +1179,9 @@ toExpH_ZW1(const AutoMPO& am,
     IQMPO H(sites);
     const int N = sites.N();
 
-    for(auto& t : am.terms())
+    std::vector<HTerm> terms = am.terms();
+
+    for(auto& t : terms)
     if(t.Nops() > 2) 
         {
         Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
@@ -1177,7 +1202,7 @@ toExpH_ZW1(const AutoMPO& am,
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
     //and starting a string of operators (i.e. first op of an HTerm)
-    for(const auto& ht : am.terms())
+    for(const auto& ht : terms)
     for(int n = ht.first().i; n < ht.last().i; ++n)
         {
         auto& bn = basis.at(n);
@@ -1246,7 +1271,7 @@ toExpH_ZW1(const AutoMPO& am,
     //all HTerms (operator strings) which begin on,
     //end on, or cross site "j"
     vector<vector<HTerm>> ht_by_n(N+1);
-    for(const HTerm& ht : am.terms()) 
+    for(const HTerm& ht : terms) 
     for(const auto& st : ht.ops)
         {
         ht_by_n.at(st.i).push_back(ht);
