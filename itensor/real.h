@@ -19,16 +19,16 @@ namespace itensor {
 
 //Real ran1();
 
-static const Real Pi = 3.1415926535897932384626433832795028841971693993;
-static const Real Sqrt2 = sqrt(2);
-static const Real ISqrt2 = 1.0/sqrt(2);
+const Real Pi = 3.1415926535897932384626433832795028841971693993;
+const Real Sqrt2 = sqrt(2);
+const Real ISqrt2 = 1.0/sqrt(2);
 //static const Real Sqrt3 = sqrt(3);
 //static const Real ISqrt3 = 1.0/sqrt(3);
 
 template <typename T>
 T sqr(T x) { return x*x; }
 
-static const Real ApproxReal_Accuracy = 1E-12;
+const Real ApproxReal_Accuracy = 1E-12;
 
 struct ApproxReal
     {
@@ -62,9 +62,9 @@ struct ApproxReal
 
     };
 
-static const Real maxlogdouble = log(std::numeric_limits<double>::max());
+const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
-static const Real LogNumber_Accuracy = 1E-12;
+const Real LogNumber_Accuracy = 1E-12;
 
 class TooBigForReal : public ITError
     {
