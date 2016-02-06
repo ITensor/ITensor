@@ -46,6 +46,7 @@ QN
 doTask(CalcDiv const& C,
        QDense<T> const& D)
     {
+    if(C.is.r()==0) return QN{};
 #ifdef DEBUG
     if(D.offsets.empty()) Error("Default constructed QDense in doTask(CalcDiv,QDense)");
 #endif
