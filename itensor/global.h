@@ -38,15 +38,15 @@ namespace itensor {
 
 enum Direction { Fromright, Fromleft, Both, None };
 
-static const int NMAX = 8;
-static const Real MIN_CUT = 1E-15;
-static const int MAX_M = 5000;
+const int NMAX = 8;
+const Real MIN_CUT = 1E-15;
+const int MAX_M = 5000;
 
 
-static const Cplx Complex_1 = Cplx(1,0);
-static const Cplx Complex_i = Cplx(0,1);
-static const Cplx Cplx_1 = Cplx(1,0);
-static const Cplx Cplx_i = Cplx(0,1);
+const Cplx Complex_1 = Cplx(1,0);
+const Cplx Complex_i = Cplx(0,1);
+const Cplx Cplx_1 = Cplx(1,0);
+const Cplx Cplx_i = Cplx(0,1);
 
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses
