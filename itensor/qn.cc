@@ -182,6 +182,12 @@ operator<<(std::ostream & s, QN const& q)
         s << "Nf=" << q(1);
         }
     else
+    if(q.mod(1) == -2 && !isActive(q,2))
+        {
+        //parity-only spinless fermion
+        s << "Pf=" << q(1);
+        }
+    else
     if(q.mod(1) == 1 && q.mod(2) == -1 && !isActive(q,3))
         {
         //electron

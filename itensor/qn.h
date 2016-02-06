@@ -37,6 +37,10 @@ QN spinboson(int Sz, int Nb);
 //spinless fermion
 QN fermion(int Nf);
 
+//spinless fermion, only parity conserved,
+//particle number not conserved
+QN fparity(int Pf);
+
 //fermion with spin
 //Sz in units of spin 1/2
 QN electron(int Sz, int Nf);
@@ -300,6 +304,9 @@ spinboson(int Sz, int Nb) { return QN({Sz,1},{Nb,1}); }
 
 QN inline
 fermion(int Nf) { return QN({Nf,-1}); }
+
+QN inline
+fparity(int Pf) { return QN({Pf,-2}); }
 
 QN inline
 electron(int Sz, int Nf) { return QN({Sz,1},{Nf,-1}); }
