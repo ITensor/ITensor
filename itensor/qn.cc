@@ -14,9 +14,18 @@ modAssign(QN const& qo)
 void QNVal::
 set(qn_t v)
     { 
-    if(std::abs(mod_) > 1) 
+    auto m = std::abs(mod_);
+    if(m > 1) 
         {
-        val_ = (mod_+v)%mod_;
+        // Here v is the value we want to compute mod m.
+        // If v >= 0 then it's enough to compute v%m.
+        // If v < 0 we don't want -(|v|%m) which is what
+        // C++'s v%m operation gives. Instead we want
+        // to map, say, -1 to m-1 and -m-1 to m-1 etc.
+        // Observe that m*|v| > v (since m > 1).
+        // So m*|v|+v for negative v will always be > 0
+        // and mod'ing this will give the desired behavior.
+        val_ = (m*std::abs(v)+v)%m;
         }
     else                   
         {
