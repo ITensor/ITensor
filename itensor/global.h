@@ -20,8 +20,8 @@ namespace itensor {
 
 enum Direction { Fromright, Fromleft, BothDir, NoDir };
 
-static const Real MIN_CUT = 1E-15;
-static const int MAX_M = 5000;
+const Real MIN_CUT = 1E-15;
+const int MAX_M = 5000;
 
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses

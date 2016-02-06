@@ -11,17 +11,17 @@
 
 namespace itensor {
 
-static const Real Pi = 3.14159265358979323846;
-static const Real Sqrt2 = std::sqrt(2.);
-static const Real ISqrt2 = 1./std::sqrt(2.);
+const Real Pi = 3.14159265358979323846;
+const Real Sqrt2 = std::sqrt(2.);
+const Real ISqrt2 = 1./std::sqrt(2.);
 
 template <typename T>
 T 
 sqr(T x) { return x*x; }
 
-static const Real maxlogdouble = log(std::numeric_limits<double>::max());
+const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
-static const Real LogNum_Accuracy = 1E-12;
+const Real LogNum_Accuracy = 1E-12;
 
 class TooBigForReal : public ITError
     {

@@ -20,10 +20,10 @@ using Real = double;
 using Cplx = std::complex<double>;
 using Complex = std::complex<double>;
 
-static const Cplx Complex_1 = Cplx(1,0);
-static const Cplx Complex_i = Cplx(0,1);
-static const Cplx Cplx_1 = Cplx(1,0);
-static const Cplx Cplx_i = Cplx(0,1);
+const Cplx Complex_1 = Cplx(1,0);
+const Cplx Complex_i = Cplx(0,1);
+const Cplx Cplx_1 = Cplx(1,0);
+const Cplx Cplx_i = Cplx(0,1);
 
 inline Real& 
 realRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[0]; }

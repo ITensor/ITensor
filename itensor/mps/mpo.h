@@ -10,7 +10,7 @@
 
 namespace itensor {
 
-static const Real DefaultLogRefScale(2.0255);
+const Real DefaultLogRefScale = 2.0255;
 
 template<class Tensor> class MPOt;
 
