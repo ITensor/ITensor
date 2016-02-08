@@ -129,7 +129,7 @@ class Global
     static bool& 
     showIDs()
         {
-        static bool showIDs_ = false;
+        static bool showIDs_ = true;
         return showIDs_;
         }
     static Real
