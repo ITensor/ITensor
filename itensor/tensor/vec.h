@@ -66,6 +66,9 @@ operator&=(CVectorRef a, VectorRefc const& b);
 //Dot product
 Real
 operator*(VectorRefc a, VectorRefc b);
+//Complex dot product, conjugates a: \sum_j conj(a_j)*b_j
+Cplx
+operator*(CVectorRefc a, CVectorRefc b);
 
 inline Vector&
 operator*=(Vector & v, Real fac) { makeRef(v) *= fac; return v; }

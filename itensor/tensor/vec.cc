@@ -204,6 +204,16 @@ operator*(VectorRefc a, VectorRefc b)
     return ddot_wrapper(a.size(),a.data(),stride(a),b.data(),stride(b));
     }
 
+Cplx
+operator*(CVectorRefc a, CVectorRefc b)
+    {
+#ifdef DEBUG
+    if(a.size() != b.size()) throw std::runtime_error("VectorRef dot product: mismatched sizes");
+    if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("VectorRef dot product: overflow of size beyond LAPACK_INT range");
+#endif
+    return zdotc_wrapper(a.size(),a.data(),stride(a),b.data(),stride(b));
+    }
 
 //
 //
