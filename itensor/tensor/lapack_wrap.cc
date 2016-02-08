@@ -61,6 +61,33 @@ ddot_wrapper(LAPACK_INT N,
     }
 
 //
+// zdotc
+//
+Cplx
+zdotc_wrapper(LAPACK_INT N,
+              Cplx const* X,
+              LAPACK_INT incx,
+              Cplx const* Y,
+              LAPACK_INT incy)
+    {
+#ifdef ITENSOR_USE_CBLAS
+    Cplx res;
+    auto pX = reinterpret_cast<const void*>(X);
+    auto pY = reinterpret_cast<const void*>(Y);
+    auto pres = reinterpret_cast<void*>(&res);
+    cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
+    return res;
+#else
+    auto pX = reinterpret_cast<Cplx*>(X);
+    auto pY = reinterpret_cast<Cplx*>(Y);
+    auto Xnc = const_cast<LAPACK_COMPLEX*>(pX);
+    auto Ync = const_cast<LAPACK_COMPLEX*>(pY);
+    return F77NAME(zdotc)(&N,Xnc,&incx,Ync,&incy);
+#endif
+    return Cplx{};
+    }
+
+//
 // dgemm
 //
 void 

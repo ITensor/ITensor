@@ -173,6 +173,14 @@ cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, cons
 LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+//zdotc declaration
+#ifdef ITENSOR_USE_CBLAS
+LAPACK_REAL 
+cblas_zdotc_sub(const LAPACK_INT N, const void *X, const LAPACK_INT incx, const void *Y, const LAPACK_INT incy, void *res);
+#else
+LAPACK_COMPLEX F77NAME(zdotc)(LAPACK_INT* N, LAPACK_COMPLEX* X, LAPACK_INT* incx, LAPACK_COMPLEX* Y, LAPACK_INT* incy);
+#endif
+
 //dgemm declaration
 #ifdef ITENSOR_USE_CBLAS
 void cblas_dgemm(const enum CBLAS_ORDER __Order,
@@ -377,6 +385,16 @@ ddot_wrapper(LAPACK_INT N,
              LAPACK_INT incx,
              const LAPACK_REAL* Y,
              LAPACK_INT incy);
+
+//
+// zdotc
+//
+Cplx
+zdotc_wrapper(LAPACK_INT N,
+              Cplx const* X,
+              LAPACK_INT incx,
+              Cplx const* Y,
+              LAPACK_INT incy);
 
 //
 // dgemm
