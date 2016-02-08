@@ -136,6 +136,7 @@ class VecRangeIter
     public:
     using size_type = size_t;
     using offset_type = size_type;
+    using ind_type = size_type;
     using iterator_category = std::forward_iterator_tag;
     using range_type = VecRange;
     private:
@@ -153,6 +154,9 @@ class VecRangeIter
 
     offset_type
     offset() const { return off_; }
+
+    ind_type
+    index() const { return off_; }
 
     size_type
     stride() const { return stride_; }
