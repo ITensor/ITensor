@@ -74,12 +74,19 @@ truncate(Vector& D,
         }
     else
         {
-        const Real scale = doRelCutoff ? D(1) : 1.0;
+        auto scale = 1.0;
+        if(doRelCutoff) 
+            {
+            scale = 0.;
+            for(int n = 1; n <= D.Length(); ++n)
+                scale += D(n);
+            }
+
         for(;m > maxm || (truncerr+D(m) < cutoff*scale && m > minm); --m)
             {
             truncerr += D(m);
             }
-        truncerr = (D(1) == 0 ? 0 : truncerr/scale);
+        truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
 
     D.ReduceDimension(m); 
@@ -162,7 +169,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto cplx = A.isComplex();
 
@@ -220,6 +227,16 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
 
     if(args.getBool("ShowEigs",false))
         {
+        auto scale_fac = 1.0;
+        Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
+        if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
+            {
+            scale_fac = fabs(A.scale().real0());
+            }
+        else
+            {
+            println("Warning: not including scale = ",A.scale());
+            }
         cout << endl;
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
         printfln("truncate = %s",(do_truncate?"true":"false"));
@@ -229,26 +246,16 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         printfln("svdtruncerr = %.3E",terr);
 
         int stop = min(10,DD.Length());
-        Vector Ds = DD.SubVector(1,stop);
+        Vector Ds = scale_fac*DD.SubVector(1,stop);
 
-        Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
-        if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
-            {
-            Ds *= fabs(A.scale().real0());
-            cout << "Singular values: ";
-            }
-        else
-            {
-            cout << "Singular values (not including scale = " << A.scale() << "):";
-            }
-
+        print("Singular vals: ");
         for(int j = 1; j <= stop; ++j)
             {
-            const Real sval = Ds(j);
+            auto sval = Ds(j);
             printf(( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E") , sval); 
             print((j != stop) ? ", " : "\n");
             }
-        cout << endl;
+        println();
         }
     
     Index uL(lname,m,litype),
@@ -287,19 +294,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
     else
         {
-        cout << "Warning: scale not finite real" << endl;
+        println("Warning: scale not finite Real, not including in spectrum");
         }
-
-    //Global::lastd() = DD;
-
-    //Include A's scale to get the actual eigenvalues kept
-    //as long as the leading eigenvalue is within a few orders
-    //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    //Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
-    //if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
-    //    {
-    //    Global::lastd() *= A.scale().real();
-    //    }
 
     return Spectrum(DD,Args("Truncerr",terr));
 
