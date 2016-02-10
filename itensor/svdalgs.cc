@@ -206,22 +206,21 @@ showEigs(Vector const& P,
     auto stop = std::min(10ul,P.size());
     auto Ps = Vector(subVector(P,0,stop));
 
-    Real orderMag = log(std::fabs(P(1))) + scale.logNum();
+    Real orderMag = log(std::fabs(P(0))) + scale.logNum();
     if(std::fabs(orderMag) < 5 && scale.isFiniteReal())
         {
         Ps *= sqr(scale.real0());
-        print("Denmat evals: ");
+        print("Denmat evals:");
         }
     else
         {
-        printf("Denmat evals (not including log(scale) = %.2f): ",scale.logNum());
+        printf("Denmat evals [not including scale = ",scale.logNum(),"]:");
         }
 
-    for(decltype(stop) j = 0; j < stop; ++j)
+    for(auto n : range(Ps))
         {
-        auto eig = Ps(j);
-        printf(( eig > 1E-3 && eig < 1000) ? ("%.4f") : ("%.3E") , eig); 
-        print((j != stop) ? ", " : "\n");
+        auto eig = Ps(n);
+        printf(( eig > 1E-3 && eig < 1000) ? (" %.4f") : (" %.3E") , eig); 
         }
     println();
     } // showEigs
@@ -319,8 +318,14 @@ svdImpl(ITensor const& A,
     //density matrix eigs
     for(auto& el : DD) el = sqr(el);
 
-    if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
-    else                         println("Warning: scale not finite real after SVD");
+    if(A.scale().isFiniteReal()) 
+        {
+        DD *= sqr(A.scale().real0());
+        }
+    else                         
+        {
+        println("Warning: scale not finite real after svd");
+        }
 
     spec.eigsKept(move(DD));
 
@@ -549,7 +554,14 @@ svdImpl(IQTensor A,
 
     //Originally eigs were found without including scale
     //so put the scale back in
-    probs *= sqr(A.scale().real0());
+    if(A.scale().isFiniteReal())
+        {
+        probs *= sqr(A.scale().real0());
+        }
+    else
+        {
+        println("Warning: scale not finite real after svd");
+        }
 
     return Spectrum(move(probs),Args("Truncerr",truncerr));
 
