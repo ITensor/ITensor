@@ -207,14 +207,14 @@ showEigs(Vector const& P,
     auto Ps = Vector(subVector(P,0,stop));
 
     Real orderMag = log(std::fabs(P(0))) + scale.logNum();
-    if(std::fabs(orderMag) < 5 && scale.isFiniteReal())
+    if(std::fabs(orderMag) < 10 && scale.isFiniteReal())
         {
         Ps *= sqr(scale.real0());
         print("Denmat evals:");
         }
     else
         {
-        printf("Denmat evals [not including scale = ",scale.logNum(),"]:");
+        print("Denmat evals [not including scale = ",scale.logNum(),"]:");
         }
 
     for(auto n : range(Ps))
