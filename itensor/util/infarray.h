@@ -372,7 +372,8 @@ class InfArray
     void
     check_ind(size_t i) const
         {
-        if(i >= size_) Error("index out of range in InfArray");
+        //if(i >= size_) Error("index out of range in InfArray");
+        if(i >= size_) throw std::runtime_error("index out of range in InfArray");
         }
     void
     check_empty() const
