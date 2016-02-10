@@ -205,10 +205,18 @@ svd(Tensor AA,
         if(hasindex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
-    auto Ucomb = combiner(std::move(Uinds),{"IndexName","uc"});
-    auto Vcomb = combiner(std::move(Vinds),{"IndexName","vc"});
-
-    AA = Ucomb * AA * Vcomb;
+    Tensor Ucomb,
+           Vcomb;
+    if(!Uinds.empty())
+        {
+        Ucomb = combiner(std::move(Uinds),{"IndexName","uc"});
+        AA *= Ucomb;
+        }
+    if(!Vinds.empty())
+        {
+        Vcomb = combiner(std::move(Vinds),{"IndexName","vc"});
+        AA *= Vcomb;
+        }
 
     if(useOrigM)
         {
@@ -231,8 +239,8 @@ svd(Tensor AA,
         args.add("Maxm",maxm);
         }
 
-    auto ui = commonIndex(Ucomb,AA);
-    auto vi = commonIndex(Vcomb,AA);
+    auto ui = commonIndex(AA,Ucomb);
+    auto vi = commonIndex(AA,Vcomb);
 
     auto spec = svdRank2(AA,ui,vi,U,D,V,args);
 
