@@ -550,7 +550,7 @@ svdImpl(IQTensor A,
 
     U = IQTensor(Uis,move(Ustore));
     D = IQTensor(Dis,move(Dstore),A.scale()*signfix);
-    V = IQTensor(Vis,move(Vstore));
+    V = IQTensor(Vis,move(Vstore),LogNum{signfix});
 
     //Originally eigs were found without including scale
     //so put the scale back in
