@@ -726,6 +726,9 @@ norm(const ITensor& T) { return T.norm(); }
 int inline
 rank(const ITensor& T) { return rank(T.indices()); }
 
+int inline
+order(const ITensor& T) { return order(T.indices()); }
+
 Real
 sumels(const ITensor& T);
 

@@ -694,6 +694,10 @@ int
 rank(const IndexSet<IndexT>& is) { return is.r(); }
 
 template<class IndexT>
+int
+order(const IndexSet<IndexT>& is) { return is.r(); }
+
+template<class IndexT>
 Arrow
 dir(const IndexSet<IndexT>& is, const IndexT& I)
     {

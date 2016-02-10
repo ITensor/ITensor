@@ -462,6 +462,9 @@ norm(const IQTensor& t) { return t.norm(); }
 int inline
 rank(const IQTensor& T) { return rank(T.indices()); }
 
+int inline
+order(const IQTensor& T) { return order(T.indices()); }
+
 Real
 sumels(const IQTensor& T);
 
