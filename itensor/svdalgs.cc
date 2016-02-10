@@ -379,8 +379,6 @@ svdImpl(IQTensor A,
         auto& VV = Vmats.at(b);
         auto& d =  dvecs.at(b);
 
-        //printfln("Block %d = \n%s",b,M);
-
         SVD(M,UU,d,VV,thresh);
 
         //conjugate VV so later we can just do
@@ -431,8 +429,6 @@ svdImpl(IQTensor A,
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
 
-        //print("d^2 = "); for(auto&& el : d) print(" ",sqr(el)); println();
-
         //Count number of eigenvalues in the sector above docut
         long this_m = 0;
         for(decltype(d.size()) n = 0; n < d.size() && sqr(d(n)) > docut; ++n)
@@ -469,10 +465,6 @@ svdImpl(IQTensor A,
                Dis(L,R),
                Vis(vI,dag(R));
 
-    //Print(Uis);
-    //Print(Dis);
-    //Print(Vis);
-
     QDense<T> Ustore(Uis,QN()),
               Vstore(Vis,QN());
 
@@ -502,18 +494,12 @@ svdImpl(IQTensor A,
         assert(uI[B.i1].m() == long(nrows(UU)));
         auto Uref = makeMatRef(pU,uI[B.i1].m(),L[n].m());
         reduceCols(UU,L[n].m());
-        //println("Doing Uref &= UU");
-        //Print(Uref.range());
-        //Print(UU.range());
         Uref &= UU;
 
         auto dind = stdx::make_array(n,n);
         auto pD = getBlock(Dstore,Dis,dind);
         assert(pD.data() != nullptr);
         auto Dref = makeVecRef(pD.data(),d.size());
-        //println("Doing Dref &= d");
-        //Print(Dref.range());
-        //Print(d.range());
         Dref &= d;
 
         auto vind = stdx::make_array(B.i2,n);
