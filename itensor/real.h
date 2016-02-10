@@ -56,34 +56,6 @@ class LogNum
     int sign_;
     public:
 
-    Real 
-    logNum() const { return lognum_; }
-
-    int 
-    sign() const { return sign_; }
-
-    bool
-    isZero() const { return sign_ == 0; }
-
-    bool 
-    isRealZero() const
-        { return (sign_ == 0 || lognum_ < -maxlogdouble); }
-
-    bool 
-    isFiniteReal() const 
-        { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
-
-    bool 
-    isTooBigForReal() const 
-        { return (lognum_ > maxlogdouble); }
-
-    bool 
-    isTooSmallForReal() const 
-        { return (lognum_ < -maxlogdouble); }
-
-    bool friend inline
-    isnan(const LogNum& L) { return std::isnan(L.lognum_); }
-
     //Default constructed to NAN 
     //to catch initialization errors
     LogNum() 
@@ -123,6 +95,35 @@ class LogNum
             Error("sign should be -1, 0, or 1");
 #endif
         } 
+
+    Real 
+    logNum() const { return lognum_; }
+
+    int 
+    sign() const { return sign_; }
+
+    bool
+    isZero() const { return sign_ == 0; }
+
+    bool 
+    isRealZero() const
+        { return (sign_ == 0 || lognum_ < -maxlogdouble); }
+
+    bool 
+    isFiniteReal() const 
+        { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
+
+    bool 
+    isTooBigForReal() const 
+        { return (lognum_ > maxlogdouble); }
+
+    bool 
+    isTooSmallForReal() const 
+        { return (lognum_ < -maxlogdouble); }
+
+    bool friend inline
+    isnan(const LogNum& L) { return std::isnan(L.lognum_); }
+
 
     void 
     read(std::istream& s) 
