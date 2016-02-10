@@ -133,7 +133,13 @@ truncate(vector<EigQN>& alleig,
         }
     else
         {
-        Real scale = doRelCutoff ? alleig.back().eig : 1.0;
+        auto scale = 1.0;
+        if(doRelCutoff) 
+            {
+            scale = 0.;
+            for(auto& eq : alleig) scale += eq.eig;
+            }
+
         while(   m > maxm 
              || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc).eig < cutoff*scale && m > minm))
              )
@@ -150,7 +156,7 @@ truncate(vector<EigQN>& alleig,
         docut = (mdisc > 0 
                 ? (alleig.at(mdisc-1).eig + alleig.at(mdisc).eig)*0.5 - 1E-5*alleig.at(mdisc-1).eig
                 : -1);
-        truncerr = (alleig.back().eig == 0 ? 0 : truncerr/scale);
+        truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
 
 
@@ -313,7 +319,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
-    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto logrefNorm = args.getReal("LogRefNorm",0.);
 
@@ -452,47 +458,47 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     if(args.getBool("ShowEigs",false))
         {
-        cout << endl;
+        //Include refNorm in printed eigs as long as
+        //the leading eig is within a few orders of magnitude
+        //of 1.0. Otherwise just print the scaled eigs.
+        int s = alleig.size();
+        Real orderMag = log(fabs(alleig.at(s-1).eig)) + refNorm.logNum();
+        Real real_fac = 1.;
+        if(fabs(orderMag) < 5 && refNorm.isFiniteReal())
+            {
+            real_fac = refNorm.real();
+            //cout << "    Singular values: ";
+            }
+        else
+            {
+            //cout << "    Singular values [omitting scale factor " << refNorm << "]: \n";
+            if(alleig.at(s-1).eig > 1.e10)
+                {
+                Error("bad alleig");
+                }
+            //cout << "    ";
+            }
+
+        println();
         println("svdRank2 (IQTensor):");
         printfln("    minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
         printfln("    Kept m = %d states in svdRank2",m);
-        printfln("    svdtruncerr = %.2E",svdtruncerr);
+        printfln("    svdtruncerr = %.2E",svdtruncerr*sqr(real_fac));
         printfln("    docut = %.2E",docut);
         println("    doRelCutoff is ",(doRelCutoff ? "true" : "false"));
         println("    absoluteCutoff is ",(absoluteCutoff ? "true" : "false"));
         println("    refNorm is ",refNorm);
 
-        const int s = alleig.size();
-        const int max_show = 20;
+        int max_show = 20;
         int stop = s-min(s,max_show);
-
-        //Include refNorm in printed eigs as long as
-        //the leading eig is within a few orders of magnitude
-        //of 1.0. Otherwise just print the scaled eigs.
-        Real orderMag = log(fabs(alleig.at(s-1).eig)) + refNorm.logNum();
-        Real real_fac = 1;
-        if(fabs(orderMag) < 5 && refNorm.isFiniteReal())
-            {
-            real_fac = refNorm.real();
-            cout << "    Singular values: ";
-            }
-        else
-            {
-            cout << "    Singular values [omitting scale factor " << refNorm << "]: \n";
-            if(alleig.at(s-1).eig > 1.e10)
-                {
-                Error("bad alleig");
-                }
-            cout << "    ";
-            }
-
+        print("Singular values: ");
         for(int j = s-1; j >= stop; --j)
             {
-            const Real sval = sqrt(alleig.at(j).eig)*real_fac;
+            auto sval = sqrt(alleig.at(j).eig)*real_fac;
             printf( (sval >= 1E-3 && sval < 1E3) ? ("%.3f") : ("%.3E"), sval);
             print((j != stop) ? ", " : "\n");
             }
-        cout << endl;
+        println();
         } //end if(showeigs_)
 
     //Truncate denmat eigenvalue vectors
