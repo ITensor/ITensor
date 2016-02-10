@@ -46,10 +46,7 @@ QN
 doTask(CalcDiv const& C,
        QDense<T> const& D)
     {
-    if(C.is.r()==0) return QN{};
-#ifdef DEBUG
-    if(D.offsets.empty()) Error("Default constructed QDense in doTask(CalcDiv,QDense)");
-#endif
+    if(C.is.r()==0 || D.offsets.empty()) return QN{};
     auto b = D.offsets.front().block;
     Labels block_ind(C.is.r());
     computeBlockInd(b,C.is,block_ind);

@@ -32,18 +32,18 @@ IQIndex S1,S2,L1,L2;
 
 IQTensor phi,A,B,C,D;
 
-S1 = IQIndex("S1",Out,
+S1 = IQIndex("S1",
              s1u,QN(+1),
              s1d,QN(-1));
-S2 = IQIndex("S2",Out,
+S2 = IQIndex("S2",
              s2u,QN(+1),
              s2d,QN(-1));
-L1 = IQIndex("L1",Out,
+L1 = IQIndex("L1",
              l1u,QN(+1),
              l10,QN( 0),
              l1d,QN(-1));
              
-L2 = IQIndex("L2",Out,
+L2 = IQIndex("L2",
              l2uu,QN(+2),
              l20,QN( 0),
              l2dd,QN(-2));
@@ -156,6 +156,27 @@ SECTION("Contracting Product")
             auto val = Op.real(s(i),sP(iP)) * t.real(l0(1),l1(j));
             CHECK_CLOSE(val, R.real(s(i),sP(iP),l0(1),l1(j)) );
             }
+        }
+
+    SECTION("Regression Test 2")
+        {
+        //Feb 10 2016: was getting an error when trying
+		//to print the result C of the following contraction
+        //Bug was that doTask(CalcDiv) was being too stingy about
+        //QDense storage with no blocks and throwing an exception
+		auto s = IQIndex("S",Index("s+",1,Site),QN(1),Index("s-",1,Site),QN(-1));
+		auto l = IQIndex("L",Index("l",1,Link),QN(3));
+
+		auto A = IQTensor(s,l);
+		A.set(s(1),l(1),1);
+
+		auto B = IQTensor(s,prime(l));
+		B.set(s(2),prime(l)(1),1);
+
+		auto C = A*dag(B);
+
+		auto q = div(C);
+		CHECK(q == QN());
         }
 
     }

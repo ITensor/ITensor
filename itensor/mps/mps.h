@@ -596,17 +596,24 @@ totalQN(const IQMPS& psi);
 // <psi | phi>
 //
 template <class MPSType>
-Complex 
+Cplx 
 overlapC(MPSType const& psi, 
-        MPSType const& phi)
+         MPSType const& phi)
     {
     auto N = psi.N();
     if(N != phi.N()) Error("overlap: mismatched N");
 
     auto l1 = linkInd(psi,1);
     auto L = phi.A(1);
-    if(l1) L *= dag(prime(psi.A(1),l1)); 
-    else   L *= dag(psi.A(1));
+    if(l1) 
+        {
+        L *= dag(prime(psi.A(1),l1)); 
+        }
+    else   
+        {
+        L *= dag(psi.A(1));
+        }
+
 
     auto i = N;
     for(i = 2; i < N; ++i) 
