@@ -96,7 +96,7 @@ struct QNVal
     set(qn_t v);
 
     QNVal&
-    operator-() { val_ = -val_; return *this; }
+    operator-() { set(-val_); return *this; }
     };
 
 //
@@ -229,6 +229,7 @@ write(std::ostream & s, QNVal const& q);
 // QN functions
 // 
 
+//1-indexed
 bool inline
 isActive(QN const& q, size_t n) { return isActive(q.val0(n-1)); }
 
@@ -274,10 +275,11 @@ operator<<(std::ostream & s, QN const& q);
 //returns -1 if any sector of the QN is fermionic and odd-parity
 //otherwise returns +1
 int
-parity(QN const& q);
+paritySign(QN const& q);
 
-bool inline
-isFermionic(QN const q) { return parity(q) == -1; }
+//returns true if any sector of the QN is fermionic
+bool
+isFermionic(QN const& q);
 
 void
 read(std::istream & s, QN & q);

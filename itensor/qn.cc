@@ -220,7 +220,7 @@ operator<<(std::ostream & s, QN const& q)
     }
 
 int
-parity(QN const& q)
+paritySign(QN const& q)
     {
     int p = 1;
     for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
@@ -231,6 +231,16 @@ parity(QN const& q)
             }
         }
     return p;
+    }
+
+bool
+isFermionic(QN const& q)
+    {
+    for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
+        {
+        if(isFermionic(q.val0(n))) return true;
+        }
+    return false;
     }
 
 void
