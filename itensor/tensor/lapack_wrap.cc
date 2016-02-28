@@ -78,11 +78,11 @@ zdotc_wrapper(LAPACK_INT N,
     cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
     return res;
 #else
-    auto pX = reinterpret_cast<Cplx const*>(X);
-    auto pY = reinterpret_cast<Cplx const*>(Y);
-    auto Xnc = const_cast<LAPACK_COMPLEX*>(pX);
-    auto Ync = const_cast<LAPACK_COMPLEX*>(pY);
-    return F77NAME(zdotc)(&N,Xnc,&incx,Ync,&incy);
+    auto ncX = const_cast<Cplx*>(X);
+    auto ncY = const_cast<Cplx*>(Y);
+    auto pX = reinterpret_cast<LAPACK_COMPLEX*>(pX);
+    auto pY = reinterpret_cast<LAPACK_COMPLEX*>(pY);
+    return F77NAME(zdotc)(&N,pX,&incx,pX,&incy);
 #endif
     return Cplx{};
     }
