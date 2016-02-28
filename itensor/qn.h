@@ -53,6 +53,37 @@ QN elparity(int Sz, int Pf);
 //for example Z3 clock QNs are clock(0,3); clock(1,3); clock(2,3);
 QN clock(int n, int N);
 
+
+//
+// QN convenience accessor functions
+// 
+
+//Get the Sz value
+//Appropriate for QNs constructed via:
+//spin, spinboson, electron, elparity
+int
+Sz(QN const& q);
+
+//Get the Nb (boson number) value
+//Appropriate for QNs constructed via:
+//boson, spinboson
+int
+Nb(QN const& q);
+
+//Get the Nf (fermion number) value
+//Appropriate for QNs constructed via:
+//electron
+int
+Nf(QN const& q);
+
+//Get the fermion parity value.
+//Either 0 for even parity or 1 for odd parity.
+//Appropriate for QNs constructed via:
+//electron, elparity
+int
+Nfp(QN const& q);
+
+
 size_t inline constexpr
 QNSize() { return 4ul; }
 
@@ -319,6 +350,17 @@ elparity(int Sz, int Pf) { return QN({Sz,1},{Pf,-2}); }
 QN inline
 clock(int n, int N) { return QN({n,N}); }
 
+int inline
+Sz(QN const& q) { return q[0]; }
+
+int inline
+Nb(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
+
+int inline
+Nf(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
+
+int inline
+Nfp(QN const& q) { return Nf(q)%2; }
 
 } //namespace itensor
 
