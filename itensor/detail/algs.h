@@ -84,13 +84,18 @@ seed_quickran(int newseed)
 double inline
 quickran() 
     {
-    auto& seed = seed_quickran(0);
-    int im = 134456;
-    int ia = 8121;
-    int ic = 28411;
-    double scale = 1.0 / im;
-    seed = (seed*ia+ic)%im;
-    return std::fabs(double(seed)) * scale;
+    auto res = 0.0;
+    while(res == 0.0)
+        {
+        auto& seed = seed_quickran(0);
+        int im = 134456;
+        int ia = 8121;
+        int ic = 28411;
+        double scale = 1.0 / im;
+        seed = (seed*ia+ic)%im;
+        res = std::fabs(double(seed)) * scale;
+        }
+    return res;
     }
 
 Cplx inline
