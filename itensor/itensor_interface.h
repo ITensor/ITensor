@@ -80,7 +80,7 @@ class ITensorT
     ITensorT(indexval_type const& iv1, 
              IVals const&... rest);
 
-    //Automatic conversion to ITensor
+    //Automatic conversion IQTensor -> ITensor
     operator ITensor() const;
 
     //
@@ -295,13 +295,12 @@ class ITensorT
 // ITensorT special constructor functions
 //
 
-// Makes a kronecker-delta-like tensor
-// with element specified by IndexVals/IQIndexVals
+// Makes a tensor with element specified by IndexVals/IQIndexVals
 // set to 1.0, all other elements zero
 template <typename IVal, typename... IVals>
 ITensorT<typename IVal::index_type>
-delta(IVal const& iv1, 
-      IVals const&... rest);
+pick(IVal const& iv1, 
+     IVals const&... rest);
 
 
 //

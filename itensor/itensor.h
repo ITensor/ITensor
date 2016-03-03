@@ -40,35 +40,36 @@ combiner(Index const& i1,
     }
 
 ITensor
-deltaTensor(const Index& i1, const Index& i2);
+delta(Index const& i1, Index const& i2);
 
 //Construct ITensor with diagonal elements set to z
 //(if z is a Real or z.imag()==0 storage will be real)
 template<typename... Inds>
 ITensor
-diagTensor(Cplx z,
-           const Index& i1,
-           Inds&&... inds);
+diag(Cplx z,
+     Index const& i1,
+     Inds&&... inds);
 
 template<typename... Inds>
 ITensor
-diagTensor(Real r,
-           const Index& i1,
-           Inds&&... inds)
+diag(Real r,
+     Index const& i1,
+     Inds&&... inds)
     {
-    return diagTensor(Cplx{r},i1,std::forward<Inds>(inds)...);
+    return diag(Cplx{r},i1,std::forward<Inds>(inds)...);
     }
 
 //Construct diagonal ITensor,
 //diagonal elements given by container C
+//(Uses elements C.begin() up to C.end())
 template<typename Container, 
          typename... Inds,
          class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
                                 || stdx::containerOf<Cplx,Container>::value> >
 ITensor
-diagTensor(const Container& C,
-           const Index& i1,
-           Inds&&... inds);
+diag(Container const& C,
+     Index const& i1,
+     Inds&&... inds);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
@@ -78,7 +79,7 @@ diagTensor(const Container& C,
 // Useful for creating MPOs
 //
 ITensor inline
-operator*(const IndexVal& iv1, const IndexVal& iv2) 
+operator*(IndexVal const& iv1, IndexVal const& iv2) 
     { 
     ITensor t(iv1); 
     return (t *= iv2); 
@@ -91,14 +92,14 @@ operator*(const IndexVal& iv1, const IndexVal& iv2)
 // Useful for creating MPOs
 //
 ITensor inline
-operator*(const IndexVal& iv1, Real val) 
+operator*(IndexVal const& iv1, Real val) 
     { 
     ITensor res(iv1); 
     res *= val; 
     return res; 
     }
 ITensor inline
-operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
+operator*(Real val, IndexVal const& iv) { return operator*(iv,val); }
 
 
 template <typename... Inds>
@@ -119,10 +120,10 @@ ITensorT<IndexT>
 randomTensor(IndexSetT<IndexT> const& inds);
 
 ITensor
-matrixTensor(Matrix&& M, const Index& i1, const Index& i2);
+matrixTensor(Matrix&& M, Index const& i1, Index const& i2);
 
 std::ostream& 
-operator<<(std::ostream & s, const ITensor& T);
+operator<<(std::ostream & s, ITensor const& T);
 
 template<> ITensor::
 ITensorT(Cplx val);

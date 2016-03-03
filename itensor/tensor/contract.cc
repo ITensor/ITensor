@@ -849,10 +849,8 @@ contract(TenRefc<RangeT,VA> A, Labels const& ai,
         }
     else
         {
-        TIMER_START(3)
         CProps props(ai,bi,ci);
         props.compute(A,B,C);
-        TIMER_STOP(3)
         contract(props,A,B,C,alpha,beta);
         }
     }

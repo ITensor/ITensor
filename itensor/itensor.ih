@@ -29,9 +29,9 @@ ITensorT(const IndexVal& iv1,
 
 template<typename... Inds>
 ITensor
-diagTensor(Complex z, 
-           const Index& i1,
-           Inds&&... inds)
+diag(Complex z, 
+     Index const& i1,
+     Inds&&... inds)
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
     auto len = minM(is);
@@ -41,9 +41,9 @@ diagTensor(Complex z,
 
 template<typename Container, typename... Inds, class>
 ITensor
-diagTensor(Container const& C, 
-           Index const& i1,
-           Inds &&... inds)
+diag(Container const& C, 
+     Index const& i1,
+     Inds &&... inds)
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG

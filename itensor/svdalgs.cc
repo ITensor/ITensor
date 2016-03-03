@@ -236,6 +236,7 @@ svdImpl(ITensor const& A,
         ITensor & V,
         Args const& args)
     {
+    SCOPED_TIMER(7);
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
