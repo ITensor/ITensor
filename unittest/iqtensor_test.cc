@@ -582,6 +582,22 @@ SECTION("Combiner")
 
     } //Combiner
 
+SECTION("Two index delta tensor")
+    {
+    auto d = delta(S1,S2);
+    auto T = randomTensor(QN{},S1,prime(S1));
+
+    auto R = d*T;
+    CHECK(hasindex(R,S2));
+    CHECK(hasindex(R,prime(S1)));
+
+    for(auto i1 : range1(S1.m()))
+    for(auto i2 : range1(S1.m()))
+        {
+        CHECK(T.real(S1(i1),prime(S1)(i2)) == R.real(S2(i1),prime(S1)(i2)));
+        }
+    }
+
 SECTION("Scalar")
     {
     auto T1 = randomTensor(QN(),L1,L2,S1,S2);

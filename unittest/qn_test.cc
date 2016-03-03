@@ -256,4 +256,5 @@ SECTION("Z3 Clock")
     Q = clock(2,3)+clock(2,3);
     CHECK(Q == clock(1,3));
     }
+
 }

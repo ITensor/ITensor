@@ -89,11 +89,11 @@ SECTION("Constructors")
         auto i3 = Index("i3",2);
         auto i4 = Index("i4",4);
         auto I = IQIndex("four",
-                         In,
                          i1,QN(-1),
                          i2,QN(0),
                          i3,QN(+1),
-                         i4,QN(+2));
+                         i4,QN(+2),
+                         In);
         CHECK(I.nindex() == 4);
         CHECK(I.dir() == In);
         CHECK(I[0] == i1);
