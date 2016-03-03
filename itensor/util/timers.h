@@ -6,6 +6,7 @@
 #define __ITENSOR_TIMERS_H
 
 #include <chrono>
+#include <cmath>
 #include "itensor/util/stdx.h"
 #include "itensor/util/print.h"
 
@@ -61,6 +62,7 @@ struct Timers
     private:
     std::array<now_type,NTimer> start_;
     std::array<duration_type,NTimer> timer_;
+    std::array<duration_type,NTimer> timer2_;
     std::array<size_type,NTimer> count_;
     now_type gstart_;
     bool print_on_exit_ = false;
@@ -70,6 +72,7 @@ struct Timers
       : print_on_exit_(print_on_exit)
         { 
         stdx::fill(timer_,duration_type::zero());
+        stdx::fill(timer2_,duration_type::zero());
         stdx::fill(count_,0ul);
         gstart_ = now();
         }
@@ -96,7 +99,9 @@ struct Timers
     stop(size_type n)
         {
         auto end_n = now();
-        timer_[n] += end_n-start_[n];
+        auto delt = end_n-start_[n];
+        timer_[n] += delt;
+        timer2_[n] += duration_type(1E-18*delt.count()*delt.count());
         count_[n] += 1ul;
         }
 
@@ -107,10 +112,25 @@ struct Timers
     time(size_type n) const { return timer_[n].count(); }
 
     double
+    time2(size_type n) const { return timer2_[n].count(); }
+
+    double
     avgTime(size_type n) const 
         { 
         if(count_[n] == 0) return 0;
         return timer_[n].count()/count_[n]; 
+        }
+
+    double
+    err(size_type n) const 
+        { 
+        auto N = count_[n];
+        if(N <= 0) return 0;
+        auto av = timer_[n].count()/N;
+        auto av2 = timer2_[n].count()/N;
+        auto stdev = std::sqrt(std::fabs(av2-av*av));
+        if(N==1) return stdev;
+        return stdev/std::sqrt(N-1);
         }
 
     double
@@ -160,9 +180,10 @@ operator<<(std::ostream& s, Timers<NTimer> const& T)
         {
         if(T.count(n) == 0) continue;
         auto avg = T.avgTime(n);
+        auto err = T.err(n);
         auto time = T.time(n);
         auto pct = 100*(time/tot);
-        s << format("\nSection %2d, Average = %.4f, Total = %.4f [%5.1f%%]",n,avg,time,pct);
+        s << format("\nSection %2d, Average = %.6f+-%.6f (%d), Total = %.4f [%5.1f%%]",n,avg,2.*err,T.count(n),time,pct);
         }
     s << "\n-----------------------------------------------------";
     return s;
