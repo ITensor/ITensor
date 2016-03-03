@@ -75,10 +75,10 @@ class ITensorT
     //Construct rank n tensor, all
     //elements set to zero except the single
     //entry specified by the IndexVal/IQIndexVal args
-    template <typename... IVals>
-    explicit
-    ITensorT(indexval_type const& iv1, 
-             IVals const&... rest);
+    //template <typename... IVals>
+    //explicit
+    //ITensorT(indexval_type const& iv1, 
+    //         IVals const&... rest);
 
     //Automatic conversion IQTensor -> ITensor
     operator ITensor() const;
@@ -298,8 +298,9 @@ class ITensorT
 // Makes a tensor with element specified by IndexVals/IQIndexVals
 // set to 1.0, all other elements zero
 template <typename IVal, typename... IVals>
-ITensorT<typename IVal::index_type>
-pick(IVal const& iv1, 
+//ITensorT<typename IVal::index_type>
+ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
+pick(IVal  const& iv1, 
      IVals const&... rest);
 
 

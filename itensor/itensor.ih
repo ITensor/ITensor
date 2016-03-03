@@ -11,20 +11,47 @@
 
 namespace itensor {
 
-template<>
-template <typename... IVals>
-ITensor::
-ITensorT(const IndexVal& iv1, 
-         const IVals&... rest)
-  : scale_(1.)
-    {
-    const size_t size = 1+sizeof...(rest);
-    auto ivs = std::array<IndexVal,size>{{iv1,rest...}};
-    std::array<Index,size> inds;
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    is_ = IndexSet(inds);
-    store_ = newITData<DenseReal>(area(is_),0.);
-    set(iv1,rest...,1.);
+//template<>
+//template <typename... IVals>
+//ITensor::
+//ITensorT(const IndexVal& iv1, 
+//         const IVals&... rest)
+//  : scale_(1.)
+//    {
+//    const size_t size = 1+sizeof...(rest);
+//    auto ivs = std::array<IndexVal,size>{{iv1,rest...}};
+//    std::array<Index,size> inds;
+//    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+//    is_ = IndexSet(inds);
+//    store_ = newITData<DenseReal>(area(is_),0.);
+//    set(iv1,rest...,1.);
+//    }
+
+// TODO: implement special code for doing this operation
+//       more efficiently
+inline ITensor& 
+operator*=(ITensor & T, IndexVal const& iv) { return T *= pick(iv); } 
+ITensor inline
+operator*(IndexVal const& iv, ITensor const& B) 
+    { 
+    auto A = pick(iv);
+    A *= B; 
+    return A; 
+    }
+
+ITensor inline
+operator*(IndexVal const& iv1, IndexVal const& iv2) 
+    { 
+    auto t = pick(iv1);
+    return (t *= iv2); 
+    }
+
+ITensor inline
+operator*(IndexVal const& iv1, Real val) 
+    { 
+    auto res = pick(iv1);
+    res *= val; 
+    return res; 
     }
 
 template<typename... Inds>

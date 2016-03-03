@@ -11,23 +11,23 @@ template<>
 IQTensor::
 ITensorT(Complex val);
 
-template<> 
-template <typename... IQIVals>
-IQTensor::
-ITensorT(const IQIndexVal& iv1,
-         const IQIVals&... rest)
-  : scale_(1.)
-    { 
-    const size_t size = 1+sizeof...(rest);
-    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
-    std::array<IQIndex,size> inds;
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    is_ = IQIndexSet(inds);
-    QN div;
-    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
-    store_ = newITData<QDenseReal>(is_,div);
-    set(iv1,rest...,1.);
-    }
+//template<> 
+//template <typename... IQIVals>
+//IQTensor::
+//ITensorT(IQIndexVal const& iv1,
+//         IQIVals const&... rest)
+//  : scale_(1.)
+//    { 
+//    const size_t size = 1+sizeof...(rest);
+//    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
+//    std::array<IQIndex,size> inds;
+//    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+//    is_ = IQIndexSet(inds);
+//    QN div;
+//    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
+//    store_ = newITData<QDenseReal>(is_,div);
+//    set(iv1,rest...,1.);
+//    }
 
 
 //template<>
@@ -56,6 +56,24 @@ ITensorT(const IQIndexVal& iv1,
 //    else
 //        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
 //    }
+
+inline IQTensor& 
+operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= pick(iv); } 
+
+IQTensor inline
+operator*(IQIndexVal const& iv, IQTensor const& T) { return pick(iv) * T; }
+
+ITensor inline
+operator*(IndexVal const& iv, IQTensor const& T) 
+    { 
+    return pick(iv) * toITensor(T); 
+    }
+
+IQTensor inline
+delta(IQIndex const& i1, IQIndex const& i2)
+    {
+    return IQTensor({i1,i2},QCombiner{});
+    }
 
 } //namespace itensor
 

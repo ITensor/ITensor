@@ -134,11 +134,11 @@ template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
 
-template<typename IndexT>
-template <typename... IVals>
-ITensorT<IndexT>::
-ITensorT(indexval_type const& iv1, 
-         IVals const&... rest) { Error("ITensorT(iv1,...) not implemented"); }
+//template<typename IndexT>
+//template <typename... IVals>
+//ITensorT<IndexT>::
+//ITensorT(indexval_type const& iv1, 
+//         IVals const&... rest) { Error("ITensorT(iv1,...) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -571,11 +571,12 @@ swap(ITensorT & other)
     }
 
 template <typename IVal, typename... IVals>
-ITensorT<typename IVal::index_type>
+ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
 pick(IVal const& iv1, 
      IVals const&... rest)
     {
-    using index_type = typename IVal::index_type;
+    //using index_type = typename IVal::index_type;
+    using index_type = typename std::common_type<IVal,IVals...>::type::index_type;
     const constexpr auto size = 1+sizeof...(rest);
     auto ivs = stdx::make_array(iv1,rest...);
     //TODO: try directly making inds as iv1.index,(rest.index)...

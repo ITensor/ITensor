@@ -27,6 +27,8 @@ class QCombiner
     Range R_;
     storage_type store_;
     public:
+
+    QCombiner() { }
     
     template<typename IQInds>
     explicit

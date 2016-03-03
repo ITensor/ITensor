@@ -13,6 +13,10 @@ struct FuncObj
     operator()(T x) const { return x*x; }
     };
 
+bool
+isIQTensor(ITensor const& T) { return false; }
+bool
+isIQTensor(IQTensor const& T) { return true; }
 
 TEST_CASE("IQTensorTest")
 {
@@ -145,7 +149,7 @@ SECTION("Contracting Product")
 
         auto l0 = IQIndex("L0",Index("l0",1),QN());
         auto l1 = IQIndex("L1",Index("l1",3),QN());
-        auto t = IQTensor(l0(1),l1(3));
+        auto t = pick(l0(1),l1(3));
 
         auto R = Op * t;
 
@@ -234,7 +238,7 @@ SECTION("Apply")
 
 SECTION("RandomizeTest")
     {
-    IQTensor T(L1(1),S1(1),L2(4),S2(2));
+    auto T = pick(L1(1),S1(1),L2(4),S2(2));
     const QN D = div(T);
     randomize(T);
     CHECK_EQUAL(D,div(T));
@@ -584,10 +588,13 @@ SECTION("Combiner")
 
 SECTION("Two index delta tensor")
     {
-    auto d = delta(S1,S2);
+    auto d = delta(dag(S1),S2);
+    CHECK(isIQTensor(d));
     auto T = randomTensor(QN{},S1,prime(S1));
+    CHECK(isIQTensor(T));
 
     auto R = d*T;
+    CHECK(isIQTensor(R));
     CHECK(hasindex(R,S2));
     CHECK(hasindex(R,prime(S1)));
 

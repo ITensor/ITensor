@@ -163,7 +163,7 @@ op(const String& opname, int i,
         {
         auto n = args.getInt("State");
         auto v = si(i)(n);
-        return IQTensor(dag(v),prime(v));
+        return pick(dag(v),prime(v));
         }
     else
         {

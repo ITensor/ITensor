@@ -22,12 +22,12 @@ IQTensor& IQTensor::dag();
 // value and rank decreases by 1
 // (similar to summing against a Kronecker
 // delta tensor \delta_{J,n})
-inline IQTensor& 
-operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= IQTensor(iv); } 
+IQTensor& 
+operator*=(IQTensor& T, IQIndexVal const& iv);
 IQTensor inline
 operator*(IQTensor T, IQIndexVal const& iv) { T *= iv; return T; }
-IQTensor inline
-operator*(IQIndexVal const& iv, IQTensor const& T) { return IQTensor(iv) * T; }
+IQTensor
+operator*(IQIndexVal const& iv, IQTensor const& T);
 
 
 //Add ITensor to corresponding block of IQTensor
@@ -65,11 +65,8 @@ operator*(const IQTensor& T, const IndexVal& iv)
     return toITensor(T)*iv; 
     }
 
-ITensor inline
-operator*(const IndexVal& iv, const IQTensor& T) 
-    { 
-    return ITensor(iv) * toITensor(T); 
-    }
+ITensor
+operator*(IndexVal const& iv, IQTensor const& T);
 
 //Compute divergence of IQTensor T
 QN
@@ -85,6 +82,9 @@ combiner(IQIndex const& i1,
     {
     return combiner(std::vector<IQIndex>{i1,inds...});
     }
+
+IQTensor
+delta(IQIndex const& i1, IQIndex const& i2);
 
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
@@ -111,7 +111,7 @@ IQTensor
 randomTensor(IQIndexVal const& iv1, 
              IQIndVals&&... ivs)
     {
-    auto T = IQTensor(iv1,std::forward<IQIndVals>(ivs)...);
+    auto T = pick(iv1,std::forward<IQIndVals>(ivs)...);
     try {
         return random(T);
         }

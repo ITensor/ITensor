@@ -21,12 +21,12 @@ namespace itensor {
 // value and rank decreases by 1
 // (similar to summing against a Kronecker
 // delta tensor \delta_{J,n})
-inline ITensor& 
-operator*=(ITensor & T, IndexVal const& iv) { return T *= ITensor(iv); } 
+ITensor& 
+operator*=(ITensor & T, IndexVal const& iv);
 ITensor inline
 operator*(ITensor T, IndexVal const& iv) { T *= iv; return T; }
-ITensor inline
-operator*(IndexVal const& iv, ITensor const& B) { ITensor A(iv); A *= B; return A; }
+ITensor
+operator*(IndexVal const& iv, ITensor const& B);
 
 ITensor
 combiner(std::vector<Index> inds, Args const& args = Global::args());
@@ -78,12 +78,8 @@ diag(Container const& C,
 //
 // Useful for creating MPOs
 //
-ITensor inline
-operator*(IndexVal const& iv1, IndexVal const& iv2) 
-    { 
-    ITensor t(iv1); 
-    return (t *= iv2); 
-    }
+ITensor
+operator*(IndexVal const& iv1, IndexVal const& iv2);
 
 //
 // Define product of IndexVal iv1 = (I1,n1) 
@@ -91,13 +87,8 @@ operator*(IndexVal const& iv1, IndexVal const& iv2)
 //
 // Useful for creating MPOs
 //
-ITensor inline
-operator*(IndexVal const& iv1, Real val) 
-    { 
-    ITensor res(iv1); 
-    res *= val; 
-    return res; 
-    }
+ITensor
+operator*(IndexVal const& iv1, Real val);
 ITensor inline
 operator*(Real val, IndexVal const& iv) { return operator*(iv,val); }
 
