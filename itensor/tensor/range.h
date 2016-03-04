@@ -433,7 +433,7 @@ namespace detail {
         return I.offset();
         }
 
-    template<typename Range_>
+    template<typename Range_, size_t start = 0>
     struct ComputeOffset
         {
         using range_type = Range_;
@@ -455,14 +455,14 @@ namespace detail {
         size_type
         off(size_type first, Inds... rest) const
             {
-            return first*r.stride(i) + off<i+1>(rest...);
+            return (first-start)*r.stride(i) + off<i+1>(rest...);
             }
 
         template <size_type i>
         size_type
         off(size_type ind) const
             {
-            return ind*r.stride(i);
+            return (ind-start)*r.stride(i);
             }
         };
 
@@ -493,6 +493,21 @@ offset(Range_ const& r, size_t i1, Inds... inds)
         throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
 #endif
     return detail::ComputeOffset<Range_>(r)(i1,inds...);
+    }
+
+//1-indexed
+template<typename Range_, 
+         class=stdx::require<isRange<Range_>>,
+         typename... Inds>
+auto
+offset1(Range_ const& r, size_t i1, Inds... inds)
+    -> decltype(r.stride(0))
+    {
+#ifdef DEBUG
+    if(1+sizeof...(inds) != rank(r)) 
+        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
+#endif
+    return detail::ComputeOffset<Range_,1>(r)(i1,inds...);
     }
 
 template<typename index_type>
