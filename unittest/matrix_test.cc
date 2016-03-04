@@ -1496,6 +1496,7 @@ SECTION("Singular Value Decomp")
 
         //Print(norm(U*DD*transpose(V)-M));
         auto relnrm = norm(U*DD*transpose(V)-M)/norm(M);
+        Print(relnrm);
         CHECK(relnrm < 1E-13);
         }
     }

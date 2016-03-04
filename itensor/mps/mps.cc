@@ -435,10 +435,10 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("a",i)); }
-    A_[1] = pick(initState(1),a[1](1));
+    A_[1] = pick(IndexVal{initState(1)},a[1](1));
     for(int i = 2; i < N_; ++i)
-        { A_[i] = pick(dag(a[i-1])(1),initState(i),a[i](1)); }
-    A_[N_] = pick(dag(a[N_-1])(1),initState(N_));
+        { A_[i] = pick(dag(a[i-1])(1),IndexVal{initState(i)},a[i](1)); }
+    A_[N_] = pick(dag(a[N_-1])(1),IndexVal{initState(N_)});
     }
 template
 void MPSt<ITensor>::

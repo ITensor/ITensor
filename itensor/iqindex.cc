@@ -269,10 +269,10 @@ qn() const
     return index.qn(j);
     }
 
-bool IQIndexVal::
-operator==(const IQIndexVal& other) const
+bool
+operator==(IQIndexVal const& iv1, IQIndexVal const& iv2)
     {
-    return (index == other.index && val == other.val);
+    return (iv1.index == iv2.index && iv1.val == iv2.val);
     }
 
 IQIndexVal::
@@ -321,10 +321,10 @@ mapprime(int plevold, int plevnew, IndexType type)
 IQIndexVal&  IQIndexVal::
 dag() { index.dag(); return *this; }
 
-ITensor IQIndexVal::
-operator*(const IndexVal& iv) const 
+ITensor
+operator*(IQIndexVal const& iqiv, IndexVal const& iv)
     { 
-    return IndexVal(Index(index),val) * iv; 
+    return IndexVal(Index(iqiv.index),iqiv.val) * iv; 
     }
 
 /*

@@ -159,37 +159,25 @@ class IQIndexVal
     public:
     using index_type = IQIndex;
 
-    //////////
     IQIndex index;
     long val;
-    //////////
 
     IQIndexVal();
 
-    IQIndexVal(const IQIndex& iqindex, long val_);
+    IQIndexVal(IQIndex const& iqindex, long val_);
 
-    const QN&
-    qn() const;
-
-    const QN&
-    qn(long j) const { return index.qn(j); }
-
-    bool
-    operator==(const IQIndexVal& other) const;
-    bool
-    operator!=(const IQIndexVal& other) const { return !operator==(other); }
-
-    bool
-    operator==(const IQIndex& iqind) const { return index == iqind; }
-    bool
-    operator!=(const IQIndex& iqind) const { return !operator==(iqind); }
+    explicit operator IndexVal() const;
 
     explicit operator bool() const { return bool(index); }
 
+    QN const&
+    qn() const;
+
+    QN const&
+    qn(long j) const { return index.qn(j); }
+
     IndexQN
     indexqn() const;
-
-    operator IndexVal() const;
 
     IndexVal 
     blockIndexVal() const;
@@ -212,11 +200,28 @@ class IQIndexVal
     IQIndexVal& 
     dag();
 
-    ITensor 
-    operator*(const IndexVal& iv) const;
-
     };
 
+ITensor
+operator*(IQIndexVal const& iqiv, IndexVal const& iv);
+
+bool
+operator==(IQIndexVal const& iv1, IQIndexVal const& iv2);
+
+bool inline
+operator!=(IQIndexVal const& iv1, IQIndexVal const& iv2) { return !(iv1==iv2); }
+
+bool inline
+operator==(IQIndexVal const& iv, IQIndex const& I) { return iv.index == I; }
+
+bool inline
+operator!=(IQIndexVal const& iv, IQIndex const& I) { return !(iv==I); }
+
+bool inline
+operator==(IQIndex const& I, IQIndexVal const& iv) { return iv == I; }
+
+bool inline
+operator!=(IQIndex const& I, IQIndexVal const& iv) { return !(iv==I); }
 
 IQIndex inline
 dag(IQIndex res) { res.dag(); return res; }
