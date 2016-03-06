@@ -22,7 +22,8 @@ template<typename T>
 bool inline constexpr
 isCplx() { return std::is_same<stdx::decay_t<T>,Cplx>::value; }
 
-using Labels = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
+using IntArray = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
+using Labels = IntArray;
 //using Labels = VarArray<long,15ul>; //sizeof(VarArray<long,15ul>)==128
 //using Labels = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
 
