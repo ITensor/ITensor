@@ -14,7 +14,15 @@ namespace itensor {
 
 class VecRangeIter;
 
-class VecRange : public RangeType
+
+template<size_t start>
+class VecRangeT;
+
+using VecRange = VecRangeT<0ul>;
+using VecRange1 = VecRangeT<1ul>;
+
+template<size_t start_>
+class VecRangeT : public RangeType
     {
     public:
     using size_type = size_t;
@@ -25,19 +33,22 @@ class VecRange : public RangeType
               stride_ = 1;
     public:
 
-    VecRange() { } 
+    VecRangeT() { } 
 
     explicit
-    VecRange(size_type extent)
+    VecRangeT(size_type extent)
       : ext_(extent),
         stride_(1)
         { }
 
-    VecRange(size_type extent,
+    VecRangeT(size_type extent,
              size_type stride)
       : ext_(extent),
         stride_(stride)
         { }
+
+    size_type constexpr
+    start() const { return start_; }
 
     size_type
     extent() const { return ext_; }
@@ -49,7 +60,7 @@ class VecRange : public RangeType
     extent(size_type i) const 
         { 
 #ifdef DEBUG
-        if(i != 0) Error("i out of range in VecRange::extent(i)");
+        if(i != 0) Error("i out of range in VecRangeT::extent(i)");
 #endif
         return ext_; 
         }
@@ -58,7 +69,7 @@ class VecRange : public RangeType
     stride(size_type i) const 
         {
 #ifdef DEBUG
-        if(i != 0) Error("i out of range in VecRange::stride(i)");
+        if(i != 0) Error("i out of range in VecRangeT::stride(i)");
 #endif
         return stride_; 
         }
@@ -84,14 +95,20 @@ class VecRange : public RangeType
 
     };
 
-VecRange::size_type inline
-rank(VecRange const& R) { return 1; }
+template<size_t S>
+size_t
+rank(VecRangeT<S> const& R) { return 1ul; }
+
+template<size_t S>
+size_t
+order(VecRangeT<S> const& R) { return 1ul; }
 
 //make VecRange with same extent but stride()==1
-VecRange inline
-normalRange(VecRange const& vr)
+template<size_t S>
+VecRangeT<S>
+normalRange(VecRangeT<S> const& vr)
     {
-    return VecRange{vr.extent()};
+    return VecRangeT<S>{vr.extent()};
     }
 
 ////0-indexed
@@ -110,21 +127,25 @@ normalRange(VecRange const& vr)
 //    return vr.stride()*i[0];
 //    }
 
-auto inline
-area(VecRange const& vr)
-    -> VecRange::size_type
+template<size_t S>
+auto
+area(VecRangeT<S> const& vr)
+    -> decltype(vr.extent())
     {
     return vr.extent();
     }
 
-bool inline
-isNormal(VecRange const& vr) { return vr.stride()==1; }
+template<size_t S>
+bool
+isNormal(VecRangeT<S> const& vr) { return vr.stride()==1; }
 
-bool inline
-isContiguous(VecRange const& vr) { return vr.stride()==1; }
+template<size_t S>
+bool
+isContiguous(VecRangeT<S> const& vr) { return vr.stride()==1; }
 
-inline std::ostream&
-operator<<(std::ostream& s, VecRange const& vr)
+template<size_t S>
+std::ostream&
+operator<<(std::ostream& s, VecRangeT<S> const& vr)
     {
     s << "(extent="<< vr.extent() <<",stride="<< vr.stride() << ")";
     return s;
@@ -141,43 +162,40 @@ class VecRangeIter
     using range_type = VecRange;
     private:
     offset_type off_ = 0;
-    size_type stride_ = 0; 
+    range_type range_;
     public: 
 
     VecRangeIter() { }
 
     explicit
-    VecRangeIter(size_type stride) : stride_(stride) { }  
-
-    explicit
-    VecRangeIter(range_type const& vr) : stride_(vr.stride()) { }  
+    VecRangeIter(range_type const& vr) : range_(vr) { }  
 
     offset_type
     offset() const { return off_; }
 
     ind_type
-    index() const { return off_; }
+    index() const { return range_.start()+off_; }
 
     size_type
-    stride() const { return stride_; }
+    stride() const { return range_.stride(); }
 
     VecRangeIter& 
-    operator++() { off_ += stride_; return *this; } 
+    operator++() { off_ += stride(); return *this; } 
 
     VecRangeIter 
-    operator++(int) { auto old = *this; off_ += stride_; return old; } 
+    operator++(int) { auto old = *this; off_ += stride(); return old; } 
 
     VecRangeIter& 
-    operator+=(size_type x) { off_ += x * stride_; return *this; } 
+    operator+=(size_type x) { off_ += x * stride(); return *this; } 
 
     VecRangeIter& 
-    operator--() { off_ -= stride_; return *this; } 
+    operator--() { off_ -= stride(); return *this; } 
 
     VecRangeIter 
-    operator--(int) { auto old = *this; off_ -= stride_; return old; } 
+    operator--(int) { auto old = *this; off_ -= stride(); return old; } 
 
     VecRangeIter& 
-    operator-=(size_type x) { off_ -= x * stride_; return *this; } 
+    operator-=(size_type x) { off_ -= x * stride(); return *this; } 
 
     VecRangeIter const& 
     operator*() { return *this; }  
@@ -185,9 +203,8 @@ class VecRangeIter
     VecRangeIter static
     makeEnd(range_type const& r)
         {
-        VecRangeIter end;
+        auto end = VecRangeIter(r);
         end.off_ = r.stride()*r.extent();
-        end.stride_ = r.stride();
         return end;
         }
     }; 
@@ -202,11 +219,13 @@ bool inline
 operator<(VecRangeIter const& x, VecRangeIter const& y) 
     { assert(x.stride() == y.stride()); return x.offset() < y.offset(); } 
 
-VecRange::iterator inline VecRange::
-begin() const { return iterator(*this); }
+template<size_t S>
+auto VecRangeT<S>::
+begin() const -> iterator { return iterator(*this); }
 
-VecRange::iterator inline VecRange::
-end() const { return iterator::makeEnd(*this); }
+template<size_t S>
+auto VecRangeT<S>::
+end() const -> iterator { return iterator::makeEnd(*this); }
 
 } //namespace itensor
 

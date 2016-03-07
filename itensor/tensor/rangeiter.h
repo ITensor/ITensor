@@ -22,7 +22,7 @@ class RangeIter
     using ind_type = InfArray<size_type,11ul>;
     using const_ind_iterator = typename ind_type::const_iterator;
     private:
-    const range_type *prange_ = nullptr; 
+    range_type const* prange_ = nullptr; 
     offset_type off_ = 0;
     ind_type ind_;
     public: 
@@ -35,7 +35,7 @@ class RangeIter
     RangeIter(range_type const& R) 
       : prange_(&R),
         off_(0),
-        ind_(R.r(),0)
+        ind_(R.r(),R.start())
         { }
 
 
@@ -101,15 +101,15 @@ class RangeIter
         auto r = range().r();
         ind_[0] += 1;
         off_ += range().stride(0);
-        if(rextent(ind_[0]) == range().extent(0))
+        if(rextent(ind_[0]-range().start()) == range().extent(0))
             {
             for(decltype(r) n = 1; n < r; ++n)
                 {
-                ind_[n-1] = 0;
+                ind_[n-1] = range().start();
                 off_ -= range().extent(n-1)*range().stride(n-1);
                 ind_[n] += 1;
                 off_ += range().stride(n);
-                if(rextent(ind_[n]) < range().extent(n)) return;
+                if(rextent(ind_[n]-range().start()) < range().extent(n)) return;
                 }
             //will only reach this line when totally done
             off_ = std::numeric_limits<offset_type>::max();

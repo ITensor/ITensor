@@ -30,6 +30,15 @@ using CTensor     = Ten<Range,Cplx>;
 using CTensorRef  = TenRef<Range,Cplx>;
 using CTensorRefc = TenRefc<Range,Cplx>;
 
+//1-indexed versions
+using Tensor1     = Ten<Range1,Real>;
+using TensorRef1  = TenRef<Range1,Real>;
+using TensorRefc1 = TenRefc<Range1,Real>;
+
+using CTensor1     = Ten<Range1,Cplx>;
+using CTensorRef1  = TenRef<Range1,Cplx>;
+using CTensorRefc1 = TenRefc<Range1,Cplx>;
+
 class TensorType { };
 
 template<typename Derived>

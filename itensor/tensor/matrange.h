@@ -11,7 +11,14 @@ namespace itensor {
 
 class MatRangeIter;
 
-struct MatRange : public RangeType
+template<size_t start>
+struct MatRangeT;
+
+using MatRange = MatRangeT<0ul>;
+using MatRange1 = MatRangeT<1ul>;
+
+template<size_t start_>
+struct MatRangeT : public RangeType
     {
     public:
     using size_type = size_t;
@@ -22,19 +29,22 @@ struct MatRange : public RangeType
               cn = 0, //number of cols
               cs = 0; //column stride
 
-    MatRange() { } 
+    MatRangeT() { } 
 
-    MatRange(size_type rn_, 
+    MatRangeT(size_type rn_, 
              size_type cn_)
         : rn(rn_),rs(1),cn(cn_),cs(rn_) 
         { }
 
-    MatRange(size_type rn_, 
+    MatRangeT(size_type rn_, 
              size_type rs_,
              size_type cn_, 
              size_type cs_) 
         : rn(rn_),rs(rs_),cn(cn_),cs(cs_) 
         { }
+
+    size_type constexpr
+    start() const { return start_; }
 
     size_type
     extent(size_type i) const
@@ -65,70 +75,81 @@ struct MatRange : public RangeType
 
     };
 
-MatRange::size_type inline
-rank(MatRange const& R) { return 2; }
+template<size_t S>
+size_t
+rank(MatRangeT<S> const& R) { return 2ul; }
 
 //make MatRange with same extents 
 //but usual strides
-MatRange inline
-normalRange(MatRange const& mr)
+template<size_t S>
+MatRangeT<S>
+normalRange(MatRangeT<S> const& mr)
     {
-    return MatRange{mr.rn,mr.cn};
+    return MatRangeT<S>{mr.rn,mr.cn};
     }
 
-MatRange inline
-transpose(MatRange const& mr)
+template<size_t S>
+MatRangeT<S>
+transpose(MatRangeT<S> const& mr)
     {
-    return MatRange{mr.cn,mr.cs,mr.rn,mr.rs};
+    return MatRangeT<S>{mr.cn,mr.cs,mr.rn,mr.rs};
     }
 
 //0-indexed
-auto inline
-offset(MatRange const& mr, 
+template<size_t S>
+auto
+offset(MatRangeT<S> const& mr, 
        size_t i1,
        size_t i2)
-    -> MatRange::size_type
+    -> typename MatRangeT<S>::size_type
     {
     return i1*mr.rs+i2*mr.cs;
     }
 
 //0-indexed
-template<typename Iterable>
+template<size_t S, typename Iterable>
 auto
-offset(MatRange const& mr, Iterable const& inds)
-    -> stdx::if_compiles_return<MatRange::size_type,decltype(inds[0])>
+offset(MatRangeT<S> const& mr, Iterable const& inds)
+    -> stdx::if_compiles_return<typename MatRangeT<S>::size_type,decltype(inds[0])>
     {
     assert(inds.size()==2);
     return offset(mr,inds[0],inds[1]);
     }
 
-auto inline
-area(MatRange const& mr)
-    -> MatRange::size_type
+template<size_t S>
+auto
+area(MatRangeT<S> const& mr)
+    -> typename MatRangeT<S>::size_type
     {
     return mr.rn * mr.cn;
     }
 
-bool inline
-operator==(MatRange const& a, MatRange const& b)
+template<size_t S>
+bool
+operator==(MatRangeT<S> const& a, MatRangeT<S> const& b)
     {
     return (a.rn==b.rn && a.rs==b.rs && a.cn==b.cn && a.cs==b.cs);
     }
 
-bool inline
-operator!=(MatRange const& a, MatRange const& b) { return !operator==(a,b); }
+template<size_t S>
+bool
+operator!=(MatRangeT<S> const& a, MatRangeT<S> const& b) { return !operator==(a,b); }
 
-bool inline
-isTransposed(MatRange const& i) { return (i.rs==i.cn && i.cs==1); }
+template<size_t S>
+bool
+isTransposed(MatRangeT<S> const& i) { return (i.rs==i.cn && i.cs==1); }
 
-bool inline
-isNormal(MatRange const& i) { return (i.rs==1 && i.cs==i.rn); }
+template<size_t S>
+bool
+isNormal(MatRangeT<S> const& i) { return (i.rs==1 && i.cs==i.rn); }
 
-bool inline
-isContiguous(MatRange const& i) { return isNormal(i) || isTransposed(i); }
+template<size_t S>
+bool
+isContiguous(MatRangeT<S> const& i) { return isNormal(i) || isTransposed(i); }
 
-inline std::ostream&
-operator<<(std::ostream& s, MatRange const& mr)
+template<size_t S>
+std::ostream&
+operator<<(std::ostream& s, MatRangeT<S> const& mr)
     {
     s << "(rn="<< mr.rn <<",rs="<< mr.rs <<",cn="<< mr.cn <<",cs="<< mr.cs << ")";
     return s;
@@ -203,11 +224,13 @@ class MatRangeIter
         }
     }; 
 
-MatRange::iterator inline MatRange::
-begin() const { return iterator(*this); }
+template<size_t S>
+auto MatRangeT<S>::
+begin() const -> iterator { return iterator(*this); }
 
-MatRange::iterator inline MatRange::
-end() const { return iterator::makeEnd(*this); }
+template<size_t S>
+auto MatRangeT<S>::
+end() const -> iterator { return iterator::makeEnd(*this); }
 
 } //namespace itensor
 

@@ -14,14 +14,20 @@ namespace itensor {
 //Parent type for all ranges
 class RangeType { };
 
-template<typename index_type>
+template<typename index_type,
+         size_t start = 0>
 class RangeT;
 
-template<typename index_type>
+template<typename range_type>
 class RangeBuilderT;
 
-using Range = RangeT<unsigned long>;
+//0-indexed
+using Range = RangeT<unsigned long,0ul>;
 using RangeBuilder = RangeBuilderT<Range>;
+
+//1-indexed
+using Range1 = RangeT<unsigned long,1ul>;
+using Range1Builder = RangeBuilderT<Range1>;
 
 template<typename Derived>
 struct isRange
@@ -56,7 +62,7 @@ struct IndStr
         }
     };
 
-template<typename index_type_>
+template<typename index_type_, size_t start_>
 class RangeT : public RangeType
     {
     public:
@@ -101,6 +107,9 @@ class RangeT : public RangeType
         }
 
     RangeT(std::initializer_list<index_type> ii) { init(ii); }
+
+    size_t constexpr
+    start() const { return start_; }
 
     size_type
     extent(size_type i) const { return static_cast<size_type>(store_[i].ind); }
@@ -164,10 +173,10 @@ class RangeT : public RangeType
     resize(size_type nsize) { store_.resize(nsize); }
 
     iterator
-    begin() const { return RangeIter<RangeT>(*this); }
+    begin() const { return iterator(*this); }
 
     iterator
-    end() const { return RangeIter<RangeT>::makeEnd(*this); }
+    end() const { return iterator::makeEnd(*this); }
 
     //Compute strides from extents
     void 
@@ -184,16 +193,16 @@ class RangeT : public RangeType
 
 namespace detail {
 
-template<typename index_type,
+template<typename range_type,
          typename Indexable,
-         typename storage_type = typename RangeT<index_type>::storage_type>
+         typename storage_type = typename range_type::storage_type>
 auto
 initImpl(stdx::choice<2>,
          Indexable && v,
          storage_type & store_)
     -> stdx::if_compiles_return<void,decltype(v[0]),decltype(v.size())>
     {
-    using size_type = typename RangeT<index_type>::size_type;
+    using size_type = typename range_type::size_type;
     store_.resize(v.size());
     size_type str = 1;
     for(decltype(v.size()) i = 0; i < v.size(); ++i)
@@ -204,16 +213,16 @@ initImpl(stdx::choice<2>,
         }
     }
 
-template<typename index_type,
+template<typename range_type,
          typename Iterable,
-         typename storage_type = typename RangeT<index_type>::storage_type>
+         typename storage_type = typename range_type::storage_type>
 auto
 initImpl(stdx::choice<1>,
          Iterable && v,
          storage_type & store_)
     -> stdx::if_compiles_return<void,decltype(v.begin())>
     {
-    using size_type = typename RangeT<index_type>::size_type;
+    using size_type = typename range_type::size_type;
     store_.resize(v.size());
     size_type str = 1;
     size_type i = 0;
@@ -228,22 +237,26 @@ initImpl(stdx::choice<1>,
 
 } //namespace detail
 
-template<typename index_type>
+template<typename index_type,size_t start>
 template<typename Container>
-void RangeT<index_type>::
+void RangeT<index_type,start>::
 init(Container const& c)
     {
-    detail::initImpl<index_type>(stdx::select_overload{},c,store_);
+    detail::initImpl<RangeT>(stdx::select_overload{},c,store_);
     }
 
-template<typename index_type>
+template<typename index_type, size_t start>
 auto
-rank(RangeT<index_type> const& R) -> decltype(R.size()) { return R.size(); }
+rank(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
+
+template<typename index_type, size_t start>
+auto
+order(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
 
 
-template<typename index_type>
+template<typename index_type,size_t start>
 std::ostream&
-operator<<(std::ostream& s, RangeT<index_type> const& r)
+operator<<(std::ostream& s, RangeT<index_type,start> const& r)
     {
     s << "exts: ";
     for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.extent(i) << " ";
@@ -253,21 +266,21 @@ operator<<(std::ostream& s, RangeT<index_type> const& r)
     }
 
 
-template<typename index_type>
+template<typename I, size_t S>
 void
-write(std::ostream& s, RangeT<index_type> const& r)
+write(std::ostream& s, RangeT<I,S> const& r)
     {
     itensor::write(s,r.store());
     }
 
-template<typename index_type>
+template<typename I, size_t S>
 void
-read(std::istream& s, RangeT<index_type>& r)
+read(std::istream& s, RangeT<I,S>& r)
     {
-    using storage_type = typename RangeT<index_type>::storage_type;
+    using storage_type = typename RangeT<I,S>::storage_type;
     storage_type store;
     itensor::read(s,store);
-    r = RangeT<index_type>(std::move(store));
+    r = RangeT<I,S>(std::move(store));
     }
 
 
@@ -389,6 +402,7 @@ namespace detail {
         //...if so make the return type to be decltype(r.extent(1))
         {
         using size_type = decltype(r.size());
+        auto start = r.start();
         size_type I  = 0, 
                   ri = 0;
         for(auto& ii : inds)
@@ -397,7 +411,7 @@ namespace detail {
             if(ri >= size_type(r.r()))
                 Error("Container-Range size mismatch in offset(...)");
 #endif
-            I += r.stride(ri)*ii;
+            I += r.stride(ri)*(ii-start);
             ++ri;
             }
         return I;
@@ -412,6 +426,7 @@ namespace detail {
         //...if so make the return type to be decltype(r.extent(0))
         {
         using size_type = decltype(r.extent(0));
+        auto start = r.start();
         size_type I  = 0;
         for(decltype(inds.size()) n = 0; n < inds.size(); ++n)
             {
@@ -419,7 +434,7 @@ namespace detail {
             if(static_cast<size_type>(n) >= r.r())
                 Error("Container-Range size mismatch in offset(...)");
 #endif
-            I += r.stride(n)*inds[n];
+            I += r.stride(n)*(inds[n]-start);
             }
         return I;
         }
@@ -430,10 +445,10 @@ namespace detail {
     offsetImpl(stdx::choice<3>, Range_ const& r, Iterable const& I)
         -> decltype(I.offset())
         {
-        return I.offset();
+        return (I.offset()-r.start());
         }
 
-    template<typename Range_, size_t start = 0>
+    template<typename Range_>
     struct ComputeOffset
         {
         using range_type = Range_;
@@ -455,14 +470,14 @@ namespace detail {
         size_type
         off(size_type first, Inds... rest) const
             {
-            return (first-start)*r.stride(i) + off<i+1>(rest...);
+            return (first-r.start())*r.stride(i) + off<i+1>(rest...);
             }
 
         template <size_type i>
         size_type
         off(size_type ind) const
             {
-            return (ind-start)*r.stride(i);
+            return (ind-r.start())*r.stride(i);
             }
         };
 
@@ -495,24 +510,9 @@ offset(Range_ const& r, size_t i1, Inds... inds)
     return detail::ComputeOffset<Range_>(r)(i1,inds...);
     }
 
-//1-indexed
-template<typename Range_, 
-         class=stdx::require<isRange<Range_>>,
-         typename... Inds>
+template<typename I, size_t S>
 auto
-offset1(Range_ const& r, size_t i1, Inds... inds)
-    -> decltype(r.stride(0))
-    {
-#ifdef DEBUG
-    if(1+sizeof...(inds) != rank(r)) 
-        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
-#endif
-    return detail::ComputeOffset<Range_,1>(r)(i1,inds...);
-    }
-
-template<typename index_type>
-auto
-area(RangeT<index_type> const& R)
+area(RangeT<I,S> const& R)
     -> decltype(R.extent(0))
     { 
     using size_type = decltype(R.size());
@@ -526,9 +526,9 @@ area(RangeT<index_type> const& R)
 
 //make Range with same extents but
 //normal (unsliced) strides
-template<typename index_type>
+template<typename I, size_t S>
 Range
-normalRange(RangeT<index_type> const& R)
+normalRange(RangeT<I,S> const& R)
     {
     auto rb = RangeBuilder(R.r());
     for(decltype(R.r()) n = 0; n < R.r(); ++n)
@@ -553,9 +553,9 @@ normalRange(RangeT<index_type> const& R)
 // there are area(R) outputs, the only
 // set fulfilling this is {0,1,...,area(R)-1})
 //
-template<typename index_type>
+template<typename I, size_t S>
 bool
-isContiguous(RangeT<index_type> const& R)
+isContiguous(RangeT<I,S> const& R)
     {
     using size_type = decltype(R.size());
     size_type max_offset = 0,
