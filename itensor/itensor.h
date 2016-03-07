@@ -6,6 +6,7 @@
 #define __ITENSOR_ITENSOR_H
 #include "itensor/itensor_interface.h"
 #include "itensor/tensor/mat.h"
+#include "itensor/tensor/slicerange.h"
 
 namespace itensor {
 
@@ -113,6 +114,15 @@ randomTensor(IndexSetT<IndexT> const& inds);
 ITensor
 matrixTensor(Matrix&& M, Index const& i1, Index const& i2);
 
+
+template<typename... Indxs>
+TensorRef1
+ordered(ITensor & T, Indxs&&... inds);
+
+template<typename... Indxs>
+CTensorRef1
+orderedC(ITensor & T, Indxs&&... inds);
+
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
 
@@ -122,6 +132,7 @@ ITensorT(Cplx val);
 template<> inline
 ITensor& ITensor::
 dag() { return conj(); }
+
 
 } //namespace itensor
 

@@ -9,12 +9,13 @@
 
 namespace itensor {
 
-template<typename Range_, typename Perm_>
-Range
+template<typename Range_, typename Perm_,
+         typename RetType = Range>
+RetType
 permuteRange(Range_ && R,
              Perm_ const& P)
     {
-    auto Rb = RangeBuilder(R.r());
+    auto Rb = RangeBuilderT<RetType>(R.r());
     size_t n = 0;
     for(auto pn : P)
         {
@@ -22,6 +23,15 @@ permuteRange(Range_ && R,
         ++n;
         }
     return Rb.build();
+    }
+
+template<typename RetType,
+         typename Range_, typename Perm_>
+RetType
+permuteRangeTo(Range_ && R,
+               Perm_ const& P)
+    {
+    return permuteRange<Range_,Perm_,RetType>(std::forward<Range_>(R),P);
     }
 
 template<typename Range_, typename Perm_>
