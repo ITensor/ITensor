@@ -30,7 +30,7 @@ applyFunc_impl(stdx::choice<4>, FuncHolder<F>& H, Storage const& s, ManageStore&
     -> stdx::enable_if_t<not std::is_void<decltype(H.f(*m.modifyData(s)))>::value,decltype((H.f(*m.modifyData(s))))>
     {
     auto *ncs = m.modifyData(s);
-    H.f(*ncs);
+    return H.f(*ncs);
     }
 template<typename F, typename Storage>
 auto
