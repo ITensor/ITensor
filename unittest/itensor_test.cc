@@ -1714,6 +1714,16 @@ for(auto kk : range1(k.m()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),k(kk)),O2(kk,ii,jj));
     }
+
+auto CIT = randomTensorC(j,k,i);
+
+auto O3 = orderedC(CIT,i,j,k);
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(CIT.cplx(i(ii),j(jj),k(kk)),O3(ii,jj,kk));
+    }
 }
 
 //SECTION("TieIndices")

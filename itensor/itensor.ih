@@ -99,7 +99,7 @@ randomTensor(const IndexSetT<IndexT>& inds)
     }
 
 template<typename V, typename... Indxs>
-TensorRef1
+TenRef<Range1,V>
 ordered_impl(ITensor & T, Indxs&&... inds)
     {
     T.scaleTo(1.);
