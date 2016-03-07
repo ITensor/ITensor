@@ -1674,6 +1674,48 @@ CHECK_CLOSE(T.real(l1(2),l2(1)),21);
 CHECK_CLOSE(T.real(l1(2),l2(2)),22);
 }
 
+SECTION("Ordered Test")
+{
+Index i("i",2),
+      j("j",3),
+      k("k",4);
+
+auto IT = randomTensor(k,i,j);
+
+auto O1 = ordered(IT,i,j,k);
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),k(kk)),O1(ii,jj,kk));
+    }
+
+auto O2 = ordered(IT,k,i,j);
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),k(kk)),O2(kk,ii,jj));
+    }
+
+O1(2,3,4) = 234;
+O1(1,2,1) = 121;
+
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),k(kk)),O1(ii,jj,kk));
+    }
+
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),k(kk)),O2(kk,ii,jj));
+    }
+}
+
 //SECTION("TieIndices")
 //    {
 //
