@@ -36,7 +36,7 @@ class MPOt : private MPSt<Tensor>
 
     MPOt();
 
-    MPOt(const SiteSet& sites, 
+    MPOt(SiteSet const& sites, 
          Real _refNorm = DefaultLogRefScale);
 
     //Accessor Methods ------------------------------
@@ -44,8 +44,8 @@ class MPOt : private MPSt<Tensor>
     using Parent::N;
 
     using Parent::sites;
-    using Parent::valid;
-    explicit operator bool() const { return valid(); }
+
+    explicit operator bool() const { return Parent::operator bool(); }
 
     using Parent::rightLim;
     using Parent::leftLim;

@@ -332,7 +332,7 @@ idmrg(MPSt<Tensor> & psi,
             wpsi.Anc(Nuc+1) *= lastV;
             wpsi.Anc(0) = D;
             writeToFile(format("psi_%d",sw),wpsi);
-            writeToFile("sites",wpsi.model());
+            writeToFile("sites",wpsi.sites());
             }
 
         psi.Anc(Nuc+1) *= lastV;

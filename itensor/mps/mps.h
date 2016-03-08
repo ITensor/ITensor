@@ -6,7 +6,6 @@
 #define __ITENSOR_MPS_H
 #include "itensor/svdalgs.h"
 #include "itensor/mps/siteset.h"
-//#include "itensor/mps/bondgate.h"
 
 namespace itensor {
 
@@ -32,44 +31,40 @@ class InitState;
 //    IQMPS for IQTensors
 //
 
-template <class Tensor> class MPSt;
+template <class Tensor> 
+class MPSt;
 
 using MPS = MPSt<ITensor>;
 using IQMPS = MPSt<IQTensor>;
 
-template <class Tensor>
+template<class Tensor>
 class MPSt
     {
     public:
-
-    //
-    //MPSt Constructors
-    //
-
-    MPSt();
-
-    MPSt(const SiteSet& sites);
-
-    MPSt(const InitState& initState);
-
-    MPSt(const MPSt& other);
-
-    MPSt&
-    operator=(const MPSt& other);
-
-    ~MPSt();
-
-    //
-    //MPSt Typedefs
-    //
-
     using TensorT = Tensor;
     using IndexT = typename Tensor::index_type;
     using IndexValT = typename Tensor::indexval_type;
     using MPOType = MPOt<Tensor>;
 
     //
-    //MPSt Accessor Methods
+    // MPSt Constructors
+    //
+
+    MPSt();
+
+    MPSt(SiteSet const& sites);
+
+    MPSt(InitState const& initState);
+
+    MPSt(MPSt const& other);
+
+    MPSt&
+    operator=(MPSt const& other);
+
+    ~MPSt();
+
+    //
+    // MPSt Accessor Methods
     //
 
     int 
@@ -77,16 +72,12 @@ class MPSt
 
     int 
     rightLim() const { return r_orth_lim_; }
-    void 
-    rightLim(int val) { r_orth_lim_ = val; }
 
     int 
     leftLim() const { return l_orth_lim_; }
-    void 
-    leftLim(int val) { l_orth_lim_ = val; }
 
     bool 
-    isOrtho() const { return (l_orth_lim_+1) == (r_orth_lim_-1); }
+    isOrtho() const { return leftLim()+1 == rightLim()-1; }
 
     int 
     orthoCenter() const;
@@ -106,35 +97,14 @@ class MPSt
     Tensor& 
     Anc(int i); //nc stands for non-const
 
-    const SiteSet& 
-    sites() const { return *sites_; }
+    SiteSet const& 
+    sites() const;
 
-    explicit operator bool() const { return valid(); }
-
-    bool 
-    valid() const { return (sites_!=0); }
-
-    //
-    //MPSt Operators
-    //
-
-    MPSt& 
-    operator*=(Real a) { Anc(l_orth_lim_+1) *= a; return *this; }
-    MPSt& 
-    operator/=(Real a) { Anc(l_orth_lim_+1) /= a; return *this; }
-    MPSt 
-    operator*(Real r) const { MPSt res(*this); res *= r; return res; }
-
-    MPSt& 
-    operator*=(Complex z) { Anc(l_orth_lim_+1) *= z; return *this; }
-    MPSt& 
-    operator/=(Complex z) { Anc(l_orth_lim_+1) /= z; return *this; }
-    MPSt 
-    operator*(Complex z) const { MPSt res(*this); res *= z; return res; }
+    explicit operator bool() const { return bool(sites_); }
 
     MPSt&
-    plusEq(const MPSt& R, 
-           const Args& args = Global::args());
+    plusEq(MPSt const& R, 
+           Args const& args = Args::global());
 
     void 
     mapprime(int oldp, int newp, IndexType type = All);
@@ -146,24 +116,29 @@ class MPSt
     noprimelink();
 
     Spectrum 
-    svdBond(int b, const Tensor& AA, Direction dir, 
-            const Args& args = Global::args());
+    svdBond(int b, 
+            Tensor const& AA, 
+            Direction dir, 
+            Args const& args = Args::global());
 
     template <class LocalOpT>
     Spectrum 
-    svdBond(int b, const Tensor& AA, Direction dir, 
-                const LocalOpT& PH, const Args& args = Global::args());
+    svdBond(int b, 
+            Tensor const& AA, 
+            Direction dir, 
+            LocalOpT const& PH, 
+            Args const& args = Args::global());
 
     //Move the orthogonality center to site i 
     //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)
     void 
-    position(int i, const Args& args = Global::args());
+    position(int i, Args const& args = Args::global());
 
     void 
-    orthogonalize(const Args& args = Global::args());
+    orthogonalize(const Args& args = Args::global());
 
     void 
-    makeRealBasis(int j, const Args& args = Global::args());
+    makeRealBasis(int j, const Args& args = Args::global());
 
     Real 
     norm() const;
@@ -174,20 +149,14 @@ class MPSt
     bool 
     isComplex() const;
 
-    //void 
-    //toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
-    //    {
-    //    iqpsi = MPSt<IQTensor>(*sites_);
-    //    convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
-    //    }
-
     void
     swap(MPSt& other);
 
     bool
     doWrite() const { return do_write_; }
+
     void
-    doWrite(bool val, const Args& args = Global::args());
+    doWrite(bool val, const Args& args = Args::global());
 
     const std::string&
     writeDir() const { return writedir_; }
@@ -195,20 +164,13 @@ class MPSt
     //Read from a directory containing individual tensors,
     //as created when doWrite(true) is called.
     void 
-    read(const std::string& dirname);
+    read(std::string const& dirname);
 
     void 
     read(std::istream& s);
+
     void 
     write(std::ostream& s) const;
-
-
-    //
-    // Deprecated methods, only for backwards compatibility
-    //
-
-    const SiteSet& 
-    model() const { return *sites_; }
 
     protected:
 
@@ -222,7 +184,7 @@ class MPSt
     int l_orth_lim_,
         r_orth_lim_;
 
-    const SiteSet* sites_;
+    SiteSet const* sites_;
 
     mutable
     int atb_;
@@ -247,14 +209,12 @@ class MPSt
     void
     setSite(int j) const;
 
-
     void
-    initWrite(const Args& args = Global::args());
+    initWrite(const Args& args = Args::global());
     void
     copyWriteDir();
     void
     cleanupWrite();
-
 
     std::string
     AFName(int j, const std::string& dirname = "") const;
@@ -280,23 +240,59 @@ class MPSt
 
     MPSt&
     addAssumeOrth(const MPSt& R, 
-                  const Args& args = Global::args());
+                  const Args& args = Args::global());
 
     private:
 
     friend class MPSt<ITensor>;
     friend class MPSt<IQTensor>;
 
+    public:
+
+    //
+    // Advanced/Developer methods
+    // Use with caution
+    //
+
+    void 
+    rightLim(int val) { r_orth_lim_ = val; }
+
+    void 
+    leftLim(int val) { l_orth_lim_ = val; }
+
     }; //class MPSt<Tensor>
 
+template<class T>
+MPSt<T>& 
+operator*=(MPSt<T> & psi, Real a) { psi.Anc(psi.leftLim()+1) *= a; return psi; }
 
-template <class Tensor>
-MPSt<Tensor>
-operator*(Real r, MPSt<Tensor> res) { res *= r; return res; }
+template<class T>
+MPSt<T>& 
+operator/=(MPSt<T> & psi, Real a) { psi.Anc(psi.leftLim()+1) /= a; return psi; }
 
-template <class Tensor>
-MPSt<Tensor>
-operator*(Complex z, MPSt<Tensor> res) { res *= z; return res; }
+template<class T>
+MPSt<T>
+operator*(MPSt<T> psi, Real r) { psi *= r; return psi; }
+
+template <class T>
+MPSt<T>
+operator*(Real r, MPSt<T> psi) { psi *= r; return psi; }
+
+template<class T>
+MPSt<T>& 
+operator*=(MPSt<T> & psi, Cplx z) { psi.Anc(psi.leftLim()+1) *= z; return psi; }
+
+template<class T>
+MPSt<T>& 
+operator/=(MPSt<T> & psi, Cplx z) { psi.Anc(psi.leftLim()+1) /= z; return psi; }
+
+template <class T>
+MPSt<T>
+operator*(MPSt<T> psi, Cplx z) { psi *= z; return psi; }
+
+template <class T>
+MPSt<T>
+operator*(Cplx z, MPSt<T> psi) { psi *= z; return psi; }
 
 class InitState
     {
@@ -331,82 +327,6 @@ class InitState
     checkRange(int i) const;
     }; 
 
-
-//
-// MPSt
-// Template Methods
-//
-
-template <class Tensor>
-template <class BigMatrixT>
-Spectrum MPSt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, 
-        const BigMatrixT& PH, const Args& args)
-    {
-    setBond(b);
-    if(dir == Fromleft && b-1 > l_orth_lim_)
-        {
-        printfln("b=%d, l_orth_lim_=%d",b,l_orth_lim_);
-        Error("b-1 > l_orth_lim_");
-        }
-    if(dir == Fromright && b+2 < r_orth_lim_)
-        {
-        printfln("b=%d, r_orth_lim_=%d",b,r_orth_lim_);
-        Error("b+2 < r_orth_lim_");
-        }
-
-    auto noise = args.getReal("Noise",0.);
-    auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto usesvd = args.getBool("UseSVD",false);
-
-    Spectrum res;
-
-    if(usesvd || (noise == 0 && cutoff < 1E-12))
-        {
-        //Need high accuracy, use svd which calls the
-        //accurate SVD method in the MatrixRef library
-        Tensor D;
-        res = svd(AA,A_[b],D,A_[b+1],args);
-
-        //Normalize the ortho center if requested
-        if(args.getBool("DoNormalize",false))
-            {
-            D *= 1./itensor::norm(D);
-            }
-
-        //Push the singular values into the appropriate site tensor
-        if(dir == Fromleft) A_[b+1] *= D;
-        else                A_[b]   *= D;
-        }
-    else
-        {
-        //If we don't need extreme accuracy
-        //or need to use noise term
-        //use density matrix approach
-        res = denmatDecomp(AA,A_[b],A_[b+1],dir,PH,args);
-
-        //Normalize the ortho center if requested
-        if(args.getBool("DoNormalize",false))
-            {
-            Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
-            auto nrm = itensor::norm(oc);
-            oc *= 1./nrm;
-            }
-        }
-
-    if(dir == Fromleft)
-        {
-        l_orth_lim_ = b;
-        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
-        }
-    else //dir == Fromright
-        {
-        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
-        r_orth_lim_ = b+1;
-        }
-
-    return res;
-    }
 
 //
 // Other Methods Related to MPSt
@@ -448,47 +368,32 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
 
 template <typename MPST>
 typename MPST::IndexT 
-linkInd(const MPST& psi, int b)
+linkInd(MPST const& psi, int b)
     { 
     return commonIndex(psi.A(b),psi.A(b+1),Link); 
     }
 
 template <typename MPST>
 typename MPST::IndexT 
-rightLinkInd(const MPST& psi, int i)
+rightLinkInd(MPST const& psi, int i)
     { 
     return commonIndex(psi.A(i),psi.A(i+1),Link); 
     }
 
 template <typename MPST>
 typename MPST::IndexT 
-leftLinkInd(const MPST& psi, int i)
+leftLinkInd(MPST const& psi, int i)
     { 
     return commonIndex(psi.A(i),psi.A(i-1),Link); 
     }
 
 template <typename MPST>
 int
-averageM(MPST const& psi)
-    {
-    Real avgm = 0;
-    for(int b = 1; b < psi.N(); ++b) avgm += linkInd(psi,b).m();
-    avgm /= (psi.N()-1);
-    return int(avgm);
-    }
+averageM(MPST const& psi);
 
 template <typename MPST>
 int
-maxM(MPST const& psi)
-    {
-    int maxM_ = 0;
-    for(int b = 1; b < psi.N(); ++b) 
-        {
-        int mb = linkInd(psi,b).m();
-        maxM_ = std::max(mb,maxM_);
-        }
-    return maxM_;
-    }
+maxM(MPST const& psi);
 
 //
 // Applies a bond gate to the bond that is currently
@@ -506,24 +411,7 @@ template <class Tensor>
 void 
 applyGate(const Tensor& gate, 
           MPSt<Tensor>& psi,
-          const Args& args = Global::args())
-    {
-    const int c = psi.orthoCenter();
-    Tensor AA = psi.A(c) * psi.A(c+1) * gate;
-    AA.noprime();
-    psi.svdBond(c,AA,Fromleft,args);
-    }
-
-//template <class Tensor>
-//void 
-//applyGate(const BondGate<Tensor>& gate, 
-//          MPSt<Tensor>& psi,
-//          const Args& args = Global::args())
-//    {
-//    Tensor AA = psi.A(gate.i1()) * psi.A(gate.i1()+1) * Tensor(gate);
-//    AA.noprime();
-//    psi.svdBond(gate.i1(),AA,Fromleft,args);
-//    }
+          const Args& args = Args::global());
 
 //Checks if A_[i] is left (left == true) 
 //or right (left == false) orthogonalized
@@ -531,144 +419,41 @@ template <class Tensor>
 bool 
 checkOrtho(const MPSt<Tensor>& psi,
            int i, 
-           bool left)
-    {
-    using IndexT = typename Tensor::index_type;
+           bool left);
 
-    IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
-    Tensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
-    Tensor Delta = makeKroneckerDelta(link,4);
-    Tensor Diff = rho - Delta;
-
-    const
-    Real threshold = 1E-13;
-    if(norm(Diff) < threshold) 
-        {
-        return true;
-        }
-
-    //Print any helpful debugging info here:
-    println("checkOrtho: on line ",__LINE__," of mps.h,");
-    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
-    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
-    printfln("checkOrtho: Error threshold set to %E",threshold);
-    //-----------------------------
-
-    return false;
-    }
-
-template <class Tensor>
+template <class T>
 bool 
-checkOrtho(const MPSt<Tensor>& psi)
-    {
-    for(int i = 1; i <= psi.leftLim(); ++i)
-    if(!checkOrtho(psi,i,true))
-        {
-        std::cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
-                  << i << std::endl;
-        return false;
-        }
-
-    for(int i = psi.N(); i >= psi.rightLim(); --i)
-    if(!checkOrtho(psi,i,false))
-        {
-        std::cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
-                  << i << std::endl;
-        return false;
-        }
-    return true;
-    }
-
+checkOrtho(MPSt<T> const& psi);
 
 int 
 findCenter(const IQMPS& psi);
 
-inline bool 
-checkQNs(const MPS& psi) { return true; }
+bool inline
+checkQNs(MPS const& psi) { return true; }
 
 bool 
-checkQNs(const IQMPS& psi);
+checkQNs(IQMPS const& psi);
 
 QN
-totalQN(const IQMPS& psi);
+totalQN(IQMPS const& psi);
 
-//
-// <psi | phi>
-//
+// Re[<psi|phi>]
+template <class MPSType>
+Real 
+overlap(MPSType const& psi, MPSType const& phi);
+
+// <psi|phi>
 template <class MPSType>
 Cplx 
 overlapC(MPSType const& psi, 
-         MPSType const& phi)
-    {
-    auto N = psi.N();
-    if(N != phi.N()) Error("overlap: mismatched N");
+         MPSType const& phi);
 
-    auto l1 = linkInd(psi,1);
-    auto L = phi.A(1);
-    if(l1) 
-        {
-        L *= dag(prime(psi.A(1),l1)); 
-        }
-    else   
-        {
-        L *= dag(psi.A(1));
-        }
-
-
-    auto i = N;
-    for(i = 2; i < N; ++i) 
-        { 
-        L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
-        }
-    L = L * phi.A(N);
-
-    auto lNm = linkInd(psi,N-1);
-    if(lNm) return (dag(prime(psi.A(N),lNm))*L).cplx();
-    return (dag(psi.A(N))*L).cplx();
-    }
-
-
+// <psi|phi>
 template <class MPSType>
 void 
-overlap(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
-    {
-    auto z = overlapC(psi,phi);
-    re = z.real();
-    im = z.imag();
-    }
-
-template <class MPSType>
-Real 
-overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
-    {
-    Real re, im;
-    overlap(psi,phi,re,im);
-    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
-        printfln("Real overlap: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
-    return re;
-    }
-
-template <class MPSType>
-Complex 
-psiphiC(MPSType const& psi, 
-        MPSType const& phi)
-    {
-    return overlapC(psi,phi);
-    }
-
-template <class MPSType>
-void 
-psiphi(MPSType const& psi,MPSType const& phi, Real& re, Real& im)
-    {
-    overlap(psi,phi,re,im);
-    }
-
-template <class MPSType>
-Real 
-psiphi(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
-    {
-    return overlap(psi,phi);
-    }
+overlap(MPSType const& psi,
+        MPSType const& phi, 
+        Real& re, Real& im);
 
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
 //but which differs from psi_basis only on the first site, and has same index
@@ -681,13 +466,7 @@ template <class Tensor>
 MPSt<Tensor>
 sum(MPSt<Tensor> const& L, 
     MPSt<Tensor> const& R, 
-    Args const& args = Global::args())
-    {
-    MPSt<Tensor> res(L);
-    res.plusEq(R,args);
-    return res;
-    }
-
+    Args const& args = Args::global());
 
 
 //
@@ -701,35 +480,7 @@ sum(MPSt<Tensor> const& L,
 template <typename MPSType>
 MPSType 
 sum(std::vector<MPSType> const& terms, 
-    Args const& args = Global::args())
-    {
-    auto Nt = terms.size();
-    if(Nt == 2)
-        { 
-        return sum(terms.at(0),terms.at(1),args);
-        }
-    else 
-    if(Nt == 1) 
-        {
-        return terms.at(0);
-        }
-    else 
-    if(Nt > 2)
-        {
-        //Add all MPS in pairs
-        auto nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
-        std::vector<MPSType> newterms(nsize); 
-        for(decltype(Nt) n = 0, np = 0; n < Nt-1; n += 2, ++np)
-            {
-            newterms.at(np) = sum(terms.at(n),terms.at(n+1),args);
-            }
-        if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
-
-        //Recursively call sum again
-        return sum(newterms,args);
-        }
-    return MPSType();
-    }
+    Args const& args = Args::global());
 
 template <class Tensor>
 std::ostream& 
@@ -739,6 +490,8 @@ std::ostream&
 operator<<(std::ostream& s, const InitState& state);
 
 } //namespace itensor
+
+#include "mps.ih"
 
 
 #endif
