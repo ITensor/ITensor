@@ -252,10 +252,12 @@ checkQNs(const IQMPO& H)
         }
     }
 
-template <class MPOType>
+template<class MPOType>
 void 
-nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
-         const Args& args)
+nmultMPO(MPOType const& Aorig, 
+         MPOType const& Borig, 
+         MPOType& res,
+         Args const& args)
     {
     using Tensor = typename MPOType::TensorT;
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
@@ -339,12 +341,12 @@ template
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,const Args& );
 
 
-template <class Tensor>
+template<class Tensor>
 void 
-zipUpApplyMPO(const MPSt<Tensor>& psi, 
-              const MPOt<Tensor>& K, 
-              MPSt<Tensor>& res,
-              const Args& args)
+zipUpApplyMPO(MPSt<Tensor> const& psi, 
+              MPOt<Tensor> const& K, 
+              MPSt<Tensor>& res, 
+              Args const& args)
     {
     using IndexT = typename Tensor::index_type;
 
@@ -471,9 +473,9 @@ void
 exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args&);
 
 template<class Tensor>
-MPSt<Tensor> 
-exactApplyMPO(MPSt<Tensor> const& x, 
-              MPOt<Tensor> const& K, 
+MPSt<Tensor>
+exactApplyMPO(MPSt<Tensor> const& x,
+              MPOt<Tensor> const& K,
               Args const& args)
     {
     MPSt<Tensor> res;
@@ -490,10 +492,10 @@ exactApplyMPO(const IQMPS& x, const IQMPO& K, const Args&);
 
 template<class Tensor>
 void
-fitApplyMPO(const MPSt<Tensor>& psi,
-            const MPOt<Tensor>& K,
+fitApplyMPO(MPSt<Tensor> const& psi,
+            MPOt<Tensor> const& K,
             MPSt<Tensor>& res,
-            const Args& args)
+            Args const& args)
     {
     fitApplyMPO(1.,psi,K,res,args);
     }
@@ -505,10 +507,10 @@ void fitApplyMPO(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& K, MPSt<IQTens
 template<class Tensor>
 void
 fitApplyMPO(Real fac,
-            const MPSt<Tensor>& psi,
-            const MPOt<Tensor>& K,
+            MPSt<Tensor> const& psi,
+            MPOt<Tensor> const& K,
             MPSt<Tensor>& res,
-            const Args& args)
+            Args const& args)
     {
     const auto nsweep = args.getInt("Nsweep",1);
     Sweeps sweeps(nsweep);
@@ -528,10 +530,10 @@ fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTe
 template<class Tensor>
 void
 fitApplyMPO(Real fac,
-            const MPSt<Tensor>& psi,
-            const MPOt<Tensor>& K,
+            MPSt<Tensor> const& psi,
+            MPOt<Tensor> const& K,
             MPSt<Tensor>& res,
-            const Sweeps& sweeps,
+            Sweeps const& sweeps,
             Args args)
     {
     auto N = psi.N();
@@ -607,12 +609,12 @@ fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTe
 
 template<class Tensor>
 Real
-fitApplyMPO(const MPSt<Tensor>& psiA, 
+fitApplyMPO(MPSt<Tensor> const& psiA, 
             Real mpofac,
-            const MPSt<Tensor>& psiB,
-            const MPOt<Tensor>& K,
+            MPSt<Tensor> const& psiB,
+            MPOt<Tensor> const& K,
             MPSt<Tensor>& res,
-            const Args& args)
+            Args const& args)
     {
     return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,args);
     }
@@ -626,12 +628,12 @@ fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,c
 template<class Tensor>
 Real
 fitApplyMPO(Real mpsfac,
-            const MPSt<Tensor>& psiA, 
+            MPSt<Tensor> const& psiA, 
             Real mpofac,
-            const MPSt<Tensor>& psiB,
-            const MPOt<Tensor>& K,
+            MPSt<Tensor> const& psiB,
+            MPOt<Tensor> const& K,
             MPSt<Tensor>& res,
-            const Args& args)
+            Args const& args)
     {
     if(&psiA == &res || &psiB == &res)
         {
@@ -751,11 +753,12 @@ expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, Args args
 
 template<class Tensor>
 void 
-expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, 
+expH(MPOt<Tensor> const& H, 
+     MPOt<Tensor>& K, 
      Real tau, 
      Real Etot,
      Real Kcutoff, 
-     int ndoub,
+     int ndoub, 
      Args args)
     {
     const bool verbose = args.getBool("Verbose",false);
@@ -797,11 +800,11 @@ expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, Args
 
 template<class Tensor>
 void
-applyExpH(const MPSt<Tensor>& psi, 
-          const MPOt<Tensor>& H, 
+applyExpH(MPSt<Tensor> const& psi, 
+          MPOt<Tensor> const& H, 
           Real tau, 
           MPSt<Tensor>& res, 
-          const Args& args)
+          Args const& args)
     {
     //using IndexT = typename Tensor::index_type;
     using MPST = MPSt<Tensor>;
@@ -916,7 +919,7 @@ void
 applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const Args& args);
 
 void
-putMPOLinks(MPO& W, const Args& args)
+putMPOLinks(MPO& W, Args const& args)
     {
     const string pfix = args.getString("Prefix","l");
     vector<Index> links(W.N());
@@ -934,7 +937,7 @@ putMPOLinks(MPO& W, const Args& args)
     }
 
 void
-putMPOLinks(IQMPO& W, const Args& args)
+putMPOLinks(IQMPO& W, Args const& args)
     {
     QN q;
     const int N = W.N();
@@ -960,7 +963,7 @@ putMPOLinks(IQMPO& W, const Args& args)
 
 template <class Tensor>
 std::ostream& 
-operator<<(std::ostream& s, const MPOt<Tensor>& M)
+operator<<(std::ostream& s, MPOt<Tensor> const& M)
     {
     s << "\n";
     for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
@@ -968,10 +971,10 @@ operator<<(std::ostream& s, const MPOt<Tensor>& M)
     }
 template
 std::ostream& 
-operator<<(std::ostream& s, const MPOt<ITensor>& M);
+operator<<(std::ostream& s, MPOt<ITensor> const& M);
 template
 std::ostream& 
-operator<<(std::ostream& s, const MPOt<IQTensor>& M);
+operator<<(std::ostream& s, MPOt<IQTensor> const& M);
 
 
 } //namespace itensor

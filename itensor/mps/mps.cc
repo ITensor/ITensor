@@ -821,7 +821,7 @@ template<class Tensor>
 void MPSt<Tensor>::
 position(int i, const Args& args)
     {
-    if(!this->valid()) Error("position: MPS is default constructed");
+    if(!(*this)) Error("position: MPS is default constructed");
 
     if(args.getBool("DoSVDBond",false))
         {
@@ -901,7 +901,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 makeRealBasis(int j, const Args& args)
     {
-    if(!this->valid()) Error("position: MPS is default constructed");
+    if(!(*this)) Error("position: MPS is default constructed");
     l_orth_lim_ = 0;
     while(l_orth_lim_ < j-1)
         {
@@ -1066,7 +1066,7 @@ normalize()
     {
     auto norm_ = norm();
     if(std::fabs(norm_) < 1E-20) Error("Zero norm");
-    operator/=(norm_);
+    *this /= norm_;
     return norm_;
     }
 template

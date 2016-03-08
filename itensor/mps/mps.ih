@@ -88,6 +88,27 @@ svdBond(int b, const Tensor& AA, Direction dir,
     }
 
 template <typename MPST>
+typename MPST::IndexT 
+linkInd(MPST const& psi, int b)
+    { 
+    return commonIndex(psi.A(b),psi.A(b+1),Link); 
+    }
+
+template <typename MPST>
+typename MPST::IndexT 
+rightLinkInd(MPST const& psi, int i)
+    { 
+    return commonIndex(psi.A(i),psi.A(i+1),Link); 
+    }
+
+template <typename MPST>
+typename MPST::IndexT 
+leftLinkInd(MPST const& psi, int i)
+    { 
+    return commonIndex(psi.A(i),psi.A(i-1),Link); 
+    }
+
+template <typename MPST>
 int
 averageM(MPST const& psi)
     {

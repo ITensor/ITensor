@@ -472,8 +472,18 @@ makeL(const MPSType& psi, int k)
             {
             while(LHlim_ < k)
                 {
-                const int ll = LHlim_;
-                projectOp(psi,ll+1,Fromleft,PH_.at(ll),Op_->A(ll+1),PH_.at(ll+1));
+                auto ll = LHlim_;
+                //projectOp(psi,ll+1,Fromleft,PH_.at(ll),Op_->A(ll+1),PH_.at(ll+1));
+                if(PH_.at(ll))
+                    {
+                    PH_.at(ll+1) = PH_.at(ll)*psi.A(ll+1);
+                    }
+                else
+                    {
+                    PH_.at(ll+1) = psi.A(ll+1);
+                    }
+                PH_.at(ll+1) *= Op_->A(ll+1);
+                PH_.at(ll+1) *= dag(prime(psi.A(ll+1)));
                 setLHlim(LHlim_+1);
                 }
             }
@@ -501,8 +511,18 @@ makeR(const MPSType& psi, int k)
             {
             while(RHlim_ > k)
                 {
-                const int rl = RHlim_;
-                projectOp(psi,rl-1,Fromright,PH_.at(rl),Op_->A(rl-1),PH_.at(rl-1));
+                auto rl = RHlim_;
+                //projectOp(psi,rl-1,Fromright,PH_.at(rl),Op_->A(rl-1),PH_.at(rl-1));
+                if(PH_.at(rl))
+                    {
+                    PH_.at(rl-1) = PH_.at(rl)*psi.A(rl-1);
+                    }
+                else
+                    {
+                    PH_.at(rl-1) = psi.A(rl-1);
+                    }
+                PH_.at(rl-1) *= Op_->A(rl-1);
+                PH_.at(rl-1) *= dag(prime(psi.A(rl-1)));
                 setRHlim(RHlim_-1);
                 }
             }

@@ -40,6 +40,17 @@ using IQMPS = MPSt<IQTensor>;
 template<class Tensor>
 class MPSt
     {
+    protected:
+    int N_;
+    mutable
+    std::vector<Tensor> A_;
+    int l_orth_lim_,
+        r_orth_lim_;
+    SiteSet const* sites_;
+    mutable
+    int atb_;
+    std::string writedir_;
+    bool do_write_;
     public:
     using TensorT = Tensor;
     using IndexT = typename Tensor::index_type;
@@ -121,7 +132,7 @@ class MPSt
             Direction dir, 
             Args const& args = Args::global());
 
-    template <class LocalOpT>
+    template<class LocalOpT>
     Spectrum 
     svdBond(int b, 
             Tensor const& AA, 
@@ -135,10 +146,10 @@ class MPSt
     position(int i, Args const& args = Args::global());
 
     void 
-    orthogonalize(const Args& args = Args::global());
+    orthogonalize(Args const& args = Args::global());
 
     void 
-    makeRealBasis(int j, const Args& args = Args::global());
+    makeRealBasis(int j, Args const& args = Args::global());
 
     Real 
     norm() const;
@@ -158,7 +169,7 @@ class MPSt
     void
     doWrite(bool val, const Args& args = Args::global());
 
-    const std::string&
+    std::string const&
     writeDir() const { return writedir_; }
 
     //Read from a directory containing individual tensors,
@@ -173,27 +184,6 @@ class MPSt
     write(std::ostream& s) const;
 
     protected:
-
-    //////////////////////////
-
-    int N_;
-
-    mutable
-    std::vector<Tensor> A_;
-
-    int l_orth_lim_,
-        r_orth_lim_;
-
-    SiteSet const* sites_;
-
-    mutable
-    int atb_;
-
-    std::string writedir_;
-
-    bool do_write_;
-
-    //////////////////////////
 
     //
     //MPSt methods for writing to disk
@@ -332,60 +322,17 @@ class InitState
 // Other Methods Related to MPSt
 //
 
-//
-// projectOp takes the projected edge tensor W 
-// of an operator and the site tensor X for the operator
-// and creates the next projected edge tensor nE
-//
-// dir==Fromleft example:
-//
-//  /---A--     /---
-//  |   |       |
-//  E-- X -  =  nE -
-//  |   |       |
-//  \---A--     \---
-//
-template <class Tensor>
-void 
-projectOp(const MPSt<Tensor>& psi, int j, Direction dir, 
-          const Tensor& E, const Tensor& X, Tensor& nE)
-    {
-    if(dir==Fromleft && j > psi.leftLim()) 
-        { 
-        printfln("projectOp: from left j > l_orth_lim_ (j=%d,leftLim=%d)",j,psi.leftLim());
-        Error("Projecting operator at j > l_orth_lim_"); 
-        }
-    if(dir==Fromright && j < psi.rightLim()) 
-        { 
-        printfln("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)",j,psi.rightLim());
-        Error("Projecting operator at j < r_orth_lim_"); 
-        }
-    nE = (E ? E*psi.A(j) : psi.A(j));
-    nE *= X; 
-    nE *= dag(prime(psi.A(j)));
-    }
-
+template <typename MPST>
+typename MPST::IndexT 
+linkInd(MPST const& psi, int b);
 
 template <typename MPST>
 typename MPST::IndexT 
-linkInd(MPST const& psi, int b)
-    { 
-    return commonIndex(psi.A(b),psi.A(b+1),Link); 
-    }
+rightLinkInd(MPST const& psi, int i);
 
 template <typename MPST>
 typename MPST::IndexT 
-rightLinkInd(MPST const& psi, int i)
-    { 
-    return commonIndex(psi.A(i),psi.A(i+1),Link); 
-    }
-
-template <typename MPST>
-typename MPST::IndexT 
-leftLinkInd(MPST const& psi, int i)
-    { 
-    return commonIndex(psi.A(i),psi.A(i-1),Link); 
-    }
+leftLinkInd(MPST const& psi, int i);
 
 template <typename MPST>
 int
@@ -426,7 +373,7 @@ bool
 checkOrtho(MPSt<T> const& psi);
 
 int 
-findCenter(const IQMPS& psi);
+findCenter(IQMPS const& psi);
 
 bool inline
 checkQNs(MPS const& psi) { return true; }
@@ -477,12 +424,12 @@ sum(MPSt<Tensor> const& L,
 //
 // Assumes terms are zero-indexed
 //
-template <typename MPSType>
+template<typename MPSType>
 MPSType 
 sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
 
-template <class Tensor>
+template<class Tensor>
 std::ostream& 
 operator<<(std::ostream& s, const MPSt<Tensor>& M);
 

@@ -44,10 +44,10 @@ main(int argc, char* argv[])
     MPS psi(initState);
 
     //
-    // psiHphi calculates matrix elements of MPO's with respect to MPS's
-    // psiHphi(psi,H,psi) = <psi|H|psi>
+    // overlap calculates matrix elements of MPO's with respect to MPS's
+    // overlap(psi,H,psi) = <psi|H|psi>
     //
-    printfln("Initial energy = %.5f", psiHphi(psi,H,psi) );
+    printfln("Initial energy = %.5f", overlap(psi,H,psi) );
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -55,7 +55,7 @@ main(int argc, char* argv[])
     // Here less than 5 cutoff values are provided, for example,
     // so all remaining sweeps will use the last one given (= 1E-10).
     //
-    Sweeps sweeps(5);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
@@ -71,7 +71,7 @@ main(int argc, char* argv[])
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",energy);
-    printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
+    printfln("\nUsing overlap = %.10f", overlap(psi,H,psi) );
 
     return 0;
     }
