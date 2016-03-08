@@ -780,6 +780,16 @@ isComplex(const ITensorT<I>& T)
     }
 
 template<typename I>
+long
+rank(ITensorT<I> const& T) { return rank(T.inds()); }
+
+//return number of indices of T
+//(same as rank)
+template<typename I>
+long
+order(ITensorT<I> const& T) { return rank(T.inds()); }
+
+template<typename I>
 Real
 norm(const ITensorT<I>& T)
     {

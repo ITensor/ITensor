@@ -389,6 +389,18 @@ template<typename I>
 bool
 isComplex(ITensorT<I> const& T);
 
+//return number of indices of T
+//(same as order)
+template<typename I>
+long
+rank(ITensorT<I> const& T);
+
+//return number of indices of T
+//(same as rank)
+template<typename I>
+long
+order(ITensorT<I> const& T);
+
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
 //Result is equivalent to sqrt((T*T).real()) 
