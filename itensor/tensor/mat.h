@@ -246,6 +246,10 @@ template<typename... CtrArgs>
 Matrix
 randomMat(CtrArgs&&... args);
 
+template<typename... CtrArgs>
+CMatrix
+randomMatC(CtrArgs&&... args);
+
 template<>
 std::ostream&
 operator<<(std::ostream& s, MatrixRefc const& M);

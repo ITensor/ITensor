@@ -109,7 +109,16 @@ template<typename... CtrArgs>
 Matrix
 randomMat(CtrArgs&&... args)
     {
-    Matrix M(std::forward<CtrArgs>(args)...);
+    auto M = Matrix(std::forward<CtrArgs>(args)...);
+    randomize(M);
+    return M;
+    }
+
+template<typename... CtrArgs>
+CMatrix
+randomMatC(CtrArgs&&... args)
+    {
+    auto M = CMatrix(std::forward<CtrArgs>(args)...);
     randomize(M);
     return M;
     }

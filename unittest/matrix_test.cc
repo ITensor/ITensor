@@ -1341,28 +1341,55 @@ SECTION("Sub Matrix")
 
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
-SECTION("diagHermitian Real")
+SECTION("diagHermitian")
     {
     auto N = 10;
-    auto M = randomMat(N,N);
-    //Symmetrize:
-    M = M+transpose(M);
 
-    Matrix U;
-    Vector d;
-    diagHermitian(M,U,d);
-
-    auto D = Matrix(N,N);
-    diagonal(D) &= d;
-    auto R = U*D*transpose(U);
-
-    for(auto r : range(N))
-    for(auto c : range(N))
+    SECTION("Real case")
         {
-        CHECK_CLOSE(R(r,c),M(r,c));
+        auto M = randomMat(N,N);
+        //Symmetrize:
+        M = M+transpose(M);
+
+        Matrix U;
+        Vector d;
+        diagHermitian(M,U,d);
+
+        auto D = Matrix(N,N);
+        diagonal(D) &= d;
+        auto R = U*D*transpose(U);
+
+        for(auto r : range(N))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(R(r,c),M(r,c));
+            }
+        CHECK(norm(R-M) < 1E-12*norm(M));
         }
-    CHECK(norm(R-M) < 1E-12*norm(M));
+
+    SECTION("Complex case")
+        {
+        auto M = randomMatC(N,N);
+        //Symmetrize:
+        M = M+conj(transpose(M));
+
+        CMatrix U;
+        Vector d;
+        diagHermitian(M,U,d);
+
+        auto D = Matrix(N,N);
+        diagonal(D) &= d;
+        auto R = U*D*conj(transpose(U));
+
+        for(auto r : range(N))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(R(r,c),M(r,c));
+            }
+        CHECK(norm(R-M) < 1E-12*norm(M));
+        }
     }
+
 
 //SECTION("diagHermitian")
 //    {
