@@ -583,11 +583,12 @@ svdRank2(IQTensor const&,IQIndex const&,IQIndex const&,
          IQTensor &,IQTensor &,IQTensor &,Args const&);
 
 
+template<typename T>
 Spectrum
-diag_hermitian(ITensor rho, 
-               ITensor& U, 
-               ITensor& D,
-               const Args& args)
+diagHImpl(ITensor rho, 
+          ITensor& U, 
+          ITensor& D,
+          Args const& args)
     {
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
@@ -595,7 +596,6 @@ diag_hermitian(ITensor rho,
     auto do_truncate = args.getBool("Truncate",false);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    auto cplx = isComplex(rho);
     auto showeigs = args.getBool("ShowEigs",false);
 
     Index active;
@@ -628,31 +628,9 @@ diag_hermitian(ITensor rho,
 
     //Do the diagonalization
     Vector DD;
-    Matrix UU,iUU;
-    if(!cplx)
-        {
-        auto R = toMatRefc<Real>(rho,active,prime(active));
-        diagHermitian(R,UU,DD);
-        }
-    else
-        {
-        Error("Complex diag_hermitian not yet implemented");
-        //Matrix Mr,Mi;
-        //ITensor rrho = realPart(rho),
-        //        irho = imagPart(rho);
-        //rrho.scaleTo(rho.scale());
-        //irho.scaleTo(rho.scale());
-        //rrho.toMatrix11NoScale(prime(active),active,Mr);
-        //irho.toMatrix11NoScale(prime(active),active,Mi);
-        //if(flipSign)
-        //    {
-        //    Mr *= -1.0; 
-        //    Mi *= -1.0; 
-        //    }
-        //HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
-        //if(flipSign) DD *= -1.0;
-        }
-
+    Mat<T> UU,iUU;
+    auto R = toMatRefc<T>(rho,active,prime(active));
+    diagHermitian(R,UU,DD);
 
     //Truncate
     Real truncerr = 0.0;
@@ -688,18 +666,10 @@ diag_hermitian(ITensor rho,
         showEigs(DD,truncerr,rho.scale(),showargs);
         }
 
-    Index newmid(active.rawname(),m,active.type());
+    auto newmid = Index(active.rawname(),m,active.type());
 
-    if(not cplx)
-        {
-        U = ITensor({active,newmid},DenseReal{move(UU.storage())}); 
-        D = ITensor({prime(newmid),newmid},DiagReal{DD.begin(),DD.end()},rho.scale());
-        }
-    else
-        {
-        //ITensor iU(active,newmid,iUU.Columns(1,m));
-        //U = U + iU*Complex_i;
-        }
+    U = ITensor({active,newmid},Dense<T>{move(UU.storage())}); 
+    D = ITensor({prime(newmid),newmid},DiagReal{DD.begin(),DD.end()},rho.scale());
 
     if(not rho.scale().isTooBigForReal())
         {
@@ -713,11 +683,12 @@ diag_hermitian(ITensor rho,
     return Spectrum{move(DD),{"Truncerr",truncerr}};
     }
 
+template<typename T>
 Spectrum
-diag_hermitian(IQTensor    rho, 
-               IQTensor  & U, 
-               IQTensor  & D,
-               Args const& args)
+diagHImpl(IQTensor    rho, 
+          IQTensor  & U, 
+          IQTensor  & D,
+          Args const& args)
     {
     SCOPED_TIMER(7)
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -727,7 +698,6 @@ diag_hermitian(IQTensor    rho,
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
-    auto cplx = isComplex(rho);
 
     if(rho.r() != 2)
         {
@@ -758,7 +728,7 @@ diag_hermitian(IQTensor    rho,
 
     if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
-    auto blocks = doTask(GetBlocks<Real>{rho.inds(),ai,prime(ai)},rho.store());
+    auto blocks = doTask(GetBlocks<T>{rho.inds(),ai,prime(ai)},rho.store());
     auto Nblock = blocks.size();
 
     size_t totaldsize = 0,
@@ -769,8 +739,8 @@ diag_hermitian(IQTensor    rho,
         totalUsize += nrows(blocks[b].M)*ncols(blocks[b].M);
         }
 
-    auto Udata = vector<Real>(totalUsize);
-    auto Umats = vector<MatrixRef>(Nblock);
+    auto Udata = vector<T>(totalUsize);
+    auto Umats = vector<MatRef<T>>(Nblock);
 
     auto ddata = vector<Real>(totaldsize);
     auto dvecs = vector<VectorRef>(Nblock);
@@ -792,14 +762,7 @@ diag_hermitian(IQTensor    rho,
         d = makeVecRef(ddata.data()+totaldsize,rM);
         UU = makeMatRef(Udata.data()+totalUsize,rM*cM,rM,cM);
 
-        if(!cplx)
-            {
-            diagHermitian(M,UU,d);
-            }
-        else
-            {
-            Error("Complex diag_hermitian not yet implemented");
-            }
+        diagHermitian(M,UU,d);
 
         alleig.insert(alleig.end(),d.begin(),d.end());
         totaldsize += rM;
@@ -866,13 +829,6 @@ diag_hermitian(IQTensor    rho,
             else             break;
             }
 
-        //if(m == 0 && d.size() >= 1) // zero-just keep one arb state
-        //    { 
-        //    this_m = 1; 
-        //    m = 1; 
-        //    docut = 1; 
-        //    }
-
         if(this_m == 0) 
             { 
             d.clear();
@@ -894,13 +850,13 @@ diag_hermitian(IQTensor    rho,
         iq.emplace_back(Index(nameint("d",0),1),ai.qn(1+B.i1));
         }
 
-    IQIndex d("d",move(iq),-ai.dir());
+    auto d = IQIndex("d",move(iq),-ai.dir());
 
     IQIndexSet Uis(dag(ai),dag(d)),
                Dis(prime(d),dag(d));
 
-    QDenseReal Ustore(Uis,QN());
-    QDiagReal Dstore(Dis,div(rho));
+    auto Ustore = QDense<T>(Uis,QN());
+    auto Dstore = QDiagReal(Dis,div(rho));
 
     long n = 0;
     for(auto b : range(Nblock))
@@ -942,8 +898,33 @@ diag_hermitian(IQTensor    rho,
         }
 
     return Spectrum{move(probs),{"Truncerr",truncerr}};
+    }
 
-    } //diag_hermitian IQTensor
+template<typename I>
+Spectrum
+diag_hermitian(ITensorT<I>    rho, 
+               ITensorT<I>  & U, 
+               ITensorT<I>  & D,
+               Args const& args)
+    {
+    if(isComplex(rho))
+        {
+        return diagHImpl<Cplx>(rho,U,D,args);
+        }
+    return diagHImpl<Real>(rho,U,D,args);
+    }
+template
+Spectrum
+diag_hermitian(ITensor    rho, 
+               ITensor  & U, 
+               ITensor  & D,
+               Args const& args);
+template
+Spectrum
+diag_hermitian(IQTensor    rho, 
+               IQTensor  & U, 
+               IQTensor  & D,
+               Args const& args);
 
 void 
 eig_decomp(ITensor T, 

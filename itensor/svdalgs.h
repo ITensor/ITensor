@@ -351,13 +351,12 @@ denmatDecomp(Tensor const& AA,
     } //denmatDecomp
 
 
-Spectrum 
-diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
-               const Args& args = Global::args());
-
-Spectrum 
-diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
-               const Args& args = Global::args());
+template<typename I>
+Spectrum
+diag_hermitian(ITensorT<I>    rho, 
+               ITensorT<I>  & U, 
+               ITensorT<I>  & D,
+               Args const& args);
 
 
 template<class Tensor>
