@@ -87,6 +87,43 @@ svdBond(int b, const Tensor& AA, Direction dir,
     return res;
     }
 
+template<typename T>
+bool
+isComplex(MPSt<T> const& psi)
+    {
+    for(auto j : range1(psi.N()))
+        {
+        if(itensor::isComplex(psi.A(j))) return true;
+        }
+    return false;
+    }
+
+template<typename T>
+bool
+isOrtho(MPSt<T> const& psi)
+    {
+    return psi.leftLim()+1 == psi.rightLim()-1;
+    }
+
+template<typename T>
+int
+orthoCenter(MPSt<T> const& psi)
+    {
+    if(!isOrtho(psi)) Error("orthogonality center not well defined.");
+    return (psi.leftLim() + 1);
+    }
+
+template<typename T>
+Real
+norm(MPSt<T> const& psi)
+    {
+    if(isOrtho(psi))
+        {
+        return itensor::norm(psi.A(orthoCenter(psi)));
+        }
+    return std::sqrt(overlap(psi,psi)); 
+    }
+
 template <typename MPST>
 typename MPST::IndexT 
 linkInd(MPST const& psi, int b)

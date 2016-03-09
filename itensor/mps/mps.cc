@@ -236,12 +236,12 @@ write(std::ostream& s) const
     if(do_write_)
         Error("MPSt::write not yet supported if doWrite(true)");
 
-    for(size_t j = 0; j < A_.size(); ++j) 
+    for(auto j : range(A_.size()))
         {
         itensor::write(s,A_[j]);
         }
-    itensor::write(s,l_orth_lim_);
-    itensor::write(s,r_orth_lim_);
+    itensor::write(s,leftLim());
+    itensor::write(s,rightLim());
     }
 template
 void MPSt<ITensor>::write(std::ostream& s) const;
@@ -610,7 +610,7 @@ plusEq(const MPSt<Tensor>& R,
        const Args& args)
     {
     //cout << "calling new orthog in sum" << endl;
-    if(!this->isOrtho())
+    if(!itensor::isOrtho(*this))
         {
         try { 
             orthogonalize(); 
@@ -622,7 +622,7 @@ plusEq(const MPSt<Tensor>& R,
             }
         }
 
-    if(!R.isOrtho())
+    if(!itensor::isOrtho(R))
         {
         MPSt<Tensor> oR(R);
         try { 
@@ -869,8 +869,8 @@ template <class Tensor>
 int MPSt<Tensor>::
 orthoCenter() const 
     { 
-    if(!isOrtho()) Error("orthogonality center not well defined.");
-    return (l_orth_lim_ + 1);
+    if(!itensor::isOrtho(*this)) Error("orthogonality center not well defined.");
+    return (leftLim() + 1);
     }
 template
 int MPSt<ITensor>::orthoCenter() const;
@@ -1046,14 +1046,11 @@ template <class Tensor>
 Real MPSt<Tensor>::
 norm() const 
     { 
-    if(isOrtho())
+    if(itensor::isOrtho(*this))
         {
-        return itensor::norm(A(orthoCenter()));
+        return itensor::norm(A(itensor::orthoCenter(*this)));
         }
-    else
-        {
-        return std::sqrt(psiphi(*this,*this)); 
-        }
+    return std::sqrt(psiphi(*this,*this)); 
     }
 template Real MPSt<ITensor>::
 norm() const;
@@ -1857,16 +1854,16 @@ template <class Tensor>
 void 
 fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     {
-    if(!psi_basis.isOrtho()) 
+    if(!itensor::isOrtho(psi_basis)) 
         Error("psi_basis must be orthogonolized.");
-    if(psi_basis.orthoCenter() != 1) 
+    if(orthoCenter(psi_basis) != 1) 
         Error("psi_basis must be orthogonolized to site 1.");
 
-    int N = psi_basis.N();
+    auto N = psi_basis.N();
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    Tensor A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),Link));
+    auto A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),Link));
     for(int n = N-1; n > 1; --n)
         {
         A *= dag(prime(psi_basis.A(n),Link));

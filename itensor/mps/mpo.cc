@@ -129,7 +129,7 @@ plusEq(const MPOt<Tensor>& other_,
         Error("operator+= not supported if doWrite(true)");
 
     //cout << "calling new orthog in sum" << endl;
-    if(!this->isOrtho())
+    if(!itensor::isOrtho(*this))
         {
         try { 
             orthogonalize(); 
@@ -141,9 +141,9 @@ plusEq(const MPOt<Tensor>& other_,
             }
         }
 
-    if(!other_.isOrtho())
+    if(!itensor::isOrtho(other_))
         {
-        MPOt<Tensor> other(other_);
+        auto other = other_;
         try { 
             other.orthogonalize(); 
             }
@@ -359,14 +359,14 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
     //Real cutoff = args.getReal("Cutoff",psi.cutoff());
     //int maxm = args.getInt("Maxm",psi.maxm());
 
-    const int N = psi.N();
+    auto N = psi.N();
     if(K.N() != N) 
         Error("Mismatched N in zipUpApplyMPO");
 
-    if(!psi.isOrtho() || psi.orthoCenter() != 1)
+    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
         Error("Ortho center of psi must be site 1");
 
-    if(!allow_arb_position && (!K.isOrtho() || K.orthoCenter() != 1))
+    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
         Error("Ortho center of K must be site 1");
 
 #ifdef DEBUG
@@ -870,7 +870,7 @@ applyExpH(MPSt<Tensor> const& psi,
                     rwfH *= H.A(b+1);
                     }
 
-                Tensor wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
+                auto wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
                 if(!up) wf.dag();
 
                 res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));

@@ -100,19 +100,11 @@ class MPOt : private MPSt<Tensor>
     position(int i, const Args& args = Args::global()) { Parent::position(i,args + Args("UseSVD")); }
 
     void 
-    orthogonalize(const Args& args = Args::global()) { Parent::orthogonalize(args + Args("UseSVD")); }
+    orthogonalize(Args const& args = Args::global()) 
+        { 
+        Parent::orthogonalize(args + Args("UseSVD")); 
+        }
 
-    using Parent::isOrtho;
-    using Parent::orthoCenter;
-
-    using Parent::isComplex;
-
-    //void 
-    //toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
-    //    {
-    //    res = MPOt<IQTensor>(*sites_,logrefNorm_);
-    //    convertToIQ(*sites_,A_,res.A_,totalq,cut);
-    //    }
 
     private:
 
@@ -126,6 +118,26 @@ class MPOt : private MPSt<Tensor>
 
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
+    
+    public:
+
+
+    //
+    // Deprecated methods
+    //
+    //use isOrtho(W) instead
+    using Parent::isOrtho;
+    //use orthoCenter(W) instead
+    using Parent::orthoCenter;
+    //use isComplex(W) instead
+    using Parent::isComplex;
+
+    //void 
+    //toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
+    //    {
+    //    res = MPOt<IQTensor>(*sites_,logrefNorm_);
+    //    convertToIQ(*sites_,A_,res.A_,totalq,cut);
+    //    }
 
     }; //class MPOt<Tensor>
 
@@ -160,6 +172,18 @@ operator*(MPOt<T> W, Cplx z) { return W *= z; }
 template<typename T>
 MPOt<T>
 operator*(Cplx z, MPOt<T> W) { return W *= z; }
+
+template<typename T>
+bool
+isComplex(MPOt<T> const& W);
+
+template<typename T>
+bool
+isOrtho(MPOt<T> const& W);
+
+template<typename T>
+int
+orthoCenter(MPOt<T> const& W);
 
 int
 findCenter(IQMPO const& psi);

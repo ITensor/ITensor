@@ -14,10 +14,6 @@ class MPOt;
 
 class InitState;
 
-//void 
-//convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
-//            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
-
 //
 // class MPSt
 // (the lowercase t stands for "template")
@@ -81,17 +77,16 @@ class MPSt
     int 
     N() const { return N_;}
 
+    SiteSet const& 
+    sites() const;
+
+    explicit operator bool() const { return bool(sites_); }
+
     int 
     rightLim() const { return r_orth_lim_; }
 
     int 
     leftLim() const { return l_orth_lim_; }
-
-    bool 
-    isOrtho() const { return leftLim()+1 == rightLim()-1; }
-
-    int 
-    orthoCenter() const;
 
     //Read-only access to i'th MPS tensor
     Tensor const& 
@@ -107,11 +102,6 @@ class MPSt
     //which allows reading and writing
     Tensor& 
     Anc(int i); //nc stands for non-const
-
-    SiteSet const& 
-    sites() const;
-
-    explicit operator bool() const { return bool(sites_); }
 
     MPSt&
     plusEq(MPSt const& R, 
@@ -152,13 +142,7 @@ class MPSt
     makeRealBasis(int j, Args const& args = Args::global());
 
     Real 
-    norm() const;
-
-    Real 
     normalize();
-
-    bool 
-    isComplex() const;
 
     void
     swap(MPSt& other);
@@ -250,7 +234,32 @@ class MPSt
     void 
     leftLim(int val) { l_orth_lim_ = val; }
 
+
+    //
+    // Deprecated methods
+    // 
+
+    //prefer function norm(psi) instead
+    Real 
+    norm() const;
+
+    //prefer isOrtho(psi) instead
+    bool 
+    isOrtho() const { return leftLim()+1 == rightLim()-1; }
+
+    //prefer orthoCenter(psi) instead
+    int 
+    orthoCenter() const;
+
+    //prefer isComplex(psi) instead
+    bool 
+    isComplex() const;
+
     }; //class MPSt<Tensor>
+
+//void 
+//convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
+//            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class T>
 MPSt<T>& 
@@ -321,6 +330,22 @@ class InitState
 //
 // Other Methods Related to MPSt
 //
+
+template<typename T>
+bool
+isComplex(MPSt<T> const& psi);
+
+template<typename T>
+bool
+isOrtho(MPSt<T> const& psi);
+
+template<typename T>
+int
+orthoCenter(MPSt<T> const& psi);
+
+template<typename T>
+Real
+norm(MPSt<T> const& psi);
 
 template <typename MPST>
 typename MPST::IndexT 
