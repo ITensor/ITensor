@@ -343,6 +343,7 @@ denmatDecomp(Tensor const& AA,
     auto spec = diag_hermitian(rho,U,D,args);
 
     cmb.dag();
+
     to_orth = cmb * dag(U);
     newoc = U * AAc;
 

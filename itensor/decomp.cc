@@ -631,6 +631,7 @@ diagHImpl(ITensor rho,
     Mat<T> UU,iUU;
     auto R = toMatRefc<T>(rho,active,prime(active));
     diagHermitian(R,UU,DD);
+    conjugate(UU);
 
     //Truncate
     Real truncerr = 0.0;
@@ -763,6 +764,7 @@ diagHImpl(IQTensor    rho,
         UU = makeMatRef(Udata.data()+totalUsize,rM*cM,rM,cM);
 
         diagHermitian(M,UU,d);
+        conjugate(UU);
 
         alleig.insert(alleig.end(),d.begin(),d.end());
         totaldsize += rM;
@@ -821,12 +823,11 @@ diagHImpl(IQTensor    rho,
         auto& d = dvecs.at(b);
         auto& B = blocks[b];
 
-        //Count number of eigenvalues in the sector above docut
-        long this_m = 0;
-        for(auto n : range(d))
+        long this_m = d.size();
+        if(do_truncate)
             {
-            if(d(n) > docut) this_m += 1;
-            else             break;
+            //Truncate all elems of d falling below docut
+            while(this_m > 0 && d(this_m-1) < docut) --this_m;
             }
 
         if(this_m == 0) 
@@ -852,8 +853,8 @@ diagHImpl(IQTensor    rho,
 
     auto d = IQIndex("d",move(iq),-ai.dir());
 
-    IQIndexSet Uis(dag(ai),dag(d)),
-               Dis(prime(d),dag(d));
+    auto Uis = IQIndexSet(dag(ai),dag(d));
+    auto Dis = IQIndexSet(prime(d),dag(d));
 
     auto Ustore = QDense<T>(Uis,QN());
     auto Dstore = QDiagReal(Dis,div(rho));

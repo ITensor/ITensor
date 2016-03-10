@@ -56,7 +56,7 @@ SECTION("Truncate Test")
         //Check that with unrestrictive settings
         //nothing gets truncated
         tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
-        long m = p.size();
+        size_t m = p.size();
         CHECK(m==origm);
         }
 
@@ -230,6 +230,74 @@ SECTION("IQTensor denmatDecomp")
             {
             CHECK(eig >= 0.);
             }
+        }
+    }
+
+SECTION("ITensor diagHermitian")
+    {
+    SECTION("Rank 2")
+        {
+        auto i = Index("i",10);
+        auto T = randomTensor(i,prime(i));
+        T += swapPrime(T,0,1);
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,i));
+        CHECK(not hasindex(U,prime(i)));
+        CHECK(norm(T-U*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Rank 4")
+        {
+        auto i = Index("i",10);
+        auto j = Index("i",4);
+        auto T = randomTensor(i,prime(i),prime(j),j);
+        T += swapPrime(T,0,1);
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,i));
+        CHECK(hasindex(U,j));
+        CHECK(not hasindex(U,prime(i)));
+        CHECK(not hasindex(U,prime(j)));
+        CHECK(norm(T-U*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Complex Rank 2")
+        {
+        auto i = Index("i",10);
+        auto T = randomTensorC(i,prime(i));
+        T += conj(swapPrime(T,0,1));
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(norm(T-conj(U)*D*prime(U)) < 1E-12);
+        }
+    }
+
+SECTION("IQTensor diagHermitian")
+    {
+    SECTION("Rank 2")
+        {
+        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
+        auto T = randomTensor(QN(),dag(I),prime(I));
+        T += dag(swapPrime(T,0,1));
+        IQTensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Complex Rank 2")
+        {
+        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
+        auto T = randomTensorC(QN(),dag(I),prime(I));
+        CHECK(isComplex(T));
+        T += dag(swapPrime(T,0,1));
+        IQTensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
         }
     }
 
