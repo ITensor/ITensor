@@ -1518,12 +1518,13 @@ SECTION("Singular Value Decomp")
 
         M = U*DD*transpose(V);
 
-        SVD(M,U,d,V);
+        auto thresh = 1E-3;
+        SVD(M,U,d,V,thresh);
         diagonal(DD) &= d;
 
         //Print(norm(U*DD*transpose(V)-M));
         auto relnrm = norm(U*DD*transpose(V)-M)/norm(M);
-        Print(relnrm);
+        //Print(relnrm);
         CHECK(relnrm < 1E-13);
         }
     }
