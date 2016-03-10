@@ -23,7 +23,7 @@ SOURCES+= itensor_test.cc
 SOURCES+= qn_test.cc
 SOURCES+= iqindex_test.cc
 SOURCES+= iqtensor_test.cc
-SOURCES+= svdalgs_test.cc
+SOURCES+= decomp_test.cc
 #SOURCES+= mps_test.cc
 #SOURCES+= mpo_test.cc
 #SOURCES+= eigensolver_test.cc
@@ -114,9 +114,9 @@ LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/mps/mpo.h
 mpo_test.o: $(LIBHEADERS)
 .debug_objs/mpo_test.o: $(LIBHEADERS)
 
-LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/svdalgs.h
-svdalgs_test.o: $(LIBHEADERS)
-.debug_objs/svdworker_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/decomp.h
+decomp_test.o: $(LIBHEADERS)
+.debug_objs/decomp_test.o: $(LIBHEADERS)
 
 regression_test.o: $(LIBHEADERS)
 .debug_objs/regression_test.o: $(LIBHEADERS)

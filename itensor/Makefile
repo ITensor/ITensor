@@ -29,7 +29,7 @@ SOURCES+= qn.cc
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
+SOURCES+= decomp.cc 
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpo.cc 
 SOURCES+= mps/autompo.cc
@@ -137,9 +137,9 @@ iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= spectrum.h
 spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-GDEPHEADERS+= svdalgs.h
-svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+GDEPHEADERS+= decomp.h
+decomp.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/decomp.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= mps/mps.h
 mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)

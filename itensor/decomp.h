@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_SVDALGS_H
-#define __ITENSOR_SVDALGS_H
+#ifndef __ITENSOR_DECOMP_H
+#define __ITENSOR_DECOMP_H
 #include "itensor/iqtensor.h"
 #include "itensor/spectrum.h"
 #include "itensor/mps/localop.h"
@@ -149,7 +149,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 
 ///////////////////////////
 //
-// Implementation (non-template parts in svdalgs.cc)
+// Implementation (non-template parts in decomp.cc)
 //
 //////////////////////////
 

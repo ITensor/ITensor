@@ -1,10 +1,10 @@
 #include "test.h"
-#include "itensor/svdalgs.h"
+#include "itensor/decomp.h"
 
 using namespace itensor;
 using namespace std;
 
-TEST_CASE("SVDAlgsTest")
+TEST_CASE("Decomposition Tests")
 {
 
 SECTION("Transpose SVD")

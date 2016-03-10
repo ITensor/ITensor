@@ -17,7 +17,7 @@
 //          the key features)
 //
 
-#include "itensor/svdalgs.h"
+#include "itensor/decomp.h"
 #include "itensor/eigensolver.h"
 #include "itensor/util/autovector.h"
 #include "itensor/util/readwrite.h"

@@ -6,7 +6,7 @@
 #include <tuple>
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
-#include "itensor/svdalgs.h"
+#include "itensor/decomp.h"
 
 namespace itensor {
 
