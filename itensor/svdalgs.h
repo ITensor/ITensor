@@ -75,12 +75,12 @@ denmatDecomp(Tensor const& AA,
 // Result is unitary tensor U and diagonal sparse tensor D
 // such that M == dag(U)*D*prime(U)
 //
-template<class Tensor>
+template<class I>
 Spectrum 
-diagHermitian(Tensor const& M, 
-              Tensor& U, 
-              Tensor& D, 
-              Args args = Global::args());
+diagHermitian(ITensorT<I> const& M, 
+              ITensorT<I>      & U, 
+              ITensorT<I>      & D,
+              Args args = Args::global());
 
 
 
@@ -359,21 +359,19 @@ diag_hermitian(ITensorT<I>    rho,
                Args const& args);
 
 
-template<class Tensor>
+template<class I>
 Spectrum 
-diagHermitian(const Tensor& M, 
-              Tensor& U, 
-              Tensor& D,
+diagHermitian(ITensorT<I> const& M, 
+              ITensorT<I>      & U, 
+              ITensorT<I>      & D,
               Args args)
     {
-    using IndexT = typename Tensor::index_type;
     if(!args.defined("IndexName")) args.add("IndexName","d");
 
-    std::vector<IndexT> inds;
-    inds.reserve(M.r()/2);
-    for(auto& I : M.inds())
+    auto inds = stdx::reserve_vector<I>(rank(M)/2);
+    for(auto& i : M.inds())
         { 
-        if(I.primeLevel() == 0) inds.push_back(I);
+        if(i.primeLevel() == 0) inds.push_back(i);
         }
 
     auto comb = combiner(std::move(inds),args);
@@ -383,7 +381,7 @@ diagHermitian(const Tensor& M,
     try {
         Mc = combP * Mc;
         }
-    catch(const ITError& e)
+    catch(ITError const& e)
         {
         println("Diagonalize expects opposite arrow directions for primed and unprimed indices.");
         throw e;
@@ -394,7 +392,6 @@ diagHermitian(const Tensor& M,
     U = comb * U;
 
     return spec;
-
     } //diagHermitian
 
 
