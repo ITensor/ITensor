@@ -41,7 +41,6 @@ SECTION("Truncate Test")
     p(3) = p(5);
     p(4) = p(5);
     p /= sumels(p);
-    //Print(p);
 
     long maxm = 2*origm,
          minm = 1;
@@ -297,6 +296,27 @@ SECTION("IQTensor diagHermitian")
         diagHermitian(T,U,D);
         CHECK(hasindex(U,I));
         CHECK(not hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Complex Rank 4")
+        {
+        detail::seed_quickran(1);
+        auto I = IQIndex("I",Index("i-",2),QN(-1),
+                             Index("i+",2),QN(+1));
+        auto J = IQIndex("J",Index("j-2",2),QN(-2),
+                             Index("j+2",2),QN(+2));
+        //auto T = randomTensorC(QN(),dag(I),prime(I),prime(J),dag(J));
+        auto T = randomTensorC(QN(),dag(I),dag(J),prime(J),prime(I));
+        CHECK(isComplex(T));
+        T += dag(swapPrime(T,0,1));
+        T = swapPrime(T,0,1);
+        IQTensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(hasindex(U,J));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(not hasindex(U,prime(J)));
         CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
         }
     }
