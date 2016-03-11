@@ -149,13 +149,6 @@ class Index
     Index
     operator[](int plev) const { auto I = *this; I.primeLevel(plev); return I; }
 
-    //// Creates an IndexVal from this Index 
-    //// with prime level plev and value (nplev-plev)
-    //// (when passed to prime function, indicates map from plev->nplev)
-    //IndexVal 
-    //operator()(long plev, long nplev) const;
-
-
     //
     // Other methods
     //
@@ -165,6 +158,11 @@ class Index
     // with Arrows and interface compatibility with class IQIndex.
     void 
     dag() { } //for forward compatibility with arrows
+
+    //define size()==m() in order to do 
+    //for(auto n : range(I)) { ... } for some Index I
+    long
+    size() const { return m(); }
 
     // Write Index to binary output stream.
     void 
@@ -176,12 +174,6 @@ class Index
 
     id_type
     id() const { return id_; }
-
-    IndexVal
-    begin() const;
-
-    IndexVal
-    end() const;
 
     private:
 
@@ -247,12 +239,6 @@ class IndexVal
     dag() { }
 
     };
-
-IndexVal&
-operator++(IndexVal& iv);
-
-IndexVal&
-operator*(IndexVal& iv);
 
 bool
 operator==(Index const& I, IndexVal const& iv);
@@ -372,9 +358,6 @@ operator<(const Index& other) const
 
 IndexVal inline Index::
 operator()(long val) const { return IndexVal(*this,val); }
-
-//IndexVal inline Index::
-//operator()(long plev, long nplev) const { return IndexVal(itensor::prime(*this,plev),nplev - plev); }
 
 inline
 Index& Index::

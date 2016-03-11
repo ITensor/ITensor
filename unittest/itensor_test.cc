@@ -538,9 +538,10 @@ SECTION("Visit Real")
     T.visit(rvfunc);
 
     Real prod_check = 1;
-    for(auto b4i : b4) for(auto l2i : l2)
+    for(auto i : range1(b4)) 
+    for(auto j : range1(l2))
         {
-        prod_check *= T.real(b4i,l2i);
+        prod_check *= T.real(b4(i),l2(j));
         }
     CHECK_CLOSE(prod,prod_check);
     }
@@ -1041,17 +1042,17 @@ SECTION("Complex-Complex")
          T2 = randomTensorC(l6,s4,b3,a1);
     auto R = T1*T2;
 
-    for(auto b5i : b5)
-    for(auto s3i : s3)
-    for(auto s4i : s4)
+    for(auto i : range1(b5))
+    for(auto j : range1(s3))
+    for(auto k : range1(s4))
         {
         Cplx val = 0;
-        for(auto b3i : b3)
-        for(auto l6i : l6)
+        for(auto l : range1(b3))
+        for(auto m : range1(l6))
             {
-            val += T1.cplx(a1(1),b3i,b5i,l6i,s3i) * T2.cplx(a1(1),l6i,s4i,b3i);
+            val += T1.cplx(a1(1),b3(l),b5(i),l6(m),s3(j)) * T2.cplx(a1(1),l6(m),s4(k),b3(l));
             }
-        CHECK_CLOSE(R.cplx(b5i,s3i,s4i),val);
+        CHECK_CLOSE(R.cplx(b5(i),s3(j),s4(k)),val);
         }
     }
 
@@ -1581,11 +1582,11 @@ SECTION("Combiner")
 
             CHECK_CLOSE(norm(R),norm(T));
             
-            for(auto i_ : range1(i.m()))
-            for(auto j_ : range1(j.m()))
-            for(auto k_ : range1(k.m()))
-            for(auto l_ : range1(l.m()))
-            for(auto m_ : range1(m.m()))
+            for(auto i_ : range1(i))
+            for(auto j_ : range1(j))
+            for(auto k_ : range1(k))
+            for(auto l_ : range1(l))
+            for(auto m_ : range1(m))
                 {
                 auto ci_ = k_+k.m()*((j_-1)+j.m()*(l_-1));
                 CHECK_CLOSE(R.real(ci(ci_),i(i_),m(m_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
