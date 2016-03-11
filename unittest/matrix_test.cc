@@ -1388,6 +1388,27 @@ SECTION("diagHermitian")
             }
         CHECK(norm(R-M) < 1E-12*norm(M));
         }
+
+    SECTION("Complex transposed case")
+        {
+        auto M = randomMatC(N,N);
+        //Symmetrize:
+        M = M+conj(transpose(M));
+
+        //We want to diag the transpose
+        //(will have a transposed MatRange)
+        auto Mt = transpose(M);
+
+        CMatrix U;
+        Vector d;
+        diagHermitian(Mt,U,d);
+
+        auto D = Matrix(N,N);
+        diagonal(D) &= d;
+        auto R = U*D*conj(transpose(U));
+
+        CHECK(norm(R-Mt) < 1E-12*norm(Mt));
+        }
     }
 
 

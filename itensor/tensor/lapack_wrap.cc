@@ -425,8 +425,8 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
     char jobz = 'V';
     char uplo = 'U';
 #ifdef PLATFORM_lapacke
-std::vector<LAPACK_REAL> work(N);
-LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+    std::vector<LAPACK_REAL> work(N);
+    LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
 #else
     LAPACK_INT lwork = std::max(1,3*N-1);//max(1, 1+6*N+2*N*N);
     std::vector<LAPACK_COMPLEX> work(lwork);

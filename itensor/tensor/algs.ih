@@ -90,6 +90,9 @@ diagHermitian(MatM && M,
 
     //Correct the signs of the eigenvalues:
     d *= -1;
+    //If M is transposed, we actually just computed the decomposition of
+    //M^T=M^*, so conjugate U to compensate for this
+    if(isTransposed(M)) conjugate(U);
     }
 
 template<typename T>
