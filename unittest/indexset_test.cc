@@ -214,20 +214,11 @@ SECTION("PrimeLevelMethods")
         SECTION("Case 2")
             {
             IndexSet is(i5,i2,prime(i2),i4);
-            prime(is,i2(0,1),i2(1,3));
+            prime(is,i2(5),prime(i2)(1),i4(2));
             CHECK(is[0] == i5);
-            CHECK(is[1] == prime(i2));
-            CHECK(is[2] == prime(i2,3));
-            CHECK(is[3] == i4);
-            }
-        SECTION("Case 3")
-            {
-            IndexSet is(i5,i2,prime(i2),i4);
-            prime(is,i2(1,3),i2(0,1));
-            CHECK(is[0] == i5);
-            CHECK(is[1] == prime(i2));
-            CHECK(is[2] == prime(i2,3));
-            CHECK(is[3] == i4);
+            CHECK(is[1] == prime(i2,5));
+            CHECK(is[2] == prime(i2,2));
+            CHECK(is[3] == prime(i4,2));
             }
         SECTION("Check Error Condition")
             {

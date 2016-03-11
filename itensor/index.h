@@ -144,16 +144,17 @@ class Index
     IndexVal 
     operator()(long i) const;
 
-    // Creates an IndexVal from this Index 
-    // with prime level plev and value (nplev-plev)
-    // (when passed to prime function, indicates map from plev->nplev)
-    IndexVal 
-    operator()(long plev, long nplev) const;
-
     //Creates a copy of this Index with prime level plev
     //(regardless of which prime level this Index has)
     Index
     operator[](int plev) const { auto I = *this; I.primeLevel(plev); return I; }
+
+    //// Creates an IndexVal from this Index 
+    //// with prime level plev and value (nplev-plev)
+    //// (when passed to prime function, indicates map from plev->nplev)
+    //IndexVal 
+    //operator()(long plev, long nplev) const;
+
 
     //
     // Other methods
@@ -372,8 +373,8 @@ operator<(const Index& other) const
 IndexVal inline Index::
 operator()(long val) const { return IndexVal(*this,val); }
 
-IndexVal inline Index::
-operator()(long plev, long nplev) const { return IndexVal(itensor::prime(*this,plev),nplev - plev); }
+//IndexVal inline Index::
+//operator()(long plev, long nplev) const { return IndexVal(itensor::prime(*this,plev),nplev - plev); }
 
 inline
 Index& Index::
