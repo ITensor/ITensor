@@ -129,17 +129,15 @@ getState(int i, const String& state) const
 inline IQTensor SpinHalf::
 getOp(int i, const String& opname, const Args& args) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s  = si(i);
+    auto sP = prime(s);
 
-    IQIndexVal Up(s(1)),
-               UpP(sP(1)),
-               Dn(s(2)),
-               DnP(sP(2));
+    auto Up = s(1);
+    auto UpP = sP(1);
+    auto Dn = s(2);
+    auto DnP = sP(2);
 
-    IQTensor Op(dag(s),sP);
+    auto Op = IQTensor(dag(s),sP);
 
     if(opname == "Sz")
         {
@@ -149,18 +147,30 @@ getOp(int i, const String& opname, const Args& args) const
     else
     if(opname == "Sx")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
+        Op = mixedIQTensor(s,sP);
         Op.set(Up,DnP,+0.5);
         Op.set(Dn,UpP,+0.5);
         }
     else
     if(opname == "ISy")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
+        Op = mixedIQTensor(s,sP);
         Op.set(Up,DnP,-0.5);
         Op.set(Dn,UpP,+0.5);
         }
     else
     if(opname == "Sy")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
+        Op = mixedIQTensor(s,sP);
         Op.set(Up,DnP,+0.5*Cplx_i);
         Op.set(Dn,UpP,-0.5*Cplx_i);
         }

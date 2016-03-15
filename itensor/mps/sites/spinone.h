@@ -145,14 +145,14 @@ getOp(int i, const String& opname, const Args& opts) const
     auto s = si(i);
     auto sP = prime(s);
 
-    IQIndexVal Up(s(1)),
-               UpP(sP(1)),
-               Dn(s(s.m())),
-               DnP(sP(s.m())),
-               Z0(s(2)),
-               Z0P(sP(2));
+    auto Up  = s(1);
+    auto UpP = sP(1);
+    auto Z0  = s(2);
+    auto Z0P = sP(2);
+    auto Dn  = s(s.m());
+    auto DnP = sP(s.m());
 
-    IQTensor Op(dag(s),sP);
+    auto Op = IQTensor(dag(s),sP);
 
     if(opname == "Sz")
         {
@@ -170,6 +170,9 @@ getOp(int i, const String& opname, const Args& opts) const
     else
     if(opname == "Sx")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
         Op = mixedIQTensor(s,sP);
         if(s.m() == 2)
             {
@@ -187,6 +190,9 @@ getOp(int i, const String& opname, const Args& opts) const
     else
     if(opname == "ISy")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
         Op = mixedIQTensor(s,sP);
         if(s.m() == 2)
             {
@@ -204,6 +210,9 @@ getOp(int i, const String& opname, const Args& opts) const
     else
     if(opname == "Sy")
         {
+        //mixedIQTensor call needed here
+        //because as an IQTensor, Op would
+        //not have a well defined QN flux
         Op = mixedIQTensor(s,sP);
         if(s.m() == 2)
             {
