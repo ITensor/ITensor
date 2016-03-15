@@ -123,7 +123,7 @@ davidson(BigMatrixT const& A,
     V[0] = phi.front();
     A.product(V[0],AV[0]);
 
-    auto initEn = (dag(V[0])*AV[0]).real();
+    auto initEn = ((dag(V[0])*AV[0]).cplx()).real();
 
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
