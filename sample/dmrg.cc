@@ -13,14 +13,14 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    //SpinHalf sites(N); //make a chain of N spin 1/2's
-    SpinOne sites(N); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
     // next-neighbor Heisenberg model
     //
-    AutoMPO ampo(sites);
+    auto ampo = AutoMPO(sites);
     for(int j = 1; j < N; ++j)
         {
         ampo += 0.5,"S+",j,"S-",j+1;
@@ -32,16 +32,15 @@ main(int argc, char* argv[])
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(sites);
+    auto state = InitState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
-            initState.set(i,"Up");
+            state.set(i,"Up");
         else
-            initState.set(i,"Dn");
+            state.set(i,"Dn");
         }
-
-    MPS psi(initState);
+    auto psi = MPS(state);
 
     //
     // overlap calculates matrix elements of MPO's with respect to MPS's
