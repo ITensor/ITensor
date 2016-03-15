@@ -37,6 +37,9 @@ class QCombiner;
 template<typename T>
 class QDiag;
 
+template<typename T>
+class QMixed;
+
 //class ITLazy;
 
 
@@ -53,7 +56,9 @@ QDense<Real>,
 QDense<Cplx>,
 QCombiner,
 QDiag<Real>,
-QDiag<Cplx>
+QDiag<Cplx>,
+QMixed<Real>,
+QMixed<Cplx>
 //ITLazy
 //-----------
 >;
@@ -68,5 +73,6 @@ QDiag<Cplx>
 #include "itensor/itdata/qdense.h"
 #include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/qdiag.h"
+#include "itensor/itdata/qmixed.h"
 ////#include "itensor/itdata/itlazy.h"
 #endif

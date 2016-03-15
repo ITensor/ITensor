@@ -237,19 +237,6 @@ dag()
     }
 
 
-struct ToITensor
-    {
-    IQIndexSet const& is;
-    LogNum const& scale;
-
-    ToITensor(IQIndexSet const& is_,
-              LogNum const& scale_)
-        :
-        is(is_),
-        scale(scale_)
-        { }
-    };
-
 template<typename V>
 ITensor
 doTask(ToITensor & T, 
@@ -285,6 +272,18 @@ doTask(ToITensor & T,
 template ITensor doTask(ToITensor & T, QDense<Real> const& d);
 template ITensor doTask(ToITensor & T, QDense<Cplx> const& d);
 
+template<typename V>
+ITensor
+doTask(ToITensor & T, 
+       QMixed<V> const& d)
+    {
+    auto inds = IndexSetBuilder(rank(T.is));
+    for(auto j : range(rank(T.is))) inds.setIndex(j,T.is[j]);
+    return ITensor(inds.build(),Dense<V>(d.begin(),d.end()),T.scale);
+    }
+template ITensor doTask(ToITensor & T, QMixed<Real> const& d);
+template ITensor doTask(ToITensor & T, QMixed<Cplx> const& d);
+
 //template<typename D>
 //ITensor
 //doTask(ToITensor & T, ITDiag<D> const& d)
@@ -304,9 +303,9 @@ toITensor(IQTensor const& T)
     //Handle unallocated IQTensors
     if(!T.store()) 
         {
-        if(T.r()==0) return ITensor{};
-        auto inds = IndexSetBuilder(T.r());
-        for(decltype(T.r()) j = 0; j < T.r(); ++j) inds.setIndex(j,T.inds()[j]);
+        if(rank(T)==0) return ITensor{};
+        auto inds = IndexSetBuilder(rank(T));
+        for(auto j : range(rank(T))) inds.setIndex(j,T.inds()[j]);
         return ITensor(inds.build());
         }
     //Main case for allocated IQTensors

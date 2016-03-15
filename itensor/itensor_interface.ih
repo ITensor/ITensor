@@ -150,8 +150,8 @@ ITensorT(indexset_type const& is)
 template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(indexset_type iset,
-        storage_ptr&& pdat,
-        LogNum const& scale)
+         storage_ptr&& pdat,
+         LogNum const& scale)
     :
     is_(std::move(iset)),
     store_(std::move(pdat)),
@@ -200,13 +200,14 @@ cplx(IVs&&... ivs) const
         Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
         }
 
-    Inds inds(size);
-    detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    auto inds = Inds(size);
+    detail::permute_map(is_,vals,inds,
+                [](indexval_type const& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
 	try {
 	    return z*scale_.real0(); 
 	    }
-	catch(const TooBigForReal& e)
+	catch(TooBigForReal const& e)
 	    {
 	    println("too big for real in cplx(...), scale = ",scale());
 	    throw e;
@@ -325,9 +326,13 @@ set(VArgs&&... vargs)
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(is_real)
+        {
         doTask(SetElt<Real,IndexT>{z.real(),is_,inds},store_);
+        }
     else
+        {
         doTask(SetElt<Cplx,IndexT>{z,is_,inds},store_);
+        }
     }
 
 

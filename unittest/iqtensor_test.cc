@@ -625,6 +625,24 @@ SECTION("Scalar")
     CHECK_CLOSE(fabs(val), norm(S));
     }
 
+SECTION("Mixed Storage")
+    {
+    auto s = IQIndex("s",Index("s+",1,Site),QN(+1),
+                         Index("s-",1,Site),QN(-1));
+    auto T = mixedIQTensor(s,prime(s));
+    T.set(s(1),prime(s)(1),11);
+    T.set(s(1),prime(s)(2),12);
+    T.set(s(2),prime(s)(1),21);
+    T.set(s(2),prime(s)(2),22);
+
+    auto t = ITensor(T);
+    for(auto i : range1(s))
+    for(auto j : range1(s))
+        {
+        CHECK_CLOSE(t.real(s(i),prime(s)(j)),T.real(s(i),prime(s)(j)));
+        }
+    }
+
 //SECTION("Non-contracting product")
 //    {
 //    SECTION("Case 1")

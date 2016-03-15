@@ -585,6 +585,11 @@ QN
 calcDiv(IQIndexSet const& is, 
         Labels const& block_ind);
 
+//code for doTask(ToITensor...) is in iqtensor.cc
+template<typename V>
+ITensor
+doTask(ToITensor & T, QDense<V> const& d);
+
 } //namespace itensor
 
 #endif

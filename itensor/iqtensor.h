@@ -148,6 +148,17 @@ randomTensorC(QN const& q, VArgs&&... vargs)
     return T+1_i*random(T);
     }
 
+//mixedIQTensor constructs
+//an IQTensor with MixedQN storage
+//allowing setting elements in
+//multiple QN sectors.
+//This is useful if creating an IQTensor
+//whose only purpose is to be converted
+//to an ITensor.
+template<typename... Inds>
+IQTensor
+mixedIQTensor(IQIndex const& i1, 
+              Inds const&... inds);
 
 std::ostream& 
 operator<<(std::ostream & s, IQTensor const& t);

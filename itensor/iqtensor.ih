@@ -75,6 +75,16 @@ delta(IQIndex const& i1, IQIndex const& i2)
     return IQTensor({i1,i2},QCombiner{});
     }
 
+template<typename... Inds>
+IQTensor
+mixedIQTensor(IQIndex const& i1, 
+              Inds const&... inds)
+    {
+    auto is = IQIndexSet(i1,inds...);
+    auto size = area(is);
+    return IQTensor(std::move(is),QMixed<Real>(size));
+    }
+
 } //namespace itensor
 
 #endif

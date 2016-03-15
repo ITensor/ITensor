@@ -461,6 +461,18 @@ struct CalcDiv
     CalcDiv(IQIndexSet const& is_) : is(is_) { }
     };
 
+struct ToITensor
+    {
+    IQIndexSet const& is;
+    LogNum const& scale;
+
+    ToITensor(IQIndexSet const& is_,
+              LogNum const& scale_)
+      : is(is_),
+        scale(scale_)
+        { }
+    };
+
 } //namespace itensor 
 
 #endif
