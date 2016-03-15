@@ -83,7 +83,7 @@ SECTION("Basic QN Constructors")
         CHECK(q3.mod(1)==-1);
         }
 
-    SECTION("Multiple")
+    SECTION("Multiple QNVal") 
         {
         auto q1 = QN({1,2},{2,-1});
         CHECK(q1(1)==1);
@@ -98,6 +98,23 @@ SECTION("Basic QN Constructors")
         CHECK(q2.mod(2)==2);
         CHECK(q2(3)==0);
         CHECK(q2.mod(3)==-1);
+        }
+
+    SECTION("Multiple Integer") 
+        {
+        auto q1 = QN(1,2);
+        CHECK(q1(1)==1);
+        CHECK(q1.mod(1)==1);
+        CHECK(q1(2)==2);
+        CHECK(q1.mod(2)==1);
+
+        auto q2 = QN(3,4,5);
+        CHECK(q2(1)==3);
+        CHECK(q2.mod(1)==1);
+        CHECK(q2(2)==4);
+        CHECK(q2.mod(2)==1);
+        CHECK(q2(3)==5);
+        CHECK(q2.mod(3)==1);
         }
     }
 
@@ -272,11 +289,11 @@ SECTION("Electron")
     CHECK(isFermionic(q));
 
     auto Q = QN("Sz=",+1,"Nf=",1)+QN("Sz=",-1,"Nf=",1);
-    CHECK(Q == electron(0,2));
+    CHECK(Q == QN("Sz=",0,"Nf=",2));
     CHECK(isFermionic(Q));
 
     Q = QN("Sz=",0,"Nf=",2)+QN("Sz=",-1,"Nf=",1);
-    CHECK(Q == electron(-1,3));
+    CHECK(Q == QN("Sz=",-1,"Nf=",3));
     CHECK(isFermionic(Q));
     }
 
@@ -298,19 +315,19 @@ SECTION("Z3 Clock")
     CHECK(q(1) == 2);
 
     auto Q = QN({0,3})+QN({1,3});
-    CHECK(Q == clock(1,3));
+    CHECK(Q == QN({1,3}));
 
     Q = QN({0,3})+QN({2,3});
-    CHECK(Q == clock(2,3));
+    CHECK(Q == QN({2,3}));
 
     Q = QN({1,3})+QN({1,3});
-    CHECK(Q == clock(2,3));
+    CHECK(Q == QN({2,3}));
 
     Q = QN({1,3})+QN({2,3});
-    CHECK(Q == clock(0,3));
+    CHECK(Q == QN({0,3}));
 
     Q = QN({2,3})+QN({2,3});
-    CHECK(Q == clock(1,3));
+    CHECK(Q == QN({1,3}));
     }
 
 }
