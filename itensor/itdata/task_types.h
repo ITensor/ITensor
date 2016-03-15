@@ -375,19 +375,30 @@ class Write
     Write(std::ostream& s_) : s(s_) { }
 
     template<class T>
-    void
-    writeType(T const& data)
+    auto
+    writeType(stdx::choice<1>, T const& data)
+        -> stdx::if_compiles_return<void,
+                 decltype(doTask(StorageType{},data)),
+                 decltype(write(std::declval<std::ostream>(),data))>
         {
         write(s,doTask(StorageType{},data));
         write(s,data); 
         }
+
+    template<class T>
+    void
+    writeType(stdx::choice<2>, T const& data)
+        {
+        throw ITError("Write to disk not implemented for storage type");
+        }
+
     };
 
 template<typename T>
 void
 doTask(Write & W, T const& D)
     {
-    W.writeType(D);
+    W.writeType(stdx::select_overload{},D);
     }
 
 
