@@ -243,7 +243,7 @@ void
 doTask(TakeImag, DenseReal & d);
 
 void
-doTask(TakeImag, DenseCplx & d);
+doTask(TakeImag, DenseCplx const& d, ManageStore & m);
 
 template<typename T>
 bool constexpr
