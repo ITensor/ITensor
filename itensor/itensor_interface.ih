@@ -577,8 +577,8 @@ swap(ITensorT & other)
 
 template <typename IVal, typename... IVals>
 ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
-pick(IVal const& iv1, 
-     IVals const&... rest)
+setElt(IVal const& iv1, 
+       IVals const&... rest)
     {
     //using index_type = typename IVal::index_type;
     using index_type = typename std::common_type<IVal,IVals...>::type::index_type;

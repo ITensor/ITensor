@@ -149,7 +149,7 @@ SECTION("Contracting Product")
 
         auto l0 = IQIndex("L0",Index("l0",1),QN());
         auto l1 = IQIndex("L1",Index("l1",3),QN());
-        auto t = pick(l0(1),l1(3));
+        auto t = setElt(l0(1),l1(3));
 
         auto R = Op * t;
 
@@ -238,7 +238,7 @@ SECTION("Apply")
 
 SECTION("RandomizeTest")
     {
-    auto T = pick(L1(1),S1(1),L2(4),S2(2));
+    auto T = setElt(L1(1),S1(1),L2(4),S2(2));
     const QN D = div(T);
     randomize(T);
     CHECK_EQUAL(D,div(T));

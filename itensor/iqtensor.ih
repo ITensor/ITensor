@@ -58,15 +58,15 @@ ITensorT(Complex val);
 //    }
 
 inline IQTensor& 
-operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= pick(iv); } 
+operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= setElt(iv); } 
 
 IQTensor inline
-operator*(IQIndexVal const& iv, IQTensor const& T) { return pick(iv) * T; }
+operator*(IQIndexVal const& iv, IQTensor const& T) { return setElt(iv) * T; }
 
 ITensor inline
 operator*(IndexVal const& iv, IQTensor const& T) 
     { 
-    return pick(iv) * toITensor(T); 
+    return setElt(iv) * toITensor(T); 
     }
 
 IQTensor inline

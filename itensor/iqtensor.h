@@ -113,7 +113,7 @@ IQTensor
 randomTensor(IQIndexVal const& iv1, 
              IQIndVals&&... ivs)
     {
-    auto T = pick(iv1,std::forward<IQIndVals>(ivs)...);
+    auto T = setElt(iv1,std::forward<IQIndVals>(ivs)...);
     try {
         return random(T);
         }

@@ -300,8 +300,8 @@ class ITensorT
 template <typename IVal, typename... IVals>
 //ITensorT<typename IVal::index_type>
 ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
-pick(IVal  const& iv1, 
-     IVals const&... rest);
+setElt(IVal  const& iv1, 
+       IVals const&... rest);
 
 
 //

@@ -549,7 +549,7 @@ toMPOImpl(AutoMPO const& am,
 #ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
 #endif
-            auto rc = pick(dag(row)(r+1)) * pick(col(c+1));
+            auto rc = setElt(dag(row)(r+1)) * setElt(col(c+1));
 
             //Start a new operator string
             if(cst.i == n && rst == IL)
@@ -664,8 +664,8 @@ toMPOImpl(AutoMPO const& am,
 #endif
         }
 
-    H.Anc(1) *= pick(links.at(0)(1));
-    H.Anc(N) *= pick(dag(links.at(N))(1));
+    H.Anc(1) *= setElt(links.at(0)(1));
+    H.Anc(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 
@@ -821,7 +821,7 @@ toExpH_ZW1(const AutoMPO& am,
 #ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
 #endif
-            auto rc = pick(dag(row)(r+1)) * pick(col(c+1));
+            auto rc = setElt(dag(row)(r+1)) * setElt(col(c+1));
 
             //Start a new operator string
             if(cst.i == n && rst == IL)
@@ -902,8 +902,8 @@ toExpH_ZW1(const AutoMPO& am,
 #endif
         }
 
-    H.Anc(1) *= pick(links.at(0)(1));
-    H.Anc(N) *= pick(dag(links.at(N))(1));
+    H.Anc(1) *= setElt(links.at(0)(1));
+    H.Anc(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 

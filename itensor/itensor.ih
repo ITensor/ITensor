@@ -30,11 +30,11 @@ namespace itensor {
 // TODO: implement special code for doing this operation
 //       more efficiently
 inline ITensor& 
-operator*=(ITensor & T, IndexVal const& iv) { return T *= pick(iv); } 
+operator*=(ITensor & T, IndexVal const& iv) { return T *= setElt(iv); } 
 ITensor inline
 operator*(IndexVal const& iv, ITensor const& B) 
     { 
-    auto A = pick(iv);
+    auto A = setElt(iv);
     A *= B; 
     return A; 
     }
@@ -42,14 +42,14 @@ operator*(IndexVal const& iv, ITensor const& B)
 ITensor inline
 operator*(IndexVal const& iv1, IndexVal const& iv2) 
     { 
-    auto t = pick(iv1);
+    auto t = setElt(iv1);
     return (t *= iv2); 
     }
 
 ITensor inline
 operator*(IndexVal const& iv1, Real val) 
     { 
-    auto res = pick(iv1);
+    auto res = setElt(iv1);
     res *= val; 
     return res; 
     }

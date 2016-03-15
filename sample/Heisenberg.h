@@ -164,8 +164,8 @@ init_()
             }
         }
 
-    auto LH = pick(links.at(0)(start));
-    auto RH = pick(dag(last)(1));
+    auto LH = setElt(links.at(0)(start));
+    auto RH = setElt(dag(last)(1));
 
     if(not infinite_)
         {

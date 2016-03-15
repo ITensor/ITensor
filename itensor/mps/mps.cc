@@ -435,12 +435,12 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     std::vector<Index> a(N_+1);
     for(auto i : range1(N_)) a[i] = Index(nameint("a",i));
 
-    A_[1] = pick(IndexVal(initState(1)),a[1](1));
+    A_[1] = setElt(IndexVal(initState(1)),a[1](1));
     for(auto i : range(2,N_))
         {
-        A_[i] = pick(dag(a[i-1])(1),IndexVal(initState(i)),a[i](1));
+        A_[i] = setElt(dag(a[i-1])(1),IndexVal(initState(i)),a[i](1));
         }
-    A_[N_] = pick(dag(a[N_-1])(1),IndexVal(initState(N_)));
+    A_[N_] = setElt(dag(a[N_-1])(1),IndexVal(initState(N_)));
     }
 template
 void MPSt<ITensor>::
@@ -468,12 +468,12 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
         a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); 
         }
 
-    A_[1] = pick(initState(1),a[1](1));
+    A_[1] = setElt(initState(1),a[1](1));
     for(auto i : range(2,N_))
         {
-        A_[i] = pick(dag(a[i-1])(1),initState(i),a[i](1)); 
+        A_[i] = setElt(dag(a[i-1])(1),initState(i),a[i](1)); 
         }
-    A_[N_] = pick(dag(a[N_-1])(1),initState(N_));
+    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
     }
 template
 void MPSt<IQTensor>::
