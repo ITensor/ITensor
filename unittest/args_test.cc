@@ -111,5 +111,25 @@ SECTION("VariadicConstructor")
     CHECK(o3.getReal("Pinning") == -0.5);
     }
 
+SECTION("Chop Equals Signs")
+    {
+    auto args = Args("Sz=",1,"Nf=",2,"Pf=",0);
+    CHECK(args.defined("Sz"));
+    CHECK(!args.defined("Sz="));
+    CHECK(args.getInt("Sz")==1);
+    CHECK(args.defined("Nf"));
+    CHECK(!args.defined("Nf="));
+    CHECK(args.getInt("Nf")==2);
+    CHECK(args.defined("Pf"));
+    CHECK(!args.defined("Pf="));
+    CHECK(args.getInt("Pf")==0);
+
+    args.add("Name=","name");
+    CHECK(args.defined("Name"));
+    CHECK(!args.defined("Name="));
+    CHECK(args.getString("Name")=="name");
+
+    }
+
 }
 

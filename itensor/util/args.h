@@ -51,8 +51,8 @@ class Args
     //
     template <typename T, typename... Rest>
     Args(const char* name1, 
-         const T& t1, 
-         const Rest&... rest);
+         T const& t1, 
+         Rest const&... rest);
 
     //
     // Construct Args from another Args and a list of
@@ -60,15 +60,16 @@ class Args
     // Args args(other,"Name1",val1,"Name2",val2,"Name3",val3,...);
     //
     template <typename... Rest>
-    Args(const Args& other,
-         const Rest&... rest);
+    Args(Args const& other,
+         Rest const&... rest);
 
 
     //
     //Args("Name") is equivalent to Args("Name",true).
     //
     Args(const char* ostring);
-    Args(const std::string& ostring);
+
+    Args(std::string const& ostring);
 
     //
     // Copy and move constructors and assignment
@@ -85,27 +86,27 @@ class Args
     // Add a named value
     //
     void
-    add(const Name& name, bool bval);
-    void
-    add(const Name& name, long ival);
-    void
-    add(const Name& name, int ival);
-    void
-    add(const Name& name, const char* sval);
-    void
-    add(const Name& name, const std::string& sval);
-    void
-    add(const Name& name, Real rval);
+    add(Name const& name, bool bval);
+    void     
+    add(Name const& name, long ival);
+    void     
+    add(Name const& name, int ival);
+    void     
+    add(Name const& name, const char* sval);
+    void     
+    add(Name const& name, std::string const& sval);
+    void     
+    add(Name const& name, Real rval);
     void
     add(const char* ostring);
 
     // Check if a specific name is defined in this Args instance
     bool
-    defined(const Name& name) const;
+    defined(Name const& name) const;
 
     // Remove an arg from the set - always succeeds
     void
-    remove(const Name& name);
+    remove(Name const& name);
 
     //
     // Methods for getting values of named arguments
@@ -113,35 +114,35 @@ class Args
 
     // Get value of bool-type argument, throws if not defined
     bool
-    getBool(const Name& name) const;
+    getBool(Name const& name) const;
     // Get value of bool-type argument, returns default_val if not defined
     bool
-    getBool(const Name& name, bool default_val) const;
+    getBool(Name const& name, bool default_val) const;
 
     // Get value of string-type argument, throws if not defined
     const std::string&
-    getString(const Name& name) const;
+    getString(Name const& name) const;
     // Get value of string-type argument, returns default_val if not defined
     const std::string&
-    getString(const Name& name, const std::string& default_val) const;
+    getString(Name const& name, std::string const& default_val) const;
 
     // Get value of int-type argument, throws if not defined
     long
-    getInt(const Name& name) const;
+    getInt(Name const& name) const;
     // Get value of int-type argument, returns default_val if not defined
     long
-    getInt(const Name& name, long default_val) const;
+    getInt(Name const& name, long default_val) const;
 
     // Get value of Real-type argument, throws if not defined
     Real
-    getReal(const Name& name) const;
+    getReal(Name const& name) const;
     // Get value of Real-type argument, returns default_val if not defined
     Real
-    getReal(const Name& name, Real default_val) const;
+    getReal(Name const& name, Real default_val) const;
 
     // Add contents of other to this
     Args&
-    operator+=(const Args& other);
+    operator+=(Args const& other);
 
     // Check if this is the global Args object
     bool
@@ -166,8 +167,8 @@ class Args
     template <typename T, typename... Rest>
     void
     initialize(const char* name1, 
-               const T& t1, 
-               const Rest&... rest)
+               T const& t1, 
+               Rest const&... rest)
         {
         add(Val(name1,t1));
         initialize(rest...);
@@ -175,8 +176,8 @@ class Args
 
     template <typename... Rest>
     void
-    initialize(const Args& other,
-               const Rest&... rest)
+    initialize(Args const& other,
+               Rest const&... rest)
         {
         operator+=(other);
         initialize(rest...);
@@ -186,16 +187,16 @@ class Args
     initialize() { }
 
     void
-    add(const Val& v);
+    add(Val const& v);
 
-    const Val&
-    get(const Name& name) const;
-
-    friend std::ostream& 
-    operator<<(std::ostream & s, const Val& v);
+    Val const&
+    get(Name const& name) const;
 
     friend std::ostream& 
-    operator<<(std::ostream & s, const Args& args);
+    operator<<(std::ostream & s, Val const& v);
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, Args const& args);
 
     class Val
         {
@@ -213,29 +214,29 @@ class Args
 
         Val(const char* name);
 
-        Val(const Name& name);
-
-        Val(const Name& name, bool bval);
-
-        Val(const Name& name, const char* sval);
-        Val(const Name& name, const std::string& sval);
-
-        Val(const Name& name, long ival);
-        Val(const Name& name, int ival);
-
-        Val(const Name& name, Real rval);
+        Val(Name const& name);
+                      
+        Val(Name const& name, bool bval);
+                      
+        Val(Name const& name, const char* sval);
+        Val(Name const& name, std::string const& sval);
+                      
+        Val(Name const& name, long ival);
+        Val(Name const& name, int ival);
+                      
+        Val(Name const& name, Real rval);
 
         //
         // Accessor methods
         //
 
-        const Name&
+        Name const&
         name() const { return name_; }
 
         bool
         boolVal() const { assertType(Boolean); return bool(rval_); }
 
-        const std::string&
+        std::string const&
         stringVal() const { assertType(String); return sval_; }
 
         long
@@ -267,22 +268,22 @@ class Args
 template <typename T, typename... Rest>
 Args::
 Args(const char* name1, 
-       const T& t1, 
-       const Rest&... rest)
+       T const& t1, 
+       Rest const&... rest)
     {
     initialize(name1,t1,rest...);
     }
 
 template <typename... Rest>
 Args::
-Args(const Args& other,
-     const Rest&... rest)
+Args(Args const& other,
+     Rest const&... rest)
     {
     initialize(other,rest...);
     }
 
 Args
-operator+(Args args, const Args& other);
+operator+(Args args, Args const& other);
 
 Args
 operator+(Args args, const char* ostring);
