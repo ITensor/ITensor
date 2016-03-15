@@ -433,11 +433,13 @@ void MPSt<Tensor>::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
     std::vector<Index> a(N_+1);
-    for(int i = 1; i <= N_; ++i)
-        { a[i] = Index(nameint("a",i)); }
+    for(auto i : range1(N_)) a[i] = Index(nameint("a",i));
+
     A_[1] = pick(IndexVal(initState(1)),a[1](1));
-    for(int i = 2; i < N_; ++i)
-        { A_[i] = pick(dag(a[i-1])(1),IndexVal(initState(i)),a[i](1)); }
+    for(auto i : range(2,N_))
+        {
+        A_[i] = pick(dag(a[i-1])(1),IndexVal(initState(i)),a[i](1));
+        }
     A_[N_] = pick(dag(a[N_-1])(1),IndexVal(initState(N_)));
     }
 template
@@ -449,24 +451,28 @@ template <class Tensor>
 void MPSt<Tensor>::
 init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     {
-    std::vector<QN> qa(N_+1); //qn[i] = qn on i^th bond
-    for(int i = 1; i <= N_; ++i) { qa[0] -= initState(i).qn()*In; }
+    auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
+    for(auto i : range1(N_)) qa[0] -= initState(i).qn()*In;
 
     //Taking OC to be at the leftmost site,
     //compute the QuantumNumbers of all the Links.
-    for(int i = 1; i <= N_; ++i)
+    for(auto i : range1(N_))
         {
         //Taking the divergence to be zero,solve for qa[i]
         qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
         }
 
-    std::vector<IQIndex> a(N_+1);
-    for(int i = 1; i <= N_; ++i)
-        { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
+    auto a = std::vector<IQIndex>(N_+1);
+    for(auto i : range1(N_))
+        { 
+        a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); 
+        }
 
     A_[1] = pick(initState(1),a[1](1));
-    for(int i = 2; i < N_; ++i)
+    for(auto i : range(2,N_))
+        {
         A_[i] = pick(dag(a[i-1])(1),initState(i),a[i](1)); 
+        }
     A_[N_] = pick(dag(a[N_-1])(1),initState(N_));
     }
 template
