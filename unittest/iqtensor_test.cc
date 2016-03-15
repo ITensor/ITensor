@@ -127,9 +127,9 @@ SECTION("Contracting Product")
     SECTION("Regression Test 1")
         {
         auto s = IQIndex("S=1 site",
-                  Index("Up",1,Site),QN(+2,0),
-                  Index("Z0",1,Site),QN( 0,0),
-                  Index("Dn",1,Site),QN(-2,0));
+                  Index("Up",1,Site),QN("Sz=",+2),
+                  Index("Z0",1,Site),QN("Sz=", 0),
+                  Index("Dn",1,Site),QN("Sz=",-2));
 
         auto sP = prime(s);
 
