@@ -14,7 +14,7 @@ class SpinOne : public SiteSet
 
     SpinOne();
 
-    SpinOne(int N, const Args& args = Global::args());
+    SpinOne(int N, const Args& args = Args::global());
 
     private:
 
@@ -74,15 +74,15 @@ constructSites(const Args& opts)
                 }
 
             site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
-                Index(nameint("Up:site",j),1,Site),spin(+1),
-                Index(nameint("Dn:site",j),1,Site),spin(-1));
+                Index(nameint("Up:site",j),1,Site),QN("Sz=",+1),
+                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-1));
             }
         else
             {
             site_.at(j) = IQIndex(nameint("S=1 site=",j),
-                Index(nameint("Up:site",j),1,Site),spin(+2),
-                Index(nameint("Z0:site",j),1,Site),spin( 0),
-                Index(nameint("Dn:site",j),1,Site),spin(-2));
+                Index(nameint("Up:site",j),1,Site),QN("Sz=",+2),
+                Index(nameint("Z0:site",j),1,Site),QN("Sz=", 0),
+                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-2));
             }
         }
     }

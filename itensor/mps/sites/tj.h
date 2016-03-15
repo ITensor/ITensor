@@ -68,9 +68,9 @@ constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         site_.at(j) = IQIndex(nameint("tJ site=",j),
-            Index(nameint("Emp for site ",j),1,Site), electron( 0,0),
-            Index(nameint("Up for site ",j),1,Site),  electron(+1,1),
-            Index(nameint("Dn for site ",j),1,Site),  electron(-1,1));
+            Index(nameint("Emp ",j),1,Site), QN("Sz=", 0,"Nf=",0),
+            Index(nameint("Up ",j),1,Site),  QN("Sz=",+1,"Nf=",1),
+            Index(nameint("Dn ",j),1,Site),  QN("Sz=",-1,"Nf=",1));
     }
 
 void inline tJ::
@@ -136,15 +136,8 @@ getOp(int i, String const& opname, Args const& args) const
                Dn(s(3)),
                DnP(sP(3));
 
-    IQTensor Op(dag(s),sP);
+    auto Op = IQTensor(dag(s),sP);
 
-    if(opname == "TReverse")
-        {
-        Op.set(Em,EmP,+1);
-        Op.set(Dn,UpP,-1); //correct?
-        Op.set(Up,DnP,+1);
-        }
-    else
     if(opname == "Nup")
         {
         Op.set(Up,UpP,1);

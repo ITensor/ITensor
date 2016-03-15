@@ -96,10 +96,10 @@ constructSites()
         for(auto j : range1(N_))
             {
             site_.at(j) = IQIndex(nameint("Hubbard site=",j),
-                Index(nameint("Emp for site ",j),1,Site), electron( 0,0),
-                Index(nameint("Up for site ",j),1,Site),  electron(Up,1),
-                Index(nameint("Dn for site ",j),1,Site),  electron(Dn,1),
-                Index(nameint("UpDn for site ",j),1,Site),electron( 0,2));
+                Index(nameint("Emp for site ",j),1,Site), QN("Sz=", 0,"Nf=",0),
+                Index(nameint("Up for site ",j),1,Site),  QN("Sz=",Up,"Nf=",1),
+                Index(nameint("Dn for site ",j),1,Site),  QN("Sz=",Dn,"Nf=",1),
+                Index(nameint("UpDn for site ",j),1,Site),QN("Sz=", 0,"Nf=",2));
             }
         }
     else //don't conserve Nf, only fermion parity
@@ -109,10 +109,10 @@ constructSites()
         for(auto j : range1(N_))
             {
             site_.at(j) = IQIndex(nameint("Hubbard site=",j),
-                Index(nameint("Emp for site ",j),1,Site), elparity( 0,0),
-                Index(nameint("Up for site ",j),1,Site),  elparity(+1,1),
-                Index(nameint("Dn for site ",j),1,Site),  elparity(-1,1),
-                Index(nameint("UpDn for site ",j),1,Site),elparity( 0,0));
+                Index(nameint("Emp for site ",j),1,Site), QN("Sz=", 0,"Pf=",0),
+                Index(nameint("Up for site ",j),1,Site),  QN("Sz=",+1,"Pf=",1),
+                Index(nameint("Dn for site ",j),1,Site),  QN("Sz=",-1,"Pf=",1),
+                Index(nameint("UpDn for site ",j),1,Site),QN("Sz=", 0,"Pf=",0));
             }
         }
     }

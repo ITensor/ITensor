@@ -14,21 +14,21 @@ class Spinless : public SiteSet
 
     Spinless();
 
-    Spinless(int N, const Args& opts = Global::opts());
+    Spinless(int N, Args const& args = Args::global());
 
     private:
 
     int
     getN() const;
 
-    const IQIndex&
+    IQIndex const&
     getSi(int i) const;
     
     virtual IQIndexVal
-    getState(int i, const String& state) const;
+    getState(int i, String const& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const Args& opts = Global::opts()) const;
+    getOp(int i, String const& opname, Args const& args = Args::global()) const;
 
     void
     constructSites();
@@ -44,8 +44,6 @@ class Spinless : public SiteSet
 
     int N_;
 
-    bool odd_even_up_down_;
-
     bool conserve_Nf_;
 
     std::vector<IQIndex> site_;
@@ -55,58 +53,38 @@ class Spinless : public SiteSet
 inline Spinless::
 Spinless()
     : N_(-1),
-      odd_even_up_down_(false),
       conserve_Nf_(true)
     { 
     }
 
 inline Spinless::
-Spinless(int N, const Args& opts)
+Spinless(int N, Args const& args)
     : N_(N),
       site_(N_+1)
     { 
-    odd_even_up_down_ = opts.getBool("OddEvenUpDown",false);
-    conserve_Nf_ = opts.getBool("ConserveNf",true);
+    conserve_Nf_ = args.getBool("ConserveNf",true);
     constructSites();
     }
 
 void inline Spinless::
 constructSites()
     {
-    const int occ = (conserve_Nf_ ? 1 : 0);
-    if(odd_even_up_down_)
+    auto q_occ = QN("Nf=",1);
+    if(not conserve_Nf_)
         {
-        for(int i = 1; i <= N_; ++i)
-            {
-            if(i%2==1)
-                {
-                site_.at(i) = IQIndex(nameint("Spinless Up site=",i),
-                Index(nameint("Emp for Up site",i),1,Site),QN(0,0,0),
-                Index(nameint("Occ for Up site",i),1,Site),QN(+1,occ,1));
-                }
-            else
-                {
-                site_.at(i) = IQIndex(nameint("Spinless Dn site=",i),
-                Index(nameint("Emp for Dn site",i),1,Site),QN(0,0,0),
-                Index(nameint("Occ for Dn site",i),1,Site),QN(-1,occ,1));
-                }
-            }
+        q_occ = QN("Pf=",1);
         }
-    else
+    for(int i = 1; i <= N_; ++i)
         {
-        for(int i = 1; i <= N_; ++i)
-            {
-            site_.at(i) = IQIndex(nameint("Spinless site=",i),
-            Index(nameint("Emp for site",i),1,Site),QN(0,0,0),
-            Index(nameint("Occ for site",i),1,Site),QN(0,occ,1));
-            }
+        site_.at(i) = IQIndex(nameint("Spinless site=",i),
+        Index(nameint("Emp for site",i),1,Site),QN(),
+        Index(nameint("Occ for site",i),1,Site),q_occ);
         }
     }
 
 void inline Spinless::
 doRead(std::istream& s)
     {
-    s.read((char*) &odd_even_up_down_,sizeof(odd_even_up_down_));
     s.read((char*) &conserve_Nf_,sizeof(conserve_Nf_));
     s.read((char*) &N_,sizeof(N_));
     site_.resize(N_+1);
@@ -117,7 +95,6 @@ doRead(std::istream& s)
 void inline Spinless::
 doWrite(std::ostream& s) const
     {
-    s.write((char*) &odd_even_up_down_,sizeof(odd_even_up_down_));
     s.write((char*) &conserve_Nf_,sizeof(conserve_Nf_));
     s.write((char*) &N_,sizeof(N_));
     for(int j = 1; j <= N_; ++j) 
@@ -154,7 +131,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor Spinless::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, const String& opname, const Args& args) const
     {
     const
     IQIndex s(si(i));

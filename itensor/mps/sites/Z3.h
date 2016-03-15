@@ -18,10 +18,10 @@ class Z3 : public SiteSet
 
     Z3(int N);
 
-    Complex static
+    Cplx static
     Omega()
         {
-        static Complex w(cos(2.*Pi/3.),sin(2.*Pi/3.));
+        static Cplx w(cos(2.*Pi/3.),sin(2.*Pi/3.));
         return w;
         }
 
@@ -70,9 +70,9 @@ constructSites()
     for(int i = 1; i <= N_; ++i)
         {
         site_.at(i) = IQIndex(nameint("Z3 site=",i),
-        Index(nameint("0|site",i),1,Site),clock(0,3),
-        Index(nameint("1|site",i),1,Site),clock(1,3),
-        Index(nameint("2|site",i),1,Site),clock(2,3));
+        Index(nameint("0|site",i),1,Site),QN({0,3}),
+        Index(nameint("1|site",i),1,Site),QN({1,3}),
+        Index(nameint("2|site",i),1,Site),QN({2,3}));
         }
     }
 
@@ -133,14 +133,14 @@ getOp(int i, String const& opname, Args const& args) const
     auto s = si(i);
     auto sP = prime(s);
 
-    IQIndexVal Zer(s(1)),
-               ZerP(sP(1)),
-               One(s(2)),
-               OneP(sP(2)),
-               Two(s(3)),
-               TwoP(sP(3));
+    auto Zer = s(1);
+    auto ZerP = sP(1);
+    auto One = s(2);
+    auto OneP = sP(2);
+    auto Two = s(3);
+    auto TwoP = sP(3);
 
-    IQTensor Op(dag(s),sP);
+    auto Op = IQTensor(dag(s),sP);
 
     if(opname == "N")
         {
@@ -168,11 +168,11 @@ getOp(int i, String const& opname, Args const& args) const
         Op.set(One,OneP,cos(2.*Pi/3.));
         Op.set(Two,TwoP,cos(4.*Pi/3.));
 
-        IQTensor TauI(s,sP);
-        TauI(One,OneP,sin(2.*Pi/3.));
-        TauI(Two,TwoP,sin(4.*Pi/3.));
+        auto TauI = IQTensor(s,sP);
+        TauI.set(One,OneP,sin(2.*Pi/3.));
+        TauI.set(Two,TwoP,sin(4.*Pi/3.));
 
-        Op += TauI*Complex_i;
+        Op += TauI*Cplx_i;
         }
     else
     if(opname == "TauDag")
@@ -181,11 +181,11 @@ getOp(int i, String const& opname, Args const& args) const
         Op.set(One,OneP,cos(2.*Pi/3.));
         Op.set(Two,TwoP,cos(4.*Pi/3.));
 
-        IQTensor TauI(s,sP);
-        TauI(One,OneP,-sin(2.*Pi/3.));
-        TauI(Two,TwoP,-sin(4.*Pi/3.));
+        auto TauI = IQTensor(s,sP);
+        TauI.set(One,OneP,-sin(2.*Pi/3.));
+        TauI.set(Two,TwoP,-sin(4.*Pi/3.));
 
-        Op += TauI*Complex_i;
+        Op += TauI*Cplx_i;
         }
     else
     if(opname == "Proj0")
