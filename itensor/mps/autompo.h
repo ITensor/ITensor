@@ -18,8 +18,8 @@ class AutoMPO;
 //
 template <typename Tensor>
 MPOt<Tensor>
-toMPO(const AutoMPO& a,
-      const Args& args = Global::args());
+toMPO(AutoMPO const& a,
+      Args const& args = Args::global());
 
 
 //
@@ -38,7 +38,7 @@ template <typename Tensor>
 MPOt<Tensor>
 toExpH(const AutoMPO& a,
        Complex tau,
-       const Args& args = Global::args());
+       const Args& args = Args::global());
 
 
 

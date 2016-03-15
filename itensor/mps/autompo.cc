@@ -413,21 +413,16 @@ endTerm(const std::string& op)
     return op;
     }
 
-template<>
-IQMPO
-toMPO<IQTensor>(const AutoMPO& am,
-                const Args& args)
+template<typename Tensor>
+MPOt<Tensor>
+toMPOImpl(AutoMPO const& am,
+          Args const& args)
     {
-    const SiteSet& sites = am.sites();
-    IQMPO H(sites);
-    const int N = sites.N();
-    //CheckQNs is so that QNs can be turned off
-    //for ITensor case - necessary?
-    //TODO: may be able to do a design where
-    //      code for creating link inds is 
-    //      factored into helper function
-    //      overloaded for IQIndex and Index cases
-    //const auto checkqn = args.getBool("CheckQNs",true);
+    using IndexT = typename Tensor::index_type;
+
+    SiteSet const& sites = am.sites();
+    auto H = MPOt<Tensor>(sites);
+    auto N = sites.N();
 
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
@@ -483,7 +478,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
     //    }
 
-    vector<IQIndex> links(N+1);
+    auto links = vector<IndexT>(N+1);
     vector<IndexQN> inqn;
     for(int n = 0; n <= N; ++n)
         {
@@ -542,7 +537,7 @@ toMPO<IQTensor>(const AutoMPO& am,
         auto &row = links.at(n-1),
              &col = links.at(n);
 
-        W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+        W = Tensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
         for(auto r : range(row.m()))
         for(auto c : range(col.m()))
@@ -678,14 +673,27 @@ toMPO<IQTensor>(const AutoMPO& am,
     }
 
 template<>
-MPO
-toMPO<ITensor>(const AutoMPO& a,
-               const Args& args)
-    {
-    auto checkqn = Args("CheckQNs",false);
-    auto res = toMPO<IQTensor>(a,args+checkqn);
-    return res.toMPO();
+MPO 
+toMPO(AutoMPO const& am, Args const& args) 
+    { 
+    return toMPOImpl<ITensor>(am,args);
     }
+template<>
+IQMPO 
+toMPO(AutoMPO const& am, Args const& args) 
+    { 
+    return toMPOImpl<IQTensor>(am,args);
+    }
+
+//template<>
+//MPO
+//toMPO<ITensor>(const AutoMPO& a,
+//               const Args& args)
+//    {
+//    auto checkqn = Args("CheckQNs",false);
+//    auto res = toMPO<IQTensor>(a,args+checkqn);
+//    return res.toMPO();
+//    }
 
 
 IQMPO
