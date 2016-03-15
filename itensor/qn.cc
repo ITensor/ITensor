@@ -9,6 +9,36 @@ QN(qn_t q0)
     }
 
 QN::
+QN(qn_t q0,
+   qn_t q1)
+    {
+    qn_[0] = QNVal(q0);
+    qn_[1] = QNVal(q1);
+    }
+
+QN::
+QN(qn_t q0,
+   qn_t q1,
+   qn_t q2)
+    {
+    qn_[0] = QNVal(q0);
+    qn_[1] = QNVal(q1);
+    qn_[2] = QNVal(q2);
+    }
+
+QN::
+QN(qn_t q0,
+   qn_t q1,
+   qn_t q2,
+   qn_t q3)
+    {
+    qn_[0] = QNVal(q0);
+    qn_[1] = QNVal(q1);
+    qn_[2] = QNVal(q2);
+    qn_[3] = QNVal(q3);
+    }
+
+QN::
 QN(Args const& args)
     {
     auto hasSz = args.defined("Sz");

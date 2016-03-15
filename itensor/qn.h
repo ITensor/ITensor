@@ -123,20 +123,29 @@ class QN
     explicit
     QN(qn_t q0);
 
+    QN(qn_t q0,
+       qn_t q1);
+
+    QN(qn_t q0,
+       qn_t q1,
+       qn_t q2);
+
+    QN(qn_t q0,
+       qn_t q1,
+       qn_t q2,
+       qn_t q3);
+
     template <typename T, typename... Rest>
-    QN(const char* name1, 
+    QN(const char* name1,
        T const& t1, 
        Rest const&... rest)
-     : QN(Args(name1,t1,rest...))
+      : QN(Args(name1,t1,rest...))
         { }
 
     // Takes QNVal arguments,
     // specifying both a qn value in each
     // sector and a mod factor
-    // Since integer (qn_t) 
-    // or two-element initializer_list
-    // convertible to QNVal, can use
-    // as QN(3,4,5) or as QN({0,2},{1,2})
+    // Can call as as QN({0,2},{1,2})
     explicit
     QN(QNVal v0,
        QNVal v1 = QNVal{},
@@ -318,7 +327,7 @@ int inline
 Pf(QN const& q) { return Nf(q)%2; }
 
 int inline
-Nfp(QN const& q) { return Nfp(q); }
+Nfp(QN const& q) { return Pf(q); }
 
 } //namespace itensor
 
