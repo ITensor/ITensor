@@ -314,10 +314,16 @@ toITensor(IQTensor const& T)
     }
 
 QN
-div(IQTensor const& T) 
+flux(IQTensor const& T) 
     { 
     if(!T) Error("div(IQTensor) not defined for unallocated IQTensor");
     return doTask(CalcDiv{T.inds()},T.store());
+    }
+
+QN
+div(IQTensor const& T) 
+    { 
+    return flux(T);
     }
 
 IQTensor
@@ -463,7 +469,16 @@ operator<<(std::ostream& s, const IQTensor& T)
 	s << "/--------------IQTensor--------------\n";
     if(T.store())
         {
-        s << "r=" << T.r() << " div=" << div(T) << " log(scale)=" << T.scale().logNum() << "\n";
+        s << "r=" << rank(T);
+        s << " flux=";
+        try { 
+            s << flux(T); 
+            }
+        catch(ITError const& e)
+            {
+            s << "(undef.)";
+            }
+        s << " log(scale)=" << T.scale().logNum() << "\n";
         s << T.inds();
         //Checking whether std::ios::floatfield is set enables 
         //printing the contents of an ITensor when using the printf

@@ -68,7 +68,9 @@ operator*(const IQTensor& T, const IndexVal& iv)
 ITensor
 operator*(IndexVal const& iv, IQTensor const& T);
 
-//Compute divergence of IQTensor T
+//Compute flux (a.k.a. divergence) of IQTensor T
+QN
+flux(IQTensor const& T);
 QN
 div(IQTensor const& T);
 
