@@ -1727,6 +1727,39 @@ for(auto kk : range1(k.m()))
     }
 }
 
+SECTION("RealImagPart")
+    {
+    auto f1 = 2.124;
+    auto f2 = 1.113;
+    auto ZiX = f1*Z + f2*1_i*X;
+    auto R = realPart(ZiX);
+    auto I = imagPart(ZiX);
+    R -= f1*Z;
+    I -= f2*X;
+    CHECK_DIFF(norm(R),0,1E-5);
+    CHECK_DIFF(norm(I),0,1E-5);
+
+    //Test hc:
+    
+    ZiX.dag();
+    R = realPart(ZiX);
+    I = imagPart(ZiX);
+    R -= f1*Z;
+    I += f2*X;
+    CHECK_DIFF(norm(R),0,1E-5);
+    CHECK_DIFF(norm(I),0,1E-5);
+    }
+
+SECTION("NormTest")
+    {
+    A = randomTensor(s1,prime(s1));
+    CHECK_CLOSE(norm(A),sqrt((A*A).real()));
+
+    B = randomTensor(s1,prime(s1));
+    auto C = A+1_i*B;
+    CHECK_CLOSE(norm(C),sqrt(realPart(dag(C)*C).real()));
+    }
+
 //SECTION("TieIndices")
 //    {
 //
@@ -1984,92 +2017,7 @@ for(auto kk : range1(k.m()))
 //    CHECK(norm(T-V) < 1E-12);
 //    }
 //
-//SECTION("CommaAssignment")
-//    {
-//    ITensor VV(s1);
-//    VV.randomize();
-//    VV *= -1;
-//    commaInit(VV,s1) << 1, 2;
-//    CHECK_EQUAL(VV(s1(1)),1);
-//    CHECK_EQUAL(VV(s1(2)),2);
 //
-//    ITensor ZZ(s1,s2);
-//    commaInit(ZZ,s1,s2) << 1, 0, 
-//                           0, -1;
-//    CHECK_EQUAL(ZZ(s1(1),s2(1)),1);
-//    CHECK_EQUAL(ZZ(s1(2),s2(1)),0);
-//    CHECK_EQUAL(ZZ(s1(1),s2(2)),0);
-//    CHECK_EQUAL(ZZ(s1(2),s2(2)),-1);
-//
-//    ITensor XX(s1,s2);
-//    XX(s1(2),s2(1)) = 5;
-//    XX *= 3;
-//    commaInit(XX,s1,s2) << 0, 1, 
-//                           1, 0;
-//    CHECK_EQUAL(XX(s1(1),s2(1)),0);
-//    CHECK_EQUAL(XX(s1(2),s2(1)),1);
-//    CHECK_EQUAL(XX(s1(1),s2(2)),1);
-//    CHECK_EQUAL(XX(s1(2),s2(2)),0);
-//
-//    ITensor AA(s1,s2);
-//    AA.randomize();
-//    AA *= -Global::random();
-//    commaInit(AA,s1,s2) << 11, 12, 
-//                           21, 22;
-//    CHECK_EQUAL(AA(s1(1),s2(1)),11);
-//    CHECK_EQUAL(AA(s1(1),s2(2)),12);
-//    CHECK_EQUAL(AA(s1(2),s2(1)),21);
-//    CHECK_EQUAL(AA(s1(2),s2(2)),22);
-//
-//    ITensor T(s1,s2,s3);
-//    T.randomize();
-//    T *= -Global::random();
-//    commaInit(T,s1,s2,s3) << 111, 112, 
-//                             121, 122,
-//                             211, 212,
-//                             221, 222;
-//    CHECK_EQUAL(T(s1(1),s2(1),s3(1)),111);
-//    CHECK_EQUAL(T(s1(1),s2(1),s3(2)),112);
-//    CHECK_EQUAL(T(s1(1),s2(2),s3(1)),121);
-//    CHECK_EQUAL(T(s1(1),s2(2),s3(2)),122);
-//    CHECK_EQUAL(T(s1(2),s2(1),s3(1)),211);
-//    CHECK_EQUAL(T(s1(2),s2(1),s3(2)),212);
-//    CHECK_EQUAL(T(s1(2),s2(2),s3(1)),221);
-//    CHECK_EQUAL(T(s1(2),s2(2),s3(2)),222);
-//    }
-//
-//SECTION("RealImagPart")
-//    {
-//    const Real f1 = 2.124,
-//               f2 = 1.113;
-//    ITensor ZiX = f1*Complex_1*Z + f2*Complex_i*X;
-//    ITensor R(realPart(ZiX)),
-//            I(imagPart(ZiX));
-//    R -= f1*Z;
-//    I -= f2*X;
-//    CHECK_DIFF(norm(R),0,1E-5);
-//    CHECK_DIFF(norm(I),0,1E-5);
-//
-//    //Test hc:
-//    
-//    ZiX.dag();
-//    R = realPart(ZiX);
-//    I = imagPart(ZiX);
-//    R -= f1*Z;
-//    I += f2*X;
-//    CHECK_DIFF(norm(R),0,1E-5);
-//    CHECK_DIFF(norm(I),0,1E-5);
-//    }
-
-//SECTION("NormTest")
-//    {
-//    A = randomTensor(s1,prime(s1));
-//    CHECK_DIFF(norm(A),sqrt((A*A).real()),1E-5);
-//
-//    ITensor C = Complex_1*A+Complex_i*B;
-//
-//    CHECK_DIFF(norm(C),sqrt(realPart(dag(C)*C).toReal()),1E-5);
-//    }
 
 //SECTION("CR_ComplexAddition")
 //    {
