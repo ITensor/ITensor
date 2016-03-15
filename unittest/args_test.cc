@@ -111,7 +111,7 @@ SECTION("VariadicConstructor")
     CHECK(o3.getReal("Pinning") == -0.5);
     }
 
-SECTION("Chop Equals Signs")
+SECTION("Chop Spaces and Equals Signs")
     {
     auto args = Args("Sz=",1,"Nf=",2,"Pf=",0);
     CHECK(args.defined("Sz"));
@@ -129,6 +129,15 @@ SECTION("Chop Equals Signs")
     CHECK(!args.defined("Name="));
     CHECK(args.getString("Name")=="name");
 
+    args.add("Size = ",5);
+    CHECK(args.defined("Size"));
+    CHECK(!args.defined("Size = "));
+    CHECK(args.getInt("Size")==5);
+
+    args.add("Maxm  ",100);
+    CHECK(args.defined("Maxm"));
+    CHECK(!args.defined("Maxm  "));
+    CHECK(args.getInt("Maxm")==100);
     }
 
 }

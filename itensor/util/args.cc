@@ -15,13 +15,20 @@ using std::ostream;
 using std::istream;
 
 std::string
-chopEq(std::string name)
+chopSpaceEq(std::string name)
     {
-    if(name.empty()) return name;
-    auto s = name.size()-1;
-    if(name[s]=='=')
+    auto s = name.size();
+    while(s > 0)
         {
-        name.resize(s);
+        if(name[s-1]=='=' || name[s-1]==' ')
+            {
+            --s;
+            name.resize(s);
+            }
+        else
+            {
+            break;
+            }
         }
     return name;
     }
@@ -38,7 +45,7 @@ Val()
 Args::Val::
 Val(const char* name)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Boolean),
     rval_(1.0)
     { }
@@ -46,7 +53,7 @@ Val(const char* name)
 Args::Val::
 Val(Name const& name)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Boolean),
     rval_(1.0)
     { }
@@ -54,7 +61,7 @@ Val(Name const& name)
 Args::Val::
 Val(Name const& name, bool bval)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Boolean),
     rval_((bval ? 1.0 : 0.0))
     { }
@@ -62,7 +69,7 @@ Val(Name const& name, bool bval)
 Args::Val::
 Val(Name const& name, const char* sval)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(String),
     sval_(sval),
     rval_(NAN)
@@ -71,7 +78,7 @@ Val(Name const& name, const char* sval)
 Args::Val::
 Val(Name const& name, const string& sval)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(String),
     sval_(sval),
     rval_(NAN)
@@ -80,7 +87,7 @@ Val(Name const& name, const string& sval)
 Args::Val::
 Val(Name const& name, long ival)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Numeric),
     rval_(ival)
     { }
@@ -88,7 +95,7 @@ Val(Name const& name, long ival)
 Args::Val::
 Val(Name const& name, int ival)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Numeric),
     rval_(ival)
     { }
@@ -96,7 +103,7 @@ Val(Name const& name, int ival)
 Args::Val::
 Val(Name const& name, Real rval)
     :
-    name_(chopEq(name)),
+    name_(chopSpaceEq(name)),
     type_(Numeric),
     rval_(rval)
     { }
