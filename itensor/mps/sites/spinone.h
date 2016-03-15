@@ -170,6 +170,7 @@ getOp(int i, const String& opname, const Args& opts) const
     else
     if(opname == "Sx")
         {
+        Op = mixedIQTensor(s,sP);
         if(s.m() == 2)
             {
             Op.set(Up,DnP,+0.5);
@@ -186,6 +187,7 @@ getOp(int i, const String& opname, const Args& opts) const
     else
     if(opname == "ISy")
         {
+        Op = mixedIQTensor(s,sP);
         if(s.m() == 2)
             {
             Op.set(Up,DnP,-0.5);
@@ -197,6 +199,23 @@ getOp(int i, const String& opname, const Args& opts) const
             Op.set(Z0,UpP,-ISqrt2);
             Op.set(Z0,DnP,+ISqrt2); 
             Op.set(Dn,Z0P,-ISqrt2);
+            }
+        }
+    else
+    if(opname == "Sy")
+        {
+        Op = mixedIQTensor(s,sP);
+        if(s.m() == 2)
+            {
+            Op.set(Up,DnP,+0.5_i);
+            Op.set(Dn,UpP,-0.5_i);
+            }
+        else
+            {
+            Op.set(Up,Z0P,-ISqrt2*1_i); 
+            Op.set(Z0,UpP,+ISqrt2*1_i);
+            Op.set(Z0,DnP,-ISqrt2*1_i); 
+            Op.set(Dn,Z0P,+ISqrt2*1_i);
             }
         }
     else
