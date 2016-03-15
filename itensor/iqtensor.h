@@ -24,11 +24,21 @@ IQTensor& IQTensor::dag();
 // delta tensor \delta_{J,n})
 IQTensor& 
 operator*=(IQTensor& T, IQIndexVal const& iv);
-IQTensor inline
-operator*(IQTensor T, IQIndexVal const& iv) { T *= iv; return T; }
+IQTensor
+operator*(IQTensor T, IQIndexVal const& iv);
 IQTensor
 operator*(IQIndexVal const& iv, IQTensor const& T);
+ITensor
+operator*(IndexVal const& iv, IQTensor const& T);
 
+
+// Contract ITensor with IQIndexVal
+ITensor& 
+operator*=(ITensor& T, IQIndexVal const& iv);
+ITensor
+operator*(ITensor T, IQIndexVal const& iv);
+ITensor
+operator*(IQIndexVal const& iv, ITensor const& T);
 
 //Add ITensor to corresponding block of IQTensor
 IQTensor& 
@@ -41,30 +51,19 @@ template<> inline
 IQTensor::
 operator ITensor() const { return toITensor(*this); }
 
-ITensor inline
-operator*(const IQTensor& T, const ITensor& t) 
-    { 
-    auto TT = toITensor(T);
-    TT *= t; 
-    return TT; 
-    }
-ITensor inline
-operator*(const ITensor& t, const IQTensor& T) 
-    { 
-    return operator*(T,t);
-    }
+ITensor 
+operator*(IQTensor const& T, ITensor const& t);
+
+ITensor
+operator*(ITensor const& t, IQTensor const& T);
 
 
 //
 // Multiplication by an IndexVal
 // Result is an ITensor
 //
-ITensor inline
-operator*(const IQTensor& T, const IndexVal& iv)
-    { 
-    return toITensor(T)*iv; 
-    }
-
+ITensor
+operator*(IQTensor const& T, IndexVal const& iv);
 ITensor
 operator*(IndexVal const& iv, IQTensor const& T);
 

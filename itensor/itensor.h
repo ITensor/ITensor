@@ -30,7 +30,7 @@ ITensor
 operator*(IndexVal const& iv, ITensor const& B);
 
 ITensor
-combiner(std::vector<Index> inds, Args const& args = Global::args());
+combiner(std::vector<Index> inds, Args const& args = Args::global());
 
 template<typename... Inds>
 ITensor

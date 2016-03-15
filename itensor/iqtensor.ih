@@ -58,16 +58,66 @@ ITensorT(Complex val);
 //    }
 
 inline IQTensor& 
-operator*=(IQTensor& T, IQIndexVal const& iv) { return T *= setElt(iv); } 
-
+operator*=(IQTensor& T, IQIndexVal const& iv) 
+    { 
+    return T *= setElt(iv); 
+    } 
 IQTensor inline
-operator*(IQIndexVal const& iv, IQTensor const& T) { return setElt(iv) * T; }
+operator*(IQTensor T, IQIndexVal const& iv) 
+    { 
+    T *= iv; 
+    return T; 
+    }
+IQTensor inline
+operator*(IQIndexVal const& iv, IQTensor const& T) 
+    { 
+    return setElt(iv) * T;
+    }
+
+inline ITensor& 
+operator*=(ITensor& T, IQIndexVal const& iv) 
+    { 
+    return T *= setElt(IndexVal(iv)); 
+    } 
+
+ITensor inline
+operator*(ITensor T, IQIndexVal const& iv) 
+    { 
+    return T * IndexVal(iv);
+    }
+
+ITensor inline
+operator*(IQIndexVal const& iv, ITensor const& T) 
+    { 
+    return IndexVal(iv) * T;
+    }
+
+ITensor inline
+operator*(IQTensor const& T, ITensor const& t) 
+    { 
+    auto TT = toITensor(T);
+    TT *= t; 
+    return TT; 
+    }
+
+ITensor inline
+operator*(const ITensor& t, const IQTensor& T) 
+    { 
+    return operator*(T,t);
+    }
+
+ITensor inline
+operator*(IQTensor const& T, IndexVal const& iv)
+    { 
+    return toITensor(T)*iv; 
+    }
 
 ITensor inline
 operator*(IndexVal const& iv, IQTensor const& T) 
     { 
     return setElt(iv) * toITensor(T); 
     }
+
 
 IQTensor inline
 delta(IQIndex const& i1, IQIndex const& i2)
