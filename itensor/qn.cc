@@ -2,6 +2,34 @@
 
 namespace itensor {
 
+QN::
+QN(qn_t q0)
+    {
+    qn_[0] = QNVal(q0);
+    }
+
+QN::
+QN(Args const& args)
+    {
+    auto hasSz = args.defined("Sz");
+    auto start = hasSz ? 1 : 0;
+
+    if(hasSz) qn_[0] = args.getInt("Sz");
+
+    if(args.defined("Nb"))
+        {
+        qn_[start] = QNVal(args.getInt("Nb"),+1);
+        }
+    else if(args.defined("Nf"))
+        {
+        qn_[start] = QNVal(args.getInt("Nf"),-1);
+        }
+    else if(args.defined("Pf"))
+        {
+        qn_[start] = QNVal(args.getInt("Pf"),-2);
+        }
+    }
+
 void QN::
 modAssign(QN const& qo)
     {

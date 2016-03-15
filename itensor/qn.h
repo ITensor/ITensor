@@ -20,41 +20,6 @@ namespace itensor {
 class QN;
 
 //
-// QN Convenience Constructor Functions
-//
-
-//Sz in units of spin 1/2
-//(1 => 1/2, 2 => 1, -1 => -1/2, etc.)
-QN spin(int Sz);
-
-//spinless hard-core boson
-QN boson(int Nb);
-
-//hard-core boson with spin
-//Sz in units of spin 1/2
-QN spinboson(int Sz, int Nb);
-
-//spinless fermion
-QN fermion(int Nf);
-
-//spinless fermion, only parity conserved,
-//particle number not conserved
-QN fparity(int Pf);
-
-//fermion with spin
-//Sz in units of spin 1/2
-QN electron(int Sz, int Nf);
-
-//QN conserving electron spin and parity, not total charge
-//Sz in units of spin 1/2
-QN elparity(int Sz, int Pf);
-
-//"clock" degree of freedom
-//for example Z3 clock QNs are clock(0,3); clock(1,3); clock(2,3);
-QN clock(int n, int N);
-
-
-//
 // QN convenience accessor functions
 // 
 
@@ -80,6 +45,9 @@ Nf(QN const& q);
 //Either 0 for even parity or 1 for odd parity.
 //Appropriate for QNs constructed via:
 //electron, elparity
+int
+Pf(QN const& q);
+//Nfp is an alias for Pf
 int
 Nfp(QN const& q);
 
@@ -146,6 +114,21 @@ class QN
     public:
 
     QN() { }
+
+    // Takes named Args:
+    // QN({"Sz=",-1,"Nf=",2})
+    explicit
+    QN(Args const& args);
+
+    explicit
+    QN(qn_t q0);
+
+    template <typename T, typename... Rest>
+    QN(const char* name1, 
+       T const& t1, 
+       Rest const&... rest)
+     : QN(Args(name1,t1,rest...))
+        { }
 
     // Takes QNVal arguments,
     // specifying both a qn value in each
@@ -322,34 +305,6 @@ void
 printFull(QN const& q);
 
 
-//
-// QN Convenience Constructor Functions
-//
-
-QN inline
-spin(int Sz) { return QN({Sz,1}); }
-
-QN inline
-boson(int Nb) { return QN({Nb,1}); }
-
-QN inline
-spinboson(int Sz, int Nb) { return QN({Sz,1},{Nb,1}); }
-
-QN inline
-fermion(int Nf) { return QN({Nf,-1}); }
-
-QN inline
-fparity(int Pf) { return QN({Pf,-2}); }
-
-QN inline
-electron(int Sz, int Nf) { return QN({Sz,1},{Nf,-1}); }
-
-QN inline
-elparity(int Sz, int Pf) { return QN({Sz,1},{Pf,-2}); }
-
-QN inline
-clock(int n, int N) { return QN({n,N}); }
-
 int inline
 Sz(QN const& q) { return q[0]; }
 
@@ -360,7 +315,10 @@ int inline
 Nf(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
 
 int inline
-Nfp(QN const& q) { return Nf(q)%2; }
+Pf(QN const& q) { return Nf(q)%2; }
+
+int inline
+Nfp(QN const& q) { return Nfp(q); }
 
 } //namespace itensor
 

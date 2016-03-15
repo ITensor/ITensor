@@ -55,57 +55,103 @@ SECTION("QNVal")
         }
     }
 
+SECTION("Basic QN Constructors")
+    {
+    SECTION("Single Integer")
+        {
+        auto q0 = QN(0);
+        CHECK(q0(1)==0);
+        CHECK(q0.mod(1)==1);
+
+        auto q1 = QN(0);
+        CHECK(q1(1)==0);
+        CHECK(q1.mod(1)==1);
+        }
+
+    SECTION("Single, Mod Factor")
+        {
+        auto q1 = QN({1,2});
+        CHECK(q1(1)==1);
+        CHECK(q1.mod(1)==2);
+
+        auto q2 = QN({2,4});
+        CHECK(q2(1)==2);
+        CHECK(q2.mod(1)==4);
+
+        auto q3 = QN({0,-1});
+        CHECK(q3(1)==0);
+        CHECK(q3.mod(1)==-1);
+        }
+
+    SECTION("Multiple")
+        {
+        auto q1 = QN({1,2},{2,-1});
+        CHECK(q1(1)==1);
+        CHECK(q1.mod(1)==2);
+        CHECK(q1(2)==2);
+        CHECK(q1.mod(2)==-1);
+
+        auto q2 = QN({2,1},{3,2},{0,-1});
+        CHECK(q2(1)==2);
+        CHECK(q2.mod(1)==1);
+        CHECK(q2(2)==1);
+        CHECK(q2.mod(2)==2);
+        CHECK(q2(3)==0);
+        CHECK(q2.mod(3)==-1);
+        }
+    }
+
 SECTION("Spin")
     {
-    auto q0 = spin(0);
+    auto q0 = QN("Sz=",0);
     CHECK(q0(1) == 0);
     CHECK(Sz(q0) == 0);
 
-    auto q1 = spin(1);
+    auto q1 = QN("Sz=",1);
     CHECK(q1(1) == 1);
     CHECK(Sz(q1) == 1);
 
-    auto q2 = spin(2);
+    auto q2 = QN("Sz=",2);
     CHECK(q2(1) == 2);
     CHECK(Sz(q2) == 2);
     }
 
 SECTION("Boson")
     {
-    auto q0 = boson(0);
+    auto q0 = QN("Nb=",0);
     CHECK(q0(1) == 0);
     CHECK(Nb(q0) == 0);
 
-    auto q1 = boson(1);
+    auto q1 = QN("Nb=",1);
     CHECK(q1(1) == 1);
     CHECK(Nb(q1) == 1);
 
-    auto q2 = boson(2);
+    auto q2 = QN("Nb=",2);
     CHECK(q2(1) == 2);
     CHECK(Nb(q2) == 2);
     }
 
 SECTION("SpinBoson")
     {
-    auto q = spinboson(0,0);
+    auto q = QN("Sz=",0,"Nb=",0);
     CHECK(q(1) == 0);
     CHECK(q(2) == 0);
     CHECK(Sz(q) == 0);
     CHECK(Nb(q) == 0);
 
-    q = spinboson(1,1);
+    q = QN("Sz=",1,"Nb=",1);
     CHECK(q(1) == 1);
     CHECK(q(2) == 1);
     CHECK(Sz(q) == 1);
     CHECK(Nb(q) == 1);
 
-    q = spinboson(-1,1);
+    q = QN("Sz=",-1,"Nb=",1);
     CHECK(q(1) == -1);
     CHECK(q(2) == 1);
     CHECK(Sz(q) == -1);
     CHECK(Nb(q) == 1);
 
-    q = spinboson(0,2);
+    q = QN("Nb=",2,"Sz=",0);
     CHECK(q(1) == 0);
     CHECK(q(2) == 2);
     CHECK(Sz(q) == 0);
@@ -114,25 +160,25 @@ SECTION("SpinBoson")
 
 SECTION("Fermion")
     {
-    auto q = fermion(0);
+    auto q = QN("Nf=",0);
     CHECK(q(1) == 0);
     CHECK(Nf(q) == 0);
     CHECK(Nfp(q) == 0);
     CHECK(isFermionic(q,1));
 
-    q = fermion(1);
+    q = QN("Nf=",1);
     CHECK(q(1) == 1);
     CHECK(Nf(q) == 1);
     CHECK(Nfp(q) == 1);
     CHECK(isFermionic(q,1));
 
-    q = fermion(2);
+    q = QN("Nf=",2);
     CHECK(q(1) == 2);
     CHECK(Nf(q) == 2);
     CHECK(Nfp(q) == 0);
     CHECK(isFermionic(q,1));
 
-    q = fermion(3);
+    q = QN("Nf=",3);
     CHECK(q(1) == 3);
     CHECK(Nf(q) == 3);
     CHECK(Nfp(q) == 1);
@@ -141,17 +187,27 @@ SECTION("Fermion")
 
 SECTION("FParity")
     {
-    auto q = fparity(0);
+    auto q = QN("Pf=",0);
     CHECK(q(1) == 0);
     CHECK(Nfp(q) == 0);
     CHECK(isFermionic(q));
 
-    q = fparity(1);
+    q = QN("Pf=",1);
     CHECK(q(1) == 1);
     CHECK(Nfp(q) == 1);
     CHECK(isFermionic(q));
 
-    q = fparity(2);
+    q = QN("Pf=",2);
+    CHECK(q(1) == 0);
+    CHECK(Nfp(q) == 0);
+    CHECK(isFermionic(q));
+
+    q = QN("Pf=",3);
+    CHECK(q(1) == 1);
+    CHECK(Nfp(q) == 1);
+    CHECK(isFermionic(q));
+
+    q = QN("Pf=",4);
     CHECK(q(1) == 0);
     CHECK(Nfp(q) == 0);
     CHECK(isFermionic(q));
@@ -159,7 +215,7 @@ SECTION("FParity")
 
 SECTION("Electron")
     {
-    auto q = electron(0,0);
+    auto q = QN("Sz=",0,"Nf=",0);
     CHECK(q(1) == 0);
     CHECK(q(2) == 0);
     CHECK(Sz(q) == 0);
@@ -170,7 +226,7 @@ SECTION("Electron")
     CHECK(!isFermionic(q,1));
     CHECK(isFermionic(q,2));
 
-    q = electron(1,1);
+    q = QN("Sz=",1,"Nf=",1);
     CHECK(q(1) == 1);
     CHECK(q(2) == 1);
     CHECK(Sz(q) == 1);
@@ -179,7 +235,7 @@ SECTION("Electron")
     CHECK(paritySign(q)==-1);
     CHECK(isFermionic(q));
 
-    q = electron(-1,1);
+    q = QN("Sz=",-1,"Nf=",1);
     CHECK(q(1) == -1);
     CHECK(q(2) == 1);
     CHECK(Sz(q) == -1);
@@ -188,7 +244,7 @@ SECTION("Electron")
     CHECK(paritySign(q)==-1);
     CHECK(isFermionic(q));
 
-    q = electron(0,2);
+    q = QN("Sz=",0,"Nf=",2);
     CHECK(q(1) == 0);
     CHECK(q(2) == 2);
     CHECK(Sz(q) == 0);
@@ -197,7 +253,7 @@ SECTION("Electron")
     CHECK(paritySign(q)==+1);
     CHECK(isFermionic(q));
 
-    q = electron(2,2);
+    q = QN("Sz=",2,"Nf=",2);
     CHECK(q(1) == 2);
     CHECK(q(2) == 2);
     CHECK(Sz(q) == 2);
@@ -206,7 +262,7 @@ SECTION("Electron")
     CHECK(paritySign(q)==+1);
     CHECK(isFermionic(q));
 
-    q = electron(-2,2);
+    q = QN("Sz=",-2,"Nf=",2);
     CHECK(q(1) == -2);
     CHECK(q(2) == 2);
     CHECK(Sz(q) == -2);
@@ -215,45 +271,45 @@ SECTION("Electron")
     CHECK(paritySign(q)==+1);
     CHECK(isFermionic(q));
 
-    auto Q = electron(+1,1)+electron(-1,1);
+    auto Q = QN("Sz=",+1,"Nf=",1)+QN("Sz=",-1,"Nf=",1);
     CHECK(Q == electron(0,2));
     CHECK(isFermionic(Q));
 
-    Q = electron(0,2)+electron(-1,1);
+    Q = QN("Sz=",0,"Nf=",2)+QN("Sz=",-1,"Nf=",1);
     CHECK(Q == electron(-1,3));
     CHECK(isFermionic(Q));
     }
 
 SECTION("Z3 Clock")
     {
-    auto q = clock(0,3);
+    auto q = QN({0,3});
     CHECK(q(1) == 0);
 
-    q = clock(1,3);
+    q = QN({1,3});
     CHECK(q(1) == 1);
 
-    q = clock(2,3);
+    q = QN({2,3});
     CHECK(q(1) == 2);
 
-    q = clock(3,3);
+    q = QN({3,3});
     CHECK(q(1) == 0);
 
-    q = clock(-1,3);
+    q = QN({-1,3});
     CHECK(q(1) == 2);
 
-    auto Q = clock(0,3)+clock(1,3);
+    auto Q = QN({0,3})+QN({1,3});
     CHECK(Q == clock(1,3));
 
-    Q = clock(0,3)+clock(2,3);
+    Q = QN({0,3})+QN({2,3});
     CHECK(Q == clock(2,3));
 
-    Q = clock(1,3)+clock(1,3);
+    Q = QN({1,3})+QN({1,3});
     CHECK(Q == clock(2,3));
 
-    Q = clock(1,3)+clock(2,3);
+    Q = QN({1,3})+QN({2,3});
     CHECK(Q == clock(0,3));
 
-    Q = clock(2,3)+clock(2,3);
+    Q = QN({2,3})+QN({2,3});
     CHECK(Q == clock(1,3));
     }
 
