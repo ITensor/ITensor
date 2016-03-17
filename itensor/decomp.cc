@@ -459,17 +459,16 @@ svdImpl(IQTensor A,
         Riq.emplace_back(Index("r",this_m),vI.qn(1+B.i2));
         }
     
-    IQIndex L("L",move(Liq),uI.dir()), 
-            R("R",move(Riq),vI.dir());
+    auto L = IQIndex("L",move(Liq),uI.dir());
+    auto R = IQIndex("R",move(Riq),vI.dir());
 
-    IQIndexSet Uis(uI,dag(L)),
-               Dis(L,R),
-               Vis(vI,dag(R));
+    auto Uis = IQIndexSet(uI,dag(L));
+    auto Dis = IQIndexSet(L,R);
+    auto Vis = IQIndexSet(vI,dag(R));
 
-    QDense<T> Ustore(Uis,QN()),
-              Vstore(Vis,QN());
-
-    QDiagReal Dstore(Dis,div(A));
+    auto Ustore = QDense<T>(Uis,QN());
+    auto Vstore = QDense<T>(Vis,QN());
+    auto Dstore = QDiagReal(Dis,div(A));
 
     long n = 0;
     for(auto b : range(Nblock))
