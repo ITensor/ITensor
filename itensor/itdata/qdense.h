@@ -407,14 +407,14 @@ loopContractedBlocks(BlockSparseA const& A,
                      IQIndexSet const& Cis,
                      Callable & callback)
     {
-    auto rA = Ais.r(),
-         rB = Bis.r(),
-         rC = Cis.r();
+    auto rA = Ais.r();
+    auto rB = Bis.r();
+    auto rC = Cis.r();
 
-    Labels AtoB(rA,-1),
-           AtoC(rA,-1),
-           BtoC(rB,-1);
-    for(decltype(rC) ic = 0; ic < rC; ++ic)
+    auto AtoB = IntArray(rA,-1);
+    auto AtoC = IntArray(rA,-1);
+    auto BtoC = IntArray(rB,-1);
+    for(auto ic : range(rC))
         {
         auto j = findindex(Ais,Cis[ic]);
         if(j >= 0)
@@ -427,17 +427,19 @@ loopContractedBlocks(BlockSparseA const& A,
             BtoC[j] = ic;
             }
         }
-    for(decltype(rA) ia = 0; ia < rA; ++ia)
-    for(decltype(rB) ib = 0; ib < rB; ++ib)
+    for(auto ia : range(rA))
+    for(auto ib : range(rB))
+        {
         if(Ais[ia] == Bis[ib])
             {
             AtoB[ia] = ib;
             break;
             }
+        }
 
-    detail::GCounter couB(rB);
-    Labels Ablockind(rA,0),
-          Cblockind(rC,0);
+    auto couB = detail::GCounter(rB);
+    auto Ablockind = IntArray(rA,0);
+    auto Cblockind = IntArray(rC,0);
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto& aio : A.offsets)
         {
@@ -450,7 +452,9 @@ loopContractedBlocks(BlockSparseA const& A,
         //Reset couB to run over indices of B (at first)
         couB.reset();
         for(decltype(rB) ib = 0; ib < rB; ++ib)
+            {
             couB.setRange(ib,0,Bis[ib].nindex()-1);
+            }
         for(decltype(rA) iA = 0; iA < rA; ++iA)
             {
             auto ival = Ablockind[iA];
@@ -483,7 +487,6 @@ loopContractedBlocks(BlockSparseA const& A,
             assert(cblock);
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
-            assert(ablock);
             TIMER_STOP(19)
 
             callback(ablock,Ablockind,
