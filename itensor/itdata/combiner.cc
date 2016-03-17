@@ -39,22 +39,6 @@ permuteStore(Dense<T>   const& d,
     m.makeNewData<Dense<T>>(move(to.storage()));
     }
 
-//void
-//permuteStore(ITCplx      const& d,
-//             IndexSet    const& dis,
-//             Permutation const& P,
-//             ManageStore      & m)
-//    {
-//    auto *nd = m.makeNewData<ITCplx>(d.size());
-//    auto csize = d.csize();
-//    auto fromre = makeTenRef(d.rstart(),csize,&dis);
-//    auto tore = makeTenRef(nd->rstart(),csize,&dis);
-//    auto fromim = makeTenRef(d.istart(),csize,&dis);
-//    auto toim = makeTenRef(nd->istart(),csize,&dis);
-//    tore &= permute(fromre,P);
-//    toim &= permute(fromim,P);
-//    }
-
 template<typename Storage>
 void
 combine(Storage  const& d,

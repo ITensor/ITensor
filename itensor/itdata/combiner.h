@@ -23,16 +23,16 @@ void inline
 read(std::istream& s, Combiner& dat) { }
 
 void inline
-write(std::ostream& s, const Combiner& dat) { }
+write(std::ostream& s, Combiner const& dat) { }
 
 Cplx
-doTask(const GetElt<Index>& g, const Combiner& c);
+doTask(GetElt<Index> const& g, Combiner const& c);
 
 Real
-doTask(NormNoScale, const Combiner& d);
+doTask(NormNoScale, Combiner const& d);
 
 void
-doTask(Conj,const Combiner& d);
+doTask(Conj, Combiner const& d);
 
 template<typename V>
 void
@@ -55,7 +55,9 @@ void
 doTask(PrintIT<Index>& P, Combiner const& d);
 
 auto inline
-doTask(StorageType const& S, Combiner const& d) ->StorageType::Type { return StorageType::Combiner; }
+doTask(StorageType const& S, Combiner const& d) 
+    ->StorageType::Type 
+    { return StorageType::Combiner; }
 
 QN 
 doTask(CalcDiv const& C, Combiner const& d);
