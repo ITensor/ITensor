@@ -119,10 +119,14 @@ operator*(IndexVal const& iv, IQTensor const& T)
     }
 
 
-IQTensor inline
-delta(IQIndex const& i1, IQIndex const& i2)
+template<typename... Inds>
+IQTensor
+delta(IQIndex const& i1,
+      Inds const&... inds)
     {
-    return IQTensor({i1,i2},QCombiner{});
+    auto is = IQIndexSet(i1,inds...);
+    auto dat = QDiagReal(is,QN(),1.);
+    return IQTensor(std::move(is),std::move(dat));
     }
 
 template<typename... Inds>

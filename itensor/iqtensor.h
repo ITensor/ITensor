@@ -84,8 +84,12 @@ combiner(IQIndex const& i1,
     return combiner(std::vector<IQIndex>{i1,inds...});
     }
 
+//Construct diagonal IQTensor with diagonal 
+//elements set to 1.0
+template<typename... Inds>
 IQTensor
-delta(IQIndex const& i1, IQIndex const& i2);
+delta(IQIndex const& i1,
+      Inds const&... inds);
 
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);

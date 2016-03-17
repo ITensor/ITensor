@@ -34,12 +34,20 @@ class QDiag
 
     storage_type store;
         //^ *diagonal* tensor data stored contiguously
+
+    T val = 0;
     //////////////
 
     QDiag() { }
 
     QDiag(IQIndexSet const& is, 
           QN const& div_);
+
+    //Special "allSame" mode where non-zero
+    //elements assumed to have the same value "val"
+    QDiag(IQIndexSet const& is, 
+          QN const& div_,
+          T val_);
 
     template<typename... SArgs>
     QDiag(std::vector<BlOf> const& off,
@@ -49,6 +57,9 @@ class QDiag
            { }
 
     explicit operator bool() const { return !store.empty(); }
+
+    bool
+    allSame() const { return store.empty(); }
 
     value_type*
     data() { return store.data(); }

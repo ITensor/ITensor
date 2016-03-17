@@ -18,6 +18,49 @@ isIQTensor(ITensor const& T) { return false; }
 bool
 isIQTensor(IQTensor const& T) { return true; }
 
+enum class Type { 
+            OtherType, 
+            QDenseReal, 
+            QDenseCplx, 
+            QDiagReal, 
+            QDiagRealAllSame, 
+            QDiagCplx, 
+            QDiagCplxAllSame, 
+            QCombiner 
+          };
+
+struct GetType
+    {
+    Type operator()(QDenseReal const& d) const { return Type::QDenseReal; }
+    Type operator()(QDenseCplx const& d) const { return Type::QDenseCplx; }
+    Type operator()(QDiagReal const& d) const { return d.allSame() ? Type::QDiagRealAllSame : Type::QDiagReal; }
+    Type operator()(QDiagCplx const& d) const { return d.allSame() ? Type::QDiagCplxAllSame : Type::QDiagCplx; }
+    Type operator()(QCombiner const& d) const { return Type::QCombiner; }
+    template<typename T>
+    Type operator()(T const& d) const { return Type::OtherType; }
+    };
+
+Type
+typeOf(IQTensor const& t) 
+    { 
+    return applyFunc(GetType{},t.store()); 
+    }
+
+std::ostream&
+operator<<(std::ostream& s, Type t)
+    {
+    if(t == Type::OtherType) s << "OtherType";
+    else if(t == Type::QDenseReal) s << "QDenseReal";
+    else if(t == Type::QDenseCplx) s << "QDenseCplx";
+    else if(t == Type::QDiagReal) s << "QDiagReal";
+    else if(t == Type::QDiagRealAllSame) s << "QDiagRealAllSame";
+    else if(t == Type::QDiagCplx) s << "QDiagCplx";
+    else if(t == Type::QDiagCplxAllSame) s << "QDiagCplxAllSame";
+    else if(t == Type::QCombiner) s << "QCombiner";
+    else Error("Unrecognized Type value");
+    return s;
+    }
+
 TEST_CASE("IQTensorTest")
 {
 
@@ -32,35 +75,25 @@ Index l2uu("L2+2",2,Link);
 Index l20("L2_0",2,Link);
 Index l2dd("L2-2",2,Link);
 
-IQIndex S1,S2,L1,L2;
+auto S1 = IQIndex("S1",s1u,QN(+1),s1d,QN(-1));
 
-IQTensor phi,A,B,C,D;
+auto S2 = IQIndex("S2",s2u,QN(+1),s2d,QN(-1));
 
-S1 = IQIndex("S1",
-             s1u,QN(+1),
-             s1d,QN(-1));
-S2 = IQIndex("S2",
-             s2u,QN(+1),
-             s2d,QN(-1));
-L1 = IQIndex("L1",
-             l1u,QN(+1),
-             l10,QN( 0),
-             l1d,QN(-1));
+auto L1 = IQIndex("L1",
+                  l1u,QN(+1),
+                  l10,QN( 0),
+                  l1d,QN(-1));
              
-L2 = IQIndex("L2",
-             l2uu,QN(+2),
-             l20,QN( 0),
-             l2dd,QN(-2));
+auto L2 = IQIndex("L2",
+                  l2uu,QN(+2),
+                  l20,QN( 0),
+                  l2dd,QN(-2));
 
-phi = randomTensor(S1(1),S2(1),L2(3));
-
-A = randomTensor(L1(1),S1(1),L2(4),S2(2));
-
-B = randomTensor(L1(1),L2(3));
-
-C = randomTensor(dag(L1)(5),prime(L1)(5));
-
-D = randomTensor(dag(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
+auto phi = randomTensor(S1(1),S2(1),L2(3));
+auto A = randomTensor(L1(1),S1(1),L2(4),S2(2));
+auto B = randomTensor(L1(1),L2(3));
+auto C = randomTensor(dag(L1)(5),prime(L1)(5));
+auto D = randomTensor(dag(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
 
 SECTION("Boolean")
     {
@@ -586,7 +619,119 @@ SECTION("Combiner")
 
     } //Combiner
 
-SECTION("Two index delta tensor")
+SECTION("Diag IQTensor Contraction")
+{
+SECTION("Diag All Same")
+    {
+    auto d = delta(dag(S1),S2); //all diag elements same
+    CHECK(typeOf(d) == Type::QDiagRealAllSame);
+
+    auto T = randomTensor(QN(),S1,prime(S1,2));
+    auto R = d*T;
+    CHECK(hasindex(R,S2));
+    CHECK(hasindex(R,prime(S1,2)));
+    for(auto j1 : range1(S1))
+    for(auto j2 : range1(S2))
+        {
+        CHECK_CLOSE(R.real(prime(S1,2)(j1),S2(j2)), T.real(prime(S1,2)(j1),S1(j2)));
+        }
+    }
+
+//SECTION("Diag")
+//    {
+//    std::vector<Real> v = {{1.23234, -0.9237}};
+//    auto op = diagTensor(v,s1,b2);
+//    CHECK(typeOf(op) == Type::DiagReal);
+//
+//    auto r2 = randomTensor(s1,s2);
+//    auto res2 = op*r2;
+//    CHECK(hasindex(res2,s2));
+//    CHECK(hasindex(res2,b2));
+//    auto diagm = std::min(s1.m(),b2.m());
+//    for(int j2 = 1; j2 <= s2.m(); ++j2)
+//    for(int d = 1; d <= diagm; ++d)
+//        {
+//        CHECK_CLOSE(res2.real(s2(j2),b2(d)), v.at(d-1) * r2.real(s2(j2),s1(d)));
+//        }
+//    }
+//
+//SECTION("Trace")
+//    {
+//    auto T = randomTensor(s1,s2,s3);
+//    auto d = delta(s1,s2);
+//    auto R = d*T;
+//    for(auto i3 : range1(s3))
+//        {
+//        Real val = 0;
+//        for(auto i12 : range1(s1))
+//            {
+//            val += T.real(s1=i12,s2=i12,s3=i3);
+//            }
+//        CHECK_CLOSE(val,R.real(s3(i3)));
+//        }
+//    }
+//
+//SECTION("Tie Indices with Diag Tensor")
+//    {
+//    auto T = randomTensor(s1,s2,s3,s4);
+//
+//    auto tied1 = Index("tied1",s1.m());
+//    auto tt1 = delta(s1,s2,s3,tied1);
+//    auto R1 = T*tt1;
+//    for(int t = 1; t <= tied1.m(); ++t)
+//    for(int j4 = 1; j4 <= s4.m(); ++j4)
+//        {
+//        CHECK_CLOSE(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+//        }
+//
+//    auto tied2 = Index("tied2",s1.m());
+//    auto tt2 = delta(s1,s3,tied2);
+//    auto R2 = T*tt2;
+//    for(int t = 1; t <= tied1.m(); ++t)
+//    for(int j2 = 1; j2 <= s2.m(); ++j2)
+//    for(int j4 = 1; j4 <= s4.m(); ++j4)
+//        {
+//        CHECK_CLOSE(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+//        }
+//    }
+//
+//SECTION("Contract All Dense Inds; Diag Scalar result")
+//    {
+//    auto T = randomTensor(J,K);
+//
+//    auto d1 = delta(J,K);
+//    auto R = d1*T;
+//    CHECK(typeOf(R) == Type::DiagRealAllSame);
+//    Real val = 0;
+//    auto minjk = std::min(J.m(),K.m());
+//    for(long j = 1; j <= minjk; ++j)
+//        val += T.real(J(j),K(j));
+//    CHECK_CLOSE(R.real(),val);
+//
+//    auto data = randomData(minjk);
+//    auto d2 = diagTensor(data,J,K);
+//    R = d2*T;
+//    CHECK(typeOf(R) == Type::DiagRealAllSame);
+//    val = 0;
+//    for(long j = 1; j <= minjk; ++j)
+//        val += data.at(j-1)*T.real(J(j),K(j));
+//    CHECK_CLOSE(R.real(),val);
+//    }
+//
+//SECTION("Contract All Dense Inds; Diag result")
+//    {
+//    auto T = randomTensor(J,K);
+//    
+//    auto d = delta(J,K,L);
+//    auto R = d*T;
+//    CHECK(typeOf(R) == Type::DiagReal);
+//    CHECK(hasindex(R,L));
+//    auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+//    for(long j = 1; j <= minjkl; ++j)
+//        CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
+//    }
+
+SECTION("Two index delta tensor as IQIndex replacer")
     {
     auto d = delta(dag(S1),S2);
     CHECK(isIQTensor(d));
@@ -604,6 +749,8 @@ SECTION("Two index delta tensor")
         CHECK(T.real(S1(i1),prime(S1)(i2)) == R.real(S2(i1),prime(S1)(i2)));
         }
     }
+}
+
 
 SECTION("Scalar")
     {

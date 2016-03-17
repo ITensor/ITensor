@@ -24,6 +24,18 @@ template QDiag<Real>::QDiag(IQIndexSet const& is, QN const& div);
 template QDiag<Cplx>::QDiag(IQIndexSet const& is, QN const& div);
 
 template<typename T>
+QDiag<T>::
+QDiag(IQIndexSet const& is, 
+      QN const& div,
+      T val_)
+  : val(val_)
+    {
+    updateOffsets(is,div);
+    }
+template QDiag<Real>::QDiag(IQIndexSet const& is, QN const& div, Real val_);
+template QDiag<Cplx>::QDiag(IQIndexSet const& is, QN const& div, Cplx val_);
+
+template<typename T>
 long QDiag<T>::
 updateOffsets(IQIndexSet const& is,
               QN const& div)
@@ -153,8 +165,8 @@ template<typename T>
 void
 doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
     {
-    P.s << format("QDiag %s {%d blocks; data size %d}\n",
-                  typeName<T>(),d.offsets.size(),d.size());
+    P.s << format("QDiag%s%s",typeName<T>(),d.allSame()?" (all same)":"");
+    P.s << format(" {%d blocks; data size %d}\n",d.offsets.size(),d.size());
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -163,7 +175,8 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
     if(rank == 0) 
         {
         P.s << "  ";
-        P.s << formatVal(scalefac*d.store.front()) << "\n";
+        auto val = d.allSame() ? d.val : d.store.front();
+        P.s << formatVal(scalefac*val) << "\n";
         return;
         }
         
@@ -181,7 +194,8 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
         auto os = io.offset;
         for(auto n : range(blockm))
             {
-            auto val = scalefac*d.store[os++];
+            auto val = d.allSame() ? d.val : d.store[os++];
+            val *= scalefac;
             if(std::norm(val) >= Global::printScale())
                 {
                 if(!indices_printed)
@@ -209,6 +223,21 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
     }
 template void doTask(PrintIT<IQIndex>& P, QDiag<Real> const& d);
 template void doTask(PrintIT<IQIndex>& P, QDiag<Cplx> const& d);
+
+template<typename T>
+class UnifVecWrapper
+    {
+    T val_;
+    size_t size_;
+    public:
+    UnifVecWrapper(T v, size_t s) : val_(v), size_(s) { }
+
+    size_t
+    size() const { return size_; }
+
+    T
+    operator()(size_t j) const { return val_; }
+    };
 
 template<typename VD, typename VT>
 void
@@ -243,7 +272,7 @@ blockDiagDense(QDiag<VD> const& D,
         auto& C = *nd;
 
         auto do_contract =
-            [&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
+            [&D,&Dis,&Tis,&Cis,&Dind,&Tind,&Cind]
             (DataRange<const VD> dblock, Labels const& Dblockind,
              DataRange<const VT> tblock, Labels const& Tblockind,
              DataRange<VC>       cblock, Labels const& Cblockind)
@@ -262,11 +291,20 @@ blockDiagDense(QDiag<VD> const& D,
                 Dminm = std::min(Dminm,Ddim[j]);
                 }
 
-            auto Dref = makeVecRef(dblock.data(),Dminm);
-
-            contractDiagPartial(Dref,Dind,
-                                Tref,Tind,
-                                Cref,Cind);
+            if(D.allSame())
+                {
+                auto dref = UnifVecWrapper<decltype(D.val)>(D.val,Dminm);
+                contractDiagPartial(dref,Dind,
+                                    Tref,Tind,
+                                    Cref,Cind);
+                }
+            else
+                {
+                auto Dref = makeVecRef(dblock.data(),Dminm);
+                contractDiagPartial(Dref,Dind,
+                                    Tref,Tind,
+                                    Cref,Cind);
+                }
             };
 
         loopContractedBlocks(D,Dis,
@@ -295,8 +333,8 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& m)
     {
     Labels Aind,
-          Bind,
-          Cind;
+           Bind,
+           Cind;
     bool sortInds = false;
     computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
     contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
@@ -317,8 +355,8 @@ doTask(Contract<IQIndex>& Con,
        ManageStore& m)
     {
     Labels Aind,
-          Bind,
-          Cind;
+           Bind,
+           Cind;
     bool sortInds = false;
     computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Aind,Bind);
     contractIS(Con.Lis,Aind,Con.Ris,Bind,Con.Nis,Cind,sortInds);
