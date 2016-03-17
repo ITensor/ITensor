@@ -40,25 +40,13 @@ combiner(Index const& i1,
     return combiner(std::vector<Index>{i1,inds...});
     }
 
-ITensor
-delta(Index const& i1, Index const& i2);
 
-//Construct ITensor with diagonal elements set to z
-//(if z is a Real or z.imag()==0 storage will be real)
+//Construct diagonal ITensor with diagonal 
+//elements set to 1.0
 template<typename... Inds>
 ITensor
-diag(Cplx z,
-     Index const& i1,
-     Inds&&... inds);
-
-template<typename... Inds>
-ITensor
-diag(Real r,
-     Index const& i1,
-     Inds&&... inds)
-    {
-    return diag(Cplx{r},i1,std::forward<Inds>(inds)...);
-    }
+delta(Index const& i1,
+      Inds const&... inds);
 
 //Construct diagonal ITensor,
 //diagonal elements given by container C
@@ -68,9 +56,9 @@ template<typename Container,
          class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
                                 || stdx::containerOf<Cplx,Container>::value> >
 ITensor
-diag(Container const& C,
-     Index const& i1,
-     Inds&&... inds);
+diagTensor(Container const& C,
+           Index const& i1,
+           Inds&&... inds);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)

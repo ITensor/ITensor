@@ -491,7 +491,7 @@ plussers(Index const& l1,
     if(m <= 0) m = 1;
     sumind = Index(sumind.rawname(),m);
 
-    first = diag(1,l1,sumind);
+    first = delta(l1,sumind);
     auto S = Matrix(l2.m(),sumind.m());
     for(auto i : range(l2.m()))
         {
@@ -524,14 +524,14 @@ plussers(IQIndex const& l1, IQIndex const& l2,
     for(IndexQN const& il1 : l1)
         {
         Index& s1 = l1map[il1.index];
-        auto t = diag(1,il1.index,s1);
+        auto t = delta(il1.index,s1);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
     for(IndexQN const& il2 : l2)
         {
         Index& s2 = l2map[il2.index];
-        auto t = diag(1,il2.index,s2);
+        auto t = delta(il2.index,s2);
         second += t;
         }
     }
@@ -934,7 +934,7 @@ void MPSt<IQTensor>::makeRealBasis(int j, const Args& args);
 ITensor
 makeKroneckerDelta(const Index& i, int plev)
     {
-    return diag(1,i,prime(i,plev));
+    return delta(i,prime(i,plev));
     }
 IQTensor
 makeKroneckerDelta(const IQIndex& I, int plev)

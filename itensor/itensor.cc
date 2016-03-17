@@ -119,14 +119,4 @@ combiner(std::vector<Index> inds, const Args& args)
     return ITensor(IndexSet(std::move(inds)),Combiner{});
     }
 
-ITensor
-delta(Index const& i1, Index const& i2)
-    {
-#ifdef DEBUG
-    if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
-#endif
-    return ITensor({i1,i2},Combiner{});
-    }
-
-
 } //namespace itensor

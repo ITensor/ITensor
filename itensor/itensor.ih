@@ -56,23 +56,21 @@ operator*(IndexVal const& iv1, Real val)
 
 template<typename... Inds>
 ITensor
-diag(Complex z, 
-     Index const& i1,
-     Inds&&... inds)
+delta(Index const& i1,
+      Inds const&... inds)
     { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
+    auto is = IndexSet(i1,inds...);
     auto len = minM(is);
-    if(z.imag() == 0) return ITensor(std::move(is),Diag<Real>(len,z.real()));
-    return ITensor(std::move(is),Diag<Complex>(len,z));
+    return ITensor(std::move(is),DiagReal(len,1.));
     }
 
 template<typename Container, typename... Inds, class>
 ITensor
-diag(Container const& C, 
-     Index const& i1,
-     Inds &&... inds)
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
     { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
+    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
     using size_type = decltype(C.size());
     //Compute min of all index dimensions

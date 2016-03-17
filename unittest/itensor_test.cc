@@ -252,7 +252,7 @@ SECTION("Dense Rank 1 from container")
     {
     Index linkind("linkind",10);
     auto data = randomData(linkind.m());
-    auto t10 = diag(data,linkind);
+    auto t10 = diagTensor(data,linkind);
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
@@ -269,7 +269,7 @@ SECTION("Diag Rank 2 from container")
     Index i1("i1",10),
           i2("i2",10);
     auto data = randomData(i1.m());
-    auto T = diag(data,i1,i2);
+    auto T = diagTensor(data,i1,i2);
     CHECK(typeOf(T) == Type::DiagReal);
 
     CHECK_EQUAL(T.r(),2);
@@ -624,8 +624,8 @@ SECTION("Add diag")
     {
     auto data1 = randomData(std::min(l6.m(),b4.m())),
          data2 = randomData(std::min(l6.m(),b4.m()));
-    auto v1 = diag(data1,l6,b4),
-         v2 = diag(data2,b4,l6);
+    auto v1 = diagTensor(data1,l6,b4),
+         v2 = diagTensor(data2,b4,l6);
     auto r = v1+v2;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
@@ -1238,7 +1238,7 @@ SECTION("Diag ITensor Contraction")
 {
 SECTION("Diag All Same")
     {
-    auto op = diag(1.,s1,a1); //all diag elements same
+    auto op = delta(s1,a1); //all diag elements same
     CHECK(typeOf(op) == Type::DiagRealAllSame);
 
     auto r1 = randomTensor(s1,prime(s1,2));
@@ -1254,7 +1254,7 @@ SECTION("Diag All Same")
 SECTION("Diag")
     {
     std::vector<Real> v = {{1.23234, -0.9237}};
-    auto op = diag(v,s1,b2);
+    auto op = diagTensor(v,s1,b2);
     CHECK(typeOf(op) == Type::DiagReal);
 
     auto r2 = randomTensor(s1,s2);
@@ -1272,14 +1272,14 @@ SECTION("Diag")
 SECTION("Trace")
     {
     auto T = randomTensor(s1,s2,s3);
-    auto d = diag(1,s1,s2);
+    auto d = delta(s1,s2);
     auto R = d*T;
-    for(int i3 = 1; i3 <= s3.m(); ++i3)
+    for(auto i3 : range1(s3))
         {
         Real val = 0;
-        for(int i12 = 1; i12 <= s1.m(); ++i12)
+        for(auto i12 : range1(s1))
             {
-            val += T.real(s1(i12),s2(i12),s3(i3));
+            val += T.real(s1=i12,s2=i12,s3=i3);
             }
         CHECK_CLOSE(val,R.real(s3(i3)));
         }
@@ -1290,7 +1290,7 @@ SECTION("Tie Indices with Diag Tensor")
     auto T = randomTensor(s1,s2,s3,s4);
 
     auto tied1 = Index("tied1",s1.m());
-    auto tt1 = diag(1,s1,s2,s3,tied1);
+    auto tt1 = delta(s1,s2,s3,tied1);
     auto R1 = T*tt1;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j4 = 1; j4 <= s4.m(); ++j4)
@@ -1299,7 +1299,7 @@ SECTION("Tie Indices with Diag Tensor")
         }
 
     auto tied2 = Index("tied2",s1.m());
-    auto tt2 = diag(1,s1,s3,tied2);
+    auto tt2 = delta(s1,s3,tied2);
     auto R2 = T*tt2;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j2 = 1; j2 <= s2.m(); ++j2)
@@ -1313,7 +1313,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     {
     auto T = randomTensor(J,K);
 
-    auto d1 = diag(1,J,K);
+    auto d1 = delta(J,K);
     auto R = d1*T;
     CHECK(typeOf(R) == Type::DiagRealAllSame);
     Real val = 0;
@@ -1323,7 +1323,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     CHECK_CLOSE(R.real(),val);
 
     auto data = randomData(minjk);
-    auto d2 = diag(data,J,K);
+    auto d2 = diagTensor(data,J,K);
     R = d2*T;
     CHECK(typeOf(R) == Type::DiagRealAllSame);
     val = 0;
@@ -1336,7 +1336,7 @@ SECTION("Contract All Dense Inds; Diag result")
     {
     auto T = randomTensor(J,K);
     
-    auto d = diag(1,J,K,L);
+    auto d = delta(J,K,L);
     auto R = d*T;
     CHECK(typeOf(R) == Type::DiagReal);
     CHECK(hasindex(R,L));
@@ -1344,12 +1344,10 @@ SECTION("Contract All Dense Inds; Diag result")
     for(long j = 1; j <= minjkl; ++j)
         CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
     }
-}
-
-SECTION("Two-index delta Tensor")
+SECTION("Two-index delta Tensor as Index Replacer")
     {
     auto d = delta(s1,s2);
-    CHECK(typeOf(d) == Type::Combiner);
+    CHECK(typeOf(d) == Type::DiagRealAllSame);
 
     auto T1 = randomTensor(s1,s3);
 
@@ -1397,6 +1395,8 @@ SECTION("Two-index delta Tensor")
     CHECK(hasindex(R4a,s1));
     CHECK(hasindex(R4b,s1));
     }
+}
+
 
 SECTION("Combiner")
     {
