@@ -118,6 +118,13 @@ operator*(IndexVal const& iv, IQTensor const& T)
     return setElt(iv) * toITensor(T); 
     }
 
+template<typename... Inds>
+IQTensor
+combiner(IQIndex const& i1, 
+         Inds const&... inds)
+    {
+    return combiner(std::vector<IQIndex>{i1,inds...});
+    }
 
 template<typename... Inds>
 IQTensor
@@ -127,6 +134,55 @@ delta(IQIndex const& i1,
     auto is = IQIndexSet(i1,inds...);
     auto dat = QDiagReal(is,QN(),1.);
     return IQTensor(std::move(is),std::move(dat));
+    }
+
+template<typename... Inds>
+IQTensor
+randomTensor(IQIndex const& i1, Inds&&... inds)
+    {
+    static_assert(stdx::false_regardless_of<Inds...>::value,"Must provide a QN or IQIndexVals to IQIndex version of randomTensor");
+    return IQTensor{};
+    }
+
+template<typename... IQIndVals>
+IQTensor
+randomTensor(IQIndexVal const& iv1, 
+             IQIndVals&&... ivs)
+    {
+    auto T = setElt(iv1,std::forward<IQIndVals>(ivs)...);
+    try {
+        return random(T);
+        }
+    catch(ITError const& e)
+        {
+        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        }
+    return T;
+    }
+
+template<typename... Inds>
+IQTensor
+randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds)
+    {
+    auto is = IQIndexSet{i1,std::forward<Inds>(inds)...};
+    auto dat = QDenseReal{is,q};
+    auto T = IQTensor(std::move(is),std::move(dat));
+    try {
+        return random(T);
+        }
+    catch(ITError const& e)
+        {
+        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        }
+    return T;
+    }
+
+template<typename... VArgs>
+IQTensor
+randomTensorC(QN const& q, VArgs&&... vargs)
+    {
+    auto T = randomTensor(q,std::forward<VArgs>(vargs)...);
+    return T+1_i*random(T);
     }
 
 template<typename... Inds>

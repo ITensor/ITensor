@@ -79,10 +79,7 @@ combiner(std::vector<IQIndex> inds, Args const& args = Global::args());
 template<typename... Inds>
 IQTensor
 combiner(IQIndex const& i1, 
-         Inds const&... inds)
-    {
-    return combiner(std::vector<IQIndex>{i1,inds...});
-    }
+         Inds const&... inds);
 
 //Construct diagonal IQTensor with diagonal 
 //elements set to 1.0
@@ -95,61 +92,30 @@ IQIndex
 findIQInd(const IQTensor& T, const Index& i);
 
 QN inline
-qn(const IQTensor& T, const Index& i) { return qn(findIQInd(T,i),i); }
+qn(IQTensor const& T, Index const& i) { return qn(findIQInd(T,i),i); }
 
 Arrow inline
-dir(const IQTensor& T, const Index& i) { return findIQInd(T,i).dir(); }
+dir(IQTensor const& T, Index const& i) { return findIQInd(T,i).dir(); }
 
 Arrow
-dir(const IQTensor& T, const IQIndex& i);
+dir(IQTensor const& T, IQIndex const& i);
 
 template <typename... Inds>
 IQTensor
-randomTensor(IQIndex const& i1, Inds&&... inds)
-    {
-    static_assert(stdx::false_regardless_of<Inds...>::value,"Must provide a QN or IQIndexVals to IQIndex version of randomTensor");
-    return IQTensor{};
-    }
+randomTensor(IQIndex const& i1, Inds&&... inds);
 
 template <typename... IQIndVals>
 IQTensor
 randomTensor(IQIndexVal const& iv1, 
-             IQIndVals&&... ivs)
-    {
-    auto T = setElt(iv1,std::forward<IQIndVals>(ivs)...);
-    try {
-        return random(T);
-        }
-    catch(ITError const& e)
-        {
-        Error("Cannot randomize IQTensor, possibly incompatible flux");
-        }
-    return T;
-    }
+             IQIndVals&&... ivs);
+     
 template <typename... Inds>
 IQTensor
-randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds)
-    {
-    auto is = IQIndexSet{i1,std::forward<Inds>(inds)...};
-    auto dat = QDenseReal{is,q};
-    auto T = IQTensor(std::move(is),std::move(dat));
-    try {
-        return random(T);
-        }
-    catch(ITError const& e)
-        {
-        Error("Cannot randomize IQTensor, possibly incompatible flux");
-        }
-    return T;
-    }
+randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds);
 
 template <typename... VArgs>
 IQTensor
-randomTensorC(QN const& q, VArgs&&... vargs)
-    {
-    auto T = randomTensor(q,std::forward<VArgs>(vargs)...);
-    return T+1_i*random(T);
-    }
+randomTensorC(QN const& q, VArgs&&... vargs);
 
 //mixedIQTensor constructs
 //an IQTensor with MixedQN storage
