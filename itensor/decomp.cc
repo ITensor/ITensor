@@ -91,8 +91,8 @@ doTask(GetBlocks<T> const& G,
        QDense<T> const& d)
     {
     if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports rank 2");
-    vector<Rank2Block<T>> res{d.offsets.size()};
-    Labels dblock(2,0);
+    auto res = vector<Rank2Block<T>>{d.offsets.size()};
+    auto dblock = IntArray(2,0);
     size_t n = 0;
     for(auto& dio : d.offsets)
         {
@@ -361,8 +361,8 @@ svdImpl(IQTensor A,
     //TODO: optimize allocation/lookup of Umats,Vmats
     //      etc. by allocating memory ahead of time (see algs.cc)
     //      and making Umats a vector of MatrixRef's to this memory
-    vector<Mat<T>> Umats(Nblock),
-                   Vmats(Nblock);
+    auto Umats = vector<Mat<T>>(Nblock);
+    auto Vmats = vector<Mat<T>>(Nblock);
 
     //TODO: allocate dvecs in a single allocation
     //      make dvecs a vector<VecRef>
@@ -373,7 +373,7 @@ svdImpl(IQTensor A,
     if(uI.m() == 0) throw ResultIsZero("uI.m() == 0");
     if(vI.m() == 0) throw ResultIsZero("vI.m() == 0");
 
-    for(decltype(Nblock) b = 0; b < Nblock; ++b)
+    for(auto b : range(Nblock))
         {
         auto& M = blocks[b].M;
         auto& UU = Umats.at(b);
@@ -420,12 +420,12 @@ svdImpl(IQTensor A,
         showEigs(probs,truncerr,A.scale(),showargs);
         }
 
-    IQIndex::storage Liq,
-                     Riq;
+    auto Liq = IQIndex::storage{};
+    auto Riq = IQIndex::storage{};
     Liq.reserve(Nblock);
     Riq.reserve(Nblock);
 
-    for(decltype(Nblock) b = 0; b < Nblock; ++b)
+    for(auto b : range(Nblock))
         {
         auto& d = dvecs.at(b);
         auto& B = blocks[b];

@@ -50,12 +50,14 @@ updateOffsets(IQIndexSet const& is,
 
     auto C = detail::GCounter(is.r());
     for(auto j : range(is.r()))
+        {
         C.setRange(j,0,is[j].nindex()-1);
+        }
 
     long totalsize = 0;
     for(; C.notDone(); ++C)
         {
-        QN blockqn;
+        auto blockqn = QN{};
         for(auto j : range(is.r()))
             {
             auto& J = is[j];
@@ -63,9 +65,9 @@ updateOffsets(IQIndexSet const& is,
             }
         if(blockqn == div)
             {
-            long indstr = 1, //accumulate Index strides
-                 ind = 0,
-                 minm = std::numeric_limits<long>::max();
+            long indstr = 1; //accumulate Index strides
+            long ind = 0;
+            long minm = std::numeric_limits<long>::max();
             for(auto j : range(is.r()))
                 {
                 auto& J = is[j];
@@ -180,7 +182,7 @@ doTask(PrintIT<IQIndex>& P, QDiag<T> const& d)
         return;
         }
         
-    Labels block(rank,0);
+    auto block = IntArray(rank,0);
     auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
@@ -286,7 +288,7 @@ blockDiagDense(QDiag<VD> const& D,
 
             auto Ddim = make_indexdim(Dis,Dblockind);
             auto Dminm = std::numeric_limits<size_t>::max();
-            for(decltype(Ddim.size()) j = 0; j < Ddim.size(); ++j)
+            for(auto j : range(Ddim))
                 {
                 Dminm = std::min(Dminm,Ddim[j]);
                 }

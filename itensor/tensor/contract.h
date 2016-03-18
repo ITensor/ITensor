@@ -206,42 +206,41 @@ computeLabels(Inds const& Lis,
 //diagonal elements of A (such as a VectorRefc)
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagPartial(DiagElsA           const& A, Labels const& ai,
-                    TenRefc<RangeT,VB> const& B, Labels const& bi, 
-                    TenRef<RangeT,VC>  const& C, Labels const& ci)
+contractDiagPartial(DiagElsA           const& A, Labels const& al,
+                    TenRefc<RangeT,VB> const& B, Labels const& bl, 
+                    TenRef<RangeT,VC>  const& C, Labels const& cl)
     {
-    using A_size_type = decltype(A.size());
     size_t b_cstride = 0; //B contracted stride
     int nbu = 0;          //# B uncont. inds.
-    for(auto j = 0ul; j < bi.size(); ++j)
+    for(auto j : range(bl))
         {
         //if index j is contracted, add its stride to n_cstride:
-        if(bi[j] < 0) b_cstride += B.stride(j);
+        if(bl[j] < 0) b_cstride += B.stride(j);
         else            ++nbu;
         }
 
     long a_ustride = 0; //total stride of uncontracted
                         //inds of A (infer from C)
-    for(auto i = 0ul; i < ci.size(); ++i)
+    for(auto i : range(cl))
         {
-        auto j = find_index(ai,ci[i]);
+        auto j = find_index(al,cl[i]);
         if(j >= 0) a_ustride += C.stride(i);
         }
 
-    Labels bstride(nbu,0),
-          cstride(nbu,0);
-    detail::GCounter GC(nbu);
+    auto bstride = IntArray(nbu,0);
+    auto cstride = IntArray(nbu,0);
+    auto GC = detail::GCounter(nbu);
     int n = 0;
-    for(decltype(bi.size()) j = 0; j < bi.size(); ++j)
+    for(auto j : range(bl))
         {
-        if(bi[j] > 0)
+        if(bl[j] > 0)
             {
 #ifdef DEBUG
             if(n >= nbu) Error("n out of range");
 #endif
             GC.setRange(n,0,B.extent(j)-1);
             bstride[n] = B.stride(j);
-            auto k = find_index(ci,bi[j]);
+            auto k = find_index(cl,bl[j]);
 #ifdef DEBUG
             if(k < 0) Error("Index not found");
 #endif
@@ -253,15 +252,15 @@ contractDiagPartial(DiagElsA           const& A, Labels const& ai,
     auto pc = MAKE_SAFE_PTR(C.data(),C.size());
     for(;GC.notDone();++GC)
         {
-        size_t coffset = 0,
-               boffset = 0;
-        for(auto i = 0; i < nbu; ++i)
+        size_t coffset = 0;
+        size_t boffset = 0;
+        for(auto i : range(nbu))
             {
             auto ii = GC[i];
             boffset += ii*bstride[i];
             coffset += ii*cstride[i];
             }
-        for(A_size_type J = 0; J < A.size(); ++J)
+        for(auto J : range(A))
             {
             pc[J*a_ustride+coffset] += A(J)*pb[J*b_cstride+boffset];
             }
@@ -270,28 +269,32 @@ contractDiagPartial(DiagElsA           const& A, Labels const& ai,
 
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
-contractDiagFull(DiagElsA           const& A, Labels const& ai, 
-                 TenRefc<RangeT,VB> const& B, Labels const& bi, 
-                 VecRef<VC>         const& C, Labels const& ci)
+contractDiagFull(DiagElsA           const& A, Labels const& al, 
+                 TenRefc<RangeT,VB> const& B, Labels const& bl, 
+                 VecRef<VC>         const& C, Labels const& cl)
     {
-    using A_size_type = decltype(A.size());
-
     long b_cstride = 0; //total stride of contracted inds of B
-    for(auto j = 0ul; j < bi.size(); ++j)
-        if(bi[j] < 0) b_cstride += B.stride(j);
+    for(auto j : range(bl))
+        {
+        if(bl[j] < 0) b_cstride += B.stride(j);
+        }
 
     auto pb = MAKE_SAFE_PTR(B.data(),B.size());
     if(C.size() == 1)
         {
         auto *Cval = C.data();
-        for(A_size_type J = 0; J < A.size(); ++J)
+        for(auto J : range(A))
+            {
             *Cval += A(J)*pb[J*b_cstride];
+            }
         }
     else
         {
         auto pc = MAKE_SAFE_PTR(C.data(),C.size());
-        for(A_size_type J = 0; J < A.size(); ++J)
+        for(auto J : range(A))
+            {
             pc[J] += A(J)*pb[J*b_cstride];
+            }
         }
     }
 
