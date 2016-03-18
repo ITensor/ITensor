@@ -1279,7 +1279,7 @@ SECTION("Trace")
         Real val = 0;
         for(auto i12 : range1(s1))
             {
-            val += T.real(s1=i12,s2=i12,s3=i3);
+            val += T.real(s1(i12),s2(i12),s3(i3));
             }
         CHECK_CLOSE(val,R.real(s3(i3)));
         }
