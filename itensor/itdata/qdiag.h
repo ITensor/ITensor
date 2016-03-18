@@ -27,34 +27,21 @@ class QDiag
     using const_iterator = typename storage_type::const_iterator;
 
     //////////////
-    std::vector<BlOf> offsets;
-        //^ Block index / data offset pairs.
-        //  Assumed that block indices are
-        //  in increasing order.
-
     storage_type store;
-        //^ *diagonal* tensor data stored contiguously
+        //^ *diagonal* tensor elements stored contiguously
 
     T val = 0;
+    size_t length = 0ul;
     //////////////
 
     QDiag() { }
 
-    QDiag(IQIndexSet const& is, 
-          QN const& div_);
+    QDiag(IQIndexSet const& is);
 
     //Special "allSame" mode where non-zero
     //elements assumed to have the same value "val"
     QDiag(IQIndexSet const& is, 
-          QN const& div_,
           T val_);
-
-    template<typename... SArgs>
-    QDiag(std::vector<BlOf> const& off,
-          SArgs&&... sargs)
-         : offsets(off),
-           store(std::forward<SArgs>(sargs)...)
-           { }
 
     explicit operator bool() const { return !store.empty(); }
 
@@ -68,11 +55,7 @@ class QDiag
     data() const { return store.data(); }
 
     size_t
-    size() const { return store.size(); }
-
-    long
-    updateOffsets(IQIndexSet const& is,
-                  QN const& div);
+    size() const { return length; }
 
     iterator
     begin() { return store.begin(); }
@@ -107,63 +90,6 @@ realData(QDiagCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size
 
 Datac inline
 realData(QDiagCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
-
-template<typename T, typename Indexable>
-T const*
-getElt(QDiag<T> const& D,
-       IQIndexSet const& is,
-       Indexable const& ind)
-    {
-    auto r = is.r();
-#ifdef DEBUG
-    if(is.r() != decltype(r)(ind.size())) 
-        {
-        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
-        Error("Wrong number of indices passed to getElt");
-        }
-#endif
-    if(r == 0) return D.data();
-    long bind = 0, //block index (total)
-         bstr = 1; //block stride so far
-    auto last_elt_subind = ind[0];
-    for(decltype(r) i = 0; i < r; ++i)
-        {
-        auto& I = is[i];
-        long block_subind = 0,
-             elt_subind = ind[i];
-        while(elt_subind >= I[block_subind].m()) //elt_subind 0-indexed
-            {
-            elt_subind -= I[block_subind].m();
-            ++block_subind;
-            }
-        if(i != 0 && elt_subind != last_elt_subind) return nullptr;
-
-        last_elt_subind = elt_subind;
-        bind += block_subind*bstr;
-        bstr *= I.nindex();
-        }
-    //Do a binary search (equal_range) to see
-    //if there is a block with block index "bind"
-    auto boff = offsetOf(D.offsets,bind);
-    if(boff != -1)
-        {
-        auto eoff = last_elt_subind;
-#ifdef DEBUG
-        if(size_t(boff+eoff) >= D.store.size()) Error("get_elt out of range");
-#endif
-        return D.data()+boff+eoff;
-        }
-    return nullptr;
-    }
-
-//template<typename Indexable>
-//Real*
-//getElt(IQTDiag & D,
-//       IndexSetT<IQIndex> const& is,
-//       Indexable const& ind)
-//    {
-//    return const_cast<Real*>(getElt(D,is,ind));
-//    }
 
 template<typename T>
 void

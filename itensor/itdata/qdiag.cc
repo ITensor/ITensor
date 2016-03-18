@@ -13,108 +13,112 @@ using std::move;
 namespace itensor {
 
 template<typename T>
-QDiag<T>::
-QDiag(IQIndexSet const& is, 
-      QN const& div)
+QN
+doTask(CalcDiv const& C, QDiag<T> const& d)
     {
-    auto totalsize = updateOffsets(is,div);
-    store.assign(totalsize,0);
+    if(rank(C.is)==0) return QN();
+
+    auto d = QN();
+    for(auto n : range(C.is))
+        {
+        d += C.is[n].qn(1)*C.is[n].dir();
+        }
+
+#ifdef DEBUG
+    for(auto s : range(C.is[0].nindex()))
+        {
+        auto q = QN();
+        for(auto n : range(C.is))
+            {
+            q += C.is[n].qn(1)*C.is[n].dir();
+            }
+        if(q != d) Error("Diagonal elements of QDiag IQTensor would have inconsistent flux");
+        }
+#endif
+
+    return d;
     }
-template QDiag<Real>::QDiag(IQIndexSet const& is, QN const& div);
-template QDiag<Cplx>::QDiag(IQIndexSet const& is, QN const& div);
+template QN doTask(CalcDiv const& C, QDiag<Real> const& d);
+template QN doTask(CalcDiv const& C, QDiag<Cplx> const& d);
+
+size_t
+computeLength(IQIndexSet const& is)
+    {
+    if(rank(is)==0) return 1ul;
+
+    auto length = is[0].m();
+    for(auto& I : is)
+        {
+        if(length != is.m())
+            Error("QDiag storage requires all IQIndices to be same size");
+        }
+    return length;
+    }
 
 template<typename T>
 QDiag<T>::
-QDiag(IQIndexSet const& is, 
-      QN const& div,
-      T val_)
-  : val(val_)
+QDiag(IQIndexSet const& is)
+  : length(computeLength(is))
     {
-    updateOffsets(is,div);
+    store.assign(length,0);
+#ifdef DEBUG
+    doTask(CalcDiv{is},*this);
+#endif
     }
-template QDiag<Real>::QDiag(IQIndexSet const& is, QN const& div, Real val_);
-template QDiag<Cplx>::QDiag(IQIndexSet const& is, QN const& div, Cplx val_);
+template QDiag<Real>::QDiag(IQIndexSet const& is);
+template QDiag<Cplx>::QDiag(IQIndexSet const& is);
 
 template<typename T>
-long QDiag<T>::
-updateOffsets(IQIndexSet const& is,
-              QN const& div)
+QDiag<T>::
+QDiag(IQIndexSet const& is, T val_)
+  : val(val_),
+    length(computeLength(is))
     {
-    offsets.clear();
-
-    if(is.r()==0)
-        {
-        offsets.push_back(make_blof(0,0));
-        return 1;
-        }
-
-    auto C = detail::GCounter(is.r());
-    for(auto j : range(is.r()))
-        {
-        C.setRange(j,0,is[j].nindex()-1);
-        }
-
-    long totalsize = 0;
-    for(; C.notDone(); ++C)
-        {
-        auto blockqn = QN{};
-        for(auto j : range(is.r()))
-            {
-            auto& J = is[j];
-            blockqn += J.qn(1+C[j])*J.dir();
-            }
-        if(blockqn == div)
-            {
-            long indstr = 1; //accumulate Index strides
-            long ind = 0;
-            long minm = std::numeric_limits<long>::max();
-            for(auto j : range(is.r()))
-                {
-                auto& J = is[j];
-                auto i_j = C[j];
-                ind += i_j*indstr;
-                indstr *= J.nindex();
-                minm = std::min(minm,J[i_j].m());
-                }
-            offsets.push_back(make_blof(ind,totalsize));
-            totalsize += minm;
-            }
-        }
-    return totalsize;
+#ifdef DEBUG
+    doTask(CalcDiv{is},*this);
+#endif
     }
-template long QDiag<Real>::updateOffsets(IQIndexSet const& is,QN const& div);
-template long QDiag<Cplx>::updateOffsets(IQIndexSet const& is,QN const& div);
+template QDiag<Real>::QDiag(IQIndexSet const& is, Real val_);
+template QDiag<Cplx>::QDiag(IQIndexSet const& is, Cplx val_);
 
 template<typename T>
 Cplx
 doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
     {
-    auto* pelt = getElt(D,G.is,G.inds);
-    if(pelt) return *pelt;
-    return 0.;
+    if(D.allSame()) return D.val;
+
+    auto r = G.is.r();
+#ifdef DEBUG
+    if(G.is.r() != decltype(r)(G.ind.size())) 
+        {
+        printfln("is.r() = %d, ind.size() = %d",G.is.r(),G.ind.size());
+        Error("Wrong number of indices passed to .real or .cplx");
+        }
+#endif
+    if(r == 0) return *(D.data());
+    size_t n = G.ind[0];
+#ifdef DEBUG
+    if(n > D.size()) Error("index out of range in getElt(QDiag..)");
+#endif
+    for(auto i : range(1,r))
+        {
+        if(G.is[i]!=n) return 0.;
+        }
+    return *(D.data()+(n-1));
     }
 template Cplx doTask(GetElt<IQIndex>& G, QDiag<Real> const& D);
 template Cplx doTask(GetElt<IQIndex>& G, QDiag<Cplx> const& D);
 
-template<typename T>
-QN
-doTask(CalcDiv const& C, QDiag<T> const& d)
-    {
-#ifdef DEBUG
-    if(d.offsets.empty()) Error("Default constructed QDiag in doTask(CalcDiv,QDiag)");
-#endif
-    auto b = d.offsets.front().block;
-    Labels block_ind(C.is.r());
-    computeBlockInd(b,C.is,block_ind);
-    return calcDiv(C.is,block_ind);
-    }
-template QN doTask(CalcDiv const& C, QDiag<Real> const& d);
-template QN doTask(CalcDiv const& C, QDiag<Cplx> const& d);
 
 template<typename T>
 Cplx
 doTask(SumEls<IQIndex>, QDiag<T> const& d)
     {
+    if(d.allSame())
+        {
+        return d.val*d.length;
+        }
+
     T s = 0.;
     for(auto& el : d) s += el;
     return s;
@@ -126,8 +130,15 @@ template<typename T>
 void
 doTask(Mult<Real> const& M, QDiag<T>& D)
     {
-    auto d = realData(D);
-    dscal_wrapper(d.size(),M.x,d.data());
+    if(D.allSame())
+        {
+        D.val *= M.x;
+        }
+    else
+        {
+        auto d = realData(D);
+        dscal_wrapper(d.size(),M.x,d.data());
+        }
     }
 template void doTask(Mult<Real> const&, QDiagReal&);
 template void doTask(Mult<Real> const&, QDiagCplx&);
@@ -135,20 +146,41 @@ template void doTask(Mult<Real> const&, QDiagCplx&);
 void
 doTask(Mult<Cplx> const& M, QDiag<Cplx> & d)
     {
-    for(auto& el : d) el *= M.x;
+    if(D.allSame())
+        {
+        D.val *= M.x;
+        }
+    else
+        {
+        for(auto& el : d) el *= M.x;
+        }
     }
 
 void
 doTask(Mult<Cplx> const& M, QDiag<Real> const& d, ManageStore & m)
     {
-    auto *nd = m.makeNewData<QDiagCplx>(d.offsets,d.begin(),d.end());
+    auto *nd = m.makeNewData<QDiagCplx>();
+    nd->length = d.length;
+    nd->val = d.val;
+    if(not d.allSame())
+        {
+        auto *nd = m.makeNewData<QDiagCplx>();
+        nd->store = QDiagCplx::storage_type(d.begin(),d.end());
+        }
     doTask(M,*nd);
     }
 
 void
 doTask(Conj, QDiagCplx & d)
     {
-    for(auto& el : d) applyConj(el);
+    if(d.allSame()) 
+        {
+        applyConj(d.val);
+        }
+    else
+        {
+        for(auto& el : d) applyConj(el);
+        }
     }
 
 
@@ -156,6 +188,7 @@ template<typename T>
 Real
 doTask(NormNoScale, QDiag<T> const& D)
     { 
+    if(D.allSame()) return std::sqrt(std::norm(D.val))*std::sqrt(D.length);
     auto d = realData(D);
     return dnrm2_wrapper(d.size(),d.data());
     }
