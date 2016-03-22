@@ -26,28 +26,23 @@ struct Mult
 template<typename IndexT>
 struct GetElt
     {
-    using Inds = InfArray<long,28ul>;
-    //using Inds = VarArray<long,31ul>;
+    IndexSetT<IndexT> const& is;
+    IntArray const& inds;
 
-    const IndexSetT<IndexT>& is;
-    const Inds& inds;
-
-    GetElt(const IndexSetT<IndexT>& is_,
-           const Inds& inds_);
+    GetElt(IndexSetT<IndexT> const& is_,
+           IntArray const& inds_);
     };
 
 template<typename T, typename IndexT>
 struct SetElt
     {
-    using Inds = InfArray<long,28ul>;
-    //using Inds = VarArray<long,31ul>;
     T elt;
-    const IndexSetT<IndexT>& is;
-    const Inds& inds;
+    IndexSetT<IndexT> const& is;
+    IntArray const& inds;
 
     SetElt(T elt_,
-           const IndexSetT<IndexT>& is_,
-           const Inds& inds_);
+           IndexSetT<IndexT> const& is_,
+           IntArray const& inds_);
     };
 
 
@@ -406,10 +401,10 @@ namespace detail {
 
 template<typename I>
 void
-checkEltInd(const IndexSetT<I>& is,
-            const typename GetElt<I>::Inds& inds)
+checkEltInd(IndexSetT<I> const& is,
+            IntArray const& inds)
     {
-    for(size_t k = 0; k < inds.size(); ++k)
+    for(auto k : range(inds))
         {
         auto i = inds[k];
         if(i < 0)
@@ -433,8 +428,8 @@ checkEltInd(const IndexSetT<I>& is,
 
 template<typename IndexT>
 GetElt<IndexT>::
-GetElt(const IndexSetT<IndexT>& is_,
-       const Inds& inds_)
+GetElt(IndexSetT<IndexT> const& is_,
+       IntArray const& inds_)
   : is(is_),
     inds(inds_)
     { 
@@ -446,8 +441,8 @@ GetElt(const IndexSetT<IndexT>& is_,
 template<typename T, typename IndexT>
 SetElt<T,IndexT>::
 SetElt(T elt_,
-       const IndexSetT<IndexT>& is_,
-       const Inds& inds_)
+       IndexSetT<IndexT> const& is_,
+       IntArray const& inds_)
     : elt(elt_), is(is_), inds(inds_)
     { 
 #ifdef DEBUG

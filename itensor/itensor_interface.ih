@@ -183,7 +183,6 @@ Cplx ITensorT<IndexT>::
 cplx(IVs&&... ivs) const
     {
     using indexval_type = typename IndexT::indexval_type;
-    using Inds = typename GetElt<IndexT>::Inds;
 
     if(!store()) Error("tensor storage unallocated");
 
@@ -200,7 +199,7 @@ cplx(IVs&&... ivs) const
         Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
         }
 
-    auto inds = Inds(size);
+    auto inds = IntArray(size);
     detail::permute_map(is_,vals,inds,
                 [](indexval_type const& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
@@ -303,7 +302,6 @@ void ITensorT<IndexT>::
 set(VArgs&&... vargs)
     {
     using indexval_type = typename IndexT::indexval_type;
-    using Inds = typename SetElt<Real,IndexT>::Inds;
     static constexpr auto size = sizeof...(vargs)-1;
     std::array<indexval_type,size> vals;
     Cplx z;
@@ -319,7 +317,7 @@ set(VArgs&&... vargs)
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",inds().r(),size));
         }
-    auto inds = Inds(is_.r(),0);
+    auto inds = IntArray(is_.r(),0);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     //TODO: if !store_ and !is_real, call allocCplx instead
     //and move this line after check for is_real
