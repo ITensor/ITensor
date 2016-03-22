@@ -169,9 +169,10 @@ template<typename T>
 DataRange<T>
 sliceData(DataRange<T> d, size_t begin, size_t end)
     {
+    auto size = end-begin;
 #ifdef DEBUG
     if(begin > end) Error("begin > end in sliceData");
-    if(begin+end > d.size()) 
+    if(begin+size > d.size()) 
         {
         println("d.size() = ",d.size());
         println("begin = ",begin);
@@ -180,7 +181,6 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
         }
 #endif
     auto pb = d.data()+begin;
-    auto size = end-begin;
     return DataRange<T>(pb,size);
     }
 
