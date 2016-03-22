@@ -451,11 +451,11 @@ loopContractedBlocks(BlockSparseA const& A,
         computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();
-        for(decltype(rB) ib = 0; ib < rB; ++ib)
+        for(auto iB : range(rB))
             {
-            couB.setRange(ib,0,Bis[ib].nindex()-1);
+            couB.setRange(iB,0,Bis[iB].nindex()-1);
             }
-        for(decltype(rA) iA = 0; iA < rA; ++iA)
+        for(auto iA : range(rA))
             {
             auto ival = Ablockind[iA];
             //Restrict couB to be fixed for indices of B contracted with A
@@ -476,11 +476,11 @@ loopContractedBlocks(BlockSparseA const& A,
             if(!bblock) continue;
 
             //Finish making Cblockind and Bblockind
-            Labels Bblockind(rB,0);
-            for(decltype(rB) ib = 0; ib < rB; ++ib)
+            auto Bblockind = IntArray(rB,0);
+            for(auto iB : range(rB))
                 {
-                if(BtoC[ib] != -1) Cblockind[BtoC[ib]] = couB.i[ib];
-                Bblockind[ib] = couB.i[ib];
+                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = couB.i[iB];
+                Bblockind[iB] = couB.i[iB];
                 }
 
             auto cblock = getBlock(C,Cis,Cblockind);
@@ -497,12 +497,12 @@ loopContractedBlocks(BlockSparseA const& A,
         } //for A.offsets
     }
 
-template<typename BlockSparseStore, typename Indexable>
+template<typename BlockSparse, typename Indexable>
 auto
-getBlock(BlockSparseStore & d,
+getBlock(BlockSparse & d,
          IQIndexSet const& is,
          Indexable const& block_ind)
-    -> decltype(makeDataRange(d.data(),d.size()))
+    -> stdx::if_compiles_return<decltype(makeDataRange(d.data(),d.size())),decltype(d.offsets)>
     {
     auto r = long(block_ind.size());
     if(r == 0) return makeDataRange(d.data(),d.size());
