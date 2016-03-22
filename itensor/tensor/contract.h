@@ -49,7 +49,8 @@ template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagFull(DiagElsA           const& A, Labels const& ai, 
                  TenRefc<RangeT,VB> const& B, Labels const& bi, 
-                 VecRef<VC>         const& C, Labels const& ci);
+                 VecRef<VC>         const& C, Labels const& ci,
+                 IntArray astarts = IntArray{});
 
 //Some indices of B uncontracted
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
@@ -290,16 +291,26 @@ contractDiagPartial(DiagElsA           const& A, Labels const& al,
         }
     }
 
+// C = A*B
+//case where all of B's indices are contracted with A,
+//making C diagonal
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagFull(DiagElsA           const& A, Labels const& al, 
                  TenRefc<RangeT,VB> const& B, Labels const& bl, 
-                 VecRef<VC>         const& C, Labels const& cl)
+                 VecRef<VC>         const& C, Labels const& cl,
+                 IntArray astarts)
     {
+    auto bstart = 0ul;
     long b_cstride = 0; //total stride of contracted inds of B
-    for(auto j : range(bl))
+    for(auto ib : range(bl))
         {
-        if(bl[j] < 0) b_cstride += B.stride(j);
+        auto ia = find_index(al,bl[ib]);
+        if(ia >= 0) 
+            {
+            b_cstride += B.stride(ib);
+            bstart += astarts[ia]*B.stride(ib);
+            }
         }
 
     auto pb = MAKE_SAFE_PTR(B.data(),B.size());
@@ -308,7 +319,7 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
         auto *Cval = C.data();
         for(auto J : range(A))
             {
-            *Cval += A(J)*pb[J*b_cstride];
+            *Cval += A(J)*pb[bstart+J*b_cstride];
             }
         }
     else
@@ -316,7 +327,7 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
         auto pc = MAKE_SAFE_PTR(C.data(),C.size());
         for(auto J : range(A))
             {
-            pc[J] += A(J)*pb[J*b_cstride];
+            pc[J] += A(J)*pb[bstart+J*b_cstride];
             }
         }
     }

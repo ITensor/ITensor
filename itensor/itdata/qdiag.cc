@@ -410,14 +410,49 @@ blockDiagDense(QDiag<VD> const& D,
         }
     else
         {
-        Error("Fully contracted QDiag*QDense not yet implemented");
-        //auto nd = m.makeNewData<QDiag>(Cis,Cdiv);
-        //auto& C = *nd;
+        auto *nd = m.makeNewData<QDiag<VC>>(Cis);
+        auto& C = *nd;
 
-        //loopContractedBlocks(D,Dis,
-        //                     T,Tis,
-        //                     C,Cis,
-        //                     do_contract);
+        auto do_contract =
+            [&D,&Dis,&Tis,&Cis,&DL,&TL,&CL]
+            (DataRange<const VT> tblock, IntArray const& Tblockind,
+             DataRange<const VD> dblock, IntArray const& Dblockind,
+             DataRange<VC>       cblock, IntArray const& Cblockind)
+            {
+            Range Trange;
+            Trange.init(make_indexdim(Tis,Tblockind));
+            auto Tref = makeRef(tblock,&Trange);
+
+            long nb=-1,ne=-1;
+            auto starts = IntArray{};
+            std::tie(nb,ne,starts) = diagBlockBounds(Dis,Dblockind);
+            assert(nb <= ne);
+            auto Dsize = ne-nb;
+
+            auto Cref = makeRef(cblock,VecRange(cblock.size()));
+
+            if(D.allSame())
+                {
+                auto dref = UnifVecWrapper<decltype(D.val)>(D.val,Dsize);
+                contractDiagFull(dref,DL,
+                                 Tref,TL,
+                                 Cref,CL,
+                                 starts);
+                }
+            else
+                {
+                auto Dref = makeVecRef(dblock.data(),Dsize);
+                contractDiagFull(Dref,DL,
+                                 Tref,TL,
+                                 Cref,CL,
+                                 starts);
+                }
+            };
+
+        loopContractedBlocks(T,Tis,
+                             D,Dis,
+                             C,Cis,
+                             do_contract);
         }
     }
 

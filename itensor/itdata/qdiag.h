@@ -243,20 +243,26 @@ getBlock(QDiag<V> const& D,
          IQIndexSet const& is,
          Indexable const& block_ind)
     {
-#ifdef DEBUG
-    if(block_ind.size()==0 || rank(is)==0) Error("Rank 0 getBlock case not implemented");
-#endif
-    //print("block_ind:"); for(auto& el : block_ind) print(" ",el); println();
     long nb = -1, ne = -1;
     auto starts = IntArray{};
-    std::tie(nb,ne,starts) = diagBlockBounds(is,block_ind);
-    //printfln("nb=%d ne=%d",nb,ne);
-    if(nb >= ne) return DataRange<const V>{};
+
+    if(block_ind.size()==0 && rank(is)==0)
+        {
+        nb = 0;
+        ne = 1;
+        }
+    else
+        {
+        //print("block_ind:"); for(auto& el : block_ind) print(" ",el); println();
+        std::tie(nb,ne,starts) = diagBlockBounds(is,block_ind);
+        if(nb >= ne) return DataRange<const V>{};
+        }
 
     if(D.allSame())
         {
         return DataRange<const V>(&D.val,1ul);
         }
+    //printfln("nb=%d ne=%d",nb,ne);
     return sliceData(makeDataRange(D.data(),D.size()),nb,ne);
     }
 
