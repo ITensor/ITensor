@@ -151,7 +151,7 @@ doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
         Error("Wrong number of indices passed to .real or .cplx");
         }
 #endif
-    if(r == 0) return *(D.data());
+    if(r == 0) return D.store.front();
     auto n = G.inds[0];
 #ifdef DEBUG
     if(n > (decltype(n))D.size()) Error("index out of range in getElt(QDiag..)");
@@ -160,7 +160,7 @@ doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
         {
         if(n != G.inds[i]) return 0.;
         }
-    return *(D.data()+(n-1));
+    return D.store.at(n);
     }
 template Cplx doTask(GetElt<IQIndex>& G, QDiag<Real> const& D);
 template Cplx doTask(GetElt<IQIndex>& G, QDiag<Cplx> const& D);
