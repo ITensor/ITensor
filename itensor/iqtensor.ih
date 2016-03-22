@@ -132,7 +132,7 @@ delta(IQIndex const& i1,
       Inds const&... inds)
     {
     auto is = IQIndexSet(i1,inds...);
-    auto dat = QDiagReal(is,QN(),1.);
+    auto dat = QDiagReal(is,1.);
     return IQTensor(std::move(is),std::move(dat));
     }
 

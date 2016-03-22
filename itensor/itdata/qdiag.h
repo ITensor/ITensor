@@ -95,7 +95,8 @@ template<typename T>
 void
 write(std::ostream & s, QDiag<T> const& dat)
     {
-    itensor::write(s,dat.offsets);
+    itensor::write(s,dat.val);
+    itensor::write(s,dat.length);
     itensor::write(s,dat.store);
     }
 
@@ -103,7 +104,8 @@ template<typename T>
 void
 read(std::istream & s, QDiag<T> & dat)
     {
-    itensor::read(s,dat.offsets);
+    itensor::read(s,dat.val);
+    itensor::read(s,dat.length);
     itensor::read(s,dat.store);
     }
  
@@ -140,7 +142,8 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real>& G, QDiagCplx const& D, ManageStore & m)
     {
-    auto *nD = m.makeNewData<QDiagReal>(D.offsets,D.size());
+    auto *nD = m.makeNewData<QDiagReal>();
+    nD->store.resize(D.length);
     stdx::generate(*nD,G.f);
     }
 
@@ -148,7 +151,8 @@ template<typename F>
 void
 doTask(GenerateIT<F,Cplx>& G, QDiagReal const& D, ManageStore & m)
     {
-    auto *nD = m.makeNewData<QDiagCplx>(D.offsets,D.size());
+    auto *nD = m.makeNewData<QDiagCplx>();
+    nD->store.resize(D.length);
     stdx::generate(*nD,G.f);
     }
 
@@ -211,6 +215,64 @@ doTask(Contract<IQIndex>& Con,
        QDense<VA> const& A,
        QDiag<VB> const& B,
        ManageStore& m);
+
+template<typename Indexable>
+std::tuple<size_t,size_t,IntArray>
+diagBlockBounds(IQIndexSet const& is,
+                Indexable const& block_ind)
+    {
+    long nb = -1;
+    long ne = std::numeric_limits<long>::max();
+    auto starts = IntArray(rank(is),0);
+    for(auto n : range(is))
+        {
+        for(auto j : range(block_ind[n])) starts[n] += is[n][j].m();
+        nb = std::max(nb,starts[n]);
+        ne = std::min(ne,starts[n]+is[n][block_ind[n]].m());
+        }
+    for(auto n : range(is))
+        {
+        starts[n] = nb-starts[n];
+        }
+    return std::make_tuple(nb,ne,starts);
+    }
+
+template<typename V, typename Indexable>
+DataRange<const V>
+getBlock(QDiag<V> const& D,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
+    {
+#ifdef DEBUG
+    if(block_ind.size()==0 || rank(is)==0) Error("Rank 0 getBlock case not implemented");
+#endif
+    //print("block_ind:"); for(auto& el : block_ind) print(" ",el); println();
+    long nb = -1, ne = -1;
+    auto starts = IntArray{};
+    std::tie(nb,ne,starts) = diagBlockBounds(is,block_ind);
+    //printfln("nb=%d ne=%d",nb,ne);
+    if(nb >= ne) return DataRange<const V>{};
+
+    if(D.allSame())
+        {
+        return DataRange<const V>(&D.val,1ul);
+        }
+    return sliceData(makeDataRange(D.data(),D.size()),nb,ne);
+    }
+
+template<typename V, typename Indexable>
+DataRange<V>
+getBlock(QDiag<V> & D,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
+    {
+    auto const& cD = D;
+    auto cdr = getBlock(cD,is,block_ind);
+    //const_cast safe here because we know
+    //original QDiag d is non-const
+    auto ncd = const_cast<V*>(cdr.data());
+    return DataRange<V>{ncd,cdr.size()};
+    }
 
 } //namespace itensor
 
