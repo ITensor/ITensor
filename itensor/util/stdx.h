@@ -275,6 +275,23 @@ sort(Container && C,
     std::sort(std::begin(C),std::end(C),std::forward<CmpFun>(f));
     }
 
+template<typename Container>
+auto
+min_element(Container && C)
+    -> decltype(std::min_element(std::begin(C),std::end(C)))
+    {
+    std::min_element(std::begin(C),std::end(C));
+    }
+
+template<typename Container>
+auto
+max_element(Container && C)
+    -> decltype(std::max_element(std::begin(C),std::end(C)))
+    {
+    std::max_element(std::begin(C),std::end(C));
+    }
+
+
 } //namespace stdx
 
 #endif
