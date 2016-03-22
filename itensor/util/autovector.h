@@ -164,5 +164,20 @@ dot(const autovector<T>& a, const autovector<T>& b)
     return res;
     }
 
+template<typename T>
+std::ostream& 
+operator<<(std::ostream & s, 
+           autovector<T> const& v)
+    {
+    if(v.size()==0l) return s;
+    auto j = v.mini();
+    for(; j < v.maxi(); ++j)
+        {
+        s << v[j] << ",";
+        }
+    s << v[j];
+    return s;
+    }
+
 } //namespace itensor
 #endif
