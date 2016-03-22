@@ -635,18 +635,38 @@ SECTION("Diag All Same")
 
 SECTION("Trace")
     {
-    auto T = randomTensor(QN(),S1,dag(S2),S3);
-    auto d = delta(dag(S1),S2);
-    auto R = d*T;
-
-    for(auto i3 : range1(S3))
+    SECTION("Case 1")
         {
-        Real val = 0;
-        for(auto i12 : range1(S1))
+        auto T = randomTensor(QN(),S1,dag(S2),S3,S4);
+        auto d = delta(dag(S1),S2);
+        auto R = d*T;
+
+        for(auto i3 : range1(S3))
+        for(auto i4 : range1(S4))
             {
-            val += T.real(S1(i12),S2(i12),S3(i3));
+            Real val = 0;
+            for(auto i12 : range1(S1))
+                {
+                val += T.real(S1(i12),S2(i12),S3(i3),S4(i4));
+                }
+            CHECK_CLOSE(val,R.real(S3(i3),S4(i4)));
             }
-        CHECK_CLOSE(val,R.real(S3(i3)));
+        }
+
+    SECTION("Case 2")
+        {
+        auto ti = IQIndex("ti",Index("ti",2),QN(0));
+
+        auto T = randomTensor(QN(),S1,dag(S3),dag(ti));
+        auto d = delta(S3,ti,dag(S1));
+        auto R = d*T;
+
+        Real val = 0;
+        for(auto j : range1(ti))
+            {
+            val += T.real(S1(j),S3(j),ti(j));
+            }
+        CHECK_CLOSE(val,R.real());
         }
     }
 
@@ -762,7 +782,7 @@ SECTION("Tie Indices with Diag IQTensor")
 //    CHECK_CLOSE(R.real(),val);
 //    }
 
-SECTION("Two index delta tensor as IQIndex replacer")
+SECTION("Single IQIndex Replacement")
     {
     auto d = delta(dag(S1),S2);
     CHECK(isIQTensor(d));
@@ -778,6 +798,20 @@ SECTION("Two index delta tensor as IQIndex replacer")
     for(auto i2 : range1(S1.m()))
         {
         CHECK(T.real(S1(i1),prime(S1)(i2)) == R.real(S2(i1),prime(S1)(i2)));
+        }
+    }
+
+SECTION("Replace two IQIndex's with three")
+    {
+    auto ti = IQIndex("ti",Index("ti",2),QN(0));
+    auto T = randomTensor(QN(),S1,dag(S3));
+    auto d = delta(S3,dag(S1),S4,dag(S2),ti);
+    auto R = d*T;
+    CHECK(typeOf(R) == QType::QDiagReal);
+
+    for(auto j : range1(ti))
+        {
+        CHECK_CLOSE(R.real(S2(j),S4(j),ti(j)), T.real(S1(j),S3(j)));
         }
     }
 }
