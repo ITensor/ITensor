@@ -1,8 +1,8 @@
-#include "core.h"
-#include "sites/spinhalf.h"
-#include "sites/spinone.h"
-#include "input.h"
-#include "autompo.h"
+#include "itensor/core.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/util/input.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 

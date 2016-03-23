@@ -109,7 +109,7 @@ init_()
     initted = true;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

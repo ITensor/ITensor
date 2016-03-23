@@ -37,4 +37,4 @@ defragment(lint newsize) // move object to lower place in heap
 	}
     }
 
-};
+} //namespace itensor

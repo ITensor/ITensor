@@ -224,6 +224,6 @@ getOp(int i, const String& opname, const Args& opts) const
     return Op;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

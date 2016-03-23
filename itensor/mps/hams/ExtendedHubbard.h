@@ -137,6 +137,6 @@ init_()
     initted_ = true;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

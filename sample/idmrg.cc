@@ -1,6 +1,6 @@
-#include "sites/spinone.h"
-#include "idmrg.h"
-#include "hams/Heisenberg.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/idmrg.h"
+#include "itensor/mps/hams/Heisenberg.h"
 
 using namespace itensor;
 

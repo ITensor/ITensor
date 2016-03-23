@@ -206,6 +206,6 @@ getDefaultOps(const Args& opts) const
     return dops_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
