@@ -42,26 +42,30 @@ class LocalOp
 
     LocalOp();
 
-    LocalOp(const Tensor& Op1, const Tensor& Op2,
-            const Args& args = Global::args());
+    LocalOp(Tensor const& Op1, 
+            Tensor const& Op2,
+            Args const& args = Global::args());
 
-    LocalOp(const Tensor& Op1, const Tensor& Op2, 
-            const Tensor& L, const Tensor& R,
-            const Args& args = Global::args());
+    LocalOp(Tensor const& Op1, 
+            Tensor const& Op2, 
+            Tensor const& L, 
+            Tensor const& R,
+            Args const& args = Global::args());
 
     //
     // Sparse Matrix Methods
     //
 
     void
-    product(const Tensor& phi, Tensor& phip) const;
+    product(Tensor const& phi, Tensor & phip) const;
 
     Real
-    expect(const Tensor& phi) const;
+    expect(Tensor const& phi) const;
 
     Tensor
-    deltaRho(const Tensor& rho, 
-             const Tensor& combine, Direction dir) const;
+    deltaRho(Tensor const& rho, 
+             Tensor const& combine, 
+             Direction dir) const;
 
     Tensor
     diag() const;
@@ -74,11 +78,13 @@ class LocalOp
     //
 
     void
-    update(const Tensor& Op1, const Tensor& Op2);
+    update(Tensor const& Op1, Tensor const& Op2);
 
     void
-    update(const Tensor& Op1, const Tensor& Op2, 
-           const Tensor& L, const Tensor& R);
+    update(Tensor const& Op1, 
+           Tensor const& Op2, 
+           Tensor const& L, 
+           Tensor const& R);
 
     const Tensor&
     Op1() const 
@@ -266,9 +272,11 @@ expect(const Tensor& phi) const
 
 template <class Tensor>
 Tensor inline LocalOp<Tensor>::
-deltaRho(const Tensor& AA, const Tensor& combine, Direction dir) const
+deltaRho(Tensor const& AA, 
+         Tensor const& combine, 
+         Direction dir) const
     {
-    Tensor delta(AA);
+    auto delta = AA;
     if(dir == Fromleft)
         {
         if(!LIsNull()) delta *= L();
