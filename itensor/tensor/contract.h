@@ -301,6 +301,7 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
                  VecRef<VC>         const& C, Labels const& cl,
                  IntArray astarts)
     {
+    if(astarts.empty()) astarts.assign(al.size(),0);
     auto bstart = 0ul;
     long b_cstride = 0; //total stride of contracted inds of B
     for(auto ib : range(bl))
