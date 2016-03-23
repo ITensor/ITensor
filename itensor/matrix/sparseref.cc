@@ -182,4 +182,4 @@ int SparseRef::memory() const
     return res;
     }
 
-};
+} //namespace itensor

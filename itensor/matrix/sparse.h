@@ -323,6 +323,6 @@ inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {retu
 
 ARRAY1CC_DEFS(SparseVector)
 
-};
+} //namespace itensor
 
 #endif

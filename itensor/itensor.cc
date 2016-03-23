@@ -249,7 +249,7 @@ reshape(const Permutation& P,
     } //switch(c.rn)
 
     } // reshape
-};
+} //namespace detail
 
 void
 reshape(const Permutation& P, 

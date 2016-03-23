@@ -6,9 +6,6 @@
 #define __ITENSOR_SPINONE_H
 #include "itensor/mps/siteset.h"
 
-#define Cout std::cout
-#define Endl std::endl
-
 namespace itensor {
 
 class SpinOne : public SiteSet
@@ -73,7 +70,7 @@ constructSites(const Args& opts)
             {
             if(opts.getBool("Verbose",false))
                 {
-                Cout << "Placing a S=1/2 at site " << j << Endl;
+                println("Placing a S=1/2 at site ",j);
                 }
 
             site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
@@ -316,9 +313,6 @@ getOp(int i, const String& opname, const Args& opts) const
     return Op;
     }
 
-}; //namespace itensor
-
-#undef Cout
-#undef Endl
+} //namespace itensor
 
 #endif

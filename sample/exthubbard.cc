@@ -1,6 +1,6 @@
-#include "core.h"
-#include "sites/hubbard.h"
-#include "autompo.h"
+#include "itensor/core.h"
+#include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 

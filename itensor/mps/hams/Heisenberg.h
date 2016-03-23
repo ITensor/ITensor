@@ -262,6 +262,6 @@ init_()
     }
 */
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

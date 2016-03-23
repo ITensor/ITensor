@@ -198,7 +198,7 @@ operator<<(std::ostream& s, const SkipIterator<Iterator,Skip>& si)
     return s << "SkipIterator";
     }
 
-}; //namespace itensor::detail
-}; //namespace itensor
+} //namespace itensor::detail
+} //namespace itensor
 
 #endif 

@@ -170,4 +170,4 @@ void copyscale( int n, double a, double *x,
 	}
     }
 
-}; 
+} //namespace itensor

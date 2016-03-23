@@ -143,6 +143,6 @@ inline SparseRef operator * (Real a, const SparseRef& sp)
     return res;   
     }
 
-};
+} //namespace itensor
 
 #endif

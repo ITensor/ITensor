@@ -112,7 +112,7 @@ permute_map(const Set1& s1,
         {
         auto& v2 = *it;
         bool found = false;
-        for(size_t i1 = 0; i1 < s1.size(); ++i1)
+        for(decltype(s1.size()) i1 = 0; i1 < s1.size(); ++i1)
             if(v2 == s1[i1])
                 {
                 r[i1] = m(v2);
