@@ -468,7 +468,7 @@ svdImpl(IQTensor A,
 
     auto Ustore = QDense<T>(Uis,QN());
     auto Vstore = QDense<T>(Vis,QN());
-    auto Dstore = QDiagReal(Dis,div(A));
+    auto Dstore = QDiagReal(Dis);
 
     long n = 0;
     for(auto b : range(Nblock))
@@ -856,7 +856,7 @@ diagHImpl(IQTensor    rho,
     auto Dis = IQIndexSet(prime(d),dag(d));
 
     auto Ustore = QDense<T>(Uis,QN());
-    auto Dstore = QDiagReal(Dis,div(rho));
+    auto Dstore = QDiagReal(Dis);
 
     long n = 0;
     for(auto b : range(Nblock))

@@ -27,34 +27,21 @@ class QDiag
     using const_iterator = typename storage_type::const_iterator;
 
     //////////////
-    std::vector<BlOf> offsets;
-        //^ Block index / data offset pairs.
-        //  Assumed that block indices are
-        //  in increasing order.
-
     storage_type store;
-        //^ *diagonal* tensor data stored contiguously
+        //^ *diagonal* tensor elements stored contiguously
 
     T val = 0;
+    size_t length = 0ul;
     //////////////
 
     QDiag() { }
 
-    QDiag(IQIndexSet const& is, 
-          QN const& div_);
+    QDiag(IQIndexSet const& is);
 
     //Special "allSame" mode where non-zero
     //elements assumed to have the same value "val"
     QDiag(IQIndexSet const& is, 
-          QN const& div_,
           T val_);
-
-    template<typename... SArgs>
-    QDiag(std::vector<BlOf> const& off,
-          SArgs&&... sargs)
-         : offsets(off),
-           store(std::forward<SArgs>(sargs)...)
-           { }
 
     explicit operator bool() const { return !store.empty(); }
 
@@ -68,11 +55,7 @@ class QDiag
     data() const { return store.data(); }
 
     size_t
-    size() const { return store.size(); }
-
-    long
-    updateOffsets(IQIndexSet const& is,
-                  QN const& div);
+    size() const { return length; }
 
     iterator
     begin() { return store.begin(); }
@@ -108,68 +91,12 @@ realData(QDiagCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.size
 Datac inline
 realData(QDiagCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
 
-template<typename T, typename Indexable>
-T const*
-getElt(QDiag<T> const& D,
-       IQIndexSet const& is,
-       Indexable const& ind)
-    {
-    auto r = is.r();
-#ifdef DEBUG
-    if(is.r() != decltype(r)(ind.size())) 
-        {
-        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
-        Error("Wrong number of indices passed to getElt");
-        }
-#endif
-    if(r == 0) return D.data();
-    long bind = 0, //block index (total)
-         bstr = 1; //block stride so far
-    auto last_elt_subind = ind[0];
-    for(decltype(r) i = 0; i < r; ++i)
-        {
-        auto& I = is[i];
-        long block_subind = 0,
-             elt_subind = ind[i];
-        while(elt_subind >= I[block_subind].m()) //elt_subind 0-indexed
-            {
-            elt_subind -= I[block_subind].m();
-            ++block_subind;
-            }
-        if(i != 0 && elt_subind != last_elt_subind) return nullptr;
-
-        last_elt_subind = elt_subind;
-        bind += block_subind*bstr;
-        bstr *= I.nindex();
-        }
-    //Do a binary search (equal_range) to see
-    //if there is a block with block index "bind"
-    auto boff = offsetOf(D.offsets,bind);
-    if(boff != -1)
-        {
-        auto eoff = last_elt_subind;
-#ifdef DEBUG
-        if(size_t(boff+eoff) >= D.store.size()) Error("get_elt out of range");
-#endif
-        return D.data()+boff+eoff;
-        }
-    return nullptr;
-    }
-
-//template<typename Indexable>
-//Real*
-//getElt(IQTDiag & D,
-//       IndexSetT<IQIndex> const& is,
-//       Indexable const& ind)
-//    {
-//    return const_cast<Real*>(getElt(D,is,ind));
-//    }
-
 template<typename T>
 void
 write(std::ostream & s, QDiag<T> const& dat)
     {
-    itensor::write(s,dat.offsets);
+    itensor::write(s,dat.val);
+    itensor::write(s,dat.length);
     itensor::write(s,dat.store);
     }
 
@@ -177,7 +104,8 @@ template<typename T>
 void
 read(std::istream & s, QDiag<T> & dat)
     {
-    itensor::read(s,dat.offsets);
+    itensor::read(s,dat.val);
+    itensor::read(s,dat.length);
     itensor::read(s,dat.store);
     }
  
@@ -214,7 +142,8 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real>& G, QDiagCplx const& D, ManageStore & m)
     {
-    auto *nD = m.makeNewData<QDiagReal>(D.offsets,D.size());
+    auto *nD = m.makeNewData<QDiagReal>();
+    nD->store.resize(D.length);
     stdx::generate(*nD,G.f);
     }
 
@@ -222,7 +151,8 @@ template<typename F>
 void
 doTask(GenerateIT<F,Cplx>& G, QDiagReal const& D, ManageStore & m)
     {
-    auto *nD = m.makeNewData<QDiagCplx>(D.offsets,D.size());
+    auto *nD = m.makeNewData<QDiagCplx>();
+    nD->store.resize(D.length);
     stdx::generate(*nD,G.f);
     }
 
@@ -285,6 +215,70 @@ doTask(Contract<IQIndex>& Con,
        QDense<VA> const& A,
        QDiag<VB> const& B,
        ManageStore& m);
+
+template<typename Indexable>
+std::tuple<size_t,size_t,IntArray>
+diagBlockBounds(IQIndexSet const& is,
+                Indexable const& block_ind)
+    {
+    long nb = -1;
+    long ne = std::numeric_limits<long>::max();
+    auto starts = IntArray(rank(is),0);
+    for(auto n : range(is))
+        {
+        for(auto j : range(block_ind[n])) starts[n] += is[n][j].m();
+        nb = std::max(nb,starts[n]);
+        ne = std::min(ne,starts[n]+is[n][block_ind[n]].m());
+        }
+    for(auto n : range(is))
+        {
+        starts[n] = nb-starts[n];
+        }
+    return std::make_tuple(nb,ne,starts);
+    }
+
+template<typename V, typename Indexable>
+DataRange<const V>
+getBlock(QDiag<V> const& D,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
+    {
+    long nb = -1, ne = -1;
+    auto starts = IntArray{};
+
+    if(block_ind.size()==0 && rank(is)==0)
+        {
+        nb = 0;
+        ne = 1;
+        }
+    else
+        {
+        //print("block_ind:"); for(auto& el : block_ind) print(" ",el); println();
+        std::tie(nb,ne,starts) = diagBlockBounds(is,block_ind);
+        if(nb >= ne) return DataRange<const V>{};
+        }
+
+    if(D.allSame())
+        {
+        return DataRange<const V>(&D.val,1ul);
+        }
+    //printfln("nb=%d ne=%d",nb,ne);
+    return sliceData(makeDataRange(D.data(),D.size()),nb,ne);
+    }
+
+template<typename V, typename Indexable>
+DataRange<V>
+getBlock(QDiag<V> & D,
+         IQIndexSet const& is,
+         Indexable const& block_ind)
+    {
+    auto const& cD = D;
+    auto cdr = getBlock(cD,is,block_ind);
+    //const_cast safe here because we know
+    //original QDiag d is non-const
+    auto ncd = const_cast<V*>(cdr.data());
+    return DataRange<V>{ncd,cdr.size()};
+    }
 
 } //namespace itensor
 

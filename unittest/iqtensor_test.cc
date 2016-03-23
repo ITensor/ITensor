@@ -625,6 +625,7 @@ SECTION("Diag All Same")
     auto R = d*T;
     CHECK(hasindex(R,S2));
     CHECK(hasindex(R,prime(S1,2)));
+
     for(auto j1 : range1(S1))
     for(auto j2 : range1(S2))
         {
@@ -634,17 +635,38 @@ SECTION("Diag All Same")
 
 SECTION("Trace")
     {
-    auto T = randomTensor(QN(),S1,S2,S3);
-    auto d = delta(dag(S1),dag(S2));
-    auto R = d*T;
-    for(auto i3 : range1(S3))
+    SECTION("Case 1")
         {
-        Real val = 0;
-        for(auto i12 : range1(S1))
+        auto T = randomTensor(QN(),S1,dag(S2),S3,S4);
+        auto d = delta(dag(S1),S2);
+        auto R = d*T;
+
+        for(auto i3 : range1(S3))
+        for(auto i4 : range1(S4))
             {
-            val += T.real(S1(i12),S2(i12),S3(i3));
+            Real val = 0;
+            for(auto i12 : range1(S1))
+                {
+                val += T.real(S1(i12),S2(i12),S3(i3),S4(i4));
+                }
+            CHECK_CLOSE(val,R.real(S3(i3),S4(i4)));
             }
-        CHECK_CLOSE(val,R.real(S3(i3)));
+        }
+
+    SECTION("Case 2")
+        {
+        auto ti = IQIndex("ti",Index("ti",2),QN(0));
+
+        auto T = randomTensor(QN(),S1,dag(S3),dag(ti));
+        auto d = delta(S3,ti,dag(S1));
+        auto R = d*T;
+
+        Real val = 0;
+        for(auto j : range1(ti))
+            {
+            val += T.real(S1(j),S3(j),ti(j));
+            }
+        CHECK_CLOSE(val,R.real());
         }
     }
 
@@ -652,6 +674,7 @@ SECTION("Tie Indices with Diag IQTensor")
     {
     SECTION("Case 1")
         {
+        //both tied indices have In arrows
         auto T = randomTensor(QN(),S1,S2,S3,S4);
         auto ti = IQIndex("ti",Index("ti-2",1),QN(-2),
                                Index("ti+2",1),QN(+2));
@@ -666,45 +689,75 @@ SECTION("Tie Indices with Diag IQTensor")
             }
         }
 
-    //SECTION("Case 2")
-    //    {
-    //    auto T = randomTensor(QN(),S1,S2,dag(S3),S4);
-    //    auto ti = IQIndex("ti",Index("ti",2),QN(0));
-    //    auto tie = delta(dag(S1),S3,ti);
+    SECTION("Case 2")
+        {
+        //tied indices have mixed arrows
+        auto T = randomTensor(QN(),S1,S2,dag(S3),S4);
+        auto ti = IQIndex("ti",Index("ti",2),QN(0));
+        auto tie = delta(dag(S1),S3,ti);
 
-    //    auto RR = randomTensor(QN(),dag(S1),S3,ti);
-    //    PrintData(RR);
+        auto R = T*tie;
 
-    //    auto MM = IQTensor(dag(S1),S3,ti);
-    //    MM.set(S1(1),S3(1),ti(1),1.);
-    //    MM.set(S1(2),S3(2),ti(2),1.);
-    //    PrintData(MM);
+        for(auto i : range1(ti))
+        for(auto j2 : range1(S2))
+        for(auto j4 : range1(S4))
+            {
+            CHECK_CLOSE(T.real(S1(i),S2(j2),S3(i),S4(j4)), R.real(ti(i),S2(j2),S4(j4)));
+            }
+        }
 
-    //    PrintData(tie);
+    SECTION("Case 3")
+        {
+        //tied indices have mixed arrows
+        //similar to above case but different index
+        //order for tie IQTensor
+        auto T = randomTensor(QN(),S1,S2,dag(S3),S4);
+        auto ti = IQIndex("ti",Index("ti",2),QN(0));
+        auto tie = delta(ti,dag(S1),S3);
 
-    //    PrintData(tie);
-    //    auto R = T*MM;
-    //    PrintData(T);
-    //    PrintData(R);
+        auto R = T*tie;
 
-    //    for(auto i : range1(ti))
-    //    for(auto j2 : range1(S2))
-    //    for(auto j4 : range1(S4))
-    //        {
-    //        CHECK_CLOSE(T.real(S1(i),S2(j2),S3(i),S4(j4)), R.real(ti(i),S2(j2),S4(j4)));
-    //        }
-    //    }
+        for(auto i : range1(ti))
+        for(auto j2 : range1(S2))
+        for(auto j4 : range1(S4))
+            {
+            CHECK_CLOSE(T.real(S1(i),S2(j2),S3(i),S4(j4)), R.real(ti(i),S2(j2),S4(j4)));
+            }
+        }
 
-    //auto tied2 = Index("tied2",s1.m());
-    //auto tt2 = delta(s1,s3,tied2);
-    //auto R2 = T*tt2;
-    //for(int t = 1; t <= tied1.m(); ++t)
-    //for(int j2 = 1; j2 <= s2.m(); ++j2)
-    //for(int j4 = 1; j4 <= s4.m(); ++j4)
-    //    {
-    //    CHECK_CLOSE(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
-    //    }
+    SECTION("Case 4")
+        {
+        //tied indices have mixed arrows
+        //similar to above case but yet another
+        //index order for tie IQTensor
+        auto T = randomTensor(QN(),S1,S2,dag(S3),S4);
+        auto ti = IQIndex("ti",Index("ti",2),QN(0));
+        auto tie = delta(S3,ti,dag(S1));
+
+        auto R = T*tie;
+
+        for(auto i : range1(ti))
+        for(auto j2 : range1(S2))
+        for(auto j4 : range1(S4))
+            {
+            CHECK_CLOSE(T.real(S1(i),S2(j2),S3(i),S4(j4)), R.real(ti(i),S2(j2),S4(j4)));
+            }
+        }
     }
+
+
+//SECTION("Contract All Dense Inds; Diag result")
+//    {
+//    auto T = randomTensor(QN{},L1,prime(L1));
+//    
+//    auto d = delta(dag(L1),dag(prime(L1)),prime(L1,2),prime(L1,3));
+//    auto R = d*T;
+//    //CHECK(typeOf(R) == Type::DiagReal);
+//    //CHECK(hasindex(R,L));
+//    //auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+//    //for(long j = 1; j <= minjkl; ++j)
+//    //    CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
+//    }
 
 //SECTION("Contract All Dense Inds; Diag Scalar result")
 //    {
@@ -728,21 +781,8 @@ SECTION("Tie Indices with Diag IQTensor")
 //        val += data.at(j-1)*T.real(J(j),K(j));
 //    CHECK_CLOSE(R.real(),val);
 //    }
-//
-//SECTION("Contract All Dense Inds; Diag result")
-//    {
-//    auto T = randomTensor(J,K);
-//    
-//    auto d = delta(J,K,L);
-//    auto R = d*T;
-//    CHECK(typeOf(R) == Type::DiagReal);
-//    CHECK(hasindex(R,L));
-//    auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
-//    for(long j = 1; j <= minjkl; ++j)
-//        CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
-//    }
 
-SECTION("Two index delta tensor as IQIndex replacer")
+SECTION("Single IQIndex Replacement")
     {
     auto d = delta(dag(S1),S2);
     CHECK(isIQTensor(d));
@@ -758,6 +798,20 @@ SECTION("Two index delta tensor as IQIndex replacer")
     for(auto i2 : range1(S1.m()))
         {
         CHECK(T.real(S1(i1),prime(S1)(i2)) == R.real(S2(i1),prime(S1)(i2)));
+        }
+    }
+
+SECTION("Replace two IQIndex's with three")
+    {
+    auto ti = IQIndex("ti",Index("ti",2),QN(0));
+    auto T = randomTensor(QN(),S1,dag(S3));
+    auto d = delta(S3,dag(S1),S4,dag(S2),ti);
+    auto R = d*T;
+    CHECK(typeOf(R) == QType::QDiagReal);
+
+    for(auto j : range1(ti))
+        {
+        CHECK_CLOSE(R.real(S2(j),S4(j),ti(j)), T.real(S1(j),S3(j)));
         }
     }
 }

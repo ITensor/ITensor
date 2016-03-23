@@ -49,14 +49,16 @@ template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagFull(DiagElsA           const& A, Labels const& ai, 
                  TenRefc<RangeT,VB> const& B, Labels const& bi, 
-                 VecRef<VC>         const& C, Labels const& ci);
+                 VecRef<VC>         const& C, Labels const& ci,
+                 IntArray astarts = IntArray{});
 
 //Some indices of B uncontracted
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagPartial(DiagElsA           const& A, Labels const& ai,
                     TenRefc<RangeT,VB> const& B, Labels const& bi, 
-                    TenRef<RangeT,VC>  const& C, Labels const& ci);
+                    TenRef<RangeT,VC>  const& C, Labels const& ci,
+                    IntArray                  astarts = IntArray{});
 
 //Non-contracting product
 template<class TA, class TB, class TC>
@@ -201,50 +203,72 @@ computeLabels(Inds const& Lis,
     return computeLabels(Lis,rL,Ris,rR,Lind,Rind,nocheck);
     }
 
+//contractDiagPartial:
 //Some indices of B uncontracted
 //DiagElsA is any function object returning
 //diagonal elements of A (such as a VectorRefc)
+//
+//Although all indices of A proceed in lockstep,
+//some may not start at zero, but at various values
+//provided by "astarts"; this is useful for blocks
+//of diagonal IQTensors (QDiag storage) where the
+//diagonal elements do not necessarily start in 
+//the 0,0,0,...,0 entry of a particular block
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagPartial(DiagElsA           const& A, Labels const& al,
                     TenRefc<RangeT,VB> const& B, Labels const& bl, 
-                    TenRef<RangeT,VC>  const& C, Labels const& cl)
+                    TenRef<RangeT,VC>  const& C, Labels const& cl,
+                    IntArray astarts)
     {
-    size_t b_cstride = 0; //B contracted stride
+    if(astarts.empty()) astarts.assign(al.size(),0);
+    auto bstart = 0ul;
+    auto cstart = 0ul;
+    auto b_cstride = 0ul; //B contracted stride
     int nbu = 0;          //# B uncont. inds.
-    for(auto j : range(bl))
+    for(auto ib : range(bl))
         {
-        //if index j is contracted, add its stride to n_cstride:
-        if(bl[j] < 0) b_cstride += B.stride(j);
-        else            ++nbu;
+        auto ia = find_index(al,bl[ib]);
+        if(ia >= 0)
+            {
+            b_cstride += B.stride(ib);
+            bstart += astarts[ia]*B.stride(ib);
+            }
+        else       
+            {
+            nbu += 1;
+            }
         }
 
-    long a_ustride = 0; //total stride of uncontracted
-                        //inds of A (infer from C)
-    for(auto i : range(cl))
+    auto c_cstride = 0ul;
+    for(auto ic : range(cl))
         {
-        auto j = find_index(al,cl[i]);
-        if(j >= 0) a_ustride += C.stride(i);
+        auto ia = find_index(al,cl[ic]);
+        if(ia >= 0) 
+            {
+            c_cstride += C.stride(ic);
+            cstart += astarts[ia]*C.stride(ic);
+            }
         }
 
-    auto bstride = IntArray(nbu,0);
-    auto cstride = IntArray(nbu,0);
+    auto bustride = IntArray(nbu,0);
+    auto custride = IntArray(nbu,0);
     auto GC = detail::GCounter(nbu);
     int n = 0;
-    for(auto j : range(bl))
+    for(auto ib : range(bl))
         {
-        if(bl[j] > 0)
+        if(bl[ib] > 0) //uncontracted
             {
 #ifdef DEBUG
             if(n >= nbu) Error("n out of range");
 #endif
-            GC.setRange(n,0,B.extent(j)-1);
-            bstride[n] = B.stride(j);
-            auto k = find_index(cl,bl[j]);
+            GC.setRange(n,0,B.extent(ib)-1);
+            bustride[n] = B.stride(ib);
+            auto ic = find_index(cl,bl[ib]);
 #ifdef DEBUG
-            if(k < 0) Error("Index not found");
+            if(ic < 0) Error("Index not found");
 #endif
-            cstride[n] = C.stride(k);
+            custride[n] = C.stride(ic);
             ++n;
             }
         }
@@ -257,26 +281,36 @@ contractDiagPartial(DiagElsA           const& A, Labels const& al,
         for(auto i : range(nbu))
             {
             auto ii = GC[i];
-            boffset += ii*bstride[i];
-            coffset += ii*cstride[i];
+            boffset += ii*bustride[i];
+            coffset += ii*custride[i];
             }
         for(auto J : range(A))
             {
-            pc[J*a_ustride+coffset] += A(J)*pb[J*b_cstride+boffset];
+            pc[cstart+J*c_cstride+coffset] += A(J)*pb[bstart+J*b_cstride+boffset];
             }
         }
     }
 
+// C = A*B
+//case where all of B's indices are contracted with A,
+//making C diagonal
 template<typename DiagElsA, typename RangeT, typename VB, typename VC>
 void 
 contractDiagFull(DiagElsA           const& A, Labels const& al, 
                  TenRefc<RangeT,VB> const& B, Labels const& bl, 
-                 VecRef<VC>         const& C, Labels const& cl)
+                 VecRef<VC>         const& C, Labels const& cl,
+                 IntArray astarts)
     {
+    auto bstart = 0ul;
     long b_cstride = 0; //total stride of contracted inds of B
-    for(auto j : range(bl))
+    for(auto ib : range(bl))
         {
-        if(bl[j] < 0) b_cstride += B.stride(j);
+        auto ia = find_index(al,bl[ib]);
+        if(ia >= 0) 
+            {
+            b_cstride += B.stride(ib);
+            bstart += astarts[ia]*B.stride(ib);
+            }
         }
 
     auto pb = MAKE_SAFE_PTR(B.data(),B.size());
@@ -285,7 +319,7 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
         auto *Cval = C.data();
         for(auto J : range(A))
             {
-            *Cval += A(J)*pb[J*b_cstride];
+            *Cval += A(J)*pb[bstart+J*b_cstride];
             }
         }
     else
@@ -293,7 +327,7 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
         auto pc = MAKE_SAFE_PTR(C.data(),C.size());
         for(auto J : range(A))
             {
-            pc[J] += A(J)*pb[J*b_cstride];
+            pc[J] += A(J)*pb[bstart+J*b_cstride];
             }
         }
     }

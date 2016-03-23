@@ -165,6 +165,25 @@ makeDataRange(T const* p, size_t offset, size_t size)
     return DataRange<const T>(p,offset,size);
     }
 
+template<typename T>
+DataRange<T>
+sliceData(DataRange<T> d, size_t begin, size_t end)
+    {
+    auto size = end-begin;
+#ifdef DEBUG
+    if(begin > end) Error("begin > end in sliceData");
+    if(begin+size > d.size()) 
+        {
+        println("d.size() = ",d.size());
+        println("begin = ",begin);
+        println("end = ",end);
+        Error("sliceData invalid begin or end");
+        }
+#endif
+    auto pb = d.data()+begin;
+    return DataRange<T>(pb,size);
+    }
+
 
 template<typename T, size_t N>
 std::ostream& 
