@@ -133,57 +133,55 @@ getState(int i, const String& state) const
 inline IQTensor Spinless::
 getOp(int i, const String& opname, const Args& args) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s  = si(i);
+    auto sP = prime(si(i));
 
-    IQIndexVal Emp(s(1)),
-               EmpP(sP(1)),
-               Occ(s(2)),
-               OccP(sP(2));
-
-    IQTensor Op(dag(s),sP);
+    auto Emp  = s(1);
+    auto EmpP = sP(1);
+    auto Occ  = s(2);
+    auto OccP = sP(2);
+     
+    auto Op = IQTensor(dag(s),sP);
 
     if(opname == "N" || opname == "n")
         {
-        Op(Occ,OccP) = 1;
+        Op.set(Occ,OccP,1);
         }
     else
     if(opname == "C")
         {
-        Op(Occ,EmpP) = 1;
+        Op.set(Occ,EmpP,1);
         }
     else
     if(opname == "Cdag")
         {
-        Op(Emp,OccP) = 1;
+        Op.set(Emp,OccP,1);
         }
     else
     if(opname == "A")
         {
-        Op(Occ,EmpP) = 1;
+        Op.set(Occ,EmpP,1);
         }
     else
     if(opname == "Adag")
         {
-        Op(Emp,OccP) = 1;
+        Op.set(Emp,OccP,1);
         }
     else
     if(opname == "F" || opname == "FermiPhase")
         {
-        Op(Emp,EmpP) = 1;
-        Op(Occ,OccP) = -1;
+        Op.set(Emp,EmpP,1);
+        Op.set(Occ,OccP,-1);
         }
     else
     if(opname == "projEmp")
         {
-        Op(Emp,EmpP) = 1;
+        Op.set(Emp,EmpP,1);
         }
     else
     if(opname == "projOcc")
         {
-        Op(Occ,OccP) = 1; 
+        Op.set(Occ,OccP,1); 
         }
     else
         {
