@@ -79,8 +79,8 @@ diagTensor(Container const& C,
         if(ind.m() < minm) minm = ind.m();
     if(C.size() != size_type(minm))
         {
-        Print(minm);
-        Print(C.size());
+        println("minm = ",minm);
+        println("C.size() = ",C.size());
         Error("Wrong size of data in diagonal ITensor constructor");
         }
 #endif
@@ -130,6 +130,5 @@ orderedC(ITensor & T, Indxs&&... inds)
     }
 
 } //namespace itensor
-
 
 #endif

@@ -1,3 +1,4 @@
+#include "itensor/util/print_macro.h"
 #include "itensor/mps/dmrg.h"
 #include "itensor/mps/sites/hubbard.h"
 #include "itensor/mps/autompo.h"

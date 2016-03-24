@@ -90,8 +90,8 @@ davidson(BigMatrixT const& A,
 
     if(area(phi.front().inds()) != size_t(maxsize))
         {
-        Print(area(phi.front().inds()));
-        Print(A.size());
+        println("area(phi.front().inds()) = ",area(phi.front().inds()));
+        println("A.size() = ",A.size());
         Error("davidson: size of initial vector should match linear matrix size");
         }
 
@@ -316,7 +316,7 @@ davidson(BigMatrixT const& A,
             {
             if(std::fabs(norm(q)-1.0) > 1E-10)
                 {
-                Print(norm(q));
+                println("norm(q) = ",norm(q));
                 Error("q not normalized after Gram Schmidt.");
                 }
             }
@@ -392,6 +392,5 @@ davidson(BigMatrixT const& A,
     }
 
 } //namespace itensor
-
 
 #endif

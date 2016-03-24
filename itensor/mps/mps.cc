@@ -5,6 +5,7 @@
 #include <map>
 #include "itensor/mps/mps.h"
 #include "itensor/mps/localop.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 

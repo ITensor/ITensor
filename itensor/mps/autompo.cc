@@ -3,8 +3,8 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
+#include "itensor/util/print_macro.h"
 #include "itensor/mps/autompo.h"
-#include "itensor/util/range.h"
 
 using std::find;
 using std::cout;

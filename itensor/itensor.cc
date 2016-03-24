@@ -2,9 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/itensor.h"
+#include "itensor/util/print_macro.h"
 #include "itensor/util/range.h"
 #include "itensor/util/safe_ptr.h"
+#include "itensor/itensor.h"
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/contract.h"
 

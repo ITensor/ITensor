@@ -7,6 +7,7 @@
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/decomp.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 

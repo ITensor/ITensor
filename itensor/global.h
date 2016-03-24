@@ -160,8 +160,8 @@ class Global
         }
     };
 
-#define PrintDat(X)  PrintEither(true,#X,X)
 #define PrintData(X) PrintEither(true,#X,X)
+#define PrintDat(X)  PrintEither(true,#X,X)
 
 template<typename T>
 void

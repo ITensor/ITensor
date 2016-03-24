@@ -320,7 +320,7 @@ diag() const
         }
     if(!found) 
         {
-        Print(Op1);
+        println("Op1 = ",Op1);
         Error("Couldn't find Index");
         }
     auto Diag = noprime(Op1 * diagTensor(1,toTie,prime(toTie)),toTie);

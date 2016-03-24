@@ -179,8 +179,8 @@ op(const String& opname, int i,
                 }
             catch(const ITError& e)
                 {
-                Print(opname);
-                Print(found);
+                println("opname = ",opname);
+                printfln("found = %s",found);
                 Error("More than one * in operator name string?");
                 }
             }
@@ -211,5 +211,6 @@ operator<<(std::ostream& s, const SiteSet& M)
     }
 
 } //namespace itensor
+
 
 #endif

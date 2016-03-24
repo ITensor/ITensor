@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/util/print_macro.h"
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 

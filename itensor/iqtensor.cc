@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/util/print_macro.h"
 #include "itensor/util/stdx.h"
 #include "itensor/util/range.h"
 #include "itensor/tensor/lapack_wrap.h"

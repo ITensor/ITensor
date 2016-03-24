@@ -407,8 +407,8 @@ operator+=(ITensorT const& R)
         }
     catch(std::exception const& e)
         {
-        Print(L);
-        Print(R);
+        println("L = ",L);
+        println("R = ",R);
         Error("ITensorT::operator+=: different index structure");
         }
 #else
@@ -754,7 +754,7 @@ swapPrime(ITensorT<IndexT> T,
         {
         if(I.primeLevel() == tempLevel) 
             {
-            Print(tempLevel);
+            println("tempLevel = ",tempLevel);
             Error("swapPrime fails if an index has primeLevel==tempLevel");
             }
         }
@@ -908,5 +908,6 @@ write(std::ostream& s, const ITensorT<I>& T)
     }
 
 } // namespace itensor
+
 
 #endif

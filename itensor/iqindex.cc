@@ -4,6 +4,7 @@
 //
 #include "itensor/itensor.h"
 #include "itensor/iqindex.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
