@@ -516,7 +516,7 @@ TEST_CASE("Contract Test")
             Range Br;
             auto B = makeTenRef(Bdat.data(),Bdat.size(),&Br);
 
-            contract<Range>(B,{},A,{2,3,4},C,{2,4,3});
+            contract(B,{},makeRef(A),{2,3,4},makeRef(C),{2,4,3});
             for(auto i2 : range(2))
             for(auto i3 : range(3))
             for(auto i4 : range(4))

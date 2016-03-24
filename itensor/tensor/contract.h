@@ -21,10 +21,11 @@ contract(TenRefc<RangeT,VA> A, Labels const& ai,
          Real alpha = 1.,
          Real beta = 0.);
 
+template<typename R, typename VA, typename VB>
 void 
-contract(Tensor const& A, Labels const& ai, 
-         Tensor const& B, Labels const& bi, 
-         Tensor      & C, Labels const& ci,
+contract(Ten<R,VA> const& A, Labels const& ai, 
+         Ten<R,VB> const& B, Labels const& bi, 
+         Ten<R,common_type<VA,VB>> & C, Labels const& ci,
          Real alpha = 1.,
          Real beta = 0.);
 
@@ -119,11 +120,11 @@ find_index(InfArray<T,MaxSize> const& v,
 /// Implementations
 ///
 
-template<typename value_t>
-void
-contract(Ten<Range,value_t> const& A, Labels const& ai, 
-         Ten<Range,value_t> const& B, Labels const& bi, 
-         Ten<Range,value_t>      & C, Labels const& ci,
+template<typename R, typename VA, typename VB>
+void 
+contract(Ten<R,VA> const& A, Labels const& ai, 
+         Ten<R,VB> const& B, Labels const& bi, 
+         Ten<R,common_type<VA,VB>> & C, Labels const& ci,
          Real alpha,
          Real beta)
     {
