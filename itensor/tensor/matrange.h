@@ -17,8 +17,10 @@ struct MatRangeT;
 using MatRange = MatRangeT<0ul>;
 using MatRange1 = MatRangeT<1ul>;
 
+struct MatRangeType : public RangeType { };
+
 template<size_t start_>
-struct MatRangeT : public RangeType
+struct MatRangeT : public MatRangeType
     {
     public:
     using size_type = size_t;

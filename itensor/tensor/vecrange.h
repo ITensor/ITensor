@@ -21,8 +21,10 @@ class VecRangeT;
 using VecRange = VecRangeT<0ul>;
 using VecRange1 = VecRangeT<1ul>;
 
+struct VecRangeType : public RangeType { };
+
 template<size_t start_>
-class VecRangeT : public RangeType
+class VecRangeT : public VecRangeType
     {
     public:
     using size_type = size_t;

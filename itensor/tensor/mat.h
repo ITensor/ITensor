@@ -24,8 +24,16 @@ using CMatrixRef = MatRef<Cplx>;
 using CMatrixRefc = MatRefc<Cplx>;
 using CMatrix = Mat<Cplx>;
 
+using MatrixRef1 = TenRefc<MatRange1,Real>;
+using MatrixRefc1 = TenRef<MatRange1,Real>;
+using Matrix1 = Ten<MatRange1,Real>;
+
+using CMatrixRef1 = TenRefc<MatRange1,Cplx>;
+using CMatrixRefc1 = TenRef<MatRange1,Cplx>;
+using CMatrix1 = Ten<MatRange1,Cplx>;
+
 template<typename M>
-using hasMatRange = std::is_same<MatRange,typename stdx::decay_t<M>::range_type>;
+using hasMatRange = std::is_base_of<MatRangeType,typename stdx::decay_t<M>::range_type>;
 
 template<typename Mat_>
 auto

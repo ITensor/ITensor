@@ -25,8 +25,16 @@ using CVector     = Vec<Cplx>;
 using CVectorRef  = VecRef<Cplx>;
 using CVectorRefc = VecRefc<Cplx>;
 
+using Vector1     = Ten<VecRange1,Real>;
+using VectorRef1  = TenRef<VecRange1,Real>;
+using VectorRefc1 = TenRefc<VecRange1,Real>;
+
+using CVector1     = Ten<VecRange1,Real>;
+using CVectorRef1  = TenRef<VecRange1,Real>;
+using CVectorRefc1 = TenRefc<VecRange1,Real>;
+
 template<typename V>
-using hasVecRange = std::is_same<VecRange,typename stdx::decay_t<V>::range_type>;
+using hasVecRange = std::is_base_of<VecRangeType,typename stdx::decay_t<V>::range_type>;
 
 template<typename V>
 auto
