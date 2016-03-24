@@ -11,6 +11,12 @@
 namespace itensor {
 
 template <class Tensor>
+class BondGate;
+
+using Gate = BondGate<ITensor>;
+using IQGate = BondGate<IQTensor>;
+
+template <class Tensor>
 class BondGate
     {
     public:
@@ -19,10 +25,16 @@ class BondGate
                 tImag,  //imaginary-time gate
                 Swap }; //exchange states of sites i1 and i2
 
-    BondGate(const Model& sites, int i1, int i2);
+    BondGate(SiteSet const& sites, 
+             int i1, 
+             int i2);
 
-    BondGate(const Model& sites, int i1, int i2, 
-             Type type, Real tau, Tensor bondH);
+    BondGate(SiteSet const& sites, 
+             int i1, 
+             int i2, 
+             Type type, 
+             Real tau, 
+             Tensor bondH);
 
     int i1() const { return i1_; }
 
@@ -30,24 +42,11 @@ class BondGate
 
     operator const Tensor&() const { return gate_; }
 
-    const Tensor&
+    Tensor const&
     gate() const { return gate_; }
 
     Type
     type() const { return type_; }
-
-  
-
-
-
-    // Deprecated: use i1() and i2() instead
-    int
-    i() const { return i1_; }
-
-    // Deprecated: use i1() and i2() instead
-    int
-    j() const { return i2_; }
-
 
     private:
 
@@ -56,26 +55,23 @@ class BondGate
     Tensor gate_;
 
     void
-    makeSwapGate(const Model& sites);
-
-
+    makeSwapGate(SiteSet const& sites);
     };
-using Gate = BondGate<ITensor>;
-using IQGate = BondGate<IQTensor>;
 
 template<class Tensor>
 Tensor
-operator*(const BondGate<Tensor>& G, Tensor T) { T *= G.gate(); return T; }
+operator*(BondGate<Tensor> const& G, Tensor T) { T *= G.gate(); return T; }
 
 template<class Tensor>
 Tensor
-operator*(Tensor T, const BondGate<Tensor>& G) { T *= G.gate(); return T; }
+operator*(Tensor T, BondGate<Tensor> const& G) { T *= G.gate(); return T; }
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& sites, int i1, int i2)
-    : 
-    type_(Swap) 
+BondGate(SiteSet const& sites, 
+         int i1, 
+         int i2)
+  : type_(Swap) 
     {
     if(i1 < i2)
         {
@@ -92,10 +88,13 @@ BondGate(const Model& sites, int i1, int i2)
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& sites, int i1, int i2, 
-         Type type, Real tau, Tensor bondH)
-    : 
-    type_(type)
+BondGate(SiteSet const& sites, 
+         int i1, 
+         int i2, 
+         Type type, 
+         Real tau, 
+         Tensor bondH)
+  : type_(type)
     {
     if(i1 < i2)
         {
@@ -118,7 +117,7 @@ BondGate(const Model& sites, int i1, int i2,
         {
         bondH *= Complex_i;
         }
-    Tensor term = bondH;
+    auto term = bondH;
     bondH.mapprime(1,2);
     bondH.mapprime(0,1);
 
@@ -136,25 +135,16 @@ BondGate(const Model& sites, int i1, int i2,
 
 template <class Tensor>
 void BondGate<Tensor>::
-makeSwapGate(const Model& sites)
+makeSwapGate(SiteSet const& sites)
     {
-    Tensor a(sites(i1_),prime(sites(i2_)),1);
-    Tensor b(sites(i2_),prime(sites(i1_)),1);
-    gate_ = a*b;
-    }
-
-template<>
-void inline BondGate<IQTensor>::
-makeSwapGate(const Model& sites)
-    {
-    IQTensor a(dag(sites(i1_)),prime(sites(i2_))),
-             b(dag(sites(i2_)),prime(sites(i1_)));
-    for(int n = 1; n <= sites(i1_).nindex(); ++n)
+    auto s1 = sites(i1_);
+    auto s2 = sites(i1_);
+    auto a = Tensor(s1,prime(s2));
+    auto b = Tensor(s2,prime(s1));
+    for(auto j : range1(s1))
         {
-        const Index &i1ind(sites(i1_).index(n)),
-                    &i2ind(sites(i2_).index(n));
-        a += diagTensor(1,i1ind,prime(i2ind));
-        b += diagTensor(1,i2ind,prime(i1ind));
+        a.set(s1(j),prime(s2)(j),1.);
+        b.set(s2(j),prime(s1)(j),1.);
         }
     gate_ = a*b;
     }

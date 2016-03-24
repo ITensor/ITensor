@@ -57,7 +57,7 @@ class DMRGObserver : public Observer
     Real last_energy_;
     Spectrum last_spec_;
 
-    Model::DefaultOpsT default_ops_;
+    SiteSet::DefaultOpsT default_ops_;
 
     //
     /////////////

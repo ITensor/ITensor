@@ -1,6 +1,5 @@
-#include "tevol.h"
-#include "sites/spinhalf.h"
-#include "hams/Heisenberg.h"
+#include "itensor/mps/tevol.h"
+#include "Heisenberg.h"
 
 using std::vector;
 using namespace itensor;
@@ -8,17 +7,17 @@ using namespace itensor;
 int
 main(int argc, char* argv[])
     {
-    const int N = 20;
+    int N = 20;
 
-    SpinHalf sites(N);
+    auto sites = SpinHalf(N);
 
-    MPS psi(sites);
+    auto psi = MPS(sites);
 
     Real ttotal = 10;
     Real tstep = 0.1;
 
     vector<Gate> gates;
-    const Gate::Type type = Gate::tImag;
+    auto type = Gate::tImag;
 
     for(int b = 1; b < N; ++b)
         {
@@ -35,17 +34,17 @@ main(int argc, char* argv[])
         gates.push_back(Gate(sites,b,b+1,type,tstep/2.,hh));
         }
 
-    const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
-    if(fabs(nt*tstep-ttotal) > 1E-9)
+    auto nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
+    if(std::fabs(nt*tstep-ttotal) > 1E-9)
         {
         Error("Timestep not commensurate with total time");
         }
 
     for(int step = 1; step <= nt; ++step)
         {
-        Foreach(const Gate& G, gates)
+        for(auto& G : gates)
             {
-            const int b = G.i();
+            auto b = G.i1();
             psi.position(b);
             ITensor AA = psi.A(b)*psi.A(b+1);
 
@@ -67,8 +66,6 @@ main(int argc, char* argv[])
             // to reset the prime level to 0 by using
             // the noprime or mapprime methods.
             //
-
-
 
             ITensor D;
             svd(AA,psi.Anc(b),D,psi.Anc(b+1));

@@ -8,20 +8,16 @@ APP2=imag_tevol
 #################################################################
 #################################################################
 
-TENSOR_HEADERS=core.h
-
 include $(LIBRARY_DIR)/this_dir.mk
 include $(LIBRARY_DIR)/options.mk
 
-#Mappings --------------
-REL_TENSOR_HEADERS=$(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(TENSOR_HEADERS))
 
 #Rules ------------------
 
-%.o: %.cc $(REL_TENSOR_HEADERS)
+%.o: %.cc
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(REL_TENSOR_HEADERS)
+.debug_objs/%.o: %.cc
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------

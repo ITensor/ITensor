@@ -1,4 +1,5 @@
-#include "itensor/core.h"
+#include "itensor/util/print_macro.h"
+#include "itensor/itensor.h"
 
 using namespace itensor;
 
@@ -10,18 +11,17 @@ main(int argc, char* argv[])
     //
     
     //Make a dimension 2 Index
-    Index s("s",2);
+    auto s = Index("s",2);
 
     //Construct an ITensor
-    ITensor psi(s); //default initialized to zero
-
+    auto psi = ITensor(s); //default initialized to zero
 
     //
     // Initialize up spin
     //
 
     //Set first element to 1.
-    psi.set(1,s(1));
+    psi.set(s(1),1);
 
     PrintData(psi);
     
@@ -31,13 +31,14 @@ main(int argc, char* argv[])
     // Operators 
     //
 
-    ITensor Sz(s,prime(s)),
-            Sx(s,prime(s));
-    Sz.set(+0.5,s(1),prime(s)(1));
-    Sz.set(-0.5,s(1),prime(s)(1));
+    auto Sz = ITensor(s,prime(s));
+    auto Sx = ITensor(s,prime(s));
 
-    Sx.set(+0.5,s(1),prime(s)(2));
-    Sx.set(+0.5,s(2),prime(s)(1));
+    Sz.set(s(1),prime(s)(1),+0.5);
+    Sz.set(s(1),prime(s)(1),-0.5);
+
+    Sx.set(s(1),prime(s)(2),+0.5);
+    Sx.set(s(2),prime(s)(1),+0.5);
 
     PrintData(Sz);
     PrintData(Sx);
@@ -63,8 +64,8 @@ main(int argc, char* argv[])
     Real theta = Pi/4;
 
     //Extra factors of two come from S=1/2 representation
-    psi.set(cos(theta/2),s(1));
-    psi.set(sin(theta/2),s(2));
+    psi.set(s(1),cos(theta/2));
+    psi.set(s(2),sin(theta/2));
 
     PrintData(psi);
 
@@ -74,7 +75,7 @@ main(int argc, char* argv[])
     // Expectation values
     //
 
-    ITensor cpsi = dag(prime(psi));
+    auto cpsi = dag(prime(psi));
 
     Real zz = (cpsi * Sz * psi).real();
     Real xx = (cpsi * Sx * psi).real();

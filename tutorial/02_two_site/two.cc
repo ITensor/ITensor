@@ -1,29 +1,30 @@
-#include "core.h"
+#include "itensor/util/print_macro.h"
+#include "itensor/itensor.h"
 
 using namespace itensor;
 
 ITensor
-makeSp(const Index& s)
+makeSp(Index const& s)
     {
-    ITensor Sp(s,prime(s));
-    Sp(s(2),prime(s)(1)) = 1;
+    auto Sp = ITensor(s,prime(s));
+    Sp.set(s(2),prime(s)(1), 1);
     return Sp;
     }
 
 ITensor
-makeSm(const Index& s)
+makeSm(Index const& s)
     {
-    ITensor Sm(s,prime(s));
-    Sm(s(1),prime(s)(2)) = 1;
+    auto Sm = ITensor(s,prime(s));
+    Sm.set(s(1),prime(s)(2),1);
     return Sm;
     }
 
 ITensor
-makeSz(const Index& s)
+makeSz(Index const& s)
     {
-    ITensor Sz(s,prime(s));
-    Sz(s(1),prime(s)(1)) =  0.5;
-    Sz(s(2),prime(s)(2)) = -0.5;
+    auto Sz = ITensor(s,prime(s));
+    Sz.set(s(1),prime(s)(1), 0.5);
+    Sz.set(s(2),prime(s)(2),-0.5);
     return Sz;
     }
 
@@ -36,13 +37,13 @@ main(int argc, char* argv[])
     // initialized to a singlet
     //
     
-    Index s1("s1",2,Site),
-          s2("s2",2,Site);
+    auto s1 = Index("s1",2,Site);
+    auto s2 = Index("s2",2,Site);
 
-    ITensor psi(s1,s2); //default initialized to zero
+    auto psi = ITensor(s1,s2); //default initialized to zero
 
-    psi(s1(1),s2(2)) =  1./sqrt(2);
-    psi(s1(2),s2(1)) = -1./sqrt(2);
+    psi.set(s1(1),s2(2), 1./sqrt(2));
+    psi.set(s1(2),s2(1),-1./sqrt(2));
 
     PrintData(psi);
 
@@ -52,12 +53,12 @@ main(int argc, char* argv[])
     // Single-site operators
     //
 
-    ITensor Sz1 = makeSz(s1),
-            Sz2 = makeSz(s2),
-            Sp1 = makeSp(s1),
-            Sp2 = makeSp(s2),
-            Sm1 = makeSm(s1),
-            Sm2 = makeSm(s2);
+    auto Sz1 = makeSz(s1);
+    auto Sz2 = makeSz(s2);
+    auto Sp1 = makeSp(s1);
+    auto Sp2 = makeSp(s2);
+    auto Sm1 = makeSm(s1);
+    auto Sm2 = makeSm(s2);
 
     PrintData(Sz1);
     PrintData(Sp1);
@@ -69,15 +70,15 @@ main(int argc, char* argv[])
     // Two-site Heisenberg Hamiltonian
     //
 
-    ITensor H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
+    auto H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
 
 
     //
     // Energy expectation value
     //
 
-    ITensor cpsi = dag(prime(psi));
-    Real E = (cpsi * H * psi).toReal();
+    auto cpsi = dag(prime(psi));
+    Real E = (cpsi * H * psi).real();
 
     Print(E);
 

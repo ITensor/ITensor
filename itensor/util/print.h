@@ -64,6 +64,35 @@ print(const T& arg1, VArgs&&... vargs)
     print(std::forward<VArgs>(vargs)...);
     }
 
+template<typename T>
+void
+PrintNice(const char* tok,
+          T const& X)
+    {
+    auto pre = format("%s = ",tok);
+    auto str = format("%s",X);
+
+    //Put a newline after '=' if
+    //output is large or output contains
+    //newline character
+    bool put_newline = false;
+    if(pre.size() + str.size() > 60)
+        {
+        put_newline = true;
+        }
+    else
+        {
+        for(auto c : str)
+            if(c == '\n')
+                {
+                put_newline = true;
+                break;
+                }
+        }
+    if(put_newline) println(pre);
+    else            print(pre);
+    println(str);
+    }
 
 } //namespace itensor
 

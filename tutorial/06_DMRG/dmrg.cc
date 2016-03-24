@@ -1,38 +1,43 @@
-#include "eigensolver.h"
-#include "localmpo.h"
-#include "sweeps.h"
-#include "sites/spinone.h"
-#include "hams/Heisenberg.h"
+#include "itensor/eigensolver.h"
+#include "itensor/mps/localmpo.h"
+#include "itensor/mps/sweeps.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 
 int
 main(int argc, char* argv[])
     {
-    const int N = 100;
+    int N = 100;
 
-    //Model objects represent a collection of 
-    //lattice degrees of freedom of a certain type
-    SpinOne model(N);
+    //sites objects represent the Hilbert space, 
+    //a collection of "physical" indices
+    auto sites = SpinOne(N);
 
-    //Get Hamiltonian
-    MPO H = Heisenberg(model);
+    //Use AutoMPO to make Hamiltonian MPO
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = MPO(ampo);
 
     //Create MPS
-    MPS psi(model); //random starting state
+    auto psi = MPS(sites); //random starting state
 
     //Define DMRG sweeps
-    Sweeps sweeps(5);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
 
     //Some stuff needed to solve
     //projected eigenvalue problem
-    LocalMPO<ITensor> Heff(H);
+    auto Heff = LocalMPO<ITensor>(H);
 
     Real energy = NAN;
-
-    OptSet opts;
 
     //Loop over sweeps
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
@@ -52,14 +57,14 @@ main(int argc, char* argv[])
 
             //Update accuracy parameters
             //to pass to svd
-            opts.add("Cutoff",sweeps.cutoff(sw));
-            opts.add("Maxm",sweeps.maxm(sw));
-            opts.add("Minm",sweeps.minm(sw));
+            auto args = Args("Cutoff",sweeps.cutoff(sw),
+                             "Maxm",sweeps.maxm(sw),
+                             "Minm",sweeps.minm(sw));
 
             //Define tensor (references/aliases)
             //to hold SVD results
-            ITensor& A = psi.Anc(b);   //nc means 'non-const'
-            ITensor& B = psi.Anc(b+1); //nc means 'non-const'
+            auto& A = psi.Anc(b);   //nc means 'non-const'
+            auto& B = psi.Anc(b+1); //nc means 'non-const'
             ITensor D;
 
             //Add code:
@@ -85,7 +90,6 @@ main(int argc, char* argv[])
                 // to the left
                 //
                 }
-
 
             } // for loop over b
 

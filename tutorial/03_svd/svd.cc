@@ -1,4 +1,6 @@
-#include "core.h"
+#include "itensor/util/print_macro.h"
+#include "itensor/decomp.h"
+#include "itensor/tensor/algs.h"
 
 using namespace itensor;
 
@@ -10,15 +12,15 @@ main(int argc, char* argv[])
     // SVD of matrix M
     //
 
-    const int Nrow = 4;
-    const int Ncol = 3;
-    const int maxm = min(Nrow,Ncol);
+    int Nrow = 4;
+    int Ncol = 3;
+    auto maxm = std::min(Nrow,Ncol);
 
-    Matrix M(Nrow,Ncol);
-    M(1,1) = 0.435839; M(1,2) = 0.223707; M(1,3) = 0.10;
-    M(2,1) = 0.435839; M(2,2) = 0.223707; M(2,3) = -0.10;
-    M(3,1) = 0.223707; M(3,2) = 0.435839; M(3,3) = 0.10;
-    M(4,1) = 0.223707; M(4,2) = 0.435839; M(4,3) = -0.10;
+    auto M = Matrix(Nrow,Ncol);
+    M(0,0) = 0.435839; M(0,1) = 0.223707; M(0,2) = 0.10;
+    M(1,0) = 0.435839; M(1,1) = 0.223707; M(1,2) = -0.10;
+    M(2,0) = 0.223707; M(2,1) = 0.435839; M(2,2) = 0.10;
+    M(3,0) = 0.223707; M(3,1) = 0.435839; M(3,2) = -0.10;
     Print(M);
 
     Matrix U,V;
@@ -29,17 +31,17 @@ main(int argc, char* argv[])
     Print(d);
     Print(V);
 
-    Matrix Dtrunc(maxm,maxm);
-    Dtrunc = 0;
+    auto Dtrunc = Matrix(maxm,maxm);
+    stdx::fill(Dtrunc,0);
 
-    const int nkeep = 2;
-    for(int j = 1; j <= nkeep; ++j)
+    int nkeep = 2;
+    for(auto j : range1(nkeep))
         Dtrunc(j,j) = d(j);
 
-    Matrix MM = U*Dtrunc*V;
+    auto MM = U*Dtrunc*V;
 
-    Matrix Diff = MM-M;
-    Matrix D2 = Diff.t()*Diff;
+    auto Diff = MM-M;
+    auto D2 = transpose(Diff)*Diff;
     Real n2 = D2(1,1) + D2(2,2) + D2(3,3);
 
     Print(n2);
@@ -51,18 +53,18 @@ main(int argc, char* argv[])
     // SVD of two-site wavefunction
     //
     
-    Index s1("s1",2,Site),
-          s2("s2",2,Site);
+    auto s1 = Index("s1",2,Site);
+    auto s2 = Index("s2",2,Site);
 
-    ITensor sing(s1,s2),
-            prod(s1,s2);
+    auto sing = ITensor(s1,s2);
+    auto prod = ITensor(s1,s2);
 
     //Make sing a singlet
-    sing(s1(1),s2(2)) =  1./sqrt(2);
-    sing(s1(2),s2(1)) = -1./sqrt(2);
+    sing.set(s1(1),s2(2), 1./sqrt(2));
+    sing.set(s1(2),s2(1),-1./sqrt(2));
 
     //Make prod a product state
-    prod(s1(1),s2(2)) =  1.;
+    prod.set(s1(1),s2(2),1.);
 
     for(Real mix = 0; mix <= 1.; mix += 0.1)
         {

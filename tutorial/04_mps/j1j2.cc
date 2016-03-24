@@ -4,7 +4,7 @@ using std::vector;
 using namespace itensor;
 
 ITensor
-B(const SiteSet& sites, int b)
+B(SiteSet const& sites, int b)
     {
     ITensor B_ = sites.op("Sz",b)*sites.op("Sz",b+1)
               + 0.5*sites.op("Sp",b)*sites.op("Sm",b+1)
@@ -15,12 +15,12 @@ B(const SiteSet& sites, int b)
 int
 main(int argc, char* argv[])
     {
-    const int N = 20;
+    int N = 20;
 
-    SpinHalf sites(N);
+    auto sites = SpinHalf(N);
 
-    vector<Real> J2s(1,NAN),
-                 dimer(1,NAN);
+    auto J2s = vector<Real>(1,NAN);
+    auto dimer = vector<Real>(1,NAN);
 
     for(Real J2 = 0.0; J2 <= 0.5; J2 += 0.05)
         {

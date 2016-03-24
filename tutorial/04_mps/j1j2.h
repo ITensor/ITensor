@@ -1,20 +1,36 @@
 #ifndef __J1J2_H
 #define __J1J2_H
 
-#include "core.h"
-#include "sites/spinhalf.h"
-#include "hams/J1J2Chain.h"
+#include "itensor/mps/mps.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/dmrg.h"
+#include "itensor/mps/autompo.h"
 
 namespace itensor {
 
 MPS inline
-computeGroundState(const SpinHalf& sites, Real J2)
+computeGroundState(SpinHalf const& sites, 
+                   Real J2)
     {
-    MPO H = J1J2Chain(sites,Opt("J2",J2));
+    auto ampo = AutoMPO(sites);
+    auto N = sites.N();
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    for(int j = 1; j < N-1; ++j)
+        {
+        ampo += 0.5*J2,"S+",j,"S-",j+2;
+        ampo += 0.5*J2,"S-",j,"S+",j+2;
+        ampo +=     J2,"Sz",j,"Sz",j+2;
+        }
+    auto H = MPO(ampo);
 
-    MPS psi(sites);
+    auto psi = MPS(sites);
 
-    Sweeps sweeps(5);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 50,50,100,100,200;
     sweeps.cutoff() = 1E-9;
 
@@ -27,6 +43,6 @@ computeGroundState(const SpinHalf& sites, Real J2)
     return psi;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
