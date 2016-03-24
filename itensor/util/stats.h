@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_STATS_H
 #define __ITENSOR_STATS_H
 
-#include "real.h"
+#include "itensor/real.h"
 
 namespace itensor {
 
