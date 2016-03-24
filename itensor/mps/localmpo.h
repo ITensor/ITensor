@@ -149,15 +149,6 @@ class LocalMPO
         return *Op_;
         }
 
-
-    const Tensor&
-    bondTensor() const { return lop_.bondTensor(); }
-
-    bool
-    combineMPO() const { return lop_.combineMPO(); }
-    void
-    combineMPO(bool val) { lop_.combineMPO(val); }
-
     int
     numCenter() const { return nc_; }
     void
