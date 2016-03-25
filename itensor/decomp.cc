@@ -827,7 +827,7 @@ diagHImpl(IQTensor    rho,
         if(do_truncate)
             {
             //Truncate all elems of d falling below docut
-            while(this_m > 0 && d(this_m-1) < docut) --this_m;
+            while(this_m > 0 && d(this_m-1) <= docut) --this_m;
             }
 
         if(this_m == 0) 
