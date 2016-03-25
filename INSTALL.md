@@ -3,7 +3,7 @@
 ## Building the Libraries
 
 1. Edit the user configurable options. Start by making a copy 
-   of the sample Makefile options file: 
+   of the sample make options file: 
 
    `cp options.mk.sample options.mk`
 
@@ -17,7 +17,7 @@
 3. If you are using a system other than a Mac, edit `PLATFORM`,
    `BLAS_LAPACK_INCLUDEFLAGS` and `BLAS_LAPACK_LIBFLAGS` to reflect the
    type and location of your BLAS/LAPACK libraries. The list of currently
-   available platforms is: macos, mkl, acml, lapack
+   available platforms is: mkl, lapack, macos, acml
    (for details see matrix/lapack_wrap.h). The `PLATFORM` variable 
    selects which function signature definitions will be used to wrap 
    vendor-specific BLAS/LAPACK fortran calls into C.
