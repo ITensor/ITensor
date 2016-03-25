@@ -227,39 +227,39 @@ operator*=(QN & qa, Arrow dir)
 std::ostream& 
 operator<<(std::ostream & s, QN const& q)
     {
-    s << "QN(";
     if(q.mod(1) == 1 && !isActive(q,2))
         {
         //spin or spinless boson
-        s << q(1);
+        s << "QN(" << q(1) << ")";
         }
     else
     if(q.mod(1) == -1 && !isActive(q,2))
         {
         //spinless fermion
-        s << "Nf=" << q(1);
+        s << "(Nf=" << q(1) << ")";
         }
     else
     if(q.mod(1) == -2 && !isActive(q,2))
         {
         //parity-only spinless fermion
-        s << "Pf=" << q(1);
+        s << "(Pf=" << q(1) << ")";
         }
     else
     if(q.mod(1) == 1 && q.mod(2) == -1 && !isActive(q,3))
         {
         //electron
-        s << "Sz=" << q(1) << ",Nf=" << q(2);
+        s << "(Sz=" << q(1) << ",Nf=" << q(2) << ")";
         }
     else
     if(q.mod(1) == 1 && q.mod(2) == -2 && !isActive(q,3))
         {
         //"superconducting" electron (parity conservation only)
-        s << "Sz=" << q(1) << ",Pf=" << q(2);
+        s << "(Sz=" << q(1) << ",Pf=" << q(2) << ")";
         }
     else
         {
         //catch-all behavior
+        s << "QN(";
         for(auto n : range1(QNSize()))
             {
             if(!isActive(q,n)) break;
@@ -273,8 +273,9 @@ operator<<(std::ostream & s, QN const& q)
                 s << q(n);
                 }
             }
+        s << ")";
         }
-    return s << ")";
+    return s;
     }
 
 int
