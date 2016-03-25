@@ -248,7 +248,7 @@ Index
 findByQN(const IQIndex& I, const QN& qn);
 
 std::string 
-showm(const IQIndex& I);
+showm(IQIndex const& I);
 
 std::ostream& 
 operator<<(std::ostream &o, const IQIndex &I);

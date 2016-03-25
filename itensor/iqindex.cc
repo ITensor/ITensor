@@ -141,13 +141,13 @@ read(istream& s)
     }
 
 string
-showm(const IQIndex& I)
+showm(IQIndex const& I)
     {
 #ifdef DEBUG
     if(!I) Error("Calling showm on null IQIndex");
 #endif
     ostringstream oh; 
-    oh << I.m() << " | ";
+    oh << "m=" << I.m() << " | ";
     for(const IndexQN& iq : I)
         {
         oh << iq.qn << ":" << iq.m() << " ";
