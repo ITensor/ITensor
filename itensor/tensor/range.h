@@ -401,7 +401,7 @@ namespace detail {
         -> stdx::if_compiles_return<decltype(r.extent(0)),decltype(inds.begin())>
         //...if so make the return type to be decltype(r.extent(1))
         {
-        using size_type = decltype(r.size());
+        using size_type = typename Range_::size_type;
         auto start = r.start();
         size_type I  = 0, 
                   ri = 0;
@@ -448,43 +448,9 @@ namespace detail {
         return (I.offset()-r.start());
         }
 
-    template<typename Range_>
-    struct ComputeOffset
-        {
-        using range_type = Range_;
-        using size_type = typename range_type::size_type;
-
-        range_type const& r;
-        ComputeOffset(range_type const& r_) : r(r_) { }
-
-        template<typename... Inds>
-        size_type
-        operator()(size_type first, Inds... rest) const 
-            { 
-            return off<0>(first,rest...);
-            }
-
-        private:
-
-        template <size_type i, typename... Inds>
-        size_type
-        off(size_type first, Inds... rest) const
-            {
-            return (first-r.start())*r.stride(i) + off<i+1>(rest...);
-            }
-
-        template <size_type i>
-        size_type
-        off(size_type ind) const
-            {
-            return (ind-r.start())*r.stride(i);
-            }
-        };
-
 } //namespace detail
 
 
-//0-indexed
 template<typename Range_, typename Iterable,
          class=stdx::enable_if_t<isRange<Range_>::value 
                               && not std::is_integral<Iterable>::value>>
@@ -495,7 +461,6 @@ offset(Range_ const& r, Iterable const& inds)
     return detail::offsetImpl(stdx::select_overload{},r,inds);
     }
 
-//0-indexed
 template<typename Range_, 
          class=stdx::require<isRange<Range_>>,
          typename... Inds>
@@ -507,7 +472,8 @@ offset(Range_ const& r, size_t i1, Inds... inds)
     if(1+sizeof...(inds) != rank(r)) 
         throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
 #endif
-    return detail::ComputeOffset<Range_>(r)(i1,inds...);
+    auto ia = stdx::make_array(i1,inds...);
+    return detail::offsetImpl(stdx::select_overload{},r,ia);
     }
 
 template<typename I, size_t S>

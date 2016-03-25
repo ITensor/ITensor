@@ -97,26 +97,24 @@ transpose(MatRangeT<S> const& mr)
     return MatRangeT<S>{mr.cn,mr.cs,mr.rn,mr.rs};
     }
 
-//0-indexed
-template<size_t S>
-auto
-offset(MatRangeT<S> const& mr, 
-       size_t i1,
-       size_t i2)
-    -> typename MatRangeT<S>::size_type
-    {
-    return i1*mr.rs+i2*mr.cs;
-    }
-
-//0-indexed
-template<size_t S, typename Iterable>
-auto
-offset(MatRangeT<S> const& mr, Iterable const& inds)
-    -> stdx::if_compiles_return<typename MatRangeT<S>::size_type,decltype(inds[0])>
-    {
-    assert(inds.size()==2);
-    return offset(mr,inds[0],inds[1]);
-    }
+//template<size_t S>
+//auto
+//offset(MatRangeT<S> const& mr, 
+//       size_t i1,
+//       size_t i2)
+//    -> typename MatRangeT<S>::size_type
+//    {
+//    return i1*mr.rs+i2*mr.cs;
+//    }
+//
+//template<size_t S, typename Iterable>
+//auto
+//offset(MatRangeT<S> const& mr, Iterable const& inds)
+//    -> stdx::if_compiles_return<typename MatRangeT<S>::size_type,decltype(inds[0])>
+//    {
+//    assert(inds.size()==2);
+//    return offset(mr,inds[0],inds[1]);
+//    }
 
 template<size_t S>
 auto
