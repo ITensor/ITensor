@@ -123,8 +123,7 @@ idmrg(MPSt<Tensor> & psi,
 
     if(N0 == 2) args.add("CombineMPO",false);
 
-    Real energy = NAN,
-         lastenergy = 0;
+    Real energy = NAN;
 
     auto lastV = last_rval.V;
     Tensor D;
@@ -241,7 +240,6 @@ idmrg(MPSt<Tensor> & psi,
 
         auto initPsi = psi;
 
-        lastenergy = energy;
         auto PH = LocalMPO<Tensor>(H,HL,HR,args);
         
         auto extra_args = Args("Quiet",olevel<3,"NoMeasure",sw%2==0,"iDMRG_Step",sw,"NSweep",ucsweeps.nsweep());
