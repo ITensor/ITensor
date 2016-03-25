@@ -7,8 +7,6 @@
 
 #include "itensor/util/print.h"
 
-#ifndef Print
 #define Print(X)  itensor::PrintNice(#X,X)
-#endif
 
 #endif
