@@ -256,7 +256,7 @@ DMRGWorker(MPSt<Tensor>& psi,
                           sweeps.cutoff(sw),
                           sweeps.minm(sw), 
                           sweeps.maxm(sw) );
-                printfln("    Trunc. err=%.1E, States kept=%s",
+                printfln("    Trunc. err=%.1E, States kept: %s",
                          spec.truncerr(),
                          showm(linkInd(psi,b)) );
                 }
