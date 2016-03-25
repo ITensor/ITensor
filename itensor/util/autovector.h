@@ -6,14 +6,15 @@
 #define __ITENSOR_AUTOVECTOR_H
 
 #include <vector>
+#include <iostream>
 
 namespace itensor {
 
 using lint = long int;
 
-    //
-    // autovector SRW 8/26/14
-    //
+//
+// autovector SRW 8/26/14
+//
 
 
 // vector class that supports any index minimum and maximum.
