@@ -98,7 +98,7 @@ measure(const Args& args)
             for(const std::string& opname : default_ops_)
                 {
                 auto sb = IndexT(psi_.sites()(b));
-                auto z = (prime(wfb,sb)*psi_.sites().op(opname,b)*wfb).cplx();
+                auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).cplx();
                 //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).cplx();
                 if(std::fabs(z.imag()) < 1E-14)
                     printfln("<%s>(%d) = %.10E",opname,b,z.real());
