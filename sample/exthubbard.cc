@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     {
     //Parse the input file
     if(argc != 2) { printfln("Usage: %s inputfile_exthubbard",argv[0]); return 0; }
-    InputGroup basic(argv[1],"basic");
+    auto basic = InputGroup(argv[1],"basic");
 
     auto N = basic.getInt("N");
     auto Npart = basic.getInt("Npart",N); //number of particles, default is N (half filling)
@@ -21,19 +21,19 @@ int main(int argc, char* argv[])
     auto V1 = basic.getReal("V1",0);
     auto quiet = basic.getYesNo("quiet",false);
 
-    InputGroup table(basic,"sweeps");
-    Sweeps sweeps(nsweeps,table);
+    auto table = InputGroup(basic,"sweeps");
+    auto sweeps = Sweeps(nsweeps,table);
     println(sweeps);
 
     //
     // Initialize the site degrees of freedom.
     //
-    Hubbard sites(N);
+    auto sites = Hubbard(N);
 
     //
     // Create the Hamiltonian using AutoMPO
     //
-    AutoMPO ampo(sites);
+    auto ampo = AutoMPO(sites);
     for(int i = 1; i <= N; ++i) 
         {
         ampo += U,"Nupdn",i;
@@ -61,30 +61,30 @@ int main(int argc, char* argv[])
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(sites);
+    auto state = InitState(sites);
     int p = Npart;
     for(int i = N; i >= 1; --i) 
         {
         if(p > i)
             {
             println("Doubly occupying site ",i);
-            initState.set(i,"UpDn");
+            state.set(i,"UpDn");
             p -= 2;
             }
         else
         if(p > 0)
             {
             println("Singly occupying site ",i);
-            initState.set(i,(i%2==1 ? "Up" : "Dn"));
+            state.set(i,(i%2==1 ? "Up" : "Dn"));
             p -= 1;
             }
         else
             {
-            initState.set(i,"Emp");
+            state.set(i,"Emp");
             }
         }
 
-    IQMPS psi(initState);
+    auto psi = IQMPS(state);
 
     Print(totalQN(psi));
 
@@ -105,18 +105,18 @@ int main(int argc, char* argv[])
         }
 
     println("Up Density:");
-    for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,upd(j-1));
+    for(int j = 0; j < N; ++j)
+        printfln("%d %.10f",1+j,upd(j));
     println();
 
     println("Dn Density:");
-    for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,dnd(j-1));
+    for(int j = 0; j < N; ++j)
+        printfln("%d %.10f",1+j,dnd(j));
     println();
 
     println("Total Density:");
-    for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f",j,(upd(j-1)+dnd(j-1)));
+    for(int j = 0; j < N; ++j)
+        printfln("%d %.10f",1+j,(upd(j)+dnd(j)));
     println();
 
     //
