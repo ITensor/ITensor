@@ -191,7 +191,8 @@ make_array(Ts&&... t)
                   typename std::common_type<Ts...>::type,V>,
                   sizeof...(Ts)>
     {
-    return {{ std::forward<Ts>(t)... }};
+    using ct = typename std::common_type<Ts...>::type;
+    return {{ static_cast<ct>(std::forward<Ts>(t))... }};
     }
 
 template<typename T>
