@@ -1003,9 +1003,12 @@ contractloop(TenRefc<RangeT> A, Labels const& ai,
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
-    auto Arow = A.extent(0), Acol = A.extent(1);
-    auto Brow = B.extent(0), Bcol = B.extent(1);
-    auto Crow = C.extent(0), Ccol = C.extent(1);
+    auto Arow = A.extent(0); 
+    auto Acol = A.extent(1);
+    auto Brow = B.extent(0); 
+    auto Bcol = B.extent(1);
+    auto Crow = C.extent(0); 
+    auto Ccol = C.extent(1);
 
     detail::GCounter couA(ra), 
                      couB(rb);

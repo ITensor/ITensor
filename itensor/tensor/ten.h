@@ -44,6 +44,7 @@ class TensorType { };
 template<typename Derived>
 struct isTensor
     {
+    constexpr isTensor() { }
     bool static constexpr value = std::is_base_of<TensorType,stdx::decay_t<Derived>>::value;
     constexpr operator bool() const noexcept { return value; }
     };
@@ -56,7 +57,7 @@ using range_type = typename stdx::decay_t<Ten_>::range_type;
 
 
 
-template<typename T, bool istensor = isTensor<T>{} >
+template<typename T, bool istensor = isTensor<T>::value >
 struct ValTypeHelper { using type = typename stdx::decay_t<T>::value_type; };
 template<typename T>
 struct ValTypeHelper<T,false> { using type = T; };
