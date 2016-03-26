@@ -6,12 +6,14 @@
 ## [1]
 ##
 ## Set which compiler to use by defining CCCOM:
-##GNU GCC compiler
+## GNU GCC compiler
+
 CCCOM=g++ -m64 -std=c++11
-##Clang compiler (good to use on Mac OS)
+
+## Clang compiler (good to use on Mac OS)
+
 #CCCOM=clang++ -std=c++1y
-##Intel C++ compiler (good to use with Intel MKL if available)
-#CCCOM=icpc -std=c++11
+
 #########
 
 #########
@@ -20,17 +22,21 @@ CCCOM=g++ -m64 -std=c++11
 ## BLAS/LAPACK Related Options
 ## 
 ## o The variable PLATFORM can be set to macos,lapack,mkl, or acml.
-##   This tells ITensor which style of BLAS/Lapack library to expect.
+##   This tells ITensor which style of BLAS/Lapack library to expect,
+##   and turns various lines of code on or off inside the files
+##   itensor/tensor/lapack_wrap.h and lapack_wrap.cc.
 ## 
-## o BLAS_LAPACK_LIBFLAGS should be something like 
+## o BLAS_LAPACK_LIBFLAGS specifies blas or lapack related 
+##   flags used during the linking step. For example, 
+##   flags of the type:
 ##   -L/path/to/lapack/lib -llapack -lblas
 ##   though the names of the static libraries (the files referred
 ##   to by the -l flags) can be highly variable - see examples below.
 ##
-## o BLAS_LAPACK_INCLUDEFLAGS is currently required for the mkl platform only.
-##   It should be set to -I/path/to/lapack/include
-##   where "include" is a folder full of .h header files in the source code 
-##   of your BLAS/Lapack library (see examples below).
+## o BLAS_LAPACK_INCLUDEFLAGS are blas or lapack related flags 
+##   needed during compilation. It may include flags such as 
+##   -I/path/to/lapack/include
+##   where "include" is a folder containing .h header files.
 ##
 
 ##
@@ -86,7 +92,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 OPTIMIZATIONS=-O2 -DNDEBUG -Wall
 
 ## Flags to give the compiler for "debug mode"
-DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
+DEBUGFLAGS=-DDEBUG -g -Wall -pedantic
 
 
 ###
