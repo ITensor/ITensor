@@ -137,6 +137,11 @@ class ITensorT
     mapprime(int plevold, int plevnew, IndexType type = All)
         { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
 
+    template<typename... VarArgs>
+    ITensorT& 
+    mapprime(VarArgs&&... vargs)
+        { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
     //
     // Element Transformation Methods
     //

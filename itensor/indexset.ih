@@ -11,48 +11,6 @@ namespace itensor {
 // Methods for Manipulating IndexSetT
 //
 
-//template <class IndexT>
-//void IndexSetT<IndexT>::
-//addindex(const IndexT& I)
-//    {
-//#ifdef DEBUG
-//    if(!I) Error("Index is default initialized");
-//
-//    for(const auto& J : *this)
-//        if(J == I)
-//            {
-//            Print(*this);
-//            Print(I);
-//            Error("Adding Index twice");
-//            }
-//#endif
-//    index_.push_back(I);
-//    }
-
-//template <class IndexT>
-//void IndexSetT<IndexT>::
-//replaceIndex(const IndexT& oind, const IndexT& nind)
-//    {
-//    if(nind.m() != oind.m())
-//        {
-//        Print(nind);
-//        Print(oind);
-//        Error("replaceIndex: new index must have same dimension as old.");
-//        }
-//    bool found = false;
-//    for(auto& J : index_)
-//        {
-//        if(oind == J)
-//            {
-//            J = nind;
-//            found = true;
-//            break;
-//            }
-//        }
-//    if(!found)
-//        Error("replaceIndex: index not found");
-//    }
-
 template <class IndexT>
 void IndexSetT<IndexT>::
 write(std::ostream& s) const
@@ -68,73 +26,6 @@ read(std::istream& s)
     parent & pr = *this;
     itensor::read(s,pr);
     }
-
-
-
-//template<class IndexT>
-//template<class Iterable>
-//void IndexSetT<IndexT>::
-//init(Iterable&& inds)
-//    {
-//#ifdef DEBUG
-//    for(const auto& ii : inds)
-//        if(!ii) Error("Default initialized index in IndexSetT");
-//#endif
-//    long r = inds.size();
-//
-//    index_.resize(r);
-//    stride_ = std::vector<long>(r,1);
-//    long str = 1;
-//    //Put m==1 indices at back; m>1 at front,
-//    //keeping original order otherwise.
-//    //rn_ should count # of m>1's when done
-//    for(auto& I : inds)
-//        {
-//        index_.at(rn_) = I;
-//        stride_[rn_] = str;
-//        str *= I.m();
-//        }
-//    }
-
-//template <class IndexT>
-//template <class Iterable>
-//void IndexSetT<IndexT>::
-//sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
-//    {
-//#ifdef DEBUG
-//    if(ninds > NMAX)
-//        Error("Too many indices for IndexSetT");
-//#endif
-//
-//    rn_ = 0;
-//    alloc_size = 1;
-//
-//    int r1_ = 0;
-//    array<const IndexT*,NMAX> index1_;
-//
-//    for(int n = offset; n < ninds+offset; ++n)
-//        {
-//        const IndexT& i = I[n];
-//#ifdef DEBUG
-//        if(!i) Error("Null Index in sortIndices");
-//#endif
-//        if(i.m()==1) 
-//            { 
-//            index1_[r1_] = &i;
-//            ++r1_;
-//            }
-//        else         
-//            { 
-//            index_[rn_] = i; 
-//            ++rn_;
-//            alloc_size *= i.m(); 
-//            }
-//        }
-//    for(int l = 0; l < r1_; ++l) 
-//        {
-//        index_[rn_+l] = *(index1_[l]);
-//        }
-//    }
 
 //
 // IndexSetT Primelevel Methods
@@ -183,18 +74,18 @@ namespace detail {
 
     template<typename Comp, typename IndexT, typename OtherT>
     bool 
-    findMatch(const Comp& cmp,
-                 const IndexT& I,
-                 const OtherT& J)
+    findMatch(Comp const& cmp,
+              IndexT const& I,
+              OtherT const& J)
         {
         return cmp(I,J);
         }
     template<typename Comp, typename IndexT, typename OtherT, typename... Rest>
     bool 
-    findMatch(const Comp& cmp,
-                 const IndexT& I,
-                 const OtherT& J,
-                 Rest&&... rest)
+    findMatch(Comp const& cmp,
+              IndexT const& I,
+              OtherT const& J,
+              Rest&&... rest)
         {
         if(cmp(I,J)) return true;
         return findMatch(cmp,I,std::forward<Rest>(rest)...);
@@ -249,18 +140,31 @@ prime(IndexSetT<IndexT>& is,
       IndexType type1,
       Types&&... rest)
     {
-    auto cmp = [](const IndexT& I, IndexType t) { return I.type()==t; };
+    auto cmp = [](IndexT const& I, IndexType t) 
+        { 
+        return I.type()==t; 
+        };
     for(auto& J : is)
         {
-        auto match = detail::computeMatchInc(cmp,J,type1,std::forward<Types>(rest)...);
+        auto match = 
+            detail::computeMatchInc(cmp,J,type1,
+                                    std::forward<Types>(rest)...);
         if(match) J.prime(match.inc);
         }
+    }
+
+template<typename IndexT>
+void 
+prime(IndexSetT<IndexT>& is, 
+      int inc) 
+    { 
+    prime(is,All,inc); 
     }
 
 template<typename IndexT, typename... Inds>
 void 
 prime(IndexSetT<IndexT>& is, 
-      const IndexT& I1, 
+      IndexT const& I1, 
       Inds&&... rest)
     {
 #ifdef DEBUG
@@ -277,6 +181,9 @@ prime(IndexSetT<IndexT>& is,
 #endif
     }
 
+// Experimental prime function that
+// takes IndexVals, where the value
+// is interpreted as an increment
 template<typename IndexT, typename... IVals>
 void 
 prime(IndexSetT<IndexT>& is,
@@ -306,7 +213,7 @@ prime(IndexSetT<IndexT>& is,
 template<typename IndexT, typename... Inds>
 void 
 primeExcept(IndexSetT<IndexT>& is, 
-            const IndexT& I1, 
+            IndexT const& I1, 
             Inds&&... rest)
     {
 #ifdef DEBUG
@@ -372,7 +279,7 @@ noprime(IndexSetT<IndexT>& is,
 template<typename IndexT, typename... Inds>
 void 
 noprime(IndexSetT<IndexT>& is, 
-        const IndexT& I1, 
+        IndexT const& I1, 
         Inds&&... inds)
     {
 #ifdef DEBUG
@@ -396,7 +303,80 @@ mapprime(IndexSetT<IndexT>& is,
          int plevnew, 
          IndexType type)
 	{
-    for(auto& J : is) J.mapprime(plevold,plevnew,type);
+    for(auto& J : is) 
+        {
+        J.mapprime(plevold,plevnew,type);
+        }
+#ifdef DEBUG
+    detail::check(is);
+#endif
+	}
+
+namespace detail {
+
+    template<typename IndexT>
+    bool
+    mp_matches(IndexT const& I1,
+               IndexT const& I2)
+        {
+        return I1.noprimeEquals(I2);
+        }
+
+    template<typename IndexT>
+    bool
+    mp_matches(IndexT const& I1,
+               IndexType const& T)
+        {
+        return I1.type() == T;
+        }
+
+    template<typename IndexT,
+             typename IndexOrIndexType,
+             typename... VArgs>
+    void
+    mapprime_impl(IndexT & I,
+                  IndexOrIndexType const& J,
+                  int plev1,
+                  int plev2)
+        {
+        if(mp_matches(I,J) && I.primeLevel()==plev1)
+            {
+            I.primeLevel(plev2);
+            return;
+            }
+        }
+
+    template<typename IndexT,
+             typename IndexOrIndexType,
+             typename... VArgs>
+    void
+    mapprime_impl(IndexT & I,
+                  IndexOrIndexType const& J,
+                  int plev1,
+                  int plev2,
+                  VArgs&&... vargs)
+        {
+        if(mp_matches(I,J) && I.primeLevel()==plev1)
+            {
+            I.primeLevel(plev2);
+            return;
+            }
+        mapprime_impl(I,vargs...);
+        }
+
+} //namespace detail
+
+template<typename IndexT, typename... VArgs>
+void 
+mapprime(IndexSetT<IndexT>& is, 
+         VArgs&&... vargs)
+	{
+    static_assert(sizeof...(vargs)%3==0,
+                  "Wrong number of arguments to mapprime");
+    for(auto& I : is)
+        {
+        detail::mapprime_impl(I,vargs...);
+        }
 #ifdef DEBUG
     detail::check(is);
 #endif

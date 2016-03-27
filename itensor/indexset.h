@@ -198,27 +198,39 @@ rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
 // IndexSetT Primelevel Methods
 //
 
+// increment primelevel of all indices of
+// type "type" by an amount "inc"
 template<typename IndexT, typename... Types>
 void 
 prime(IndexSetT<IndexT>& is, 
       IndexType type,
-      int inc);
+      int inc = 1);
 
+// same as above but for multiple types
+// optionally, last argument can be 
+// an increment amount
 template<typename IndexT, typename... Types>
 void 
 prime(IndexSetT<IndexT>& is, 
       IndexType type1,
       Types&&... rest);
 
+// increment primelevel of all
+// indices by an amount "inc"
 template<typename IndexT>
 void 
-prime(IndexSetT<IndexT>& is, int inc = 1) { prime(is,All,inc); }
+prime(IndexSetT<IndexT>& is, 
+      int inc = 1);
 
-template<typename IndexT, typename... IVals>
+// Increment primelevels of the indices
+// specified by 1, or an optional amount "inc"
+// For example, to prime indices I and J by 2,
+// prime(is,I,J,2);
+template<typename IndexT, typename... Inds>
 void 
-prime(IndexSetT<IndexT>& is,
-      const typename IndexT::indexval_type& iv1,
-      IVals&&... ivs);
+prime(IndexSetT<IndexT>& is, 
+      IndexT const& I1, 
+      Inds&&... rest);
 
 //
 //Given a list of indices and an increment (an int)
@@ -233,7 +245,7 @@ prime(IndexSetT<IndexT>& is,
 template<typename IndexT, typename... Inds>
 void 
 primeExcept(IndexSetT<IndexT>& is, 
-            const IndexT& I1, 
+            IndexT const& I1, 
             Inds&&... inds);
 
 template<typename IndexT, typename... ITs>
@@ -259,9 +271,30 @@ noprime(IndexSetT<IndexT>& is,
         const IndexT& I1, 
         Inds&&... inds);
 
+// This version of mapprime takes
+// any number of triples: I,p1,p2
+// where I is an index or an IndexType,
+// p1 is the inital primelevel and
+// p2 if the final primlevel
+// For example,
+// prime(is,j,0,2,Site,1,0);
+// would change an Index "j" with
+// primelevel 0 to have primelevel 2
+// and any indices with type Site
+// and primelevel 1 to have primelevel 0
+// If two or more mappings match for a particular
+// index, only the first mapping is used.
+template<typename IndexT, typename... VArgs>
+void 
+mapprime(IndexSetT<IndexT>& is, 
+         VArgs&&... vargs);
+
 template<typename IndexT>
 void 
-mapprime(IndexSetT<IndexT>& is, int plevold, int plevnew, IndexType type = All);
+mapprime(IndexSetT<IndexT>& is, 
+         int plevold, 
+         int plevnew, 
+         IndexType type = All);
 
 //
 // IndexSetT helper methods
