@@ -76,7 +76,11 @@ davidson(BigMatrixT const& A,
     for(auto j : range(nget))
         {
         auto nrm = norm(phi[j]);
-        if(nrm == 0.0) Error("norm of 0 in davidson");
+        while(nrm == 0.0) 
+            {
+            randomize(phi[j]);
+            nrm = norm(phi[j]);
+            }
         phi[j] *= 1./nrm;
         }
 

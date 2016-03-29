@@ -321,7 +321,7 @@ denmatDecomp(Tensor const& AA,
         {
         rho += noise*PH.deltaRho(AA,cmb,dir);
         auto tr = (delta(dag(ci),prime(ci))*realPart(rho)).real();
-        rho *= 1./tr;
+        if(tr > 1E-16) rho *= 1./tr;
         }
 
     STOP_TIMER(8)

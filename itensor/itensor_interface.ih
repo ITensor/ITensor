@@ -799,7 +799,7 @@ norm(const ITensorT<I>& T)
 #ifdef DEBUG
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
 #endif
-    auto fac = fabs(T.scale().real0());
+    auto fac = std::fabs(T.scale().real0());
     return fac * doTask(NormNoScale{},T.store());
     }
 

@@ -69,7 +69,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
             {
             Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
             auto nrm = itensor::norm(oc);
-            oc *= 1./nrm;
+            if(nrm > 1E-16) oc *= 1./nrm;
             }
         }
 
