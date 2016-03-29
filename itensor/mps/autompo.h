@@ -73,7 +73,7 @@ struct SiteTerm
     };
 
 bool
-isFermionic(const SiteTerm& st);
+isFermionic(SiteTerm const& st);
 
 struct HTerm
     {
@@ -133,6 +133,9 @@ struct HTerm
     operator!=(const HTerm& other) const;
     };
 
+void
+sort(HTerm & ht);
+
 class AutoMPO
     {
     const SiteSet& sites_;
@@ -183,14 +186,14 @@ class AutoMPO
 
     public:
 
-    AutoMPO(const SiteSet& sites) 
-        : sites_(sites)
+    AutoMPO(SiteSet const& sites) 
+      : sites_(sites)
         { }
 
-    const SiteSet&
+    SiteSet const&
     sites() const { return sites_; }
 
-    const std::vector<HTerm>&
+    std::vector<HTerm> const&
     terms() const { return terms_; }
 
     operator MPO() const { return toMPO<ITensor>(*this); }
@@ -202,7 +205,14 @@ class AutoMPO
     operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
+    add(HTerm t) 
+        { 
+        if(abs(t.coef()) != 0) 
+            {
+            sort(t);
+            terms_.push_back(t); 
+            }
+        }
 
     void
     reset() { terms_.clear(); }

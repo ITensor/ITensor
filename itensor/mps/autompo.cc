@@ -151,6 +151,39 @@ operator!=(const HTerm& other) const
     return !operator==(other);
     }
 
+void
+sort(HTerm & ht)
+    {
+    if(ht.ops.size() <= 1) return;
+
+    auto op = [&ht](size_t n)->SiteTerm& { return ht.ops.at(n); };
+
+    //Do bubble sort: O(n^2) but allows making 
+    //pair-wise comparison for fermion signs
+    bool did_swap = true;
+    while(did_swap)
+        {
+        did_swap = false;
+        for(auto n : range(ht.ops.size()-1))
+            {
+            if(op(n).i == op(n+1).i) 
+                {
+                Error("AutoMPO: cannot put two operators on same site in a single term");
+                }
+            if(op(n).i > op(n+1).i) 
+                {
+                std::swap(op(n),op(n+1));
+                did_swap = true;
+                if(isFermionic(op(n)) && isFermionic(op(n+1)))
+                    {
+                    println("Putting in minus sign");
+                    op(n).coef *= -1;
+                    }
+                }
+            }
+        }
+    }
+
 
 AutoMPO::Accumulator::
 Accumulator(AutoMPO* pa_, 
