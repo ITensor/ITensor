@@ -9,19 +9,19 @@ int main(int argc, char* argv[])
     {
     //Parse the input file
     if(argc != 2) { printfln("Usage: %s inputfile_exthubbard",argv[0]); return 0; }
-    auto basic = InputGroup(argv[1],"basic");
+    auto input = InputGroup(argv[1],"input");
 
-    auto N = basic.getInt("N");
-    auto Npart = basic.getInt("Npart",N); //number of particles, default is N (half filling)
+    auto N = input.getInt("N");
+    auto Npart = input.getInt("Npart",N); //number of particles, default is N (half filling)
 
-    auto nsweeps = basic.getInt("nsweeps");
-    auto t1 = basic.getReal("t1",1);
-    auto t2 = basic.getReal("t2",0);
-    auto U = basic.getReal("U",0);
-    auto V1 = basic.getReal("V1",0);
-    auto quiet = basic.getYesNo("quiet",false);
+    auto nsweeps = input.getInt("nsweeps");
+    auto t1 = input.getReal("t1",1);
+    auto t2 = input.getReal("t2",0);
+    auto U = input.getReal("U",0);
+    auto V1 = input.getReal("V1",0);
+    auto quiet = input.getYesNo("quiet",false);
 
-    auto table = InputGroup(basic,"sweeps");
+    auto table = InputGroup(input,"sweeps");
     auto sweeps = Sweeps(nsweeps,table);
     println(sweeps);
 
@@ -40,20 +40,18 @@ int main(int argc, char* argv[])
         }
     for(int b = 1; b < N; ++b)
         {
-        //Note the + signs for the Hermitian conjugate terms
         ampo += -t1,"Cdagup",b,"Cup",b+1;
-        ampo += +t1,"Cup",b,"Cdagup",b+1;
+        ampo += -t1,"Cdagup",b+1,"Cup",b;
         ampo += -t1,"Cdagdn",b,"Cdn",b+1;
-        ampo += +t1,"Cdn",b,"Cdagdn",b+1;
-
+        ampo += -t1,"Cdagdn",b+1,"Cdn",b;
         ampo += V1,"Ntot",b,"Ntot",b+1;
         }
     for(int b = 1; b < N-1; ++b)
         {
         ampo += -t2,"Cdagup",b,"Cup",b+2;
-        ampo += +t2,"Cup",b,"Cdagup",b+2;
+        ampo += -t2,"Cdagup",b+2,"Cup",b;
         ampo += -t2,"Cdagdn",b,"Cdn",b+2;
-        ampo += +t2,"Cdn",b,"Cdagdn",b+2;
+        ampo += -t2,"Cdagdn",b+2,"Cdn",b;
         }
     auto H = IQMPO(ampo);
 
