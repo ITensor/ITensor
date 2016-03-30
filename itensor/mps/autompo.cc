@@ -158,6 +158,13 @@ sort(HTerm & ht)
 
     auto op = [&ht](size_t n)->SiteTerm& { return ht.ops.at(n); };
 
+    //print("Before sorting, ops are:");
+    //for(auto n : range(ht.ops.size()))
+    //    {
+    //    printf(" %s*%s_%d",op(n).coef,op(n).op,op(n).i);
+    //    }
+    //println();
+
     //Do bubble sort: O(n^2) but allows making 
     //pair-wise comparison for fermion signs
     bool did_swap = true;
@@ -176,12 +183,17 @@ sort(HTerm & ht)
                 did_swap = true;
                 if(isFermionic(op(n)) && isFermionic(op(n+1)))
                     {
-                    println("Putting in minus sign");
-                    op(n).coef *= -1;
+                    op(n+1).coef *= -1;
                     }
                 }
             }
         }
+    //print("After sorting, ops are:");
+    //for(auto n : range(ht.ops.size()))
+    //    {
+    //    printf(" %s*%s_%d",op(n).coef,op(n).op,op(n).i);
+    //    }
+    //println();
     }
 
 
@@ -660,6 +672,11 @@ toMPOImpl(AutoMPO const& am,
                     W += ht.last().coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
+                    auto coef = ht.last().coef;
+                    if(isApproxReal(coef))
+                        ws[r][c] = format("%.2f %s",coef.real(),op);
+                    else
+                        ws[r][c] = format("%.2f %s",coef,op);
 #endif
                     }
                 }
