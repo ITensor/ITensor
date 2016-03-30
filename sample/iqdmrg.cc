@@ -34,22 +34,27 @@ main(int argc, char* argv[])
         }
     auto H = IQMPO(ampo);
 
+    //
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    auto initState = InitState(sites);
+    // This choice implicitly sets the global Sz quantum number
+    // of the wavefunction to zero. Since it is an IQMPS
+    // it will remain in this quantum number sector.
+    //
+    //
+    auto state = InitState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
-            initState.set(i,"Up");
+            state.set(i,"Up");
         else
-            initState.set(i,"Dn");
+            state.set(i,"Dn");
         }
 
-    auto psi = IQMPS(initState);
+    auto psi = IQMPS(state);
 
     //
-    // overlap calculates matrix elements of MPO's with respect to MPS's
     // overlap(psi,H,psi) = <psi|H|psi>
     //
     printfln("Initial energy = %.5f", overlap(psi,H,psi) );
