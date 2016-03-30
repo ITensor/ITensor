@@ -26,6 +26,7 @@ SOURCES+= iqtensor_test.cc
 SOURCES+= decomp_test.cc
 #SOURCES+= mps_test.cc
 #SOURCES+= mpo_test.cc
+SOURCES+= autompo_test.cc
 #SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
 #SOURCES+= spectrum_test.cc

@@ -3,9 +3,9 @@ input
     N = 20
     Npart = 10
 
-    t1 = 1
+    t1 = 1.0
     t2 = 0.2
-    U = 1
+    U = 1.0
     V1 = 0.5
 
     nsweeps = 5
