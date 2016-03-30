@@ -64,8 +64,8 @@ class LocalMPO_MPS
     int
     size() const { return lmpo_.size(); }
 
-    bool
-    isNull() const { return Op_ == 0; }
+    explicit
+    operator bool() const { return bool(Op_); }
 
     Real
     weight() const { return weight_; }
@@ -84,8 +84,8 @@ class LocalMPO_MPS
     // Data Members
     //
 
-    const MPOt<Tensor>* Op_;
-    const std::vector<MPSt<Tensor> >* psis_;
+    MPOt<Tensor> const* Op_;
+    std::vector<MPSt<Tensor>> const* psis_;
     //LocalMPO object representing projected version
     //of the MPO Op_
     LocalMPO<Tensor> lmpo_; 
@@ -104,8 +104,8 @@ template <class Tensor>
 inline LocalMPO_MPS<Tensor>::
 LocalMPO_MPS()
     : 
-    Op_(0),
-    psis_(0),
+    Op_(nullptr),
+    psis_(nullptr),
     weight_(1)
     { }
 

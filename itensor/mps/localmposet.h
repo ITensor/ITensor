@@ -52,8 +52,8 @@ class LocalMPOSet
     int
     size() const { return lmpo_.front().size(); }
 
-    bool
-    isNull() const { return Op_ == 0; }
+    explicit
+    operator bool() const { return bool(Op_); }
 
     bool
     doWrite() const { return false; }
@@ -70,8 +70,8 @@ class LocalMPOSet
     // Data Members
     //
 
-    const std::vector<MPOt<Tensor> >* Op_;
-    std::vector<LocalMPO<Tensor> > lmpo_;
+    std::vector<MPOt<Tensor>> const* Op_;
+    std::vector<LocalMPO<Tensor>> lmpo_;
 
     //
     /////////////////
@@ -82,7 +82,7 @@ template <class Tensor>
 inline LocalMPOSet<Tensor>::
 LocalMPOSet()
     : 
-    Op_(0)
+    Op_(nullptr)
     { }
 
 template <class Tensor>
