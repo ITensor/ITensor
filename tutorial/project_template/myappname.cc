@@ -26,7 +26,7 @@ main(int argc, char* argv[])
           b("B",4);
 
     ITensor T(a,b);
-    T = randomize(T);
+    randomize(T);
 
     //The %f formatting flag below tells printfln to
     //show the ITensor's data.
