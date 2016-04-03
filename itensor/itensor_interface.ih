@@ -235,13 +235,19 @@ real(IVals&&... ivs) const
 
 namespace detail {
 
-template<typename IndexValT, typename Iter>
-bool
+template<typename IndexValT, 
+         typename Iter,
+         typename IV>
+auto
 getVals(Iter it,
         Cplx & z,
-        IndexValT const& iv)
+        IV const& iv)
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
+                      || std::is_same<IV,IQIndexVal>::value,
+                         bool>
     {
-    static_assert(stdx::false_regardless_of<IndexValT>::value,"Last argument to .set method must be Real or Cplx scalar");
+    static_assert(stdx::false_regardless_of<IndexValT>::value,
+            "Last argument to .set method must be Real or Cplx scalar");
     return true;
     }
 template<typename IndexValT, typename Iter>
@@ -263,14 +269,20 @@ getVals(Iter it,
     return false;
     }
 
-template<typename IndexValT, typename Iter, typename... Rest>
-bool
+template<typename IndexValT, 
+         typename Iter, 
+         typename IV, 
+         typename... Rest>
+auto
 getVals(Iter it,
         Cplx & z,
-        IndexValT const& iv,
+        IV const& iv,
         Rest&&... rest)
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
+                      || std::is_same<IV,IQIndexVal>::value,
+                         bool>
     {
-    *it = iv;
+    *it = static_cast<IndexValT>(iv);
     return getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
