@@ -7,8 +7,13 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/itdata/itdata.h"
+#include "itensor/iqindex.h"
 
 namespace itensor {
+
+//template<typename index_type> 
+//class ITensorT;
+//using ITensor  = ITensorT<Index>;
 
 template<typename T>
 class QMixed
@@ -93,43 +98,7 @@ doTask(ToITensor & T, QMixed<V> const& d);
 
 template<typename T>
 void
-doTask(PrintIT<IQIndex>& P, QMixed<T> const& D)
-    {
-    auto name = std::is_same<T,Real>::value ? "QMixed Real"
-                                            : "QMixed Cplx";
-    P.printInfo(D,name);
-     
-    auto r = rank(P.is);
-    if(r == 0) 
-        {
-        P.s << "  ";
-        P.s << formatVal(P.scalefac*D.store.front()) << "\n";
-        return;
-        }
-
-    if(!P.print_data) return;
-
-    auto gc = detail::GCounter(r);
-    for(auto i : range(r))
-        gc.setRange(i,0,P.is.extent(i)-1);
-
-    for(; gc.notDone(); ++gc)
-        {
-        auto val = P.scalefac*D[offset(P.is,gc.i)];
-        if(std::norm(val) >= Global::printScale())
-            {
-            P.s << "(";
-            for(auto ii : range1(gc.i.mini(),gc.i.maxi()))
-                {
-                P.s << (1+gc[ii]);
-                if(ii < gc.i.maxi()) P.s << ",";
-                }
-            P.s << ") ";
-
-            P.s << formatVal(val) << "\n";
-            }
-        }
-    }
+doTask(PrintIT<IQIndex>& P, QMixed<T> const& D);
 
 
 } //namespace itensor

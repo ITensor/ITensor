@@ -22,6 +22,7 @@ SOURCES+= itdata/diag.cc
 SOURCES+= itdata/qdense.cc
 SOURCES+= itdata/qcombiner.cc 
 SOURCES+= itdata/qdiag.cc
+SOURCES+= itdata/qmixed.cc
 ##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
@@ -115,6 +116,9 @@ itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/qdiag.h
 itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/qmixed.h
+itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
