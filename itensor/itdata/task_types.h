@@ -23,6 +23,10 @@ struct Mult
     Mult(T x_) : x(x_) { }
     };
 
+template<typename T>
+const char*
+typeNameOf(Mult<T> const&) { return "Mult"; }
+
 template<typename IndexT>
 struct GetElt
     {
@@ -32,6 +36,10 @@ struct GetElt
     GetElt(IndexSetT<IndexT> const& is_,
            IntArray const& inds_);
     };
+
+template<typename I>
+const char*
+typeNameOf(GetElt<I> const&) { return "GetElt"; }
 
 template<typename T, typename IndexT>
 struct SetElt
@@ -45,8 +53,14 @@ struct SetElt
            IntArray const& inds_);
     };
 
+template<typename T, typename I>
+const char*
+typeNameOf(SetElt<T,I> const&) { return "SetElt"; }
 
 struct NormNoScale { };
+
+inline const char*
+typeNameOf(NormNoScale const&) { return "NormNoScale"; }
 
 template<typename IndexT>
 struct PrintIT
@@ -83,9 +97,19 @@ struct PrintIT
         }
     };
 
+template<typename I>
+const char*
+typeNameOf(PrintIT<I> const&) { return "PrintIT"; }
+
 struct Conj { };
 
+inline const char*
+typeNameOf(Conj const&) { return "Conj"; }
+
 struct CheckComplex { };
+
+inline const char*
+typeNameOf(CheckComplex const&) { return "CheckComplex"; }
 
 template<typename IndexT>
 struct SumEls
@@ -93,6 +117,10 @@ struct SumEls
     const IndexSetT<IndexT>& is;
     SumEls(IndexSetT<IndexT> const& is_) : is(is_) { }
     };
+
+template<typename I>
+const char*
+typeNameOf(SumEls<I> const&) { return "SumEls"; }
 
 
 template<typename F>
@@ -133,6 +161,10 @@ struct ApplyIT
         to = f(from);
         }
     };
+
+template<typename F>
+const char*
+typeNameOf(ApplyIT<F> const&) { return "ApplyIT"; }
 
 namespace detail {
 
@@ -198,6 +230,10 @@ struct GenerateIT
     GenerateIT(F&& f_) : f(f_)  { }
     };
 
+template<typename F, typename T>
+const char*
+typeNameOf(GenerateIT<F,T> const&) { return "GenerateIT"; }
+
 template <typename F>
 struct VisitIT
     {
@@ -208,6 +244,10 @@ struct VisitIT
         { }
     };
 
+template<typename F>
+const char*
+typeNameOf(VisitIT<F> const&) { return "VisitIT"; }
+
 template<typename T>
 struct Fill
     {
@@ -215,8 +255,17 @@ struct Fill
     Fill(T x_) : x(x_) { }
     };
 
+template<typename T>
+const char*
+typeNameOf(Fill<T> const&) { return "Fill"; }
+
 struct TakeReal { };
 struct TakeImag { };
+
+inline const char*
+typeNameOf(TakeReal const&) { return "TakeReal"; }
+inline const char*
+typeNameOf(TakeImag const&) { return "TakeImag"; }
 
 template<typename IndexT>
 struct PlusEQ
@@ -254,6 +303,11 @@ struct PlusEQ
     iset_type const&
     is2() const { return *is2_; }
     };
+
+template<typename I>
+const char*
+typeNameOf(PlusEQ<I> const&) { return "PlusEQ"; }
+
 
 //
 // Helper for Contract and NCProd
@@ -316,6 +370,10 @@ struct Contract
 
     };
 
+template<typename I>
+const char*
+typeNameOf(Contract<I> const&) { return "Contract"; }
+
 //Non-contracting product
 template<typename IndexT>
 struct NCProd
@@ -343,6 +401,10 @@ struct NCProd
         scalefac(other.scalefac)
         { }
     };
+
+template<typename I>
+const char*
+typeNameOf(NCProd<I> const&) { return "NCProd"; }
 
 struct StorageType
     {
@@ -456,6 +518,9 @@ struct CalcDiv
     CalcDiv(IQIndexSet const& is_) : is(is_) { }
     };
 
+inline const char*
+typeNameOf(CalcDiv const&) { return "CalcDiv"; }
+
 struct ToITensor
     {
     IQIndexSet const& is;
@@ -467,6 +532,9 @@ struct ToITensor
         scale(scale_)
         { }
     };
+
+inline const char*
+typeNameOf(ToITensor const&) { return "ToITensor"; }
 
 } //namespace itensor 
 

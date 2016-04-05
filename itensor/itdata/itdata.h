@@ -329,6 +329,10 @@ operator->() { return p.get(); }
 inline const ITData* CPData::
 operator->() const { return p.get(); }
 
+template<typename T>
+const char*
+typeNameOf(T const& t) { return "[unknown]"; }
+
 
 } // namespace itensor
 
