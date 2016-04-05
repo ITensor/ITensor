@@ -424,39 +424,95 @@ struct StorageType
         }; 
     };
 
+inline const char*
+typeNameOf(StorageType const&) { return "StorageType"; }
+
 class Write
     {
-    std::ostream& s;
+    bool called_writetype_ = false;
     public:
+    std::ostream& s;
 
     Write(std::ostream& s_) : s(s_) { }
 
-    template<class T>
-    auto
-    writeType(stdx::choice<1>, T const& data)
-        -> stdx::if_compiles_return<void,
-                 decltype(doTask(StorageType{},data)),
-                 decltype(write(std::declval<std::ostream>(),data))>
+    ~Write()
         {
-        write(s,doTask(StorageType{},data));
-        write(s,data); 
+        if(not called_writetype_)
+            Error("When implementing doTask(Write& W,..) must call W.writeType");
         }
 
     template<class T>
     void
-    writeType(stdx::choice<2>, T const& data)
-        {
-        throw ITError("Write to disk not implemented for storage type");
+    writeType(T const& data) 
+        { 
+        write(s,doTask(StorageType{},data)); 
+        called_writetype_ = true;
         }
+
+    //template<class T>
+    //auto
+    //writeType(stdx::choice<1>, T const& data)
+    //    -> stdx::if_compiles_return<void,
+    //             decltype(doTask(StorageType{},data)),
+    //             decltype(write(std::declval<std::ostream&>(),data))>
+    //    {
+    //    write(s,doTask(StorageType{},data));
+    //    write(s,data); 
+    //    }
+
+    //template<class T>
+    //void
+    //writeType(stdx::choice<2>, T const& data)
+    //    {
+    //    auto dname = typeNameOf(data);
+    //    throw ITError(format("Write to disk not implemented for storage type %s",dname));
+    //    }
+
+    //template<class T>
+    //auto
+    //storageTypeDefined(stdx::choice<1>, T const& data)
+    //    -> stdx::if_compiles_return<bool,
+    //             decltype(doTask(StorageType{},data))>
+    //     {
+    //     return true;
+    //     }
+    //template<class T>
+    //bool
+    //storageTypeDefined(stdx::choice<2>, T const& data)
+    //     {
+    //     return false;
+    //     }
+
+    //template<class T>
+    //auto
+    //writeDefined(stdx::choice<1>, T const& data)
+    //    -> stdx::if_compiles_return<bool,
+    //             decltype(write(std::declval<std::ostream&>(),data))>
+    //     {
+    //     return true;
+    //     }
+    //template<class T>
+    //bool
+    //writeDefined(stdx::choice<2>, T const& data)
+    //     {
+    //     return false;
+    //     }
 
     };
 
-template<typename T>
-void
-doTask(Write & W, T const& D)
-    {
-    W.writeType(stdx::select_overload{},D);
-    }
+inline const char*
+typeNameOf(Write const&) { return "Write"; }
+
+
+//template<typename T>
+//void
+//doTask(Write & W, T const& D)
+//    {
+//    auto sd = W.storageTypeDefined(stdx::select_overload{},D);
+//    auto wd = W.writeDefined(stdx::select_overload{},D);
+//    printfln("%d: storage type defined = %s, write defined = %s",typeNameOf(D),sd,wd);
+//    W.writeType(stdx::select_overload{},D);
+//    }
 
 
 namespace detail {

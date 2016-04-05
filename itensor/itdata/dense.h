@@ -140,6 +140,14 @@ write(std::ostream& s, Dense<T> const& dat)
     itensor::write(s,dat.store);
     }
 
+template<typename T>
+void
+doTask(Write & W, Dense<T> const& D)
+    {
+    W.writeType(D);
+    itensor::write(W.s,D.store);
+    }
+
 template<typename F, typename T>
 void
 doTask(ApplyIT<F>& A, Dense<T> const& d, ManageStore & m)
