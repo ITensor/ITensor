@@ -15,6 +15,10 @@ using std::move;
 
 namespace itensor {
 
+const char*
+typeNameOf(QDenseReal const& d) { return "QDenseReal"; }
+const char*
+typeNameOf(QDenseCplx const& d) { return "QDenseCplx"; }
 
 //function object for calling binaryFind
 //on offset vectors below

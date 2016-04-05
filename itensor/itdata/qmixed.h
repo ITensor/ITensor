@@ -73,42 +73,18 @@ class QMixed
     end() { return store.end(); }
     };
 
+const char*
+typeNameOf(QMixed<Real> const& d);
+const char*
+typeNameOf(QMixed<Cplx> const& d);
+
 template<typename V>
 Cplx 
-doTask(GetElt<IQIndex> const& g, QMixed<V> const& d)
-    {
-    return d[offset(g.is,g.inds)];
-    }
-
-namespace detail {
-    template<typename E, typename T>
-    struct SetEltHelper
-        {
-        void static
-        set(SetElt<E,IQIndex> const& S, QMixed<T> const& D, ManageStore& m)
-            {
-            auto& Dnc = *m.modifyData(D);
-            Dnc[offset(S.is,S.inds)] = S.elt;
-            }
-        };
-    template<>
-    struct SetEltHelper<Cplx,Real>
-        {
-        void static
-        set(SetElt<Cplx,IQIndex> const& S, QMixed<Real> const& D, ManageStore & m)
-            {
-            auto& nd = *m.makeNewData<QMixed<Cplx>>(D.begin(),D.end());
-            nd[offset(S.is,S.inds)] = S.elt;
-            }
-        };
-} //namespace detail
+doTask(GetElt<IQIndex> const& g, QMixed<V> const& d);
 
 template<typename E, typename T>
 void
-doTask(SetElt<E,IQIndex> const& S, QMixed<T> const& d, ManageStore & m)
-    {
-    detail::SetEltHelper<E,T>::set(S,d,m);
-    }
+doTask(SetElt<E,IQIndex> const& S, QMixed<T> const& d, ManageStore & m);
 
 //implementation of doTask(ToITensor...) is in iqtensor.cc
 template<typename V>

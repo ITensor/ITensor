@@ -13,6 +13,9 @@ using std::tie;
 
 namespace itensor {
 
+const char*
+typeNameOf(QCombiner const& d) { return "QCombiner"; }
+
 Cplx
 doTask(GetElt<IQIndex> const& g, QCombiner const& c)
     {

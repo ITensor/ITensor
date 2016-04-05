@@ -71,6 +71,11 @@ class QDiag
 
     };
 
+const char*
+typeNameOf(QDiagReal const& d);
+const char*
+typeNameOf(QDiagCplx const& d);
+
 template<typename T>
 bool constexpr
 isReal(QDiag<T> const& t) { return std::is_same<T,Real>::value; }

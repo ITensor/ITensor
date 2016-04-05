@@ -68,6 +68,9 @@ class QCombiner
 
     };
 
+const char*
+typeNameOf(QCombiner const& d);
+
 void inline
 read(std::istream& s, QCombiner & dat) { }
 

@@ -111,6 +111,11 @@ class QDense
 
     };
 
+const char*
+typeNameOf(QDenseReal const& d);
+const char*
+typeNameOf(QDenseCplx const& d);
+
 //QDenseCplx inline
 //makeCplx(QDenseReal const& DR)
 //    {

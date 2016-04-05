@@ -13,6 +13,10 @@
 
 namespace itensor {
 
+const char*
+typeNameOf(DenseReal const& d) { return "DenseReal"; }
+const char*
+typeNameOf(DenseCplx const& d) { return "DenseCplx"; }
 
 template<typename T>
 Cplx 

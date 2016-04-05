@@ -7,6 +7,11 @@ using std::vector;
 
 namespace itensor {
 
+const char*
+typeNameOf(DiagReal const& d) { return "DiagReal"; }
+const char*
+typeNameOf(DiagCplx const& d) { return "DiagCplx"; }
+
 template <typename T>
 Cplx
 doTask(GetElt<Index> const& g, Diag<T> const& d)

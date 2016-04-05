@@ -12,6 +12,11 @@ using std::move;
 
 namespace itensor {
 
+const char*
+typeNameOf(QDiagReal const& d) { return "QDiagReal"; }
+const char*
+typeNameOf(QDiagCplx const& d) { return "QDiagCplx"; }
+
 template<typename T, class F>
 void
 loopDiagBlocks(QDiag<T> const& D,

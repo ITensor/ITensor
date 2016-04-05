@@ -19,6 +19,9 @@ class Combiner
 
     };
 
+const char*
+typeNameOf(Combiner const& d);
+
 void inline
 read(std::istream& s, Combiner& dat) { }
 

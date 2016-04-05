@@ -101,6 +101,11 @@ class Dense
     end() { return store.end(); }
     };
 
+const char*
+typeNameOf(DenseReal const& d);
+const char*
+typeNameOf(DenseCplx const& d);
+
 template<typename T>
 bool constexpr
 isReal(Dense<T> const& t) { return std::is_same<T,Real>::value; }

@@ -93,6 +93,11 @@ class Diag
     end() { return store.end(); }
     };
 
+const char*
+typeNameOf(DiagReal const& d);
+const char*
+typeNameOf(DiagCplx const& d);
+
 template<typename T>
 bool constexpr
 isReal(Diag<T> const& D) { return isReal<T>(); }

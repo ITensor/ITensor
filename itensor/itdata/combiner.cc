@@ -14,6 +14,9 @@ using std::vector;
 
 namespace itensor {
 
+const char*
+typeNameOf(Combiner const& d) { return "Combiner"; }
+
 Cplx
 doTask(GetElt<Index> const& g, Combiner const& c)
     {
