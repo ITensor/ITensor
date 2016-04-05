@@ -19,8 +19,7 @@ putprimes(string s, int plev)
     if(plev < 0) Error("Negative prime level");
     if(plev > 3)
         {
-        //str << "[" << plev << "']";
-        str << "^" << plev;
+        str << "'" << plev;
         }
     else
         {
@@ -163,16 +162,28 @@ IndexVal(const Index& index_, long val_)
 #endif
     }
 
-bool IndexVal::
-operator==(const IndexVal& other) const
+bool
+operator==(IndexVal const& iv1, IndexVal const& iv2)
     {
-    return (index == other.index && val == other.val);
+    return (iv1.index == iv2.index && iv1.val == iv2.val);
+    }
+
+bool
+operator!=(IndexVal const& iv1, IndexVal const& iv2)
+    {
+    return not operator==(iv1,iv2);
     }
 
 bool
 operator==(Index const& I, IndexVal const& iv)
     {
-    return iv.operator==(I);
+    return iv.index == I;
+    }
+
+bool
+operator==(IndexVal const& iv, Index const& I)
+    {
+    return iv.index == I;
     }
 
 
