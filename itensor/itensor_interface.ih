@@ -244,29 +244,19 @@ getVals(Iter it,
         IV const& iv)
     -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
                       || std::is_same<IV,IQIndexVal>::value,
-                         bool>
+                         void>
     {
     static_assert(stdx::false_regardless_of<IndexValT>::value,
             "Last argument to .set method must be Real or Cplx scalar");
-    return true;
     }
+
 template<typename IndexValT, typename Iter>
-bool
-getVals(Iter it,
-        Cplx & z,
-        Real const& r)
-    {
-    z = Cplx(r,0);
-    return true;
-    }
-template<typename IndexValT, typename Iter>
-bool
+void
 getVals(Iter it,
         Cplx & z,
         Cplx const& w)
     {
     z = w;
-    return false;
     }
 
 template<typename IndexValT, 
@@ -280,10 +270,10 @@ getVals(Iter it,
         Rest&&... rest)
     -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
                       || std::is_same<IV,IQIndexVal>::value,
-                         bool>
+                         void>
     {
     *it = static_cast<IndexValT>(iv);
-    return getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
+    getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
 template<typename IndexValT, typename Iter, typename... Rest>
@@ -293,7 +283,8 @@ getVals(Iter it,
         Cplx w,
         Rest&&... rest)
     {
-    static_assert(stdx::false_regardless_of<Iter>::value,"New value passed to .set method must be last argument");
+    static_assert(stdx::false_regardless_of<Iter>::value,
+            "New value passed to .set method must be last argument");
     return false;
     }
 
@@ -317,8 +308,7 @@ set(VArgs&&... vargs)
     static constexpr auto size = sizeof...(vargs)-1;
     std::array<indexval_type,size> vals;
     Cplx z;
-    bool is_real = 
-        detail::getVals<indexval_type>(vals.begin(),z,std::forward<VArgs&&>(vargs)...);
+    detail::getVals<indexval_type>(vals.begin(),z,std::forward<VArgs&&>(vargs)...);
     if(size != size_t(inds().r())) 
         {
         println("---------------------------------------------");
@@ -335,7 +325,7 @@ set(VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
-    if(is_real)
+    if(z.imag()==0.0)
         {
         doTask(SetElt<Real,IndexT>{z.real(),is_,inds},store_);
         }
@@ -899,7 +889,7 @@ read(std::istream& s, ITensorT<I>& T)
     else if(type==StorageType::QDenseCplx) { p = readType<QDense<Cplx>>(s); }
     else if(type==StorageType::QDiagReal) { p = readType<QDiag<Real>>(s); }
     else if(type==StorageType::QDiagCplx) { p = readType<QDiag<Cplx>>(s); }
-    //else if(type==StorageType::QCombiner) { p = readType<QCombiner>(s); }
+    else if(type==StorageType::QCombiner) { p = readType<QCombiner>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");

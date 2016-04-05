@@ -3,6 +3,7 @@
 #include "itensor/util/cplx_literal.h"
 #include "itensor/util/range.h"
 #include "itensor/util/set_scoped.h"
+#include "itensor/iqindex.h"
 
 using namespace std;
 using namespace itensor;
@@ -281,6 +282,27 @@ SECTION("Diag Rank 2 from container")
     CHECK_DIFF(norm(T),std::sqrt(nrm),1E-10);
     CHECK_DIFF(sumels(T),tot,1E-10);
     }
+}
+
+SECTION("Set and Get Elements")
+{
+auto T = ITensor(s1,s2);
+T.set(s1(1),s2(1),11);
+T.set(s1(1),s2(2),12);
+T.set(s1(2),s2(1),21);
+T.set(s1(2),s2(2),22);
+CHECK(!isComplex(T));
+CHECK_CLOSE(T.real(s1(1),s2(1)),11);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+CHECK_CLOSE(T.real(s1(2),s2(2)),22);
+
+T.set(s2(2),s1(1),3);
+CHECK_CLOSE(T.real(s1(1),s2(2)),3);
+
+T.set(s2(2),s1(1),3+5_i);
+CHECK(isComplex(T));
+CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
 }
 
 SECTION("IndexValConstructors")
@@ -1758,6 +1780,16 @@ SECTION("NormTest")
     B = randomTensor(s1,prime(s1));
     auto C = A+1_i*B;
     CHECK_CLOSE(norm(C),sqrt(realPart(dag(C)*C).real()));
+    }
+
+SECTION("Get/Set with IQIndexVal")
+    {
+    auto I = IQIndex("I",Index("I+",1),QN(+1),
+                         Index("I-",1),QN(-1));
+    auto J = Index("J",2);
+    auto T = ITensor(I,J);
+    T.set(I(2),J(1),21);
+    CHECK_CLOSE(T.real(J(1),I(2)),21);
     }
 
 //SECTION("TieIndices")
