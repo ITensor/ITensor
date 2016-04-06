@@ -44,6 +44,63 @@ nameint(string const& f, int n)
 // class Index
 //
 
+Index::id_type Index::
+generateID()
+    {
+    static Index::IDGenerator rng(std::time(NULL) + getpid());
+    return rng();
+    }
+
+Index::
+Index() 
+    : 
+    id_(0),
+    primelevel_(0),
+    m_(1),
+    type_(NullInd)
+    { }
+
+Index::
+Index(const std::string& name, long m, IndexType type, int plev) 
+    : 
+    id_(generateID()),
+    primelevel_(plev),
+    m_(m),
+    type_(type),
+    name_(name.c_str())
+    { 
+#ifdef DEBUG
+    if(type_ == All) Error("Constructing Index with type All disallowed");
+    if(type_ == NullInd) Error("Constructing Index with type NullInd disallowed");
+#endif
+    }
+
+
+Index& Index::
+primeLevel(int plev) 
+    { 
+    primelevel_ = plev; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        Error("Negative primeLevel");
+#endif
+    return *this;
+    }
+
+
+Index& Index::
+prime(int inc) 
+    { 
+    primelevel_ += inc; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        {
+        Error("Negative primeLevel");
+        }
+#endif
+    return *this;
+    }
+
 
 string Index::
 name() const  { return putprimes(name_.c_str(),primelevel_); }
@@ -88,6 +145,27 @@ prime(IndexType type, int inc)
     return *this;
     }
 
+
+bool Index::
+noprimeEquals(Index const& other) const
+    { 
+    return (id_ == other.id_);
+    }
+
+IndexVal Index::
+operator()(long val)
+    {
+    return IndexVal(*this,val);
+    }
+
+Index Index::
+operator[](int plev) 
+    { 
+    auto I = *this;
+    I.primeLevel(plev); 
+    return I; 
+    }
+
 void Index::
 write(std::ostream& s) const 
     { 
@@ -114,6 +192,43 @@ read(std::istream& s)
 
     return *this;
     }
+
+bool 
+operator==(Index const& i1, Index const& i2)
+    { 
+    return (i1.id() == i2.id()) && (i1.primeLevel() == i2.primeLevel()); 
+    }
+
+bool 
+operator!=(Index const& i1, Index const& i2)
+    { 
+    return not operator==(i1,i2);
+    }
+
+bool
+operator>(Index const& i1, Index const& i2)
+    { 
+    if(i1.m() == i2.m()) 
+        {
+        if(i1.id() == i2.id()) return i1.primeLevel() > i2.primeLevel();
+        return i1.id() > i2.id();
+        }
+    return i1.m() > i2.m();
+    }
+
+bool
+operator<(Index const& i1, Index const& i2)
+    {
+    if(i1.m() == i2.m()) 
+        {
+        if(i1.id() == i2.id()) return i1.primeLevel() < i2.primeLevel();
+        return i1.id() < i2.id();
+        }
+    return i1.m() < i2.m();
+    }
+
+
+
 
 std::ostream& 
 operator<<(std::ostream & s, Index const& t)

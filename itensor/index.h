@@ -40,10 +40,6 @@ class Index
     IndexName name_;
     public:
 
-    //
-    // Constructors
-    //
-
     Index();
 
     // Name of Index is used for printing purposes
@@ -52,10 +48,6 @@ class Index
           long m = 1, 
           IndexType it = Link, 
           int primelev = 0);
-
-    //
-    // Accessor Methods
-    //
 
     // Returns the bond dimension
     long 
@@ -80,6 +72,9 @@ class Index
     std::string
     rawname() const { return std::string(name_.c_str()); }
 
+    id_type
+    id() const { return id_; }
+
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const;
 
@@ -88,17 +83,11 @@ class Index
     explicit operator long() const { return m(); }
     explicit operator size_t() const { return m(); }
 
-
     // Returns the Arrow direction of this Index
     Arrow 
     dir() const { return Out; }
     void 
     dir(Arrow ndir) const {  }
-
-
-    //
-    // Prime level methods
-    //
 
     // Increase primelevel by 1 (or by optional amount inc)
     Index& 
@@ -118,40 +107,17 @@ class Index
     Index& 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
-    //
-    // Operators
-    //
-
-    // Equality (==) operator
-    // True if other Index is a copy of this Index and has same primelevel
-    bool 
-    operator==(const Index& other) const;
-
-    bool 
-    operator!=(const Index& other) const { return !operator==(other); }
-
     // Check if other Index is a copy of this, ignoring primeLevel
     bool 
-    noprimeEquals(const Index& other) const;
+    noprimeEquals(Index const& other) const;
 
-    // Useful for sorting Index objects
-    bool 
-    operator>(const Index& other) const;
-    bool 
-    operator<(const Index& other) const;
+    //Return an IndexVal with specified value
+    IndexVal
+    operator()(long val);
 
-    // Creates an IndexVal from this Index with value i
-    IndexVal 
-    operator()(long i) const;
-
-    //Creates a copy of this Index with prime level plev
-    //(regardless of which prime level this Index has)
+    //Return copy of this Index with primelevel plev
     Index
-    operator[](int plev) const { auto I = *this; I.primeLevel(plev); return I; }
-
-    //
-    // Other methods
-    //
+    operator[](int plev);
 
     // Conjugate this Index.
     // Currently has no effect; exists for forward compatibility
@@ -172,22 +138,24 @@ class Index
     Index& 
     read(std::istream& s);
 
-    id_type
-    id() const { return id_; }
-
     private:
 
-    /////////////
-    /////////////
-
     Index::id_type 
-    generateID()
-        {
-        static Index::IDGenerator rng(std::time(NULL) + getpid());
-        return rng();
-        }
+    generateID();
 
     }; //class Index
+
+// i1 compares equal to i2 if i2 is a copy of i1 with same primelevel
+bool 
+operator==(Index const& i1, Index const& i2);
+bool 
+operator!=(Index const& i1, Index const& i2);
+
+// Useful for sorting Index objects
+bool 
+operator<(Index const& i1, Index const& i2);
+bool 
+operator>(Index const& i1, Index const& i2);
 
 
 //
@@ -233,13 +201,11 @@ class IndexVal
 
 bool
 operator==(IndexVal const& iv1, IndexVal const& iv2);
-
 bool
 operator!=(IndexVal const& iv1, IndexVal const& iv2);
 
 bool
 operator==(IndexVal const& iv, Index const& I);
-
 bool
 operator==(Index const& I, IndexVal const& iv);
 
@@ -281,123 +247,29 @@ mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
 
 //Returns a string version of this Index's bond dimension.
 std::string
-showm(const Index& I);
+showm(Index const& I);
 
 std::string 
-nameint(const std::string& f, int n);
+nameint(std::string const& f, int n);
 
 std::ostream& 
-operator<<(std::ostream & s, const Index &t);
+operator<<(std::ostream & s, Index const& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const IndexVal& iv);
-
-
-//
-//
-// Implementations
-//
-//
-
-inline Index::
-Index() 
-    : 
-    id_(0),
-    primelevel_(0),
-    m_(1),
-    type_(NullInd)
-    { }
-
-inline Index::
-Index(const std::string& name, long m, IndexType type, int plev) 
-    : 
-    id_(generateID()),
-    primelevel_(plev),
-    m_(m),
-    type_(type),
-    name_(name.c_str())
-    { 
-#ifdef DEBUG
-    if(type_ == All) Error("Constructing Index with type All disallowed");
-    if(type_ == NullInd) Error("Constructing Index with type NullInd disallowed");
-#endif
-    }
-
-bool inline Index::
-operator==(const Index& other) const 
-    { 
-    return (id_ == other.id_) && (primelevel_ == other.primelevel_); 
-    }
-
-bool inline Index::
-noprimeEquals(const Index& other) const
-    { 
-    return (id_ == other.id_);
-    }
-
-bool inline Index::
-operator>(const Index& other) const 
-    { 
-    if(m_ == other.m_) 
-        {
-        if(id_ == other.id_) return primelevel_ > other.primelevel_;
-        return id_ > other.id_;
-        }
-    return m_ > other.m_;
-    }
-
-bool inline Index::
-operator<(const Index& other) const
-    {
-    if(m_ == other.m_) 
-        {
-        if(id_ == other.id_) return primelevel_ < other.primelevel_;
-        return id_ < other.id_;
-        }
-    return m_ < other.m_;
-    }
-
-IndexVal inline Index::
-operator()(long val) const { return IndexVal(*this,val); }
-
-inline
-Index& Index::
-primeLevel(int plev) 
-    { 
-    primelevel_ = plev; 
-#ifdef DEBUG
-    if(primelevel_ < 0)
-        Error("Negative primeLevel");
-#endif
-    return *this;
-    }
-
-inline
-Index& Index::
-prime(int inc) 
-    { 
-    primelevel_ += inc; 
-#ifdef DEBUG
-    if(primelevel_ < 0)
-        {
-        Error("Negative primeLevel");
-        }
-#endif
-    return *this;
-    }
+operator<<(std::ostream& s, IndexVal const& iv);
 
 void
 add(Args& args, 
-    const Args::Name& name, 
+    Args::Name const& name, 
     IndexType it);
 
 IndexType
-getIndexType(const Args& args, 
-             const Args::Name& name);
+getIndexType(Args const& args, 
+             Args::Name const& name);
 
 IndexType
-getIndexType(const Args& args, 
-             const Args::Name& name, 
+getIndexType(Args const& args, 
+             Args::Name const& name, 
              IndexType default_val);
 
 } //namespace itensor
