@@ -1,11 +1,43 @@
+//
+// Distributed under the ITensor Library License, Version 1.1.
+//    (See accompanying LICENSE file.)
+//
+
 #include "itensor/util/cputime.h"
+#include <string>
 #include <iomanip>
 #include <sstream>
 #include <chrono>
-#include <sys/time.h>
-#include <sys/resource.h>
+
+using namespace std;
+using namespace std::chrono;
 
 namespace itensor {
+
+#if defined(_MSC_VER)
+#include <windows.h>
+
+double 
+cpu_mytime()
+    {
+    FILETIME ftCreation, ftExit, ftKernel, ftUser;
+    SYSTEMTIME stUser;
+
+    HANDLE hProcess = GetCurrentProcess();
+    if (GetProcessTimes(hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser) != -1) 
+        {
+        if (FileTimeToSystemTime(&ftUser, &stUser) != -1)
+            {
+            return stUser.wHour * 3600.0 + stUser.wMinute * 60.0 + stUser.wSecond + stUser.wMilliseconds * 1E-3;
+            }
+        }
+    return 0.0;
+    }
+
+#else
+
+#include <sys/time.h>
+#include <sys/resource.h>
 
 double 
 cpu_mytime() // cpu time in seconds used by program
@@ -14,6 +46,8 @@ cpu_mytime() // cpu time in seconds used by program
     getrusage(RUSAGE_SELF,&result);
     return result.ru_utime.tv_sec + 1e-6 * result.ru_utime.tv_usec;
     }
+
+#endif
 
 double 
 cpu_mywall() // wall time since program started
