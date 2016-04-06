@@ -81,27 +81,52 @@ read(std::istream& s, CtrArgs&&... args)
     return t;
     }
 
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct DoWrite
-    {
-    DoWrite(std::ostream& s, const T& obj)
+//template<typename T, bool isPod = std::is_pod<T>::value>
+//struct DoWrite
+//    {
+//    DoWrite(std::ostream& s, const T& obj)
+//        {
+//        obj.write(s);
+//        }
+//    };
+//template<typename T>
+//struct DoWrite<T, true>
+//    {
+//    DoWrite(std::ostream& s, const T& val)
+//        {
+//        s.write((char*) &val, sizeof(val));
+//        }
+//    };
+
+namespace detail {
+
+    template<typename T>
+    auto
+    writeImpl(stdx::choice<1>, std::ostream& s, T const& t)
+        -> stdx::enable_if_t<std::is_pod<T>::value,void>
         {
-        obj.write(s);
+        s.write((char*) &t, sizeof(t));
         }
-    };
-template<typename T>
-struct DoWrite<T, true>
-    {
-    DoWrite(std::ostream& s, const T& val)
+    template<typename T>
+    auto
+    writeImpl(stdx::choice<2>, std::ostream& s, T const& t)
+        -> stdx::if_compiles_return<void,decltype(t.write(s))>
         {
-        s.write((char*) &val, sizeof(val));
+        t.write(s);
         }
-    };
+    template<typename T>
+    void
+    writeImpl(stdx::choice<3>, std::ostream& s, T const& t)
+        {
+        Error("Object does not define .write method");
+        }
+}
+
 template<typename T>
 void
-write(std::ostream& s, const T& val)
+write(std::ostream& s, T const& val)
     {
-    DoWrite<T>(s,val);
+    detail::writeImpl(stdx::select_overload{},s,val);
     }
 
 

@@ -129,12 +129,13 @@ read(std::istream& s, Diag<T>& dat)
 
 template<typename T>
 void
-write(std::ostream& s, const Diag<T>& dat)
+write(std::ostream& s, Diag<T> const& dat)
     {
     itensor::write(s,dat.val);
     itensor::write(s,dat.length);
     itensor::write(s,dat.store);
     }
+
 
 template <typename F, typename T,
           class = stdx::require<std::is_same<T,stdx::result_of_t<F(T)>>> >
@@ -232,7 +233,6 @@ doTask(StorageType const& S, DiagReal const& d) ->StorageType::Type { return Sto
 
 auto inline
 doTask(StorageType const& S, DiagCplx const& d) ->StorageType::Type { return StorageType::DiagCplx; }
-
 
 } //namespace itensor
 

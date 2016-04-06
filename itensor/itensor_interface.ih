@@ -870,7 +870,7 @@ readType(std::istream& s, CtrArgs&&... args)
 
 template<typename I>
 void
-read(std::istream& s, ITensorT<I>& T)
+read(std::istream& s, ITensorT<I> & T)
     {
     IndexSetT<I> is;
     read(s,is);
@@ -897,16 +897,40 @@ read(std::istream& s, ITensorT<I>& T)
     T = ITensorT<I>(std::move(is),std::move(p),scale);
     }
 
+struct Write
+    {
+    std::ostream& s;
+
+    Write(std::ostream& s_) : s(s_) { }
+    };
+
+inline const char*
+typeNameOf(Write const&) { return "Write"; }
+
+template<typename D>
+auto
+doTask(Write & W, D const& d)
+    -> stdx::if_compiles_return<void,decltype(itensor::write(W.s,d))>
+    {
+    write(W.s,d);
+    }
+
 template<typename I>
 void
-write(std::ostream& s, const ITensorT<I>& T)
+write(std::ostream& s, ITensorT<I> const& T)
     {
     write(s,T.inds());
     write(s,T.scale());
+    auto type = StorageType::Null;
     if(T.store()) 
+        {
+        type = doTask(StorageType{},T.store());
+        }
+    write(s,type);
+    if(T.store()) 
+        {
         doTask(Write{s},T.store());
-    else 
-        write(s,StorageType::Null);
+        }
     }
 
 } // namespace itensor

@@ -4,6 +4,7 @@
 #include "itensor/util/range.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/iqindex.h"
+#include <cstdlib>
 
 using namespace std;
 using namespace itensor;
@@ -282,6 +283,45 @@ SECTION("Diag Rank 2 from container")
     CHECK_DIFF(norm(T),std::sqrt(nrm),1E-10);
     CHECK_DIFF(sumels(T),tot,1E-10);
     }
+}
+
+SECTION("Write to Disk")
+{
+auto fname = "_write_test";
+SECTION("Dense Real Storage")
+    {
+    auto T = randomTensor(s1,s2);
+    writeToFile(fname,T);
+    auto nT = readFromFile<ITensor>(fname);
+    CHECK(typeOf(nT) == Type::DenseReal);
+    CHECK(norm(T-nT) < 1E-12);
+    }
+SECTION("Dense Cplx Storage")
+    {
+    auto T = randomTensorC(s1,s2);
+    writeToFile(fname,T);
+    auto nT = readFromFile<ITensor>(fname);
+    CHECK(typeOf(nT) == Type::DenseCplx);
+    CHECK(norm(T-nT) < 1E-12);
+    }
+SECTION("Combiner Storage")
+    {
+    auto C = combiner(s1,s2);
+    writeToFile(fname,C);
+    auto nC = readFromFile<ITensor>(fname);
+    CHECK(hasindex(nC,s1));
+    CHECK(hasindex(nC,s2));
+    CHECK(typeOf(nC) == Type::Combiner);
+    }
+SECTION("DiagRealAllSame Storage")
+    {
+    auto T = delta(s1,s2);
+    writeToFile(fname,T);
+    auto nT = readFromFile<ITensor>(fname);
+    CHECK(typeOf(nT) == Type::DiagRealAllSame);
+    }
+
+std::system(format("rm -f %s",fname).c_str());
 }
 
 SECTION("Set and Get Elements")
@@ -1627,6 +1667,7 @@ SECTION("Combiner")
         //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
         //    }
         }
+
     }
 
 SECTION("Norm")
