@@ -507,7 +507,7 @@ operator-(const IndexSetIter<T>& x, const IndexSetIter<T>& y)
 
 template <typename T>
 IndexSetIter<T> 
-operator+(const IndexSetIter<T>& x, typename IndexSetIter<T>::difference_type d) 
+operator+(IndexSetIter<T>& x, typename IndexSetIter<T>::difference_type d) 
     { 
     return x += d;
     } 
