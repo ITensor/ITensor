@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor/indexset.h"
 #include "itensor/util/set_scoped.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 
@@ -368,5 +369,20 @@ SECTION("Map Prime")
     }
 
 } //PrimeLevelMethods
+
+SECTION("IndexSet Iterator")
+{
+auto s1 = Index("s1",2);
+auto s2 = Index("s2",3); 
+auto s3 = Index("s3",4); 
+auto s4 = Index("s4",5); 
+auto i = IndexSet(s1,s2,s3,s4); 
+auto c = i.begin(); 
+CHECK(*c == s1);
+CHECK(*(c+1) == s2);
+CHECK(*(c+2) == s3);
+CHECK(*(c+3) == s4);
+CHECK((c+4) == i.end());
+}
 
 } //IndexSetTest

@@ -499,22 +499,17 @@ operator<(const IndexSetIter<T>& x, const IndexSetIter<T>& y)
     } 
 
 template <typename T>
-typename IndexSetIter<T>::difference_type 
-operator-(const IndexSetIter<T>& x, const IndexSetIter<T>& y) 
-    { 
-    return x.data() - y.data();
-    } 
-
-template <typename T>
-IndexSetIter<T> 
-operator+(const IndexSetIter<T>& x, typename IndexSetIter<T>::difference_type d) 
+IndexSetIter<T>
+operator+(IndexSetIter<T> x, 
+          typename IndexSetIter<T>::difference_type d) 
     { 
     return x += d;
     } 
 
 template <typename T>
-IndexSetIter<T> 
-operator+(typename IndexSetIter<T>::difference_type d, const IndexSetIter<T>& x) 
+IndexSetIter<T>
+operator+(typename IndexSetIter<T>::difference_type d, 
+          IndexSetIter<T> x) 
     { 
     return x += d;
     } 
