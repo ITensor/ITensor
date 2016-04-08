@@ -30,6 +30,25 @@ toMPO() const
     return MPO();
     }
 
+template <> inline
+IQMPO MPO::
+toIQMPO() const
+    {
+    IQMPO res(*sites_,logrefNorm_);
+    convertToIQ(*sites_,A_,res.A_);
+    return res;
+    }
+
+//toMPO method fails unless template class 
+//Tensor is set to IQTensor (object is an IQMPO)
+template<class Tensor>
+IQMPO MPOt<Tensor>::
+toIQMPO() const
+    {
+    Error("toIQMPO only implemented for class MPO");
+    return IQMPO();
+    }
+
 template<typename T>
 bool
 isComplex(MPOt<T> const& W)

@@ -144,6 +144,13 @@ class MPSt
     Real 
     normalize();
 
+    void 
+    toIQ(QN totalq, IQMPS& iqpsi, Real cut = 1E-12) const
+        {
+        iqpsi = IQMPS(*sites_);
+        convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
+        }
+
     void
     swap(MPSt& other);
 
@@ -257,9 +264,9 @@ class MPSt
 
     }; //class MPSt<Tensor>
 
-//void 
-//convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
-//            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
+void 
+convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
+            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class T>
 MPSt<T>& 
