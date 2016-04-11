@@ -1,8 +1,4 @@
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/autompo.h"
-#include "itensor/util/input.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
@@ -18,24 +14,24 @@ int main(int argc, char* argv[])
     {
     //Parse the input file
     if(argc < 2) { printfln("Usage: %s inputfile_dmrg_table",argv[0]); return 0; }
-    InputGroup basic(argv[1],"basic");
+    auto input = InputGroup(argv[1],"input");
 
     //Read in individual parameters from the input file
-    auto N = basic.getInt("N");
-    auto nsweeps = basic.getInt("nsweeps");
+    auto N = input.getInt("N");
+    auto nsweeps = input.getInt("nsweeps");
     //second argument to getXXX methods is a default
     //in case parameter not provided in input file
-    auto quiet = basic.getYesNo("quiet",true);
+    auto quiet = input.getYesNo("quiet",true);
 
     //
     // Read the sweeps parameters from a table.
     //
 
     //Read in the sweeps table itself
-    InputGroup table(basic,"sweeps");
+    auto table = InputGroup(input,"sweeps");
 
     //Create the sweeps class & print
-    Sweeps sweeps(nsweeps,table);
+    auto sweeps = Sweeps(nsweeps,table);
     println(sweeps);
 
     //
@@ -43,14 +39,14 @@ int main(int argc, char* argv[])
     // with this Sweeps class
     //
 
-    //SpinHalf sites(N);
-    SpinOne sites(N);
+    //auto sites = SpinHalf(N);
+    auto sites = SpinOne(N);
 
     //
     // Use the AutoMPO feature to create the 
     // next-neighbor Heisenberg model
     //
-    AutoMPO ampo(sites);
+    auto ampo = AutoMPO(sites);
     for(int j = 1; j < N; ++j)
         {
         ampo += 0.5,"S+",j,"S-",j+1;
@@ -59,16 +55,16 @@ int main(int argc, char* argv[])
         }
     auto H = MPO(ampo);
 
-    InitState initState(sites);
+    auto state = InitState(sites);
     for(int i = 1; i <= N; ++i) 
         {
-        if(i%2 == 1) initState.set(i,"Up");
-        else         initState.set(i,"Dn");
+        if(i%2 == 1) state.set(i,"Up");
+        else         state.set(i,"Dn");
         }
 
-    MPS psi(initState);
+    auto psi = MPS(state);
 
-    printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
+    printfln("Initial energy = %.5f",overlap(psi,H,psi));
 
     auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
 

@@ -1,6 +1,4 @@
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/autompo.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
@@ -15,7 +13,7 @@ int main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    SpinHalf sites(N);
+    auto sites = SpinHalf(N);
 
     //
     // Create the Hamiltonian matrix product operator.
@@ -23,7 +21,7 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    AutoMPO ampo(sites);
+    auto ampo = AutoMPO(sites);
     for(int j = 1; j < N; ++j)
         {
         ampo += 0.5,"S+",j,"S-",j+1;
@@ -41,17 +39,17 @@ int main(int argc, char* argv[])
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(sites);
+    auto state = InitState(sites);
     for(int i = 1; i <= N; ++i) 
-        initState.set(i,(i%2==1 ? "Up" : "Dn"));
+        state.set(i,(i%2==1 ? "Up" : "Dn"));
 
-    IQMPS psi(initState);
+    auto psi = IQMPS(state);
 
     //
-    // psiHphi calculates matrix elements of MPO's with respect to MPS's
-    // psiHphi(psi,H,psi) = <psi|H|psi>
+    // overlap calculates matrix elements of MPO's with respect to MPS's
+    // overlap(psi,H,psi) = <psi|H|psi>
     //
-    printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
+    printfln("Initial energy = %.5f",overlap(psi,H,psi));
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -59,7 +57,7 @@ int main(int argc, char* argv[])
     // values are provided, so all remaining sweeps will use the
     // last maxm (= 200).
     //
-    Sweeps sweeps(5);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 50,50,100,100,200;
     sweeps.cutoff() = 1E-8;
     println(sweeps);
@@ -73,7 +71,7 @@ int main(int argc, char* argv[])
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",energy);
-    printfln("\nUsing psiHphi = %.10f\n", psiHphi(psi,H,psi) );
+    printfln("\nUsing overlap = %.10f\n", overlap(psi,H,psi) );
 
     println("\nTotal QN of Ground State = ",totalQN(psi));
 

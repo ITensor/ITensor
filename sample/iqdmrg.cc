@@ -1,7 +1,4 @@
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/autompo.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
