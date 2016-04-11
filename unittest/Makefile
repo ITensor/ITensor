@@ -31,7 +31,7 @@ SOURCES+= autompo_test.cc
 SOURCES+= regression_test.cc
 #SOURCES+= spectrum_test.cc
 #SOURCES+= webpage_test.cc
-#SOURCES+= localmpo_test.cc
+SOURCES+= localop_test.cc
 #SOURCES+= siteset_test.cc
 #SOURCES+= bondgate_test.cc
 endif
@@ -128,7 +128,10 @@ eigensolver_test.o: $(ITENSOR_INCLUDEDIR)/itensor/eigensolver.h
 webpage_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iqtensor.h
 .debug_objs/webpage_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iqtensor.h
 
+LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/mps/localop.h
 LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/mps/localmpo.h
-localmpo_test.o: $(LIBHEADERS)
-.debug_objs/localmpo_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/mps/localmpo_mps.h
+LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor/mps/localmposet.h
+localop_test.o: $(LIBHEADERS)
+.debug_objs/localop_test.o: $(LIBHEADERS)
 

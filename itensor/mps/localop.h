@@ -32,6 +32,11 @@ namespace itensor {
 template <class Tensor>
 class LocalOp
     {
+    Tensor const* Op1_;
+    Tensor const* Op2_;
+    Tensor const* L_;
+    Tensor const* R_;
+    mutable long size_;
     public:
 
     using IndexT = typename Tensor::index_type;
@@ -86,38 +91,32 @@ class LocalOp
            Tensor const& L, 
            Tensor const& R);
 
-    const Tensor&
+    Tensor const&
     Op1() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *Op1_;
         }
 
-    const Tensor&
+    Tensor const&
     Op2() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *Op2_;
         }
 
-    const Tensor&
+    Tensor const&
     L() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *L_;
         }
 
-    const Tensor&
+    Tensor const&
     R() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *R_;
-        }
-
-    const Tensor&
-    bondTensor() const 
-        { 
-        return (*Op1_) * (*Op2_);
         }
 
     explicit operator bool() const { return bool(Op1_); }
@@ -127,26 +126,6 @@ class LocalOp
 
     bool
     RIsNull() const;
-
-    void
-    operator=(const LocalOp& other)
-        {
-        Op1_ = other.Op1_;
-        Op2_ = other.Op2_;
-        L_ = other.L_;
-        R_ = other.R_;
-        }
-
-    private:
-
-    /////////////////
-    const Tensor *Op1_, *Op2_; 
-    const Tensor *L_, *R_; 
-    mutable long size_;
-    /////////////////
-
-    void
-    makeBond() const;
 
     };
 
@@ -230,7 +209,8 @@ RIsNull() const
 
 template <class Tensor>
 void inline LocalOp<Tensor>::
-product(const Tensor& phi, Tensor& phip) const
+product(Tensor const& phi, 
+        Tensor      & phip) const
     {
     if(!(*this)) Error("LocalOp is null");
 
@@ -276,25 +256,25 @@ deltaRho(Tensor const& AA,
          Tensor const& combine, 
          Direction dir) const
     {
-    auto delta = AA;
+    auto drho = AA;
     if(dir == Fromleft)
         {
-        if(!LIsNull()) delta *= L();
-        delta *= (*Op1_);
+        if(!LIsNull()) drho *= L();
+        drho *= (*Op1_);
         }
     else //dir == Fromright
         {
-        if(!RIsNull()) delta *= R();
-        delta *= (*Op2_);
+        if(!RIsNull()) drho *= R();
+        drho *= (*Op2_);
         }
 
-    delta.noprime();
-    delta = combine * delta;
-    auto ci = commonIndex(combine,delta);
+    drho.noprime();
+    drho = combine * drho;
+    auto ci = commonIndex(combine,drho);
     
-    delta *= dag(prime(delta,ci));
+    drho *= dag(prime(drho,ci));
 
-    return delta;
+    return drho;
     }
 
 
@@ -307,75 +287,58 @@ diag() const
     auto& Op1 = *Op1_;
     auto& Op2 = *Op2_;
 
-    IndexT toTie;
-    bool found = false;
-    for(auto& s : Op1.inds())
-        {
-        if(s.primeLevel() == 0 && s.type() == Site) 
+    //lambda helper function:
+    auto findIndPair = [](Tensor const& T) {
+        for(auto& s : T.inds())
             {
-            toTie = s;
-            found = true;
-            break;
+            if(s.primeLevel() == 0 && hasindex(T,prime(s))) 
+                {
+                return s;
+                }
             }
-        }
-    if(!found) 
-        {
-        println("Op1 = ",Op1);
-        Error("Couldn't find Index");
-        }
-    auto Diag = noprime(Op1 * diagTensor(1,toTie,prime(toTie)),toTie);
+        return IndexT();
+        };
 
-    found = false;
-    for(auto& s : Op2.inds())
-        {
-        if(s.primeLevel() == 0 && s.type() == Site) 
-            {
-            toTie = s;
-            found = true;
-            break;
-            }
-        }
-    if(!found) Error("Couldn't find Index");
-    Diag *= noprime(Op2 * diagTensor(1,toTie,prime(toTie)),toTie);
+    auto toTie = noprime(findtype(Op1,Site));
+    auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
+    Diag.noprime();
+
+    toTie = noprime(findtype(Op2,Site));
+    auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
+    Diag *= noprime(Diag2);
 
     if(!LIsNull())
         {
-        found = false;
-        for(auto& ll : L().inds())
+        toTie = findIndPair(L());
+        if(toTie)
             {
-            if(ll.primeLevel() == 0 && hasindex(L(),prime(ll)))
-                {
-                toTie = ll;
-                found = true;
-                break;
-                }
+            auto DiagL = L() * delta(toTie,prime(toTie),prime(toTie,2));
+            Diag *= noprime(DiagL);
             }
-        if(found)
-            Diag *= noprime(L()*diagTensor(1,toTie,prime(toTie)),toTie);
         else
+            {
             Diag *= L();
+            }
         }
 
     if(!RIsNull())
         {
-        found = false;
-        for(auto& rr : R().inds())
+        toTie = findIndPair(R());
+        if(toTie)
             {
-            if(rr.primeLevel() == 0 && hasindex(R(),prime(rr)))
-                {
-                toTie = rr;
-                found = true;
-                break;
-                }
+            auto DiagR = R() * delta(toTie,prime(toTie),prime(toTie,2));
+            Diag *= noprime(DiagR);
             }
-        if(found)
-            Diag *= noprime(R()*diagTensor(1,toTie,prime(toTie)),toTie);
         else
+            {
             Diag *= R();
+            }
         }
 
     Diag.dag();
-    Diag.takeReal(); //Diag must be real since operator assumed Hermitian
+    //Diag must be real since operator assumed Hermitian
+    Diag.takeReal();
+
     return Diag;
     }
 
