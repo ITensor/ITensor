@@ -71,7 +71,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 #PLATFORM=openblas
 #BLAS_LAPACK_LIBFLAGS=-L/usr/local/opt/openblas/lib -lopenblas
-#BLAS_LAPACK_INCLUDEFLAGS=-I/usr/local/opt/openblas/include
+#BLAS_LAPACK_INCLUDEFLAGS=-I/usr/local/opt/openblas/include -fpermissive -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE
 
 ##
 ## Example using the AMD ACML library
