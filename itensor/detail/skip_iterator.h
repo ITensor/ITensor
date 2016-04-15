@@ -34,7 +34,7 @@ class SkipIterator
     typedef typename __traits_type::reference reference;
     typedef typename __traits_type::pointer pointer;
 
-    typedef unsigned long size_type;
+    typedef size_t size_type;
 
     public:
 
