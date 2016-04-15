@@ -22,11 +22,11 @@ template<typename range_type>
 class RangeBuilderT;
 
 //0-indexed
-using Range = RangeT<unsigned long,0ul>;
+using Range = RangeT<size_t,0ul>;
 using RangeBuilder = RangeBuilderT<Range>;
 
 //1-indexed
-using Range1 = RangeT<unsigned long,1ul>;
+using Range1 = RangeT<size_t,1ul>;
 using Range1Builder = RangeBuilderT<Range1>;
 
 template<typename Derived>
@@ -40,7 +40,7 @@ struct isRange
 template<typename index_type>
 struct IndStr
     {
-    using size_type = unsigned long;
+    using size_type = size_t;
     index_type  ind = index_type{}; //convertible to size_type
     size_type   str = 0; //stride
 
