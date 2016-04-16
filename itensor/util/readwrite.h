@@ -13,7 +13,7 @@
 #include "itensor/util/error.h"
 #include "itensor/util/infarray.h"
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #include <process.h>
 #include <io.h>
 #include <direct.h>
