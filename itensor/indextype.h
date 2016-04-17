@@ -25,39 +25,23 @@ ITSize() { return 7ul; }
 size_t inline constexpr 
 ITStoreSize() { return 1+ITSize(); }
 
-class IndexType
+struct IndexType
     {
-    public:
     using storage_type = std::array<char,ITStoreSize()>;
     private:
     storage_type name_;
     public:
 
     explicit
-    IndexType(const char* name)
-        {
-        name_.fill('\0');
-        auto len = std::min(std::strlen(name),size());
-#ifdef DEBUG
-        if(std::strlen(name) > size())
-            {
-            std::cout << "Warning: IndexType name will be truncated to " << size() << " chars" << std::endl;
-            }
-#endif
-        for(size_t j = 0; j < len; ++j)
-            {
-            name_[j] = name[j];
-            }
-        assert(name_[size()]=='\0');
-        }
+    IndexType(const char* name);
+
+    size_t static constexpr
+    size() { return ITSize(); }
 
     const char*
     c_str() const { assert(name_[size()]=='\0'); return &(name_[0]); }
 
     operator const char*() const { return c_str(); }
-
-    size_t static constexpr
-    size() { return ITSize(); }
 
     const char&
     operator[](size_t i) const { CHECK_IND(i) return name_[i]; }
@@ -75,22 +59,21 @@ class IndexType
 
 
 bool inline
-operator==(const IndexType& t1, const IndexType& t2)
+operator==(IndexType const& t1, IndexType const& t2)
     {
     for(size_t j = 0; j < IndexType::size(); ++j)
         if(t1[j] != t2[j]) return false;
     return true;
-    //return *reinterpret_cast<const uint64_t*>(t1.c_str()) == *reinterpret_cast<const uint64_t*>(t2.c_str());
     }
 
 bool inline
-operator!=(const IndexType& t1, const IndexType& t2)
+operator!=(IndexType const& t1, IndexType const& t2)
     {
     return !operator==(t1,t2);
     }
 
 void inline
-write(std::ostream& s, const IndexType& t)
+write(std::ostream& s, IndexType const& t)
     {
     for(size_t n = 0; n < IndexType::size(); ++n)
         s.write((char*) &t[n],sizeof(char));
@@ -103,6 +86,27 @@ read(std::istream& s, IndexType& t)
         s.read((char*) &(t[n]),sizeof(char));
     }
 
+inline IndexType::
+IndexType(const char* name)
+    {
+    name_.fill('\0');
+    auto len = std::min(std::strlen(name),size());
+#ifdef DEBUG
+    if(std::strlen(name) > size())
+        {
+        std::cout << "Warning: IndexType name will be truncated to " << size() << " chars" << std::endl;
+        }
+#endif
+    for(size_t j = 0; j < len; ++j)
+        {
+        name_[j] = name[j];
+        }
+    assert(name_[size()]=='\0');
+    }
+
+//
+// Pre-defined IndexTypes
+//
 const auto All     = IndexType("All");
 const auto NullInd = IndexType("NullInd");
 const auto Link    = IndexType("Link"); 
@@ -111,52 +115,15 @@ const auto Atype   = IndexType("Atype");
 const auto Btype   = IndexType("Btype");
 const auto Ctype   = IndexType("Ctype");
 const auto Dtype   = IndexType("Dtype");
+const auto Vtype   = IndexType("Vtype");
+const auto Wtype   = IndexType("Wtype");
 const auto Xtype   = IndexType("Xtype");
 const auto Ytype   = IndexType("Ytype");
 const auto Ztype   = IndexType("Ztype");
-const auto Wtype   = IndexType("Wtype");
-const auto Vtype   = IndexType("Vtype");
 
 
 } // namespace itensor
 
 #undef CHECK_IND
-
-//
-// Some older methods of IndexType
-//
-
-//#ifdef DEBUG
-//            if(!std::isalpha(name[j]))
-//                {
-//                Error("IndexType names must consist of letters only");
-//                }
-//#endif
-
-    //operator long() const
-    //    {
-    //    static constexpr size_t StrideFac = 58;
-    //    long res = 0,
-    //         stride = 1;
-    //    for(size_t j = 0; j < Size; ++j)
-    //        {
-    //        if(name_[j]=='\0') break;
-    //        auto incr = 1+int(name_[j]-'A');
-    //        res += stride*incr;
-    //        stride *= StrideFac;
-    //        }
-    //    return res;
-    //    }
-
-//inline std::ostream&
-//operator<<(std::ostream& s, const IndexType& t)
-//    {
-//    for(size_t j = 0; j < IndexType::size(); ++j)
-//        {
-//        if(t[j]=='\0') break;
-//        s << t[j];
-//        }
-//    return s;
-//    }
 
 #endif
