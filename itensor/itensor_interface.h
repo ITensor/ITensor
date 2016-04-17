@@ -234,8 +234,6 @@ class ITensorT
     operator/=(ITensorT const& other);
 
 
-    public:
-
     //
     // Developer / advanced methods
     //

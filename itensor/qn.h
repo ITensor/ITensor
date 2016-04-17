@@ -7,7 +7,6 @@
 
 #include "itensor/global.h"
 #include "itensor/arrow.h"
-#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
