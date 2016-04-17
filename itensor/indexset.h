@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
-#include "itensor/util/readwrite.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/types.h"
@@ -139,6 +138,14 @@ class IndexSetT : public RangeT<index_type_>
         return operator[](I-1);
         }
 
+    parent const&
+    range() const { return *this; }
+
+    void
+    dag() { for(auto& J : *this) J.dag(); }
+
+    void
+    swap(IndexSetT & other) { parent::swap(other); }
 
     index_type const&
     front() const { return parent::front().ind; }
@@ -164,21 +171,15 @@ class IndexSetT : public RangeT<index_type_>
     const_iterator
     cend() const { return end(); }
 
-    parent const&
-    range() const { return *this; }
-
-    void
-    swap(IndexSetT& other) { parent::swap(other); }
-
-    void
-    dag() { for(auto& J : *this) J.dag(); }
-
-    void
-    read(std::istream& s);
-
-    void
-    write(std::ostream& s) const;
     };
+
+template<typename index_type>
+void
+read(std::istream& s, IndexSetT<index_type> & is);
+
+template<typename index_type>
+void
+write(std::ostream& s, IndexSetT<index_type> const& is);
 
 template<typename index_type>
 auto
@@ -198,23 +199,6 @@ rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
 // IndexSetT Primelevel Methods
 //
 
-// increment primelevel of all indices of
-// type "type" by an amount "inc"
-template<typename IndexT, typename... Types>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexType type,
-      int inc = 1);
-
-// same as above but for multiple types
-// optionally, last argument can be 
-// an increment amount
-template<typename IndexT, typename... Types>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexType type1,
-      Types&&... rest);
-
 // increment primelevel of all
 // indices by an amount "inc"
 template<typename IndexT>
@@ -231,6 +215,23 @@ void
 prime(IndexSetT<IndexT>& is, 
       IndexT const& I1, 
       Inds&&... rest);
+
+// increment primelevel of all indices of
+// type "type" by an amount "inc"
+template<typename IndexT, typename... Types>
+void 
+prime(IndexSetT<IndexT>& is, 
+      IndexType type,
+      int inc = 1);
+
+// same as above but for multiple types
+// optionally, last argument can be 
+// an increment amount
+template<typename IndexT, typename... Types>
+void 
+prime(IndexSetT<IndexT>& is, 
+      IndexType type1,
+      Types&&... rest);
 
 //
 //Given a list of indices and an increment (an int)
@@ -268,7 +269,7 @@ noprime(IndexSetT<IndexT>& is,
 template<typename IndexT, typename... Inds>
 void 
 noprime(IndexSetT<IndexT>& is, 
-        const IndexT& I1, 
+        IndexT const& I1, 
         Inds&&... inds);
 
 // This version of mapprime takes
@@ -301,15 +302,6 @@ mapprime(IndexSetT<IndexT>& is,
 //
 
 
-template<class IndexT>
-Arrow
-dir(const IndexSetT<IndexT>& is, const IndexT& I);
-
-
-template <class IndexT>
-IndexT const&
-finddir(IndexSetT<IndexT> const& iset, Arrow dir);
-
 //
 // Given IndexSetT<IndexT> iset and IndexT I,
 // return int j such that iset[j] == I.
@@ -325,33 +317,42 @@ IndexT const&
 findtype(IndexSetT<IndexT> const& iset, 
          IndexType t);
 
-//
-// Compute the permutation P taking an IndexSetT iset
-// to oset (of type IndexSetT or array<IndexT,NMAX>)
-//
 template <class IndexT>
-void
-getperm(const IndexSetT<IndexT>& iset, 
-        const typename IndexSetT<IndexT>::storage& oset, 
-        Permutation& P);
+IndexT const&
+finddir(IndexSetT<IndexT> const& iset, Arrow dir);
+
+template<class IndexT>
+Arrow
+dir(IndexSetT<IndexT> const& is, IndexT const& I);
+
+
+////
+//// Compute the permutation P taking an IndexSetT iset
+//// to oset (of type IndexSetT or array<IndexT,NMAX>)
+////
+//template <class IndexT>
+//void
+//getperm(const IndexSetT<IndexT>& iset, 
+//        const typename IndexSetT<IndexT>::storage& oset, 
+//        Permutation& P);
 
 template <class IndexT>
 bool
-hasindex(const IndexSetT<IndexT>& iset, 
-         const IndexT& I);
+hasindex(IndexSetT<IndexT> const& iset, 
+         IndexT const& I);
 
 template <class IndexT>
 bool
-hastype(const IndexSetT<IndexT>& iset, 
+hastype(IndexSetT<IndexT> const& iset, 
         IndexType t);
 
 template <class IndexT>
 long
-minM(const IndexSetT<IndexT>& iset);
+minM(IndexSetT<IndexT> const& iset);
 
 template <class IndexT>
 long
-maxM(const IndexSetT<IndexT>& iset);
+maxM(IndexSetT<IndexT> const& iset);
 
 template<class IndexT>
 void

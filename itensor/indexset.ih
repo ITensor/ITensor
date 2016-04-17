@@ -11,19 +11,21 @@ namespace itensor {
 // Methods for Manipulating IndexSetT
 //
 
-template <class IndexT>
-void IndexSetT<IndexT>::
-write(std::ostream& s) const
+template<typename I>
+void
+write(std::ostream& s, IndexSetT<I> const& is)
     {
-    parent const& pr = *this;
+    using parent = typename IndexSetT<I>::parent;
+    parent const& pr = is;
     itensor::write(s,pr);
     }
 
-template <class IndexT>
-void IndexSetT<IndexT>::
-read(std::istream& s)
+template<typename I>
+void
+read(std::istream& s, IndexSetT<I> & is)
     {
-    parent & pr = *this;
+    using parent = typename IndexSetT<I>::parent;
+    parent & pr = is;
     itensor::read(s,pr);
     }
 
@@ -443,50 +445,50 @@ findtype(const IndexSetT<IndexT>& iset, IndexType t)
     return IndexT();
 	}
 
-//
-// Compute the permutation P taking an IndexSetT iset
-// to oset (of type IndexSetT or array<IndexT,NMAX>)
-//
-template <class IndexT>
-void
-getperm(const IndexSetT<IndexT>& iset, 
-        const typename IndexSetT<IndexT>::storage& oset, 
-        Permutation& P)
-	{
-	for(int j = 0; j < iset.r(); ++j)
-	    {
-	    bool got_one = false;
-	    for(int k = 0; k < iset.r(); ++k)
-            {
-            if(oset[j] == iset[k])
-                { 
-                P.setFromTo(j+1,k+1); 
-                got_one = true; 
-                break;
-                }
-            }
-	    if(!got_one)
-            {
-            println("j = ",j);
-            println("iset =");
-            for(int j = 0; j < iset.r(); ++j)
-                printfln("%d %s",j,iset[j]);
-            println("\noset = ");
-            for(int j = 0; j < iset.r(); ++j)
-                printfln("%d %s",j,oset[j]);
-            println();
-            //printfln("iset uniqueReal = %.15E",iset.uniqueReal());
-            //Real our = 0;
-            //for(int i = 0; i < iset.r(); ++i)
-            //    {
-            //    our += oset[i].uniqueReal();
-            //    }
-            //printfln("oset uniqueReal = %.15E",our);
-            //printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
-            throw ITError("IndexSetT::getperm: no matching index");
-            }
-	    }
-	}
+////
+//// Compute the permutation P taking an IndexSetT iset
+//// to oset (of type IndexSetT or array<IndexT,NMAX>)
+////
+//template <class IndexT>
+//void
+//getperm(const IndexSetT<IndexT>& iset, 
+//        const typename IndexSetT<IndexT>::storage& oset, 
+//        Permutation& P)
+//	{
+//	for(int j = 0; j < iset.r(); ++j)
+//	    {
+//	    bool got_one = false;
+//	    for(int k = 0; k < iset.r(); ++k)
+//            {
+//            if(oset[j] == iset[k])
+//                { 
+//                P.setFromTo(j+1,k+1); 
+//                got_one = true; 
+//                break;
+//                }
+//            }
+//	    if(!got_one)
+//            {
+//            println("j = ",j);
+//            println("iset =");
+//            for(int j = 0; j < iset.r(); ++j)
+//                printfln("%d %s",j,iset[j]);
+//            println("\noset = ");
+//            for(int j = 0; j < iset.r(); ++j)
+//                printfln("%d %s",j,oset[j]);
+//            println();
+//            //printfln("iset uniqueReal = %.15E",iset.uniqueReal());
+//            //Real our = 0;
+//            //for(int i = 0; i < iset.r(); ++i)
+//            //    {
+//            //    our += oset[i].uniqueReal();
+//            //    }
+//            //printfln("oset uniqueReal = %.15E",our);
+//            //printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
+//            throw ITError("IndexSetT::getperm: no matching index");
+//            }
+//	    }
+//	}
 
 template <class IndexT>
 bool
