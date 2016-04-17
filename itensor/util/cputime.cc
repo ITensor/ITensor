@@ -14,7 +14,7 @@ using namespace std::chrono;
 
 namespace itensor {
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #include <windows.h>
 
 double 
