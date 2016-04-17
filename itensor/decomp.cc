@@ -204,7 +204,7 @@ showEigs(Vector const& P,
     printfln("doRelCutoff = %s, absoluteCutoff = %s",doRelCutoff,absoluteCutoff);
     printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());
 
-    auto stop = std::min(10ul,P.size());
+    auto stop = std::min(size_t{10},P.size());
     auto Ps = Vector(subVector(P,0,stop));
 
     //Real orderMag = log(std::fabs(P(0))) + scale.logNum();
