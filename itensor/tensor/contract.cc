@@ -135,7 +135,7 @@ struct CProps
          permuteB_ = false,
          permuteC_ = false;
     public:
-    using Dimension = unsigned long long;
+    using Dimension = size_t;
     Dimension dleft = 1,
               dmid = 1,
               dright = 1;
