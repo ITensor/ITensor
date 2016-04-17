@@ -16,6 +16,26 @@ auto h2 = Index("h2",4);
 auto l0 = Index("l0",10);
 auto l2 = Index("l2",10);
 
+auto S1 = IQIndex("S1",Index("s1-",1,Site),QN(-1),
+                       Index("s1+",1,Site),QN(+1));
+auto S2 = IQIndex("S2",Index("s2-",1,Site),QN(-1),
+                       Index("s2+",1,Site),QN(+1));
+auto H0 = IQIndex("H0",Index("h0-2",4),QN(-2),
+                       Index("h0+0",8),QN(+0),
+                       Index("h0+2",4),QN(+2));
+auto H1 = IQIndex("H1",Index("h1-2",4),QN(-2),
+                       Index("h1+0",8),QN(+0),
+                       Index("h1+2",4),QN(+2));
+auto H2 = IQIndex("H2",Index("h2-2",4),QN(-2),
+                       Index("h2+0",8),QN(+0),
+                       Index("h2+2",4),QN(+2));
+auto L0 = IQIndex("L0",Index("l0-2",4),QN(-2),
+                       Index("l0+0",8),QN(+0),
+                       Index("l0+2",4),QN(+2));
+auto L2 = IQIndex("L2",Index("l2-2",4),QN(-2),
+                       Index("l2+0",8),QN(+0),
+                       Index("l2+2",4),QN(+2));
+
 
 SECTION("Product")
     {
@@ -38,7 +58,7 @@ SECTION("Product")
 
 SECTION("Diag")
     {
-    SECTION("Bulk Case")
+    SECTION("Bulk Case - ITensor")
         {
         auto Op1 = randomTensor(s1,prime(s1),h0,h1);
         auto Op2 = randomTensor(s2,prime(s2),h1,h2);
@@ -51,6 +71,20 @@ SECTION("Diag")
         CHECK(hasindex(diag,l0));
         CHECK(hasindex(diag,l2));
         }
+
+    //SECTION("Bulk Case - IQTensor")
+    //    {
+    //    auto Op1 = randomTensor(QN(),S1,prime(S1),H0,H1);
+    //    auto Op2 = randomTensor(QN(),S2,prime(S2),H1,H2);
+    //    auto L = randomTensor(QN(),L0,prime(L0),H0);
+    //    auto R = randomTensor(QN(),L2,prime(L2),H2);
+    //    auto lop = LocalOp<IQTensor>(Op1,Op2,L,R);
+    //    auto diag = lop.diag();
+    //    CHECK(hasindex(diag,S1));
+    //    CHECK(hasindex(diag,S2));
+    //    CHECK(hasindex(diag,L0));
+    //    CHECK(hasindex(diag,L2));
+    //    }
     }
 }
 
