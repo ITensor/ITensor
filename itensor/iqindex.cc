@@ -5,6 +5,7 @@
 #include "itensor/itensor.h"
 #include "itensor/iqindex.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
@@ -15,6 +16,105 @@ using std::string;
 using std::ostringstream;
 using std::make_shared;
 
+long
+totalM(IQIndex::storage const& storage)
+    {
+    long tm = 0;
+    for(auto& iq : storage)
+        {
+        tm += iq.index.m();
+#ifdef DEBUG
+        if(iq.index.type() != storage.front().type())
+            Error("Indices must have the same type");
+#endif
+        }
+    return tm;
+    }
+
+class IQIndexDat
+    {
+    public:
+    using storage = std::vector<IndexQN>;
+    using iterator = storage::iterator;
+    using const_iterator = storage::const_iterator;
+    private:
+    storage iq_;
+    public:
+
+    IQIndexDat() { }
+
+    //template<typename... Rest>
+    //IQIndexDat(Index const& i1, 
+    //           QN const& q1,
+    //           Rest const&... args) 
+    //    { 
+    //    constexpr auto size = sizeof...(args)/2+1;
+    //    iq_ = stdx::reserve_vector<IndexQN>(size);
+    //    detail::fill(iq_,i1,q1,args...);
+    //    }
+
+    explicit
+    IQIndexDat(storage const& ind_qn) 
+      : iq_(ind_qn)
+        { }
+
+    explicit
+    IQIndexDat(storage&& ind_qn) 
+      : iq_(std::move(ind_qn))
+        { }
+
+    //Disallow copying
+    IQIndexDat(const IQIndexDat&) = delete;
+
+    void 
+    operator=(IQIndexDat const&) = delete;
+
+    storage const&
+    inds() const { return iq_; }
+
+    long
+    size() { return iq_.size(); }
+
+    Index const&
+    index(long i) { return iq_[i-1].index; }
+
+    Index const&
+    operator[](long i) { return iq_[i].index; }
+
+    QN const&
+    qn(long i) { return iq_[i-1].qn; }
+
+    iterator
+    begin() { return iq_.begin(); }
+
+    iterator
+    end() { return iq_.end(); }
+
+    const_iterator
+    begin() const { return iq_.begin(); }
+
+    const_iterator
+    end()   const { return iq_.end(); }
+
+    storage const&
+    store() const { return iq_; }
+
+    storage &
+    store() { return iq_; }
+    };
+
+void 
+write(std::ostream & s, IQIndexDat const& d) 
+    { 
+    write(s,d.store()); 
+    }
+
+void 
+read(std::istream & s, IQIndexDat & d) 
+    { 
+    read(s,d.store()); 
+    }
+
 //
 // IQIndex Methods
 //
@@ -24,6 +124,17 @@ using std::make_shared;
 #else
 #define IQINDEX_CHECK_NULL
 #endif
+
+IQIndex::
+IQIndex(std::string const& name, 
+        storage && ind_qn, 
+        Arrow dir, 
+        int plev) 
+  : Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
+    dir_(dir)
+    { 
+    makeStorage(std::move(ind_qn));
+    }
 
 //const IQIndexDat::storage& IQIndex::
 //inds() const 
@@ -47,7 +158,7 @@ end() const
     }
 
 long IQIndex::
-nindex() const 
+nblock() const 
     { 
     IQINDEX_CHECK_NULL
     return (long) pd->size(); 
@@ -98,20 +209,6 @@ qn(long i) const
     return pd->qn(i);
     }
 
-long
-totalM(const IQIndexDat::storage& storage)
-    {
-    long tm = 0;
-    for(const IndexQN& iq : storage)
-        {
-        tm += iq.index.m();
-#ifdef DEBUG
-        if(iq.index.type() != storage.front().type())
-            Error("Indices must have the same type");
-#endif
-        }
-    return tm;
-    }
 
 IQIndex& IQIndex::
 dag() 
@@ -216,16 +313,24 @@ showm(IQIndex const& I)
 //    if(!pd.unique()) pd = pd->clone();
 //    }
 
-void
-calc_ind_ii(const IQIndexVal& iv, long& j, long& ii)
+struct IndSector
     {
-    j = 1;
-    ii = iv.val;
-    while(ii > iv.index.index(j).m())
+    long sector = 0l;
+    long sind   = 0l;
+
+    IndSector(long sec, long si) : sector(sec), sind(si) { }
+    };
+
+IndSector
+sectorInfo(IQIndexVal const& iv)
+    {
+    auto is = IndSector(1,iv.val);
+    while(is.sind > iv.index.index(is.sector).m())
         {
-        ii -= iv.index.index(j).m();
-        ++j;
+        is.sind -= iv.index.index(is.sector).m();
+        is.sector += 1;
         }
+    return is;
     }
 
 
@@ -256,18 +361,16 @@ IQIndexVal(const IQIndex& iqindex, long val_)
 IndexQN IQIndexVal::
 indexqn() const 
     { 
-    long j,ii;
-    calc_ind_ii(*this,j,ii);
-    return IndexQN(index.index(j),index.qn(j));
+    auto is = sectorInfo(*this);
+    return IndexQN(index.index(is.sector),index.qn(is.sector));
     }
 
 
 const QN& IQIndexVal::
 qn() const 
     { 
-    long j,ii;
-    calc_ind_ii(*this,j,ii);
-    return index.qn(j);
+    auto is = sectorInfo(*this);
+    return index.qn(is.sector);
     }
 
 bool
@@ -286,9 +389,8 @@ operator IndexVal() const
 IndexVal IQIndexVal::
 blockIndexVal() const 
     { 
-    long j,ii;
-    calc_ind_ii(*this,j,ii);
-    return IndexVal(index.index(j),ii); 
+    auto is = sectorInfo(*this);
+    return IndexVal(index.index(is.sector),is.sind); 
     }
 
 IQIndexVal&  IQIndexVal::
@@ -341,6 +443,12 @@ IQIndexVal IQIndex::
 operator()(long val) const 
     { 
     return IQIndexVal(*this,val); 
+    }
+
+void IQIndex::
+makeStorage(storage && iq)
+    {
+    pd = std::make_shared<IQIndexDat>(std::move(iq));
     }
 
 bool
@@ -417,6 +525,20 @@ operator<<(ostream &o, const IQIndex& I)
     for(long j = 1; j <= I.nindex(); ++j) 
         o << "  " << I.index(j) << " " <<  I.qn(j) << "\n";
     return o;
+    }
+
+void IndexQN::
+write(std::ostream & s) const
+    { 
+    index.write(s); 
+    itensor::write(s,qn); 
+    }
+
+void IndexQN::
+read(std::istream& s)
+    { 
+    index.read(s); 
+    itensor::read(s,qn); 
     }
 
 std::ostream& 
