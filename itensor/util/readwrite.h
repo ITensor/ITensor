@@ -46,30 +46,40 @@ fileExists(const std::string& fname)
 // be called
 //
 
-//Here we have to use a struct to implement the read(istream,T)
-//function because function templates cannot be partially specialized
+////Here we have to use a struct to implement the read(istream,T)
+////function because function templates cannot be partially specialized
+////template<typename T, bool isPod = std::is_pod<T>::value>
 //template<typename T, bool isPod = std::is_pod<T>::value>
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct DoRead
-    {
-    DoRead(std::istream& s, T& obj)
-        {
-        obj.read(s);
-        }
-    };
+//struct DoRead
+//    {
+//    DoRead(std::istream& s, T& obj)
+//        {
+//        obj.read(s);
+//        }
+//    };
+//template<typename T>
+//struct DoRead<T, true>
+//    {
+//    DoRead(std::istream& s, T& val)
+//        {
+//        s.read((char*) &val, sizeof(val));
+//        }
+//    };
+
 template<typename T>
-struct DoRead<T, true>
+auto
+read(std::istream& s, T & val)
+    -> stdx::if_compiles_return<void,decltype(val.read(s))>
     {
-    DoRead(std::istream& s, T& val)
-        {
-        s.read((char*) &val, sizeof(val));
-        }
-    };
+    val.read(s);
+    }
+
 template<typename T>
-void
-read(std::istream& s, T& val)
+auto
+read(std::istream& s, T & val)
+    -> stdx::enable_if_t<std::is_pod<T>::value,void>
     {
-    DoRead<T>(s,val);
+    s.read((char*) &val, sizeof(val));
     }
 
 template<typename T, typename... CtrArgs>
@@ -77,7 +87,8 @@ T
 read(std::istream& s, CtrArgs&&... args)
     {
     T t(std::forward<CtrArgs>(args)...);
-    DoRead<T>(s,t);
+    //DoRead<T>(s,t);
+    read(s,t);
     return t;
     }
 
@@ -165,55 +176,40 @@ write(std::ostream& s, const Cplx& z)
     s.write((char*)&i,sizeof(i));
     }
 
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct ReadVecData
-    {
-    ReadVecData(size_t size, std::istream& s, std::vector<T>& vec)
-        {
-        for(auto& el : vec) itensor::read(s,el);
-        }
-    };
 template<typename T>
-struct ReadVecData<T,/*isPod==*/true>
+auto
+read(std::istream& s, std::vector<T> & v)
+    -> stdx::if_compiles_return<void,decltype(itensor::read(s,v[0]))>
     {
-    ReadVecData(size_t size, std::istream& s, std::vector<T>& vec)
-        {
-        s.read((char*)vec.data(), sizeof(T)*size);
-        }
-    };
-template<typename T>
-void
-read(std::istream& s, std::vector<T>& vec)
-    {
-    decltype(vec.size()) size = 0;
+    auto size = v.size();
     itensor::read(s,size);
-    vec.resize(size);
-    ReadVecData<T>(size,s,vec);
+    v.resize(size);
+    if(std::is_pod<T>::value)
+        {
+        s.read((char*)v.data(), sizeof(T)*size);
+        }
+    else
+        {
+        for(auto& el : v) itensor::read(s,el);
+        }
     }
 
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct WriteVecData
-    {
-    WriteVecData(size_t size, std::ostream& s, const std::vector<T>& vec)
-        {
-        for(auto& el : vec) itensor::write(s,el);
-        }
-    };
+
 template<typename T>
-struct WriteVecData<T,/*isPod==*/true>
+auto
+write(std::ostream& s, std::vector<T> const& v)
+    -> stdx::if_compiles_return<void,decltype(itensor::write(s,v[0]))>
     {
-    WriteVecData(size_t size, std::ostream& s, const std::vector<T>& vec)
-        {
-        s.write((char*)vec.data(), sizeof(T)*size);
-        }
-    };
-template<typename T>
-void
-write(std::ostream& s, const std::vector<T>& vec)
-    {
-    auto size = vec.size();
+    auto size = v.size();
     itensor::write(s,size);
-    WriteVecData<T>(size,s,vec);
+    if(std::is_pod<T>::value)
+        {
+        s.write((char*)v.data(), sizeof(T)*size);
+        }
+    else
+        {
+        for(auto& el : v) itensor::write(s,el);
+        }
     }
 
 
