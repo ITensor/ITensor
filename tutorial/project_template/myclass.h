@@ -9,6 +9,8 @@
 
 class MyClass
     {
+    int i_;
+    std::string name_;
     public:
     
     //Default constructor
@@ -16,15 +18,12 @@ class MyClass
 
     MyClass(std::string name, int i);
 
-    const std::string&
+    std::string const&
     name() const;
 
     int
     value() const;
 
-    private:
-    int i_;
-    std::string name_;
     };
 
 //
@@ -38,7 +37,7 @@ class MyClass
 //See myclass.cc for implementation.
 //
 std::ostream&
-operator<<(std::ostream& s, const MyClass& m);
+operator<<(std::ostream& s, MyClass const& m);
 
 //Implementation code is in myclass.cc ...
 

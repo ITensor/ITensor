@@ -1,6 +1,5 @@
-# 1. Rename this file to just 'Makefile' if it's not called that already. 
-#    Put it in the same folder as your 'driver' code (the code containing
-#    the 'main' function).
+# 1. Put this file in the same folder as your 'driver' code 
+#    (the code containing the 'main' function).
 
 # 2. Edit LIBRARY_DIR to point at the location of your ITensor Library
 #    source folder (this is the folder that has options.mk in it)
