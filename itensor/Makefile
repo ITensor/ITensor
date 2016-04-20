@@ -67,9 +67,14 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
-build: libitensor.a
+touch_all_headers:
+	@touch all.h
+	@touch all_basic.h
+	@touch all_mps.h
 
-debug: libitensor-g.a
+build: libitensor.a touch_all_headers
+
+debug: libitensor-g.a touch_all_headers
 
 mkdebugdir:
 	@mkdir -p .debug_objs
