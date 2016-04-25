@@ -50,11 +50,17 @@ operator*=(VectorRef v, Real fac);
 CVectorRef
 operator*=(CVectorRef v, Real fac);
 
+CVectorRef
+operator*=(CVectorRef v, Cplx fac);
+
 VectorRef
 operator/=(VectorRef v, Real fac);
 
 CVectorRef
 operator/=(CVectorRef v, Real fac);
+
+CVectorRef
+operator/=(CVectorRef v, Cplx fac);
 
 VectorRef
 operator+=(VectorRef a, VectorRefc b);
@@ -104,6 +110,15 @@ operator*(Real fac, Vector A) { A *= fac; return A; }
 
 Vector inline
 operator/(Vector A, Real fac) { A /= fac; return A; }
+
+CVector inline
+operator*(CVector A, Cplx fac) { A *= fac; return A; }
+
+CVector inline
+operator*(Cplx fac, CVector A) { A *= fac; return A; }
+
+CVector inline
+operator/(CVector A, Cplx fac) { A /= fac; return A; }
 
 Vector inline
 operator+(VectorRefc A, VectorRefc B)

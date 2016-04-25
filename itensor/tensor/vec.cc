@@ -93,6 +93,13 @@ operator*=(CVectorRef v, Real fac)
     return v;
     }
 
+CVectorRef
+operator*=(CVectorRef v, Cplx fac)
+    {
+    for(auto& el : v) el *= fac;
+    return v;
+    }
+
 template<typename T>
 void
 divReal(VecRef<T> V, Real fac)
