@@ -373,6 +373,21 @@ mult(MatRefc<V> M,
 template void mult(MatRefc<Real>,VecRefc<Real>,VecRef<Real>,bool);
 template void mult(MatRefc<Cplx>,VecRefc<Cplx>,VecRef<Cplx>,bool);
 
+template<typename VM, typename Vx>
+Vec<common_type<VM,Vx>>
+mult(MatRefc<VM> M,
+     VecRefc<Vx> x,
+     bool fromleft)
+    {
+    auto res = Vec<common_type<VM,Vx>>(x.size());
+    mult(M,x,makeRef(res));
+    return res;
+    }
+template Vector mult(MatrixRefc,VectorRefc, bool);
+//template CVector mult(CMatrixRefc,VectorRefc, bool);
+//template CVector mult(MatrixRefc,CVectorRefc, bool);
+template CVector mult(CMatrixRefc,CVectorRefc, bool);
+
 template<typename V>
 void
 multAdd(MatRefc<V> M,

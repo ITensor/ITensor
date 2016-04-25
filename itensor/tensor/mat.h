@@ -135,6 +135,12 @@ mult(MatRefc<V> M,
      VecRef<V> y,
      bool fromleft = false);
 
+template<typename VM, typename Vx>
+Vec<common_type<VM,Vx>>
+mult(MatRefc<VM> M,
+     VecRefc<Vx> x,
+     bool fromleft = false);
+
 //y = y+M*x
 template<typename V>
 void
