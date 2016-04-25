@@ -96,7 +96,7 @@ tensor/mat.o: $(GDEPHEADERS)
 .debug_objs/tensor/mat.o: $(GDEPHEADERS)
 tensor/gemm.o: $(GDEPHEADERS)
 .debug_objs/tensor/gemm.o: $(GDEPHEADERS)
-GDEPHEADERS+= tensor/slicemat.h tensor/algs.h
+GDEPHEADERS+= tensor/slicemat.h tensor/algs.h tensor/algs.ih
 tensor/algs.o: $(GDEPHEADERS)
 .debug_objs/tensor/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/permutation.h tensor/slicerange.h tensor/sliceten.h \
