@@ -951,71 +951,115 @@ factor(ITensor const& T,ITensor& A,ITensor & B,Args const& args);
 template void
 factor(IQTensor const& T,IQTensor& A,IQTensor & B,Args const& args);
 
+template<typename value_type>
 void 
-eig_decomp(ITensor T, 
-           const Index& L, const Index& R,
-           ITensor& V, ITensor& D,
-           const Args& args)
+eigDecompImpl(ITensor T, 
+              ITensor & L, 
+              ITensor & R, 
+              ITensor & D,
+              Args const& args)
     {
-    /*
-    //const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    bool cplx = T.isComplex();
+    auto full = args.getBool("FullDecomp",false);
 
-#ifdef DEBUG
-    if(T.r() != 2)
+    if(rank(T) != 2)
         {
-        Print(T.r());
+        Print(rank(T));
         Print(T);
         Error("eig_decomp requires rank 2 tensor as input");
         }
-#endif
+
+    auto lind = noprime(T.inds().front());
 
     //Do the diagonalization
-    Vec Dr,Di;
-    Matrix Ur,Ui;
-    if(!cplx)
+    auto MM = toMatRefc<value_type>(T,prime(lind),lind);
+    Vector Dr, Di;
+    Matrix Rr, Ri;
+    Matrix Lr, Li;
+    if(!full) 
         {
-        Matrix M;
-        T.toMatrix11NoScale(L,R,M);
-        GenEigenValues(M,Dr,Di,Ur,Ui); 
+        eigen(MM,Rr,Ri,Dr,Di);
         }
     else
         {
-        Matrix Mr,Mi;
-        ITensor rT = realPart(T),
-                iT = imagPart(T);
-        rT.scaleTo(T.scale());
-        iT.scaleTo(T.scale());
-        rT.toMatrix11NoScale(L,R,Mr);
-        iT.toMatrix11NoScale(L,R,Mi);
-        ComplexEigenvalues(Mr,Mi,Dr,Di,Ur,Ui); 
+        Error("Full eigDecomp not currently working");
+        eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
         }
 
+    auto newmid = Index("C",lind.m(),lind.type());
 
-    Index newmid("d",R.m(),R.type());
-    V = ITensor(R,newmid,Ur);
-    D = ITensor(prime(newmid),newmid,Dr);
-
-    if(Norm(Ui.TreatAsVector()) > 1E-12)
+    //put right eigenvectors into an ITensor
+    if(norm(Ri) > 1E-16*norm(Rr))
         {
-        V += ITensor(R,newmid,Ui)*Complex_i;
+        //complex eigenvectors
+        auto store = DenseCplx(Rr.size());
+        auto ri = Rr.begin();
+        auto ii = Ri.begin();
+        for(decltype(Rr.size()) n = 0; n < Rr.size(); ++ri, ++ii, ++n)
+            {
+#ifdef DEBUG
+            if(ri == Rr.end() || ii == Ri.end()) Error("out of range iterator");
+#endif
+            store[n] = Cplx(*ri,*ii);
+            }
+        R = ITensor({lind,newmid},move(store));
         }
-
-    if(Norm(Di) > 1E-12)
+    else
         {
-        D += ITensor(prime(newmid),newmid,Di)*Complex_i;
+        //real eigenvectors
+        R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
         }
 
-    D *= T.scale();
-    */
+    if(norm(Di) > 1E-16*norm(Dr))
+        {
+        //complex eigenvalues
+        auto store = DiagCplx(Dr.size());
+        for(auto n : range(Dr.size()))
+            {
+            store.store.at(n) = Cplx(Dr(n),Di(n));
+            }
+        D = ITensor({prime(newmid),newmid},move(store),T.scale());
+        }
+    else
+        {
+        //real eigenvectors
+        D = ITensor({prime(newmid),newmid},DiagReal{move(Dr.storage())},T.scale());
+        }
 
+    if(full)
+        {
+        //put left eigenvectors into an ITensor
+        if(norm(Li) > 1E-16*norm(Lr))
+            {
+            //complex eigenvectors
+            auto store = DenseCplx(Lr.size());
+            auto ri = Lr.begin();
+            auto ii = Li.begin();
+            for(decltype(Lr.size()) n = 0; n < Lr.size(); ++ri, ++ii, ++n)
+                {
+#ifdef DEBUG
+                if(ri == Lr.end() || ii == Li.end()) Error("out of range iterator");
+#endif
+                store[n] = Cplx(*ri,*ii);
+                }
+            //L = ITensor({prime(lind),prime(newmid)},move(store));
+            L = ITensor({prime(newmid),prime(lind)},move(store));
+            }
+        else
+            {
+            //real eigenvectors
+            //L = ITensor({prime(lind),prime(newmid)},DenseReal{move(Lr.storage())});
+            L = ITensor({prime(newmid),prime(lind)},DenseReal{move(Lr.storage())});
+            }
+        }
     }
 
+template<typename value_type>
 void 
-eig_decomp(IQTensor T, 
-           const IQIndex& L, const IQIndex& R,
-           IQTensor& V, IQTensor& D,
-           const Args& args)
+eigDecompImpl(IQTensor T, 
+              IQTensor & L, 
+              IQTensor & R, 
+              IQTensor & D,
+              Args const& args)
     {
     /*
     const bool doRelCutoff = args.getBool("DoRelCutoff",false);
@@ -1156,6 +1200,74 @@ eig_decomp(IQTensor T,
 
     */
     }
+
+template<typename index_type>
+void 
+eigen(ITensorT<index_type> const& T, 
+      ITensorT<index_type> & V, 
+      ITensorT<index_type> & D,
+      Args const& args)
+    {
+    auto colinds = std::vector<index_type>{};
+    for(auto& I : T.inds())
+        { 
+        if(I.primeLevel() == 0) colinds.push_back(I);
+        }
+    auto comb = combiner(std::move(colinds));
+
+    auto Tc = prime(comb) * T * comb; 
+
+    ITensorT<index_type> L;
+    if(isComplex(T))
+        {
+        eigDecompImpl<Cplx>(Tc,L,V,D,args);
+        }
+    else
+        {
+        eigDecompImpl<Real>(Tc,L,V,D,args);
+        }
+
+    V = V * comb;
+    }
+template void 
+eigen(ITensor const&, ITensor&, ITensor&, Args const&);
+template void 
+eigen(IQTensor const&, IQTensor&,IQTensor&, Args const&);
+
+template<typename index_type>
+void 
+eigDecomp(ITensorT<index_type> const& T, 
+          ITensorT<index_type> & L,
+          ITensorT<index_type> & D,
+          ITensorT<index_type> & R,
+          Args const& args)
+    {
+    auto colinds = std::vector<index_type>{};
+    for(auto& I : T.inds())
+        { 
+        if(I.primeLevel() == 0) colinds.push_back(I);
+        }
+    auto comb = combiner(std::move(colinds));
+
+    auto Tc = prime(comb) * T * comb; 
+
+    if(isComplex(Tc))
+        {
+        eigDecompImpl<Cplx>(Tc,L,R,D,{args,"FullDecomp",true});
+        }
+    else
+        {
+        eigDecompImpl<Real>(Tc,L,R,D,{args,"FullDecomp",true});
+        }
+
+    R = R * comb;
+    L = L * prime(comb);
+    }
+template void 
+eigDecomp(ITensor const&, ITensor &, ITensor & , ITensor & , Args const& );
+template void 
+eigDecomp(IQTensor const&, IQTensor &,IQTensor & , IQTensor & , Args const& );
+
 
 template<typename I>
 ITensorT<I>

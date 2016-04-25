@@ -141,36 +141,38 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
 
 //
 //
-// Eigen decomposition
+// Eigenvalues and eigenvectors
 //
 // Computes eigenvalues V and eigenvectors D of an arbitrary tensor T.
-// T must be "square-matrix-like" in one of the following two ways: 
 //
-// (1) T has only indices I,J,K,... and indices I',J',K',...
-//     If V is default-constructed upon calling eigDecomp this case is assumed.
-//
-// (2) V has "column" indices I,J,K,... and T has these indices as well.
-//     T also has "row" indices L,M,N,... such that grouping (I,J,K,...) and
-//     (L,M,N,...) transforms T into a square matrix.
+// T must be "square-matrix-like" in the sense that
+// T has only indices I,J,K,... and indices I',J',K',...
 //
 // D is a diagonal rank 2 tensor (matrix) containing the eigenvalues.
 // On return, V has the "column" indices of T and a new index shared with D
 // (the index labeled "C" below).
 //
 // The result is such that V and D give:
-//      __         __               __
-// K-<-|  |-<-I-<-|  |         K-<-|~ |     
-//     |T |       |V |-<-C ==      |V |-<-C'-<-(D)-<-C
-// L-<-|__|-<-J-<-|__|         L-<-|__|    
+//       _         _                 _ 
+// I'-<-| |-<-I-<-| |          I'-<-| |     
+//      |T|       |V|-<-C  ==       |V|-<-C'-<-(D)-<-C
+// J'-<-|_|-<-J-<-|_|          J'-<-|_|    
 //
-//       ~
-// (here V is identical to V upon replacing K->I, L->J,
-//  and for case (1) is the same as prime(V))
 //
-template<class Tensor>
+template<class I>
 void 
-eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-          const Args& args = Global::args());
+eigen(ITensorT<I> const& T, 
+      ITensorT<I> & V, 
+      ITensorT<I> & D,
+      Args const& args = Args::global());
+
+template<class I>
+void 
+eigDecomp(ITensorT<I> const& T, 
+          ITensorT<I> & L, 
+          ITensorT<I> & D,
+          ITensorT<I> & R, 
+          Args const& args = Args::global());
 
 
 ///////////////////////////
@@ -500,64 +502,6 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
     return Spectrum();
 
     } //orthoDecomp
-
-void 
-eig_decomp(ITensor T, const Index& L, const Index& R, ITensor& V, ITensor& D,
-           const Args& args = Global::args());
-
-void 
-eig_decomp(IQTensor T, const IQIndex& L, const IQIndex& R, IQTensor& V, IQTensor& D,
-           const Args& args = Global::args());
-
-template<class Tensor>
-void 
-eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-          const Args& args)
-    {
-    /*
-    using IndexT = typename Tensor::IndexT;
-
-    if(isZero(T,Args("Fast"))) 
-        throw ResultIsZero("eigDecomp: T is zero");
-
-    CombinerT ccomb, //common or column indices
-              rcomb; //remaining or row indices
-    if(V.r() != 0)
-        {
-        //Use indices of V as "column" indices
-        for(const IndexT& I : T.indices())
-            { 
-            if(hasindex(V,I))
-                ccomb.addleft(I);
-            else
-                rcomb.addleft(I);
-            }
-        }
-    else
-        {
-        //No hint from V, 
-        //separate indices by primelevel
-        for(const IndexT& I : T.indices())
-            { 
-            if(I.primeLevel() == 0)
-                ccomb.addleft(I);
-            else
-                rcomb.addleft(I);
-            }
-        }
-
-    Tensor Tc = rcomb * T * ccomb; 
-
-    if(rcomb.right().m() != ccomb.right().m())
-        {
-        Error("Tensor not square-matrix-like in eigDecomp");
-        }
-
-    eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,args);
-
-    V = V * ccomb;
-    */
-    }
 
 //Return value is: (trunc_error,docut)
 std::tuple<Real,Real>
