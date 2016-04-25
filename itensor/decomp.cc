@@ -981,7 +981,6 @@ eigDecompImpl(ITensor T,
         }
     else
         {
-        Error("Full eigDecomp not currently working");
         eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
         }
 
@@ -1027,6 +1026,11 @@ eigDecompImpl(ITensor T,
 
     if(full)
         {
+
+        // If doing full decomp, prime R
+        R.prime();
+
+
         //put left eigenvectors into an ITensor
         if(norm(Li) > 1E-16*norm(Lr))
             {
@@ -1041,14 +1045,12 @@ eigDecompImpl(ITensor T,
 #endif
                 store[n] = Cplx(*ri,*ii);
                 }
-            //L = ITensor({prime(lind),prime(newmid)},move(store));
-            L = ITensor({prime(newmid),prime(lind)},move(store));
+            L = ITensor({lind,newmid},move(store));
             }
         else
             {
             //real eigenvectors
-            //L = ITensor({prime(lind),prime(newmid)},DenseReal{move(Lr.storage())});
-            L = ITensor({prime(newmid),prime(lind)},DenseReal{move(Lr.storage())});
+            L = ITensor({lind,newmid},DenseReal{move(Lr.storage())});
             }
         }
     }
@@ -1237,9 +1239,9 @@ eigen(IQTensor const&, IQTensor&,IQTensor&, Args const&);
 template<typename index_type>
 void 
 eigDecomp(ITensorT<index_type> const& T, 
-          ITensorT<index_type> & L,
-          ITensorT<index_type> & D,
           ITensorT<index_type> & R,
+          ITensorT<index_type> & D,
+          ITensorT<index_type> & Rinv,
           Args const& args)
     {
     auto colinds = std::vector<index_type>{};
@@ -1253,15 +1255,15 @@ eigDecomp(ITensorT<index_type> const& T,
 
     if(isComplex(Tc))
         {
-        eigDecompImpl<Cplx>(Tc,L,R,D,{args,"FullDecomp",true});
+        eigDecompImpl<Cplx>(Tc,Rinv,R,D,{args,"FullDecomp",true});
         }
     else
         {
-        eigDecompImpl<Real>(Tc,L,R,D,{args,"FullDecomp",true});
+        eigDecompImpl<Real>(Tc,Rinv,R,D,{args,"FullDecomp",true});
         }
 
-    R = R * comb;
-    L = L * prime(comb);
+    R = R * prime(comb);
+    Rinv = Rinv * comb;
     }
 template void 
 eigDecomp(ITensor const&, ITensor &, ITensor & , ITensor & , Args const& );

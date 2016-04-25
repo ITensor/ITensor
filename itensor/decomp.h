@@ -169,9 +169,9 @@ eigen(ITensorT<I> const& T,
 template<class I>
 void 
 eigDecomp(ITensorT<I> const& T, 
-          ITensorT<I> & L, 
-          ITensorT<I> & D,
           ITensorT<I> & R, 
+          ITensorT<I> & D,
+          ITensorT<I> & Rinv, 
           Args const& args = Args::global());
 
 
