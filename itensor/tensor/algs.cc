@@ -150,7 +150,6 @@ diagGeneralRef(MatRefc<value_type> const& M,
         call(LAPACK_INT N, Real const* Mdata, Real *Ldata, Real *Rdata, Real *drdata, Real *didata)
             {
             auto cl = (Ldata==nullptr) ? 'N' : 'V';
-            println("cl=",cl);
             return dgeev_wrapper(cl,'V',N,Mdata,drdata,didata,Ldata,Rdata);
             }
         LAPACK_INT static
@@ -179,11 +178,6 @@ diagGeneralRef(MatRefc<value_type> const& M,
         {
         println("M = \n",M);
         throw std::runtime_error("Error condition in diagGeneral");
-        }
-
-    if(L)
-        {
-        println("L=\n",L);
         }
 
     struct Unpack
@@ -236,6 +230,18 @@ diagGeneralRef(MatRefc<value_type> const& M,
         {
         auto Lref = isTransposed(M) ? transpose(L) : makeRef(L);
         Unpack::call(makeRef(di),makeRef(Lr),makeRef(Li),Lref);
+        Error("Inverse step not fully implemented");
+        //for(auto n : range(N))
+        //    {
+        //    auto facr = column(Lr,n)*column(Rr,n)+column(Li,n)*column(Ri,n);
+        //    auto faci = column(Lr,n)*column(Ri,n)-column(Li,n)*column(Rr,n);
+        //    auto z = Cplx(facr,faci);
+        //    printfln("z %d = %.4E",n,z);
+        //    if(std::abs(z) <= 1E-16) Error("Ill conditioned or non-invertible matrix");
+        //    z = 1./z;
+        //    column(Lr,n) &= column(Lr,n)*z.real()+column(Li,n)*z.imag();
+        //    column(Li,n) &= column(Lr,n)*z.imag()-column(Li,n)*z.real();
+        //    }
         }
     }
 template void
