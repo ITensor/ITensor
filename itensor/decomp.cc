@@ -1157,4 +1157,26 @@ eig_decomp(IQTensor T,
     */
     }
 
+template<typename I>
+ITensorT<I>
+expHermitian(ITensorT<I> const& T)
+    {
+    ITensorT<I> U;
+    ITensorT<I> d;
+    diagHermitian(T,U,d);
+
+    struct Exp
+        {
+        Real
+        operator()(Real x) const { return exp(x); }
+        Cplx
+        operator()(Cplx z) const { return exp(z); }
+        };
+    d.apply(Exp());
+
+    return prime(U)*d*dag(U);
+    }
+template ITensor expHermitian(ITensor const& T);
+template IQTensor expHermitian(IQTensor const& T);
+
 } //namespace itensor

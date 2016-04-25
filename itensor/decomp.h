@@ -106,6 +106,9 @@ diagHermitian(ITensorT<I> const& M,
               Args args = Args::global());
 
 
+template<typename I>
+ITensorT<I>
+expHermitian(ITensorT<I> const& T);
 
 
 //
