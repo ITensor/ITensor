@@ -41,6 +41,37 @@ diagHermitian(MatM && M,
               MatU && U,
               Vecd && d);
 
+// compute eigenvalues
+// and right eigenvectors
+template<class MatM, class MatV,class Vecd,
+         class = stdx::require<
+         hasMatRange<MatM>,
+         hasMatRange<MatV>,
+         hasVecRange<Vecd>
+         >>
+void
+eigen(MatM && M,
+      MatV && Vr,
+      MatV && Vi,
+      Vecd && dr,
+      Vecd && di);
+
+// full eigenvalue decomp
+// M = L*D*R
+template<class MatM, class MatV,class Vecd,
+         class = stdx::require<
+         hasMatRange<MatM>,
+         hasMatRange<MatV>,
+         hasVecRange<Vecd>
+         >>
+void
+eigDecomp(MatM && M,
+          MatV && Lr,
+          MatV && Li,
+          Vecd && dr,
+          Vecd && di,
+          MatV && Rr,
+          MatV && Ri);
 
 //orthogonalize the columns of a matrixref M, optionally
 //repeating numpass times to reduce roundoff errors

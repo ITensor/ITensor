@@ -19,97 +19,231 @@ using std::tie;
 namespace itensor {
 
 
+//void
+//diagHermitian(MatrixRefc const& Mre,
+//              MatrixRefc const& Mim,
+//              MatrixRef  const& Ure,
+//              MatrixRef  const& Uim,
+//              VectorRef  const& d)
+//    {
+//    auto N = ncols(Mre);
+//    if(N != nrows(Mre))
+//        {
+//        printfln("Mre is %dx%d",nrows(Mre),ncols(Mre));
+//        throw std::runtime_error("diagHermitian: Input Matrix must be square");
+//        }
+//    if(N != nrows(Mim) || N != ncols(Mim))
+//        {
+//        printfln("Mim is %dx%d",nrows(Mim),ncols(Mim));
+//        throw std::runtime_error("diagHermitian: Input Matrix must be square, and real and imag part same size");
+//        }
+//
+//#ifdef DEBUG
+//    if(N < 1) throw std::runtime_error("diagHermitian: 0 dimensional matrix");
+//    if(!(nrows(Ure) == N && ncols(Ure) == N)) 
+//        throw std::runtime_error("diagHermitian: Ure should have same dims as M");
+//    if(!(nrows(Uim) == N && ncols(Uim) == N)) 
+//        throw std::runtime_error("diagHermitian: Uim should have same dims as M");
+//    if(d.size() != N)
+//        throw std::runtime_error("diagHermitian: d size should be linear size of M");
+//    if(!isContiguous(Ure))
+//        throw std::runtime_error("diagHermitian: Ure must be contiguous");
+//    if(!isContiguous(Uim))
+//        throw std::runtime_error("diagHermitian: Uim must be contiguous");
+//    if(!isContiguous(d))
+//        throw std::runtime_error("diagHermitian: d must be contiguous");
+//#endif
+//
+//    //Set Mc = -M so eigenvalues will be sorted from largest to smallest
+//    auto Mc = std::vector<Cplx>(N*N);
+//    if(isContiguous(Mre) && isContiguous(Mim))
+//        {
+//        copyNegElts(Mre.data(),Mim.data(),Mc);
+//        }
+//    else
+//        {
+//        copyNegElts(Mre.cbegin(),Mim.cbegin(),Mc);
+//        }
+//
+//    auto info = zheev_wrapper(N,Mc.data(),d.data());
+//    if(info != 0) 
+//        {
+//        throw std::runtime_error("Error condition in diagHermitian");
+//        }
+//
+//    //Correct eigenvalue signs
+//    d *= -1;
+//
+//    //Following code assumes Ure and Uim are contiguous
+//    auto ur = Ure.data();
+//    auto ui = Uim.data();
+//    for(auto& z : Mc)
+//        {
+//        (*ur) = realRef(z);
+//        (*ui) = imagRef(z);
+//        ++ur;
+//        ++ui;
+//        }
+//    }
+//
+//void
+//diagHermitian(MatrixRefc const& Mre,
+//              MatrixRefc const& Mim,
+//              Matrix          & Ure,
+//              Matrix          & Uim,
+//              VectorRef  const& d)
+//    {
+//    resize(Ure,nrows(Mre),ncols(Mre));
+//    resize(Uim,nrows(Mre),ncols(Mre));
+//    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),d);
+//    }
+//
+//void
+//diagHermitian(MatrixRefc const& Mre,
+//              MatrixRefc const& Mim,
+//              Matrix          & Ure,
+//              Matrix          & Uim,
+//              Vector          & d)
+//    {
+//    resize(Ure,nrows(Mre),ncols(Mre));
+//    resize(Uim,nrows(Mre),ncols(Mre));
+//    resize(d,nrows(Mre));
+//    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),makeRef(d));
+//    }
+
+template<typename value_type>
 void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              MatrixRef  const& Ure,
-              MatrixRef  const& Uim,
-              VectorRef  const& d)
+diagGeneralRef(MatRefc<value_type> const& M,
+               MatrixRef const& Rr,
+               MatrixRef const& Ri,
+               MatrixRef const& Lr,
+               MatrixRef const& Li,
+               VectorRef const& dr,
+               VectorRef const& di)
     {
-    auto N = ncols(Mre);
-    if(N != nrows(Mre))
+    auto N = ncols(M);
+    if(N < 1) throw std::runtime_error("diagGeneral: 0 dimensional matrix");
+    if(N != nrows(M))
         {
-        printfln("Mre is %dx%d",nrows(Mre),ncols(Mre));
-        throw std::runtime_error("diagHermitian: Input Matrix must be square");
-        }
-    if(N != nrows(Mim) || N != ncols(Mim))
-        {
-        printfln("Mim is %dx%d",nrows(Mim),ncols(Mim));
-        throw std::runtime_error("diagHermitian: Input Matrix must be square, and real and imag part same size");
+        printfln("M is %dx%d",nrows(M),ncols(M));
+        throw std::runtime_error("diagGeneral: Input Matrix must be square");
         }
 
 #ifdef DEBUG
-    if(N < 1) throw std::runtime_error("diagHermitian: 0 dimensional matrix");
-    if(!(nrows(Ure) == N && ncols(Ure) == N)) 
-        throw std::runtime_error("diagHermitian: Ure should have same dims as M");
-    if(!(nrows(Uim) == N && ncols(Uim) == N)) 
-        throw std::runtime_error("diagHermitian: Uim should have same dims as M");
-    if(d.size() != N)
-        throw std::runtime_error("diagHermitian: d size should be linear size of M");
-    if(!isContiguous(Ure))
-        throw std::runtime_error("diagHermitian: Ure must be contiguous");
-    if(!isContiguous(Uim))
-        throw std::runtime_error("diagHermitian: Uim must be contiguous");
-    if(!isContiguous(d))
-        throw std::runtime_error("diagHermitian: d must be contiguous");
+    if(!isContiguous(Rr))
+        throw std::runtime_error("diagGeneral: Rr must be contiguous");
+    if(!isContiguous(Ri))
+        throw std::runtime_error("diagGeneral: Ri must be contiguous");
+    if(Lr && !isContiguous(Lr))
+        throw std::runtime_error("diagGeneral: Lr must be contiguous");
+    if(Li && !isContiguous(Li))
+        throw std::runtime_error("diagGeneral: Li must be contiguous");
+    if(!isContiguous(dr))
+        throw std::runtime_error("diagGeneral: dr must be contiguous");
+    if(!isContiguous(di))
+        throw std::runtime_error("diagGeneral: di must be contiguous");
 #endif
 
-    //Set Mc = -M so eigenvalues will be sorted from largest to smallest
-    auto Mc = std::vector<Cplx>(N*N);
-    if(isContiguous(Mre) && isContiguous(Mim))
+    struct Diag
         {
-        copyNegElts(Mre.data(),Mim.data(),Mc);
-        }
-    else
-        {
-        copyNegElts(Mre.cbegin(),Mim.cbegin(),Mc);
-        }
+        LAPACK_INT static
+        call(LAPACK_INT N, Real const* Mdata, Real *Ldata, Real *Rdata, Real *drdata, Real *didata)
+            {
+            auto cl = (Ldata==nullptr) ? 'N' : 'V';
+            println("cl=",cl);
+            return dgeev_wrapper(cl,'V',N,Mdata,drdata,didata,Ldata,Rdata);
+            }
+        LAPACK_INT static
+        call(LAPACK_INT N, Cplx const* Mdata, Cplx *Ldata, Cplx *Rdata, Real *drdata, Real *didata)
+            {
+            auto d = std::vector<Cplx>(N);
+            auto cl = (Ldata==nullptr) ? 'N' : 'V';
+            auto info = zgeev_wrapper(cl,'V',N,Mdata,d.data(),Ldata,Rdata);
+            for(size_t n = 0ul; n < d.size(); ++n)
+                {
+                *drdata = d[n].real();
+                *didata = d[n].imag();
+                ++drdata;
+                ++didata;
+                }
+            return info;
+            }
+        };
 
-    auto info = zheev_wrapper(N,Mc.data(),d.data());
+    auto R = Mat<value_type>(N,N);
+    auto L = Mat<value_type>{};
+    if(Lr && Li) resize(L,N,N);
+
+    auto info = Diag::call(N,M.data(),L.data(),R.data(),dr.data(),di.data());
     if(info != 0) 
         {
-        throw std::runtime_error("Error condition in diagHermitian");
+        println("M = \n",M);
+        throw std::runtime_error("Error condition in diagGeneral");
         }
 
-    //Correct eigenvalue signs
-    d *= -1;
-
-    //Following code assumes Ure and Uim are contiguous
-    auto ur = Ure.data();
-    auto ui = Uim.data();
-    for(auto& z : Mc)
+    if(L)
         {
-        (*ur) = realRef(z);
-        (*ui) = imagRef(z);
-        ++ur;
-        ++ui;
+        println("L=\n",L);
+        }
+
+    struct Unpack
+        {
+        void static
+        call(VectorRef di, MatrixRef Vr, MatrixRef Vi, MatrixRefc V)
+            {
+            //Unpack information in V
+            //back into actual eigenvectors
+            auto N = di.size();
+            decltype(N) n = 0;
+            while(n < N)
+                {
+                if(di(n) > 0)
+                    {
+                    //complex eigenvalue pair
+                    column(Vr,n) &= column(V,n);
+                    column(Vr,n+1) &= column(V,n);
+                    column(Vi,n) &= column(V,n+1);
+                    column(Vi,n+1) &= column(V,n+1);
+                    column(Vi,n+1) *= -1;
+                    n += 2;
+                    }
+                else
+                    {
+                    column(Vr,n) &= column(V,n);
+                    stdx::fill(column(Vi,n),0.);
+                    n += 1;
+                    }
+                }
+            }
+
+        void static
+        call(VectorRef di, MatrixRef Vr, MatrixRef Vi, CMatrixRefc V)
+            {
+            auto N = di.size();
+            for(decltype(N) c = 0; c < N; ++c)
+            for(decltype(N) r = 0; r < N; ++r)
+                {
+                Vr(r,c) = V(r,c).real();
+                Vi(r,c) = V(r,c).imag();
+                }
+            }
+        };
+
+    auto Rref = isTransposed(M) ? transpose(R) : makeRef(R);
+    Unpack::call(makeRef(di),makeRef(Rr),makeRef(Ri),Rref);
+
+    if(L) 
+        {
+        auto Lref = isTransposed(M) ? transpose(L) : makeRef(L);
+        Unpack::call(makeRef(di),makeRef(Lr),makeRef(Li),Lref);
         }
     }
-
-void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              Matrix          & Ure,
-              Matrix          & Uim,
-              VectorRef  const& d)
-    {
-    resize(Ure,nrows(Mre),ncols(Mre));
-    resize(Uim,nrows(Mre),ncols(Mre));
-    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),d);
-    }
-
-void
-diagHermitian(MatrixRefc const& Mre,
-              MatrixRefc const& Mim,
-              Matrix          & Ure,
-              Matrix          & Uim,
-              Vector          & d)
-    {
-    resize(Ure,nrows(Mre),ncols(Mre));
-    resize(Uim,nrows(Mre),ncols(Mre));
-    resize(d,nrows(Mre));
-    diagHermitian(Mre,Mim,makeRef(Ure),makeRef(Uim),makeRef(d));
-    }
+template void
+diagGeneralRef(MatRefc<Real> const& M,MatrixRef const& Rr,MatrixRef const& Ri,
+               MatrixRef const& Lr,MatrixRef const& Li,VectorRef const& dr,VectorRef const& di);
+template void
+diagGeneralRef(MatRefc<Cplx> const& M,MatrixRef const& Rr,MatrixRef const& Ri,
+               MatrixRef const& Lr,MatrixRef const& Li,VectorRef const& dr,VectorRef const& di);
 
 
 //

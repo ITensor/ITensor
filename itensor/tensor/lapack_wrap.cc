@@ -483,29 +483,57 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 // Eigenvalues and eigenvectors of real, square matrix A
 // A can be a general real matrix, not assumed symmetric
 //
-void 
-dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
-              char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
-              LAPACK_INT* n,        //number of rows/cols of A
-              LAPACK_REAL* A,       //matrix A, on return contains eigenvectors
+LAPACK_INT 
+dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
+              char jobvr,          //if 'V', compute right eigenvectors, else 'N'
+              LAPACK_INT n,        //number of rows/cols of A
+              LAPACK_REAL const* A, //matrix A
               LAPACK_REAL* dr,      //real parts of eigenvalues
               LAPACK_REAL* di,      //imaginary parts of eigenvalues
               LAPACK_REAL* vl,      //left eigenvectors on return
-              LAPACK_REAL* vr,      //right eigenvectors on return
-              LAPACK_INT* info)  //error info
+              LAPACK_REAL* vr)      //right eigenvectors on return
     {
     static std::vector<LAPACK_REAL> work;
-    LAPACK_INT nevecl = (*jobvl == 'V' ? *n : 1);
-    LAPACK_INT nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = std::max(1,4*(*n));
-    work.resize(lwork);
+    static std::vector<LAPACK_REAL> cpA;
+
+    cpA.resize(n*n);
+    std::copy(A,A+n*n,cpA.data());
+    
+    LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
+    LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
+    LAPACK_INT info = 0;
 #ifdef PLATFORM_acml
-    LAPACK_INT jobvl_len = 1;
-    LAPACK_INT jobvr_len = 1;
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,info,jobvl_len,jobvr_len);
+    LAPACK_INT lwork = -1;
+    LAPACK_REAL wquery = 0;
+    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info,1,1);
+
+    lwork = static_cast<LAPACK_INT>(wquery);
+    work.resize(lwork);
+    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info,1,1);
 #else
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,info);
+    LAPACK_INT lwork = -1;
+    LAPACK_REAL wquery = 0;
+    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info);
+
+    lwork = static_cast<LAPACK_INT>(wquery);
+    work.resize(lwork);
+    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info);
 #endif
+    //println("jobvl = ",jobvl);
+    //println("nevecl = ",nevecl);
+    //println("vl data = ");
+    //for(auto j = 0; j < n*n; ++j)
+    //    {
+    //    println(*vl);
+    //    ++vl;
+    //    }
+    //println("vr data = ");
+    //for(auto j = 0; j < n*n; ++j)
+    //    {
+    //    println(*vr);
+    //    ++vr;
+    //    }
+    return info;
     }
 
 //
@@ -514,29 +542,41 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
 // Eigenvalues and eigenvectors of complex, square matrix A
 // A can be a general complex matrix, not assumed symmetric
 //
-void 
-zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
-              char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
-              LAPACK_INT* n,        //number of rows/cols of A
-              LAPACK_COMPLEX* A,    //matrix A, on return contains eigenvectors
-              LAPACK_COMPLEX* d,    //eigenvalues
-              LAPACK_COMPLEX* vl,   //left eigenvectors on return
-              LAPACK_COMPLEX* vr,   //right eigenvectors on return
-              LAPACK_INT* info)  //error info
+LAPACK_INT 
+zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
+              char jobvr,          //if 'V', compute right eigenvectors, else 'N'
+              LAPACK_INT n,        //number of rows/cols of A
+              Cplx const* A, //matrix A
+              Cplx * d,    //eigenvalues
+              Cplx * vl,   //left eigenvectors on return
+              Cplx * vr)   //right eigenvectors on return
     {
+    static std::vector<LAPACK_COMPLEX> cpA;
     static std::vector<LAPACK_COMPLEX> work;
     static std::vector<LAPACK_REAL> rwork;
-    int nevecl = (*jobvl == 'V' ? *n : 1);
-    int nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = std::max(1,4*(*n));
+    int nevecl = (jobvl == 'V' ? n : 1);
+    int nevecr = (jobvr == 'V' ? n : 1);
+    LAPACK_INT lwork = std::max(1,4*n);
     work.resize(lwork);
-    LAPACK_INT lrwork = std::max(1,2*(*n));
+    LAPACK_INT lrwork = std::max(1,2*n);
     rwork.resize(lrwork);
+
+    //Copy A data into cpA
+    cpA.resize(n*n);
+    auto pA = reinterpret_cast<LAPACK_COMPLEX const*>(A);
+    std::copy(pA,pA+n*n,cpA.data());
+
+    auto pd = reinterpret_cast<LAPACK_COMPLEX*>(d);
+    auto pvl = reinterpret_cast<LAPACK_COMPLEX*>(vl);
+    auto pvr = reinterpret_cast<LAPACK_COMPLEX*>(vr);
+
+    LAPACK_INT info = 0;
 #ifdef PLATFORM_acml
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work.data(),&lwork,rwork.data(),info,1,1);
+    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info,1,1);
 #else
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work.data(),&lwork,rwork.data(),info);
+    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info);
 #endif
+    return info;
     }
 
 } //namespace itensor

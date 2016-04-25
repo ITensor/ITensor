@@ -552,16 +552,17 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 // Eigenvalues and eigenvectors of real, square matrix A
 // A can be a general real matrix, not assumed symmetric
 //
-void
-dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
-              char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
-              LAPACK_INT* n,        //number of rows/cols of A
-              LAPACK_REAL* A,       //matrix A, on return contains eigenvectors
+// Returns "info" integer
+//
+LAPACK_INT
+dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
+              char jobvr,          //if 'V', compute right eigenvectors, else 'N'
+              LAPACK_INT n,        //number of rows/cols of A
+              LAPACK_REAL const* A, //matrix A
               LAPACK_REAL* dr,      //real parts of eigenvalues
               LAPACK_REAL* di,      //imaginary parts of eigenvalues
               LAPACK_REAL* vl,      //left eigenvectors on return
-              LAPACK_REAL* vr,      //right eigenvectors on return
-              LAPACK_INT* info);  //error info
+              LAPACK_REAL* vr);     //right eigenvectors on return
 
 //
 // zgeev
@@ -569,15 +570,16 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
 // Eigenvalues and eigenvectors of complex, square matrix A
 // A can be a general complex matrix, not assumed symmetric
 //
-void
-zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
-              char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
-              LAPACK_INT* n,        //number of rows/cols of A
-              LAPACK_COMPLEX* A,    //matrix A, on return contains eigenvectors
-              LAPACK_COMPLEX* d,    //eigenvalues
-              LAPACK_COMPLEX* vl,   //left eigenvectors on return
-              LAPACK_COMPLEX* vr,   //right eigenvectors on return
-              LAPACK_INT* info);  //error info
+// Returns "info" integer
+//
+LAPACK_INT
+zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
+              char jobvr,          //if 'V', compute right eigenvectors, else 'N'
+              LAPACK_INT n,        //number of rows/cols of A
+              Cplx const* A, //matrix A
+              Cplx * d,    //eigenvalues
+              Cplx * vl,   //left eigenvectors on return
+              Cplx * vr);  //right eigenvectors on return
 
 } //namespace itensor
 

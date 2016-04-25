@@ -95,6 +95,61 @@ diagHermitian(MatM && M,
     if(isTransposed(M)) conjugate(U);
     }
 
+template<typename V>
+void
+diagGeneralRef(MatRefc<V> const& M,
+               MatrixRef const& Rr,
+               MatrixRef const& Ri,
+               MatrixRef const& Lr,
+               MatrixRef const& Li,
+               VectorRef const& dr,
+               VectorRef const& di);
+
+template<class MatM, 
+         class MatV,
+         class Vecd,
+         class>
+void
+eigen(MatM && M,
+      MatV && Vr,
+      MatV && Vi,
+      Vecd && dr,
+      Vecd && di)
+    {
+    auto N = ncols(M);
+    resize(Vr,N,N);
+    resize(Vi,N,N);
+    resize(dr,N);
+    resize(di,N);
+    auto Lr = MatrixRef{};
+    auto Li = MatrixRef{};
+    diagGeneralRef(makeRef(M),makeRef(Vr),makeRef(Vi),Lr,Li,makeRef(dr),makeRef(di));
+    }
+
+template<class MatM, class MatV,class Vecd,class>
+void
+eigDecomp(MatM && M,
+          MatV && Lr,
+          MatV && Li,
+          Vecd && dr,
+          Vecd && di,
+          MatV && Rr,
+          MatV && Ri)
+    {
+    auto N = ncols(M);
+    resize(Lr,N,N);
+    resize(Li,N,N);
+    resize(Rr,N,N);
+    resize(Ri,N,N);
+    resize(dr,N);
+    resize(di,N);
+    diagGeneralRef(makeRef(M),
+                   makeRef(Rr),makeRef(Ri),
+                   makeRef(Lr),makeRef(Li),
+                   makeRef(dr),makeRef(di));
+    }
+
+
 template<typename T>
 void
 SVDRef(MatRefc<T> const& M,
