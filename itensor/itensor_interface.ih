@@ -20,6 +20,7 @@ QN
 div(IQTensor const& T);
 
 namespace detail {
+
 void inline
 allocReal(ITensor& T)
     {
@@ -50,6 +51,12 @@ allocReal(IQTensor& T, const Container& inds)
         div += iv.qn()*iv.index.dir();
         }
     T.store() = newITData<QDenseReal>(T.inds(),div);
+    }
+
+void inline
+allocCplx(ITensor& T)
+    {
+    T.store() = newITData<DenseCplx>(area(T.inds()),0);
     }
 
 void inline

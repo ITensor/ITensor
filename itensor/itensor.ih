@@ -117,7 +117,8 @@ template<typename... Indxs>
 TensorRef1
 ordered(ITensor & T, Indxs&&... inds)
     {
-    if(isComplex(T)) Error("ITensor is complex; use orderedC instead of ordered");
+    if(!T.store()) detail::allocReal(T);
+    else if(isComplex(T)) Error("ITensor is complex; use orderedC instead of ordered");
     return ordered_impl<Real>(T,std::forward<Indxs>(inds)...);
     }
 
@@ -125,7 +126,8 @@ template<typename... Indxs>
 CTensorRef1
 orderedC(ITensor & T, Indxs&&... inds)
     {
-    if(!isComplex(T)) Error("ITensor is real; use ordered instead of orderedC");
+    if(!T.store()) detail::allocCplx(T);
+    else if(!isComplex(T)) Error("ITensor is real; use ordered instead of orderedC");
     return ordered_impl<Cplx>(T,std::forward<Indxs>(inds)...);
     }
 
