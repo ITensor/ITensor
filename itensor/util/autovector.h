@@ -119,7 +119,7 @@ class autovector // returns T() outside range or unassigned
                 { // resize
                 lint newlen = (lint)((newmaxi - newmini + 8) * 2);
                 lint newminiloc = (newlen - (newmaxi - newmini + 1)) / 2;
-		std::vector<T> newdat(newlen);
+		        std::vector<T> newdat(newlen);
                 lint oldbegin = miniloc_, 
                            oldend = miniloc_ + maxi_ - mini_;
                 lint newbegin = newminiloc-newmini+mini_; // location of mini in newdat
