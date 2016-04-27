@@ -108,7 +108,7 @@ diagHermitian(ITensorT<I> const& M,
 
 template<typename I>
 ITensorT<I>
-expHermitian(ITensorT<I> const& T);
+expHermitian(ITensorT<I> const& T, Cplx t = 1.);
 
 
 //

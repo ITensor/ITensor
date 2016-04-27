@@ -1271,26 +1271,35 @@ template void
 eigDecomp(IQTensor const&, IQTensor &,IQTensor & , IQTensor & , Args const& );
 
 
+template<typename T>
+struct Exp
+    {
+    T tt = 0.;
+    Exp(T t_) : tt(t_) { }
+
+    T
+    operator()(Real x) const { return exp(tt*x); }
+    };
+
 template<typename I>
 ITensorT<I>
-expHermitian(ITensorT<I> const& T)
+expHermitian(ITensorT<I> const& T, Cplx t)
     {
-    ITensorT<I> U;
-    ITensorT<I> d;
+    ITensorT<I> U,d;
     diagHermitian(T,U,d);
 
-    struct Exp
+    if(t.imag()==0.)
         {
-        Real
-        operator()(Real x) const { return exp(x); }
-        Cplx
-        operator()(Cplx z) const { return exp(z); }
-        };
-    d.apply(Exp());
+        d.apply(Exp<Real>(t.real()));
+        }
+    else
+        {
+        d.apply(Exp<Cplx>(t));
+        }
 
     return prime(U)*d*dag(U);
     }
-template ITensor expHermitian(ITensor const& T);
-template IQTensor expHermitian(IQTensor const& T);
+template ITensor expHermitian(ITensor const& T, Cplx);
+template IQTensor expHermitian(IQTensor const& T, Cplx);
 
 } //namespace itensor

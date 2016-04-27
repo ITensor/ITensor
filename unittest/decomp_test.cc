@@ -321,4 +321,64 @@ SECTION("IQTensor diagHermitian")
         }
     }
 
+SECTION("Exp Hermitian")
+    {
+    SECTION("ITensor case")
+        {
+        auto s = Index("s",2);
+        auto X = ITensor(s,prime(s));
+        X.set(s(1),prime(s)(2),1);
+        X.set(s(2),prime(s)(1),1);
+
+        auto Id = ITensor(s,prime(s));
+        Id.set(s(1),prime(s)(1),1);
+        Id.set(s(2),prime(s)(2),1);
+
+        SECTION("Real tau")
+            {
+            Real tau = -0.2342;
+            auto expX = expHermitian(X,tau);
+            CHECK(norm(expX - (cosh(tau)*Id+sinh(tau)*X)) < 1E-12);
+            CHECK(not isComplex(expX));
+            }
+
+        SECTION("Imag tau")
+            {
+            Cplx tau = -0.2342_i;
+            auto expX = expHermitian(X,tau);
+            CHECK(norm(expX - (cos(tau.imag())*Id+1_i*sin(tau.imag())*X)) < 1E-12);
+            CHECK(isComplex(expX));
+            }
+        }
+
+    SECTION("IQTensor case")
+        {
+        auto s = IQIndex("S",Index("s-",1),QN(-1),
+                             Index("s+",1),QN(+1));
+        auto Z = IQTensor(dag(s),prime(s));
+        Z.set(s(1),prime(s)(1),1);
+        Z.set(s(2),prime(s)(2),-1);
+
+        auto Id = IQTensor(dag(s),prime(s));
+        Id.set(s(1),prime(s)(1),1);
+        Id.set(s(2),prime(s)(2),1);
+
+        SECTION("Real tau")
+            {
+            Real tau = -0.2342;
+            auto expZ = expHermitian(Z,tau);
+            CHECK(norm(expZ - (cosh(tau)*Id+sinh(tau)*Z)) < 1E-12);
+            CHECK(not isComplex(expZ));
+            }
+
+        SECTION("Imag tau")
+            {
+            Cplx tau = -0.2342_i;
+            auto expZ = expHermitian(Z,tau);
+            CHECK(norm(expZ - (cos(tau.imag())*Id+1_i*sin(tau.imag())*Z)) < 1E-12);
+            CHECK(isComplex(expZ));
+            }
+        }
+    }
+
 }
