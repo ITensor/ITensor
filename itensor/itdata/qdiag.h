@@ -51,6 +51,11 @@ class QDiag
         length(D.length)
         { }
 
+    QDiag(size_t size)
+      : store(size,0.),
+        length(size)
+        { }
+
     explicit operator bool() const { return !store.empty(); }
 
     bool
@@ -137,7 +142,7 @@ doTask(ApplyIT<F> & A, QDiag<T> const& d, ManageStore & m)
     using new_type = ApplyIT_result_of<T,F>;
     if(switchesType<T>(A))
         {
-        auto *nd = m.makeNewData<QDiag<new_type>>(d);
+        auto *nd = m.makeNewData<QDiag<new_type>>(d.size());
         assert(nd->store.size() == d.store.size());
         A(d.val,nd->val);
         for(auto n : range(d.store.size()))
