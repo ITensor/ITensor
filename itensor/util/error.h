@@ -5,8 +5,8 @@
 #ifndef _error_h
 #define _error_h
 
+#include <cstdlib>
 #include <stdexcept>
-//#include <cstdlib>
 #include <iostream>
 
 void error(const std::string& s);
