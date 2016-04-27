@@ -142,8 +142,7 @@ doTask(ApplyIT<F>& A, Diag<T> const& d, ManageStore & m)
     using new_type = ApplyIT_result_of<T,F>;
     if(switchesType<T>(A))
         {
-        auto *nd = m.makeNewData<Diag<new_type>>(d);
-        assert(nd->store.size() == d.store.size());
+        auto *nd = m.makeNewData<Diag<new_type>>(d.size());
         A(d.val,nd->val);
         for(auto n : range(d.store.size()))
             {
