@@ -608,6 +608,39 @@ SECTION("Visit Real")
     CHECK_CLOSE(prod,prod_check);
     }
 
+SECTION("Diag Apply")
+    {
+    auto i = Index("i",4);
+    auto j = Index("j",4);
+
+    auto vr = vector<Real>{{3.,4.,5.,6.}};
+    auto vc = vector<Cplx>{{3._i,4.,5._i,6.}};
+
+    auto dr = diagTensor(vr,i,j);
+    auto dc = diagTensor(vc,i,j);
+    
+    auto frr = [](Real r) { return 2*r; };
+    auto frc = [](Real r) { return 2_i*r; };
+    auto fcr = [](Cplx z) { return z.real(); };
+    auto fcc = [](Cplx z) { return 2*z; };
+
+    auto adrr = apply(dr,frr);
+    CHECK(not isComplex(adrr));
+    CHECK(norm(2*dr - adrr) < 1E-12);
+
+    auto adrc = apply(dr,frc);
+    CHECK(isComplex(adrc));
+    CHECK(norm(2_i*dr - adrc) < 1E-12);
+
+    auto adcr = apply(dc,fcr);
+    CHECK(not isComplex(adcr));
+    CHECK(norm(realPart(dc) - adcr) < 1E-12);
+
+    auto adcc = apply(dc,fcc);
+    CHECK(isComplex(adcc));
+    CHECK(norm(2*dc - adcc) < 1E-12);
+    }
+
 }
 
 SECTION("SumDifference")

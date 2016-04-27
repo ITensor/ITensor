@@ -175,10 +175,6 @@ doTask(Contract<Index> & C,
        Dense<T2>  const& t,
        ManageStore     & m);
 
-//void
-//doTask(PlusEQ<Index> const& P,
-//       DiagReal           & D1,
-//       DiagReal      const& D2);
 template<typename T1, typename T2>
 void
 doTask(PlusEQ<Index> const& P,
