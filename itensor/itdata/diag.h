@@ -62,8 +62,7 @@ class Diag
       : store(D.begin(),D.end()),
         val(D.val),
         length(D.length)
-        {
-        }
+        { }
 
     bool
     allSame() const { return store.empty(); }
@@ -136,27 +135,26 @@ write(std::ostream& s, Diag<T> const& dat)
     itensor::write(s,dat.store);
     }
 
-
-template <typename F, typename T,
-          class = stdx::require<std::is_same<T,stdx::result_of_t<F(T)>>> >
+template <typename F, typename T>
 void
-doTask(ApplyIT<F>& A, Diag<T>& d) 
+doTask(ApplyIT<F>& A, Diag<T> const& d, ManageStore & m) 
     { 
-    //if(d.allSame()) 
-    //    {
-    //    d.val = detail::call<T>(A.f,d.val);
-    //    }
-    //else
-    //    {
-    //    for(auto& elt : d.store) elt = detail::call<T>(A.f,elt);
-    //    }
-    if(d.allSame()) 
+    using new_type = ApplyIT_result_of<T,F>;
+    if(switchesType<T>(A))
         {
-        A(d.val);
+        auto *nd = m.makeNewData<Diag<new_type>>(d);
+        assert(nd->store.size() == d.store.size());
+        A(d.val,nd->val);
+        for(auto n : range(d.store.size()))
+            {
+            A(d.store[n],nd->store[n]);
+            }
         }
     else
         {
-        for(auto& el : d.store) A(el);
+        auto *md = m.modifyData(d);
+        A(md->val);
+        for(auto& el : md->store) A(el);
         }
     }
 

@@ -43,6 +43,14 @@ class QDiag
     QDiag(IQIndexSet const& is, 
           T val_);
 
+    template<typename V>
+    explicit
+    QDiag(QDiag<V> const& D)
+      : store(D.begin(),D.end()),
+        val(D.val),
+        length(D.length)
+        { }
+
     explicit operator bool() const { return !store.empty(); }
 
     bool
@@ -124,9 +132,25 @@ doTask(CalcDiv const& C, QDiag<T> const& d);
 
 template<typename F, typename T>
 void
-doTask(ApplyIT<F> & A, QDiag<T> & d)
+doTask(ApplyIT<F> & A, QDiag<T> const& d, ManageStore & m)
     {
-    for(auto& el : d.store) A(el);
+    using new_type = ApplyIT_result_of<T,F>;
+    if(switchesType<T>(A))
+        {
+        auto *nd = m.makeNewData<QDiag<new_type>>(d);
+        assert(nd->store.size() == d.store.size());
+        A(d.val,nd->val);
+        for(auto n : range(d.store.size()))
+            {
+            A(d.store[n],nd->store[n]);
+            }
+        }
+    else
+        {
+        auto *md = m.modifyData(d);
+        A(md->val);
+        for(auto& el : md->store) A(el);
+        }
     }
 
 template<typename F, typename T>
