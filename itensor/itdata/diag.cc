@@ -158,17 +158,62 @@ template void doTask(Contract<Index>&, Diag<Real> const&, Dense<Cplx> const&, Ma
 template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Real> const&, ManageStore&);
 template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Cplx> const&, ManageStore&);
 
+struct Adder
+    {
+    const Real f = 1.;
+    Adder(Real f_) : f(f_) { }
+    template<typename T1, typename T2>
+    void operator()(T2 v2, T1& v1) { v1 += f*v2; }
+    void operator()(Cplx v2, Real& v1) { }
+    };
+
+template<typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
-       DiagReal           & D1,
-       DiagReal      const& D2)
+add(PlusEQ<Index> const& P,
+    Diag<T1>          & D1,
+    Diag<T2>     const& D2)
     {
 #ifdef DEBUG
-    if(D1.size() != D2.size()) Error("Mismatched sizes in plusEq");
+    if(D1.length != D2.length) Error("Mismatched lengths in plusEq");
 #endif
     if(D1.allSame() || D2.allSame()) Error("Diag plusEq allSame case not implemented");
-    daxpy_wrapper(D1.size(),P.fac(),D2.data(),1,D1.data(),1);
+
+    if(std::is_same<T1,T2>::value)
+        {
+        auto d1 = realData(D1);
+        auto d2 = realData(D2);
+        daxpy_wrapper(d1.size(),P.fac(),d2.data(),1,d1.data(),1);
+        }
+    else
+        {
+        auto ref1 = makeVecRef(D1.data(),D1.size());
+        auto ref2 = makeVecRef(D2.data(),D2.size());
+        transform(ref2,ref1,Adder{P.fac()});
+        }
     }
+
+template<typename T1, typename T2>
+void
+doTask(PlusEQ<Index> const& P,
+       Diag<T1> const& D1,
+       Diag<T2> const& D2,
+       ManageStore & m)
+    {
+    if(isReal(D1) && isCplx(D2))
+        {
+        auto *ncD1 = m.makeNewData<DiagCplx>(D1.begin(),D1.end());
+        add(P,*ncD1,D2);
+        }
+    else
+        {
+        auto *ncD1 = m.modifyData(D1);
+        add(P,*ncD1,D2);
+        }
+    }
+template void doTask(PlusEQ<Index> const&,Diag<Real> const&,Diag<Real> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Diag<Real> const&,Diag<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Diag<Cplx> const&,Diag<Real> const&,ManageStore &);
+template void doTask(PlusEQ<Index> const&,Diag<Cplx> const&,Diag<Cplx> const&,ManageStore &);
 
 template<typename N, typename T>
 void
