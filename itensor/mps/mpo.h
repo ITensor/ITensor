@@ -68,8 +68,8 @@ class MPOt : private MPSt<Tensor>
     MPOt<ITensor>
     toMPO() const;
 
-    //MPOt<IQTensor>
-    //toIQMPO() const;
+    MPOt<IQTensor>
+    toIQMPO() const;
 
     //MPOt: index methods --------------------------------------------------
 
@@ -132,12 +132,12 @@ class MPOt : private MPSt<Tensor>
     //use isComplex(W) instead
     using Parent::isComplex;
 
-    //void 
-    //toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
-    //    {
-    //    res = MPOt<IQTensor>(*sites_,logrefNorm_);
-    //    convertToIQ(*sites_,A_,res.A_,totalq,cut);
-    //    }
+    void 
+    toIQ(QN totalq, IQMPO& res, Real cut = 1E-12) const
+        {
+        res = IQMPO(*sites_,logrefNorm_);
+        convertToIQ(*sites_,A_,res.A_,totalq,cut);
+        }
 
     }; //class MPOt<Tensor>
 
