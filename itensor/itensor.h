@@ -72,14 +72,14 @@ operator*(IndexVal const& iv1, IndexVal const& iv2);
 
 //
 // Define product of IndexVal iv1 = (I1,n1) 
-// with a Real number "fac" to be an ITensor T such that T(I1(n1)) == val
+// with a scalar "fac" to be an ITensor T such that T(I1(n1)) == val
 //
 // Useful for creating MPOs
 //
 ITensor
-operator*(IndexVal const& iv1, Real val);
+operator*(IndexVal const& iv1, Cplx val);
 ITensor inline
-operator*(Real val, IndexVal const& iv) { return operator*(iv,val); }
+operator*(Cplx val, IndexVal const& iv) { return operator*(iv,val); }
 
 
 template <typename... Inds>

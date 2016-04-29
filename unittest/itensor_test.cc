@@ -1866,6 +1866,46 @@ SECTION("Get/Set with IQIndexVal")
     CHECK_CLOSE(T.real(J(1),I(2)),21);
     }
 
+SECTION("IndexVal Products")
+{
+SECTION("IndexVal times IndexVal")
+    {
+    auto i = Index("i",4);
+    auto j = Index("j",3);
+    auto T = i(2)*j(3);
+
+    CHECK_CLOSE(T.real(i(2),j(3)),1.0);
+    auto tot = 0.0;
+    for(auto ni : range1(i))
+    for(auto nj : range1(j))
+        {
+        tot += T.real(i(ni),j(nj));
+        }
+    CHECK_CLOSE(tot,1.0);
+    }
+
+SECTION("IndexVal times Scalar")
+    {
+    auto i = Index("i",4);
+    auto R1 = i(2) * 7.;
+    CHECK_CLOSE(R1.real(i(2)),7.0);
+    CHECK(not isComplex(R1));
+
+    auto R2 = 7. * i(3);
+    CHECK_CLOSE(R2.real(i(3)),7.0);
+    CHECK(not isComplex(R2));
+
+    auto C1 = i(2) * (3.+4_i);
+    CHECK_CLOSE(C1.cplx(i(2)),3.+4_i);
+    CHECK(isComplex(C1));
+
+    auto C2 = (2.+1_i) * i(3);
+    CHECK_CLOSE(C2.cplx(i(3)),2.+1_i);
+    CHECK(isComplex(C2));
+    }
+
+}
+
 //SECTION("TieIndices")
 //    {
 //

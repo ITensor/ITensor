@@ -47,7 +47,7 @@ operator*(IndexVal const& iv1, IndexVal const& iv2)
     }
 
 ITensor inline
-operator*(IndexVal const& iv1, Real val) 
+operator*(IndexVal const& iv1, Cplx val) 
     { 
     auto res = setElt(iv1);
     res *= val; 
