@@ -206,32 +206,48 @@ void
 prime(IndexSetT<IndexT>& is, 
       int inc = 1);
 
-// Increment primelevels of the indices
-// specified by 1, or an optional amount "inc"
-// For example, to prime indices I and J by 2,
-// prime(is,I,J,2);
-template<typename IndexT, typename... Inds>
+//
+// Increment primelevels of indices in the
+// set by matching them against a list
+// of other objects, including:
+// * Index (or IQIndex) objects
+// * IndexType objects
+// * IndexVal (or IQIndexVal) objects
+// The last argument can optionally
+// be an integer "inc" telling how
+// much to increment by.
+//
+template<typename IndexT, typename... VArgs>
 void 
 prime(IndexSetT<IndexT>& is, 
-      IndexT const& I1, 
-      Inds&&... rest);
+      VArgs&&... vargs);
 
-// increment primelevel of all indices of
-// type "type" by an amount "inc"
-template<typename IndexT, typename... Types>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexType type,
-      int inc = 1);
+//// Increment primelevels of the indices
+//// specified by 1, or an optional amount "inc"
+//// For example, to prime indices I and J by 2,
+//// prime(is,I,J,2);
+//template<typename IndexT, typename... Inds>
+//void 
+//prime(IndexSetT<IndexT>& is, 
+//      IndexT const& I1, 
+//      Inds&&... rest);
 
-// same as above but for multiple types
-// optionally, last argument can be 
-// an increment amount
-template<typename IndexT, typename... Types>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexType type1,
-      Types&&... rest);
+//// increment primelevel of all indices of
+//// type "type" by an amount "inc"
+//template<typename IndexT, typename... Types>
+//void 
+//prime(IndexSetT<IndexT>& is, 
+//      IndexType type,
+//      int inc = 1);
+
+//// same as above but for multiple types
+//// optionally, last argument can be 
+//// an increment amount
+//template<typename IndexT, typename... Types>
+//void 
+//prime(IndexSetT<IndexT>& is, 
+//      IndexType type1,
+//      Types&&... rest);
 
 //
 //Given a list of indices and an increment (an int)

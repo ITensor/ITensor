@@ -185,32 +185,80 @@ SECTION("Prime Indices")
         }
     }
 
-SECTION("Prime Using IndexVals")
+SECTION("Prime Mix of IndexType and Index")
     {
-    SECTION("Case 1")
+    SECTION("Case 1 Basic")
         {
-        IndexSet is(i5,i2,prime(i2),i4);
-        prime(is,i2(1),prime(i2)(2));
+        auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
+        prime(is,i2,Vtype);
         CHECK(is[0] == i5);
         CHECK(is[1] == prime(i2));
-        CHECK(is[2] == prime(i2,3));
-        CHECK(is[3] == i4);
-        }
-    SECTION("Case 2")
-        {
-        IndexSet is(i5,i2,prime(i2),i4);
-        prime(is,i2(5),prime(i2)(1),i4(2));
-        CHECK(is[0] == i5);
-        CHECK(is[1] == prime(i2,5));
         CHECK(is[2] == prime(i2,2));
-        CHECK(is[3] == prime(i4,2));
+        CHECK(is[3] == prime(v1));
+        CHECK(is[4] == prime(w1));
         }
-    SECTION("Check Error Condition")
+    SECTION("Case 2 Increment")
         {
-        IndexSet is(i5,i2,i3,i4);
-        CHECK_THROWS_AS(prime(is,prime(i2)(3)),ITError);
+        auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
+        prime(is,i2,Vtype,3);
+        CHECK(is[0] == i5);
+        CHECK(is[1] == prime(i2,3));
+        CHECK(is[2] == prime(i2,2));
+        CHECK(is[3] == prime(v1,3));
+        CHECK(is[4] == prime(w1));
+        }
+    SECTION("Case 3 Other Order")
+        {
+        auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
+        prime(is,Vtype,i2,3);
+        CHECK(is[0] == i5);
+        CHECK(is[1] == prime(i2,3));
+        CHECK(is[2] == prime(i2,2));
+        CHECK(is[3] == prime(v1,3));
+        CHECK(is[4] == prime(w1));
+        }
+    SECTION("Check Error: No Matching Index")
+        {
+        auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
+        CHECK_THROWS_AS(prime(is,Vtype,i3),ITError);
+        }
+    SECTION("Check Error: Invalid Prime Levels")
+        {
+        auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
+        CHECK_THROWS_AS(prime(is,Vtype,i2,2),ITError);
         }
     }
+
+//
+// This feature was experimental and has been
+// removed. Use mapprime instead.
+//
+//SECTION("Prime Using IndexVals")
+//    {
+//    SECTION("Case 1")
+//        {
+//        auto is = IndexSet(i5,i2,prime(i2),i4);
+//        prime(is,i2(1),prime(i2)(2));
+//        CHECK(is[0] == i5);
+//        CHECK(is[1] == prime(i2));
+//        CHECK(is[2] == prime(i2,3));
+//        CHECK(is[3] == i4);
+//        }
+//    SECTION("Case 2")
+//        {
+//        IndexSet is(i5,i2,prime(i2),i4);
+//        prime(is,i2(5),prime(i2)(1),i4(2));
+//        CHECK(is[0] == i5);
+//        CHECK(is[1] == prime(i2,5));
+//        CHECK(is[2] == prime(i2,2));
+//        CHECK(is[3] == prime(i4,2));
+//        }
+//    SECTION("Check Error Condition")
+//        {
+//        IndexSet is(i5,i2,i3,i4);
+//        CHECK_THROWS_AS(prime(is,prime(i2)(3)),ITError);
+//        }
+//    }
 
 SECTION("Prime Except")
     {

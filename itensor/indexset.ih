@@ -107,22 +107,39 @@ namespace detail {
         }
 
     template<typename IndexT, typename T>
-    void
-    checkHasInds(const IndexSetT<IndexT>& is,
-                 const T& I,
-                 int inc = 1)
+    auto
+    doCheck(stdx::choice<1>,
+            IndexSetT<IndexT> const& is,
+            T const& I)
+        -> stdx::if_compiles_return<void,decltype(is.front()==I)>
         {
         for(auto& J : is) if(I == J) return;
         throw ITError(format("Missing index in index set\nindex = \n%s\nindex set = \n%s",I,is));
         }
-    template<typename IndexT, typename T, typename... Rest>
+    template<typename IndexT, typename T>
     void
-    checkHasInds(const IndexSetT<IndexT>& is,
-                 const T& I1,
-                 const T& I2,
+    doCheck(stdx::choice<2>,
+            IndexSetT<IndexT> const& is,
+            T const& I)
+        { }
+
+
+    template<typename IndexT, typename T>
+    void
+    checkHasInds(IndexSetT<IndexT> const& is,
+                 T const& I,
+                 int inc = 1)
+        {
+        doCheck(stdx::select_overload{},is,I);
+        }
+    template<typename IndexT, typename T1, typename T2, typename... Rest>
+    void
+    checkHasInds(IndexSetT<IndexT> const& is,
+                 T1 const& I1,
+                 T2 const& I2,
                  Rest&&... rest)
         {
-        checkHasInds(is,I1);
+        doCheck(stdx::select_overload{},is,I1);
         checkHasInds(is,I2,std::forward<Rest>(rest)...);
         }
 } //namespace detail
@@ -136,23 +153,50 @@ prime(IndexSetT<IndexT>& is,
     for(auto& J : is) J.prime(type,inc);
     }
 
-template<typename IndexT, typename... Types>
+namespace detail {
+
+template<typename IndexT>
+struct IndexCmp
+    {
+    bool
+    operator()(IndexT const& i, IndexType t) const
+        {
+        return i.type() == t;
+        }
+    bool
+    operator()(IndexType t, IndexT const& i) const
+        {
+        return i.type() == t;
+        }
+    template<typename T1, typename T2>
+    auto
+    operator()(T1 const& i1, T2 const& i2) const
+        -> stdx::if_compiles_return<bool,decltype(i1==i2)>
+        {
+        return i1 == i2;
+        }
+    };
+
+} //namespace detail
+
+template<typename IndexT, typename... VArgs>
 void 
 prime(IndexSetT<IndexT>& is, 
-      IndexType type1,
-      Types&&... rest)
+      VArgs&&... vargs)
     {
-    auto cmp = [](IndexT const& I, IndexType t) 
-        { 
-        return I.type()==t; 
-        };
+#ifdef DEBUG
+    detail::checkHasInds(is,std::forward<VArgs>(vargs)...);
+#endif
     for(auto& J : is)
         {
         auto match = 
-            detail::computeMatchInc(cmp,J,type1,
-                                    std::forward<Types>(rest)...);
+            detail::computeMatchInc(detail::IndexCmp<IndexT>(),J,
+                                    std::forward<VArgs>(vargs)...);
         if(match) J.prime(match.inc);
         }
+#ifdef DEBUG
+    detail::check(is);
+#endif
     }
 
 template<typename IndexT>
@@ -163,54 +207,54 @@ prime(IndexSetT<IndexT>& is,
     prime(is,All,inc); 
     }
 
-template<typename IndexT, typename... Inds>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexT const& I1, 
-      Inds&&... rest)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,I1,std::forward<Inds>(rest)...);
-#endif
-    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
-    for(auto& J : is)
-        {
-        auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(rest)...);
-        if(match) J.prime(match.inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
+//template<typename IndexT, typename... Inds>
+//void 
+//prime(IndexSetT<IndexT>& is, 
+//      IndexT const& I1, 
+//      Inds&&... rest)
+//    {
+//#ifdef DEBUG
+//    detail::checkHasInds(is,I1,std::forward<Inds>(rest)...);
+//#endif
+//    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
+//    for(auto& J : is)
+//        {
+//        auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(rest)...);
+//        if(match) J.prime(match.inc);
+//        }
+//#ifdef DEBUG
+//    detail::check(is);
+//#endif
+//    }
 
-// Experimental prime function that
-// takes IndexVals, where the value
-// is interpreted as an increment
-template<typename IndexT, typename... IVals>
-void 
-prime(IndexSetT<IndexT>& is,
-      const typename IndexT::indexval_type& iv1,
-      IVals&&... rest)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,iv1,std::forward<IVals>(rest)...);
-#endif
-    int inc = 0;
-    auto cmp = [&inc](const IndexT& J, 
-                      const typename IndexT::indexval_type& iv) 
-               { 
-               inc = iv.val; 
-               return J==iv.index; 
-               };
-    for(auto& J : is)
-        {
-        auto found = detail::findMatch(cmp,J,iv1,std::forward<IVals>(rest)...);
-        if(found) J.prime(inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
+//// Experimental prime function that
+//// takes IndexVals, where the value
+//// is interpreted as an increment
+//template<typename IndexT, typename... IVals>
+//void 
+//prime(IndexSetT<IndexT>& is,
+//      const typename IndexT::indexval_type& iv1,
+//      IVals&&... rest)
+//    {
+//#ifdef DEBUG
+//    detail::checkHasInds(is,iv1,std::forward<IVals>(rest)...);
+//#endif
+//    int inc = 0;
+//    auto cmp = [&inc](const IndexT& J, 
+//                      const typename IndexT::indexval_type& iv) 
+//               { 
+//               inc = iv.val; 
+//               return J==iv.index; 
+//               };
+//    for(auto& J : is)
+//        {
+//        auto found = detail::findMatch(cmp,J,iv1,std::forward<IVals>(rest)...);
+//        if(found) J.prime(inc);
+//        }
+//#ifdef DEBUG
+//    detail::check(is);
+//#endif
+//    }
 
 template<typename IndexT, typename... Inds>
 void 
