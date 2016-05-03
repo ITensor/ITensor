@@ -241,15 +241,13 @@ class ITensorT
     // be needed for most user code.
     //
 
-    //Construct by explicitly providing data object
-    //DataType should be a subclass of ITData
-    template <class DataType>
+    template <class StorageType>
     ITensorT(indexset_type iset,
-             DataType&& dat,
+             StorageType&& store,
              scale_type const& scale = LogNum{1.});
 
     ITensorT(indexset_type iset,
-             storage_ptr&& pdat,
+             storage_ptr&& pstore,
              scale_type const& scale = LogNum{1.});
 
     //Provide indices from IndexSet
