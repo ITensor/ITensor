@@ -67,9 +67,7 @@ operator*(IQTensor const& T, IndexVal const& iv);
 ITensor
 operator*(IndexVal const& iv, IQTensor const& T);
 
-//Compute flux (a.k.a. divergence) of IQTensor T
-QN
-flux(IQTensor const& T);
+//Compute divergence of IQTensor T
 QN
 div(IQTensor const& T);
 
@@ -127,6 +125,8 @@ mixedIQTensor(IQIndex const& i1,
 
 std::ostream& 
 operator<<(std::ostream & s, IQTensor const& t);
+
+
 
 } //namespace itensor
 

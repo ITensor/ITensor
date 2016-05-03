@@ -37,7 +37,7 @@ ITensorT(Complex val);
 //    {
 //    static constexpr auto size = sizeof...(ivs);
 //    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
-//    //If this IQTensor is not allocated, compute QN flux from ivs
+//    //If this IQTensor is not allocated, compute QN divergence from ivs
 //    if(!store_)
 //        {
 //#ifdef DEBUG
@@ -155,7 +155,7 @@ randomTensor(IQIndexVal const& iv1,
         }
     catch(ITError const& e)
         {
-        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        Error("Cannot randomize IQTensor, possibly incompatible divergence");
         }
     return T;
     }
@@ -172,7 +172,7 @@ randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds)
         }
     catch(ITError const& e)
         {
-        Error("Cannot randomize IQTensor, possibly incompatible flux");
+        Error("Cannot randomize IQTensor, possibly incompatible divergence");
         }
     return T;
     }
@@ -194,6 +194,9 @@ mixedIQTensor(IQIndex const& i1,
     auto size = area(is);
     return IQTensor(std::move(is),QMixed<Real>(size));
     }
+
+QN inline
+flux(IQTensor const& T) { return div(T); }
 
 } //namespace itensor
 

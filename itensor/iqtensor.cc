@@ -152,7 +152,7 @@ addIT(AddITensor & A,
       Dense<T2> const& t)
     {
     auto ddiv = doTask(CalcDiv{A.iqis},d);
-    if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
+    if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN divergence");
     Range drange;
     drange.init(make_indexdim(A.iqis,A.block_ind));
     auto dblock = getBlock(d,A.iqis,A.block_ind);
@@ -314,16 +314,10 @@ toITensor(IQTensor const& T)
     }
 
 QN
-flux(IQTensor const& T) 
+div(IQTensor const& T) 
     { 
     if(!T) Error("div(IQTensor) not defined for unallocated IQTensor");
     return doTask(CalcDiv{T.inds()},T.store());
-    }
-
-QN
-div(IQTensor const& T) 
-    { 
-    return flux(T);
     }
 
 IQTensor
@@ -483,9 +477,9 @@ operator<<(std::ostream& s, const IQTensor& T)
     if(T.store())
         {
         s << "r=" << rank(T);
-        s << " flux=";
+        s << " div=";
         try { 
-            s << flux(T); 
+            s << div(T); 
             }
         catch(ITError const& e)
             {
