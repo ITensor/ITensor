@@ -91,11 +91,11 @@ delta(IQIndex const& i1,
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
 
-QN inline
-qn(IQTensor const& T, Index const& i) { return qn(findIQInd(T,i),i); }
+QN
+qn(IQTensor const& T, Index const& i);
 
-Arrow inline
-dir(IQTensor const& T, Index const& i) { return findIQInd(T,i).dir(); }
+Arrow
+dir(IQTensor const& T, Index const& i);
 
 Arrow
 dir(IQTensor const& T, IQIndex const& i);

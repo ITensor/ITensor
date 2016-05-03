@@ -400,6 +400,22 @@ findIQInd(IQTensor const& T,
     return IQIndex{};
     }
 
+QN
+qn(IQTensor const& T, Index const& i) 
+    { 
+    auto I = findIQInd(T,i);
+    if(not I) Error("qn: no matching IQIndex found");
+    return qn(I,i);
+    }
+
+Arrow
+dir(IQTensor const& T, Index const& i) 
+    { 
+    auto I = findIQInd(T,i);
+    if(not I) Error("dir: no matching IQIndex found");
+    return I.dir(); 
+    }
+
 
 Arrow
 dir(IQTensor const& T, 
