@@ -100,10 +100,6 @@ dir(IQTensor const& T, Index const& i);
 Arrow
 dir(IQTensor const& T, IQIndex const& i);
 
-template <typename... Inds>
-IQTensor
-randomTensor(IQIndex const& i1, Inds&&... inds);
-
 template <typename... IQIndVals>
 IQTensor
 randomTensor(IQIndexVal const& iv1, 
