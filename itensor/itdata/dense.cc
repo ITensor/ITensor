@@ -173,6 +173,12 @@ doTask(TakeImag, DenseCplx const& D, ManageStore & m)
         }
     }
 
+void
+doTask(MakeCplx, DenseReal const& d, ManageStore & m)
+    {
+    m.makeNewData<DenseCplx>(d.begin(),d.end());
+    }
+
 
 template<typename T>
 void

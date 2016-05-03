@@ -250,6 +250,12 @@ doTask(TakeImag, DenseReal & d);
 void
 doTask(TakeImag, DenseCplx const& d, ManageStore & m);
 
+void
+doTask(MakeCplx, DenseReal const& d, ManageStore & m);
+
+void inline
+doTask(MakeCplx, DenseCplx const& d) { }
+
 template<typename T>
 bool constexpr
 doTask(CheckComplex, Dense<T> const& d) { return isCplx(d); }

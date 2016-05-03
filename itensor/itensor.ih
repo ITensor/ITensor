@@ -127,7 +127,7 @@ CTensorRef1
 orderedC(ITensor & T, Indxs&&... inds)
     {
     if(!T.store()) detail::allocCplx(T);
-    else if(!isComplex(T)) Error("ITensor is real; use ordered instead of orderedC");
+    else           doTask(MakeCplx{},T.store());
     return ordered_impl<Cplx>(T,std::forward<Indxs>(inds)...);
     }
 

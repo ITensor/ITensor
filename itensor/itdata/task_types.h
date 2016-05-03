@@ -261,6 +261,7 @@ typeNameOf(Fill<T> const&) { return "Fill"; }
 
 struct TakeReal { };
 struct TakeImag { };
+struct MakeCplx { };
 
 inline const char*
 typeNameOf(TakeReal const&) { return "TakeReal"; }
