@@ -392,11 +392,8 @@ IQIndex
 findIQInd(IQTensor const& T, 
           Index    const& i)
     {
-    for(const IQIndex& J : T.inds())
+    for(auto& J : T.inds())
         if(hasindex(J,i)) return J;
-    Print(T.inds());
-    Print(i);
-    throw ITError("Index i not found in any of T's IQIndices");
     return IQIndex{};
     }
 

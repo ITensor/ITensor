@@ -89,7 +89,7 @@ delta(IQIndex const& i1,
       Inds const&... inds);
 
 IQIndex
-findIQInd(const IQTensor& T, const Index& i);
+findIQInd(IQTensor const& T, Index const& i);
 
 QN
 qn(IQTensor const& T, Index const& i);
