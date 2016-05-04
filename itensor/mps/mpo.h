@@ -59,6 +59,8 @@ class MPOt : private MPSt<Tensor>
     using Parent::read;
     using Parent::write;
 
+    Real
+    logRefNorm() const { return logrefNorm_; }
 
     MPOt&
     plusEq(const MPOt& R,
@@ -109,13 +111,6 @@ class MPOt : private MPSt<Tensor>
     private:
 
 
-    MPOt&
-    addAssumeOrth(const MPOt& oth, const Args& args = Args::global()) 
-        { 
-        Parent::addAssumeOrth(oth,args+Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
-        return *this; 
-        }
-
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
     
@@ -140,6 +135,15 @@ class MPOt : private MPSt<Tensor>
     //    }
 
     }; //class MPOt<Tensor>
+
+template<typename T>
+MPOt<T>&
+addAssumeOrth(MPOt<T> & L, MPOt<T> const& R, Args const& args = Args::global()) 
+    { 
+    addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
+    return L;
+    }
+
 
 template<class T>
 MPOt<T>& 

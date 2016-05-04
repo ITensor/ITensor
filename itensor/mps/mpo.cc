@@ -152,10 +152,10 @@ plusEq(const MPOt<Tensor>& other_,
             { 
             return *this;
             }
-        return addAssumeOrth(other,args);
+        return addAssumeOrth(*this,other,args);
         }
 
-    return addAssumeOrth(other_,args);
+    return addAssumeOrth(*this,other_,args);
     }
 template
 MPOt<ITensor>& MPOt<ITensor>::plusEq(const MPOt<ITensor>& other, const Args&);

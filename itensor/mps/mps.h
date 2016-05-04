@@ -212,9 +212,6 @@ class MPSt
     void 
     init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
-    MPSt&
-    addAssumeOrth(const MPSt& R, 
-                  const Args& args = Args::global());
 
     private:
 
@@ -256,6 +253,12 @@ class MPSt
     isComplex() const;
 
     }; //class MPSt<Tensor>
+
+template <class MPSType>
+MPSType&
+addAssumeOrth(MPSType      & L,
+              MPSType const& R, 
+              Args const& args = Args::global());
 
 //void 
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
