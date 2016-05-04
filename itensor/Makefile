@@ -31,6 +31,8 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= decomp.cc 
+SOURCES+= svd.cc 
+SOURCES+= hermitian.cc 
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpo.cc 
 SOURCES+= mps/autompo.cc
@@ -149,6 +151,10 @@ spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= decomp.h
 decomp.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/decomp.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+svd.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/svd.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+hermitian.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/hermitian.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= mps/mps.h
 mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)

@@ -512,6 +512,48 @@ truncate(Vector & P,
          bool absoluteCutoff = false,
          bool doRelCutoff = false);
 
+template<typename V>
+MatRefc<V>
+toMatRefc(ITensor const& T, 
+          Index const& i1, 
+          Index const& i2);
+
+template<typename T>
+struct GetBlocks
+    {
+    using value_type = T;
+    IQIndexSet const& is;
+    bool transpose = false;
+
+    GetBlocks(IQIndexSet const& is_, 
+              IQIndex const& i1_, 
+              IQIndex const& i2_)
+      : is(is_)
+        { 
+        if(is.r() != 2) Error("GetBlocks only supports rank 2 currently");
+        transpose = (i2_ == is.front());
+        }
+    };
+
+template<typename T>
+struct Rank2Block
+    {
+    MatRefc<T> M;
+    long i1 = 0,
+         i2 = 0;
+    };
+
+template<typename T>
+std::vector<Rank2Block<T>>
+doTask(GetBlocks<T> const& G, 
+       QDense<T> const& d);
+
+void
+showEigs(Vector const& P,
+         Real truncerr,
+         LogNum const& scale,
+         Args const& args);
+
 } //namespace itensor
 
 
