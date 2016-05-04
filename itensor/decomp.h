@@ -190,7 +190,7 @@ svdRank2(ITensorT<IndexT> const& A,
          ITensorT<IndexT> & U, 
          ITensorT<IndexT> & D, 
          ITensorT<IndexT> & V,
-         Args const& args = Args::global());
+         Args args = Args::global());
 
 template<class Tensor>
 Spectrum 

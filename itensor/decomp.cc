@@ -11,6 +11,8 @@
 
 namespace itensor {
 
+const auto MAX_INT = std::numeric_limits<int>::max();
+
 using std::swap;
 using std::istream;
 using std::ostream;
@@ -191,10 +193,10 @@ showEigs(Vector const& P,
          LogNum const& scale,
          Args const& args)
     {
-    auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto maxm = args.getInt("Maxm",MAX_M);
-    auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",true);
+    auto cutoff = args.getReal("Cutoff",0.);
+    auto maxm = args.getInt("Maxm",MAX_INT);
+    auto minm = args.getInt("Minm",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
 
@@ -238,11 +240,11 @@ svdImpl(ITensor const& A,
         Args const& args)
     {
     SCOPED_TIMER(7);
+    auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
-    auto do_truncate = args.getBool("Truncate",true);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto lname = args.getString("LeftIndexName","ul");
@@ -345,14 +347,19 @@ svdImpl(IQTensor A,
         IQTensor & V,
         Args const& args)
     {
-    auto thresh = args.getReal("SVDThreshold",1E-4);
-    auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto maxm = args.getInt("Maxm",MAX_M);
+    auto do_truncate = args.getBool("Truncate");
+    auto thresh = args.getReal("SVDThreshold",1E-3);
+    auto cutoff = args.getReal("Cutoff",0);
+    auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);
-    auto do_truncate = args.getBool("Truncate",true);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
+    auto lname = args.getString("LeftIndexName","ul");
+    auto rname = args.getString("RightIndexName","vl");
+    auto itype = getIndexType(args,"IndexType",Link);
+    auto litype = getIndexType(args,"LeftIndexType",itype);
+    auto ritype = getIndexType(args,"RightIndexType",itype);
 
     auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
 
@@ -456,12 +463,12 @@ svdImpl(IQTensor A,
 
         resize(d,this_m);
 
-        Liq.emplace_back(Index("l",this_m),uI.qn(1+B.i1));
-        Riq.emplace_back(Index("r",this_m),vI.qn(1+B.i2));
+        Liq.emplace_back(Index("l",this_m,litype),uI.qn(1+B.i1));
+        Riq.emplace_back(Index("r",this_m,ritype),vI.qn(1+B.i2));
         }
     
-    auto L = IQIndex("L",move(Liq),uI.dir());
-    auto R = IQIndex("R",move(Riq),vI.dir());
+    auto L = IQIndex(lname,move(Liq),uI.dir());
+    auto R = IQIndex(lname,move(Riq),vI.dir());
 
     auto Uis = IQIndexSet(uI,dag(L));
     auto Dis = IQIndexSet(L,R);
@@ -562,8 +569,13 @@ svdRank2(ITensorT<IndexT> const& A,
          ITensorT<IndexT> & U, 
          ITensorT<IndexT> & D, 
          ITensorT<IndexT> & V,
-         Args const& args)
+         Args args)
     {
+    auto do_truncate = args.defined("Cutoff") 
+                    || args.defined("Maxm") 
+                    || args.defined("Minm");
+    args.add("Truncate",do_truncate);
+
     if(A.r() != 2) 
         {
         Print(A);
@@ -577,10 +589,10 @@ svdRank2(ITensorT<IndexT> const& A,
     }
 template Spectrum 
 svdRank2(ITensor const&,Index const&,Index const&,
-         ITensor &,ITensor &,ITensor &,Args const&);
+         ITensor &,ITensor &,ITensor &,Args );
 template Spectrum 
 svdRank2(IQTensor const&,IQIndex const&,IQIndex const&,
-         IQTensor &,IQTensor &,IQTensor &,Args const&);
+         IQTensor &,IQTensor &,IQTensor &,Args );
 
 
 template<typename T>
@@ -590,8 +602,8 @@ diagHImpl(ITensor rho,
           ITensor& D,
           Args const& args)
     {
-    auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto maxm = args.getInt("Maxm",MAX_M);
+    auto cutoff = args.getReal("Cutoff",0.);
+    auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",false);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
@@ -692,8 +704,8 @@ diagHImpl(IQTensor    rho,
           Args const& args)
     {
     SCOPED_TIMER(7)
-    auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto maxm = args.getInt("Maxm",MAX_M);
+    auto cutoff = args.getReal("Cutoff",0.);
+    auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);
     auto do_truncate = args.getBool("Truncate",false);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
