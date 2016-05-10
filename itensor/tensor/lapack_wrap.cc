@@ -308,7 +308,7 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_REAL* eigs, //eigenvalues on return
               LAPACK_INT& info)  //error info
     {
-    static std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_REAL> work;
     LAPACK_INT lda = n;
 
 #ifdef PLATFORM_acml
@@ -353,9 +353,9 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-    static std::vector<LAPACK_COMPLEX> work;
-    static std::vector<LAPACK_REAL> rwork;
-    static std::vector<LAPACK_INT> iwork;
+    std::vector<LAPACK_COMPLEX> work;
+    std::vector<LAPACK_REAL> rwork;
+    std::vector<LAPACK_INT> iwork;
     LAPACK_INT l = std::min(*m,*n),
                g = std::max(*m,*n);
     LAPACK_INT lwork = l*l+2*l+g+100;
@@ -385,7 +385,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //length should be min(m,n)
                LAPACK_INT* info)  //error info
     {
-    static std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_REAL> work;
     int lwork = std::max(1,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
@@ -406,7 +406,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info)  //error info
     {
-    static std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_REAL> work;
     auto lwork = std::max(1,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
@@ -464,7 +464,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_REAL* d,       //eigenvalues on return
               LAPACK_INT* info)  //error info
     {
-    static std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_REAL> work;
     int itype = 1;
     LAPACK_INT lwork = std::max(1,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
     work.resize(lwork);
@@ -493,8 +493,8 @@ dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               LAPACK_REAL* vl,      //left eigenvectors on return
               LAPACK_REAL* vr)      //right eigenvectors on return
     {
-    static std::vector<LAPACK_REAL> work;
-    static std::vector<LAPACK_REAL> cpA;
+    std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_REAL> cpA;
 
     cpA.resize(n*n);
     std::copy(A,A+n*n,cpA.data());
@@ -551,9 +551,9 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               Cplx * vl,   //left eigenvectors on return
               Cplx * vr)   //right eigenvectors on return
     {
-    static std::vector<LAPACK_COMPLEX> cpA;
-    static std::vector<LAPACK_COMPLEX> work;
-    static std::vector<LAPACK_REAL> rwork;
+    std::vector<LAPACK_COMPLEX> cpA;
+    std::vector<LAPACK_COMPLEX> work;
+    std::vector<LAPACK_REAL> rwork;
     int nevecl = (jobvl == 'V' ? n : 1);
     int nevecr = (jobvr == 'V' ? n : 1);
     LAPACK_INT lwork = std::max(1,4*n);
