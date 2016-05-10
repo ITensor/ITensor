@@ -110,35 +110,6 @@ template<typename I>
 ITensorT<I>
 expHermitian(ITensorT<I> const& T, Cplx t = 1.);
 
-
-//
-// Orthogonal decomposition
-//
-// Given a tensor T, decomposes it into two tensors A and B
-// such that T=A*B. If dir==Fromleft, A is guaranteed to be
-// real and orthogonal, similar for B if dir==Fromright.
-//
-template<class Tensor>
-Spectrum 
-orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
-            Direction dir, 
-            const Args& args = Global::args());
-
-
-//
-// Inverse Canonical SVD
-//
-// Factors a tensor AA such that AA=L*V*R
-// where V is the inverse of the diagonal tensor
-// appearing in the SVD
-//
-
-template<class Tensor>
-Spectrum 
-csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     const Args& args = Global::args());
-
-
 //
 //
 // Eigenvalues and eigenvectors
@@ -166,13 +137,13 @@ eigen(ITensorT<I> const& T,
       ITensorT<I> & D,
       Args const& args = Args::global());
 
-template<class I>
-void 
-eigDecomp(ITensorT<I> const& T, 
-          ITensorT<I> & R, 
-          ITensorT<I> & D,
-          ITensorT<I> & Rinv, 
-          Args const& args = Args::global());
+//template<class I>
+//void 
+//eigDecomp(ITensorT<I> const& T, 
+//          ITensorT<I> & R, 
+//          ITensorT<I> & D,
+//          ITensorT<I> & Rinv, 
+//          Args const& args = Args::global());
 
 
 ///////////////////////////
@@ -278,27 +249,6 @@ svd(Tensor AA,
     return spec;
     } //svd
 
-template<class Tensor>
-Spectrum 
-csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     const Args& args)
-    {
-    /*
-    Tensor UU(L),VV(R);
-    Tensor D(V);
-    Spectrum spec = svd(AA,UU,D,VV,args);
-
-    L = UU*D;
-    R = D*VV;
-
-    V = dag(D);
-    V.pseudoInvert(0);
-    return spec;
-    */
-    //TODO remove this line:
-    return Spectrum();
-    }
-
 template<class Tensor, class BigMatrixT>
 Spectrum 
 denmatDecomp(Tensor const& AA, 
@@ -326,11 +276,11 @@ denmatDecomp(Tensor const& AA,
     
     auto& activeInds = (to_orth ? to_orth : AA).inds();
 
-    std::vector<IndexT> cinds;
-    cinds.reserve(activeInds.r());
+    auto cinds = stdx::reserve_vector<IndexT>(activeInds.r());
     for(auto& I : activeInds)
-        if(!hasindex(newoc,I))
-            cinds.push_back(I);
+        {
+        if(!hasindex(newoc,I)) cinds.push_back(I);
+        }
 
     //Apply combiner
     START_TIMER(8)
@@ -423,85 +373,6 @@ diagHermitian(ITensorT<I> const& M,
     return spec;
     } //diagHermitian
 
-
-template<class Tensor>
-Spectrum 
-orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
-            Direction dir, 
-            const Args& args)
-    {
-    /*
-    using IndexT = typename Tensor::IndexT;
-
-    if(isZero(T,Args("Fast"))) 
-        throw ResultIsZero("orthoDecomp: T is zero");
-
-    const
-    bool usedenmat = false;
-
-    Spectrum spec;
-
-    if(usedenmat)
-        {
-        spec = denmatDecomp(T,A,B,dir,args + Args("TraceReIm",true,"Noise",0));
-        }
-    else //use svd
-        {
-        //Combiners which transform T
-        //into a rank 2 tensor
-        CombinerT Acomb, Bcomb;
-
-        const
-        IndexT reim = IQIndex("ReIm",Index("reim",2),QN());
-
-        //Divide up indices based on U
-        //If U is null, use V instead
-        const Tensor &L = (A ? A : B);
-        CombinerT &Lcomb = (A ? Acomb : Bcomb),
-                  &Rcomb = (A ? Bcomb : Acomb);
-        for(const IndexT& I : T.indices())
-            { 
-            if(hasindex(L,I))
-                Lcomb.addleft(I);
-            else
-                Rcomb.addleft(I);
-            }
-
-        if(dir == Fromleft)
-            Rcomb.addleft(reim);
-        else
-            Lcomb.addleft(reim);
-
-        T = realPart(T)*reim(1) + imagPart(T)*reim(2);
-
-        T = Acomb * T * Bcomb;
-
-
-        Tensor D;
-        spec = svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,args);
-
-        A = dag(Acomb) * A;
-        B = B * dag(Bcomb);
-
-        if(dir==Fromleft) 
-            {
-            B *= D;
-            B = B*dag(reim)(1) + Complex_i*B*dag(reim)(2);
-            }
-        else              
-            {
-            A *= D;
-            A = A*dag(reim)(1) + Complex_i*A*dag(reim)(2);
-            }
-        }
-
-    return spec;
-    */
-
-    //TODO remove this line:
-    return Spectrum();
-
-    } //orthoDecomp
 
 //Return value is: (trunc_error,docut)
 std::tuple<Real,Real>
