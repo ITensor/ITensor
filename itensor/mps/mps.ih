@@ -124,6 +124,16 @@ norm(MPSt<T> const& psi)
     return std::sqrt(overlap(psi,psi)); 
     }
 
+template<typename T>
+Real
+normalize(MPSt<T> & psi)
+    {
+    auto nrm = norm(psi);
+    if(std::fabs(nrm) < 1E-20) Error("Zero norm");
+    psi /= nrm;
+    return nrm;
+    }
+
 template <typename MPST>
 typename MPST::IndexT 
 linkInd(MPST const& psi, int b)

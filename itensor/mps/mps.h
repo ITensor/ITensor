@@ -138,12 +138,6 @@ class MPSt
     void 
     orthogonalize(Args const& args = Args::global());
 
-    void 
-    makeRealBasis(int j, Args const& args = Args::global());
-
-    Real 
-    normalize();
-
     void
     swap(MPSt& other);
 
@@ -239,6 +233,11 @@ class MPSt
     //prefer function norm(psi) instead
     Real 
     norm() const;
+
+    //prefer function normalize(psi) instead
+    Real 
+    normalize();
+
 
     //prefer isOrtho(psi) instead
     bool 
@@ -349,6 +348,10 @@ orthoCenter(MPSt<T> const& psi);
 template<typename T>
 Real
 norm(MPSt<T> const& psi);
+
+template<typename T>
+Real
+normalize(MPSt<T> & psi);
 
 template <typename MPST>
 typename MPST::IndexT 

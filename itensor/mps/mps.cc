@@ -807,33 +807,6 @@ void MPSt<ITensor>::orthogonalize(const Args& args);
 template
 void MPSt<IQTensor>::orthogonalize(const Args& args);
 
-template <class Tensor>
-void MPSt<Tensor>::
-makeRealBasis(int j, const Args& args)
-    {
-    if(!(*this)) Error("position: MPS is default constructed");
-    l_orth_lim_ = 0;
-    while(l_orth_lim_ < j-1)
-        {
-        setBond(l_orth_lim_+1);
-        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
-        orthoDecomp(WF,A_[l_orth_lim_+1],A_[l_orth_lim_+2],Fromleft,args);
-        ++l_orth_lim_;
-        }
-    r_orth_lim_ = N_+1;
-    while(r_orth_lim_ > j+1)
-        {
-        setBond(r_orth_lim_-2);
-        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
-        orthoDecomp(WF,A_[r_orth_lim_-2],A_[r_orth_lim_-1],Fromright,args);
-        --r_orth_lim_;
-        }
-    }
-template
-void MPSt<ITensor>::makeRealBasis(int j, const Args& args);
-template
-void MPSt<IQTensor>::makeRealBasis(int j, const Args& args);
-
 //Methods for use internally by checkOrtho
 ITensor
 makeKroneckerDelta(const Index& i, int plev)
@@ -956,11 +929,7 @@ template <class Tensor>
 Real MPSt<Tensor>::
 norm() const 
     { 
-    if(itensor::isOrtho(*this))
-        {
-        return itensor::norm(A(itensor::orthoCenter(*this)));
-        }
-    return std::sqrt(psiphi(*this,*this)); 
+    return itensor::norm(*this);
     }
 template Real MPSt<ITensor>::
 norm() const;
@@ -971,10 +940,7 @@ template <class Tensor>
 Real MPSt<Tensor>::
 normalize()
     {
-    auto norm_ = norm();
-    if(std::fabs(norm_) < 1E-20) Error("Zero norm");
-    *this /= norm_;
-    return norm_;
+    return itensor::normalize(*this);
     }
 template
 Real MPSt<ITensor>::
