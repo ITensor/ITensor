@@ -803,7 +803,7 @@ order(ITensorT<I> const& T) { return rank(T.inds()); }
 
 template<typename I>
 Real
-norm(const ITensorT<I>& T)
+norm(ITensorT<I> const& T)
     {
 #ifdef DEBUG
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
