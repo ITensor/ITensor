@@ -492,13 +492,14 @@ toMPOImpl(AutoMPO const& am,
 
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
+    //(unique including their coefficient)
     //and starting a string of operators (i.e. first op of an HTerm)
     for(auto& ht : am.terms())
     for(auto n : range(ht.first().i,ht.last().i))
         {
         auto& bn = basis.at(n);
-        auto test_has_first = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
-        bool has_first = (find_if(bn.cbegin(),bn.cend(),test_has_first) != bn.end());
+        auto test_has_first = [&ht](SiteQN const& sq){ return sq.st == ht.first(); };
+        bool has_first = (stdx::find_if(bn,test_has_first) != bn.end());
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
@@ -665,6 +666,7 @@ toMPOImpl(AutoMPO const& am,
             //End operator strings
             if(cst == HL)
                 {
+                //Check if operator is an ending operator
                 for(const auto& ht : ht_by_n.at(n))
                 if(rst == ht.first() && ht.last().i == n)
                     {
