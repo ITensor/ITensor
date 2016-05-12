@@ -18,7 +18,7 @@ int main()
     // Use the AutoMPO feature to create the 
     // next-neighbor Heisenberg model
     //
-    auto ampo = AutoMPO(sites);
+    auto ampo = AutoMPO(sites, {"SVD", true});
     for(int j = 1; j < N; ++j)
         {
         ampo += 0.5,"S+",j,"S-",j+1;

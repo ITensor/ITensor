@@ -7,6 +7,7 @@
 
 #include "itensor/global.h"
 #include "itensor/mps/mpo.h"
+#include <map>
 
 namespace itensor {
 
@@ -54,42 +55,59 @@ struct SiteTerm
     {
     std::string op;
     int i;
-    Complex coef;
 
     SiteTerm();
 
-    SiteTerm(const std::string& op,
-             int i,
-             Real coef = 1);
+    SiteTerm(const std::string& op, int i);
+             
+    bool isFermionic() const;
 
     bool
     operator==(const SiteTerm& other) const;
 
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
-
-    bool
-    proportialTo(const SiteTerm& other) const;
     };
 
-bool
-isFermionic(const SiteTerm& st);
+typedef std::vector<SiteTerm> SiteTermProd;
 
-struct HTerm
+SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
+
+struct Term
     {
-    std::vector<SiteTerm> ops;
+    Complex coef;
+    SiteTermProd ops;
+    
+    Term() : coef(1) {};
+    
+    Term(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
+    
+    bool operator==(const Term &other) const {return coef == other.coef && ops == other.ops; }
+    
+    Term&
+    operator*=(Real x);
 
-    HTerm();
+    Term&
+    operator*=(Complex x);
+    
+    Term
+    operator*(Real x) const;
 
-    HTerm(const std::string& op1,
-          int i1,
-          Real x = 1);
+    Term
+    operator*(Complex x) const;
+    };
+    
+struct TermSum
+    {
+    std::vector<Term> sum;
+    
+    void operator+=(const Term &t);
+    };
 
-    HTerm(const std::string& op1_,
-          int i1_,
-          const std::string& op2_,
-          int i2_,
-          Real x_ = 1);
+struct HTerm : Term
+    {
+        
+    HTerm() {};
 
     void
     add(const std::string& op,
@@ -117,15 +135,9 @@ struct HTerm
     bool
     contains(int i) const;
 
-    Complex
-    coef() const;
-
-    HTerm&
-    operator*=(Real x);
-
-    HTerm&
-    operator*=(Complex x);
-
+    bool
+    proportionalTo(const HTerm& other) const;
+    
     bool
     operator==(const HTerm& other) const;
 
@@ -133,11 +145,81 @@ struct HTerm
     operator!=(const HTerm& other) const;
     };
 
+struct MatIndex
+    {
+    int row, col;
+    MatIndex(int r, int c) : row(r), col(c) {};
+    
+    bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
+    };
+
+struct CoefMatElement
+    {
+    MatIndex ind;
+    Complex val;
+    
+    CoefMatElement(MatIndex index, Complex v) : ind(index), val(v) {};
+    
+    bool operator==(const CoefMatElement &other) const {return ind == other.ind && val == other.val; }
+    };
+    
+struct IQMPOMatElement
+    {
+    QN rowqn, colqn;
+    int row, col;
+    Term val;
+    
+    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const Term &t) : 
+        rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
+        
+    bool operator==(const IQMPOMatElement &other) const;
+    };
+    
+struct ComplexMatrix
+    {
+    Matrix Re;
+    Matrix Im;
+    
+    ComplexMatrix() {};
+    
+    ComplexMatrix(const std::vector<CoefMatElement> &M);
+    
+    bool isComplex() const { return Im.Storage(); };
+    
+    Complex operator() (int i, int j) const;
+    };
+    
+struct Partition
+    {
+        std::vector<SiteTermProd> left,right;
+        std::vector<CoefMatElement> Coeff;        
+    };
+
+typedef std::map<QN, Partition> PartitionByQN;
+typedef std::vector<IQMPOMatElement> MPOSparseMatrix;
+typedef std::vector<std::vector<TermSum>> MPOMatrix;
+    
 class AutoMPO
     {
     const SiteSet& sites_;
     std::vector<HTerm> terms_;
-
+    bool svd_;
+    
+    void DecomposeTerm(int n, const SiteTermProd &term, 
+                    SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
+    int PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
+    
+    void PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const;
+    
+    void CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<MPOSparseMatrix> &tempMPO,
+                    std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
+                    bool isExpH, Complex tau) const;
+                    
+    IQMPO ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO, 
+                            const std::vector<IQIndex> &links, bool isExpH) const;
+    
+    IQMPO ConstructMPOUsingSVD() const;
+    
     enum State { New, Op };
 
     class Accumulator
@@ -184,8 +266,8 @@ class AutoMPO
     public:
 
     explicit
-    AutoMPO(const SiteSet& sites) 
-        : sites_(sites)
+    AutoMPO(const SiteSet& sites, const Args& args) 
+        : sites_(sites), svd_(args.getBool("SVD",false))
         { }
 
     const SiteSet&
@@ -193,11 +275,15 @@ class AutoMPO
 
     const std::vector<HTerm>&
     terms() const { return terms_; }
+    
+    bool usingSVD() const { return svd_; }
+    
+    IQMPO toExpHUsingSVD_ZW1(Complex tau) const;
+    
+    operator MPO() const;
 
-    operator MPO() const { return toMPO<ITensor>(*this); }
-
-    operator IQMPO() const { return toMPO<IQTensor>(*this); }
-
+    operator IQMPO() const;
+    
     template <typename T>
     Accumulator
     operator+=(T x) { return Accumulator(this,x); }
@@ -208,12 +294,18 @@ class AutoMPO
     private:
 
     void
-    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
+    add(const HTerm& t);
 
     };
 
 std::ostream& 
 operator<<(std::ostream& s, const SiteTerm& t);
+
+std::ostream& 
+operator<<(std::ostream& s, const SiteTermProd& t);
+
+std::ostream& 
+operator<<(std::ostream& s, const TermSum& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const HTerm& t);

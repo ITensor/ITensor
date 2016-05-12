@@ -271,6 +271,14 @@ getOp(int i, const String& opname, const Args& opts) const
         Op(UD,UDP) = +1;
         }
     else
+    if(opname == "Fup") // parity of up electrons
+        {
+        Op(Em,EmP) = +1; 
+        Op(Up,UpP) = -1;
+        Op(Dn,DnP) = +1;
+        Op(UD,UDP) = -1;
+        }
+    else
     if(opname == "Sz")
         {
         Op(Up,UpP) = +0.5; 
