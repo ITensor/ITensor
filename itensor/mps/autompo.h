@@ -291,8 +291,6 @@ class AutoMPO
     void
     reset() { terms_.clear(); }
 
-    private:
-
     void
     add(const HTerm& t);
 
