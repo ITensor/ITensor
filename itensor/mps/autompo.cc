@@ -583,7 +583,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                     }
 
                 Real epsilon = 1E-12;
-                auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
+                auto isApproxZero = [&epsilon](const Real &val){ return std::fabs(val) < epsilon; };
                 auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
                 d_npp[qn]=firstApproxZero - D.begin();
                 }
@@ -711,7 +711,7 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO,
             for(int c = 1; c <= nc; ++c)
                 for(const Term &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
                     {
-                    if(fabs(term.coef) < 1E-12)
+                    if(std::abs(term.coef) < 1E-12)
                         continue;
                         
                     IQTensor op = sites_.op(term.ops.front().op, n);
