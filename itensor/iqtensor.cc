@@ -1146,9 +1146,7 @@ operator*=(const IQTensor& other)
 
         for(const BlockInfo& l : Lb)
             {
-            START_TIMER(2)
             if(l.c == r.c) insertAdd(N[l.u+r.u],L[l.p] * R[r.p]);
-            STOP_TIMER(2)
             }
         }
 
