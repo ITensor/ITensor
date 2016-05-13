@@ -743,14 +743,24 @@ IQMPO AutoMPO::ConstructMPOUsingSVD() const
     std::vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
     std::vector<MPOSparseMatrix> tempMPO(N);
 
+    println("Calling PartitionHTerms");
+    START_TIMER(1)
     PartitionHTerms(part, tempMPO);        
+    STOP_TIMER(1)
     
     std::vector<MPOMatrix> finalMPO(N);
     std::vector<IQIndex> links(N+1);
 
+    println("Calling CompressMPO");
+    START_TIMER(2)
     CompressMPO(part, tempMPO, finalMPO, links);
+    STOP_TIMER(2)
 
-    return ConstructMPOTensors(finalMPO, links);
+    println("Calling ConstructMPOTensors");
+    START_TIMER(3)
+    auto H = ConstructMPOTensors(finalMPO, links);
+    STOP_TIMER(3)
+    return H;
     }
 
 IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
