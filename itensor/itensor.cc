@@ -2554,7 +2554,6 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
-    SCOPED_TIMER(40)
     if(!this->valid() || !other.valid())
         Error("Null ITensor in product");
 
@@ -2750,14 +2749,10 @@ operator*=(const ITensor& other)
 
         //Do the matrix multiplication
         auto nsize = rref.Nrows()*lref.Ncols();
-        START_TIMER(38)
         auto np = make_shared<ITDat>(nsize,0);
-        STOP_TIMER(38)
 
         SimpleMatrixRef nref(np->data(),rref.Nrows(),lref.Ncols());
-        {SCOPED_TIMER(11)
         mult_add(rref,lref,nref,0);
-        }//TIMER
 
         r_.swap(np);
         
@@ -2785,9 +2780,7 @@ operator*=(const ITensor& other)
 
     scale_ *= other.scale_;
 
-        {SCOPED_TIMER(3)
     scaleOutNorm();
-        }//TIMER
 
     return *this;
     } //ITensor::operator*=(ITensor)
