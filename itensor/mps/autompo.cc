@@ -237,16 +237,21 @@ proportionalTo(const HTerm& other) const
 void AutoMPO::
 add(const HTerm& t)
     { 
-    if(abs(t.coef) == 0)
-        return; 
+    if(abs(t.coef) == 0) return; 
     
-    // Check if a proportional term already exists
-    auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
-    auto it = find_if(terms_.begin(), terms_.end(), isProportional);
-    if(it == terms_.end())
-        terms_.push_back(t); 
-    else
-        it->coef += t.coef;
+    //// Check if a proportional term already exists
+    //auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
+    //auto it = find_if(terms_.begin(), terms_.end(), isProportional);
+    //if(it == terms_.end())
+    //    {
+    //    terms_.push_back(t); 
+    //    }
+    //else
+    //    {
+    //    it->coef += t.coef;
+    //    }
+
+    terms_.push_back(t);
     }
 
 
