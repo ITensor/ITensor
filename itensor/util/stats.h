@@ -6,6 +6,7 @@
 #define __ITENSOR_STATS_H
 
 #include "itensor/real.h"
+#include "itensor/tensor/vec.h"
 
 namespace itensor {
 
@@ -68,16 +69,16 @@ class Stats
         const int n = dat.size();
         if(n < bs) return 0;
         int nbin = n / bs;
-        Vector bin(nbin);
-        bin = 0.0;
+        auto bin = Vector(nbin);
+        stdx::fill(bin,0.);
         for(int i = 0; i < n; i++)
             {
             if(i/bs > (nbin-1)) break;
-            bin.el(i/bs) += dat.at(i);
+            bin(i/bs) += dat.at(i);
             }
         bin *= 1.0/bs;
         Stats bmeas;
-        for(int i = 1; i <= nbin; ++i) bmeas.putin(bin(i));
+        for(int i = 0; i < nbin; ++i) bmeas.putin(bin(i));
         return bmeas.err();
         }
 

@@ -2,6 +2,7 @@
 
 #include "itensor/global.h"
 #include "itensor/util/infarray.h"
+#include "itensor/util/stats.h"
 
 using namespace itensor;
 using namespace std;
@@ -212,6 +213,51 @@ SECTION("Erase")
         ++count;
         }
     //println();
+    }
+}
+
+TEST_CASE("Stats")
+{
+SECTION("Average")
+    {
+    auto st = Stats();
+    auto v = std::vector<Real>{{1.,2.,3.,4.}};
+    auto avg = 0.;
+    for(auto& el : v) 
+        {
+        st.putin(el);
+        avg += el;
+        }
+    avg /= v.size();
+
+    CHECK_CLOSE(st.avg(), avg);
+    }
+
+SECTION("Err")
+    {
+    auto st = Stats();
+    auto v = std::vector<Real>{{1.,2.,3.,4.}};
+    auto avg = 0.;
+    auto avg2 = 0.;
+    for(auto& el : v) 
+        {
+        st.putin(el);
+        avg += el;
+        avg2 += el*el;
+        }
+    avg /= v.size();
+    avg2 /= v.size();
+    auto err = std::sqrt((avg2-avg*avg)/(v.size()-1));
+
+    CHECK_CLOSE(st.err(),err);
+    }
+
+SECTION("BinErr")
+    {
+    auto st = Stats();
+    int N = 100;
+    for(int n = 1; n <= N; ++n) st.putin(Global::random());
+    CHECK(st.binerr(10) < 0.51/std::sqrt(N-1));
     }
 }
 

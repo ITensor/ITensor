@@ -21,6 +21,8 @@
 
 #include "itensor/all_basic.h"
 
+#include "itensor/util/stats.h"
+
 #include "itensor/mps/dmrg.h"
 #include "itensor/mps/idmrg.h"
 #include "itensor/mps/tevol.h"
