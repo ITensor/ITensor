@@ -454,7 +454,7 @@ posInVec(SiteTermProd const& ops,
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
 void AutoMPO::
-PartitionHTerms(vector<PartitionByQN> & part, 
+PartitionHTerms(vector<QNPart> & qps, 
                 vector<IQMatEls> & tempMPO) const
     {
     for(const HTerm &ht : terms_)
@@ -470,10 +470,10 @@ PartitionHTerms(vector<PartitionByQN> & part,
         
         int j,k,l;
 
-        // part.at(i) is the partition at the link between sites i+1 and i+2
-        // i.e. part.at(0) is the partition at the link between sites 1 and 2
-        // and part.at(N-2) is the partition at the link between sites N-1 and N
-        // for site n the link on the left is part.at(n-2) and the link on the right is part.at(n-1)
+        // qps.at(i) is the partition at the link between sites i+1 and i+2
+        // i.e. qps.at(0) is the partition at the link between sites 1 and 2
+        // and qps.at(N-2) is the partition at the link between sites N-1 and N
+        // for site n the link on the left is qps.at(n-2) and the link on the right is part.at(n-1)
         if(left.empty())
             {
             j=0;
@@ -483,7 +483,7 @@ PartitionHTerms(vector<PartitionByQN> & part,
                 }
             else // term starting on site n
                 {
-                k = posInVec(right, part.at(n-1)[sqn].right);
+                k = posInVec(right, qps.at(n-1)[sqn].right);
                 }
             }
         else
@@ -491,15 +491,15 @@ PartitionHTerms(vector<PartitionByQN> & part,
             if(right.empty()) // term ending on site n
                 {
                 k = 0;
-                j = posInVec(onsite, part.at(n-2)[lqn].right);
+                j = posInVec(onsite, qps.at(n-2)[lqn].right);
                 }
             else
                 {
-                j = posInVec(mult(onsite,right), part.at(n-2)[lqn].right);
-                k = posInVec(right, part.at(n-1)[lqn+sqn].right);
+                j = posInVec(mult(onsite,right), qps.at(n-2)[lqn].right);
+                k = posInVec(right, qps.at(n-1)[lqn+sqn].right);
                 }
-            l = posInVec(left, part.at(n-2)[lqn].left);
-            part.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
+            l = posInVec(left, qps.at(n-2)[lqn].left);
+            qps.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
             }
             
         // Place the coefficient of the HTerm when the term starts
@@ -557,7 +557,7 @@ PartitionHTerms(vector<PartitionByQN> & part,
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void AutoMPO::
-CompressMPO(vector<PartitionByQN> const& part, 
+CompressMPO(vector<QNPart> const& part, 
             vector<IQMatEls> const& tempMPO,
             vector<MPOMatrix> & finalMPO, 
             vector<IQIndex> & links, 
@@ -588,7 +588,7 @@ CompressMPO(vector<PartitionByQN> const& part,
     inqn.emplace_back(Index("hl0_0",d_n_tot),ZeroQN);
     links.at(0) = IQIndex("Hl0",inqn);
 
-    for(int n=1; n<=N; n++)
+    for(int n = 1; n <= N; ++n)
         {
         if(n==N || part.at(n-1).empty())
             {
@@ -596,13 +596,13 @@ CompressMPO(vector<PartitionByQN> const& part,
             }
         else    
             {
-            for(const std::pair<QN, Partition> &v : part.at(n-1) )
+            for(auto& qp : part.at(n-1) )
                 {
-                QN qn = v.first;
-                Partition p = v.second;
+                QN const& qn = qp.first;
+                Partition const& p = qp.second;
                 
                 // Convert the coefficients of the partition to a dense Matrix                
-                ComplexMatrix C(p.Coeff);
+                auto C = ComplexMatrix(p.Coeff);
                 
                 Vector D;
                 if(C.isComplex())
@@ -651,20 +651,24 @@ CompressMPO(vector<PartitionByQN> const& part,
 #endif       
        
         // Construct the compressed MPO
-        
+
         finalMPO.at(n-1).resize(d_n_tot);
-        for(auto &v : finalMPO.at(n-1))
+        for(auto& v : finalMPO.at(n-1))
+            {
             v.resize(d_npp_tot);
+            }
         
         SiteTermProd opId;
         opId.emplace_back("Id", n);
         
         finalMPO.at(n-1).at(0).at(0) += HTerm(1, opId);
         if(!isExpH)
+            {
             finalMPO.at(n-1).at(1).at(1) += HTerm(1, opId);
+            }
             
         Complex Zero(0,0);
-        for(const IQMPOMatElement &elem: tempMPO.at(n-1))
+        for(IQMPOMatElement const& elem: tempMPO.at(n-1))
             {
             int k = elem.row;
             int l = elem.col;
@@ -672,28 +676,51 @@ CompressMPO(vector<PartitionByQN> const& part,
             // if constructing ExpH multiply by tau when term is starting (k=0)
             HTerm t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
             int rowOffset = isExpH ? 0 : 1;
+
+            auto ii = t.ops.front().i;
+            for(auto& o : t.ops)
+                {
+                if(o.i != ii)
+                    {
+                    Print(t);
+                    PAUSE
+                    }
+                }
     
             if(l==0 && k==0)	// on-site terms
+                {
                 finalMPO.at(n-1).at(rowOffset).at(0) += t;
+                }
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += HTerm(t.coef*V_npp[elem.colqn](j,l), t.ops);
+                        {
+                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) 
+                            += HTerm(t.coef*V_npp[elem.colqn](j,l), t.ops);
+                        }
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += HTerm(t.coef*V_n[elem.rowqn](i,k), t.ops);
+                        {
+                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) 
+                            += HTerm(t.coef*V_n[elem.rowqn](i,k), t.ops);
+                        }
                 }
             else 
                 {
-                for(int i=1; i<=d_n[elem.rowqn]; i++)
-                    for(int j=1; j<=d_npp[elem.colqn]; j++) 
-                        if( (V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += HTerm(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
+                for(int i = 1; i <= d_n[elem.rowqn];   ++i)
+                for(int j = 1; j <= d_npp[elem.colqn]; ++j) 
+                    {
+                    if((V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
+                        {
+                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) 
+                            += HTerm(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
+                        }
+                    }
                 }
             }
 
@@ -716,8 +743,10 @@ CompressMPO(vector<PartitionByQN> const& part,
         for(int n=1; n<=N; n++)
             {
             for(unsigned r = 0; r < finalMPO.at(n-1).size(); ++r, println())
-                for(unsigned c = 0; c < finalMPO.at(n-1).at(r).size(); ++c)
-                    print(finalMPO.at(n-1).at(r).at(c), "\t");
+            for(unsigned c = 0; c < finalMPO.at(n-1).at(r).size(); ++c)
+                {
+                print(finalMPO.at(n-1).at(r).at(c), "\t");
+                }
             println("=========================================");
             }
 #endif            
@@ -746,12 +775,14 @@ ConstructMPOTensors(vector<MPOMatrix> const& finalMPO,
         for(int r = 1; r <= nr; ++r)
         for(int c = 1; c <= nc; ++c)
             {
+            // finalMPO.at(n-1).at(r-1).at(c-1).sum
+            // is a vector<HTerm>
             for(auto& ht : finalMPO.at(n-1).at(r-1).at(c-1).sum)
                 {
                 if(std::abs(ht.coef) < 1E-12) continue;
                     
                 IQTensor op = sites_.op(ht.ops.front().op, n);
-                for(auto it = ht.ops.begin()+1; it != ht.ops.end(); it++)
+                for(auto it = ht.ops.begin()+1; it != ht.ops.end(); ++it)
                     {
                     op = multSiteOps(op, sites_.op(it->op, n));
                     }
@@ -785,7 +816,7 @@ ConstructMPOUsingSVD() const
     {
     const int N = sites_.N();
     
-    vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
+    vector<QNPart> part(N-1);   // There are N-1 links between N sites
     vector<IQMatEls> tempMPO(N);
 
     println("Calling PartitionHTerms");
@@ -808,11 +839,12 @@ ConstructMPOUsingSVD() const
     return H;
     }
 
-IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
+IQMPO AutoMPO::
+toExpHUsingSVD_ZW1(Complex tau) const
     {
     const int N = sites_.N();
     
-    vector<PartitionByQN> part(N-1); // There are N-1 links between N sites
+    auto part = vector<QNPart>(N-1); // There are N-1 links between N sites
     vector<IQMatEls> tempMPO(N);
 
     PartitionHTerms(part, tempMPO);        
