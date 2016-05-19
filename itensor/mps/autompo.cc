@@ -452,7 +452,7 @@ PosInVec(SiteTermProd const& ops,
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
 void AutoMPO::
 PartitionHTerms(vector<PartitionByQN> & part, 
-                vector<MPOSparseMatrix> & tempMPO) const
+                vector<IQMatEls> & tempMPO) const
     {
     for(const HTerm &ht : terms_)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
@@ -525,7 +525,6 @@ PartitionHTerms(vector<PartitionByQN> & part,
         }
             
 #ifdef SHOW_AUTOMPO
-
     println("Left and Right Partials:");
     for(unsigned n=0; n<part.size(); n++)
         {
@@ -554,14 +553,13 @@ PartitionHTerms(vector<PartitionByQN> & part,
             println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
         println("=========================================");
         }
-
 #endif   
     }
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void AutoMPO::
 CompressMPO(vector<PartitionByQN> const& part, 
-            vector<MPOSparseMatrix> const& tempMPO,
+            vector<IQMatEls> const& tempMPO,
             vector<MPOMatrix> & finalMPO, 
             vector<IQIndex> & links, 
             bool isExpH = false, 
@@ -747,21 +745,30 @@ ConstructMPOTensors(vector<MPOMatrix> const& finalMPO,
         H.Anc(n) = IQTensor(dag(sites_(n)),prime(sites_(n)),dag(row),col);
 
         for(int r = 1; r <= nr; ++r)
-            for(int c = 1; c <= nc; ++c)
-                for(const HTerm &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
+        for(int c = 1; c <= nc; ++c)
+            {
+            for(const HTerm &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
+                {
+                if(std::abs(term.coef) < 1E-12) continue;
+                    
+                IQTensor op = sites_.op(term.ops.front().op, n);
+                for(auto it = term.ops.begin()+1; it != term.ops.end(); it++)
                     {
-                    if(std::abs(term.coef) < 1E-12)
-                        continue;
-                        
-                    IQTensor op = sites_.op(term.ops.front().op, n);
-                    for(auto it = term.ops.begin()+1; it != term.ops.end(); it++)
-                        op = multSiteOps(op, sites_.op(it->op, n));
-
-                    if(isReal(term.coef))        
-                        H.Anc(n) += term.coef.real() * op * row(r) * col(c);       
-                    else
-                        H.Anc(n) += term.coef * op * row(r) * col(c);
+                    op = multSiteOps(op, sites_.op(it->op, n));
                     }
+
+                TIMER_START(33)
+                if(isReal(term.coef))        
+                    {
+                    H.Anc(n) += term.coef.real() * op * row(r) * col(c);       
+                    }
+                else
+                    {
+                    H.Anc(n) += term.coef * op * row(r) * col(c);
+                    }
+                TIMER_STOP(33)
+                }
+            }
         }
     
     H.Anc(1) *= IQTensor(links.at(0)(min_n));
@@ -776,7 +783,7 @@ ConstructMPOUsingSVD() const
     const int N = sites_.N();
     
     vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
-    vector<MPOSparseMatrix> tempMPO(N);
+    vector<IQMatEls> tempMPO(N);
 
     println("Calling PartitionHTerms");
     START_TIMER(1)
@@ -803,7 +810,7 @@ IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
     const int N = sites_.N();
     
     vector<PartitionByQN> part(N-1); // There are N-1 links between N sites
-    vector<MPOSparseMatrix> tempMPO(N);
+    vector<IQMatEls> tempMPO(N);
 
     PartitionHTerms(part, tempMPO);        
     

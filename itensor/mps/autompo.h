@@ -193,7 +193,7 @@ struct Partition
     };
 
 using PartitionByQN = std::map<QN, Partition>;
-using MPOSparseMatrix = std::vector<IQMPOMatElement>;
+using IQMatEls = std::vector<IQMPOMatElement>;
 using MPOMatrix = std::vector<std::vector<TermSum>>;
     
 class AutoMPO
@@ -206,9 +206,9 @@ class AutoMPO
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
     int PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
     
-    void PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const;
+    void PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<IQMatEls> &tempMPO) const;
     
-    void CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<MPOSparseMatrix> &tempMPO,
+    void CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<IQMatEls> &tempMPO,
                     std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
                     bool isExpH, Complex tau) const;
                     
