@@ -204,7 +204,8 @@ class AutoMPO
     
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
-    int PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
+
+    int posInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
     
     void PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<IQMatEls> &tempMPO) const;
     

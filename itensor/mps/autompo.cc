@@ -72,7 +72,7 @@ OpString(const SiteTermProd &prod)
     }
     
 bool 
-IsFermionic(const SiteTermProd &prod)
+isFermionic(const SiteTermProd &prod)
     {
     string opstr = OpString(prod);
     auto num = std::count(opstr.begin(), opstr.end(), 'C');
@@ -99,29 +99,32 @@ fermionicTerm(const string& op)
     return op;
     }
     
-void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
+void 
+rewriteFermionic(SiteTermProd & prod, 
+                 bool isleftFermionic)
     {
-    if(prod.empty())
-        Error("Empty product in RewriteFermionic is not expected.");    
+    if(prod.empty()) Error("Empty product in rewriteFermionic is not expected.");    
     
     int i = prod.front().i;
-    for(const SiteTerm &t : prod)
-        if(t.i != i)
-            Error("Multi-site product in RewriteFermionic is not expected.");    
+    for(auto& st : prod)
+        if(st.i != i)
+            {
+            Error("Multi-site product in rewriteFermionic is not expected.");    
+            }
 
     // Rewrite a fermionic single site product using the Jordan-Wigner string            
-    bool isSiteFermionic = IsFermionic(prod);
+    bool isSiteFermionic = isFermionic(prod);
     if(isSiteFermionic)
         {
-        for(SiteTerm &t : prod)
-            if(t.isFermionic())
-                t.op = fermionicTerm(t.op);
+        for(auto& st : prod) if(st.isFermionic()) st.op = fermionicTerm(st.op);
         }
     
     // Add a FermiPhase operator at the end if the product of operators
     // to the left (including this site) is fermionic
     if((isleftFermionic && !isSiteFermionic) || (!isleftFermionic && isSiteFermionic))
+        {
         prod.emplace_back("F", i);         
+        }
     }
 
 QN 
@@ -208,7 +211,7 @@ add(const string& op,
     if(it != ops.end() && t.isFermionic())
     {
         SiteTermProd rightOps(it, ops.end());
-        if(IsFermionic(rightOps))
+        if(isFermionic(rightOps))
             coef *= -1;
     }
     
@@ -440,7 +443,7 @@ void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops,
 // Returns a 1-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
 int AutoMPO::
-PosInVec(SiteTermProd const& ops, 
+posInVec(SiteTermProd const& ops, 
          vector<SiteTermProd> & vec) const
     {   
     auto it = stdx::find(vec,ops);
@@ -457,17 +460,14 @@ PartitionHTerms(vector<PartitionByQN> & part,
     for(const HTerm &ht : terms_)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
-        TIMER_START(10)
         SiteTermProd left, onsite, right;
         DecomposeTerm(n, ht.ops, left, onsite, right);
-        TIMER_STOP(10)
         
-        TIMER_START(11)
+        TIMER_START(10)
         QN lqn = QuantumNumber(sites_, left);
         QN sqn = QuantumNumber(sites_, onsite);
-        TIMER_STOP(11)
+        TIMER_STOP(10)
         
-        TIMER_START(12)
         int j,k,l;
 
         // part.at(i) is the partition at the link between sites i+1 and i+2
@@ -483,7 +483,7 @@ PartitionHTerms(vector<PartitionByQN> & part,
                 }
             else // term starting on site n
                 {
-                k = PosInVec(right, part.at(n-1)[sqn].right);
+                k = posInVec(right, part.at(n-1)[sqn].right);
                 }
             }
         else
@@ -491,21 +491,21 @@ PartitionHTerms(vector<PartitionByQN> & part,
             if(right.empty()) // term ending on site n
                 {
                 k = 0;
-                j = PosInVec(onsite, part.at(n-2)[lqn].right);
+                j = posInVec(onsite, part.at(n-2)[lqn].right);
                 }
             else
                 {
-                j = PosInVec(mult(onsite,right), part.at(n-2)[lqn].right);
-                k = PosInVec(right, part.at(n-1)[lqn+sqn].right);
+                j = posInVec(mult(onsite,right), part.at(n-2)[lqn].right);
+                k = posInVec(right, part.at(n-1)[lqn+sqn].right);
                 }
-            l = PosInVec(left, part.at(n-2)[lqn].left);
+            l = posInVec(left, part.at(n-2)[lqn].left);
             part.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
             }
             
         // Place the coefficient of the HTerm when the term starts
         Complex c = j==0 ? ht.coef : 1;
         
-        bool leftF = IsFermionic(left);
+        bool leftF = isFermionic(left);
         if(onsite.empty())
             {
             if(leftF) onsite.emplace_back("F",n);
@@ -513,15 +513,14 @@ PartitionHTerms(vector<PartitionByQN> & part,
             }
         else
             {
-            RewriteFermionic(onsite, leftF);
+            rewriteFermionic(onsite, leftF);
             }
-        TIMER_STOP(12)
         
-        TIMER_START(15)
+        TIMER_START(11)
         auto elem = IQMPOMatElement(lqn, lqn+sqn, j, k, HTerm(c, onsite));
         auto it = stdx::find(tempMPO.at(n-1),elem);
         if(it == tempMPO.at(n-1).end()) tempMPO.at(n-1).push_back(elem);
-        TIMER_STOP(15)
+        TIMER_STOP(11)
         }
             
 #ifdef SHOW_AUTOMPO
@@ -747,24 +746,28 @@ ConstructMPOTensors(vector<MPOMatrix> const& finalMPO,
         for(int r = 1; r <= nr; ++r)
         for(int c = 1; c <= nc; ++c)
             {
-            for(const HTerm &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
+            for(auto& ht : finalMPO.at(n-1).at(r-1).at(c-1).sum)
                 {
-                if(std::abs(term.coef) < 1E-12) continue;
+                if(std::abs(ht.coef) < 1E-12) continue;
                     
-                IQTensor op = sites_.op(term.ops.front().op, n);
-                for(auto it = term.ops.begin()+1; it != term.ops.end(); it++)
+                IQTensor op = sites_.op(ht.ops.front().op, n);
+                for(auto it = ht.ops.begin()+1; it != ht.ops.end(); it++)
                     {
                     op = multSiteOps(op, sites_.op(it->op, n));
                     }
 
+                //
+                // This part is taking the majority
+                // of the time of this function
+                //
                 TIMER_START(33)
-                if(isReal(term.coef))        
+                if(isReal(ht.coef))        
                     {
-                    H.Anc(n) += term.coef.real() * op * row(r) * col(c);       
+                    H.Anc(n) += ht.coef.real() * op * row(r) * col(c);       
                     }
                 else
                     {
-                    H.Anc(n) += term.coef * op * row(r) * col(c);
+                    H.Anc(n) += ht.coef * op * row(r) * col(c);
                     }
                 TIMER_STOP(33)
                 }
