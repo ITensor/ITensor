@@ -2804,8 +2804,7 @@ operator+=(const ITensor& other)
     {
     if(!this->valid())
         {
-        Error("Calling += on null ITensor");
-        return *this;
+        return operator=(other);
         }
     if(!other.valid())
         {

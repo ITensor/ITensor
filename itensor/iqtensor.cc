@@ -1336,8 +1336,7 @@ operator+=(const IQTensor& other)
     {
     if(!this->valid())
         {
-        Error("Calling += on null IQTensor");
-        return *this;
+        return operator=(other);
         }
     if(!other.valid())
         {
