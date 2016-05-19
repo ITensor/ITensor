@@ -27,7 +27,7 @@ SiteTerm::
 SiteTerm() : i(-1) { }
 
 SiteTerm::
-SiteTerm(const std::string& op_,
+SiteTerm(const string& op_,
          int i_)
     :
     op(op_),
@@ -49,7 +49,7 @@ isFermionic() const
 
 //forward declaration
 string
-startTerm(const std::string& op);
+startTerm(const string& op);
 
 bool
 isFermionic(const SiteTerm& st)
@@ -58,13 +58,13 @@ isFermionic(const SiteTerm& st)
     return false;
     }
 
-std::string 
+string 
 OpString(const SiteTermProd &prod)
     {
     if(prod.empty())
         return "";
 
-    std::string opstr;
+    string opstr;
     for(auto t = prod.begin(); t != prod.end()-1; t++)
         opstr += t->op + "*";
     opstr += prod.back().op;
@@ -74,13 +74,13 @@ OpString(const SiteTermProd &prod)
 bool 
 IsFermionic(const SiteTermProd &prod)
     {
-    std::string opstr = OpString(prod);
+    string opstr = OpString(prod);
     auto num = std::count(opstr.begin(), opstr.end(), 'C');
     return num % 2;
     }
 
 string
-fermionicTerm(const std::string& op)
+fermionicTerm(const string& op)
     {
     static array<pair<string,string>,6>
            rewrites =
@@ -124,12 +124,14 @@ void RewriteFermionic(SiteTermProd &prod, bool isleftFermionic)
         prod.emplace_back("F", i);         
     }
 
-QN QuantumNumber(const SiteSet &sites, const SiteTermProd &prod)
+QN 
+QuantumNumber(SiteSet const& sites, 
+              SiteTermProd const& prod)
     {
     QN qn;
-    for(const SiteTerm &t: prod)
+    for(auto& st : prod)
         {
-        IQTensor op = sites.op(t.op,t.i);
+        IQTensor op = sites.op(st.op,st.i);
         qn += -div(op);                    
         }
     return qn;
@@ -190,7 +192,7 @@ operator+=(HTerm const& term)
     }    
 
 void HTerm::
-add(const std::string& op,
+add(const string& op,
     int i,
     Real x)
     {
@@ -299,7 +301,7 @@ Accumulator(AutoMPO* pa_,
 
 AutoMPO::Accumulator::
 Accumulator(AutoMPO* pa_, 
-            const std::string& op_)
+            const string& op_)
     :
     pa(pa_),
     state(Op),
@@ -363,7 +365,7 @@ operator,(const char* op_)
     }
 
 AutoMPO::Accumulator& AutoMPO::Accumulator::
-operator,(const std::string& op_)
+operator,(const string& op_)
     {
     if(state == New)
         {
@@ -378,14 +380,15 @@ operator,(const std::string& op_)
     }
     
 bool IQMPOMatElement::
-operator==(const IQMPOMatElement &other) const
+operator==(IQMPOMatElement const& other) const
     {
     return rowqn == other.rowqn && colqn == other.colqn && 
             row == other.row && col == other.col && 
             val == other.val;
     }
 
-ComplexMatrix::ComplexMatrix(const std::vector<CoefMatElement> &M)
+ComplexMatrix::
+ComplexMatrix(vector<CoefMatElement> const& M)
     {
     int nr = 0, nc = 0;
     bool isComplex = false;
@@ -436,19 +439,20 @@ void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops,
 
 // Returns a 1-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
-int AutoMPO::PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const
+int AutoMPO::
+PosInVec(SiteTermProd const& ops, 
+         vector<SiteTermProd> & vec) const
     {   
-    auto it = find(vec.begin(), vec.end(), ops);
-    if (it != vec.end())
-        return it - vec.begin() + 1;
+    auto it = stdx::find(vec,ops);
+    if(it != vec.end()) return it - vec.begin() + 1;
     vec.push_back(ops);
     return vec.size();
     }
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
 void AutoMPO::
-PartitionHTerms(std::vector<PartitionByQN> & part, 
-                std::vector<MPOSparseMatrix> & tempMPO) const
+PartitionHTerms(vector<PartitionByQN> & part, 
+                vector<MPOSparseMatrix> & tempMPO) const
     {
     for(const HTerm &ht : terms_)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
@@ -555,9 +559,13 @@ PartitionHTerms(std::vector<PartitionByQN> & part,
     }
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
-void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vector<MPOSparseMatrix> &tempMPO,
-                        std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
-                        bool isExpH = false, Complex tau = 0) const
+void AutoMPO::
+CompressMPO(vector<PartitionByQN> const& part, 
+            vector<MPOSparseMatrix> const& tempMPO,
+            vector<MPOMatrix> & finalMPO, 
+            vector<IQIndex> & links, 
+            bool isExpH = false, 
+            Complex tau = 0) const
     {
     const int N = sites_.N();
     
@@ -586,8 +594,11 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
     for(int n=1; n<=N; n++)
         {
         if(n==N || part.at(n-1).empty())
+            {
             d_npp[ZeroQN] = 0;        
+            }
         else    
+            {
             for(const std::pair<QN, Partition> &v : part.at(n-1) )
                 {
                 QN qn = v.first;
@@ -613,6 +624,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                 auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
                 d_npp[qn]=firstApproxZero - D.begin();
                 }
+            }
 
         qnstart_npp[ZeroQN] = d0;
         
@@ -714,11 +726,12 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
 #endif            
     }
 
-IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO, 
-                                    const std::vector<IQIndex> &links, bool isExpH = false) const
+IQMPO AutoMPO::
+ConstructMPOTensors(vector<MPOMatrix> const& finalMPO, 
+                    vector<IQIndex> const& links, 
+                    bool isExpH = false) const
     {
-    
-    IQMPO H(sites_);
+    auto H = IQMPO(sites_);
     
     const int N = sites_.N();
     int min_n = isExpH ? 1 : 2;
@@ -757,20 +770,21 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO,
     return H;
     }
 
-IQMPO AutoMPO::ConstructMPOUsingSVD() const
+IQMPO AutoMPO::
+ConstructMPOUsingSVD() const
     {
     const int N = sites_.N();
     
-    std::vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
-    std::vector<MPOSparseMatrix> tempMPO(N);
+    vector<PartitionByQN> part(N-1);   // There are N-1 links between N sites
+    vector<MPOSparseMatrix> tempMPO(N);
 
     println("Calling PartitionHTerms");
     START_TIMER(1)
     PartitionHTerms(part, tempMPO);        
     STOP_TIMER(1)
     
-    std::vector<MPOMatrix> finalMPO(N);
-    std::vector<IQIndex> links(N+1);
+    vector<MPOMatrix> finalMPO(N);
+    vector<IQIndex> links(N+1);
 
     println("Calling CompressMPO");
     START_TIMER(2)
@@ -788,13 +802,13 @@ IQMPO AutoMPO::toExpHUsingSVD_ZW1(Complex tau) const
     {
     const int N = sites_.N();
     
-    std::vector<PartitionByQN> part(N-1); // There are N-1 links between N sites
-    std::vector<MPOSparseMatrix> tempMPO(N);
+    vector<PartitionByQN> part(N-1); // There are N-1 links between N sites
+    vector<MPOSparseMatrix> tempMPO(N);
 
     PartitionHTerms(part, tempMPO);        
     
-    std::vector<MPOMatrix> finalMPO(N);
-    std::vector<IQIndex> links(N+1);
+    vector<MPOMatrix> finalMPO(N);
+    vector<IQIndex> links(N+1);
     
     CompressMPO(part, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
@@ -874,7 +888,7 @@ Cdn_i Cdagdn_j = (Adn_i F_i) F_{i+1} ... Fup_j Adagdn_j
 */
 
 string
-startTerm(const std::string& op)
+startTerm(const string& op)
     {
     static array<pair<string,string>,6>
            rewrites =
@@ -894,7 +908,7 @@ startTerm(const std::string& op)
     }
 
 string
-endTerm(const std::string& op)
+endTerm(const string& op)
     {
     static array<pair<string,string>,6>
            rewrites =
@@ -928,7 +942,7 @@ struct SiteQN
     };
 
 void
-plusAppend(std::string& s, const std::string& a)
+plusAppend(string& s, const string& a)
     {
     if(s.size() == 0 || s == "0") s = a;
     else 

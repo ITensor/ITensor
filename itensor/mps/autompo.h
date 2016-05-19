@@ -71,7 +71,8 @@ struct SiteTerm
 
 using SiteTermProd = std::vector<SiteTerm>;
 
-SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
+SiteTermProd 
+mult(SiteTermProd const& first, SiteTermProd const& second);
 
 struct HTerm
     {
