@@ -69,45 +69,33 @@ struct SiteTerm
     operator!=(const SiteTerm& other) const { return !operator==(other); }
     };
 
-typedef std::vector<SiteTerm> SiteTermProd;
+using SiteTermProd = std::vector<SiteTerm>;
 
 SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second);
 
-struct Term
+struct HTerm
     {
     Complex coef;
     SiteTermProd ops;
     
-    Term() : coef(1) {};
+    HTerm() : coef(1) {};
     
-    Term(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
+    HTerm(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
     
-    bool operator==(const Term &other) const {return coef == other.coef && ops == other.ops; }
+    bool
+    operator==(const HTerm &other) const;
     
-    Term&
+    HTerm&
     operator*=(Real x);
 
-    Term&
+    HTerm&
     operator*=(Complex x);
     
-    Term
+    HTerm
     operator*(Real x) const;
 
-    Term
+    HTerm
     operator*(Complex x) const;
-    };
-    
-struct TermSum
-    {
-    std::vector<Term> sum;
-    
-    void operator+=(const Term &t);
-    };
-
-struct HTerm : Term
-    {
-        
-    HTerm() {};
 
     void
     add(const std::string& op,
@@ -138,11 +126,19 @@ struct HTerm : Term
     bool
     proportionalTo(const HTerm& other) const;
     
-    bool
-    operator==(const HTerm& other) const;
+    //bool
+    //operator==(const HTerm& other) const;
 
-    bool
-    operator!=(const HTerm& other) const;
+    //bool
+    //operator!=(const HTerm& other) const;
+
+    };
+    
+struct TermSum
+    {
+    std::vector<HTerm> sum;
+    
+    void operator+=(const HTerm &t);
     };
 
 struct MatIndex
@@ -167,9 +163,9 @@ struct IQMPOMatElement
     {
     QN rowqn, colqn;
     int row, col;
-    Term val;
+    HTerm val;
     
-    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const Term &t) : 
+    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
         rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
         
     bool operator==(const IQMPOMatElement &other) const;
@@ -191,13 +187,13 @@ struct ComplexMatrix
     
 struct Partition
     {
-        std::vector<SiteTermProd> left,right;
-        std::vector<CoefMatElement> Coeff;        
+    std::vector<SiteTermProd> left,right;
+    std::vector<CoefMatElement> Coeff;        
     };
 
-typedef std::map<QN, Partition> PartitionByQN;
-typedef std::vector<IQMPOMatElement> MPOSparseMatrix;
-typedef std::vector<std::vector<TermSum>> MPOMatrix;
+using PartitionByQN = std::map<QN, Partition>;
+using MPOSparseMatrix = std::vector<IQMPOMatElement>;
+using MPOMatrix = std::vector<std::vector<TermSum>>;
     
 class AutoMPO
     {

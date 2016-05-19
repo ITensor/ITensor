@@ -142,39 +142,46 @@ SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
     return prod;
     }    
 
-Term& Term::
+HTerm& HTerm::
 operator*=(Real x)
     {
     coef *= x;
     return *this;
     }
 
-Term& Term::
+HTerm& HTerm::
 operator*=(Complex x)
     {
     coef *= x;
     return *this;
     }
     
-Term Term::
+HTerm HTerm::
 operator*(Real x) const
     {
-    Term t(x*this->coef, this->ops);
+    HTerm t(x*this->coef, this->ops);
     return t;
     }
 
-Term Term::
+HTerm HTerm::
 operator*(Complex x) const
     {
-    Term t(x*this->coef, this->ops);
+    HTerm t(x*this->coef, this->ops);
     return t;
     }
 
-void TermSum::operator+=(const Term &term)
+bool HTerm::
+operator==(HTerm const& other) const 
+    { 
+    return std::abs(coef-other.coef) < 1E-12 && ops == other.ops; 
+    }
+
+void TermSum::
+operator+=(HTerm const& term)
     {
     // Check if the Term already appears in the sum and if yes, then only add the coefficients
     SiteTermProd ops = term.ops;
-    auto isEqualProd = [&ops](const Term &t) { return t.ops == ops; };
+    auto isEqualProd = [&ops](HTerm const& t) { return t.ops == ops; };
     auto it = find_if(sum.begin(), sum.end(), isEqualProd);
     if(it != sum.end())
         it->coef += term.coef;
@@ -370,11 +377,12 @@ operator,(const std::string& op_)
     return *this;
     }
     
-bool IQMPOMatElement::operator==(const IQMPOMatElement &other) const
+bool IQMPOMatElement::
+operator==(const IQMPOMatElement &other) const
     {
-        return rowqn == other.rowqn && colqn == other.colqn && 
-                row == other.row && col == other.col && 
-                val == other.val;
+    return rowqn == other.rowqn && colqn == other.colqn && 
+            row == other.row && col == other.col && 
+            val == other.val;
     }
 
 ComplexMatrix::ComplexMatrix(const std::vector<CoefMatElement> &M)
@@ -438,66 +446,79 @@ int AutoMPO::PosInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) c
     }
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
-void AutoMPO::PartitionHTerms(std::vector<PartitionByQN> &part, std::vector<MPOSparseMatrix> &tempMPO) const
-    {    
+void AutoMPO::
+PartitionHTerms(std::vector<PartitionByQN> & part, 
+                std::vector<MPOSparseMatrix> & tempMPO) const
+    {
     for(const HTerm &ht : terms_)
-        for(int n = ht.first().i; n <= ht.last().i; n++)
-            {
-            SiteTermProd left, onsite, right;
-            DecomposeTerm(n, ht.ops, left, onsite, right);
-            
-            QN lqn = QuantumNumber(sites_, left);
-            QN sqn = QuantumNumber(sites_, onsite);
-            
-            int j,k,l;
+    for(int n = ht.first().i; n <= ht.last().i; ++n)
+        {
+        TIMER_START(10)
+        SiteTermProd left, onsite, right;
+        DecomposeTerm(n, ht.ops, left, onsite, right);
+        TIMER_STOP(10)
+        
+        TIMER_START(11)
+        QN lqn = QuantumNumber(sites_, left);
+        QN sqn = QuantumNumber(sites_, onsite);
+        TIMER_STOP(11)
+        
+        TIMER_START(12)
+        int j,k,l;
 
-            // part.at(i) is the partition at the link between sites i+1 and i+2
-            // i.e. part.at(0) is the partition at the link between sites 1 and 2
-            // and part.at(N-2) is the partition at the link between sites N-1 and N
-            // for site n the link on the left is part.at(n-2) and the link on the right is part.at(n-1)
-            if(left.empty())
+        // part.at(i) is the partition at the link between sites i+1 and i+2
+        // i.e. part.at(0) is the partition at the link between sites 1 and 2
+        // and part.at(N-2) is the partition at the link between sites N-1 and N
+        // for site n the link on the left is part.at(n-2) and the link on the right is part.at(n-1)
+        if(left.empty())
+            {
+            j=0;
+            if(right.empty()) // on site term
                 {
-                j=0;
-                if(right.empty()) // on site term
-                    k = 0;
-                else // term starting on site n
-                    k = PosInVec(right, part.at(n-1)[sqn].right);
+                k = 0;
+                }
+            else // term starting on site n
+                {
+                k = PosInVec(right, part.at(n-1)[sqn].right);
+                }
+            }
+        else
+            {
+            if(right.empty()) // term ending on site n
+                {
+                k = 0;
+                j = PosInVec(onsite, part.at(n-2)[lqn].right);
                 }
             else
                 {
-                if(right.empty()) // term ending on site n
-                    {
-                    k = 0;
-                    j = PosInVec(onsite, part.at(n-2)[lqn].right);
-                    }
-                else
-                    {
-                    j = PosInVec(mult(onsite,right), part.at(n-2)[lqn].right);
-                    k = PosInVec(right, part.at(n-1)[lqn+sqn].right);
-                    }
-                l = PosInVec(left, part.at(n-2)[lqn].left);
-                part.at(n-2)[lqn].Coeff.emplace_back(CoefMatElement(MatIndex(l, j), ht.coef));
+                j = PosInVec(mult(onsite,right), part.at(n-2)[lqn].right);
+                k = PosInVec(right, part.at(n-1)[lqn+sqn].right);
                 }
-                
-            // Place the coefficient of the HTerm when the term starts
-            Complex c = j==0 ? ht.coef : 1;
+            l = PosInVec(left, part.at(n-2)[lqn].left);
+            part.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
+            }
             
-            bool leftF = IsFermionic(left);
-            if(onsite.empty())
-                {
-                if(leftF)
-                    onsite.emplace_back(SiteTerm("F",n));
-                else 
-                    onsite.emplace_back(SiteTerm("Id",n));
-                }
-            else
-                RewriteFermionic(onsite, leftF);
-            
-            IQMPOMatElement elem(lqn, lqn+sqn, j, k, Term(c, onsite));
-            auto el = find(tempMPO.at(n-1).begin(), tempMPO.at(n-1).end(), elem);
-            if(el == tempMPO.at(n-1).end())
-                tempMPO.at(n-1).push_back(elem);
-            }    
+        // Place the coefficient of the HTerm when the term starts
+        Complex c = j==0 ? ht.coef : 1;
+        
+        bool leftF = IsFermionic(left);
+        if(onsite.empty())
+            {
+            if(leftF) onsite.emplace_back("F",n);
+            else      onsite.emplace_back("Id",n);
+            }
+        else
+            {
+            RewriteFermionic(onsite, leftF);
+            }
+        TIMER_STOP(12)
+        
+        TIMER_START(15)
+        auto elem = IQMPOMatElement(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+        auto it = stdx::find(tempMPO.at(n-1),elem);
+        if(it == tempMPO.at(n-1).end()) tempMPO.at(n-1).push_back(elem);
+        TIMER_STOP(15)
+        }
             
 #ifdef SHOW_AUTOMPO
 
@@ -629,9 +650,9 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
         SiteTermProd opId;
         opId.emplace_back("Id", n);
         
-        finalMPO.at(n-1).at(0).at(0) += Term(1, opId);
+        finalMPO.at(n-1).at(0).at(0) += HTerm(1, opId);
         if(!isExpH)
-            finalMPO.at(n-1).at(1).at(1) += Term(1, opId);
+            finalMPO.at(n-1).at(1).at(1) += HTerm(1, opId);
             
         Complex Zero(0,0);
         for(const IQMPOMatElement &elem: tempMPO.at(n-1))
@@ -640,7 +661,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
             int l = elem.col;
             
             // if constructing ExpH multiply by tau when term is starting (k=0)
-            Term t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
+            HTerm t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
             int rowOffset = isExpH ? 0 : 1;
     
             if(l==0 && k==0)	// on-site terms
@@ -649,21 +670,21 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_npp[elem.colqn](j,l), t.ops);
+                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += HTerm(t.coef*V_npp[elem.colqn](j,l), t.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
                 {
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += Term(t.coef*V_n[elem.rowqn](i,k), t.ops);
+                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += HTerm(t.coef*V_n[elem.rowqn](i,k), t.ops);
                 }
             else 
                 {
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     for(int j=1; j<=d_npp[elem.colqn]; j++) 
                         if( (V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += HTerm(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
                 }
             }
 
@@ -714,7 +735,7 @@ IQMPO AutoMPO::ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO,
 
         for(int r = 1; r <= nr; ++r)
             for(int c = 1; c <= nc; ++c)
-                for(const Term &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
+                for(const HTerm &term : finalMPO.at(n-1).at(r-1).at(c-1).sum)
                     {
                     if(std::abs(term.coef) < 1E-12)
                         continue;
@@ -1436,7 +1457,7 @@ std::ostream&
 operator<<(std::ostream& s, const TermSum& tSum)
     {
     const char* pfix = "";     
-    for(const Term &t : tSum.sum)
+    for(HTerm const& t : tSum.sum)
         {        
         if(abs(t.coef-1.0) > 1E-12) 
             if(isReal(t.coef))
