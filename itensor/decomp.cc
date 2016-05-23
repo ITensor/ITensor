@@ -130,8 +130,12 @@ truncate(Vector & P,
         }
 
     Real truncerr = 0;
-    //Always truncate down to at least m==maxm
-    for(; n >= maxm; --n) truncerr += P(n);
+    //Always truncate down to at least m==maxm (m==n+1)
+    while(n >= maxm)
+        {
+        truncerr += P(n);
+        --n;
+        }
 
     if(absoluteCutoff) //absoluteCutoff is typically false
         {
@@ -150,9 +154,10 @@ truncate(Vector & P,
 
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==minm)
-        for(;truncerr+P(n) < cutoff*scale && n >= minm; --n)
+        while(truncerr+P(n) < cutoff*scale && n >= minm)
             {
             truncerr += P(n);
+            --n;
             }
         truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
