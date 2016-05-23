@@ -440,31 +440,30 @@ exactApplyMPO(MPSt<Tensor> const& x,
     auto N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
 
-    //if(&res != &x)
-    //    res = x;
-    res = MPSt<Tensor>(x.sites());
+    auto Kx = MPSt<Tensor>(x.sites());
 
-    res.Anc(1) = x.A(1) * K.A(1);
+    Kx.Anc(1) = x.A(1) * K.A(1);
     for(auto j : range1(N-1))
         {
         //Compute product of MPS tensor and MPO tensor
-        res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
+        Kx.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to combiner
-        auto cinds = stdx::reserve_vector<IndexT>(res.A(j).r());
-        for(auto& I : res.A(j).inds())
+        auto cinds = stdx::reserve_vector<IndexT>(Kx.A(j).r());
+        for(auto& I : Kx.A(j).inds())
             {
-            if(hasindex(res.A(j+1),I))
+            if(hasindex(Kx.A(j+1),I))
                 cinds.push_back(I);
             }
         auto comb = combiner(std::move(cinds));
 
         //Apply combiner to product tensors
-        res.Anc(j) = res.A(j) * comb; //m^3 k^3 d
-        res.Anc(j+1) = dag(comb) * res.A(j+1); //m^3 k^3 d
+        Kx.Anc(j) = Kx.A(j) * comb; //m^3 k^3 d
+        Kx.Anc(j+1) = dag(comb) * Kx.A(j+1); //m^3 k^3 d
         }
-    res.mapprime(1,0,Site);
-    if(orthog) res.orthogonalize(args);
+    Kx.mapprime(1,0,Site);
+    if(orthog) Kx.orthogonalize(args);
+    res = Kx;
     } //void exact_applyMPO
 template
 void 
