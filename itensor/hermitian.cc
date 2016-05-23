@@ -35,7 +35,8 @@ diagHImpl(ITensor rho,
     auto cutoff = args.getReal("Cutoff",0.);
     auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);
-    auto do_truncate = args.getBool("Truncate",false);
+    auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
+    auto do_truncate = args.getBool("Truncate",def_do_trunc);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
@@ -137,7 +138,8 @@ diagHImpl(IQTensor    rho,
     auto cutoff = args.getReal("Cutoff",0.);
     auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);
-    auto do_truncate = args.getBool("Truncate",false);
+    auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
+    auto do_truncate = args.getBool("Truncate",def_do_trunc);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
