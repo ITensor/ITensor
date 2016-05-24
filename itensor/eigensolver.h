@@ -155,6 +155,10 @@ davidson(BigMatrixT const& A,
         else // ii != 0
             {
             Mref *= -1;
+            if(debug_level_ > 3)
+                {
+                println("Mref = \n",Mref);
+                }
             diagHermitian(Mref,U,D);
             Mref *= -1;
             D *= -1;
@@ -259,9 +263,12 @@ davidson(BigMatrixT const& A,
         int Npass = 1;
         auto Vq = std::vector<Cplx>(ni);
         int step = 0;
-        for(auto pass : range1(Npass))
+        int pass = 1;
+        int tot_pass = 0;
+        while(pass <= Npass)
             {
-            ++step;
+            if(debug_level_ >= 3) println("Doing orthog pass");
+            ++tot_pass;
             for(auto k : range(ni))
                 {
                 Vq[k] = (dag(V[k])*q).cplx();
@@ -275,10 +282,13 @@ davidson(BigMatrixT const& A,
                 {
                 //Orthogonalization failure,
                 //try randomizing
-                if(debug_level_ >= 2)
-                    println("Vector not independent, randomizing");
+                if(debug_level_ >= 2) println("Vector not independent, randomizing");
                 q = V.at(ni-1);
                 randomize(q);
+                qnrm = norm(q);
+                //Do another orthog pass
+                --pass;
+                if(debug_level_ >= 3) printfln("Now pass = %d",pass);
 
                 if(ni >= maxsize)
                     {
@@ -290,20 +300,18 @@ davidson(BigMatrixT const& A,
                     goto done;
                     }
 
-                if(step > Npass * 3)
+                if(tot_pass > Npass * 3)
                     {
                     // Maybe the size of the matrix is only 1?
                     if(debug_level_ >= 3)
                         println("Breaking out of Davidson: orthog step too big");
                     goto done;
                     }
-
-                qnrm = norm(q);
-                --pass;
                 }
-
             q *= 1./qnrm;
+            ++pass;
             }
+        if(debug_level_ >= 3) println("Done with orthog step");
 
         //Check V's are orthonormal
         //Mat Vo(ni+1,ni+1,NAN); 
