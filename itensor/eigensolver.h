@@ -262,7 +262,6 @@ davidson(BigMatrixT const& A,
         //to include it in the subbasis
         int Npass = 1;
         auto Vq = std::vector<Cplx>(ni);
-        int step = 0;
         int pass = 1;
         int tot_pass = 0;
         while(pass <= Npass)
