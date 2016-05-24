@@ -271,7 +271,7 @@ void
 nmultMPO(MPOType const& Aorig, 
          MPOType const& Borig, 
          MPOType& res,
-         Args const& args = Args::global());
+         Args args = Args::global());
 
 //
 // Applies an MPO to an MPS using the zip-up method described

@@ -258,13 +258,16 @@ void
 nmultMPO(MPOType const& Aorig, 
          MPOType const& Borig, 
          MPOType& res,
-         Args const& args)
+         Args args)
     {
     using Tensor = typename MPOType::TensorT;
+
+    if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
+
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
     const int N = Borig.N();
 
-    MPOType A(Aorig);
+    auto A = Aorig;
     A.position(1);
 
     MPOType B;
@@ -285,7 +288,6 @@ nmultMPO(MPOType const& Aorig,
     res.mapprime(1,2,Site);
 
     Tensor clust,nfork;
-    vector<int> midsize(N);
     for(int i = 1; i < N; ++i)
         {
         if(i == 1) 
@@ -299,36 +301,16 @@ nmultMPO(MPOType const& Aorig,
 
         if(i == N-1) break;
 
-        auto oldmid = rightLinkInd(res,i);
-        nfork = Tensor(rightLinkInd(A,i),rightLinkInd(B,i),oldmid);
+        nfork = Tensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
 
-        /*
-        if(clust.norm() == 0) // this product gives 0 !!
-            { 
-            cout << "WARNING: clust.norm()==0 in nmultMPO i=" << i << endl;
-            res *= 0;
-            return; 
-            }
-            */
-
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
+        denmatDecomp(clust,res.Anc(i),nfork,Fromleft,args);
 
         auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
-        midsize[i] = mid.m();
         res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
-
-    /*
-    if(nfork.norm() == 0) // this product gives 0 !!
-        { 
-        cerr << "WARNING: nfork.norm()==0 in nmultMPO\n"; 
-        res *= 0;
-        return; 
-        }
-        */
 
     res.svdBond(N-1,nfork,Fromright);
     res.noprimelink();
@@ -337,9 +319,9 @@ nmultMPO(MPOType const& Aorig,
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 template
-void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, const Args&);
+void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, Args);
 template
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,const Args& );
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Args);
 
 
 template<class Tensor>
