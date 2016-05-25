@@ -1088,8 +1088,11 @@ toMPO<IQTensor>(const AutoMPO& am,
                     {
                     auto op = endTerm(ht.last().op);
                     W += ht.coef * sites.op(op,n) * rc;
-#ifdef SHOW_AUTOMPO
-                    ws[r][c] = op;
+#ifdef SHOW_AUTOMPO                    
+                    if(isApproxReal(ht.coef))
+                        ws[r][c] = format("%.2f %s",ht.coef.real(),op);
+                    else
+                        ws[r][c] = format("%.2f %s",ht.coef,op);
 #endif
                     }
                 }
@@ -1447,7 +1450,7 @@ operator<<(std::ostream& s, const TermSum& tSum)
                 s << format("%s%f ",pfix,t.coef.real());
                 }
             else
-                format("%s%f ",pfix,t.coef);
+                s << format("%s%f ",pfix,t.coef);
         else
             s << pfix;
             
