@@ -216,6 +216,7 @@ class AutoMPO
     const SiteSet& sites_;
     std::map<SiteTermProd, Complex> terms_;
     bool svd_;
+    Real epsilon_;
     
     void DecomposeTerm(int n, const SiteTermProd &term, 
                     SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
@@ -278,7 +279,7 @@ class AutoMPO
     public:
 
     AutoMPO(const SiteSet& sites, const Args& args) 
-        : sites_(sites), svd_(args.getBool("SVD",false))
+        : sites_(sites), svd_(args.getBool("SVD",false)), epsilon_(args.getReal("epsilon",1E-12))
         { }
 
     const SiteSet&

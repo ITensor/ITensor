@@ -589,8 +589,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                     SVD(C.Re, U, D, V_npp[qn].Re);
                     }
 
-                Real epsilon = 1E-12;
-                auto isApproxZero = [&epsilon](const Real &val){ return fabs(val) < epsilon; };
+                auto isApproxZero = [&](const Real &val){ return fabs(val) < epsilon_; };
                 auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
                 d_npp[qn]=firstApproxZero - D.begin();
                 }
