@@ -28,8 +28,8 @@ using std::string;
 // Constructors
 //
 
-template <class Tensor>
-MPSt<Tensor>::
+template <class T>
+MPSt<T>::
 MPSt() 
     : 
     N_(0), 
@@ -43,9 +43,9 @@ MPSt();
 template MPSt<IQTensor>::
 MPSt();
 
-template <class Tensor>
-MPSt<Tensor>::
-MPSt(const SiteSet& sites)
+template <class T>
+MPSt<T>::
+MPSt(SiteSet const& sites)
     : 
     N_(sites.N()), 
     A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
@@ -63,9 +63,9 @@ MPSt(const SiteSet& sites);
 template MPSt<IQTensor>::
 MPSt(const SiteSet& sites);
 
-template <class Tensor>
-MPSt<Tensor>::
-MPSt(const InitState& initState)
+template <class T>
+MPSt<T>::
+MPSt(InitState const& initState)
     : 
     N_(initState.sites().N()),
     A_(initState.sites().N()+2), //idmrg may use A_[0] and A[N+1]
@@ -83,27 +83,9 @@ MPSt(const InitState& initState);
 template MPSt<IQTensor>::
 MPSt(const InitState& initState);
 
-//template <class Tensor>
-//MPSt<Tensor>::
-//MPSt(const SiteSet& sites, std::istream& s)
-//    : 
-//    N_(sites.N()), 
-//    A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
-//    sites_(&sites),
-//    atb_(1),
-//    writedir_("."),
-//    do_write_(false)
-//    { 
-//    read(s); 
-//    }
-//template MPSt<ITensor>::
-//MPSt(const SiteSet& sites, std::istream& s);
-//template MPSt<IQTensor>::
-//MPSt(const SiteSet& sites, std::istream& s);
-
-template <class Tensor>
-MPSt<Tensor>::
-MPSt(const MPSt& other)
+template <class T>
+MPSt<T>::
+MPSt(MPSt const& other)
     : 
     N_(other.N_),
     A_(other.A_),
@@ -123,7 +105,7 @@ MPSt(const MPSt<IQTensor>&);
 
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-operator=(const MPSt& other)
+operator=(MPSt const& other)
     { 
     N_ = other.N_;
     A_ = other.A_;
@@ -138,12 +120,12 @@ operator=(const MPSt& other)
     return *this;
     }
 template MPSt<ITensor>& MPSt<ITensor>::
-operator=(const MPSt<ITensor>&);
+operator=(MPSt<ITensor> const&);
 template MPSt<IQTensor>& MPSt<IQTensor>::
-operator=(const MPSt<IQTensor>&);
+operator=(MPSt<IQTensor> const&);
 
-template <class Tensor>
-MPSt<Tensor>::
+template <class T>
+MPSt<T>::
 ~MPSt()
     {
     cleanupWrite();
@@ -152,7 +134,7 @@ template MPSt<ITensor>::~MPSt();
 template MPSt<IQTensor>::~MPSt();
 
 template <class Tensor>
-const Tensor& MPSt<Tensor>::
+Tensor const& MPSt<Tensor>::
 A(int i) const
     { 
     if(i < 0) i = N_+i+1;
@@ -164,8 +146,8 @@ const ITensor& MPSt<ITensor>::A(int i) const;
 template
 const IQTensor& MPSt<IQTensor>::A(int i) const;
 
-template <class Tensor>
-Tensor& MPSt<Tensor>::
+template <class T>
+T& MPSt<T>::
 Anc(int i)
     { 
     if(i < 0) i = N_+i+1;
@@ -179,9 +161,9 @@ ITensor& MPSt<ITensor>::Anc(int i);
 template
 IQTensor& MPSt<IQTensor>::Anc(int i);
 
-template <class Tensor>
-void MPSt<Tensor>::
-doWrite(bool val, const Args& args) 
+template <class T>
+void MPSt<T>::
+doWrite(bool val, Args const& args) 
     { 
     if(val == do_write_) return;
 
@@ -203,7 +185,7 @@ doWrite(bool val, const Args& args);
 
 template <class Tensor>
 void MPSt<Tensor>::
-read(std::istream& s)
+read(std::istream & s)
     {
     if(not sites_) Error("Can't read to default constructed MPS");
     for(auto j : range(A_))
@@ -263,7 +245,7 @@ read(const std::string& dirname)
     //if(dname_[dname_.length()-1] != '/')
     //    dname_ += "/";
 
-    for(size_t j = 0; j < A_.size(); ++j) 
+    for(auto j : range(A_.size()))
         {
     	readFromFile(AFName(j,dirname),A_.at(j));
         }
@@ -279,9 +261,13 @@ string MPSt<Tensor>::
 AFName(int j, const string& dirname) const
     { 
     if(dirname == "")
+        {
         return format("%s/A_%03d",writedir_,j);
+        }
     else
+        {
         return format("%s/A_%03d",dirname,j);
+        }
     }
 template
 string MPSt<ITensor>::AFName(int j, const string&) const;
@@ -403,10 +389,14 @@ new_tensors(std::vector<ITensor>& A_)
     {
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
-        { a[i] = Index(nameint("a",i)); }
+        { 
+        a[i] = Index(nameint("a",i)); 
+        }
     A_[1] = ITensor(sites()(1),a[1]);
     for(int i = 2; i < N_; i++)
-        { A_[i] = ITensor(dag(a[i-1]),sites()(i),a[i]); }
+        { 
+        A_[i] = ITensor(dag(a[i-1]),sites()(i),a[i]); 
+        }
     A_[N_] = ITensor(dag(a[N_-1]),sites()(N_));
     }
 template
@@ -676,12 +666,10 @@ template<class Tensor>
 Spectrum
 orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
     {
-    using IndexT = typename Tensor::index_type;
-
     Tensor& L = (dir == Fromleft ? A1 : A2);
     Tensor& R = (dir == Fromleft ? A2 : A1);
 
-    IndexT bnd = commonIndex(L,R,Link);
+    auto bnd = commonIndex(L,R,Link);
     if(!bnd) return Spectrum();
 
     if(args.getBool("Verbose",false))
@@ -691,33 +679,10 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
 
     Tensor A,B(bnd);
     Tensor D;
-    Spectrum spec = svd(L,A,D,B,args);
+    auto spec = svd(L,A,D,B,args);
 
     L = A;
     R *= (D*B);
-
-    //Older density matrix implementation
-    //Doesn't flip arrows appropriately
-
-    //Tensor rho = prime(L,bnd)*dag(L);
-
-    //Tensor U;
-    //Tensor D;
-    //diagHermitian(rho,U,D,spec,args);
-
-
-    //Tensor Di = D;
-    //Di.mapElems(SqrtInv());
-    //D.mapElems(Sqrt());
-
-    //const
-    //Tensor siRho = dag(U)*Di*prime(U),
-    //       sRho = dag(U)*D*prime(U);
-
-    //L *= siRho;
-    //L.noprime();
-
-    //R = prime(R,bnd)*sRho;
 
     return spec;
     }
@@ -739,14 +704,14 @@ position(int i, const Args& args)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+            auto WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
             svdBond(l_orth_lim_+1,WF,Fromleft,args);
             }
         while(r_orth_lim_ > i+1)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+            auto WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
             svdBond(r_orth_lim_-2,WF,Fromright,args);
             }
         }
@@ -964,8 +929,8 @@ bool MPSt<ITensor>::isComplex() const;
 template
 bool MPSt<IQTensor>::isComplex() const;
 
-template <class Tensor>
-void MPSt<Tensor>::
+template <class T>
+void MPSt<T>::
 initWrite(const Args& args)
     {
     if(!do_write_)
@@ -987,7 +952,9 @@ initWrite(const Args& args)
                 if(!A_.at(j)) continue;
                 writeToFile(AFName(j),A_.at(j));
                 if(j < atb_ || j > atb_+1)
-                    A_[j] = Tensor();
+                    {
+                    A_[j] = T{};
+                    }
                 }
             }
 
@@ -1001,8 +968,8 @@ void MPSt<ITensor>::initWrite(const Args&);
 template
 void MPSt<IQTensor>::initWrite(const Args&);
 
-template <class Tensor>
-void MPSt<Tensor>::
+template <class T>
+void MPSt<T>::
 copyWriteDir()
     {
     if(do_write_)
@@ -1022,8 +989,8 @@ template
 void MPSt<IQTensor>::copyWriteDir();
 
 
-template <class Tensor>
-void MPSt<Tensor>::
+template <class T>
+void MPSt<T>::
 cleanupWrite()
     {
     if(do_write_)
@@ -1038,9 +1005,9 @@ void MPSt<ITensor>::cleanupWrite();
 template
 void MPSt<IQTensor>::cleanupWrite();
 
-template<class Tensor>
-void MPSt<Tensor>::
-swap(MPSt<Tensor>& other)
+template<class T>
+void MPSt<T>::
+swap(MPSt<T>& other)
     {
     if(N_ != other.N_)
         Error("Require same system size to swap MPS");
@@ -1622,11 +1589,11 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 */
 
 int 
-findCenter(const IQMPS& psi)
+findCenter(IQMPS const& psi)
     {
     for(int j = 1; j <= psi.N(); ++j) 
         {
-        const IQTensor& A = psi.A(j);
+        auto& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
         bool allSameDir = true;
         auto it = A.inds().begin();
@@ -1647,24 +1614,28 @@ findCenter(const IQMPS& psi)
     }
 
 
-template <class Tensor>
+template <class T>
 std::ostream& 
-operator<<(std::ostream& s, const MPSt<Tensor>& M)
+operator<<(std::ostream& s, MPSt<T> const& M)
     {
     s << "\n";
     for(int i = 1; i <= M.N(); ++i) 
+        {
         s << M.A(i) << "\n";
+        }
     return s;
     }
 template std::ostream& operator<<(std::ostream& s, const MPSt<ITensor>& M);
 template std::ostream& operator<<(std::ostream& s, const MPSt<IQTensor>& M);
 
 std::ostream& 
-operator<<(std::ostream& s, const InitState& state)
+operator<<(std::ostream& s, InitState const& state)
     {
     s << "\n";
     for(int i = 1; i <= state.sites().N(); ++i) 
+        {
         s << state(i) << "\n";
+        }
     return s;
     }
 

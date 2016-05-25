@@ -207,7 +207,7 @@ sum(MPOt<Tensor> L,
 //<psi|H|phi>
 template <class Tensor>
 void 
-psiHphi(MPSt<Tensor> const& psi, 
+overlap(MPSt<Tensor> const& psi, 
         MPOt<Tensor> const& H, 
         MPSt<Tensor> const& phi, 
         Real& re, 
@@ -215,19 +215,19 @@ psiHphi(MPSt<Tensor> const& psi,
 
 template <class Tensor>
 Real 
-psiHphi(MPSt<Tensor> const& psi, 
+overlap(MPSt<Tensor> const& psi, 
         MPOt<Tensor> const& H, 
         MPSt<Tensor> const& phi);
 
 template <class Tensor>
 Complex 
-psiHphiC(MPSt<Tensor> const& psi, 
+overlapC(MPSt<Tensor> const& psi, 
          MPOt<Tensor> const& H, 
          MPSt<Tensor> const& phi);
 
 template<class Tensor>
 void
-psiHphi(MPSt<Tensor> const& psi, 
+overlap(MPSt<Tensor> const& psi, 
         MPOt<Tensor> const& H, 
         Tensor const& LB, 
         Tensor const& RB, 
@@ -237,7 +237,7 @@ psiHphi(MPSt<Tensor> const& psi,
 
 template <class Tensor>
 Real
-psiHphi(MPSt<Tensor> const& psi, 
+overlap(MPSt<Tensor> const& psi, 
         MPOt<Tensor> const& H, 
         Tensor const& LB, 
         Tensor const& RB, 
