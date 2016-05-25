@@ -464,6 +464,7 @@ toMPOImpl(AutoMPO const& am,
           Args const& args)
     {
     using IndexT = typename Tensor::index_type;
+    auto checkqn = args.getBool("CheckQN",true);
 
     SiteSet const& sites = am.sites();
     auto H = MPOt<Tensor>(sites);
@@ -503,26 +504,30 @@ toMPOImpl(AutoMPO const& am,
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
-            //if(checkqn)
-            bn.emplace_back(ht.first(),-div(Op));
-            //else
-            //    bn.emplace_back(ht.first(),Zero);
+            if(checkqn)
+                {
+                bn.emplace_back(ht.first(),-div(Op));
+                }
+            else
+                {
+                bn.emplace_back(ht.first(),Zero);
+                }
             }
         }
 
-    //if(checkqn)
-    //    {
-    auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
-                   {
-                   //First two if statements are to artificially make
-                   //the default-constructed Zero QN come first in the sort
-                   if(sq1.q == Zero && sq2.q != Zero) return true;
-                   else if(sq2.q == Zero && sq1.q != Zero) return false;
-                   return sq1.q < sq2.q;
-                   };
-    //Sort bond "basis" elements by quantum number sector:
-    for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
-    //    }
+    if(checkqn)
+        {
+        auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
+                       {
+                       //First two if statements are to artificially make
+                       //the default-constructed Zero QN come first in the sort
+                       if(sq1.q == Zero && sq2.q != Zero) return true;
+                       else if(sq2.q == Zero && sq1.q != Zero) return false;
+                       return sq1.q < sq2.q;
+                       };
+        //Sort bond "basis" elements by quantum number sector:
+        for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
+        }
 
     auto links = vector<IndexT>(N+1);
     vector<IndexQN> inqn;
@@ -728,7 +733,7 @@ template<>
 MPO 
 toMPO(AutoMPO const& am, Args const& args) 
     { 
-    return toMPOImpl<ITensor>(am,args);
+    return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
     }
 template<>
 IQMPO 

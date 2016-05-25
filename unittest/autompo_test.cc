@@ -1,6 +1,8 @@
 #include "test.h"
 #include "itensor/mps/autompo.h"
 #include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 
@@ -204,6 +206,46 @@ SECTION("Hubbard")
         CHECK_CLOSE(overlap(IQMPS(L),H,IQMPS(R)),V1);
         }
 
+    }
+
+SECTION("No QN MPO")
+    {
+    auto N = 10;
+    auto h = 0.732;
+    auto sites = SpinHalf(N);
+    auto ampo = AutoMPO(sites);
+    for(auto j = 1; j < N; ++j)
+        {
+        ampo += "Sx",j,"Sx",j+1;
+        }
+    for(auto j = 1; j <= N; ++j)
+        {
+        ampo += h,"Sz",j;
+        }
+    auto H = MPO(ampo);
+
+    auto AllUp = InitState(sites,"Up");
+    auto L = AllUp;
+    auto R = AllUp;
+    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+
+    L = AllUp;
+    R = AllUp;
+    L.set(1,"Dn");
+    R.set(1,"Dn");
+    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+
+    L = AllUp;
+    R = AllUp;
+    L.set(1,"Dn");
+    L.set(2,"Dn");
+    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+
+    L = AllUp;
+    R = AllUp;
+    L.set(3,"Dn");
+    R.set(4,"Dn");
+    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
     }
 
 }
