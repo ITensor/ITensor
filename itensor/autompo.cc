@@ -650,7 +650,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
-                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_npp[elem.colqn](j,l), t.ops);
+                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*conj(V_npp[elem.colqn](j,l)), t.ops);
                         
                 }
             else if(l==0) 	// terms ending on site n
@@ -664,7 +664,7 @@ void AutoMPO::CompressMPO(const std::vector<PartitionByQN> &part, const std::vec
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     for(int j=1; j<=d_npp[elem.colqn]; j++) 
                         if( (V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) += Term(t.coef*V_n[elem.rowqn](i,k)*conj(V_npp[elem.colqn](j,l)), t.ops);
                 }
             }
 
