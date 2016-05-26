@@ -29,16 +29,30 @@ class Spectrum
 
     Spectrum(Args const& args = Args::global());
 
-    Spectrum(Vector const& eigs, Args const& args = Args::global());
+    Spectrum(Vector && eigs, Args const& args = Args::global());
 
-    Spectrum(Vector const& eigs, 
-             QNStorage const& qns,
+    Spectrum(Vector && eigs, 
+             QNStorage && qns,
              Args const& args = Args::global());
 
-    //Spectrum(ITensor const& D, Args const& args = Args::global());
+    Real 
+    truncerr() const { return truncerr_; }
 
-    //Spectrum(IQTensor const& D, Args const& args = Args::global());
+    Vector const&
+    eigs() const { return eigs_; }
 
+    Vector const& 
+    eigsKept() const { return eigs(); }
+
+    //1-indexed
+    Real
+    eig(int n) const { return eigs_(n-1); }
+
+    int
+    numEigsKept() const { return eigs_.size(); }
+
+    bool
+    hasQNs() const { return !qns_.empty(); }
 
     //1-indexed
     QN
@@ -47,41 +61,8 @@ class Spectrum
     QNStorage const&
     qns() const { return qns_; }
 
-    //1-indexed
-    Real
-    eig(int n) const { return eigs_(n-1); }
-
-    Vector const&
-    eigs() const { return eigs_; }
-
-    Real 
-    truncerr() const { return truncerr_; }
-
     int
     size() const { return eigs_.size(); }
-
-    bool
-    hasQNs() const { return !qns_.empty(); }
-
-
-    //
-    // Other Methods
-    //
-
-    Vector const& 
-    eigsKept() const { return eigs_; }
-
-    int
-    numEigsKept() const { return eigs_.size(); }
-
-    void 
-    truncerr(Real val) { truncerr_ = val; }
-
-    void 
-    eigsKept(Vector const& val) { eigs_ = val; }
-
-    void 
-    eigsKept(Vector&& val) { eigs_ = std::move(val); }
 
     void 
     read(std::istream& s);
@@ -91,7 +72,7 @@ class Spectrum
     private:
      
     void
-    computeTruncerr(const Args& args);
+    computeTruncerr(Args const& args);
 
     }; //class Spectrum
 

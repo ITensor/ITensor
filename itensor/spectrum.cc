@@ -6,8 +6,7 @@
 #include <utility>
 #include "itensor/spectrum.h"
 
-using std::pair;
-using std::make_pair;
+using std::move;
 
 namespace itensor {
 
@@ -23,73 +22,24 @@ struct OrderSecond
 
 Spectrum::
 Spectrum(Args const& args) 
-    :
-    truncerr_(NAN)
+  : truncerr_(NAN)
     { 
     computeTruncerr(args);
     }
 
-//Spectrum::
-//Spectrum(ITensor const& D, Args const& args)
-//    :
-//    truncerr_(0)
-//    {
-//    Error("Spectrum ITensor constructor not yet implemented");
-//    //if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
-//    //eigs_ = D.diag();
-//    //for(auto n = 1l; n <= eigs_.size(); ++n)
-//    //    eigs_(n) = sqr(eigs_(n));
-//    //computeTruncerr(args);
-//    }
-//
-//Spectrum::
-//Spectrum(const IQTensor& D, const Args& args)
-//    :
-//    truncerr_(0)
-//    {
-//    Error("Spectrum IQTensor constructor not yet implemented");
-//    //std::vector<OrderSecond::value_type> eigs;
-//    //eigs.reserve(D.indices().front().m());
-//
-//    //for(const ITensor& t : D.blocks())
-//    //    {
-//    //	if(t.type() != ITensor::Diag)
-//    //		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
-//    //    const Vector svals = t.diag();
-//    //    const QN q = itensor::qn(D,t.indices().front());
-//    //    for(int n = 1; n <= svals.size(); ++n)
-//    //        {
-//    //        eigs.push_back(std::make_pair(q,sqr(svals(n))));
-//    //        }
-//    //    }
-//    //std::sort(eigs.begin(),eigs.end(),OrderSecond());
-//
-//    //qns_.resize(eigs.size());
-//    //eigs_.ReDimension(eigs.size());
-//    //for(size_t j = 0; j < eigs.size(); ++j)
-//    //    {
-//    //    qns_.at(j) = eigs.at(j).first;
-//    //    eigs_[j] = eigs.at(j).second;
-//    //    }
-//    //computeTruncerr(args);
-//    }
-
 Spectrum::
-Spectrum(Vector const& eigs, Args const& args)
-    :
-    eigs_(eigs)
+Spectrum(Vector && eigs, Args const& args)
+  : eigs_(move(eigs))
     {
     computeTruncerr(args);
     }
 
-
 Spectrum::
-Spectrum(Vector    const& eigs, 
-         QNStorage const& qns,
+Spectrum(Vector    && eigs, 
+         QNStorage && qns,
          Args      const& args)
-    :
-    eigs_(eigs),
-    qns_(qns)
+  : eigs_(move(eigs)),
+    qns_(move(qns))
     {
     computeTruncerr(args);
     }
@@ -166,7 +116,6 @@ operator<<(std::ostream & s, Spectrum const& spec)
         }
     return s;
     }
-
 
 
 } //namespace itensor
