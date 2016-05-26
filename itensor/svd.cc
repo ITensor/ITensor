@@ -391,9 +391,11 @@ svdRank2(ITensorT<IndexT> const& A,
          Args args)
     {
     auto do_truncate = args.defined("Cutoff") 
-                    || args.defined("Maxm") 
-                    || args.defined("Minm");
-    args.add("Truncate",do_truncate);
+                    || args.defined("Maxm");
+    if(not args.defined("Truncate")) 
+        {
+        args.add("Truncate",do_truncate);
+        }
 
     if(A.r() != 2) 
         {
