@@ -181,19 +181,6 @@ operator==(HTerm const& other) const
     return std::abs(coef-other.coef) < 1E-12 && ops == other.ops; 
     }
 
-void TermSum::
-operator+=(HTerm const& term)
-    {
-    // Check if the Term already appears in the sum and if yes, then only add the coefficients
-    SiteTermProd ops = term.ops;
-    auto isEqualProd = [&ops](HTerm const& t) { return t.ops == ops; };
-    auto it = find_if(sum.begin(), sum.end(), isEqualProd);
-    if(it != sum.end())
-        it->coef += term.coef;
-    else
-        sum.push_back(term);
-    }    
-
 void HTerm::
 add(const string& op,
     int i,
@@ -204,16 +191,16 @@ add(const string& op,
     auto it = ops.begin();
     while(it != ops.end() && it->i <= i) ++it;
     
-    SiteTerm t(op,i);
+    auto t = SiteTerm(op,i);
     
     // If the operator is fermionic and being inserted in between existing operators 
     // need to check if an extra minus is required
     if(it != ops.end() && t.isFermionic())
-    {
+        {
         SiteTermProd rightOps(it, ops.end());
         if(isFermionic(rightOps))
             coef *= -1;
-    }
+        }
     
     coef *= x;
     ops.insert(it,t);
@@ -662,18 +649,12 @@ CompressMPO(vector<QNPart> const& part,
         // Construct the compressed MPO
 
         finalMPO.at(n-1).resize(d_n_tot);
-        for(auto& v : finalMPO.at(n-1))
-            {
-            v.resize(d_npp_tot);
-            }
+        for(auto& v : finalMPO.at(n-1)) v.resize(d_npp_tot);
         
-        SiteTermProd opId;
-        opId.emplace_back("Id", n);
-        
-        finalMPO.at(n-1).at(0).at(0) += HTerm(1, opId);
+        finalMPO.at(n-1).at(0).at(0) += sites_.op("Id",n);
         if(!isExpH)
             {
-            finalMPO.at(n-1).at(1).at(1) += HTerm(1, opId);
+            finalMPO.at(n-1).at(1).at(1) += sites_.op("Id",n);
             }
             
         Complex Zero(0,0);
@@ -686,27 +667,30 @@ CompressMPO(vector<QNPart> const& part,
             HTerm t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
             int rowOffset = isExpH ? 0 : 1;
 
-            auto ii = t.ops.front().i;
-            for(auto& o : t.ops)
+            //
+            // Assemble HTerms "t" which here represent products
+            // of operators all on the same site (==n) into a
+            // single IQTensor "op"
+            //
+            if(t.ops.front().i != n) Error("Op on wrong site");
+            IQTensor op = sites_.op(t.ops.front().op,n);
+            for(auto it = t.ops.begin()+1; it != t.ops.end(); ++it)
                 {
-                if(o.i != ii)
-                    {
-                    Print(t);
-                    PAUSE
-                    }
+                if(it->i != n) Error("Op on wrong site");
+                op = multSiteOps(op,sites_.op(it->op,n));
                 }
+            op *= t.coef;
     
             if(l==0 && k==0)	// on-site terms
                 {
-                finalMPO.at(n-1).at(rowOffset).at(0) += t;
+                finalMPO.at(n-1).at(rowOffset).at(0) += op;
                 }
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
                         {
-                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) 
-                            += HTerm(t.coef*V_npp[elem.colqn](j,l), t.ops);
+                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += V_npp[elem.colqn](j,l)*op;
                         }
                         
                 }
@@ -715,8 +699,7 @@ CompressMPO(vector<QNPart> const& part,
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
                         {
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) 
-                            += HTerm(t.coef*V_n[elem.rowqn](i,k), t.ops);
+                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += V_n[elem.rowqn](i,k)*op;
                         }
                 }
             else 
@@ -727,7 +710,7 @@ CompressMPO(vector<QNPart> const& part,
                     if((V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
                         {
                         finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) 
-                            += HTerm(t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l), t.ops);
+                            += V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l)*op;
                         }
                     }
                 }
@@ -784,33 +767,10 @@ ConstructMPOTensors(vector<MPOMatrix> const& finalMPO,
         for(int r = 1; r <= nr; ++r)
         for(int c = 1; c <= nc; ++c)
             {
-            // finalMPO.at(n-1).at(r-1).at(c-1).sum
-            // is a vector<HTerm>
-            for(auto& ht : finalMPO.at(n-1).at(r-1).at(c-1).sum)
-                {
-                if(std::abs(ht.coef) < 1E-12) continue;
-                    
-                IQTensor op = sites_.op(ht.ops.front().op, n);
-                for(auto it = ht.ops.begin()+1; it != ht.ops.end(); ++it)
-                    {
-                    op = multSiteOps(op, sites_.op(it->op, n));
-                    }
+            auto& op = finalMPO.at(n-1).at(r-1).at(c-1);
+            if(not op) continue;
 
-                //
-                // This part is taking the majority
-                // of the time of this function
-                //
-                TIMER_START(33)
-                if(isReal(ht.coef))        
-                    {
-                    H.Anc(n) += ht.coef.real() * op * row(r) * col(c);       
-                    }
-                else
-                    {
-                    H.Anc(n) += ht.coef * op * row(r) * col(c);
-                    }
-                TIMER_STOP(33)
-                }
+            H.Anc(n) += op * row(r) * col(c);
             }
         }
     
@@ -1500,14 +1460,14 @@ toExpH<ITensor>(const AutoMPO& a,
     }
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTerm& t)
+operator<<(std::ostream& s, SiteTerm const& t)
     {
     s << format("%s(%d)",t.op,t.i);
     return s;
     }
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTermProd& ops)
+operator<<(std::ostream& s, SiteTermProd const& ops)
     {
     const char* pfix = "";
     for(const auto& st : ops) 
@@ -1519,43 +1479,21 @@ operator<<(std::ostream& s, const SiteTermProd& ops)
     }
     
 std::ostream& 
-operator<<(std::ostream& s, const TermSum& tSum)
-    {
-    const char* pfix = "";     
-    for(HTerm const& t : tSum.sum)
-        {        
-        if(abs(t.coef-1.0) > 1E-12) 
-            if(isReal(t.coef))
-                {
-                if (t.coef.real() > 0)
-                    s << pfix;
-                s << format("%s%f ",pfix,t.coef.real());
-                }
-            else
-                format("%s%f ",pfix,t.coef);
-        else
-            s << pfix;
-            
-        s << t.ops;
-        pfix = "+";
-        }
-    return s;
-    }
-
-std::ostream& 
-operator<<(std::ostream& s, const HTerm& t)
+operator<<(std::ostream& s, HTerm const& t)
     {
     if(abs(t.coef-1.0) > 1E-12) 
+        {
         s << (isReal(t.coef) ? format("%f ",t.coef.real()) : format("%f ",t.coef));
+        }
     s << t.ops;
     return s;
     }
 
 std::ostream& 
-operator<<(std::ostream& s, const AutoMPO& a)
+operator<<(std::ostream& s, AutoMPO const& a)
     {
     s << "AutoMPO:\n";
-    for(const auto& t : a.terms()) s << t << "\n";
+    for(auto& t : a.terms()) s << t << "\n";
     return s;
     }
 

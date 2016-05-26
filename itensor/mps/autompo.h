@@ -132,15 +132,8 @@ struct HTerm
 
     //bool
     //operator!=(const HTerm& other) const;
-
     };
     
-struct TermSum
-    {
-    std::vector<HTerm> sum;
-    
-    void operator+=(const HTerm &t);
-    };
 
 struct MatIndex
     {
@@ -194,7 +187,7 @@ struct Partition
 
 using QNPart = std::map<QN, Partition>;
 using IQMatEls = std::vector<IQMPOMatElement>;
-using MPOMatrix = std::vector<std::vector<TermSum>>;
+using MPOMatrix = std::vector<std::vector<IQTensor>>;
     
 class AutoMPO
     {
@@ -299,9 +292,6 @@ operator<<(std::ostream& s, const SiteTerm& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const SiteTermProd& t);
-
-std::ostream& 
-operator<<(std::ostream& s, const TermSum& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const HTerm& t);
