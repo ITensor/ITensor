@@ -86,8 +86,6 @@ svdImpl(ITensor const& A,
         reduceCols(VV,m);
         }
 
-    Spectrum spec;
-    spec.truncerr(truncerr);
 
     if(show_eigs) 
         {
@@ -127,11 +125,25 @@ svdImpl(ITensor const& A,
         println("Warning: scale not finite real after svd");
         }
 
-    spec.eigsKept(move(DD));
-
-    return spec;
+    return Spectrum(move(DD),{"Truncerr",truncerr});
     }
 
+
+struct EigQN
+    {
+    Real eig = 0.;
+    QN qn;
+
+    EigQN() { }
+
+    EigQN(Real eg,QN q) : eig(eg),qn(q) { }
+
+    bool
+    operator<(EigQN const& o) const { return eig < o.eig; }
+
+    bool
+    operator>(EigQN const& o) const { return eig > o.eig; }
+    };
 
 template<typename T>
 Spectrum
@@ -156,6 +168,7 @@ svdImpl(IQTensor A,
     auto itype = getIndexType(args,"IndexType",Link);
     auto litype = getIndexType(args,"LeftIndexType",itype);
     auto ritype = getIndexType(args,"RightIndexType",itype);
+    auto compute_qn = args.getBool("ComputeQNs",false);
 
     auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
 
@@ -174,6 +187,12 @@ svdImpl(IQTensor A,
 
     auto alleig = stdx::reserve_vector<Real>(std::min(uI.m(),vI.m()));
 
+    auto alleigqn = vector<EigQN>{};
+    if(compute_qn)
+        {
+        alleigqn = stdx::reserve_vector<EigQN>(std::min(uI.m(),vI.m()));
+        }
+
     if(uI.m() == 0) throw ResultIsZero("uI.m() == 0");
     if(vI.m() == 0) throw ResultIsZero("vI.m() == 0");
 
@@ -190,14 +209,25 @@ svdImpl(IQTensor A,
         //U*D*V to reconstruct ITensor A:
         conjugate(VV);
 
+        if(compute_qn)
+            {
+            auto bi = blocks[b].i1;
+            auto q = uI.qn(1+bi);
+            for(auto sval : d)
+                {
+                alleigqn.emplace_back(sqr(sval),q);
+                }
+            }
         alleig.insert(alleig.end(),d.begin(),d.end());
         }
 
     //Square the singular values into probabilities
     //(density matrix eigenvalues)
     for(auto& sval : alleig) sval = sval*sval;
+
     //Sort all eigenvalues from largest to smallest
     //irrespective of quantum numbers
+    if(compute_qn) stdx::sort(alleigqn,std::greater<EigQN>{});
     stdx::sort(alleig,std::greater<Real>{});
 
     auto probs = Vector(move(alleig),VecRange{alleig.size()});
@@ -210,6 +240,7 @@ svdImpl(IQTensor A,
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
                                        absoluteCutoff,doRelCutoff);
         m = probs.size();
+        alleigqn.resize(m);
         }
 
     if(show_eigs) 
@@ -353,7 +384,14 @@ svdImpl(IQTensor A,
         println("Warning: scale not finite real after svd");
         }
 
-    return Spectrum(move(probs),Args("Truncerr",truncerr));
+    if(compute_qn)
+        {
+        auto qns = stdx::reserve_vector<QN>(alleigqn.size());
+        for(auto& eq : alleigqn) qns.push_back(eq.qn);
+        return Spectrum(move(probs),move(qns),{"Truncerr",truncerr});
+        }
+
+    return Spectrum(move(probs),{"Truncerr",truncerr});
 
     } // svdImpl IQTensor
 
