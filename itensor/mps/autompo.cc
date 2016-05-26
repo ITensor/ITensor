@@ -616,7 +616,8 @@ CompressMPO(vector<QNPart> const& part,
                     SVD(C.Re, U, D, V_npp[qn].Re);
                     }
 
-                Real epsilon = 1E-12;
+                Real epsilon = 1E-14;
+                //TODO: this code looks sketchy!
                 auto isApproxZero = [&epsilon](const Real &val){ return std::fabs(val) < epsilon; };
                 auto firstApproxZero = std::find_if(D.begin(), D.end(), isApproxZero);
                 d_npp[qn]=firstApproxZero - D.begin();
