@@ -176,7 +176,7 @@ diagGeneralRef(MatRefc<value_type> const& M,
     auto info = Diag::call(N,M.data(),L.data(),R.data(),dr.data(),di.data());
     if(info != 0) 
         {
-        println("M = \n",M);
+        //println("M = \n",M);
         throw std::runtime_error("Error condition in diagGeneral");
         }
 

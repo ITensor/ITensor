@@ -84,7 +84,7 @@ diagHermitian(MatM && M,
     auto info = Diag::call(N,U.data(),d.data());
     if(info != 0) 
         {
-        println("M = \n",M);
+        //println("M = \n",M);
         throw std::runtime_error("Error condition in diagHermitian");
         }
 
