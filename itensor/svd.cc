@@ -129,21 +129,6 @@ svdImpl(ITensor const& A,
     }
 
 
-struct EigQN
-    {
-    Real eig = 0.;
-    QN qn;
-
-    EigQN() { }
-
-    EigQN(Real eg,QN q) : eig(eg),qn(q) { }
-
-    bool
-    operator<(EigQN const& o) const { return eig < o.eig; }
-
-    bool
-    operator>(EigQN const& o) const { return eig > o.eig; }
-    };
 
 template<typename T>
 Spectrum
@@ -209,6 +194,7 @@ svdImpl(IQTensor A,
         //U*D*V to reconstruct ITensor A:
         conjugate(VV);
 
+        alleig.insert(alleig.end(),d.begin(),d.end());
         if(compute_qn)
             {
             auto bi = blocks[b].i1;
@@ -218,7 +204,6 @@ svdImpl(IQTensor A,
                 alleigqn.emplace_back(sqr(sval),q);
                 }
             }
-        alleig.insert(alleig.end(),d.begin(),d.end());
         }
 
     //Square the singular values into probabilities
@@ -227,8 +212,8 @@ svdImpl(IQTensor A,
 
     //Sort all eigenvalues from largest to smallest
     //irrespective of quantum numbers
-    if(compute_qn) stdx::sort(alleigqn,std::greater<EigQN>{});
     stdx::sort(alleig,std::greater<Real>{});
+    if(compute_qn) stdx::sort(alleigqn,std::greater<EigQN>{});
 
     auto probs = Vector(move(alleig),VecRange{alleig.size()});
 

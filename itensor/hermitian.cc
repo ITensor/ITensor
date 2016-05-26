@@ -143,6 +143,7 @@ diagHImpl(IQTensor    rho,
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
+    auto compute_qns = args.getBool("ComputeQNs",false);
 
     if(rho.r() != 2)
         {
@@ -190,7 +191,9 @@ diagHImpl(IQTensor    rho,
     auto ddata = vector<Real>(totaldsize);
     auto dvecs = vector<VectorRef>(Nblock);
 
-    auto alleig = stdx::reserve_vector<Real>(rho.inds().front().m());
+    auto alleig = stdx::reserve_vector<Real>(ai.m());
+    auto alleigqn = vector<EigQN>{};
+    if(compute_qns) alleigqn = stdx::reserve_vector<EigQN>(ai.m());
 
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
@@ -211,6 +214,15 @@ diagHImpl(IQTensor    rho,
         conjugate(UU);
 
         alleig.insert(alleig.end(),d.begin(),d.end());
+        if(compute_qns)
+            {
+            auto bi = blocks[b].i1;
+            auto q = ai.qn(1+bi);
+            for(auto eig : d)
+                {
+                alleigqn.emplace_back(eig,q);
+                }
+            }
         totaldsize += rM;
         totalUsize += rM*cM;
         }
@@ -219,6 +231,7 @@ diagHImpl(IQTensor    rho,
     //2. Truncate eigenvalues
 
     stdx::sort(alleig,std::greater<Real>{});
+    if(compute_qns) stdx::sort(alleigqn,std::greater<EigQN>{});
 
     auto probs = Vector{move(alleig),VecRange{alleig.size()}};
 
@@ -231,6 +244,7 @@ diagHImpl(IQTensor    rho,
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
                                        absoluteCutoff,doRelCutoff);
         m = probs.size();
+        alleigqn.resize(m);
         }
 
     if(showeigs)
@@ -340,6 +354,13 @@ diagHImpl(IQTensor    rho,
     else
         {
         probs *= rho.scale().real0();
+        }
+
+    if(compute_qns)
+        {
+        auto qns = stdx::reserve_vector<QN>(alleigqn.size());
+        for(auto& eq : alleigqn) qns.push_back(eq.qn);
+        return Spectrum(move(probs),move(qns),{"Truncerr",truncerr});
         }
 
     return Spectrum{move(probs),{"Truncerr",truncerr}};

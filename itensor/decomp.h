@@ -425,6 +425,22 @@ showEigs(Vector const& P,
          LogNum const& scale,
          Args const& args);
 
+struct EigQN
+    {
+    Real eig = 0.;
+    QN qn;
+
+    EigQN() { }
+
+    EigQN(Real eg,QN q) : eig(eg),qn(q) { }
+
+    bool
+    operator<(EigQN const& o) const { return eig < o.eig; }
+
+    bool
+    operator>(EigQN const& o) const { return eig > o.eig; }
+    };
+
 } //namespace itensor
 
 
