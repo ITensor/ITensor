@@ -71,9 +71,6 @@ struct SiteTerm
 
 using SiteTermProd = std::vector<SiteTerm>;
 
-SiteTermProd 
-mult(SiteTermProd const& first, SiteTermProd const& second);
-
 struct HTerm
     {
     Complex coef;
@@ -126,88 +123,14 @@ struct HTerm
 
     bool
     proportionalTo(const HTerm& other) const;
-    
-    //bool
-    //operator==(const HTerm& other) const;
-
-    //bool
-    //operator!=(const HTerm& other) const;
     };
     
-
-struct MatIndex
-    {
-    int row, col;
-    MatIndex(int r, int c) : row(r), col(c) {};
-    
-    bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
-    };
-
-struct CoefMatElement
-    {
-    MatIndex ind;
-    Complex val;
-    
-    CoefMatElement(MatIndex index, Complex v) : ind(index), val(v) {};
-    
-    bool operator==(const CoefMatElement &other) const {return ind == other.ind && val == other.val; }
-    };
-    
-struct IQMPOMatElement
-    {
-    QN rowqn, colqn;
-    int row, col;
-    HTerm val;
-    
-    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
-        rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
-        
-    bool operator==(const IQMPOMatElement &other) const;
-    };
-    
-struct ComplexMatrix
-    {
-    Matrix Re;
-    Matrix Im;
-    
-    ComplexMatrix() {};
-    
-    ComplexMatrix(const std::vector<CoefMatElement> &M);
-    
-    bool isComplex() const { return Im.Storage(); };
-    
-    Complex operator() (int i, int j) const;
-    };
-    
-struct Partition
-    {
-    std::vector<SiteTermProd> left,right;
-    std::vector<CoefMatElement> Coeff;        
-    };
-
-using QNPart = std::map<QN, Partition>;
-using IQMatEls = std::vector<IQMPOMatElement>;
-using MPOMatrix = std::vector<std::vector<IQTensor>>;
     
 class AutoMPO
     {
     const SiteSet& sites_;
     std::vector<HTerm> terms_;
     bool svd_;
-    
-    void DecomposeTerm(int n, const SiteTermProd &term, 
-                    SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const;
-
-    int posInVec(const SiteTermProd &ops, std::vector<SiteTermProd> &vec) const;
-    
-    void PartitionHTerms(std::vector<QNPart> &part, std::vector<IQMatEls> &tempMPO) const;
-    
-    void CompressMPO(const std::vector<QNPart> &part, const std::vector<IQMatEls> &tempMPO,
-                    std::vector<MPOMatrix> &finalMPO, std::vector<IQIndex> &links, 
-                    bool isExpH, Complex tau) const;
-                    
-    IQMPO ConstructMPOTensors(const std::vector<MPOMatrix> &finalMPO, 
-                            const std::vector<IQIndex> &links, bool isExpH) const;
     
     IQMPO ConstructMPOUsingSVD() const;
     
@@ -261,10 +184,10 @@ class AutoMPO
         : sites_(sites), svd_(args.getBool("SVD",false))
         { }
 
-    const SiteSet&
+    SiteSet const&
     sites() const { return sites_; }
 
-    const std::vector<HTerm>&
+    std::vector<HTerm> const&
     terms() const { return terms_; }
     
     bool usingSVD() const { return svd_; }

@@ -140,7 +140,8 @@ QuantumNumber(SiteSet const& sites,
     return qn;
     }
     
-SiteTermProd mult(const SiteTermProd &first, const SiteTermProd &second)
+SiteTermProd 
+mult(const SiteTermProd &first, const SiteTermProd &second)
     {
     SiteTermProd prod = first;
     prod.insert( prod.end(), second.begin(), second.end() );
@@ -376,6 +377,18 @@ operator,(const string& op_)
         }
     return *this;
     }
+
+struct IQMPOMatElement
+    {
+    QN rowqn, colqn;
+    int row, col;
+    HTerm val;
+    
+    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
+        rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
+        
+    bool operator==(const IQMPOMatElement &other) const;
+    };
     
 bool IQMPOMatElement::
 operator==(IQMPOMatElement const& other) const
@@ -384,6 +397,38 @@ operator==(IQMPOMatElement const& other) const
             row == other.row && col == other.col && 
             val == other.val;
     }
+
+struct MatIndex
+    {
+    int row, col;
+    MatIndex(int r, int c) : row(r), col(c) {};
+    
+    bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
+    };
+
+struct CoefMatElement
+    {
+    MatIndex ind;
+    Complex val;
+    
+    CoefMatElement(MatIndex index, Complex v) : ind(index), val(v) {};
+    
+    bool operator==(const CoefMatElement &other) const {return ind == other.ind && val == other.val; }
+    };
+
+struct ComplexMatrix
+    {
+    Matrix Re;
+    Matrix Im;
+    
+    ComplexMatrix() {};
+    
+    ComplexMatrix(const std::vector<CoefMatElement> &M);
+    
+    bool isComplex() const { return Im.Storage(); };
+    
+    Complex operator() (int i, int j) const;
+    };
 
 ComplexMatrix::
 ComplexMatrix(vector<CoefMatElement> const& M)
@@ -421,8 +466,13 @@ Complex ComplexMatrix::operator() (int i, int j) const
         return re+im;
     }
 
-void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops, 
-                            SiteTermProd &left, SiteTermProd &onsite, SiteTermProd &right) const
+
+void 
+DecomposeTerm(int n, 
+              SiteTermProd const& ops, 
+              SiteTermProd & left, 
+              SiteTermProd & onsite, 
+              SiteTermProd & right)
     {
     auto isOnSiteOrOnTheRight = [&n](const SiteTerm &t) {return t.i >= n;};
     auto startOfOnSite = find_if(ops.begin(), ops.end(), isOnSiteOrOnTheRight);
@@ -437,30 +487,42 @@ void AutoMPO::DecomposeTerm(int n, const SiteTermProd &ops,
 
 // Returns a 1-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
-int AutoMPO::
+int
 posInVec(SiteTermProd const& ops, 
-         vector<SiteTermProd> & vec) const
+         vector<SiteTermProd> & vec)
     {   
     auto it = stdx::find(vec,ops);
     if(it != vec.end()) return it - vec.begin() + 1;
     vec.push_back(ops);
     return vec.size();
     }
+
+struct Partition
+    {
+    std::vector<SiteTermProd> left,right;
+    std::vector<CoefMatElement> Coeff;        
+    };
+
+using QNPart = std::map<QN, Partition>;
+using IQMatEls = std::vector<IQMPOMatElement>;
+using MPOMatrix = std::vector<std::vector<IQTensor>>;
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
-void AutoMPO::
-PartitionHTerms(vector<QNPart> & qps, 
-                vector<IQMatEls> & tempMPO) const
+void
+PartitionHTerms(SiteSet const& sites,
+                vector<HTerm> const& terms,
+                vector<QNPart> & qps, 
+                vector<IQMatEls> & tempMPO)
     {
-    for(const HTerm &ht : terms_)
+    for(const HTerm &ht : terms)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
         SiteTermProd left, onsite, right;
         DecomposeTerm(n, ht.ops, left, onsite, right);
         
         TIMER_START(10)
-        QN lqn = QuantumNumber(sites_, left);
-        QN sqn = QuantumNumber(sites_, onsite);
+        QN lqn = QuantumNumber(sites, left);
+        QN sqn = QuantumNumber(sites, onsite);
         TIMER_STOP(10)
         
         int j,k,l;
@@ -551,15 +613,16 @@ PartitionHTerms(vector<QNPart> & qps,
     }
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
-void AutoMPO::
-CompressMPO(vector<QNPart> const& part, 
+void
+CompressMPO(SiteSet const& sites,
+            vector<QNPart> const& part, 
             vector<IQMatEls> const& tempMPO,
             vector<MPOMatrix> & finalMPO, 
             vector<IQIndex> & links, 
             bool isExpH = false, 
-            Complex tau = 0) const
+            Complex tau = 0)
     {
-    const int N = sites_.N();
+    const int N = sites.N();
     
     // For the MPO matrix on site n we need the SVD on both the previous link and the following link
     
@@ -651,10 +714,10 @@ CompressMPO(vector<QNPart> const& part,
         finalMPO.at(n-1).resize(d_n_tot);
         for(auto& v : finalMPO.at(n-1)) v.resize(d_npp_tot);
         
-        finalMPO.at(n-1).at(0).at(0) += sites_.op("Id",n);
+        finalMPO.at(n-1).at(0).at(0) += sites.op("Id",n);
         if(!isExpH)
             {
-            finalMPO.at(n-1).at(1).at(1) += sites_.op("Id",n);
+            finalMPO.at(n-1).at(1).at(1) += sites.op("Id",n);
             }
             
         Complex Zero(0,0);
@@ -673,11 +736,11 @@ CompressMPO(vector<QNPart> const& part,
             // single IQTensor "op"
             //
             if(t.ops.front().i != n) Error("Op on wrong site");
-            IQTensor op = sites_.op(t.ops.front().op,n);
+            IQTensor op = sites.op(t.ops.front().op,n);
             for(auto it = t.ops.begin()+1; it != t.ops.end(); ++it)
                 {
                 if(it->i != n) Error("Op on wrong site");
-                op = multSiteOps(op,sites_.op(it->op,n));
+                op = multSiteOps(op,sites.op(it->op,n));
                 }
             op *= t.coef;
     
@@ -744,14 +807,15 @@ CompressMPO(vector<QNPart> const& part,
 #endif            
     }
 
-IQMPO AutoMPO::
-ConstructMPOTensors(vector<MPOMatrix> const& finalMPO, 
+IQMPO
+ConstructMPOTensors(SiteSet const& sites,
+                    vector<MPOMatrix> const& finalMPO, 
                     vector<IQIndex> const& links, 
-                    bool isExpH = false) const
+                    bool isExpH = false)
     {
-    auto H = IQMPO(sites_);
+    auto H = IQMPO(sites);
     
-    const int N = sites_.N();
+    const int N = sites.N();
     int min_n = isExpH ? 1 : 2;
     
     for(int n=1; n<=N; n++)
@@ -762,7 +826,7 @@ ConstructMPOTensors(vector<MPOMatrix> const& finalMPO,
         auto &row = links.at(n-1),
              &col = links.at(n);
 
-        H.Anc(n) = IQTensor(dag(sites_(n)),prime(sites_(n)),dag(row),col);
+        H.Anc(n) = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
         for(int r = 1; r <= nr; ++r)
         for(int c = 1; c <= nc; ++c)
@@ -790,7 +854,7 @@ ConstructMPOUsingSVD() const
 
     println("Calling PartitionHTerms");
     START_TIMER(1)
-    PartitionHTerms(part, tempMPO);        
+    PartitionHTerms(sites(),terms(),part, tempMPO);        
     STOP_TIMER(1)
     
     vector<MPOMatrix> finalMPO(N);
@@ -798,12 +862,12 @@ ConstructMPOUsingSVD() const
 
     println("Calling CompressMPO");
     START_TIMER(2)
-    CompressMPO(part, tempMPO, finalMPO, links);
+    CompressMPO(sites(),part, tempMPO, finalMPO, links);
     STOP_TIMER(2)
 
     println("Calling ConstructMPOTensors");
     START_TIMER(3)
-    auto H = ConstructMPOTensors(finalMPO, links);
+    auto H = ConstructMPOTensors(sites(),finalMPO, links);
     STOP_TIMER(3)
     return H;
     }
@@ -816,14 +880,14 @@ toExpHUsingSVD_ZW1(Complex tau) const
     auto part = vector<QNPart>(N-1); // There are N-1 links between N sites
     vector<IQMatEls> tempMPO(N);
 
-    PartitionHTerms(part, tempMPO);        
+    PartitionHTerms(sites(),terms(),part, tempMPO);        
     
     vector<MPOMatrix> finalMPO(N);
     vector<IQIndex> links(N+1);
     
-    CompressMPO(part, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
+    CompressMPO(sites(),part, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
-    return ConstructMPOTensors(finalMPO, links, /*isExpH*/ true);
+    return ConstructMPOTensors(sites(),finalMPO, links, /*isExpH*/ true);
     }
 
 /*
