@@ -528,7 +528,7 @@ PartitionHTerms(SiteSet const& sites,
         QN sqn = QuantumNumber(sites, onsite);
         TIMER_STOP(10)
         
-        int j,k,l;
+        int j=0,k=0;
 
         // qps.at(i) is the partition at the link between sites i+1 and i+2
         // i.e. qps.at(0) is the partition at the link between sites 1 and 2
@@ -536,12 +536,7 @@ PartitionHTerms(SiteSet const& sites,
         // for site n the link on the left is qps.at(n-2) and the link on the right is part.at(n-1)
         if(left.empty())
             {
-            j=0;
-            if(right.empty()) // on site term
-                {
-                k = 0;
-                }
-            else // term starting on site n
+            if(not right.empty()) // term starting on site n
                 {
                 k = posInVec(right, qps.at(n-1)[sqn].right);
                 }
@@ -550,7 +545,6 @@ PartitionHTerms(SiteSet const& sites,
             {
             if(right.empty()) // term ending on site n
                 {
-                k = 0;
                 j = posInVec(onsite, qps.at(n-2)[lqn].right);
                 }
             else
@@ -558,7 +552,7 @@ PartitionHTerms(SiteSet const& sites,
                 j = posInVec(mult(onsite,right), qps.at(n-2)[lqn].right);
                 k = posInVec(right, qps.at(n-1)[lqn+sqn].right);
                 }
-            l = posInVec(left, qps.at(n-2)[lqn].left);
+            auto l = posInVec(left, qps.at(n-2)[lqn].left);
             qps.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
             }
             
