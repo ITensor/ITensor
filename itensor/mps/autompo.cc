@@ -517,7 +517,7 @@ PartitionHTerms(SiteSet const& sites,
                 vector<QNPart> & qps, 
                 vector<IQMatEls> & tempMPO)
     {
-    for(const HTerm &ht : terms)
+    for(HTerm const& ht : terms)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
         SiteTermProd left, onsite, right;
@@ -577,6 +577,9 @@ PartitionHTerms(SiteSet const& sites,
             }
         
         TIMER_START(11)
+        //
+        // Add only unique IQMPOMatElements to tempMPO
+        // 
         auto elem = IQMPOMatElement(lqn, lqn+sqn, j, k, HTerm(c, onsite));
         auto it = stdx::find(tempMPO.at(n-1),elem);
         if(it == tempMPO.at(n-1).end()) tempMPO.at(n-1).push_back(elem);
@@ -608,7 +611,7 @@ PartitionHTerms(SiteSet const& sites,
     println("TempMPO Elements:");
     for(unsigned n=0; n<tempMPO.size(); n++)
         {
-        for(const IQMPOMatElement &elem: tempMPO.at(n))
+        for(IQMPOMatElement const& elem: tempMPO.at(n))
             println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
         println("=========================================");
         }
