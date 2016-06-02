@@ -18,6 +18,9 @@ using std::fabs;
 namespace itensor {
 
 bool
+isZero(Complex const& z, Real thresh = 1E-13) { return std::abs(z) < thresh; }
+
+bool
 isReal(const Complex& z) { return z.imag() == 0; }
 
 bool
