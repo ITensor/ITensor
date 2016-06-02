@@ -849,20 +849,20 @@ ConstructMPOUsingSVD() const
     {
     const int N = sites_.N();
     
-    vector<QNPart> part(N-1);   // There are N-1 links between N sites
-    vector<IQMatEls> tempMPO(N);
+    auto qps = vector<QNPart>(N-1);   // There are N-1 links between N sites
+    auto tempMPO = vector<IQMatEls>(N);
 
     println("Calling PartitionHTerms");
     START_TIMER(1)
-    PartitionHTerms(sites(),terms(),part, tempMPO);        
+    PartitionHTerms(sites(),terms(),qps,tempMPO);
     STOP_TIMER(1)
     
-    vector<MPOMatrix> finalMPO(N);
-    vector<IQIndex> links(N+1);
+    auto finalMPO = vector<MPOMatrix>(N);
+    auto links = vector<IQIndex>(N+1);
 
     println("Calling CompressMPO");
     START_TIMER(2)
-    CompressMPO(sites(),part, tempMPO, finalMPO, links);
+    CompressMPO(sites(),qps,tempMPO,finalMPO,links);
     STOP_TIMER(2)
 
     println("Calling ConstructMPOTensors");
@@ -877,15 +877,15 @@ toExpHUsingSVD_ZW1(Complex tau) const
     {
     const int N = sites_.N();
     
-    auto part = vector<QNPart>(N-1); // There are N-1 links between N sites
+    auto qps = vector<QNPart>(N-1); // There are N-1 links between N sites
     vector<IQMatEls> tempMPO(N);
 
-    PartitionHTerms(sites(),terms(),part, tempMPO);        
+    PartitionHTerms(sites(),terms(),qps, tempMPO);        
     
     vector<MPOMatrix> finalMPO(N);
     vector<IQIndex> links(N+1);
     
-    CompressMPO(sites(),part, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
+    CompressMPO(sites(),qps, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
     return ConstructMPOTensors(sites(),finalMPO, links, /*isExpH*/ true);
     }
