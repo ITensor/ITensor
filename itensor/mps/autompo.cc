@@ -491,7 +491,7 @@ posInVec(SiteTermProd const& ops,
 struct Partition
     {
     std::vector<SiteTermProd> left,right;
-    std::vector<CoefMatElement> Coeff;        
+    std::vector<CoefMatElement> coeff;        
     };
 
 using QNPart = std::map<QN, Partition>;
@@ -569,7 +569,7 @@ partitionHTerms(SiteSet const& sites,
                 k = posInVec(right, qps.at(n-1)[lqn+sqn].right);
                 }
             auto l = posInVec(left, qps.at(n-2)[lqn].left);
-            qps.at(n-2)[lqn].Coeff.emplace_back(MatIndex(l, j), ht.coef);
+            qps.at(n-2)[lqn].coeff.emplace_back(MatIndex(l, j), ht.coef);
             }
             
         // Place the coefficient of the HTerm when the term starts
@@ -612,7 +612,7 @@ partitionHTerms(SiteSet const& sites,
 //            for(const SiteTermProd &prod : p.right)
 //                println(prod);
 //            println("Coef, QN = ", pqn.first);
-//            for(const CoefMatElement &elem : p.Coeff)
+//            for(const CoefMatElement &elem : p.coeff)
 //                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
 //            }
 //        println("=========================================");
@@ -677,7 +677,7 @@ compressMPO(SiteSet const& sites,
                 Partition const& p = qp.second;
                 
                 // Convert the coefficients of the partition to a dense Matrix                
-                auto C = ComplexMatrix(p.Coeff);
+                auto C = ComplexMatrix(p.coeff);
                 
                 Vector D;
                 if(C.isComplex())
