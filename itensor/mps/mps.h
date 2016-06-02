@@ -366,7 +366,7 @@ typename MPST::IndexT
 leftLinkInd(MPST const& psi, int i);
 
 template <typename MPST>
-int
+Real
 averageM(MPST const& psi);
 
 template <typename MPST>

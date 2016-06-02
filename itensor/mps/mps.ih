@@ -156,7 +156,7 @@ leftLinkInd(MPST const& psi, int i)
     }
 
 template <typename MPST>
-int
+Real
 averageM(MPST const& psi)
     {
     Real avgm = 0;
@@ -165,7 +165,7 @@ averageM(MPST const& psi)
         avgm += linkInd(psi,b).m();
         }
     avgm /= (psi.N()-1);
-    return int(avgm);
+    return avgm;
     }
 
 template <typename MPST>
