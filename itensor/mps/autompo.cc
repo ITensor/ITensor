@@ -130,18 +130,6 @@ rewriteFermionic(SiteTermProd & prod,
         }
     }
 
-QN 
-QuantumNumber(SiteSet const& sites, 
-              SiteTermProd const& prod)
-    {
-    QN qn;
-    for(auto& st : prod)
-        {
-        IQTensor op = sites.op(st.op,st.i);
-        qn += -div(op);                    
-        }
-    return qn;
-    }
     
 SiteTermProd 
 mult(const SiteTermProd &first, const SiteTermProd &second)
@@ -517,6 +505,33 @@ partitionHTerms(SiteSet const& sites,
                 vector<QNPart> & qps, 
                 vector<IQMatEls> & tempMPO)
     {
+    //
+    // NOTE: this optimization of using a map
+    // to cache the QN's of various operators assumes
+    // that each site has the same type of Hilbert space
+    //
+    auto qnmap = std::map<std::string,QN>();
+    auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+        {
+        QN qn;
+        for(auto& st : prod)
+            {
+            auto it = qnmap.find(st.op);
+            if(it != qnmap.end())
+                {
+                qn += it->second;
+                }
+            else
+                {
+                auto Op = sites.op(st.op,st.i);
+                auto OpQN = -div(Op);
+                qnmap[st.op] = OpQN;
+                qn += OpQN;
+                }
+            }
+        return qn;
+        };
+
     for(HTerm const& ht : terms)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
@@ -524,10 +539,11 @@ partitionHTerms(SiteSet const& sites,
         DecomposeTerm(n, ht.ops, left, onsite, right);
         
         TIMER_START(10)
-        QN lqn = QuantumNumber(sites, left);
-        QN sqn = QuantumNumber(sites, onsite);
+        auto lqn = calcQN(left);
+        auto sqn = calcQN(onsite);
         TIMER_STOP(10)
         
+        TIMER_START(12)
         int j=0,k=0;
 
         // qps.at(i) is the partition at the link between sites i+1 and i+2
@@ -569,6 +585,7 @@ partitionHTerms(SiteSet const& sites,
             {
             rewriteFermionic(onsite, leftF);
             }
+        TIMER_STOP(12)
         
         TIMER_START(11)
         //
@@ -580,36 +597,36 @@ partitionHTerms(SiteSet const& sites,
         TIMER_STOP(11)
         }
             
-#ifdef SHOW_AUTOMPO
-    println("Left and Right Partials:");
-    for(unsigned n=0; n<part.size(); n++)
-        {
-        for(const auto &pqn : part.at(n))
-            {
-            const Partition &p = pqn.second;
-
-            println("Left, QN = ", pqn.first);
-            for(const SiteTermProd &prod : p.left)
-                println(prod);
-            println("Right, QN = ", pqn.first);
-            for(const SiteTermProd &prod : p.right)
-                println(prod);
-            println("Coef, QN = ", pqn.first);
-            for(const CoefMatElement &elem : p.Coeff)
-                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
-            }
-        println("=========================================");
-        }
-        
-    println();
-    println("TempMPO Elements:");
-    for(unsigned n=0; n<tempMPO.size(); n++)
-        {
-        for(IQMPOMatElement const& elem: tempMPO.at(n))
-            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
-        println("=========================================");
-        }
-#endif   
+//#ifdef SHOW_AUTOMPO
+//    println("Left and Right Partials:");
+//    for(unsigned n=0; n<part.size(); n++)
+//        {
+//        for(const auto &pqn : part.at(n))
+//            {
+//            const Partition &p = pqn.second;
+//
+//            println("Left, QN = ", pqn.first);
+//            for(const SiteTermProd &prod : p.left)
+//                println(prod);
+//            println("Right, QN = ", pqn.first);
+//            for(const SiteTermProd &prod : p.right)
+//                println(prod);
+//            println("Coef, QN = ", pqn.first);
+//            for(const CoefMatElement &elem : p.Coeff)
+//                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
+//            }
+//        println("=========================================");
+//        }
+//        
+//    println();
+//    println("TempMPO Elements:");
+//    for(unsigned n=0; n<tempMPO.size(); n++)
+//        {
+//        for(IQMPOMatElement const& elem: tempMPO.at(n))
+//            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
+//        println("=========================================");
+//        }
+//#endif   
     }
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
