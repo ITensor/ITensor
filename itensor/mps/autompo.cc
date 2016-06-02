@@ -459,7 +459,7 @@ Complex ComplexMatrix::operator() (int i, int j) const
 
 
 void 
-DecomposeTerm(int n, 
+decomposeTerm(int n, 
               SiteTermProd const& ops, 
               SiteTermProd & left, 
               SiteTermProd & onsite, 
@@ -536,7 +536,7 @@ partitionHTerms(SiteSet const& sites,
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
         SiteTermProd left, onsite, right;
-        DecomposeTerm(n, ht.ops, left, onsite, right);
+        decomposeTerm(n, ht.ops, left, onsite, right);
         
         TIMER_START(10)
         auto lqn = calcQN(left);
