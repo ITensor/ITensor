@@ -244,7 +244,7 @@ add(const HTerm& t)
     
     //TODO: remove this check or implement
     //      more efficiently; very slow!!
-    bool do_check = true;
+    bool do_check = false;
     if(do_check)
         {
         // Check if a proportional term already exists
@@ -725,6 +725,8 @@ CompressMPO(SiteSet const& sites,
             {
             finalMPO.at(n-1).at(1).at(1) += sites.op("Id",n);
             }
+
+        //auto nsmall = 0;
             
         Complex Zero(0,0);
         for(IQMPOMatElement const& elem: tempMPO.at(n-1))
@@ -734,6 +736,9 @@ CompressMPO(SiteSet const& sites,
             
             // if constructing ExpH multiply by tau when term is starting (k=0)
             HTerm t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
+
+            if(isZero(t.coef,1E-13)) continue;
+
             int rowOffset = isExpH ? 0 : 1;
 
             //
@@ -748,18 +753,25 @@ CompressMPO(SiteSet const& sites,
                 if(it->i != n) Error("Op on wrong site");
                 op = multSiteOps(op,sites.op(it->op,n));
                 }
-            op *= t.coef;
     
             if(l==0 && k==0)	// on-site terms
                 {
-                finalMPO.at(n-1).at(rowOffset).at(0) += op;
+                auto coef = t.coef;
+                if(not isZero(coef,1E-13))
+                    {
+                    finalMPO.at(n-1).at(rowOffset).at(0) += coef*op;
+                    }
                 }
             else if(k==0)  	// terms starting on site n
                 {
                 for(int j=1; j<=d_npp[elem.colqn]; j++)
                     if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
                         {
-                        finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += V_npp[elem.colqn](j,l)*op;
+                        auto coef = t.coef*V_npp[elem.colqn](j,l);
+                        if(not isZero(coef,1E-13))
+                            {
+                            finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += coef*op;
+                            }
                         }
                         
                 }
@@ -768,7 +780,11 @@ CompressMPO(SiteSet const& sites,
                 for(int i=1; i<=d_n[elem.rowqn]; i++)
                     if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
                         {
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += V_n[elem.rowqn](i,k)*op;
+                        auto coef = t.coef*V_n[elem.rowqn](i,k);
+                        if(not isZero(coef,1E-13))
+                            {
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += coef*op;
+                            }
                         }
                 }
             else 
@@ -778,12 +794,18 @@ CompressMPO(SiteSet const& sites,
                     {
                     if((V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
                         {
-                        finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) 
-                            += V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l)*op;
+                        auto coef = t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l);
+                        if(not isZero(coef,1E-13))
+                            {
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) 
+                                += coef*op;
+                            }
                         }
                     }
                 }
             }
+
+        //printfln("nsmall in CompressMPO = %d",nsmall);
 
         // Store SVD computed at this step for next link
         V_n = V_npp;
@@ -823,8 +845,10 @@ ConstructMPOTensors(SiteSet const& sites,
     
     const int N = sites.N();
     int min_n = isExpH ? 1 : 2;
+
+    //auto nsmall = 0;
     
-    for(int n=1; n<=N; n++)
+    for(int n = 1; n <= N; ++n)
         {
         int nr = finalMPO.at(n-1).size();
         int nc = n == N ? min_n : finalMPO.at(n).size();
@@ -840,9 +864,19 @@ ConstructMPOTensors(SiteSet const& sites,
             auto& op = finalMPO.at(n-1).at(r-1).at(c-1);
             if(not op) continue;
 
+            //if(norm(op) < 1E-13) 
+            //    {
+            //    ++nsmall;
+            //    continue;
+            //    }
+
+            TIMER_START(31)
             H.Anc(n) += op * row(r) * col(c);
+            TIMER_STOP(31)
             }
         }
+
+    //Print(nsmall);
     
     H.Anc(1) *= IQTensor(links.at(0)(min_n));
     H.Anc(N) *= IQTensor(dag(links.at(N))(1));   
