@@ -211,9 +211,15 @@ operator!=(const QN &a,const QN &b)
 bool inline
 operator<(const QN &a,const QN &b)
     { 
-    return a.sz() < b.sz() 
-        || (a.sz() == b.sz() && a.Nf() < b.Nf()) 
-        || (a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() < b.Nfp()); 
+    if(a.sz() != b.sz())
+        {
+        return a.sz() < b.sz();
+        }
+    else if(a.Nf() != b.Nf())
+        {
+        return a.Nf() < b.Nf();
+        }
+    return a.Nfp() < b.Nfp();
     }
 
 QN inline
