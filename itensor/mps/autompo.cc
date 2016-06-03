@@ -3,13 +3,17 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
+#include <set>
 #include "itensor/mps/autompo.h"
 
+using std::move;
 using std::find;
 using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::map;
+using std::set;
 using std::array;
 using std::pair;
 using std::make_pair;
@@ -25,6 +29,35 @@ isReal(const Complex& z) { return z.imag() == 0; }
 
 bool
 isApproxReal(const Complex& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
+
+bool
+less(Real const& r1, Real const& r2, Real eps = 1E-12) 
+    {
+    return (r2-r1) > eps;
+    }
+bool
+gtr(Real const& r1, Real const& r2, Real eps = 1E-12) 
+    {
+    return (r1-r2) > eps;
+    }
+bool
+equal(Real const& r1, Real const& r2, Real eps = 1E-12) 
+    {
+    return std::fabs(r1-r2) < eps;
+    }
+
+bool
+less(Cplx const& z1, Cplx const& z2, Real eps = 1E-12) 
+    { 
+    if(not equal(z1.real(),z2.real(),eps)) return less(z1.real(),z2.real(),eps);
+    return less(z1.imag(),z2.imag());
+    }
+
+bool
+equal(Cplx const& z1, Cplx const& z2, Real eps = 1E-12) 
+    { 
+    return std::abs(z1-z2) < eps;
+    }
 
 SiteTerm::
 SiteTerm() : i(-1) { }
@@ -168,9 +201,29 @@ operator*(Complex x) const
     }
 
 bool HTerm::
-operator==(HTerm const& other) const 
+operator==(HTerm const& o) const 
     { 
-    return std::abs(coef-other.coef) < 1E-12 && ops == other.ops; 
+    if(not equal(coef,o.coef,1E-12)) return false;
+    if(ops.size() != o.ops.size()) return false;
+
+    for(size_t j = 0ul; j < ops.size(); ++j)
+        {
+        if(ops[j] != o.ops[j]) return false;
+        }
+    return true;
+    }
+
+bool HTerm::
+operator<(HTerm const& o) const 
+    { 
+    if(not equal(coef,o.coef,1E-12)) return less(coef,o.coef,1E-12);
+    if(ops.size() != o.ops.size()) return ops.size() < o.ops.size();
+    
+    for(size_t j = 0ul; j < ops.size(); ++j)
+        {
+        if(ops[j] != o.ops[j]) return ops[j] < o.ops[j];
+        }
+    return false;
     }
 
 void HTerm::
@@ -232,7 +285,7 @@ add(const HTerm& t)
     
     //TODO: remove this check or implement
     //      more efficiently; very slow!!
-    bool do_check = false;
+    bool do_check = true;
     if(do_check)
         {
         // Check if a proportional term already exists
@@ -369,26 +422,48 @@ operator,(const string& op_)
     return *this;
     }
 
-struct IQMPOMatElement
+struct IQMPOMatElem
     {
     QN rowqn, colqn;
     int row, col;
     HTerm val;
     
-    IQMPOMatElement(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
+    IQMPOMatElem() { }
+
+    IQMPOMatElem(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
         rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
         
-    bool operator==(const IQMPOMatElement &other) const;
+    bool 
+    operator==(const IQMPOMatElem &other) const
+        {
+        return rowqn == other.rowqn && colqn == other.colqn && 
+                row == other.row && col == other.col && 
+                val == other.val;
+        }
+
+    bool
+    operator<(IQMPOMatElem const& o) const
+        {
+        if(row != o.row)
+            {
+            return row < o.row;
+            }
+        else if(col != o.col)
+            {
+            return col < o.col;
+            }
+        else if(rowqn != o.rowqn)
+            {
+            return rowqn < o.rowqn;
+            }
+        else if(colqn != o.colqn)
+            {
+            return colqn < o.colqn;
+            }
+        return val < o.val;
+        }
     };
     
-bool IQMPOMatElement::
-operator==(IQMPOMatElement const& other) const
-    {
-    return rowqn == other.rowqn && colqn == other.colqn && 
-            row == other.row && col == other.col && 
-            val == other.val;
-    }
-
 struct MatIndex
     {
     int row, col;
@@ -495,7 +570,7 @@ struct Partition
     };
 
 using QNPart = std::map<QN, Partition>;
-using IQMatEls = std::vector<IQMPOMatElement>;
+using IQMatEls = set<IQMPOMatElem>;
 using MPOMatrix = std::vector<std::vector<IQTensor>>;
     
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
@@ -505,6 +580,8 @@ partitionHTerms(SiteSet const& sites,
                 vector<QNPart> & qps, 
                 vector<IQMatEls> & tempMPO)
     {
+    auto N = sites.N();
+
     //
     // NOTE: this optimization of using a map
     // to cache the QN's of various operators assumes
@@ -532,6 +609,8 @@ partitionHTerms(SiteSet const& sites,
         return qn;
         };
 
+    tempMPO.resize(N);
+
     for(HTerm const& ht : terms)
     for(int n = ht.first().i; n <= ht.last().i; ++n)
         {
@@ -543,7 +622,7 @@ partitionHTerms(SiteSet const& sites,
         auto sqn = calcQN(onsite);
         TIMER_STOP(10)
         
-        TIMER_START(12)
+        TIMER_START(11)
         int j=0,k=0;
 
         // qps.at(i) is the partition at the link between sites i+1 and i+2
@@ -585,18 +664,22 @@ partitionHTerms(SiteSet const& sites,
             {
             rewriteFermionic(onsite, leftF);
             }
-        TIMER_STOP(12)
-        
-        TIMER_START(11)
-        //
-        // Add only unique IQMPOMatElements to tempMPO
-        // 
-        auto elem = IQMPOMatElement(lqn, lqn+sqn, j, k, HTerm(c, onsite));
-        auto it = stdx::find(tempMPO.at(n-1),elem);
-        if(it == tempMPO.at(n-1).end()) tempMPO.at(n-1).push_back(elem);
         TIMER_STOP(11)
+        
+        //
+        // Add only unique IQMPOMatElems to tempMPO
+        // TODO: assumes terms are unique I think!
+        // 
+        TIMER_START(12)
+        auto& tn = tempMPO.at(n-1);
+        auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+
+        auto it = tn.find(el);
+        if(it == tn.end()) tn.insert(move(el));
+
+        TIMER_STOP(12)
         }
-            
+
 //#ifdef SHOW_AUTOMPO
 //    println("Left and Right Partials:");
 //    for(unsigned n=0; n<part.size(); n++)
@@ -622,7 +705,7 @@ partitionHTerms(SiteSet const& sites,
 //    println("TempMPO Elements:");
 //    for(unsigned n=0; n<tempMPO.size(); n++)
 //        {
-//        for(IQMPOMatElement const& elem: tempMPO.at(n))
+//        for(IQMPOMatElem const& elem: tempMPO.at(n))
 //            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
 //        println("=========================================");
 //        }
@@ -740,7 +823,7 @@ compressMPO(SiteSet const& sites,
         //auto nsmall = 0;
             
         Complex Zero(0,0);
-        for(IQMPOMatElement const& elem: tempMPO.at(n-1))
+        for(IQMPOMatElem const& elem: tempMPO.at(n-1))
             {
             int k = elem.row;
             int l = elem.col;
@@ -901,7 +984,7 @@ ConstructMPOUsingSVD() const
     const int N = sites_.N();
     
     auto qps = vector<QNPart>(N-1);   // There are N-1 links between N sites
-    auto tempMPO = vector<IQMatEls>(N);
+    auto tempMPO = vector<IQMatEls>();
 
     println("Calling partitionHTerms");
     START_TIMER(1)

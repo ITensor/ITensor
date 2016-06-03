@@ -67,6 +67,20 @@ struct SiteTerm
 
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
+
+    bool
+    operator<(SiteTerm const& o) const
+        {
+        if(i != o.i) return i < o.i;
+        return op < o.op;
+        }
+
+    bool
+    operator>(SiteTerm const& o) const
+        {
+        if(i != o.i) return i > o.i;
+        return op > o.op;
+        }
     };
 
 using SiteTermProd = std::vector<SiteTerm>;
@@ -82,6 +96,11 @@ struct HTerm
     
     bool
     operator==(const HTerm &other) const;
+
+    bool
+    operator<(HTerm const& other) const;
+    bool
+    operator>(HTerm const& other) const;
     
     HTerm&
     operator*=(Real x);
