@@ -37,6 +37,7 @@ SOURCES+= hermitian.cc
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpsalgs.cc 
 SOURCES+= mps/mpo.cc 
+SOURCES+= mps/mpoalgs.cc 
 SOURCES+= mps/autompo.cc
 
 ####################################
@@ -167,3 +168,5 @@ mps/mpsalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= mps/mpo.h
 mps/mpo.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/mps/mpo.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+mps/mpoalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/mps/mpoalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
