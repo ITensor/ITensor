@@ -43,7 +43,7 @@ class autovector // returns T() outside range or unassigned
     static const T&
     defaultRef()
         {
-        constexpr static auto default_ = T();
+        static auto default_ = T();
         return default_;
         }
     public:
