@@ -460,13 +460,7 @@ write(std::ostream& s, ITensorT<I> const& T);
 //
 template<class I>
 ITensorT<I>
-multSiteOps(ITensorT<I> A, ITensorT<I> const& B) 
-    {
-    A.prime(Site);
-    A *= B;
-    A.mapprime(2,1,Site);
-    return A;
-    }
+multSiteOps(ITensorT<I> A, ITensorT<I> const& B);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);

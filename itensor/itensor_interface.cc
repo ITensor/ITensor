@@ -361,4 +361,16 @@ write(std::ostream& s, ITensorT<I> const& T)
 template void write(std::ostream& s, ITensorT<Index> const& T);
 template void write(std::ostream& s, ITensorT<IQIndex> const& T);
 
+template<class I>
+ITensorT<I>
+multSiteOps(ITensorT<I> A, ITensorT<I> const& B) 
+    {
+    A.prime(Site);
+    A *= B;
+    A.mapprime(2,1,Site);
+    return A;
+    }
+template ITensorT<Index> multSiteOps(ITensorT<Index> A, ITensorT<Index> const& B);
+template ITensorT<IQIndex> multSiteOps(ITensorT<IQIndex> A, ITensorT<IQIndex> const& B);
+
 } //namespace itensor
