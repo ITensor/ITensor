@@ -468,6 +468,12 @@ multSiteOps(ITensorT<I> A, ITensorT<I> const& B)
     return A;
     }
 
+std::ostream& 
+operator<<(std::ostream & s, ITensor const& T);
+
+std::ostream& 
+operator<<(std::ostream & s, IQTensor const& T);
+
 } //namespace itensor
 
 #include "itensor_interface.ih"

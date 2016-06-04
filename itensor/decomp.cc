@@ -8,6 +8,7 @@
 #include "itensor/tensor/algs.h"
 #include "itensor/decomp.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/itdata/qutil.h"
 
 namespace itensor {
 

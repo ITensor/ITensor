@@ -6,6 +6,7 @@
 #include "itensor/tensor/sliceten.h"
 #include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/itdata.h"
+#include "itensor/itdata/qutil.h"
 #include "itensor/iqindex.h"
 
 using std::vector;

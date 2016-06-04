@@ -9,11 +9,21 @@
 #include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/itdata/qdense.h"
+#include "itensor/itdata/qutil.h"
 
 using std::vector;
 using std::move;
 
 namespace itensor {
+
+BlOf inline
+make_blof(long b, long o)
+    {
+    BlOf B;
+    B.block = b;
+    B.offset = o;
+    return B;
+    }
 
 const char*
 typeNameOf(QDenseReal const& d) { return "QDenseReal"; }

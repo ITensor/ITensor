@@ -9,6 +9,7 @@
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/iqtensor.h"
+#include "itensor/itdata/qutil.h"
 
 namespace itensor {
 
