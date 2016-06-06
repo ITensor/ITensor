@@ -7,7 +7,7 @@
 
 #include "itensor/global.h"
 #include "itensor/mps/mpo.h"
-#include <map>
+#include <set>
 
 namespace itensor {
 
@@ -143,12 +143,21 @@ struct HTerm
     bool
     proportionalTo(const HTerm& other) const;
     };
+
+struct LessNoCoef
+    {
+    bool
+    operator()(HTerm const& t1, HTerm const& t2) const;
+    };
     
     
 class AutoMPO
     {
-    const SiteSet& sites_;
-    std::vector<HTerm> terms_;
+    public:
+    using storage = std::set<HTerm,LessNoCoef>;
+    private:
+    SiteSet const& sites_;
+    storage terms_;
     bool svd_;
     
     IQMPO ConstructMPOUsingSVD() const;
@@ -206,7 +215,7 @@ class AutoMPO
     SiteSet const&
     sites() const { return sites_; }
 
-    std::vector<HTerm> const&
+    storage const&
     terms() const { return terms_; }
     
     bool usingSVD() const { return svd_; }

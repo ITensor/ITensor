@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
-#include <set>
+#include <map>
 #include "itensor/mps/autompo.h"
 
 using std::move;
@@ -226,6 +226,18 @@ operator<(HTerm const& o) const
     return false;
     }
 
+bool LessNoCoef::
+operator()(HTerm const& t1, HTerm const& t2) const
+    { 
+    if(t1.ops.size() != t2.ops.size()) return t1.ops.size() < t2.ops.size();
+    
+    for(size_t j = 0ul; j < t1.ops.size(); ++j)
+        {
+        if(t1.ops[j] != t2.ops[j]) return t1.ops[j] < t2.ops[j];
+        }
+    return false;
+    }
+
 void HTerm::
 add(const string& op,
     int i,
@@ -279,30 +291,42 @@ proportionalTo(const HTerm& other) const
     }
     
 void AutoMPO::
-add(const HTerm& t)
+add(HTerm const& t)
     { 
-    if(abs(t.coef) == 0) return; 
+    if(abs(t.coef) == 0.0) return; 
     
     //TODO: remove this check or implement
     //      more efficiently; very slow!!
     bool do_check = true;
     if(do_check)
         {
-        // Check if a proportional term already exists
-        auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
-        auto it = find_if(terms_.begin(), terms_.end(), isProportional);
+        //// Check if a proportional term already exists
+        //auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
+        //auto it = find_if(terms_.begin(), terms_.end(), isProportional);
+        //if(it == terms_.end())
+        //    {
+        //    terms_.push_back(t); 
+        //    }
+        //else
+        //    {
+        //    it->coef += t.coef;
+        //    }
+        auto it = terms_.find(t);
         if(it == terms_.end())
             {
-            terms_.push_back(t); 
+            terms_.insert(t);
             }
         else
             {
-            it->coef += t.coef;
+            auto nt = t;
+            nt.coef += it->coef;
+            terms_.erase(it);
+            terms_.insert(nt);
             }
         }
     else
         {
-        terms_.push_back(t);
+        terms_.insert(t);
         }
     }
 
@@ -576,7 +600,7 @@ using MPOMatrix = std::vector<std::vector<IQTensor>>;
 // Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
 void
 partitionHTerms(SiteSet const& sites,
-                vector<HTerm> const& terms,
+                AutoMPO::storage const& terms,
                 vector<QNPart> & qps, 
                 vector<IQMatEls> & tempMPO)
     {
@@ -715,7 +739,7 @@ partitionHTerms(SiteSet const& sites,
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void
 compressMPO(SiteSet const& sites,
-            vector<QNPart> const& part, 
+            vector<QNPart> const& qps, 
             vector<IQMatEls> const& tempMPO,
             vector<MPOMatrix> & finalMPO, 
             vector<IQIndex> & links, 
@@ -748,13 +772,13 @@ compressMPO(SiteSet const& sites,
 
     for(int n = 1; n <= N; ++n)
         {
-        if(n==N || part.at(n-1).empty())
+        if(n==N || qps.at(n-1).empty())
             {
             d_npp[ZeroQN] = 0;        
             }
         else    
             {
-            for(auto& qp : part.at(n-1) )
+            for(auto& qp : qps.at(n-1) )
                 {
                 QN const& qn = qp.first;
                 Partition const& p = qp.second;
