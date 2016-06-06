@@ -743,8 +743,9 @@ compressMPO(SiteSet const& sites,
     
     // For the MPO matrix on site n we need the SVD on both the previous link and the following link
     
-    std::map<QN, ComplexMatrix> V_n, V_npp;
-    std::map<QN, int> d_n, d_npp; 	// num of non-zero singular values for each QN block
+    std::map<QN, ComplexMatrix> V_n;
+ 	// d_n, d_npp are num of non-zero singular values for each QN block
+    std::map<QN, int> d_n;
     
     const QN ZeroQN;
     
@@ -754,16 +755,20 @@ compressMPO(SiteSet const& sites,
     int d_n_tot = d0;
     
     // qn block offset in the compressed MPO
-    std::map<QN, int> qnstart_n, qnstart_npp;
+
+    std::map<QN, int> qnstart_n;
     qnstart_n[ZeroQN] = d0; 
         
-    auto inqn = vector<IndexQN>{};
-    inqn.emplace_back(Index("hl0_0",d_n_tot),ZeroQN);
-    links.at(0) = IQIndex("Hl0",inqn);
+    links.at(0) = IQIndex("Hl0",Index("hl0_0",d_n_tot),ZeroQN);
 
     int max_d = 0;
     for(int n = 1; n <= N; ++n)
         {
+        std::map<QN, int> qnstart_npp;
+        std::map<QN, ComplexMatrix> V_npp;
+        // d_npp is num of non-zero singular values for each QN block
+        std::map<QN, int> d_npp;
+
         if(n==N || qps.at(n-1).empty())
             {
             d_npp[ZeroQN] = 0;        
@@ -774,6 +779,10 @@ compressMPO(SiteSet const& sites,
                 {
                 QN const& qn = qp.first;
                 Partition const& p = qp.second;
+
+                auto& Vq = V_npp[qn];
+                auto& Vre = Vq.Re;
+                auto& Vim = Vq.Im;
                 
                 // Convert the coefficients of the partition to a dense Matrix                
                 auto C = ComplexMatrix(p.coeff);
@@ -782,12 +791,12 @@ compressMPO(SiteSet const& sites,
                 if(C.isComplex())
                     {                    
                     ComplexMatrix U;
-                    SVD(C.Re, C.Im, U.Re, U.Im, D, V_npp[qn].Re, V_npp[qn].Im);
+                    SVD(C.Re, C.Im, U.Re, U.Im, D, Vre,Vim);
                     }
                 else
                     {
                     Matrix U;                
-                    SVD(C.Re, U, D, V_npp[qn].Re);
+                    SVD(C.Re, U, D, Vre);
                     }
 
                 Real epsilon = 1E-14;
@@ -800,25 +809,22 @@ compressMPO(SiteSet const& sites,
 
         qnstart_npp[ZeroQN] = d0;
         
-        inqn.clear();
         int count = 0;
 
         int d_npp_tot = d_npp[ZeroQN]+d0;
         
+        auto inqn = vector<IndexQN>{};
         // Make sure zero QN is first in the list of indices
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),d_npp_tot),ZeroQN);        
-        
-        for(const std::pair<QN, int> &d : d_npp)
+        for(std::pair<QN, int> const& d : d_npp)
             {
-            if(d.first == ZeroQN)
-                continue;   // was already taken care of
+            if(d.first == ZeroQN) continue; // was already taken care of
             
             qnstart_npp[d.first] = d_npp_tot;
             d_npp_tot += d.second;
             
             inqn.emplace_back(Index(format("hl%d_%d",n,count++),d.second),d.first);
             }
-            
         links.at(n) = IQIndex(nameint("Hl",n),inqn);
 
 #ifdef SHOW_AUTOMPO        
@@ -918,30 +924,26 @@ compressMPO(SiteSet const& sites,
         //printfln("nsmall in compressMPO = %d",nsmall);
 
         // Store SVD computed at this step for next link
-        V_n = V_npp;
-        d_n = d_npp;
+        V_n = move(V_npp);
+        d_n = move(d_npp);
         d_n_tot = d_npp_tot;
-        qnstart_n = qnstart_npp;
-        
-        V_npp.clear();
-        d_npp.clear();
-        qnstart_npp.clear();
+        qnstart_n = move(qnstart_npp);
         
         max_d = max(max_d, d_n_tot);
         }
         
-        println("Maximal dimension of the MPO is ", max_d);
-        
+    println("Maximal dimension of the MPO is ", max_d);
+    
 #ifdef SHOW_AUTOMPO
-        for(int n=1; n<=N; n++)
+    for(int n=1; n<=N; n++)
+        {
+        for(unsigned r = 0; r < finalMPO.at(n-1).size(); ++r, println())
+        for(unsigned c = 0; c < finalMPO.at(n-1).at(r).size(); ++c)
             {
-            for(unsigned r = 0; r < finalMPO.at(n-1).size(); ++r, println())
-            for(unsigned c = 0; c < finalMPO.at(n-1).at(r).size(); ++c)
-                {
-                print(finalMPO.at(n-1).at(r).at(c), "\t");
-                }
-            println("=========================================");
+            print(finalMPO.at(n-1).at(r).at(c), "\t");
             }
+        println("=========================================");
+        }
 #endif            
     }
 
@@ -997,7 +999,6 @@ constructMPOTensors(SiteSet const& sites,
 IQMPO AutoMPO::
 ConstructMPOUsingSVD() const
     {
-    
     auto qps = vector<QNPart>();
     auto tempMPO = vector<IQMatEls>();
 
