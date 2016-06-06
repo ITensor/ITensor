@@ -568,7 +568,8 @@ posInVec(SiteTermProd const& ops,
 
 struct Partition
     {
-    std::vector<SiteTermProd> left,right;
+    std::vector<SiteTermProd> left;
+    std::vector<SiteTermProd> right;
     std::vector<CoefMatElement> coeff;        
     };
 
@@ -585,10 +586,18 @@ partitionHTerms(SiteSet const& sites,
     {
     auto N = sites.N();
 
+
     //
     // NOTE: this optimization of using a map
     // to cache the QN's of various operators assumes
     // that each site has the same type of Hilbert space
+    // TODO: improve by having a separate map at each link,
+    //       simulatenously take the left,right fields OUT
+    //       of Partition since these don't get used later
+    //       in compressMPO anyway
+    // Even better: when going from left to right, QNs computed
+    // on site i can be used to compute QNs of operator strings
+    // continuing to site i+1
     //
     auto qnmap = std::map<std::string,QN>();
     auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
@@ -612,6 +621,7 @@ partitionHTerms(SiteSet const& sites,
         return qn;
         };
 
+    qps.resize(N-1);
     tempMPO.resize(N);
 
     for(HTerm const& ht : terms)
@@ -641,17 +651,18 @@ partitionHTerms(SiteSet const& sites,
             }
         else
             {
+            auto& leftlink = qps.at(n-2)[lqn];
             if(right.empty()) // term ending on site n
                 {
-                j = posInVec(onsite, qps.at(n-2)[lqn].right);
+                j = posInVec(onsite, leftlink.right);
                 }
             else
                 {
-                j = posInVec(mult(onsite,right), qps.at(n-2)[lqn].right);
+                j = posInVec(mult(onsite,right), leftlink.right);
                 k = posInVec(right, qps.at(n-1)[lqn+sqn].right);
                 }
-            auto l = posInVec(left, qps.at(n-2)[lqn].left);
-            qps.at(n-2)[lqn].coeff.emplace_back(MatIndex(l, j), ht.coef);
+            auto l = posInVec(left,leftlink.left);
+            leftlink.coeff.emplace_back(MatIndex(l, j), ht.coef);
             }
             
         // Place the coefficient of the HTerm when the term starts
@@ -726,29 +737,31 @@ compressMPO(SiteSet const& sites,
             Complex tau = 0)
     {
     const int N = sites.N();
+
+    finalMPO.resize(N);
+    links.resize(N+1);
     
     // For the MPO matrix on site n we need the SVD on both the previous link and the following link
     
     std::map<QN, ComplexMatrix> V_n, V_npp;
     std::map<QN, int> d_n, d_npp; 	// num of non-zero singular values for each QN block
-    int d_n_tot = 0, d_npp_tot = 0;
-    int max_d = 0;
     
     const QN ZeroQN;
     
     int d0 = isExpH ? 1 : 2;
     
     d_n[ZeroQN] = 0;
-    d_n_tot = d0;
+    int d_n_tot = d0;
     
     // qn block offset in the compressed MPO
     std::map<QN, int> qnstart_n, qnstart_npp;
     qnstart_n[ZeroQN] = d0; 
         
-    vector<IndexQN> inqn;
+    auto inqn = vector<IndexQN>{};
     inqn.emplace_back(Index("hl0_0",d_n_tot),ZeroQN);
     links.at(0) = IQIndex("Hl0",inqn);
 
+    int max_d = 0;
     for(int n = 1; n <= N; ++n)
         {
         if(n==N || qps.at(n-1).empty())
@@ -790,7 +803,7 @@ compressMPO(SiteSet const& sites,
         inqn.clear();
         int count = 0;
 
-        d_npp_tot = d_npp[ZeroQN]+d0;
+        int d_npp_tot = d_npp[ZeroQN]+d0;
         
         // Make sure zero QN is first in the list of indices
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),d_npp_tot),ZeroQN);        
@@ -984,9 +997,8 @@ constructMPOTensors(SiteSet const& sites,
 IQMPO AutoMPO::
 ConstructMPOUsingSVD() const
     {
-    const int N = sites_.N();
     
-    auto qps = vector<QNPart>(N-1);   // There are N-1 links between N sites
+    auto qps = vector<QNPart>();
     auto tempMPO = vector<IQMatEls>();
 
     println("Calling partitionHTerms");
@@ -996,8 +1008,8 @@ ConstructMPOUsingSVD() const
 
     //return IQMPO();
     
-    auto finalMPO = vector<MPOMatrix>(N);
-    auto links = vector<IQIndex>(N+1);
+    auto finalMPO = vector<MPOMatrix>();
+    auto links = vector<IQIndex>();
 
     println("Calling compressMPO");
     START_TIMER(2)
