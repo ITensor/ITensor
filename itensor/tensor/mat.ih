@@ -1,3 +1,10 @@
+//
+// Distributed under the ITensor Library License, Version 1.2.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_MAT_IH__
+#define __ITENSOR_MAT_IH__
+
 namespace itensor {
 
 template<typename V>
@@ -124,3 +131,5 @@ randomMatC(CtrArgs&&... args)
     }
 
 } //namespace itensor
+
+#endif

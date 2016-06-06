@@ -1,5 +1,13 @@
+//
+// Distributed under the ITensor Library License, Version 1.2.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_MATRIX_ALGS__IH_
+#define __ITENSOR_MATRIX_ALGS__IH_
+
 namespace itensor {
 
+namespace detail {
 
 //Helper for diagHermitian
 template<typename Iter, typename V>
@@ -29,6 +37,12 @@ copyNegElts(Iter mre,
         ++mim;
         }
     }
+
+    int
+    hermitianDiag(int N, Real *Udata, Real *ddata);
+    int
+    hermitianDiag(int N, Cplx *Udata,Real *ddata);
+} //namespace detail
 
 template<class MatM, 
          class MatU,
@@ -62,26 +76,11 @@ diagHermitian(MatM && M,
 #endif
 
     //Set U = -M so eigenvalues will be sorted from largest to smallest
-    if(isContiguous(M)) copyNegElts(M.data(),makeRef(U));
-    else                copyNegElts(M.cbegin(),makeRef(U));
+    if(isContiguous(M)) detail::copyNegElts(M.data(),makeRef(U));
+    else                detail::copyNegElts(M.cbegin(),makeRef(U));
 
-    struct Diag
-        {
-        LAPACK_INT static
-        call(LAPACK_INT N, Real *Udata, Real *ddata)
-            {
-            LAPACK_INT info = 0;
-            dsyev_wrapper('V','U',N,Udata,ddata,info);
-            return info;
-            }
-        LAPACK_INT static
-        call(LAPACK_INT N, Cplx *Udata,Real *ddata)
-            {
-            return zheev_wrapper(N,Udata,ddata);
-            }
-        };
 
-    auto info = Diag::call(N,U.data(),d.data());
+    auto info = detail::hermitianDiag(N,U.data(),d.data());
     if(info != 0) 
         {
         //println("M = \n",M);
@@ -181,3 +180,4 @@ SVD(MatM && M,
 
 } //namespace itensor
 
+#endif

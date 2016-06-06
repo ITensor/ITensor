@@ -18,6 +18,20 @@ using std::tie;
 
 namespace itensor {
 
+namespace detail {
+    int
+    hermitianDiag(int N, Real *Udata, Real *ddata)
+        {
+        LAPACK_INT info = 0;
+        dsyev_wrapper('V','U',N,Udata,ddata,info);
+        return info;
+        }
+    int
+    hermitianDiag(int N, Cplx *Udata,Real *ddata)
+        {
+        return zheev_wrapper(N,Udata,ddata);
+        }
+} //namespace detail
 
 //void
 //diagHermitian(MatrixRefc const& Mre,

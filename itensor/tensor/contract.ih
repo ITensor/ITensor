@@ -1,3 +1,10 @@
+//
+// Distributed under the ITensor Library License, Version 1.2.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_CONTRACT_IH__
+#define __ITENSOR_CONTRACT_IH__
+
 namespace itensor {
 
 namespace detail {
@@ -98,3 +105,5 @@ ncprod(TA && A, Labels const& ai,
     }
 
 } // namespace itensor
+
+#endif
