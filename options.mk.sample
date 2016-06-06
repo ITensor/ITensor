@@ -12,7 +12,7 @@ CCCOM=g++ -m64 -std=c++11
 
 ## Clang compiler (good to use on Mac OS)
 
-#CCCOM=clang++ -std=c++1y
+#CCCOM=clang++ -std=c++11
 
 #########
 
