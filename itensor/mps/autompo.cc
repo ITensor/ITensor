@@ -847,11 +847,11 @@ compressMPO(SiteSet const& sites,
         Complex Zero(0,0);
         for(IQMPOMatElem const& elem: tempMPO.at(n-1))
             {
-            int k = elem.row;
-            int l = elem.col;
+            int j = elem.row;
+            int k = elem.col;
             
-            // if constructing ExpH multiply by tau when term is starting (k=0)
-            HTerm t = (isExpH && k==0) ? elem.val*(-tau) : elem.val;
+            // if constructing ExpH multiply by tau when term is starting (j=0)
+            HTerm t = (isExpH && j==0) ? elem.val*(-tau) : elem.val;
 
             if(isZero(t.coef,1E-13)) continue;
 
@@ -870,7 +870,7 @@ compressMPO(SiteSet const& sites,
                 op = multSiteOps(op,sites.op(it->op,n));
                 }
     
-            if(l==0 && k==0)	// on-site terms
+            if(j==0 && k==0)	// on-site terms
                 {
                 auto coef = t.coef;
                 if(not isZero(coef,1E-13))
@@ -878,42 +878,42 @@ compressMPO(SiteSet const& sites,
                     finalMPO.at(n-1).at(rowOffset).at(0) += coef*op;
                     }
                 }
-            else if(k==0)  	// terms starting on site n
+            else if(j==0)  	// terms starting on site n
                 {
-                for(int j=1; j<=d_npp[elem.colqn]; j++)
-                    if(V_npp[elem.colqn](j,l) != Zero) // 1-based access of matrix elements
+                for(int i=1; i<=d_npp[elem.colqn]; i++)
+                    if(V_npp[elem.colqn](i,k) != Zero) // 1-based access of matrix elements
                         {
-                        auto coef = t.coef*V_npp[elem.colqn](j,l);
+                        auto coef = t.coef*V_npp[elem.colqn](i,k);
                         if(not isZero(coef,1E-13))
                             {
-                            finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+j-1) += coef*op;
+                            finalMPO.at(n-1).at(rowOffset).at(qnstart_npp[elem.colqn]+i-1) += coef*op;
                             }
                         }
                         
                 }
-            else if(l==0) 	// terms ending on site n
+            else if(k==0) 	// terms ending on site n
                 {
-                for(int i=1; i<=d_n[elem.rowqn]; i++)
-                    if(V_n[elem.rowqn](i,k) != Zero) // 1-based access of matrix elements
+                for(int r=1; r<=d_n[elem.rowqn]; r++)
+                    if(V_n[elem.rowqn](r,j) != Zero) // 1-based access of matrix elements
                         {
-                        auto coef = t.coef*V_n[elem.rowqn](i,k);
+                        auto coef = t.coef*V_n[elem.rowqn](r,j);
                         if(not isZero(coef,1E-13))
                             {
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(0) += coef*op;
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+r-1).at(0) += coef*op;
                             }
                         }
                 }
             else 
                 {
-                for(int i = 1; i <= d_n[elem.rowqn];   ++i)
-                for(int j = 1; j <= d_npp[elem.colqn]; ++j) 
+                for(int r = 1; r <= d_n[elem.rowqn];   ++r)
+                for(int c = 1; c <= d_npp[elem.colqn]; ++c) 
                     {
-                    if((V_n[elem.rowqn](i,k) != Zero)  && (V_npp[elem.colqn](j,l) != Zero) ) // 1-based access of matrix elements
+                    if((V_n[elem.rowqn](r,j) != Zero)  && (V_npp[elem.colqn](c,k) != Zero) ) // 1-based access of matrix elements
                         {
-                        auto coef = t.coef*V_n[elem.rowqn](i,k)*V_npp[elem.colqn](j,l);
+                        auto coef = t.coef*V_n[elem.rowqn](r,j)*V_npp[elem.colqn](c,k);
                         if(not isZero(coef,1E-13))
                             {
-                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+i-1).at(qnstart_npp[elem.colqn]+j-1) 
+                            finalMPO.at(n-1).at(qnstart_n[elem.rowqn]+r-1).at(qnstart_npp[elem.colqn]+c-1) 
                                 += coef*op;
                             }
                         }
