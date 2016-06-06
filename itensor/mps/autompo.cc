@@ -295,38 +295,17 @@ add(HTerm const& t)
     { 
     if(abs(t.coef) == 0.0) return; 
     
-    //TODO: remove this check or implement
-    //      more efficiently; very slow!!
-    bool do_check = true;
-    if(do_check)
+    auto it = terms_.find(t);
+    if(it == terms_.end())
         {
-        //// Check if a proportional term already exists
-        //auto isProportional = [&t](const HTerm &ht) {return ht.proportionalTo(t); };
-        //auto it = find_if(terms_.begin(), terms_.end(), isProportional);
-        //if(it == terms_.end())
-        //    {
-        //    terms_.push_back(t); 
-        //    }
-        //else
-        //    {
-        //    it->coef += t.coef;
-        //    }
-        auto it = terms_.find(t);
-        if(it == terms_.end())
-            {
-            terms_.insert(t);
-            }
-        else
-            {
-            auto nt = t;
-            nt.coef += it->coef;
-            terms_.erase(it);
-            terms_.insert(nt);
-            }
+        terms_.insert(t);
         }
     else
         {
-        terms_.insert(t);
+        auto nt = t;
+        nt.coef += it->coef;
+        terms_.erase(it);
+        terms_.insert(nt);
         }
     }
 
