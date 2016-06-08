@@ -7,12 +7,18 @@
 ##
 ## Set which compiler to use by defining CCCOM:
 ## GNU GCC compiler
-
 CCCOM=g++ -m64 -std=c++11
 
 ## Clang compiler (good to use on Mac OS)
-
 #CCCOM=clang++ -std=c++11
+
+## GCC On Windows cygwin
+## Extra flags are workaround for limitations
+## of this compiler with Windows binary format
+#CCCOM=g++ -std=c++11 -Wa,-mbig-obj -O2
+
+## Intel C++ Compiler not recommended,
+## As of June 2016 it does not fully support C++11
 
 #########
 
