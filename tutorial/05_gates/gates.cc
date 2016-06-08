@@ -67,9 +67,6 @@ main()
             // the noprime or mapprime methods.
             //
 
-            AA *= G;
-            AA.noprime();
-
             auto U = psi.A(b);
             ITensor D,V;
             svd(AA,U,D,V,{"Cutoff",1E-10});
