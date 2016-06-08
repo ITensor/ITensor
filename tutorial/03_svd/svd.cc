@@ -1,13 +1,9 @@
-#include "itensor/util/print_macro.h"
-#include "itensor/decomp.h"
-#include "itensor/tensor/algs.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
-int
-main(int argc, char* argv[])
+int main()
     {
-
     //
     // SVD of matrix M
     //
@@ -31,20 +27,20 @@ main(int argc, char* argv[])
     Print(d);
     Print(V);
 
-    auto Dtrunc = Matrix(maxm,maxm);
-    stdx::fill(Dtrunc,0);
-
     int nkeep = 2;
-    for(auto j : range1(nkeep))
+    auto Dtrunc = Matrix(maxm,maxm);
+    for(auto j : range(nkeep))
+        {
         Dtrunc(j,j) = d(j);
+        }
 
-    auto MM = U*Dtrunc*V;
+    auto Mtrunc = U*Dtrunc*transpose(V);
+    Print(Mtrunc);
 
-    auto Diff = MM-M;
-    auto D2 = transpose(Diff)*Diff;
-    Real n2 = D2(1,1) + D2(2,2) + D2(3,3);
+    auto diff = norm(M-Mtrunc);
+    auto diff2 = sqr(diff);
 
-    Print(n2);
+    printfln("|M-Mtrunc|^2 = %.2f",diff2);
 
     println();
     
