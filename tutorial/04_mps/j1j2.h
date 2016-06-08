@@ -1,10 +1,7 @@
 #ifndef __J1J2_H
 #define __J1J2_H
 
-#include "itensor/mps/mps.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/autompo.h"
+#include "itensor/all.h"
 
 namespace itensor {
 

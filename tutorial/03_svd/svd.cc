@@ -65,7 +65,8 @@ int main()
     for(Real mix = 0; mix <= 1.; mix += 0.1)
         {
         //
-        // Create a new wavefunction that is 
+        // TODO: ADD CODE here to create
+        // a new wavefunction that is 
         // (1-mix) times a product state plus (mix)
         // times a singlet (i.e. maximally entangled state).
         //

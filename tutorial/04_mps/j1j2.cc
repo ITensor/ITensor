@@ -12,26 +12,26 @@ B(SiteSet const& sites, int b)
     return B_;
     }
 
-int
-main(int argc, char* argv[])
+int main()
     {
     int N = 20;
 
     auto sites = SpinHalf(N);
 
-    auto J2s = vector<Real>(1,NAN);
-    auto dimer = vector<Real>(1,NAN);
+    auto J2s = vector<Real>();
+    auto dimer = vector<Real>();
 
     for(Real J2 = 0.0; J2 <= 0.5; J2 += 0.05)
         {
         //
-        // Compute ground state using black box
+        // Compute ground state using
+        // "black box" routine (or have a look at j1j2.h)
         //
         MPS psi = computeGroundState(sites,J2);
 
         Real val = 0;
         //
-        // Write code here that
+        // TODO: ADD CODE here that
         // measures the dimer order parameter:
         //
         // B(N/2) - 1/2*B(N/2-1) - 1/2*B(N/2+1)
@@ -41,7 +41,7 @@ main(int argc, char* argv[])
         dimer.push_back(val);
         }
 
-    for(int j = 1; j < int(dimer.size()); ++j)
+    for(auto j : range(J2s))
         {
         printfln("%.5f %.10f",J2s.at(j),dimer.at(j));
         }

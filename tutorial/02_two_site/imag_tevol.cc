@@ -121,9 +121,9 @@ int main()
     for(int ord = max_order-1; ord >= 1; --ord)
         {
         //
-        //
-        // Fill in code here.
-        //
+        // TODO: ADD CODE here to compute
+        // exponential of H, saving result
+        // in tensor expH
         //
         }
 
