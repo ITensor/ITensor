@@ -51,7 +51,8 @@ main()
             //
             // TODO: ADD CODE here that applies 
             // the gate G to the MPS bond
-            // tensor "AA"
+            // tensor "AA" by multiplying
+            // G and AA using the * operator
             //
             // G can be treated as an ITensor
             // with index structure:
