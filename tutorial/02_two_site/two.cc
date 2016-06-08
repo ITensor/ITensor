@@ -1,5 +1,4 @@
-#include "itensor/util/print_macro.h"
-#include "itensor/itensor.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
@@ -28,10 +27,8 @@ makeSz(Index const& s)
     return Sz;
     }
 
-int
-main(int argc, char* argv[])
+int main()
     {
-
     //
     // Two-site wavefunction
     // initialized to a singlet
@@ -47,7 +44,7 @@ main(int argc, char* argv[])
 
     PrintData(psi);
 
-    //exit(0);
+    //EXIT //uncomment to exit here
 
     //
     // Single-site operators
@@ -64,14 +61,13 @@ main(int argc, char* argv[])
     PrintData(Sp1);
     PrintData(Sm1);
 
-    //exit(0);
+    //EXIT //uncomment to exit here
 
     //
     // Two-site Heisenberg Hamiltonian
     //
 
     auto H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
-
 
     //
     // Energy expectation value

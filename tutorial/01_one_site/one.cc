@@ -1,10 +1,8 @@
-#include "itensor/util/print_macro.h"
-#include "itensor/itensor.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
-int
-main(int argc, char* argv[])
+int main()
     {
     //
     // Single-site wavefunction
@@ -25,7 +23,7 @@ main(int argc, char* argv[])
 
     PrintData(psi);
     
-    //exit(0); //uncomment to exit here
+    //EXIT //uncomment to exit here
 
     //
     // Operators 
@@ -43,7 +41,7 @@ main(int argc, char* argv[])
     PrintData(Sz);
     PrintData(Sx);
 
-    //exit(0); //uncomment to exit here
+    //EXIT //uncomment to exit here
 
     //
     // Product Sx * phi 
@@ -55,7 +53,7 @@ main(int argc, char* argv[])
 
     PrintData(phi);
 
-    //exit(0); //uncomment to exit here
+    //EXIT //uncomment to exit here
 
     //
     // 45* angle spin
@@ -69,7 +67,7 @@ main(int argc, char* argv[])
 
     PrintData(psi);
 
-    //exit(0); //uncomment to exit here
+    //EXIT //uncomment to exit here
 
     //
     // Expectation values

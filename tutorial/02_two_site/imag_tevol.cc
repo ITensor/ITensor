@@ -1,6 +1,4 @@
-#include "itensor/util/print_macro.h"
-#include "itensor/itensor.h"
-#include "itensor/decomp.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
@@ -39,8 +37,7 @@ makeSz(Index const& s)
     }
 
 
-int
-main(int argc, char* argv[])
+int main()
     {
 
     //
