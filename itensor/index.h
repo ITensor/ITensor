@@ -113,11 +113,11 @@ class Index
 
     //Return an IndexVal with specified value
     IndexVal
-    operator()(long val);
+    operator()(long val) const;
 
     //Return copy of this Index with primelevel plev
     Index
-    operator[](int plev);
+    operator[](int plev) const;
 
     // Conjugate this Index.
     // Currently has no effect; exists for forward compatibility

@@ -153,13 +153,13 @@ noprimeEquals(Index const& other) const
     }
 
 IndexVal Index::
-operator()(long val)
+operator()(long val) const
     {
     return IndexVal(*this,val);
     }
 
 Index Index::
-operator[](int plev) 
+operator[](int plev) const
     { 
     auto I = *this;
     I.primeLevel(plev); 
