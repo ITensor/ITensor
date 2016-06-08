@@ -1,11 +1,11 @@
-#include "itensor/mps/tevol.h"
+#include "itensor/all.h"
 #include "Heisenberg.h"
 
 using std::vector;
 using namespace itensor;
 
 int
-main(int argc, char* argv[])
+main()
     {
     int N = 20;
 
@@ -16,7 +16,7 @@ main(int argc, char* argv[])
     Real ttotal = 10;
     Real tstep = 0.1;
 
-    vector<Gate> gates;
+    auto gates = vector<Gate>();
     auto type = Gate::tImag;
 
     for(int b = 1; b < N; ++b)
@@ -49,7 +49,7 @@ main(int argc, char* argv[])
             ITensor AA = psi.A(b)*psi.A(b+1);
 
             //
-            // Write code here that applies 
+            // TODO: ADD CODE here that applies 
             // the gate G to the MPS bond
             // tensor "AA"
             //
@@ -67,16 +67,21 @@ main(int argc, char* argv[])
             // the noprime or mapprime methods.
             //
 
-            ITensor D;
-            svd(AA,psi.Anc(b),D,psi.Anc(b+1));
-            psi.Anc(b+1) *= D;
+            AA *= G;
+            AA.noprime();
+
+            auto U = psi.A(b);
+            ITensor D,V;
+            svd(AA,U,D,V,{"Cutoff",1E-10});
+            psi.setA(b,U);
+            psi.setA(b+1,D*V);
             }
         psi.normalize();
         printfln("Step %d/%d",step,nt);
         }
 
     MPO H = Heisenberg(sites);
-    printfln("Energy = %.20f",psiHphi(psi,H,psi));
+    printfln("Energy = %.20f",overlap(psi,H,psi));
 
 
     return 0;
