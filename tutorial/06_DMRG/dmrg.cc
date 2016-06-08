@@ -1,13 +1,8 @@
-#include "itensor/eigensolver.h"
-#include "itensor/mps/localmpo.h"
-#include "itensor/mps/sweeps.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/autompo.h"
+#include "itensor/all.h"
 
 using namespace itensor;
 
-int
-main(int argc, char* argv[])
+int main()
     {
     int N = 100;
 
@@ -78,7 +73,8 @@ main(int argc, char* argv[])
                 //Add code:
                 //
                 // Shift orthogonality center
-                // to the right
+                // to the right by multiplying
+                // singular values into B
                 //
                 }
             else
@@ -87,7 +83,8 @@ main(int argc, char* argv[])
                 //Add code:
                 //
                 // Shift orthogonality center
-                // to the left
+                // to the right by multiplying
+                // singular values into A
                 //
                 }
 
