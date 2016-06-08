@@ -39,17 +39,12 @@ makeSz(Index const& s)
 
 int main()
     {
-
     //
-    // Two-site wavefunction
-    // initialized to a singlet
+    // Random initial wavefunction
     //
-    
     auto s1 = Index("s1",2,Site);
     auto s2 = Index("s2",2,Site);
-
-    auto psi = ITensor(s1,s2); //default initialized to zero
-
+    auto psi = ITensor(s1,s2);
     randomize(psi);
     psi *= 1./norm(psi);
 
@@ -58,7 +53,6 @@ int main()
     //
     // Single-site operators
     //
-
     auto Sz1 = makeSz(s1);
     auto Sz2 = makeSz(s2);
     auto Sp1 = makeSp(s1);
@@ -71,45 +65,30 @@ int main()
     //
     // Two-site Heisenberg Hamiltonian
     //
-
     ITensor H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
 
-
-    //
-    // Energy expectation value
-    //
-
-    auto cpsi = dag(prime(psi));
-    Real initEn = (cpsi * H * psi).real();
-
+    // Initial energy expectation value
+    Real initEn = (dag(prime(psi)) * H * psi).real();
     printfln("\nInitial energy = %.10f",initEn);
 
-    //
-    // Exponentiate H to form exp(-beta*H/2)
-    // 
-    // Use the formula:
-    // exp(x) = 1 + x + x^2/2! + x^3/3! + ...
-    //        = 1 + x * (1 + x/2 * (1 + x/3 * (...)))
-    //        ~ ((x/3 + 1) * x/2 + 1) * x + 1
-    //
-    // to build up exp(x) in the for loop below.
-
-    const Real beta = 10;
-    const int max_order = 100;
-
-    const ITensor I = Id1*Id2;
-
-    ITensor x = H*(-beta);
-
-    //Make expH = (x/M + 1), similar to the innermost
-    //parentheses in the formula above:
-    ITensor expH = x/max_order + I;
-
-    x.mapprime(1,2);
-    x.mapprime(0,1);
 
     //
-    // The tensor x now looks like:
+    // Pieces needed to build exp(-beta*H)
+    //
+    Real beta = 10;
+    int max_order = 100;
+    ITensor Id = Id1*Id2;
+    ITensor bH = (-beta)*H;
+
+    //Make expH = (bH/M + 1), similar to the innermost
+    //parentheses in the formula below:
+    ITensor expH = bH/max_order + Id;
+
+    bH.mapprime(1,2);
+    bH.mapprime(0,1);
+
+    //
+    // The tensor bH now looks like:
     //
     //    s1''   s2''
     //    |      |
@@ -117,6 +96,15 @@ int main()
     //    |      |
     //    s1'    s2'
     //
+    //
+    // Exponentiate H to form exp(-beta*H)
+    // 
+    // Use the formula:
+    // exp(bH) = 1 + bH + bH^2/2! + bH^3/3! + ...
+    //        = 1 + bH * (1 + bH/2 * (1 + bH/3 * (...)))
+    //        ~ ((bH/3 + 1) * bH/2 + 1) * bH + 1
+    //
+    // to build up exp(bH) in the for loop below.
 
     for(int ord = max_order-1; ord >= 1; --ord)
         {
@@ -125,17 +113,28 @@ int main()
         // exponential of H, saving result
         // in tensor expH
         //
+        //Steps to do:
+        //1. Multiply expH times bH
+        //2. Divide expH by ord
+        //3. Restore primelevels of expH
+        //   to their original values
+        //   Hint: use expH.mapprime(2,1)
+        //4. Add Id to expH
+        //
         }
 
     ITensor psi_beta = expH*psi;
     psi_beta.noprime();
-    psi_beta *= 1./norm(psi_beta);
+    psi_beta /= norm(psi_beta);
 
     Real En = (dag(prime(psi_beta)) * H * psi_beta).real();
     printfln("Energy at beta = %.3f: %.10f",beta,En);
 
-    ITensor A(s1),B(s2),D;
-
+    //
+    // Inspect entanglement spectrum
+    //
+    auto A = ITensor(s1);
+    ITensor D,B;
     svd(psi_beta,A,D,B);
 
     PrintData(D);
