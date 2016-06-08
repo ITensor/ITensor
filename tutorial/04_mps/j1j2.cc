@@ -4,7 +4,7 @@ using std::vector;
 using namespace itensor;
 
 ITensor
-B(SiteSet const& sites, int b)
+makeB(SiteSet const& sites, int b)
     {
     ITensor B_ = sites.op("Sz",b)*sites.op("Sz",b+1)
               + 0.5*sites.op("Sp",b)*sites.op("Sm",b+1)
@@ -29,16 +29,52 @@ int main()
         //
         MPS psi = computeGroundState(sites,J2);
 
-        Real val = 0;
+        Real D = 0.;
         //
-        // TODO: ADD CODE here that
-        // measures the dimer order parameter:
+        // We will add code below to
+        // measure the dimer order parameter:
         //
-        // B(N/2) - 1/2*B(N/2-1) - 1/2*B(N/2+1)
+        // D = B_(N/2) - 1/2*B_(N/2-1) - 1/2*B_(N/2+1)
+        //
+        // Tip: to prime only physical indices
+        // do prime(...,Site)
         //
 
+        //
+        // Compute:  <B_(N/2)>
+        //
+        auto i1 = N/2;
+        psi.position(i1);
+        auto B1 = makeB(sites,i1);
+        auto wf1 = psi.A(i1)*psi.A(i1+1);
+        // compute <wf1|B1|wf1>
+        D +=  (dag(prime(wf1,Site)) * B1 * wf1).real();
+
+        //
+        // Compute: -1/2 <B_(N/2-1)>
+        //
+        auto i2 = N/2-1;
+        psi.position(i2);
+        auto B2 = makeB(sites,i2);
+        auto wf2 = psi.A(i2)*psi.A(i2+1);
+        //TODO: ADD CODE to compute <wf2|B2|wf2>
+        //      replacing the ... below
+        //D += (-0.5) * ...
+
+        //
+        // Compute: -1/2 <B_(N/2+1)>
+        //
+        auto i3 = N/2+1;
+        psi.position(i3);
+        auto B3 = makeB(sites,i3);
+        auto wf3 = psi.A(i3)*psi.A(i3+1);
+        //TODO: ADD CODE to compute <wf3|B3|wf3>
+        //      replacing the ... below
+        //D +=  (-0.5) * ...
+
+
         J2s.push_back(J2);
-        dimer.push_back(val);
+        dimer.push_back(D);
         }
 
     for(auto j : range(J2s))
