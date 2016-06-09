@@ -148,7 +148,7 @@ const IQTensor& MPSt<IQTensor>::A(int i) const;
 
 template <class T>
 T& MPSt<T>::
-Anc(int i)
+Aref(int i)
     { 
     if(i < 0) i = N_+i+1;
     setSite(i);

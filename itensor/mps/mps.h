@@ -101,7 +101,9 @@ class MPSt
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
     Tensor& 
-    Anc(int i); //nc stands for non-const
+    Aref(int i);
+    Tensor& 
+    Anc(int i) { return Aref(i); }
 
     MPSt&
     plusEq(MPSt const& R, 
