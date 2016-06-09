@@ -58,7 +58,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ##
 
 #PLATFORM=lapack
-#BLAS_LAPACK_LIBFLAGS=-L/usr/lib -lblas -llapack 
+#BLAS_LAPACK_LIBFLAGS=-lpthread -L/usr/lib -lblas -llapack 
 
 ##
 ## Example using the Intel MKL library
@@ -76,7 +76,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ##
 
 #PLATFORM=openblas
-#BLAS_LAPACK_LIBFLAGS=-L/usr/local/opt/openblas/lib -lopenblas
+#BLAS_LAPACK_LIBFLAGS=-lpthread -L/usr/local/opt/openblas/lib -lopenblas
 #BLAS_LAPACK_INCLUDEFLAGS=-I/usr/local/opt/openblas/include -fpermissive -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE
 
 ##
