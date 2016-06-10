@@ -157,9 +157,9 @@ Aref(int i)
     return A_.at(i); 
     }
 template
-ITensor& MPSt<ITensor>::Anc(int i);
+ITensor& MPSt<ITensor>::Aref(int i);
 template
-IQTensor& MPSt<IQTensor>::Anc(int i);
+IQTensor& MPSt<IQTensor>::Aref(int i);
 
 template <class T>
 void MPSt<T>::
