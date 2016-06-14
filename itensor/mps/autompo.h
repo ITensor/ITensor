@@ -92,7 +92,7 @@ struct HTerm
     
     HTerm() : coef(1) {};
     
-    HTerm(Complex c, const SiteTermProd &prod) : coef(c), ops(prod) {};
+    HTerm(Complex c, SiteTermProd const& prod) : coef(c), ops(prod) {};
     
     bool
     operator==(const HTerm &other) const;

@@ -172,6 +172,31 @@ mult(const SiteTermProd &first, const SiteTermProd &second)
     return prod;
     }    
 
+IQTensor
+computeProd(SiteSet const& sites, SiteTermProd const& p)
+    {
+    auto i = p.front().i;
+    auto op = sites.op(p.front().op,i);
+    for(auto it = p.begin()+1; it != p.end(); ++it)
+        {
+        if(it->i != i) Error("Op on wrong site");
+        op = multSiteOps(op,sites.op(it->op,i));
+        }
+    return op;
+    }
+
+bool
+operator<(SiteTermProd const& p1, SiteTermProd const& p2)
+    { 
+    if(p1.size() != p2.size()) return p1.size() < p2.size();
+    
+    for(size_t j = 0ul; j < p1.size(); ++j)
+        {
+        if(p1[j] != p2[j]) return p1[j] < p2[j];
+        }
+    return false;
+    }
+
 HTerm& HTerm::
 operator*=(Real x)
     {
@@ -217,13 +242,7 @@ bool HTerm::
 operator<(HTerm const& o) const 
     { 
     if(not equal(coef,o.coef,1E-12)) return less(coef,o.coef,1E-12);
-    if(ops.size() != o.ops.size()) return ops.size() < o.ops.size();
-    
-    for(size_t j = 0ul; j < ops.size(); ++j)
-        {
-        if(ops[j] != o.ops[j]) return ops[j] < o.ops[j];
-        }
-    return false;
+    return (ops < o.ops);
     }
 
 bool LessNoCoef::
@@ -525,14 +544,19 @@ ComplexMatrix(vector<CoefMatElement> const& M)
         }
     }
     
-Complex ComplexMatrix::operator() (int i, int j) const
+Complex ComplexMatrix::
+operator()(int i, int j) const
     {
-        Complex re, im;
-        if(Im.Storage())
-            im = Complex(0, Im(i,j));
-        if(Re.Storage())
-            re = Complex(Re(i,j),0);
-        return re+im;
+    Complex z = 0.;
+    if(Im.Storage())
+        {
+        z += Complex(0, Im(i,j));
+        }
+    if(Re.Storage())
+        {
+        z += Complex(Re(i,j),0);
+        }
+    return z;
     }
 
 
