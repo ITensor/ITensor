@@ -1051,15 +1051,13 @@ ConstructMPOUsingSVD() const
 IQMPO AutoMPO::
 toExpHUsingSVD_ZW1(Complex tau) const
     {
-    const int N = sites_.N();
-    
-    auto qps = vector<QNPart>(N-1); // There are N-1 links between N sites
-    vector<IQMatEls> tempMPO(N);
+    auto qps = vector<QNPart>();
+    auto tempMPO = vector<IQMatEls>();
 
     partitionHTerms(sites(),terms(),qps, tempMPO);        
     
-    vector<MPOMatrix> finalMPO(N);
-    vector<IQIndex> links(N+1);
+    auto finalMPO = vector<MPOMatrix>();
+    auto links = vector<IQIndex>();
     
     compressMPO(sites(),qps, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
