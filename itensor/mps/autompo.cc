@@ -319,12 +319,12 @@ add(HTerm const& t)
         {
         terms_.insert(t);
         }
-    else
+    else //found duplicate
         {
         auto nt = t;
         nt.coef += it->coef;
         terms_.erase(it);
-        terms_.insert(nt);
+        terms_.insert(move(nt));
         }
     }
 
