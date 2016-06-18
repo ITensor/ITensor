@@ -83,7 +83,7 @@ diagHImpl(ITensor rho,
     Real docut = -1;
     if(do_truncate)
         {
-        if(DD(1) < 0) DD *= -1; //DEBUG
+        //if(DD(1) < 0) DD *= -1; //DEBUG
         tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         m = DD.size();
         reduceCols(UU,m);
@@ -108,7 +108,7 @@ diagHImpl(ITensor rho,
         showargs.add("Truncate",do_truncate);
         showargs.add("DoRelCutoff",doRelCutoff);
         showargs.add("AbsoluteCutoff",absoluteCutoff);
-        showEigs(DD,truncerr,rho.scale(),showargs);
+        showEigs(DD,truncerr,sqrt(rho.scale()),showargs);
         }
 
     auto newmid = Index(active.rawname(),m,active.type());
