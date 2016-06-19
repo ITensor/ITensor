@@ -74,21 +74,46 @@ find_package(LAPACK REQUIRED)
 list(APPEND CMAKE_LINKER_FLAGS ${LAPACK_LINKER_FLAGS})
 link_libraries(${LAPACK_LIBRARIES})
 
-# build itensor parts
-#add_subdirectory(utilities)
-#add_subdirectory(matrix)
-#add_subdirectory(itensor)
-
+# build itensor 
 include_directories(".")
 file(GLOB_RECURSE itensor_sources RELATIVE ${CMAKE_SOURCE_DIR} itensor/*.cc) 
-list(REMOVE_ITEM itensor_sources itensor/itdata/itlazy.cc)
-#message(STATUS ${itensor_sources})
+list(REMOVE_ITEM itensor_sources "itensor/itdata/itlazy.cc")
 add_library(itensor ${ITENSOR_BUILD_TYPE} ${itensor_sources})
 
 # Enable testing
 option(Testing "Enable testing" ON)
 if (Testing)
     enable_testing()
+    list(APPEND itensor_test_sources 
+        unittest/util_test.cc
+        unittest/algorithm_test.cc
+        unittest/real_test.cc
+        unittest/args_test.cc
+        unittest/matrix_test.cc
+        unittest/tensor_test.cc
+        unittest/sparse_contract_test.cc
+        unittest/index_test.cc
+        unittest/indexset_test.cc
+        unittest/itensor_test.cc
+        unittest/qn_test.cc
+        unittest/iqindex_test.cc
+        unittest/iqtensor_test.cc
+        unittest/decomp_test.cc
+        unittest/autompo_test.cc
+        unittest/regression_test.cc
+        unittest/localop_test.cc
+        )
+
+    message(STATUS ${itensor_test_sources})
+    foreach(test_src ${itensor_test_sources})
+        string(REPLACE ".cc" "" test_name ${test_src})
+        string(REPLACE "unittest/" "" test_name ${test_name})
+        add_executable(${test_name} ${test_src} ./unittest/test.cc)
+        target_link_libraries(${test_name} itensor)
+        add_test(${test_name} ${test_name})
+    endforeach()
+    
+    
 #    add_subdirectory(unittest)
 endif (Testing)
 
