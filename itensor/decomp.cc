@@ -220,7 +220,7 @@ showEigs(Vector const& P,
 
 
 template<typename Tensor>
-void
+Spectrum
 factor(Tensor const& T,
        Tensor      & A,
        Tensor      & B,
@@ -228,7 +228,7 @@ factor(Tensor const& T,
     {
     auto name = args.getString("IndexName","c");
     Tensor D;
-    svd(T,A,D,B,{args,"LeftIndexName=",name});
+    auto spec = svd(T,A,D,B,{args,"LeftIndexName=",name});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
     D.apply([](Real x){ return std::sqrt(std::fabs(x)); });
@@ -236,10 +236,11 @@ factor(Tensor const& T,
     B *= D;
     //Replace index dl with dr
     A *= delta(dl,dr);
+    return spec;
     }
-template void
+template Spectrum
 factor(ITensor const& T,ITensor& A,ITensor & B,Args const& args);
-template void
+template Spectrum
 factor(IQTensor const& T,IQTensor& A,IQTensor & B,Args const& args);
 
 template<typename value_type>

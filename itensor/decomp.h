@@ -40,7 +40,7 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 // connecting A and B.
 // 
 template<typename Tensor>
-void
+Spectrum
 factor(Tensor const& T,
        Tensor      & A,
        Tensor      & B,
