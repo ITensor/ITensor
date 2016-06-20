@@ -8,23 +8,17 @@ int main()
     // Single-site wavefunction
     //
     
-    //Make a dimension 2 Index
     auto s = Index("s",2);
 
-    //Construct an ITensor
-    auto psi = ITensor(s); //default initialized to zero
+    auto psi = ITensor(s); //initialized to zero
 
-    //
-    // Initialize up spin
-    //
+    psi.set(s(1),1.);
 
-    //Set first element to 1.
-    psi.set(s(1),1);
+    // TODO try changing above wavefunction
+    //      to be Sx eigenstate
 
     PrintData(psi);
     
-    //EXIT //uncomment to exit here
-
     //
     // Operators 
     //
@@ -33,7 +27,7 @@ int main()
     auto Sx = ITensor(s,prime(s));
 
     Sz.set(s(1),prime(s)(1),+0.5);
-    Sz.set(s(1),prime(s)(1),-0.5);
+    Sz.set(s(2),prime(s)(2),-0.5);
 
     Sx.set(s(1),prime(s)(2),+0.5);
     Sx.set(s(2),prime(s)(1),+0.5);
@@ -41,45 +35,24 @@ int main()
     PrintData(Sz);
     PrintData(Sx);
 
-    //EXIT //uncomment to exit here
-
     //
-    // Product Sx * phi 
+    // Product Sx * psi 
     //
 
-    ITensor phi = Sx * psi;
-
-    phi.noprime();
-
-    PrintData(phi);
-
-    //EXIT //uncomment to exit here
-
     //
-    // 45* angle spin
+    // TODO 
     //
-
-    Real theta = Pi/4;
-
-    //Extra factors of two come from S=1/2 representation
-    psi.set(s(1),cos(theta/2));
-    psi.set(s(2),sin(theta/2));
-
-    PrintData(psi);
-
-    //EXIT //uncomment to exit here
-
+    // 1. Compute |phi> = Sx |psi> using
+    //    the Sx and psi ITensors above
     //
-    // Expectation values
+    // 2. Next compute: auto olap = <psi|phi>;
+    //    using the * operator and .real() method
+    //
+    // 3. Try normalizing |phi> before computing
+    //    the overlap: phi /= norm(phi);
     //
 
-    auto cpsi = dag(prime(psi));
 
-    Real zz = (cpsi * Sz * psi).real();
-    Real xx = (cpsi * Sx * psi).real();
-
-    println("<Sz> = ", zz);
-    println("<Sx> = ", xx);
 
     return 0;
     }

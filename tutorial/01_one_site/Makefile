@@ -1,8 +1,10 @@
 LIBRARY_DIR=../..
 
+ifdef app
+APP=$(app)
+else
 APP=one
-
-HEADERS=
+endif
 
 CCFILES=$(APP).cc
 
@@ -15,7 +17,7 @@ CCFILES=$(APP).cc
 include $(LIBRARY_DIR)/this_dir.mk
 include $(LIBRARY_DIR)/options.mk
 
-TENSOR_HEADERS=$(LIBRARY_DIR)/itensor/core.h
+TENSOR_HEADERS=$(LIBRARY_DIR)/itensor/all.h
 
 #Mappings --------------
 OBJECTS=$(patsubst %.cc,%.o, $(CCFILES))
