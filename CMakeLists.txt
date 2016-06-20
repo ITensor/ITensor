@@ -6,16 +6,11 @@ project (ITensor CXX)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-if(NOT DEFINED ITENSOR_BUILD_TYPE)
-    set(ITENSOR_BUILD_TYPE STATIC)
+if(NOT DEFINED ITENSOR_LINK_TYPE)
+    set(ITENSOR_LINK_TYPE STATIC)
 endif()
 
-# Select default build type : Release = -03 -DNDEBUG
-if(NOT CMAKE_BUILD_TYPE:String AND NOT CMAKE_CONFIGURATION_TYPES)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-else()
-   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-endif()
+option(ITENSOR_BUILD_PIC "Generate position-independent code (PIC)" OFF)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # rpath fix on a mac
@@ -75,10 +70,23 @@ list(APPEND CMAKE_LINKER_FLAGS ${LAPACK_LINKER_FLAGS})
 link_libraries(${LAPACK_LIBRARIES})
 
 # build itensor 
+string(TOLOWER ${PROJECT_NAME} ITENSOR_LIB_NAME)
 include_directories(".")
 file(GLOB_RECURSE itensor_sources RELATIVE ${CMAKE_SOURCE_DIR} itensor/*.cc) 
 list(REMOVE_ITEM itensor_sources "itensor/itdata/itlazy.cc")
-add_library(itensor ${ITENSOR_BUILD_TYPE} ${itensor_sources})
+add_library(${ITENSOR_LIB_NAME} ${ITENSOR_LINK_TYPE} ${itensor_sources})
+if (ITENSOR_BUILD_PIC)
+    set_target_properties(${ITENSOR_LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+#install itensor
+install(DIRECTORY itensor DESTINATION "include" FILES_MATCHING PATTERN "*.h")
+install(TARGETS ${ITENSOR_LIB_NAME} 
+          EXPORT ${ITENSOR_LIB_NAME} 
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          INCLUDES DESTINATION include)
+install(EXPORT ${ITENSOR_LIB_NAME} NAMESPACE itensor:: DESTINATION share/${ITENSOR_LIB_NAME})
 
 # Enable testing
 option(Testing "Enable testing" ON)
