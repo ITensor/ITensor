@@ -79,15 +79,6 @@ if (ITENSOR_BUILD_PIC)
     set_target_properties(${ITENSOR_LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-#install itensor
-install(DIRECTORY itensor DESTINATION "include" FILES_MATCHING PATTERN "*.h")
-install(TARGETS ${ITENSOR_LIB_NAME} 
-          EXPORT ${ITENSOR_LIB_NAME} 
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib
-          INCLUDES DESTINATION include)
-install(EXPORT ${ITENSOR_LIB_NAME} NAMESPACE itensor:: DESTINATION share/${ITENSOR_LIB_NAME})
-
 # Enable testing
 option(Testing "Enable testing" ON)
 if (Testing)
@@ -112,7 +103,6 @@ if (Testing)
         unittest/localop_test.cc
         )
 
-    message(STATUS ${itensor_test_sources})
     foreach(test_src ${itensor_test_sources})
         string(REPLACE ".cc" "" test_name ${test_src})
         string(REPLACE "unittest/" "" test_name ${test_name})
@@ -120,10 +110,33 @@ if (Testing)
         target_link_libraries(${test_name} itensor)
         add_test(${test_name} ${test_name})
     endforeach()
-    
-    
-#    add_subdirectory(unittest)
 endif (Testing)
+
+#install itensor
+install(DIRECTORY itensor DESTINATION "include" FILES_MATCHING PATTERN "*.h")
+install(TARGETS ${ITENSOR_LIB_NAME} 
+          EXPORT ${ITENSOR_LIB_NAME} 
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          INCLUDES DESTINATION include)
+install(EXPORT ${ITENSOR_LIB_NAME} NAMESPACE itensor:: DESTINATION share/${ITENSOR_LIB_NAME})
+
+#configure ITensorConfig.cmake
+file(WRITE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake 
+"include(${CMAKE_INSTALL_PREFIX}/share/${ITENSOR_LIB_NAME}/itensor.cmake)
+get_target_property(${PROJECT_NAME}_DEP_LIBRARIES itensor::itensor INTERFACE_LINK_LIBRARIES)
+get_target_property(${PROJECT_NAME}_DEP_INCLUDE_DIR itensor::itensor INTERFACE_INCLUDE_DIRECTORIES)
+get_property(itensor_lib_location TARGET itensor::itensor PROPERTY LOCATION)
+
+list(APPEND ${PROJECT_NAME}_LIBRARIES \${${PROJECT_NAME}_DEP_LIBRARIES} \${itensor_lib_location}) 
+list(APPEND ${PROJECT_NAME}_INCLUDE_DIRS \${${PROJECT_NAME}_DEP_INCLUDE_DIR}) 
+
+unset(itensor::itensor)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(${PROJECT_NAME} DEFAULT_MSG ${PROJECT_NAME}_LIBRARIES ${PROJECT_NAME}_INCLUDE_DIRS)
+")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${ITENSOR_LIB_NAME})
+
 
 # Build example
 option(Tutorial "Build tutorial" ON)
