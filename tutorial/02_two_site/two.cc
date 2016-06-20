@@ -3,6 +3,15 @@
 using namespace itensor;
 
 ITensor
+makeId(Index const& s)
+    {
+    auto Id = ITensor(s,prime(s));
+    Id.set(s(1),prime(s)(1),1);
+    Id.set(s(2),prime(s)(2),1);
+    return Id;
+    }
+
+ITensor
 makeSp(Index const& s)
     {
     auto Sp = ITensor(s,prime(s));
@@ -27,56 +36,78 @@ makeSz(Index const& s)
     return Sz;
     }
 
+
 int main()
     {
+    Real beta = 1.;
+
     //
-    // Two-site wavefunction
-    // initialized to a singlet
+    // Random initial wavefunction
     //
-    
     auto s1 = Index("s1",2,Site);
     auto s2 = Index("s2",2,Site);
+    auto psi_init = random(ITensor(s1,s2));
+    psi_init *= 1./norm(psi_init);
 
-    auto psi = ITensor(s1,s2); //default initialized to zero
-
-    psi.set(s1(1),s2(2), 1./sqrt(2));
-    psi.set(s1(2),s2(1),-1./sqrt(2));
-
-    PrintData(psi);
-
-    //EXIT //uncomment to exit here
+    //PrintData(psi);
 
     //
     // Single-site operators
     //
-
     auto Sz1 = makeSz(s1);
     auto Sz2 = makeSz(s2);
     auto Sp1 = makeSp(s1);
     auto Sp2 = makeSp(s2);
     auto Sm1 = makeSm(s1);
     auto Sm2 = makeSm(s2);
-
-    PrintData(Sz1);
-    PrintData(Sp1);
-    PrintData(Sm1);
-
-    //EXIT //uncomment to exit here
+    auto Id1 = makeId(s1);
+    auto Id2 = makeId(s2);
 
     //
     // Two-site Heisenberg Hamiltonian
     //
+    ITensor H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
 
-    auto H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
+    // Initial energy expectation value
+    Real initEn = (dag(prime(psi_init)) * H * psi_init).real();
+    printfln("\nInitial energy = %.10f",initEn);
+
 
     //
-    // Energy expectation value
+    // Make exp(-beta*H)
+    //
+    auto expH = expHermitian(H,-beta);
+
+    auto psi = expH*psi_init;
+    psi.noprime();
+    psi/= norm(psi);
+
+    Real En = (dag(prime(psi)) * H * psi).real();
+    printfln("At beta=%.1f, energy = %.10f",beta,En);
+
+    //
+    // TODO
+    // (1) Compute SVD of psi,
+    //     look at singular values
     //
 
-    auto cpsi = dag(prime(psi));
-    Real E = (cpsi * H * psi).real();
+    //
+    // TODO
+    // (2) Use spectrum of density matrix
+    //     (squares of singular values)
+    //     to compute entanglement entropy
+    //    
+    // Tips:
+    // 
+    // o spectrum.eig(n) is nth density matrix
+    //   eigenvalue (square of singular value)
+    //
+    // o spectrum.size() is number of eigenvalues
+    // 
+    // o Use for(auto n : range1(spectrum)) { ... }
+    //   to loop over n=1,2,...
+    // 
 
-    Print(E);
 
     return 0;
     }
