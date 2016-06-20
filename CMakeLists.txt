@@ -21,7 +21,7 @@ else()
  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
-# enable C++11 
+# set C++11 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     execute_process(
@@ -42,7 +42,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}"
 else ()
     message(FATAL_ERROR "Your C++ compiler does not support C++11.")
 endif ()
-
 
 # LAPACK
 # Check if LAPACK vendor is not defined and try to set it.
@@ -137,20 +136,3 @@ find_package_handle_standard_args(${PROJECT_NAME} DEFAULT_MSG ${PROJECT_NAME}_LI
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${ITENSOR_LIB_NAME})
 
 
-# Build example
-option(Tutorial "Build tutorial" ON)
-if (Tutorial)
-    message(STATUS "Building tutorial")
- #   add_subdirectory(tutorial)
-endif (Tutorial)
-
-# Build sample
-option(Sample "Build samples" ON)
-if (Sample)
-    message(STATUS "Building samples")
-  #  add_subdirectory(sample)
-endif (Sample)
-
-# Install pkg-config file
-#configure_file(ITensor.pc.in ITensor.pc @ONLY)
-#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ITensor.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
