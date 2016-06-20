@@ -124,11 +124,10 @@ install(EXPORT ${ITENSOR_LIB_NAME} NAMESPACE itensor:: DESTINATION share/${ITENS
 #configure ITensorConfig.cmake
 file(WRITE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake 
 "include(${CMAKE_INSTALL_PREFIX}/share/${ITENSOR_LIB_NAME}/itensor.cmake)
-get_target_property(${PROJECT_NAME}_DEP_LIBRARIES itensor::itensor INTERFACE_LINK_LIBRARIES)
 get_target_property(${PROJECT_NAME}_DEP_INCLUDE_DIR itensor::itensor INTERFACE_INCLUDE_DIRECTORIES)
 get_property(itensor_lib_location TARGET itensor::itensor PROPERTY LOCATION)
 
-list(APPEND ${PROJECT_NAME}_LIBRARIES \${${PROJECT_NAME}_DEP_LIBRARIES} \${itensor_lib_location}) 
+list(APPEND ${PROJECT_NAME}_LIBRARIES \${itensor_lib_location}) 
 list(APPEND ${PROJECT_NAME}_INCLUDE_DIRS \${${PROJECT_NAME}_DEP_INCLUDE_DIR}) 
 
 unset(itensor::itensor)
