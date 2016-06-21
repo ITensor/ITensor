@@ -245,7 +245,7 @@ overlap(MPSt<Tensor> const& psi,
 
 template <class Tensor>
 void
-psiHKphi(MPSt<Tensor> const& psi, 
+overlap(MPSt<Tensor> const& psi, 
          MPOt<Tensor> const& H, 
          MPOt<Tensor> const& K,
          MPSt<Tensor> const& phi, 
@@ -254,17 +254,17 @@ psiHKphi(MPSt<Tensor> const& psi,
 
 template <class Tensor>
 Real
-psiHKphi(MPSt<Tensor> const& psi, 
-         MPOt<Tensor> const& H, 
-         MPOt<Tensor> const& K,
-         MPSt<Tensor> const& phi);
+overlap(MPSt<Tensor> const& psi, 
+        MPOt<Tensor> const& H, 
+        MPOt<Tensor> const& K,
+        MPSt<Tensor> const& phi);
 
 template <class Tensor>
 Complex
-psiHKphiC(MPSt<Tensor> const& psi, 
-          MPOt<Tensor> const& H, 
-          MPOt<Tensor> const& K,
-          MPSt<Tensor> const& phi);
+overlapC(MPSt<Tensor> const& psi, 
+         MPOt<Tensor> const& H, 
+         MPOt<Tensor> const& K,
+         MPSt<Tensor> const& phi);
 
 template<class MPOType>
 void 
