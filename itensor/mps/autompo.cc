@@ -101,8 +101,10 @@ OpString(const SiteTermProd &prod)
         return "";
 
     string opstr;
-    for(auto t = prod.begin(); t != prod.end()-1; t++)
+    for(auto t = prod.begin(); t != prod.end()-1; ++t)
+        {
         opstr += t->op + "*";
+        }
     opstr += prod.back().op;
     return opstr;
     }
@@ -494,14 +496,14 @@ struct MatIndex
     bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
     };
 
-struct CoefMatElement
+struct MatElem
     {
     MatIndex ind;
     Complex val;
     
-    CoefMatElement(MatIndex index, Complex v) : ind(index), val(v) {};
+    MatElem(MatIndex index, Complex v) : ind(index), val(v) {};
     
-    bool operator==(const CoefMatElement &other) const {return ind == other.ind && val == other.val; }
+    bool operator==(const MatElem &other) const {return ind == other.ind && val == other.val; }
     };
 
 struct ComplexMatrix
@@ -511,7 +513,7 @@ struct ComplexMatrix
     
     ComplexMatrix() {};
     
-    ComplexMatrix(const std::vector<CoefMatElement> &M);
+    ComplexMatrix(const std::vector<MatElem> &M);
     
     bool isComplex() const { return Im.Storage(); };
     
@@ -519,12 +521,12 @@ struct ComplexMatrix
     };
 
 ComplexMatrix::
-ComplexMatrix(vector<CoefMatElement> const& M)
+ComplexMatrix(vector<MatElem> const& M)
     {
     int nr = 0, nc = 0;
     bool isComplex = false;
     
-    for(const CoefMatElement &elem : M)
+    for(const MatElem &elem : M)
         {
         nr = max(nr, elem.ind.row);
         nc = max(nc, elem.ind.col);
@@ -536,7 +538,7 @@ ComplexMatrix(vector<CoefMatElement> const& M)
     if(isComplex)
         Im.Enlarge(nr, nc);
         
-    for(const CoefMatElement &elem : M)
+    for(const MatElem &elem : M)
         {
         Re(elem.ind.row,elem.ind.col) = elem.val.real();
         if(!isReal(elem.val))
@@ -578,34 +580,40 @@ decomposeTerm(int n,
     right = SiteTermProd(startOfRightPart, ops.end());
     }  
 
+using Basis = map<SiteTermProd,int>;
+
+struct Block
+    {
+    Basis left;
+    Basis right;
+    vector<MatElem> mat;        
+    };
+
+using QNBlock = map<QN, Block>;
+using IQMatEls = set<IQMPOMatElem>;
+using MPOMatrix = vector<vector<IQTensor>>;
+
 // Returns a 1-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
 int
-posInVec(SiteTermProd const& ops, 
-         vector<SiteTermProd> & vec)
-    {   
-    auto it = stdx::find(vec,ops);
-    if(it != vec.end()) return it - vec.begin() + 1;
-    vec.push_back(ops);
-    return vec.size();
-    }
-
-struct Partition
+posInBlock(SiteTermProd const& ops, 
+           Basis & b)
     {
-    std::vector<SiteTermProd> left;
-    std::vector<SiteTermProd> right;
-    std::vector<CoefMatElement> coeff;        
-    };
-
-using QNPart = std::map<QN, Partition>;
-using IQMatEls = set<IQMPOMatElem>;
-using MPOMatrix = std::vector<std::vector<IQTensor>>;
+    auto it = b.find(ops);
+    if(it != b.end()) return it->second;
+    int i = 1+static_cast<int>(b.size());
+    b[ops] = i;
+    return i;
+    }
     
-// Construct left & right partials and the ceofficients matrix on each link as well as the temporary MPO
+//
+// Construct left & right partials and the 
+// coefficients matrix on each link as well as the temporary MPO
+//
 void
 partitionHTerms(SiteSet const& sites,
                 AutoMPO::storage const& terms,
-                vector<QNPart> & qps, 
+                vector<QNBlock> & qbs, 
                 vector<IQMatEls> & tempMPO)
     {
     auto N = sites.N();
@@ -617,7 +625,7 @@ partitionHTerms(SiteSet const& sites,
     // that each site has the same type of Hilbert space
     // TODO: improve by having a separate map at each link,
     //       simulatenously take the left,right fields OUT
-    //       of Partition since these don't get used later
+    //       of Partition/Block since these don't get used later
     //       in compressMPO anyway
     // Even better: when going from left to right, QNs computed
     // on site i can be used to compute QNs of operator strings
@@ -645,7 +653,7 @@ partitionHTerms(SiteSet const& sites,
         return qn;
         };
 
-    qps.resize(N-1);
+    qbs.resize(N-1);
     tempMPO.resize(N);
 
     for(HTerm const& ht : terms)
@@ -662,31 +670,31 @@ partitionHTerms(SiteSet const& sites,
         TIMER_START(11)
         int j=0,k=0;
 
-        // qps.at(i) is the partition at the link between sites i+1 and i+2
-        // i.e. qps.at(0) is the partition at the link between sites 1 and 2
-        // and qps.at(N-2) is the partition at the link between sites N-1 and N
-        // for site n the link on the left is qps.at(n-2) and the link on the right is part.at(n-1)
+        // qbs.at(i) are the blocks at the link between sites i+1 and i+2
+        // i.e. qbs.at(0) are the blocks at the link between sites 1 and 2
+        // and qbs.at(N-2) are the blocks at the link between sites N-1 and N
+        // for site n the link on the left is qbs.at(n-2) and the link on the right is part.at(n-1)
         if(left.empty())
             {
             if(not right.empty()) // term starting on site n
                 {
-                k = posInVec(right, qps.at(n-1)[sqn].right);
+                k = posInBlock(right, qbs.at(n-1)[sqn].right);
                 }
             }
         else
             {
-            auto& leftlink = qps.at(n-2)[lqn];
+            auto& leftlink = qbs.at(n-2)[lqn];
             if(right.empty()) // term ending on site n
                 {
-                j = posInVec(onsite, leftlink.right);
+                j = posInBlock(onsite, leftlink.right);
                 }
             else
                 {
-                j = posInVec(mult(onsite,right), leftlink.right);
-                k = posInVec(right, qps.at(n-1)[lqn+sqn].right);
+                j = posInBlock(mult(onsite,right), leftlink.right);
+                k = posInBlock(right, qbs.at(n-1)[lqn+sqn].right);
                 }
-            auto l = posInVec(left,leftlink.left);
-            leftlink.coeff.emplace_back(MatIndex(l, j), ht.coef);
+            auto l = posInBlock(left,leftlink.left);
+            leftlink.mat.emplace_back(MatIndex(l, j), ht.coef);
             }
             
         // Place the coefficient of the HTerm when the term starts
@@ -733,7 +741,7 @@ partitionHTerms(SiteSet const& sites,
 //            for(const SiteTermProd &prod : p.right)
 //                println(prod);
 //            println("Coef, QN = ", pqn.first);
-//            for(const CoefMatElement &elem : p.coeff)
+//            for(const MatElem &elem : p.mat)
 //                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
 //            }
 //        println("=========================================");
@@ -753,7 +761,7 @@ partitionHTerms(SiteSet const& sites,
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void
 compressMPO(SiteSet const& sites,
-            vector<QNPart> const& qps, 
+            vector<QNBlock> const& qbs, 
             vector<IQMatEls> const& tempMPO,
             vector<MPOMatrix> & finalMPO, 
             vector<IQIndex> & links, 
@@ -793,23 +801,23 @@ compressMPO(SiteSet const& sites,
         // d_npp is num of non-zero singular values for each QN block
         std::map<QN, int> d_npp;
 
-        if(n==N || qps.at(n-1).empty())
+        if(n==N || qbs.at(n-1).empty())
             {
             d_npp[ZeroQN] = 0;        
             }
         else    
             {
-            for(auto& qp : qps.at(n-1) )
+            for(auto& qb : qbs.at(n-1) )
                 {
-                QN const& qn = qp.first;
-                Partition const& p = qp.second;
+                QN const& qn = qb.first;
+                auto const& b = qb.second;
 
                 auto& Vq = V_npp[qn];
                 auto& Vre = Vq.Re;
                 auto& Vim = Vq.Im;
                 
-                // Convert the coefficients of the partition to a dense Matrix                
-                auto C = ComplexMatrix(p.coeff);
+                // Convert the block matrix elements to a dense matrix
+                auto C = ComplexMatrix(b.mat);
                 
                 Vector D;
                 if(C.isComplex())
@@ -1023,12 +1031,12 @@ constructMPOTensors(SiteSet const& sites,
 IQMPO AutoMPO::
 ConstructMPOUsingSVD() const
     {
-    auto qps = vector<QNPart>();
+    auto qbs = vector<QNBlock>();
     auto tempMPO = vector<IQMatEls>();
 
     println("Calling partitionHTerms");
     START_TIMER(1)
-    partitionHTerms(sites(),terms(),qps,tempMPO);
+    partitionHTerms(sites(),terms(),qbs,tempMPO);
     STOP_TIMER(1)
 
     //return IQMPO();
@@ -1038,7 +1046,7 @@ ConstructMPOUsingSVD() const
 
     println("Calling compressMPO");
     START_TIMER(2)
-    compressMPO(sites(),qps,tempMPO,finalMPO,links);
+    compressMPO(sites(),qbs,tempMPO,finalMPO,links);
     STOP_TIMER(2)
 
     println("Calling constructMPOTensors");
@@ -1051,15 +1059,15 @@ ConstructMPOUsingSVD() const
 IQMPO AutoMPO::
 toExpHUsingSVD_ZW1(Complex tau) const
     {
-    auto qps = vector<QNPart>();
+    auto qbs = vector<QNBlock>();
     auto tempMPO = vector<IQMatEls>();
 
-    partitionHTerms(sites(),terms(),qps, tempMPO);        
+    partitionHTerms(sites(),terms(),qbs, tempMPO);        
     
     auto finalMPO = vector<MPOMatrix>();
     auto links = vector<IQIndex>();
     
-    compressMPO(sites(),qps, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
+    compressMPO(sites(),qbs, tempMPO, finalMPO, links, /*isExpH*/ true, tau);
 
     return constructMPOTensors(sites(),finalMPO, links, /*isExpH*/ true);
     }
