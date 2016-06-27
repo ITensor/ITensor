@@ -317,7 +317,7 @@ add(HTerm const& t)
     auto it = terms_.find(t);
     if(it == terms_.end())
         {
-        terms_.insert(t);
+        terms_.insert(move(t));
         }
     else //found duplicate
         {
