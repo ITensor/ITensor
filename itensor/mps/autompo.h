@@ -158,9 +158,6 @@ class AutoMPO
     private:
     SiteSet const& sites_;
     storage terms_;
-    bool svd_;
-    
-    IQMPO ConstructMPOUsingSVD() const;
     
     enum State { New, Op };
 
@@ -209,7 +206,7 @@ class AutoMPO
 
     explicit
     AutoMPO(const SiteSet& sites, const Args& args) 
-        : sites_(sites), svd_(args.getBool("SVD",false))
+        : sites_(sites)
         { }
 
     SiteSet const&
@@ -218,13 +215,9 @@ class AutoMPO
     storage const&
     terms() const { return terms_; }
     
-    bool usingSVD() const { return svd_; }
-    
-    IQMPO toExpHUsingSVD_ZW1(Complex tau) const;
-    
-    operator MPO() const;
+    operator MPO() const { return toMPO<ITensor>(*this); }
 
-    operator IQMPO() const;
+    operator IQMPO() const { return toMPO<IQTensor>(*this); }
     
     template <typename T>
     Accumulator
