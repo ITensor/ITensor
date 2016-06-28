@@ -353,6 +353,10 @@ diagHermitian(ITensorT<I> const& M,
         if(i.primeLevel() == 0) inds.push_back(i);
         }
 
+    if(inds.empty()) 
+        {
+        Error("Input tensor to diagHermitian should have pairs of indices with prime level 0 and 1");
+        }
     auto comb = combiner(std::move(inds),args);
     auto Mc = M*comb;
 
