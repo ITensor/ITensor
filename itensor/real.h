@@ -43,6 +43,15 @@ class TooSmallForReal : public ITError
         { }
     };
 
+bool inline
+equal(Real x, Real y, Real eps = 1E-12)
+    {
+    auto ax = std::fabs(x);
+    auto ay = std::fabs(y);
+    auto scale = (ax < ay ? ay : ax);
+    return std::fabs(x-y) <= scale*eps;
+    }
+
 //
 // LogNum
 //
