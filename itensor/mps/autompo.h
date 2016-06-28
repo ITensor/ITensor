@@ -205,7 +205,7 @@ class AutoMPO
     public:
 
     explicit
-    AutoMPO(const SiteSet& sites, const Args& args) 
+    AutoMPO(const SiteSet& sites, const Args& args = Args::global()) 
         : sites_(sites)
         { }
 
