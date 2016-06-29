@@ -31,19 +31,28 @@ bool
 isApproxReal(const Complex& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
 
 bool
-less(Real const& r1, Real const& r2, Real eps = 1E-12) 
+less(Real x, Real y, Real eps = 1E-12)
     {
-    return (r2-r1) > eps;
+    Real ax = std::fabs(x);
+    Real ay = std::fabs(y);
+    Real scale = (ax < ay ? ay : ax);
+    return (y-x) >= scale*eps;
     }
 bool
-gtr(Real const& r1, Real const& r2, Real eps = 1E-12) 
+gtr(Real x, Real y, Real eps = 1E-12)
     {
-    return (r1-r2) > eps;
+    Real ax = std::fabs(x);
+    Real ay = std::fabs(y);
+    Real scale = (ax < ay ? ay : ax);
+    return (x-y) >= scale*eps;
     }
 bool
-equal(Real const& r1, Real const& r2, Real eps = 1E-12) 
+equal(Real x, Real y, Real eps = 1E-12)
     {
-    return std::fabs(r1-r2) < eps;
+    Real ax = std::fabs(x);
+    Real ay = std::fabs(y);
+    Real scale = (ax < ay ? ay : ax);
+    return std::fabs(x-y) <= scale*eps;
     }
 
 bool
