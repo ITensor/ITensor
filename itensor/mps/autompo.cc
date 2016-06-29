@@ -738,17 +738,20 @@ partitionHTerms(SiteSet const& sites,
         TIMER_STOP(12)
         }
 
-    for(auto n = 1; n <= N; ++n)
-        {
-        printfln("===== tempMPO at %d =====",n);
-        for(auto& el : tempMPO.at(n-1))
-            {
-            printfln("(r,c) = (%d,%d)",el.row,el.col);
-            printfln("QNs %s %s",el.rowqn,el.colqn);
-            printfln("HTerm = \n%s",el.val);
-            println();
-            }
-        }
+    ////
+    //// Debugging printout
+    ////
+    //for(auto n = 1; n <= N; ++n)
+    //    {
+    //    printfln("===== tempMPO at %d =====",n);
+    //    for(auto& el : tempMPO.at(n-1))
+    //        {
+    //        printfln("(r,c) = (%d,%d)",el.row,el.col);
+    //        printfln("QNs %s %s",el.rowqn,el.colqn);
+    //        printfln("HTerm = \n%s",el.val);
+    //        println();
+    //        }
+    //    }
 
 //#ifdef SHOW_AUTOMPO
 //    println("Left and Right Partials:");
@@ -883,8 +886,12 @@ compressMPO(SiteSet const& sites,
     const int N = sites.N();
     Real eps = 1E-14;
 
+    int minm = args.getInt("Minm",1);
     int maxm = args.getInt("Maxm",5000);
-    Real cutoff = args.getReal("Cutoff",1E-14);
+    Real cutoff = args.getReal("Cutoff",1E-16);
+    printfln("Using cutoff = %.2E",cutoff);
+    printfln("Using minm = %d",minm);
+    printfln("Using maxm = %d",maxm);
 
     finalMPO.resize(N);
     links.resize(N+1);
@@ -900,7 +907,7 @@ compressMPO(SiteSet const& sites,
     auto max_d = links.at(0).m();
     for(int n = 1; n <= N; ++n)
         {
-        printfln("=== Making compressed MPO at site %d ===",n);
+        //printfln("=== Making compressed MPO at site %d ===",n);
         //Put in factor of (-tau) if isExpH==true
         if(isExpH) Error("Need to put in factor of (-tau)");
 
@@ -916,9 +923,9 @@ compressMPO(SiteSet const& sites,
             // Convert the block matrix elements to a dense matrix
             auto C = ComplexMatrix(qb.second.mat);
 
-            println("<><><><><><><> Doing SVD: <><><><><><><><><><>");
-            println("qn = ",qn);
-            println("C.Re = \n",C.Re);
+            //println("<><><><><><><> Doing SVD: <><><><><><><><><><>");
+            //println("qn = ",qn);
+            //println("C.Re = \n",C.Re);
 
             auto& Vq = V_npp[qn];
             auto& Vre = Vq.Re;
@@ -938,15 +945,15 @@ compressMPO(SiteSet const& sites,
 
             //square singular vals for call to truncate
             for(int n = 1; n <= D.Length(); ++n) D(n) = sqr(D(n));
-            truncate(D,maxm,1,cutoff);
+            truncate(D,maxm,minm,cutoff);
             int m = D.Length();
 
             int nc = C.Re.Ncols();
             Vre.ReduceDimension(m,nc);
             if(C.isComplex()) Vim.ReduceDimension(m,nc);
 
-            println("Vre = \n",Vre);
-            println("<><><><><><><><><><><><><><><><><><><><><><><>");
+            //println("Vre = \n",Vre);
+            //println("<><><><><><><><><><><><><><><><><><><><><><><>");
             }
 
         int count = 0;
@@ -962,7 +969,7 @@ compressMPO(SiteSet const& sites,
             }
         links.at(n) = IQIndex(nameint("Hl",n),inqn);
 
-        printfln("()()()() Link size at %d is %d",n,links.at(n).m());
+        //printfln("()()()() Link size at %d is %d",n,links.at(n).m());
 
         //
         // Construct the compressed MPO
@@ -1016,18 +1023,13 @@ compressMPO(SiteSet const& sites,
                 }
             else if(j==0)  	// terms starting on site n
                 {
-                printfln("---> Starting elem at %d, op=%s --->",n,t.ops);
-                println("elem.colqn = ",elem.colqn);
-                printfln("M is %d x %d",M.Re.Nrows(),M.Re.Ncols());
                 auto& V = V_npp[elem.colqn];
-                print("V.Re = \n",V.Re);
                 for(int i = 1; i <= V.Nrows(); ++i)
                     {
                     auto z = t.coef*V(i,k);
                     M.Re(rowOffset,i+colShift) += z.real();
                     M.Im(rowOffset,i+colShift) += z.imag();
                     }
-                print("M.Re = \n",M.Re);
                 }
             else if(k==0) 	// terms ending on site n
                 {
@@ -1061,24 +1063,43 @@ compressMPO(SiteSet const& sites,
         
     println("Maximal dimension of the MPO is ", max_d);
     
-    //
-    // Debugging printout
-    //
-    println("Final MPO is:");
-    for(int n=1; n<=N; ++n)
-        {
-        println("---------------------------------------------");
-        println("Site n = ",n);
-        for(auto& qnp_m : finalMPO.at(n-1))
-            {
-            println("QN = ",qnp_m.first.q);
-            println("Op = ",qnp_m.first.prod);
-            println("M.Re = \n",qnp_m.second.Re);
-            println();
-            }
-        println("---------------------------------------------");
-        PAUSE
-        }
+    ////
+    //// Debugging printout
+    ////
+    //println("Final MPO is:");
+    //for(int n=1; n<=N; ++n)
+    //    {
+    //    println("---------------------------------------------");
+    //    println("Site n = ",n);
+    //    println("links.at(n-1) = ",links.at(n-1));
+    //    println("links.at(n) = ",links.at(n));
+    //    for(auto& qnp_m : finalMPO.at(n-1))
+    //        {
+    //        auto& row = links.at(n-1);
+    //        auto& col = links.at(n);
+
+    //        auto rq = qnp_m.first.q;
+
+    //        auto& prod = qnp_m.first.prod;
+    //        auto Op = computeProd(sites,prod);
+    //        auto sq = div(Op);
+    //        auto cq = rq-sq;
+
+    //        auto ri = findByQN(row,rq);
+    //        auto ci = findByQN(col,cq);
+
+    //        println("row QN = ",rq);
+    //        println("site QN = ",sq);
+    //        println("col QN = ",cq);
+    //        println("row Index = ",ri);
+    //        println("col Index = ",ci);
+    //        println("Op = ",qnp_m.first.prod);
+    //        println("M.Re = \n",qnp_m.second.Re);
+    //        println();
+    //        }
+    //    println("---------------------------------------------");
+    //    //PAUSE
+    //    }
     }
 
 IQMPO
@@ -1112,7 +1133,6 @@ constructMPOTensors(SiteSet const& sites,
             auto cq = rq-sq;
             //-rq + sq + cq == 0
             //==> cq = rq - sq
-            //but is rq defined consistently?
 
             auto ri = findByQN(row,rq);
             auto ci = findByQN(col,cq);
