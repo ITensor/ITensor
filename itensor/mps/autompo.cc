@@ -574,6 +574,77 @@ operator()(int i, int j) const
     return z;
     }
 
+std::tuple<Real,Real>
+truncate(Vector & P,
+         long maxm,
+         long minm,
+         Real cutoff,
+         bool doRelCutoff = true,
+         bool absoluteCutoff = false)
+    {
+    long origm = P.Length();
+    long n = origm-1;
+    Real docut = 0;
+    
+    if(origm == 1) 
+        {
+        docut = P[0]/2.;
+        return std::make_tuple(0,0);
+        }
+
+    //Zero out any negative weight
+    for(auto zn = n; zn >= 0; --zn)
+        {
+        if(P[zn] >= 0) break;
+        P[zn] = 0;
+        }
+
+    Real truncerr = 0;
+    //Always truncate down to at least m==maxm (m==n+1)
+    while(n >= maxm)
+        {
+        truncerr += P[n];
+        --n;
+        }
+
+    if(absoluteCutoff) //absoluteCutoff is typically false
+        {
+        //Test if individual prob. weights fall below cutoff
+        //rather than using *sum* of discarded weights
+        for(; P[n] < cutoff && n >= minm; --n) 
+            {
+            truncerr += P[n];
+            }
+        }
+    else
+        {
+        Real scale = 1.0;
+        //if doRelCutoff, use normalized P's when truncating
+        if(doRelCutoff) scale = P.sumels();
+
+        //Continue truncating until *sum* of discarded probability 
+        //weight reaches cutoff reached (or m==minm)
+        while(truncerr+P(n) < cutoff*scale && n >= minm)
+            {
+            truncerr += P[n];
+            --n;
+            }
+        truncerr = (scale == 0 ? 0 : truncerr/scale);
+        }
+
+    if(n < 0) n = 0;
+
+    //P[n] is 0-indexed, so add 1 to n to 
+    //get correct state count m
+    auto m = n+1;
+
+    if(m < origm) docut = (P[m] + P[m-1])/2. - 1E-5*P[m];
+
+    P.ReduceDimension(m);
+
+    return std::make_tuple(truncerr,docut);
+    }
+
 
 void 
 decomposeTerm(int n, 
@@ -785,76 +856,6 @@ partitionHTerms(SiteSet const& sites,
 //#endif   
     }
 
-std::tuple<Real,Real>
-truncate(Vector & P,
-         long maxm,
-         long minm,
-         Real cutoff,
-         bool doRelCutoff = true,
-         bool absoluteCutoff = false)
-    {
-    long origm = P.Length();
-    long n = origm-1;
-    Real docut = 0;
-    
-    if(origm == 1) 
-        {
-        docut = P[0]/2.;
-        return std::make_tuple(0,0);
-        }
-
-    //Zero out any negative weight
-    for(auto zn = n; zn >= 0; --zn)
-        {
-        if(P[zn] >= 0) break;
-        P[zn] = 0;
-        }
-
-    Real truncerr = 0;
-    //Always truncate down to at least m==maxm (m==n+1)
-    while(n >= maxm)
-        {
-        truncerr += P[n];
-        --n;
-        }
-
-    if(absoluteCutoff) //absoluteCutoff is typically false
-        {
-        //Test if individual prob. weights fall below cutoff
-        //rather than using *sum* of discarded weights
-        for(; P[n] < cutoff && n >= minm; --n) 
-            {
-            truncerr += P[n];
-            }
-        }
-    else
-        {
-        Real scale = 1.0;
-        //if doRelCutoff, use normalized P's when truncating
-        if(doRelCutoff) scale = P.sumels();
-
-        //Continue truncating until *sum* of discarded probability 
-        //weight reaches cutoff reached (or m==minm)
-        while(truncerr+P(n) < cutoff*scale && n >= minm)
-            {
-            truncerr += P[n];
-            --n;
-            }
-        truncerr = (scale == 0 ? 0 : truncerr/scale);
-        }
-
-    if(n < 0) n = 0;
-
-    //P[n] is 0-indexed, so add 1 to n to 
-    //get correct state count m
-    auto m = n+1;
-
-    if(m < origm) docut = (P[m] + P[m-1])/2. - 1E-5*P[m];
-
-    P.ReduceDimension(m);
-
-    return std::make_tuple(truncerr,docut);
-    }
          
 
 struct QNProd
