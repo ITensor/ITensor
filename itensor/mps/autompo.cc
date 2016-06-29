@@ -664,10 +664,9 @@ decomposeTerm(int n,
     right = SiteTermProd(startOfRightPart, ops.end());
     }  
 
-using Basis = map<SiteTermProd,int>;
-
 struct Block
     {
+    using Basis = map<SiteTermProd,int>;
     Basis left;
     Basis right;
     vector<MatElem> mat;        
@@ -681,7 +680,7 @@ using MPOMatrix = vector<vector<IQTensor>>;
 // If ops is not in the vector adds it is added
 int
 posInBlock(SiteTermProd const& ops, 
-           Basis & b)
+           Block::Basis & b)
     {
     auto it = b.find(ops);
     if(it != b.end()) return it->second;
