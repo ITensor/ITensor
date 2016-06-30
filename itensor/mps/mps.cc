@@ -756,6 +756,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 orthogonalize(const Args& args)
     {
+    auto cut_fac = args.getReal("CutFac",0.1);
     //Do a half-sweep to the right, orthogonalizing each bond
     //but lower the cutoff since the basis to the right
     //might not be ortho: don't want to over truncate
@@ -763,7 +764,7 @@ orthogonalize(const Args& args)
     r_orth_lim_ = N()+1;
     //Use smaller cutoff to orthogonalize w/ minimal truncation
     auto orig_cut = args.getReal("Cutoff",MIN_CUT);
-    position(N_,{args,"Cutoff",0.1*orig_cut});
+    position(N_,{args,"Cutoff",cut_fac*orig_cut});
     //Now basis is ortho, ok to truncate
     position(1,args);
     }
