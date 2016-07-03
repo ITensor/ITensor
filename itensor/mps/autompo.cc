@@ -672,6 +672,19 @@ struct Block
     vector<MatElem> mat;        
     };
 
+//struct OpType
+//    {
+//    QN qn; //QN of operator
+//    int nt = 0; //number of terms in operator
+//
+//    bool
+//    operator<(OpType const& ot)
+//        {
+//        if(qn != ot.qn) return qn < ot.qn;
+//        return nt < ot.nt;
+//        }
+//    };
+
 using QNBlock = map<QN, Block>;
 using IQMatEls = set<IQMPOMatElem>;
 using MPOMatrix = vector<vector<IQTensor>>;
@@ -702,18 +715,17 @@ partitionHTerms(SiteSet const& sites,
     auto N = sites.N();
 
     //
-    // NOTE: this optimization of using a map
-    // to cache the QN's of various operators assumes
-    // that each site has the same type of Hilbert space
-    // TODO: improve by having a separate map at each link,
-    //       simulatenously take the left,right fields OUT
-    //       of Partition/Block since these don't get used later
-    //       in compressMPO anyway
-    // Even better: when going from left to right, QNs computed
-    // on site i can be used to compute QNs of operator strings
-    // continuing to site i+1
+    // qnmap caches the quantum numbers of various products
+    // of operators encountered while building the QNBlock
+    // data structures at each bond
     //
-    auto qnmap = std::map<std::string,QN>();
+    // TODO: The qnmap keys are just strings, which assumes
+    //       all operators with the same name have the same
+    //       QN divergence. This wouldn't be true e.g. for
+    //       a spin model with different spin sizes at 
+    //       different sites.
+    //
+    auto qnmap = map<string,QN>();
     auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
         {
         QN qn;
@@ -853,6 +865,56 @@ partitionHTerms(SiteSet const& sites,
 //        println("=========================================");
 //        }
 //#endif   
+
+    //for(int n = 1; n <= N; ++n)
+    //    {
+    //    printfln("======== Site %d ==========",n);
+    //    printfln("%d QNBlocks",qbs.at(n-1).size());
+    //    for(auto& qb : qbs.at(n-1) )
+    //        {
+    //        auto& qn = qb.first;
+
+    //        println("QN = ",qn);
+    //        int l1 = 0,
+    //            l2 = 0,
+    //            l3 = 0;
+    //        int r1 = 0,
+    //            r2 = 0,
+    //            r3 = 0;
+    //        println("Left basis elems:");
+    //        for(auto& it : qb.second.left)
+    //            {
+    //            //printfln("   %s -> %d",it.first,it.second);
+    //            if(it.first.size() == 1ul) ++l1;
+    //            if(it.first.size() == 2ul) ++l2;
+    //            if(it.first.size() == 3ul) ++l3;
+    //            }
+    //        printfln("  %d 1-ops",l1);
+    //        printfln("  %d 2-ops",l2);
+    //        printfln("  %d 3-ops",l3);
+    //        //printfln("  %d total",l1+l2+l3);
+    //        println("Right basis elems:");
+    //        for(auto& it : qb.second.right)
+    //            {
+    //            //printfln("   %s -> %d",it.first,it.second);
+    //            if(it.first.size() == 1ul) ++r1;
+    //            if(it.first.size() == 2ul) ++r2;
+    //            if(it.first.size() == 3ul) ++r3;
+    //            }
+    //        printfln("  %d 1-ops",r1);
+    //        printfln("  %d 2-ops",r2);
+    //        printfln("  %d 3-ops",r3);
+    //        //printfln("  %d total",r1+r2+r3);
+
+    //        // Convert the block matrix elements to a dense matrix
+    //        auto C = ComplexMatrix(qb.second.mat);
+
+    //        printfln("C is %d x %d",C.Re.Nrows(),C.Re.Ncols());
+    //        println();
+    //        //println("C.Re = \n",C.Re);
+    //        //PAUSE
+    //        }
+    //    }
     }
 
          
