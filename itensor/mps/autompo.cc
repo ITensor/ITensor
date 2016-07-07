@@ -951,9 +951,9 @@ compressMPO(SiteSet const& sites,
     int minm = args.getInt("Minm",1);
     int maxm = args.getInt("Maxm",5000);
     Real cutoff = args.getReal("Cutoff",1E-16);
-    printfln("Using cutoff = %.2E",cutoff);
-    printfln("Using minm = %d",minm);
-    printfln("Using maxm = %d",maxm);
+    //printfln("Using cutoff = %.2E",cutoff);
+    //printfln("Using minm = %d",minm);
+    //printfln("Using maxm = %d",maxm);
 
     finalMPO.resize(N);
     links.resize(N+1);
@@ -1123,7 +1123,7 @@ compressMPO(SiteSet const& sites,
         max_d = max(max_d, links.at(n).m());
         }
         
-    println("Maximal dimension of the MPO is ", max_d);
+    //println("Maximal dimension of the MPO is ", max_d);
     
     ////
     //// Debugging printout
@@ -1226,7 +1226,7 @@ svdIQMPO(const AutoMPO& am, const Args& args)
     auto qbs = vector<QNBlock>();
     auto tempMPO = vector<IQMatEls>();
 
-    println("Calling partitionHTerms");
+    //println("Calling partitionHTerms");
     START_TIMER(1)
     partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
     STOP_TIMER(1)
@@ -1236,7 +1236,7 @@ svdIQMPO(const AutoMPO& am, const Args& args)
     auto finalMPO = vector<MPOPiece>();
     auto links = vector<IQIndex>();
 
-    println("Calling compressMPO");
+    //println("Calling compressMPO");
     START_TIMER(2)
     compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
     STOP_TIMER(2)
@@ -1244,7 +1244,7 @@ svdIQMPO(const AutoMPO& am, const Args& args)
     //EXIT
     //return IQMPO();
     
-    println("Calling constructMPOTensors");
+    //println("Calling constructMPOTensors");
     START_TIMER(3)
     auto H = constructMPOTensors(am.sites(),finalMPO, links);
     STOP_TIMER(3)
