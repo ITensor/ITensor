@@ -200,6 +200,8 @@ class IQTensor
     //existing one if already present and QNs match
     IQTensor& 
     operator+=(const ITensor& block);
+    IQTensor 
+    operator+(const ITensor& block) const;
 
     //Like operator+=(ITensor) but
     //demands that the block is zero/absent
@@ -427,6 +429,12 @@ operator*(IQTensor T, const IQIndexVal& iv) { T *= iv; return T; }
 
 IQTensor inline
 operator*(const IQIndexVal& iv, const IQTensor& T) { return IQTensor(iv) * T; }
+
+IQTensor inline IQTensor::
+operator+(const ITensor& t) const { auto res = *this; return (res += t); }
+
+IQTensor inline
+operator+(const ITensor& t, IQTensor T) { return (T += t); }
 
 
 //
