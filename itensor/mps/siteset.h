@@ -161,13 +161,12 @@ op(const String& opname, int i,
         {
         //If opname of the form "Name1*Name2",
         //return product of Name1 operator times Name2 operator
-        const
-        std::size_t found = opname.find_first_of('*');
+        auto found = opname.find_first_of('*');
         if(found != std::string::npos)
             {
             try {
             return multSiteOps(getOp(i,op1(opname,found),args),
-                               getOp(i,op2(opname,found),args));
+                               op(op2(opname,found),i,args));
                 }
             catch(const ITError& e)
                 {
