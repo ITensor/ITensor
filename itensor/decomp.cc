@@ -12,7 +12,7 @@
 
 namespace itensor {
 
-const auto MAX_INT = std::numeric_limits<int>::max();
+//const auto MAX_INT = std::numeric_limits<int>::max();
 
 using std::swap;
 using std::istream;
@@ -184,7 +184,7 @@ showEigs(Vector const& P,
     {
     auto do_truncate = args.getBool("Truncate",true);
     auto cutoff = args.getReal("Cutoff",0.);
-    auto maxm = args.getInt("Maxm",MAX_INT);
+    auto maxm = args.getInt("Maxm",P.size());
     auto minm = args.getInt("Minm",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
@@ -202,11 +202,11 @@ showEigs(Vector const& P,
     if(scale.logNum() < 10 && scale.isFiniteReal())
         {
         Ps *= sqr(scale.real0());
-        print("Density matrix evals:");
+        print("Eigenvalues:");
         }
     else
         {
-        print("Density matrix evals [not including scale = ",scale.logNum(),"]:");
+        print("Eigenvalues [not including scale = ",scale.logNum(),"]:");
         }
 
     for(auto n : range(Ps))
