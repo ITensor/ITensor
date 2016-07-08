@@ -34,7 +34,7 @@ diagHImpl(ITensor rho,
           Args const& args)
     {
     auto cutoff = args.getReal("Cutoff",0.);
-    auto maxm = args.getInt("Maxm",MAX_INT);
+    auto maxm = args.getInt("Maxm",rho.inds().front().m());
     auto minm = args.getInt("Minm",1);
     auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
     auto do_truncate = args.getBool("Truncate",def_do_trunc);
