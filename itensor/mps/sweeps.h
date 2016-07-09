@@ -360,10 +360,24 @@ tableInit(InputGroup& table)
     noise_ = std::vector<Real>(nsweep_+1);
 
     table.SkipLine(); //SkipLine so we can have a table key
+    int n_last = 1;
     for(int i = 1; i <= nsweep_; i++)
         {
         table.file() >> maxm_[i] >> minm_[i] >> cutoff_[i] >> niter_[i] >> noise_[i];
+        if(maxm_[i] == 0)
+          {
+          n_last = i - 1 ;
+          break ;
+          }
         }
+    for(int i = n_last + 1; i <= nsweep_; i++)
+       {
+       maxm_[i] = maxm_[n_last];
+       minm_[i] = minm_[n_last];
+       cutoff_[i] = cutoff_[n_last];
+       niter_[i] = niter_[n_last];
+       noise_[i] = noise_[n_last];
+       }
 
     } //Sweeps::tableInit
 
