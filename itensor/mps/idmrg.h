@@ -115,6 +115,8 @@ idmrg(MPSt<Tensor> & psi,
     auto nucs_decr = args.getInt("NUCSweepsDecrement",0);
     auto do_randomize = args.getBool("Randomize",false);
     auto show_overlap = args.getBool("ShowOverlap",false);
+    //inverse_cut is cutoff for computing pseudo inverse 
+    auto inverse_cut = args.getReal("InverseCut",1E-8);
     auto actual_nucsweeps = nucsweeps;
 
     int N0 = psi.N(); //Number of sites in center
@@ -162,7 +164,7 @@ idmrg(MPSt<Tensor> & psi,
         ucsweeps.niter() = sweeps.niter(sw);
         print(ucsweeps);
 
-        auto extra_args = Args("Quiet",olevel < 3,
+        auto extra_args = Args("Quiet",olevel < 2,
                                "iDMRG_Step",sw,
                                "NSweep",ucsweeps.nsweep());
         energy = dmrg(psi,H,HL,HR,ucsweeps,obs,args + extra_args);
@@ -241,11 +243,17 @@ idmrg(MPSt<Tensor> & psi,
         auto initPsi = psi;
 
         auto PH = LocalMPO<Tensor>(H,HL,HR,args);
+
+        if(olevel >= 1)
+            {
+            auto ien = overlap(psi,H,HL,HR,psi);
+            printfln("Initial energy = %.20f",ien);
+            }
         
-        auto extra_args = Args("Quiet",olevel<3,"NoMeasure",sw%2==0,"iDMRG_Step",sw,"NSweep",ucsweeps.nsweep());
+        auto extra_args = Args("Quiet",olevel<2,"NoMeasure",sw%2==0,"iDMRG_Step",sw,"NSweep",ucsweeps.nsweep());
         energy = DMRGWorker(psi,PH,ucsweeps,obs,args + extra_args);
 
-        if(show_overlap)
+        if(show_overlap || olevel >= 1)
             {
             Real ovrlap, im;
             psiphi(initPsi,psi,ovrlap,im);
@@ -261,7 +269,7 @@ idmrg(MPSt<Tensor> & psi,
         //Save last center matrix
         lastV = dag(D);
         lastV /= norm(lastV);
-        lastV.apply(detail::PseudoInvert(0));
+        lastV.apply(detail::PseudoInvert(inverse_cut));
 
         //Calculate new center matrix
         psi.position(Nuc);
@@ -320,7 +328,7 @@ idmrg(MPSt<Tensor> & psi,
             {
             println("File WRITE_WF found: writing out wavefunction after step",sw);
             system("rm -f WRITE_WF");
-            MPSt<Tensor> wpsi(psi);
+            auto wpsi = psi;
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
                 Tensor d;
