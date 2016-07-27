@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     //idmrg returns a struct holding various useful
     //things such as the energy and the "edge tensors"
     //representing the Hamiltonian projected into the infinite MPS
-    auto res = idmrg(psi,H,sweeps,"OutputLevel=2");
+    auto res = idmrg(psi,H,sweeps,{"OutputLevel",1});
 
     printfln("\nGround state energy / site = %.20f",res.energy/N);
 
