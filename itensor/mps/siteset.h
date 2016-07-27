@@ -206,7 +206,7 @@ operator<<(std::ostream& s, const SiteSet& M)
     {
     s << "SiteSet:\n";
     for(int j = 1; j <= M.N(); ++j) 
-        s << format("si(%d) = ",j,M.si(j),"\n");
+        s << format("si(%d) = %s\n",j,M.si(j));
     return s;
     }
 
