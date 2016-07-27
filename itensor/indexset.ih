@@ -102,6 +102,7 @@ namespace detail {
         for(size_t k = 0; k < is.size(); ++k)
             if(k != j && is[j] == is[k])
                 {
+                println("index set = \n",is);
                 throw ITError("Duplicate indices in index set");
                 }
         }
