@@ -177,7 +177,7 @@ davidson(BigMatrixT const& A,
             q += (-lambda)*phi_t;
 
             //Fix sign
-            if(U(t,0).real() < 0)
+            if(U(0,t).real() < 0)
                 {
                 phi_t *= -1;
                 q *= -1;
