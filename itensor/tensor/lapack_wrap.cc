@@ -72,9 +72,15 @@ zdotc_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     Cplx res;
+#if defined PLATFORM_openblas
+    auto pX = reinterpret_cast<OPENBLAS_CONST double*>(X);
+    auto pY = reinterpret_cast<OPENBLAS_CONST double*>(Y);
+    auto pres = reinterpret_cast<openblas_complex_double*>(&res);
+#else
     auto pX = reinterpret_cast<const void*>(X);
     auto pY = reinterpret_cast<const void*>(Y);
     auto pres = reinterpret_cast<void*>(&res);
+#endif
     cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
     return res;
 #else
