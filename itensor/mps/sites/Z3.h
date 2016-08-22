@@ -10,11 +10,9 @@ namespace itensor {
 
 class Z3 : public SiteSet
     {
-    int N_;
-    std::vector<IQIndex> site_;
     public:
 
-    Z3();
+    Z3() { }
 
     Z3(int N);
 
@@ -27,12 +25,6 @@ class Z3 : public SiteSet
 
     private:
 
-    int
-    getN() const;
-
-    IQIndex const&
-    getSi(int i) const;
-
     virtual IQIndexVal
     getState(int i, String const& state) const;
 
@@ -40,26 +32,13 @@ class Z3 : public SiteSet
     getOp(int i, String const& opname, Args const& args) const;
 
     void
-    doRead(std::istream& s);
-
-    void
-    doWrite(std::ostream& s) const;
-
-    void
     constructSites();
         
     };
 
 inline Z3::
-Z3()
-    : N_(-1)
-    { }
-
-inline Z3::
 Z3(int N)
-    : 
-    N_(N),
-    site_(N_+1)
+  : SiteSet(N)
     { 
     constructSites();
     }
@@ -67,64 +46,29 @@ Z3(int N)
 void inline Z3::
 constructSites()
     {
-    for(int i = 1; i <= N_; ++i)
+    for(int i = 1; i <= N(); ++i)
         {
-        site_.at(i) = IQIndex(nameint("Z3 site=",i),
+        set(i,{nameint("Z3 site=",i),
         Index(nameint("0|site",i),1,Site),QN({0,3}),
         Index(nameint("1|site",i),1,Site),QN({1,3}),
-        Index(nameint("2|site",i),1,Site),QN({2,3}));
+        Index(nameint("2|site",i),1,Site),QN({2,3})});
         }
     }
-
-void inline Z3::
-doRead(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-    }
-
-void inline Z3::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-int inline Z3::
-getN() const
-    { return N_; }
-
-inline 
-IQIndex const& Z3::
-getSi(int i) const
-    { return site_.at(i); }
 
 inline IQIndexVal Z3::
 getState(int i, String const& state) const
     {
     int st = -1;
-    if(state == "0") 
-        {
-        st = 1;
-        }
+    if(state == "0") { st = 1; }
     else
-    if(state == "1")
-        {
-        st = 2;
-        }
+    if(state == "1") { st = 2; }
     else
-    if(state == "2")
-        {
-        st = 3;
-        }
+    if(state == "2") { st = 3; }
     else
         {
         Error("State " + state + " not recognized");
         }
-    return getSi(i)(st);
+    return si(i)(st);
     }
 
 inline IQTensor Z3::

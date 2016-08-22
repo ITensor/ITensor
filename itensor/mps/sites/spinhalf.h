@@ -12,17 +12,11 @@ class SpinHalf : public SiteSet
     {
     public:
 
-    SpinHalf();
+    SpinHalf() { }
 
     SpinHalf(int N);
 
     private:
-
-    int
-    getN() const;
-
-    const IQIndex&
-    getSi(int i) const;
 
     IQIndexVal
     getState(int i, const String& state) const;
@@ -34,19 +28,9 @@ class SpinHalf : public SiteSet
     getDefaultOps(const Args& args) const;
 
     virtual void
-    doRead(std::istream& s);
-
-    virtual void
-    doWrite(std::ostream& s) const;
-
-    virtual void
     constructSites();
 
     //Data members -----------------
-
-    int N_;
-
-    std::vector<IQIndex> site_;
 
     static DefaultOpsT
     initDefaultOps()
@@ -59,14 +43,8 @@ class SpinHalf : public SiteSet
     };
 
 inline SpinHalf::
-SpinHalf()
-    : N_(-1)
-    { }
-
-inline SpinHalf::
 SpinHalf(int N)
-    : N_(N),
-      site_(N_+1)
+    : SiteSet(N)
     { 
     constructSites();
     }
@@ -74,56 +52,31 @@ SpinHalf(int N)
 inline void SpinHalf::
 constructSites()
     {
-    for(int j = 1; j <= N_; ++j)
+    for(int j = 1; j <= N(); ++j)
         {
-        site_.at(j) = IQIndex(nameint("S=1/2 ",j),
-            Index(nameint("Up ",j),1,Site),QN("Sz=",+1),
-            Index(nameint("Dn ",j),1,Site),QN("Sz=",-1));
+        set(j,{nameint("S=1/2 ",j),
+               Index(nameint("Up ",j),1,Site),QN("Sz=",+1),
+               Index(nameint("Dn ",j),1,Site),QN("Sz=",-1)});
         }
     }
-
-inline void SpinHalf::
-doRead(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-    }
-
-inline void SpinHalf::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-inline int SpinHalf::
-getN() const
-    { return N_; }
-
-inline const IQIndex& SpinHalf::
-getSi(int i) const
-    { return site_.at(i); }
 
 inline IQIndexVal SpinHalf::
 getState(int i, const String& state) const
     {
     if(state == "Up") 
         {
-        return getSi(i)(1);
+        return si(i)(1);
         }
     else 
     if(state == "Dn") 
         {
-        return getSi(i)(2);
+        return si(i)(2);
         }
     else
         {
         Error("State " + state + " not recognized");
-        return getSi(i)(1);
         }
+    return si(i)(1);
     }
 
 inline IQTensor SpinHalf::
@@ -209,9 +162,9 @@ getOp(int i, const String& opname, const Args& args) const
     }
 
 SpinHalf::DefaultOpsT inline SpinHalf::
-getDefaultOps(const Args& args) const
+getDefaultOps(Args const& args) const
     {
-    static const std::vector<String> dops_(initDefaultOps());
+    static const auto dops_ = initDefaultOps();
     return dops_;
     }
 

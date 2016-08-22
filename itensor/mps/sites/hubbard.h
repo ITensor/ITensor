@@ -22,11 +22,8 @@ class Hubbard : public SiteSet
 
     private:
 
-    virtual int
-    getN() const;
-
-    virtual const IQIndex&
-    getSi(int i) const;
+    void
+    doRead(std::istream& s);
 
     virtual IQIndexVal
     getState(int i, String const& state) const;
@@ -38,22 +35,13 @@ class Hubbard : public SiteSet
     getDefaultOps(Args const& args) const;
 
     void 
-    constructSites();
-
-    void
-    doRead(std::istream& s);
-
-    void
-    doWrite(std::ostream& s) const;
+    constructSites(int N);
 
         
     //Data members -----------------
 
-    int N_;
     bool conserveNf_,
          conserveSz_;
-
-    std::vector<IQIndex> site_;
 
     static DefaultOpsT
     initDefaultOps()
@@ -71,48 +59,46 @@ class Hubbard : public SiteSet
 
 inline Hubbard::
 Hubbard()
-    : N_(-1),
-    conserveNf_(true),
+  : conserveNf_(true),
     conserveSz_(true)
     { }
 
 inline Hubbard::
 Hubbard(int N, Args const& args)
-    : N_(N),
-      site_(N_+1)
+  : SiteSet(N)
     { 
     conserveNf_ = args.getBool("ConserveNf",true);
     conserveSz_ = args.getBool("ConserveSz",true);
-    constructSites();
+    constructSites(N);
     }
 
 void inline Hubbard::
-constructSites()
+constructSites(int N)
     {
     int Up = (conserveSz_ ? +1 : 0),
         Dn = -Up;
     if(conserveNf_)
         {
-        for(auto j : range1(N_))
+        for(auto j : range1(N))
             {
-            site_.at(j) = IQIndex(nameint("site=",j),
+            set(j,{nameint("site=",j),
                 Index(nameint("Emp ",j),1,Site), QN("Sz=", 0,"Nf=",0),
                 Index(nameint("Up ",j),1,Site),  QN("Sz=",Up,"Nf=",1),
                 Index(nameint("Dn ",j),1,Site),  QN("Sz=",Dn,"Nf=",1),
-                Index(nameint("UpDn ",j),1,Site),QN("Sz=", 0,"Nf=",2));
+                Index(nameint("UpDn ",j),1,Site),QN("Sz=", 0,"Nf=",2)});
             }
         }
     else //don't conserve Nf, only fermion parity
         {
         if(!conserveSz_) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
 
-        for(auto j : range1(N_))
+        for(auto j : range1(N))
             {
-            site_.at(j) = IQIndex(nameint("site=",j),
+            set(j,{nameint("site=",j),
                 Index(nameint("Emp ",j),1,Site), QN("Sz=", 0,"Pf=",0),
                 Index(nameint("Up ",j),1,Site),  QN("Sz=",+1,"Pf=",1),
                 Index(nameint("Dn ",j),1,Site),  QN("Sz=",-1,"Pf=",1),
-                Index(nameint("UpDn ",j),1,Site),QN("Sz=", 0,"Pf=",0));
+                Index(nameint("UpDn ",j),1,Site),QN("Sz=", 0,"Pf=",0)});
             }
         }
     }
@@ -120,58 +106,36 @@ constructSites()
 void inline Hubbard::
 doRead(std::istream& s)
     {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-
-    conserveNf_ = (site_.at(1).qn(2)(2) == 1);
+    conserveNf_ = (si(1).qn(2)(2) == 1);
     }
-
-void inline Hubbard::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-int inline Hubbard::
-getN() const
-    { return N_; }
-
-inline const IQIndex& Hubbard::
-getSi(int i) const
-    { return site_.at(i); }
 
 inline IQIndexVal Hubbard::
 getState(int i, String const& state) const
     {
     if(state == "0" || state == "Emp") 
         {
-        return getSi(i)(1);
+        return si(i)(1);
         }
     else 
     if(state == "+" || state == "Up") 
         {
-        return getSi(i)(2);
+        return si(i)(2);
         }
     else 
     if(state == "-" || state == "Dn") 
         {
-        return getSi(i)(3);
+        return si(i)(3);
         }
     else 
     if(state == "S" || state == "UpDn") 
         {
-        return getSi(i)(4);
+        return si(i)(4);
         }
     else
         {
         Error("State " + state + " not recognized");
-        return getSi(i)(1);
         }
-    return IQIndexVal();
+    return IQIndexVal{};
     }
 
 
@@ -301,7 +265,7 @@ getOp(int i, String const& opname, Args const& args) const
 Hubbard::DefaultOpsT inline Hubbard::
 getDefaultOps(Args const& args) const
     {
-    static const std::vector<String> dops_(initDefaultOps());
+    static const auto dops_ = initDefaultOps();
     return dops_;
     }
 

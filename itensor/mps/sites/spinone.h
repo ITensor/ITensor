@@ -12,105 +12,57 @@ class SpinOne : public SiteSet
     {
     public:
 
-    SpinOne();
+    SpinOne() { }
 
-    SpinOne(int N, const Args& args = Args::global());
+    SpinOne(int N, 
+            Args const& args = Args::global());
 
     private:
 
-    virtual int
-    getN() const;
-
-    virtual const IQIndex&
-    getSi(int i) const;
+    void
+    constructSites(Args const& args);
 
     virtual IQIndexVal
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const Args& opts) const;
-
-    void
-    constructSites(const Args& opts);
-
-    void
-    doRead(std::istream& s);
-     
-    void
-    doWrite(std::ostream& s) const;
-
-    //Data members -----------------
-
-    int N_;
-
-    std::vector<IQIndex> site_;
+    getOp(int i, const String& opname, const Args& args) const;
 
     };
 
 inline SpinOne::
-SpinOne()
-    : N_(-1)
-    { }
-
-inline SpinOne::
-SpinOne(int N, const Args& opts)
-    : N_(N),
-      site_(N_+1)
+SpinOne(int N, const Args& args)
+    : SiteSet(N)
     { 
-    constructSites(opts);
+    constructSites(args);
     }
 
 inline void SpinOne::
-constructSites(const Args& opts)
+constructSites(Args const& args)
     {
-    for(int j = 1; j <= N_; ++j)
+    for(int j = 1; j <= N(); ++j)
         {
-        if((opts.getBool("SHalfEdge",false) && (j==1 || j == N_))
-           || (opts.getBool("SHalfLeftEdge",false) && j==1))
+        if((args.getBool("SHalfEdge",false) && (j==1 || j == N()))
+           || (args.getBool("SHalfLeftEdge",false) && j==1))
             {
-            if(opts.getBool("Verbose",false))
+            if(args.getBool("Verbose",false))
                 {
                 println("Placing a S=1/2 at site ",j);
                 }
 
-            site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
+            set(j,{nameint("S=1/2 site=",j),
                 Index(nameint("Up:site",j),1,Site),QN("Sz=",+1),
-                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-1));
+                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-1)});
             }
         else
             {
-            site_.at(j) = IQIndex(nameint("S=1 site=",j),
+            set(j,{nameint("S=1 site=",j),
                 Index(nameint("Up:site",j),1,Site),QN("Sz=",+2),
                 Index(nameint("Z0:site",j),1,Site),QN("Sz=", 0),
-                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-2));
+                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-2)});
             }
         }
     }
-
-inline void SpinOne::
-doRead(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-    }
-
-inline void SpinOne::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-inline int SpinOne::
-getN() const
-    { return N_; }
-
-inline const IQIndex& SpinOne::
-getSi(int i) const
-    { return site_.at(i); }
 
 inline IQIndexVal SpinOne::
 getState(int i, const String& state) const
@@ -123,24 +75,23 @@ getState(int i, const String& state) const
     else
     if(state == "Z0" || state == "0")
         {
-        if(getSi(i).m() == 2)
-            Error("Z0 not defined for spin 1/2 site");
+        if(si(i).m() == 2) Error("Z0 not defined for spin 1/2 site");
         st = 2;
         }
     else
     if(state == "Dn" || state == "-")
         {
-        st = getSi(i).m();
+        st = si(i).m();
         }
     else
         {
         Error("State " + state + " not recognized");
         }
-    return getSi(i)(st);
+    return si(i)(st);
     }
 
 inline IQTensor SpinOne::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, const String& opname, const Args& args) const
     {
     auto s = si(i);
     auto sP = prime(s);

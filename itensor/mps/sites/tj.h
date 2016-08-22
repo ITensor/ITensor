@@ -12,20 +12,11 @@ class tJ : public SiteSet
     {
     public:
 
-    tJ();
+    tJ() { }
 
     tJ(int N);
 
     private:
-
-    virtual int
-    getN() const;
-
-    virtual const IQIndex&
-    getSi(int i) const;
-
-    virtual IQIndex
-    getSiP(int i) const { return prime(getSi(i)); }
 
     IQIndexVal
     getState(int i, String const& state) const;
@@ -34,31 +25,15 @@ class tJ : public SiteSet
     getOp(int i, String const& opname, Args const& args) const;
 
     virtual void
-    doRead(std::istream& s);
-
-    virtual void
-    doWrite(std::ostream& s) const;
-
-    virtual void
     constructSites();
 
     //Data members -----------------
 
-    int N_;
-
-    std::vector<IQIndex> site_;
-
     };
 
 inline tJ::
-tJ()
-    : N_(-1)
-    { }
-
-inline tJ::
 tJ(int N)
-    : N_(N),
-      site_(N_+1)
+  : SiteSet(N)
     { 
     constructSites();
     }
@@ -66,60 +41,37 @@ tJ(int N)
 void inline tJ::
 constructSites()
     {
-    for(int j = 1; j <= N_; ++j)
-        site_.at(j) = IQIndex(nameint("tJ site=",j),
+    for(int j = 1; j <= N(); ++j)
+        {
+        set(j,{nameint("tJ site=",j),
             Index(nameint("Emp ",j),1,Site), QN("Sz=", 0,"Nf=",0),
             Index(nameint("Up ",j),1,Site),  QN("Sz=",+1,"Nf=",1),
-            Index(nameint("Dn ",j),1,Site),  QN("Sz=",-1,"Nf=",1));
+            Index(nameint("Dn ",j),1,Site),  QN("Sz=",-1,"Nf=",1)});
+        }
     }
-
-void inline tJ::
-doRead(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-    }
-
-void inline tJ::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-int inline tJ::
-getN() const
-    { return N_; }
-
-inline const IQIndex& tJ::
-getSi(int i) const
-    { return site_.at(i); }
 
 IQIndexVal inline tJ::
 getState(int i, String const& state) const
     {
     if(state == "0" || state == "Emp") 
         {
-        return getSi(i)(1);
+        return si(i)(1);
         }
     else 
     if(state == "+" || state == "Up") 
         {
-        return getSi(i)(2);
+        return si(i)(2);
         }
     else 
     if(state == "-" || state == "Dn") 
         {
-        return getSi(i)(3);
+        return si(i)(3);
         }
     else
         {
         Error("State " + state + " not recognized");
-        return IQIndexVal();
         }
+    return IQIndexVal();
     }
 
 

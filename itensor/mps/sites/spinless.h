@@ -18,12 +18,6 @@ class Spinless : public SiteSet
 
     private:
 
-    int
-    getN() const;
-
-    IQIndex const&
-    getSi(int i) const;
-    
     virtual IQIndexVal
     getState(int i, String const& state) const;
 
@@ -39,28 +33,21 @@ class Spinless : public SiteSet
     void
     doWrite(std::ostream& s) const;
 
-        
     //Data members -----------------
 
-    int N_;
-
     bool conserve_Nf_;
-
-    std::vector<IQIndex> site_;
 
     };
 
 inline Spinless::
 Spinless()
-    : N_(-1),
-      conserve_Nf_(true)
+  : conserve_Nf_(true)
     { 
     }
 
 inline Spinless::
 Spinless(int N, Args const& args)
-    : N_(N),
-      site_(N_+1)
+  : SiteSet(N)
     { 
     conserve_Nf_ = args.getBool("ConserveNf",true);
     constructSites();
@@ -74,11 +61,11 @@ constructSites()
         {
         q_occ = QN("Pf=",1);
         }
-    for(int i = 1; i <= N_; ++i)
+    for(int i = 1; i <= N(); ++i)
         {
-        site_.at(i) = IQIndex(nameint("Spinless site=",i),
+        set(i,{nameint("Spinless site=",i),
         Index(nameint("Emp for site",i),1,Site),QN(),
-        Index(nameint("Occ for site",i),1,Site),q_occ);
+        Index(nameint("Occ for site",i),1,Site),q_occ});
         }
     }
 
@@ -86,52 +73,35 @@ void inline Spinless::
 doRead(std::istream& s)
     {
     s.read((char*) &conserve_Nf_,sizeof(conserve_Nf_));
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
     }
 
 void inline Spinless::
 doWrite(std::ostream& s) const
     {
     s.write((char*) &conserve_Nf_,sizeof(conserve_Nf_));
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
     }
 
-int inline Spinless::
-getN() const
-    { return N_; }
-
-inline 
-const IQIndex& Spinless::
-getSi(int i) const
-    { return site_.at(i); }
-
-
 inline IQIndexVal Spinless::
-getState(int i, const String& state) const
+getState(int i, String const& state) const
     {
     if(state == "Emp" || state == "0") 
         {
-        return getSi(i)(1);
+        return si(i)(1);
         }
     else 
     if(state == "Occ" || state == "1") 
         {
-        return getSi(i)(2);
+        return si(i)(2);
         }
     else
         {
         Error("State " + state + " not recognized");
-        return getSi(i)(1);
         }
+    return IQIndexVal{};
     }
 
 inline IQTensor Spinless::
-getOp(int i, const String& opname, const Args& args) const
+getOp(int i, String const& opname, Args const& args) const
     {
     auto s  = si(i);
     auto sP = prime(si(i));

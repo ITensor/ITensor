@@ -36,6 +36,8 @@ using Model = SiteSet; //for backwards compatibility
 
 class SiteSet
     {
+    using storage = std::vector<IQIndex>;
+    std::shared_ptr<storage> sites_;
     public:
 
     using String = std::string;
@@ -43,18 +45,22 @@ class SiteSet
 
     SiteSet() { }
 
-    SiteSet(std::ifstream& s) { }
+    SiteSet(int N) 
+        : sites_{std::make_shared<storage>(N+1)}
+        { }
+
+    explicit operator bool() const { return bool(sites_); }
 
     //Number of Sites
     int 
     N() const { return getN(); }
 
     //Index at Site i
-    const IQIndex&
+    IQIndex const&
     operator()(int i) const { return getSi(i); }
 
     //Index at Site i, alternate version
-    const IQIndex& 
+    IQIndex const& 
     si(int i) const { return getSi(i); }
 
     //Primed Index at Site i
@@ -67,91 +73,118 @@ class SiteSet
     //representing the spin up state on site 5
     //(assuming a spin SiteSet such as SpinHalf)
     IQIndexVal
-    operator()(int i, const String& state) const
+    operator()(int i, String const& state) const
         { return getState(i,state); }
 
     IQIndexVal
-    st(int i, const String& state) const
+    st(int i, String const& state) const
         { return getState(i,state); }
 
     IQIndexVal
-    stP(int i, const String& state) const
+    stP(int i, String const& state) const
         { return prime(getState(i,state)); }
 
 
     //Get the operator indicated by
     //"opname" located at site i
     IQTensor
-    op(const String& opname, int i,
-       const Args& args = Global::args()) const;
+    op(String const& opname, int i,
+       Args const& args = Global::args()) const;
 
     DefaultOpsT
-    defaultOps(const Args& args = Global::args()) const 
+    defaultOps(Args const& args = Args::global()) const 
         { return getDefaultOps(args); }
 
     void 
-    read(std::istream& s) { doRead(s); }
+    read(std::istream & s);
 
     void 
-    write(std::ostream& s) const { doWrite(s); }
+    write(std::ostream & s) const;
 
     virtual 
     ~SiteSet() { }
 
-    //Implementations (To Be Overridden by Derived Classes) 
+    //Index at Site i, alternate version
+    void
+    set(int i, IQIndex I) 
+        { 
+        if(!*this) Error("Cannot call set on default-initialized SiteSet");
+        if(not sites_.unique()) 
+            {
+            sites_ = std::make_shared<storage>(*sites_);
+            }
+        sites_->at(i) = I;
+        }
 
     private:
 
+    //Implementations (To Be Overridden by Derived Classes) 
+
     virtual int
-    getN() const = 0;
+    getN() const { return sites_ ? static_cast<int>(sites_->size())-1 : 0; }
 
     virtual IQIndex const&
-    getSi(int i) const = 0;
+    getSi(int i) const 
+        { 
+        if(not *this) Error("Default initialized SiteSet");
+        return (*sites_).at(i); 
+        }
 
     virtual IQIndexVal
-    getState(int i, const String& state) const
+    getState(int i, String const& state) const
         {
-        Error("getState not defined in class derived from SiteSet");
+        Error("getState not defined SiteSet or derived class");
         return IQIndexVal();
         }
 
     virtual IQTensor
-    getOp(int i, String const& opname, Args const& args) const
+    getOp(int i, 
+          String const& opname, 
+          Args const& args) const
         {
-        Error("getOp not defined in class derived from SiteSet");
-        return IQTensor();
+        Error("getOp not defined in SiteSet or derived class");
+        return IQTensor{};
         }
 
     virtual DefaultOpsT
-    getDefaultOps(const Args& args) const { return DefaultOpsT(); }
+    getDefaultOps(Args const& args) const 
+        { 
+        return DefaultOpsT(); 
+        }
 
     protected:
 
     virtual void
-    doRead(std::istream& s) { Error("doRead not defined in class derived from SiteSet"); }
+    doRead(std::istream& s) { }
 
     virtual void
-    doWrite(std::ostream& s) const { Error("doWrite not defined in class derived from SiteSet"); }
+    doWrite(std::ostream& s) const { }
 
     private:
 
     std::string
-    op1(const std::string& opname, size_t n) const;
+    op1(std::string const& opname, size_t n) const;
 
     std::string
-    op2(const std::string& opname, size_t n) const;
+    op2(std::string const& opname, size_t n) const;
+
+    public:
+
+    //for backwards compatibility with ITensor v1
+    SiteSet(std::ifstream& s) { }
 
     };
 
 inline IQTensor SiteSet::
-op(const String& opname, int i, 
-   const Args& args) const
+op(String const& opname, int i, 
+   Args const& args) const
     { 
+    if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
     if(opname == "Id")
         {
         IQIndex s = dag(si(i));
         IQIndex sP = siP(i);
-        IQTensor id_(s,sP);
+        auto id_ = IQTensor(s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
             id_.set(s(j),sP(j),1);
@@ -169,15 +202,14 @@ op(const String& opname, int i,
         {
         //If opname of the form "Name1*Name2",
         //return product of Name1 operator times Name2 operator
-        const
-        std::size_t found = opname.find_first_of('*');
+        auto found = opname.find_first_of('*');
         if(found != std::string::npos)
             {
             try {
             return multSiteOps(getOp(i,op1(opname,found),args),
                                getOp(i,op2(opname,found),args));
                 }
-            catch(const ITError& e)
+            catch(ITError const& e)
                 {
                 println("opname = ",opname);
                 printfln("found = %s",found);
@@ -190,23 +222,56 @@ op(const String& opname, int i,
     }
 
 std::string inline SiteSet::
-op1(const std::string& opname, size_t n) const
+op1(std::string const& opname, size_t n) const
     {
     return opname.substr(0,n);
     }
 
 std::string inline SiteSet::
-op2(const std::string& opname, size_t n) const
+op2(std::string const& opname, size_t n) const
     {
     return opname.substr(n+1);
     }
 
+void inline SiteSet::
+read(std::istream & s)
+    {
+    int N = 0;
+    s.read((char*) &N,sizeof(N));
+    if(N > 0)
+        {
+        sites_ = std::make_shared<storage>(N+1);
+        for(int j = 1; j <= N; ++j) 
+            {
+            sites_->at(j).read(s);
+            }
+        }
+    doRead(s);
+    }
+
+void inline SiteSet::
+write(std::ostream & s) const
+    {
+    auto N = getN();
+    s.write((char*) &N,sizeof(N));
+    if(sites_)
+        {
+        for(int j = 1; j <= N; ++j) 
+            {
+            sites_->at(j).write(s);
+            }
+        }
+    doWrite(s);
+    }
+
 inline std::ostream& 
-operator<<(std::ostream& s, const SiteSet& M)
+operator<<(std::ostream& s, SiteSet const& M)
     {
     s << "SiteSet:\n";
     for(int j = 1; j <= M.N(); ++j) 
+        {
         s << format("si(%d) = %s\n",j,M.si(j));
+        }
     return s;
     }
 
