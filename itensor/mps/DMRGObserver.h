@@ -57,7 +57,7 @@ class DMRGObserver : public Observer
     Real last_energy_;
     Spectrum last_spec_;
 
-    SiteSet::DefaultOpsT default_ops_;
+    //SiteSet::DefaultOpsT default_ops_;
 
     //
     /////////////
@@ -74,8 +74,8 @@ DMRGObserver(const MPSt<Tensor>& psi, const Args& args)
     max_eigs(-1),
     max_te(-1),
     done_(false),
-    last_energy_(1000),
-    default_ops_(psi.sites().defaultOps())
+    last_energy_(1000)
+    //default_ops_(psi.sites().defaultOps())
     { 
     }
 
@@ -88,23 +88,23 @@ measure(const Args& args)
     auto sw = args.getInt("Sweep",0);
     auto ha = args.getInt("HalfSweep",0);
     auto energy = args.getReal("Energy",0);
-    using IndexT = typename Tensor::index_type;
+    //using IndexT = typename Tensor::index_type;
 
     if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
         {
         if(b < N && b > 0)
             {
             auto wfb = psi_.A(b)*psi_.A(b+1);
-            for(const std::string& opname : default_ops_)
-                {
-                auto sb = IndexT(psi_.sites()(b));
-                auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).cplx();
-                //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).cplx();
-                if(std::fabs(z.imag()) < 1E-14)
-                    printfln("<%s>(%d) = %.10E",opname,b,z.real());
-                else
-                    printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
-                }
+            //for(const std::string& opname : default_ops_)
+            //    {
+            //    auto sb = IndexT(psi_.sites()(b));
+            //    auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).cplx();
+            //    //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).cplx();
+            //    if(std::fabs(z.imag()) < 1E-14)
+            //        printfln("<%s>(%d) = %.10E",opname,b,z.real());
+            //    else
+            //        printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
+            //    }
             }
         }
 
