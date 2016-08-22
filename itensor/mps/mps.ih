@@ -12,8 +12,8 @@ template<class T>
 SiteSet const& MPSt<T>::
 sites() const 
     { 
-    if(!sites_) Error("MPS SiteSet pointer is null");
-    return *sites_; 
+    if(not sites_) Error("MPS SiteSet is default-initialized");
+    return sites_; 
     }
 
 template <class Tensor>

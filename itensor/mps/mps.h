@@ -42,7 +42,7 @@ class MPSt
     std::vector<Tensor> A_;
     int l_orth_lim_,
         r_orth_lim_;
-    SiteSet const* sites_;
+    SiteSet sites_;
     mutable
     int atb_;
     std::string writedir_;
@@ -58,6 +58,8 @@ class MPSt
     //
 
     MPSt();
+
+    MPSt(int N);
 
     MPSt(SiteSet const& sites);
 
@@ -80,7 +82,7 @@ class MPSt
     SiteSet const& 
     sites() const;
 
-    explicit operator bool() const { return bool(sites_); }
+    explicit operator bool() const { return (not A_.empty()); }
 
     int 
     rightLim() const { return r_orth_lim_; }
@@ -318,12 +320,12 @@ class InitState
     const IQIndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
 
-    const SiteSet&
-    sites() const { return *sites_; }
+    SiteSet const&
+    sites() const { return sites_; }
 
     private:
 
-    const SiteSet* sites_;
+    SiteSet sites_;
     Storage state_;
 
     void

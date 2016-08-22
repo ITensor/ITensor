@@ -138,7 +138,7 @@ sort(HTerm & ht);
 
 class AutoMPO
     {
-    const SiteSet& sites_;
+    SiteSet sites_;
     std::vector<HTerm> terms_;
 
     enum State { New, Op };

@@ -33,7 +33,6 @@ MPSt<T>::
 MPSt() 
     : 
     N_(0), 
-    sites_(nullptr),
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -45,13 +44,31 @@ MPSt();
 
 template <class T>
 MPSt<T>::
+MPSt(int N)
+    : 
+    N_(N), 
+    A_(N+2), //idmrg may use A_[0] and A[N+1]
+    l_orth_lim_(0),
+    r_orth_lim_(N+1),
+    atb_(1),
+    writedir_("./"),
+    do_write_(false)
+    { 
+    }
+template MPSt<ITensor>::
+MPSt(int N);
+template MPSt<IQTensor>::
+MPSt(int N);
+
+template <class T>
+MPSt<T>::
 MPSt(SiteSet const& sites)
     : 
     N_(sites.N()), 
     A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(sites.N()+1),
-    sites_(&sites), 
+    sites_(sites), 
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -59,9 +76,9 @@ MPSt(SiteSet const& sites)
     random_tensors(A_);
     }
 template MPSt<ITensor>::
-MPSt(const SiteSet& sites);
+MPSt(SiteSet const& sites);
 template MPSt<IQTensor>::
-MPSt(const SiteSet& sites);
+MPSt(SiteSet const& sites);
 
 template <class T>
 MPSt<T>::
@@ -71,7 +88,7 @@ MPSt(InitState const& initState)
     A_(initState.sites().N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
-    sites_(&(initState.sites())), 
+    sites_(initState.sites()), 
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -79,9 +96,9 @@ MPSt(InitState const& initState)
     init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
-MPSt(const InitState& initState);
+MPSt(InitState const& initState);
 template MPSt<IQTensor>::
-MPSt(const InitState& initState);
+MPSt(InitState const& initState);
 
 template <class T>
 MPSt<T>::
@@ -99,9 +116,9 @@ MPSt(MPSt const& other)
     copyWriteDir();
     }
 template MPSt<ITensor>::
-MPSt(const MPSt<ITensor>&);
+MPSt(MPSt<ITensor> const&);
 template MPSt<IQTensor>::
-MPSt(const MPSt<IQTensor>&);
+MPSt(MPSt<IQTensor> const&);
 
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
@@ -187,7 +204,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 read(std::istream & s)
     {
-    if(not sites_) Error("Can't read to default constructed MPS");
+    if(not *this) Error("Can't read to default constructed MPS");
     for(auto j : range(A_))
         {
         itensor::read(s,A_[j]);
@@ -196,11 +213,11 @@ read(std::istream & s)
     //using the same sites
     auto s1 = findtype(A_.at(1),Site);
     s1.noprime();
-    if(s1 != IndexT(sites_->si(1)))
+    if(sites_ && s1 != IndexT(sites_(1)))
         {
         Print(A_.at(1).inds());
         Print(s1);
-        Print(IndexT(sites_->si(1)));
+        Print(IndexT(sites_(1)));
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
         }
     itensor::read(s,l_orth_lim_);
@@ -233,11 +250,8 @@ void MPSt<IQTensor>::write(std::ostream& s) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
-read(const std::string& dirname)
+read(std::string const& dirname)
     {
-    if(sites_ == 0)
-        Error("Can't read to default constructed MPS, must specify SiteSet");
-
     l_orth_lim_ = 0;
     r_orth_lim_ = N_+1;
 
@@ -251,14 +265,14 @@ read(const std::string& dirname)
         }
     }
 template
-void MPSt<ITensor>::read(const std::string& dirname);
+void MPSt<ITensor>::read(std::string const& dirname);
 template
-void MPSt<IQTensor>::read(const std::string& dirname);
+void MPSt<IQTensor>::read(std::string const& dirname);
 
 
 template <class Tensor>
 string MPSt<Tensor>::
-AFName(int j, const string& dirname) const
+AFName(int j, string const& dirname) const
     { 
     if(dirname == "")
         {
@@ -270,9 +284,9 @@ AFName(int j, const string& dirname) const
         }
     }
 template
-string MPSt<ITensor>::AFName(int j, const string&) const;
+string MPSt<ITensor>::AFName(int j, string const&) const;
 template
-string MPSt<IQTensor>::AFName(int j, const string&) const;
+string MPSt<IQTensor>::AFName(int j, string const&) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -694,9 +708,9 @@ orthMPS(IQTensor& A1, IQTensor& A2, Direction dir, const Args& args);
 
 template<class Tensor> 
 void MPSt<Tensor>::
-position(int i, const Args& args)
+position(int i, Args const& args)
     {
-    if(!(*this)) Error("position: MPS is default constructed");
+    if(not *this) Error("position: MPS is default constructed");
 
     if(args.getBool("DoSVDBond",false))
         {
@@ -959,7 +973,7 @@ initWrite(const Args& args)
                 }
             }
 
-        writeToFile(writedir_+"/sites",*sites_);
+        writeToFile(writedir_+"/sites",sites_);
 
         do_write_ = true;
         }
@@ -1026,21 +1040,21 @@ template
 void MPSt<IQTensor>::swap(MPSt<IQTensor>& other);
 
 InitState::
-InitState(const SiteSet& sites)
+InitState(SiteSet const& sites)
     : 
-    sites_(&sites), 
+    sites_(sites), 
     state_(1+sites.N())
     { 
-    for(int n = 1; n <= sites_->N(); ++n)
+    for(int n = 1; n <= sites_.N(); ++n)
         {
-        state_[n] = sites_->si(n)(1);
+        state_[n] = sites_(n)(1);
         }
     }
 
 InitState::
-InitState(const SiteSet& sites, const String& state)
+InitState(SiteSet const& sites, String const& state)
     : 
-    sites_(&sites), 
+    sites_(sites), 
     state_(1+sites.N())
     { 
     setAll(state);
@@ -1050,16 +1064,16 @@ InitState& InitState::
 set(int i, const String& state)
     { 
     checkRange(i);
-    state_.at(i) = sites_->st(i,state);
+    state_.at(i) = sites_(i,state);
     return *this;
     }
 
 InitState& InitState::
-setAll(const String& state)
+setAll(String const& state)
     { 
-    for(int n = 1; n <= sites_->N(); ++n)
+    for(int n = 1; n <= sites_.N(); ++n)
         {
-        state_[n] = sites_->st(n,state);
+        state_[n] = sites_(n,state);
         }
     return *this;
     }
@@ -1067,17 +1081,17 @@ setAll(const String& state)
 void InitState::
 checkRange(int i) const
     {
-    if(i > sites_->N() || i < 1) 
+    if(i > sites_.N() || i < 1) 
         {
         println("i = ",i);
-        println("Valid range is 1 to ",sites_->N());
+        println("Valid range is 1 to ",sites_.N());
         Error("i out of range");
         }
     }
 
 //Auxilary method for convertToIQ
 long 
-collapseCols(const Vector& Diag, Matrix& M)
+collapseCols(Vector const& Diag, Matrix& M)
     {
     long nr = Diag.size(), 
          nc = long(sumels(Diag));
