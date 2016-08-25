@@ -8,19 +8,9 @@
 
 namespace itensor {
 
-class Spinless : public SiteSet
-    {
-    public:
+class SpinlessSite;
 
-    Spinless();
-
-    Spinless(int N, 
-             Args const& args = Args::global());
-
-    void
-    read(std::istream& s);
-
-    };
+using Spinless = BasicSiteSet<SpinlessSite>;
 
 class SpinlessSite
     {
@@ -124,23 +114,6 @@ class SpinlessSite
         return Op;
         }
     };
-
-inline Spinless::
-Spinless(int N, Args const& args)
-    { 
-    auto sites = std::vector<SpinlessSite>(N+1);
-    for(int j = 1; j <= N; ++j)
-        {
-        sites.at(j) = SpinlessSite(j,args);
-        }
-    SiteSet::init(std::move(sites));
-    }
-
-void inline Spinless::
-read(std::istream & s)
-    {
-    SiteSet::initStream<SpinlessSite>(s);
-    }
 
 } //namespace itensor
 

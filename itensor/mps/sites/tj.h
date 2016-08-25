@@ -8,19 +8,9 @@
 
 namespace itensor {
 
-class tJ : public SiteSet
-    {
-    public:
+class tJSite;
 
-    tJ();
-
-    tJ(int N, 
-       Args const& args = Args::global());
-
-    void
-    read(std::istream& s);
-
-    };
+using tJ  = BasicSiteSet<tJSite>;
 
 class tJSite
     {
@@ -173,23 +163,6 @@ class tJSite
         return Op;
         }
     };
-
-inline tJ::
-tJ(int N, Args const& args)
-    { 
-    auto sites = std::vector<tJSite>(N+1);
-    for(int j = 1; j <= N; ++j)
-        {
-        sites.at(j) = tJSite(j,args);
-        }
-    SiteSet::init(std::move(sites));
-    }
-
-void inline tJ::
-read(std::istream & s)
-    {
-    SiteSet::initStream<tJSite>(s);
-    }
 
 } //namespace itensor
 

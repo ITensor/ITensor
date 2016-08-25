@@ -8,18 +8,9 @@
 
 namespace itensor {
 
-class SpinHalf : public SiteSet
-    {
-    public:
+class SpinHalfSite;
 
-    SpinHalf() { }
-
-    SpinHalf(int N);
-
-    void
-    read(std::istream & s);
-
-    };
+using SpinHalf = BasicSiteSet<SpinHalfSite>;
 
 class SpinHalfSite
     {
@@ -141,23 +132,6 @@ class SpinHalfSite
         return Op;
         }
     };
-
-inline SpinHalf::
-SpinHalf(int N)
-    { 
-    auto sites = SiteStore<SpinHalfSite>(N);
-    for(int j = 1; j <= N; ++j)
-        {
-        sites.set(j,SpinHalfSite(j));
-        }
-    SiteSet::init(std::move(sites));
-    }
-
-void inline SpinHalf::
-read(std::istream & s)
-    {
-    SiteSet::initStream<SiteStore<SpinHalfSite>>(s);
-    }
 
 } //namespace itensor
 

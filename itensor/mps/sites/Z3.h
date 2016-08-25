@@ -8,26 +8,9 @@
 
 namespace itensor {
 
-class Z3 : public SiteSet
-    {
-    public:
+class Z3Site;
 
-    Z3();
-
-    Z3(int N, 
-       Args const& args = Args::global());
-
-    void
-    read(std::istream& s);
-
-    Cplx static
-    Omega()
-        {
-        static Cplx w(cos(2.*Pi/3.),sin(2.*Pi/3.));
-        return w;
-        }
-
-    };
+using Z3 = BasicSiteSet<Z3Site>;
 
 class Z3Site
     {
@@ -147,23 +130,6 @@ class Z3Site
         return Op;
         }
     };
-
-inline Z3::
-Z3(int N, Args const& args)
-    { 
-    auto sites = std::vector<Z3Site>(N+1);
-    for(int j = 1; j <= N; ++j)
-        {
-        sites.at(j) = Z3Site(j,args);
-        }
-    SiteSet::init(std::move(sites));
-    }
-
-void inline Z3::
-read(std::istream & s)
-    {
-    SiteSet::initStream<Z3Site>(s);
-    }
 
 } //namespace itensor
 

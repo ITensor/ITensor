@@ -1,4 +1,4 @@
-//
+////
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
@@ -24,11 +24,11 @@ namespace itensor {
 //
 
 class GenericSite;
-struct BaseSiteStore;
+struct SiteStore;
 
 class SiteSet
     {
-    std::shared_ptr<BaseSiteStore> sites_;
+    std::shared_ptr<SiteStore> sites_;
     public:
 
     using String = std::string;
@@ -59,7 +59,7 @@ class SiteSet
        Args const& args = Args::global()) const;
 
     void 
-    read(std::istream & s) { initStream<SiteStore<>>(s); }
+    read(std::istream & s) { readType<GenericSite>(s); }
 
     void 
     write(std::ostream & s) const;
@@ -88,17 +88,71 @@ class SiteSet
 
     protected:
 
-    template<class SiteType>
     void
-    init(std::vector<SiteType> && sites);
+    init(SiteStore && sites);
 
     template<typename SiteType>
     void
-    initStream(std::istream & s);
+    readType(std::istream & s);
 
     };
 
-class GenericSite 
+//
+// "Base" type for virtual mechanism
+//
+class SiteBase 
+    { 
+    public:
+
+    SiteBase() { }
+
+    virtual ~SiteBase() { }
+
+    IQIndex virtual
+    index() const = 0;
+
+    IQTensor virtual
+    op(std::string const& opname,
+       Args const& args) const = 0;
+
+    IQIndexVal virtual
+    state(std::string const& state) = 0;
+    };
+
+//
+// Derived "box" type with virtual methods
+// Wraps any object implementing the "SiteType" interface
+//
+template<typename SiteType>
+class SiteHolder : public SiteBase
+    { 
+    SiteType s;
+    public:
+
+    SiteHolder() { }
+
+    SiteHolder(SiteType && s_) : s(std::move(s_)) { }
+
+    virtual ~SiteHolder() { }
+
+    IQIndex virtual
+    index() const { return s.index(); }
+
+    IQTensor virtual
+    op(std::string const& opname,
+       Args const& args) const
+        {
+        return s.op(opname,args);
+        }
+
+    IQIndexVal virtual
+    state(std::string const& state)
+        {
+        return s.state(state);
+        }
+    };
+
+class GenericSite
     { 
     IQIndex i;
     public:
@@ -126,59 +180,11 @@ class GenericSite
         }
     };
 
-//Placeholder for SiteStorage below
-struct NoSite
-    { 
-    NoSite() { }
 
-    IQIndex
-    index() const { return IQIndex{}; }
-
-    IQTensor
-    op(std::string const& opname,
-       Args const& args) const
-        {
-        return IQTensor{};
-        }
-
-    IQIndexVal
-    state(std::string const& state)
-        {
-        return IQIndexVal{};
-        }
-    };
-
-struct BaseSiteStore
+struct SiteStore
     {
-    int virtual
-    N() const = 0;
-
-    IQIndex virtual
-    si(int j) const = 0;
-
-    IQIndexVal virtual
-    state(int j,
-          std::string const& state) = 0;
-
-    IQTensor virtual
-    op(int j,
-       std::string const& opname,
-       Args const& args) const = 0;
-    };
-
-template<class SiteType1 = GenericSite, class SiteType2 = GenericSite>
-struct SiteStore : public BaseSiteStore
-    {
-    struct Element
-        {
-        int tag = 0;
-        union s
-            {
-            SiteType1 s1;
-            SiteType2 s2;
-            };
-        };
-    using storage = std::vector<Element>;
+    using sptr = std::unique_ptr<SiteBase>;
+    using storage = std::vector<sptr>;
     private:
     storage sites_;
     public:
@@ -187,37 +193,12 @@ struct SiteStore : public BaseSiteStore
 
     SiteStore(int N) : sites_(1+N) { }
 
+    template<typename SiteType>
     void
-    set(int i, SiteType1 const& s1) 
+    set(int i, SiteType && s) 
         {
-        sites_.at(i).tag = 1;
-        sites_.at(i).s = s1;
+        sites_.at(i) = sptr(new SiteHolder<SiteType>(std::move(s)));
         }
-
-    void
-    set(int i, SiteType2 const& s2) 
-        {
-        sites_.at(i).tag = 2;
-        sites_.at(i).s = s2;
-        }
-
-    void
-    set(int i, IQIndex const& i, int tag = 1) 
-        {
-        if(not (tag == 1 || tag == 2)) Error("Invalid tag passed to set");
-        sites_.at(i).tag = tag;
-        if(tag == 1)
-            {
-            sites_[i].s = SiteType1(i);
-            }
-        else
-            {
-            sites_[i].s = SiteType2(i);
-            }
-        }
-
-    int
-    tag(int i) const { return sites_.at(i).tag; }
 
     int
     N() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
@@ -225,16 +206,16 @@ struct SiteStore : public BaseSiteStore
     IQIndex
     si(int j) const 
         { 
-        auto& el = sites_.at(j);
-        return el.tag==1 ? el.s1.index() : el.s2.index();
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->index();
         }
 
     IQIndexVal
     state(int j,
           std::string const& state)
         {
-        auto& el = sites_.at(j);
-        return el.tag==1 ? el.s1.state(state) : el.s2.state(state);
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->state(state);
         }
 
     IQTensor
@@ -242,8 +223,8 @@ struct SiteStore : public BaseSiteStore
        std::string const& opname,
        Args const& args) const
         {
-        auto& el = sites_.at(j);
-        return el.tag==1 ? el.s1.op(opname,args) : el.s2.op(opname,args);
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->op(opname,args);
         }
     };
 
@@ -320,33 +301,25 @@ op(String const& opname, int i,
         }
     }
 
-template<class StoreType>
-void SiteSet::
-init(StoreType && store)
+void inline SiteSet::
+init(SiteStore && store)
     { 
-    static_assert(std::is_base_of<BaseSiteStore,StoreType>::value,
-                  "StoreType must be derived from BaseSiteStore");
-    sites_ = std::make_shared<StoreType>(std::move(store));
+    sites_ = std::make_shared<SiteStore>(std::move(store));
     }
 
-template<typename StoreType>
+template<typename SiteType>
 void SiteSet::
-initStream(std::istream & s)
+readType(std::istream & s)
     {
-    static_assert(std::is_base_of<BaseSiteStore,StoreType>::value,
-                  "StoreType must be derived from BaseSiteStore");
-    int N = 0;
-    s.read((char*) &N,sizeof(N));
+    int N = itensor::read<int>(s);
     if(N > 0)
         {
-        auto store = StoreType(N);
+        auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
             auto I = IQIndex{};
             I.read(s);
-            int tag = I.primeLevel();
-            I.primeLevel(0);
-            store.set(j,I,tag);
+            store.set(j,SiteType(I));
             }
         init(std::move(store));
         }
@@ -355,16 +328,12 @@ initStream(std::istream & s)
 void inline SiteSet::
 write(std::ostream & s) const
     {
-    auto N_ = N();
-    s.write((char*) &N_,sizeof(N_));
+    itensor::write(s,N());
     if(sites_)
         {
-        for(int j = 1; j <= N_; ++j) 
+        for(int j = 1; j <= N(); ++j) 
             {
-            auto tag = sites_->tag(j);
-            auto I = sites_->si(j);
-            I.primeLevel(tag);
-            I.write(s);
+            sites_->si(j).write(s);
             }
         }
     }
@@ -379,6 +348,32 @@ operator<<(std::ostream& s, SiteSet const& sites)
         }
     return s;
     }
+
+template<typename SiteType>
+class BasicSiteSet : public SiteSet
+    {
+    public:
+
+    BasicSiteSet() { }
+
+    BasicSiteSet(int N, 
+                 Args const& args = Args::global())
+        {
+        auto sites = SiteStore(N);
+        for(int j = 1; j <= N; ++j)
+            {
+            sites.set(j,SiteType(j));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
+    void
+    read(std::istream& s)
+        {
+        SiteSet::readType<SiteType>(s);
+        }
+
+    };
 
 } //namespace itensor
 

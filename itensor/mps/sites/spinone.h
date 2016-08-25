@@ -12,15 +12,16 @@ class SpinOne : public SiteSet
     {
     public:
 
-    SpinOne();
+    SpinOne() { }
 
     SpinOne(int N, 
-             Args const& args = Args::global());
+            Args const& args = Args::global());
 
     void
     read(std::istream& s);
 
     };
+
 
 class SpinOneSite
     {
@@ -31,27 +32,12 @@ class SpinOneSite
 
     SpinOneSite(IQIndex I) : s(I) { }
 
-    SpinOneSite(int n, int N, Args const& args = Args::global())
+    SpinOneSite(int n)
         {
-        if((args.getBool("SHalfEdge",false) && (n==1 || n == N))
-           || (args.getBool("SHalfLeftEdge",false) && n==1))
-            {
-            if(args.getBool("Verbose",false))
-                {
-                println("Placing a S=1/2 at site ",n);
-                }
-
-            s = IQIndex{nameint("S=1/2 site=",n),
-                Index(nameint("Up:site",n),1,Site),QN("Sz=",+1),
-                Index(nameint("Dn:site",n),1,Site),QN("Sz=",-1)};
-            }
-        else
-            {
-            s = IQIndex{nameint("S=1 site=",n),
-                Index(nameint("Up:site",n),1,Site),QN("Sz=",+2),
-                Index(nameint("Z0:site",n),1,Site),QN("Sz=", 0),
-                Index(nameint("Dn:site",n),1,Site),QN("Sz=",-2)};
-            }
+        s = IQIndex{nameint("S=1 site=",n),
+            Index(nameint("Up:site",n),1,Site),QN("Sz=",+2),
+            Index(nameint("Z0:site",n),1,Site),QN("Sz=", 0),
+            Index(nameint("Dn:site",n),1,Site),QN("Sz=",-2)};
         }
 
     IQIndex
@@ -67,13 +53,12 @@ class SpinOneSite
         else
         if(state == "Z0" || state == "0")
             {
-            if(s.m() == 2) Error("Z0 not defined for spin 1/2 site");
             return s(2);
             }
         else
         if(state == "Dn" || state == "-")
             {
-            return s(s.m());
+            return s(3);
             }
         else
             {
@@ -99,16 +84,8 @@ class SpinOneSite
 
         if(opname == "Sz")
             {
-            if(s.m() == 2)
-                {
-                Op.set(Up,UpP,+0.5);
-                Op.set(Dn,DnP,-0.5);
-                }
-            else
-                {
-                Op.set(Up,UpP,+1.0);
-                Op.set(Dn,DnP,-1.0);
-                }
+            Op.set(Up,UpP,+1.0);
+            Op.set(Dn,DnP,-1.0);
             }
         else
         if(opname == "Sx")
@@ -117,18 +94,10 @@ class SpinOneSite
             //because as an IQTensor, Op would
             //not have a well defined QN flux
             Op = mixedIQTensor(s,sP);
-            if(s.m() == 2)
-                {
-                Op.set(Up,DnP,+0.5);
-                Op.set(Dn,UpP,+0.5);
-                }
-            else
-                {
-                Op.set(Up,Z0P,ISqrt2); 
-                Op.set(Z0,UpP,ISqrt2);
-                Op.set(Z0,DnP,ISqrt2); 
-                Op.set(Dn,Z0P,ISqrt2);
-                }
+            Op.set(Up,Z0P,ISqrt2); 
+            Op.set(Z0,UpP,ISqrt2);
+            Op.set(Z0,DnP,ISqrt2); 
+            Op.set(Dn,Z0P,ISqrt2);
             }
         else
         if(opname == "ISy")
@@ -137,18 +106,10 @@ class SpinOneSite
             //because as an IQTensor, Op would
             //not have a well defined QN flux
             Op = mixedIQTensor(s,sP);
-            if(s.m() == 2)
-                {
-                Op.set(Up,DnP,-0.5);
-                Op.set(Dn,UpP,+0.5);
-                }
-            else
-                {
-                Op.set(Up,Z0P,+ISqrt2); 
-                Op.set(Z0,UpP,-ISqrt2);
-                Op.set(Z0,DnP,+ISqrt2); 
-                Op.set(Dn,Z0P,-ISqrt2);
-                }
+            Op.set(Up,Z0P,+ISqrt2); 
+            Op.set(Z0,UpP,-ISqrt2);
+            Op.set(Z0,DnP,+ISqrt2); 
+            Op.set(Dn,Z0P,-ISqrt2);
             }
         else
         if(opname == "Sy")
@@ -157,56 +118,32 @@ class SpinOneSite
             //because as an IQTensor, Op would
             //not have a well defined QN flux
             Op = mixedIQTensor(s,sP);
-            if(s.m() == 2)
-                {
-                Op.set(Up,DnP,+0.5_i);
-                Op.set(Dn,UpP,-0.5_i);
-                }
-            else
-                {
-                Op.set(Up,Z0P,-ISqrt2*1_i); 
-                Op.set(Z0,UpP,+ISqrt2*1_i);
-                Op.set(Z0,DnP,-ISqrt2*1_i); 
-                Op.set(Dn,Z0P,+ISqrt2*1_i);
-                }
+            Op.set(Up,Z0P,-ISqrt2*1_i); 
+            Op.set(Z0,UpP,+ISqrt2*1_i);
+            Op.set(Z0,DnP,-ISqrt2*1_i); 
+            Op.set(Dn,Z0P,+ISqrt2*1_i);
             }
         else
         if(opname == "Sp" || opname == "S+")
             {
-            if(s.m() == 2)
-                {
-                Op.set(Dn,UpP,1);
-                }
-            else
-                {
-                Op.set(Dn,Z0P,Sqrt2);  
-                Op.set(Z0,UpP,Sqrt2);
-                }
+            Op.set(Dn,Z0P,Sqrt2);  
+            Op.set(Z0,UpP,Sqrt2);
             }
         else
         if(opname == "Sm" || opname == "S-")
             {
-            if(s.m() == 2)
-                {
-                Op.set(Up,DnP,1);
-                }
-            else
-                {
-                Op.set(Up,Z0P,Sqrt2);
-                Op.set(Z0,DnP,Sqrt2);
-                }
+            Op.set(Up,Z0P,Sqrt2);
+            Op.set(Z0,DnP,Sqrt2);
             }
         else
         if(opname == "Sz2")
             {
-            if(s.m() == 2) Error("Sz^2 only non-trivial for S=1 sites");
             Op.set(Up,UpP,1); 
             Op.set(Dn,DnP,1);
             }
         else
         if(opname == "Sx2")
             {
-            if(s.m() == 2) Error("Sx^2 only non-trivial for S=1 sites");
             Op.set(Up,UpP,0.5); 
             Op.set(Up,DnP,0.5);
             Op.set(Z0,Z0P,1.0);
@@ -216,7 +153,6 @@ class SpinOneSite
         else
         if(opname == "Sy2")
             {
-            if(s.m() == 2) Error("Sy^2 only non-trivial for S=1 sites");
             Op.set(Up,UpP,+0.5); 
             Op.set(Up,DnP,-0.5);
             Op.set(Z0,Z0P,1);
@@ -231,7 +167,6 @@ class SpinOneSite
         else
         if(opname == "projZ0")
             {
-            if(s.m() == 2) Error("Can only form projZ0 for S=1 sites");
             Op.set(Z0,Z0P,1);
             }
         else
@@ -284,20 +219,57 @@ class SpinOneSite
     };
 
 inline SpinOne::
-SpinOne(int N, Args const& args)
-    { 
-    auto sites = std::vector<SpinOneSite>(N+1);
-    for(int j = 1; j <= N; ++j)
+SpinOne(int N, 
+        Args const& args)
+    {
+    auto shedge = args.getBool("SHalfEdge",false);
+    auto Lshedge = args.getBool("SHalfLeftEdge",false);
+
+    auto sites = SiteStore(N);
+
+    auto start = 1;
+    if(shedge || Lshedge)
         {
-        sites.at(j) = SpinOneSite(j,N,args);
+        if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
+        sites.set(1,SpinHalfSite(1));
+        start = 2;
         }
+
+    for(int j = start; j < N; ++j)
+        {
+        sites.set(j,SpinOneSite(j));
+        }
+
+    if(shedge)
+        {
+        if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
+        sites.set(N,SpinHalfSite(N));
+        }
+    else
+        {
+        sites.set(N,SpinOneSite(N));
+        }
+
     SiteSet::init(std::move(sites));
     }
 
 void inline SpinOne::
-read(std::istream & s)
+read(std::istream& s)
     {
-    SiteSet::initStream<SpinOneSite>(s);
+    int N = itensor::read<int>(s);
+    if(N > 0)
+        {
+        auto store = SiteStore(N);
+        for(int j = 1; j <= N; ++j) 
+            {
+            auto I = IQIndex{};
+            I.read(s);
+            if(I.m() == 3) store.set(j,SpinOneSite(I));
+            else if(I.m() == 2) store.set(j,SpinHalfSite(I));
+            else Error(format("SpinOne cannot read index of size %d",I.m()));
+            }
+        init(std::move(store));
+        }
     }
 
 } //namespace itensor

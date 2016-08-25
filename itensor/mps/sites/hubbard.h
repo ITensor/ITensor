@@ -8,19 +8,9 @@
 
 namespace itensor {
 
-class Hubbard : public SiteSet
-    {
-    public:
+class HubbardSite;
 
-    Hubbard() { }
-
-    Hubbard(int N, 
-            Args const& args = Global::args());
-
-    void
-    read(std::istream & s);
-
-    };
+using Hubbard = BasicSiteSet<HubbardSite>;
 
 class HubbardSite
     {
@@ -212,23 +202,6 @@ class HubbardSite
         return Op;
         }
     };
-
-inline Hubbard::
-Hubbard(int N, Args const& args)
-    { 
-    auto sites = std::vector<HubbardSite>(N+1);
-    for(int j = 1; j <= N; ++j)
-        {
-        sites.at(j) = HubbardSite(j,args);
-        }
-    SiteSet::init(std::move(sites));
-    }
-
-void inline Hubbard::
-read(std::istream & s)
-    {
-    SiteSet::initStream<HubbardSite>(s);
-    }
 
 
 } //namespace itensor
