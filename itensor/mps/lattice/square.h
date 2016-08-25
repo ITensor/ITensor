@@ -15,6 +15,8 @@ squareLattice(int Nx,
               Args const& args = Args::global())
     {
     auto yperiodic = args.getBool("YPeriodic",false);
+    // Periodicity on y is meaningless for one dimensional chain or a ladder
+    yperiodic = yperiodic && (Ny > 2);
     auto N = Nx*Ny;
     auto Nbond = 2*N-Ny + (yperiodic ? 0 : -Nx);
     LatticeGraph latt; 
