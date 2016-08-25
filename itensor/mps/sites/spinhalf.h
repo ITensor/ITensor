@@ -145,18 +145,18 @@ class SpinHalfSite
 inline SpinHalf::
 SpinHalf(int N)
     { 
-    auto sites = std::vector<SpinHalfSite>(N+1);
+    auto sites = SiteStore<SpinHalfSite>(N);
     for(int j = 1; j <= N; ++j)
         {
-        sites.at(j) = SpinHalfSite(j);
+        sites.set(j,SpinHalfSite(j));
         }
-    init(std::move(sites));
+    SiteSet::init(std::move(sites));
     }
 
 void inline SpinHalf::
 read(std::istream & s)
     {
-    SiteSet::initStream<SpinHalfSite>(s);
+    SiteSet::initStream<SiteStore<SpinHalfSite>>(s);
     }
 
 } //namespace itensor

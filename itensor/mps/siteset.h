@@ -59,7 +59,7 @@ class SiteSet
        Args const& args = Args::global()) const;
 
     void 
-    read(std::istream & s) { initStream<GenericSite>(s); }
+    read(std::istream & s) { initStream<SiteStore<>>(s); }
 
     void 
     write(std::ostream & s) const;
@@ -126,6 +126,28 @@ class GenericSite
         }
     };
 
+//Placeholder for SiteStorage below
+struct NoSite
+    { 
+    NoSite() { }
+
+    IQIndex
+    index() const { return IQIndex{}; }
+
+    IQTensor
+    op(std::string const& opname,
+       Args const& args) const
+        {
+        return IQTensor{};
+        }
+
+    IQIndexVal
+    state(std::string const& state)
+        {
+        return IQIndexVal{};
+        }
+    };
+
 struct BaseSiteStore
     {
     int virtual
@@ -144,27 +166,75 @@ struct BaseSiteStore
        Args const& args) const = 0;
     };
 
-template<class SiteType = GenericSite>
+template<class SiteType1 = GenericSite, class SiteType2 = GenericSite>
 struct SiteStore : public BaseSiteStore
     {
-    using storage = std::vector<SiteType>;
+    struct Element
+        {
+        int tag = 0;
+        union s
+            {
+            SiteType1 s1;
+            SiteType2 s2;
+            };
+        };
+    using storage = std::vector<Element>;
     private:
     storage sites_;
     public:
 
-    SiteStore(storage && sites) : sites_(sites) { }
+    SiteStore() { }
+
+    SiteStore(int N) : sites_(1+N) { }
+
+    void
+    set(int i, SiteType1 const& s1) 
+        {
+        sites_.at(i).tag = 1;
+        sites_.at(i).s = s1;
+        }
+
+    void
+    set(int i, SiteType2 const& s2) 
+        {
+        sites_.at(i).tag = 2;
+        sites_.at(i).s = s2;
+        }
+
+    void
+    set(int i, IQIndex const& i, int tag = 1) 
+        {
+        if(not (tag == 1 || tag == 2)) Error("Invalid tag passed to set");
+        sites_.at(i).tag = tag;
+        if(tag == 1)
+            {
+            sites_[i].s = SiteType1(i);
+            }
+        else
+            {
+            sites_[i].s = SiteType2(i);
+            }
+        }
+
+    int
+    tag(int i) const { return sites_.at(i).tag; }
 
     int
     N() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
 
     IQIndex
-    si(int j) const { return sites_.at(j).index(); }
+    si(int j) const 
+        { 
+        auto& el = sites_.at(j);
+        return el.tag==1 ? el.s1.index() : el.s2.index();
+        }
 
     IQIndexVal
     state(int j,
           std::string const& state)
         {
-        return sites_.at(j).state(state);
+        auto& el = sites_.at(j);
+        return el.tag==1 ? el.s1.state(state) : el.s2.state(state);
         }
 
     IQTensor
@@ -172,9 +242,11 @@ struct SiteStore : public BaseSiteStore
        std::string const& opname,
        Args const& args) const
         {
-        return sites_.at(j).op(opname,args);
+        auto& el = sites_.at(j);
+        return el.tag==1 ? el.s1.op(opname,args) : el.s2.op(opname,args);
         }
     };
+
 
 
 int inline SiteSet::
@@ -248,27 +320,33 @@ op(String const& opname, int i,
         }
     }
 
-template<class SiteType>
+template<class StoreType>
 void SiteSet::
-init(std::vector<SiteType> && sites)
+init(StoreType && store)
     { 
-    sites_ = std::make_shared<SiteStore<SiteType>>(std::move(sites));
+    static_assert(std::is_base_of<BaseSiteStore,StoreType>::value,
+                  "StoreType must be derived from BaseSiteStore");
+    sites_ = std::make_shared<StoreType>(std::move(store));
     }
 
-template<typename SiteType>
+template<typename StoreType>
 void SiteSet::
 initStream(std::istream & s)
     {
+    static_assert(std::is_base_of<BaseSiteStore,StoreType>::value,
+                  "StoreType must be derived from BaseSiteStore");
     int N = 0;
     s.read((char*) &N,sizeof(N));
     if(N > 0)
         {
-        auto store = std::vector<SiteType>(N+1);
+        auto store = StoreType(N);
         for(int j = 1; j <= N; ++j) 
             {
             auto I = IQIndex{};
             I.read(s);
-            store.at(j) = I;
+            int tag = I.primeLevel();
+            I.primeLevel(0);
+            store.set(j,I,tag);
             }
         init(std::move(store));
         }
@@ -283,7 +361,10 @@ write(std::ostream & s) const
         {
         for(int j = 1; j <= N_; ++j) 
             {
-            si(j).write(s);
+            auto tag = sites_->tag(j);
+            auto I = sites_->si(j);
+            I.primeLevel(tag);
+            I.write(s);
             }
         }
     }
