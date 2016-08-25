@@ -188,7 +188,8 @@ exactApplyMPO(MPSt<Tensor> const& x,
     auto N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
 
-    auto Kx = MPSt<Tensor>(x.sites());
+//    auto Kx = MPSt<Tensor>(x.sites());
+    MPSt<Tensor> Kx(x);
 
     Kx.Anc(1) = x.A(1) * K.A(1);
     for(auto j : range1(N-1))
