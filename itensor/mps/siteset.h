@@ -362,7 +362,7 @@ class BasicSiteSet : public SiteSet
         auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
-            sites.set(j,SiteType(j));
+            sites.set(j,SiteType(j,args));
             }
         SiteSet::init(std::move(sites));
         }

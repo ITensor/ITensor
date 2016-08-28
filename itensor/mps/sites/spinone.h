@@ -32,7 +32,7 @@ class SpinOneSite
 
     SpinOneSite(IQIndex I) : s(I) { }
 
-    SpinOneSite(int n)
+    SpinOneSite(int n, Args const& args = Args::global())
         {
         s = IQIndex{nameint("S=1 site=",n),
             Index(nameint("Up:site",n),1,Site),QN("Sz=",+2),

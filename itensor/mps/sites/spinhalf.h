@@ -21,7 +21,7 @@ class SpinHalfSite
 
     SpinHalfSite(IQIndex I) : s(I) { }
 
-    SpinHalfSite(int n)
+    SpinHalfSite(int n, Args const& args = Args::global())
         {
         s = IQIndex{nameint("S=1/2 ",n),
                Index(nameint("Up ",n),1,Site),QN("Sz=",+1),
