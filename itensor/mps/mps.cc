@@ -204,7 +204,8 @@ template <class Tensor>
 void MPSt<Tensor>::
 read(std::istream & s)
     {
-    if(not *this) Error("Can't read to default constructed MPS");
+    itensor::read(s,N_);
+    A_.resize(N_+2);
     for(auto j : range(A_))
         {
         itensor::read(s,A_[j]);
@@ -236,6 +237,7 @@ write(std::ostream& s) const
     if(do_write_)
         Error("MPSt::write not yet supported if doWrite(true)");
 
+    itensor::write(s,N());
     for(auto j : range(A_.size()))
         {
         itensor::write(s,A_[j]);
