@@ -146,12 +146,12 @@ class tJSite
             Op.set(Dn,UpP,1);
             }
         else
-        if(opname == "Sp")
+        if(opname == "Sp" || opname == "S+")
             {
             Op.set(Dn,UpP,1);
             }
         else
-        if(opname == "Sm")
+        if(opname == "Sm" || opname == "S-")
             {
             Op.set(Up,DnP,1);
             }
