@@ -50,7 +50,8 @@ main(int argc, char* argv[])
     {
     if(argc != 4)
         {
-        Error("Usage ./upgrademps mpsfile sitefile new_mpsfile");
+        println("Usage ./upgrademps mpsfile sitefile new_mpsfile");
+        return 0;
         }
 
     string mpsfile = argv[1];
