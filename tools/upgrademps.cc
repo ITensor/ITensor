@@ -20,11 +20,16 @@ template<typename MPSType>
 MPSType
 v20read(std::istream & s, int N)
     {
+    using T = MPSType::TensorT;
     auto psi = MPSType(N);
     for(auto j : range(N+2))
         {
-        itensor::read(s,psi.Anc(j));
+        psi.setA(j,itensor::read<T>(s));
         }
+    auto llim = itensor::read<int>(s);
+    auto rlim = itensor::read<int>(s);
+    psi.leftLim(llim);
+    psi.rightLim(rlim);
     return psi;
     }
 
