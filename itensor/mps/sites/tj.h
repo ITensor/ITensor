@@ -213,12 +213,12 @@ getOp(int i, String const& opname, Args const& args) const
         Op.set(Dn,UpP,1);
         }
     else
-    if(opname == "Sp")
+    if(opname == "S+" || opname == "Sp")
         {
         Op.set(Dn,UpP,1);
         }
     else
-    if(opname == "Sm")
+    if(opname == "S-" || opname == "Sm")
         {
         Op.set(Up,DnP,1);
         }
