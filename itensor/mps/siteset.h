@@ -35,6 +35,9 @@ class SiteSet
 
     SiteSet() { }
 
+    //Create generic SiteSet of N sites with local dimension d
+    SiteSet(int N, int d);
+
     explicit operator bool() const { return bool(sites_); }
 
     int 
@@ -228,6 +231,19 @@ struct SiteStore
         }
     };
 
+
+inline SiteSet::
+SiteSet(int N, int d)
+    {
+    auto sites = SiteStore(N);
+    for(int j = 1; j <= N; ++j)
+        {
+        auto I = IQIndex(format("Site %d",j),
+                         Index(format("site %d",j),d,Site),QN());
+        sites.set(j,GenericSite(I));
+        }
+    SiteSet::init(std::move(sites));
+    }
 
 
 int inline SiteSet::

@@ -1,9 +1,10 @@
 #include "test.h"
-#include "sites/spinhalf.h"
-#include "sites/spinone.h"
-#include "sites/hubbard.h"
-#include "sites/spinless.h"
-#include "sites/tj.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/tj.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 
@@ -12,9 +13,24 @@ TEST_CASE("SiteSetTest")
 
 const int N = 10;
 
+SECTION("Generic SiteSet")
+    {
+    auto sites = SiteSet(N,3);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 3);
+        CHECK(sites(i).type() == Site);
+        }
+    }
+
 SECTION("SpinHalf")
     {
-    SpinHalf sites(N);
+    auto sites = SpinHalf(N);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 2);
+        CHECK(sites(i).type() == Site);
+        }
 
     sites.op("Sz",2); 
     sites.op("S+",2); 
@@ -28,7 +44,12 @@ SECTION("SpinHalf")
 
 SECTION("SpinOne")
     {
-    SpinOne sites(N);
+    auto sites = SpinOne(N);
+    for(auto i : range1(N)) 
+        {
+        CHECK(sites(i).m() == 3);
+        CHECK(sites(i).type() == Site);
+        }
 
     sites.op("Sz",2); 
     sites.op("S+",2); 
@@ -42,7 +63,12 @@ SECTION("SpinOne")
 
 SECTION("Hubbard")
     {
-    Hubbard sites(N);
+    auto sites = Hubbard(N);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 4);
+        CHECK(sites(i).type() == Site);
+        }
 
     sites.op("Nup",2); 
     sites.op("Ndn",2); 
@@ -58,7 +84,12 @@ SECTION("Hubbard")
 
 SECTION("Spinless")
     {
-    Spinless sites(N);
+    auto sites = Spinless(N);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 2);
+        CHECK(sites(i).type() == Site);
+        }
 
     sites.op("N",2); 
     sites.op("A",2); 
@@ -68,7 +99,12 @@ SECTION("Spinless")
 
 SECTION("tJ")
     {
-    tJ sites(N);
+    auto sites = tJ(N);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 3);
+        CHECK(sites(i).type() == Site);
+        }
 
     sites.op("Nup",2); 
     sites.op("Ndn",2); 
