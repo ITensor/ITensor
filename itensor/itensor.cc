@@ -96,6 +96,12 @@ matrixTensor(Matrix&& M, const Index& i1, const Index& i2)
     return res;
     }
 
+ITensor
+matrixTensor(Matrix const& M, const Index& i1, const Index& i2)
+    {
+    return matrixTensor(Matrix(M),i1,i2);
+    }
+
 
 ITensor
 combiner(std::vector<Index> inds, const Args& args)
