@@ -10,6 +10,7 @@
 #include "itensor/tensor/contract.h"
 #include "itensor/itdata/qdense.h"
 #include "itensor/itdata/qutil.h"
+#include "itensor/util/print_macro.h"
 
 using std::vector;
 using std::move;

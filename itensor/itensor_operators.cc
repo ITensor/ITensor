@@ -82,7 +82,10 @@ void
 checkSameDiv(IQTensor const& T1,
              IQTensor const& T2)
     {
-    if(div(T1) != div(T2)) Error("div(T1) must equal div(T2) when adding T1+T2");
+    if(div(T1) != div(T2)) 
+        {
+        Error(format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+        }
     }
 
 } //namespace detail
