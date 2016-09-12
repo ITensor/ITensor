@@ -466,7 +466,7 @@ toMPOImpl(AutoMPO const& am,
     using IndexT = typename Tensor::index_type;
     auto checkqn = args.getBool("CheckQN",true);
 
-    SiteSet const& sites = am.sites();
+    auto const& sites = am.sites();
     auto H = MPOt<Tensor>(sites);
     auto N = sites.N();
 
@@ -758,8 +758,8 @@ toExpH_ZW1(const AutoMPO& am,
            Complex tau,
            const Args& args)
     {
-    const SiteSet& sites = am.sites();
-    IQMPO H(sites);
+    auto const& sites = am.sites();
+    auto H = IQMPO(sites);
     const int N = sites.N();
 
     for(auto& t : am.terms())

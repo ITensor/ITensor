@@ -32,10 +32,10 @@
 #include "itensor/mps/lattice/square.h"
 #include "itensor/mps/lattice/triangular.h"
 
-#include "itensor/mps/sites/hubbard.h"
 #include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinless.h"
 #include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/sites/spinless.h"
 #include "itensor/mps/sites/tj.h"
 #include "itensor/mps/sites/Z3.h"
 

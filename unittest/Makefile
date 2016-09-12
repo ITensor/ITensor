@@ -32,7 +32,7 @@ SOURCES+= regression_test.cc
 #SOURCES+= spectrum_test.cc
 #SOURCES+= webpage_test.cc
 SOURCES+= localop_test.cc
-#SOURCES+= siteset_test.cc
+SOURCES+= siteset_test.cc
 #SOURCES+= bondgate_test.cc
 endif
 

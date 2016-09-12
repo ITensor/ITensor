@@ -12,331 +12,264 @@ class SpinOne : public SiteSet
     {
     public:
 
-    SpinOne();
+    SpinOne() { }
 
-    SpinOne(int N, const Args& args = Args::global());
-
-    private:
-
-    virtual int
-    getN() const;
-
-    virtual const IQIndex&
-    getSi(int i) const;
-
-    virtual IQIndexVal
-    getState(int i, const String& state) const;
-
-    virtual IQTensor
-    getOp(int i, const String& opname, const Args& opts) const;
+    SpinOne(int N, 
+            Args const& args = Args::global());
 
     void
-    constructSites(const Args& opts);
-
-    void
-    doRead(std::istream& s);
-     
-    void
-    doWrite(std::ostream& s) const;
-
-    //Data members -----------------
-
-    int N_;
-
-    std::vector<IQIndex> site_;
+    read(std::istream& s);
 
     };
 
-inline SpinOne::
-SpinOne()
-    : N_(-1)
-    { }
 
-inline SpinOne::
-SpinOne(int N, const Args& opts)
-    : N_(N),
-      site_(N_+1)
-    { 
-    constructSites(opts);
-    }
-
-inline void SpinOne::
-constructSites(const Args& opts)
+class SpinOneSite
     {
-    for(int j = 1; j <= N_; ++j)
-        {
-        if((opts.getBool("SHalfEdge",false) && (j==1 || j == N_))
-           || (opts.getBool("SHalfLeftEdge",false) && j==1))
-            {
-            if(opts.getBool("Verbose",false))
-                {
-                println("Placing a S=1/2 at site ",j);
-                }
+    IQIndex s;
+    public:
 
-            site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
-                Index(nameint("Up:site",j),1,Site),QN("Sz=",+1),
-                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-1));
+    SpinOneSite() { }
+
+    SpinOneSite(IQIndex I) : s(I) { }
+
+    SpinOneSite(int n, Args const& args = Args::global())
+        {
+        s = IQIndex{nameint("S=1 site=",n),
+            Index(nameint("Up:site",n),1,Site),QN("Sz=",+2),
+            Index(nameint("Z0:site",n),1,Site),QN("Sz=", 0),
+            Index(nameint("Dn:site",n),1,Site),QN("Sz=",-2)};
+        }
+
+    IQIndex
+    index() const { return s; }
+
+    IQIndexVal
+    state(std::string const& state)
+        {
+        if(state == "Up" || state == "+") 
+            {
+            return s(1);
+            }
+        else
+        if(state == "Z0" || state == "0")
+            {
+            return s(2);
+            }
+        else
+        if(state == "Dn" || state == "-")
+            {
+            return s(3);
             }
         else
             {
-            site_.at(j) = IQIndex(nameint("S=1 site=",j),
-                Index(nameint("Up:site",j),1,Site),QN("Sz=",+2),
-                Index(nameint("Z0:site",j),1,Site),QN("Sz=", 0),
-                Index(nameint("Dn:site",j),1,Site),QN("Sz=",-2));
+            Error("State " + state + " not recognized");
             }
+        return IQIndexVal{};
         }
-    }
 
-inline void SpinOne::
-doRead(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    site_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).read(s);
-    }
-
-inline void SpinOne::
-doWrite(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j) 
-        site_.at(j).write(s);
-    }
-
-inline int SpinOne::
-getN() const
-    { return N_; }
-
-inline const IQIndex& SpinOne::
-getSi(int i) const
-    { return site_.at(i); }
-
-inline IQIndexVal SpinOne::
-getState(int i, const String& state) const
-    {
-    int st = -1;
-    if(state == "Up" || state == "+") 
+	IQTensor
+	op(std::string const& opname,
+	   Args const& args) const
         {
-        st = 1;
-        }
-    else
-    if(state == "Z0" || state == "0")
-        {
-        if(getSi(i).m() == 2)
-            Error("Z0 not defined for spin 1/2 site");
-        st = 2;
-        }
-    else
-    if(state == "Dn" || state == "-")
-        {
-        st = getSi(i).m();
-        }
-    else
-        {
-        Error("State " + state + " not recognized");
-        }
-    return getSi(i)(st);
-    }
+        auto sP = prime(s);
 
-inline IQTensor SpinOne::
-getOp(int i, const String& opname, const Args& opts) const
-    {
-    auto s = si(i);
-    auto sP = prime(s);
+        auto Up  = s(1);
+        auto UpP = sP(1);
+        auto Z0  = s(2);
+        auto Z0P = sP(2);
+        auto Dn  = s(s.m());
+        auto DnP = sP(s.m());
 
-    auto Up  = s(1);
-    auto UpP = sP(1);
-    auto Z0  = s(2);
-    auto Z0P = sP(2);
-    auto Dn  = s(s.m());
-    auto DnP = sP(s.m());
+        auto Op = IQTensor(dag(s),sP);
 
-    auto Op = IQTensor(dag(s),sP);
-
-    if(opname == "Sz")
-        {
-        if(s.m() == 2)
-            {
-            Op.set(Up,UpP,+0.5);
-            Op.set(Dn,DnP,-0.5);
-            }
-        else
+        if(opname == "Sz")
             {
             Op.set(Up,UpP,+1.0);
             Op.set(Dn,DnP,-1.0);
             }
-        }
-    else
-    if(opname == "Sx")
-        {
-        //mixedIQTensor call needed here
-        //because as an IQTensor, Op would
-        //not have a well defined QN flux
-        Op = mixedIQTensor(s,sP);
-        if(s.m() == 2)
-            {
-            Op.set(Up,DnP,+0.5);
-            Op.set(Dn,UpP,+0.5);
-            }
         else
+        if(opname == "Sx")
             {
+            //mixedIQTensor call needed here
+            //because as an IQTensor, Op would
+            //not have a well defined QN flux
+            Op = mixedIQTensor(s,sP);
             Op.set(Up,Z0P,ISqrt2); 
             Op.set(Z0,UpP,ISqrt2);
             Op.set(Z0,DnP,ISqrt2); 
             Op.set(Dn,Z0P,ISqrt2);
             }
-        }
-    else
-    if(opname == "ISy")
-        {
-        //mixedIQTensor call needed here
-        //because as an IQTensor, Op would
-        //not have a well defined QN flux
-        Op = mixedIQTensor(s,sP);
-        if(s.m() == 2)
-            {
-            Op.set(Up,DnP,-0.5);
-            Op.set(Dn,UpP,+0.5);
-            }
         else
+        if(opname == "ISy")
             {
+            //mixedIQTensor call needed here
+            //because as an IQTensor, Op would
+            //not have a well defined QN flux
+            Op = mixedIQTensor(s,sP);
             Op.set(Up,Z0P,+ISqrt2); 
             Op.set(Z0,UpP,-ISqrt2);
             Op.set(Z0,DnP,+ISqrt2); 
             Op.set(Dn,Z0P,-ISqrt2);
             }
-        }
-    else
-    if(opname == "Sy")
-        {
-        //mixedIQTensor call needed here
-        //because as an IQTensor, Op would
-        //not have a well defined QN flux
-        Op = mixedIQTensor(s,sP);
-        if(s.m() == 2)
-            {
-            Op.set(Up,DnP,+0.5_i);
-            Op.set(Dn,UpP,-0.5_i);
-            }
         else
+        if(opname == "Sy")
             {
+            //mixedIQTensor call needed here
+            //because as an IQTensor, Op would
+            //not have a well defined QN flux
+            Op = mixedIQTensor(s,sP);
             Op.set(Up,Z0P,-ISqrt2*1_i); 
             Op.set(Z0,UpP,+ISqrt2*1_i);
             Op.set(Z0,DnP,-ISqrt2*1_i); 
             Op.set(Dn,Z0P,+ISqrt2*1_i);
             }
-        }
-    else
-    if(opname == "Sp" || opname == "S+")
-        {
-        if(s.m() == 2)
-            {
-            Op.set(Dn,UpP,1);
-            }
         else
+        if(opname == "Sp" || opname == "S+")
             {
             Op.set(Dn,Z0P,Sqrt2);  
             Op.set(Z0,UpP,Sqrt2);
             }
-        }
-    else
-    if(opname == "Sm" || opname == "S-")
-        {
-        if(s.m() == 2)
-            {
-            Op.set(Up,DnP,1);
-            }
         else
+        if(opname == "Sm" || opname == "S-")
             {
             Op.set(Up,Z0P,Sqrt2);
             Op.set(Z0,DnP,Sqrt2);
             }
+        else
+        if(opname == "Sz2")
+            {
+            Op.set(Up,UpP,1); 
+            Op.set(Dn,DnP,1);
+            }
+        else
+        if(opname == "Sx2")
+            {
+            Op.set(Up,UpP,0.5); 
+            Op.set(Up,DnP,0.5);
+            Op.set(Z0,Z0P,1.0);
+            Op.set(Dn,DnP,0.5); 
+            Op.set(Dn,UpP,0.5);
+            }
+        else
+        if(opname == "Sy2")
+            {
+            Op.set(Up,UpP,+0.5); 
+            Op.set(Up,DnP,-0.5);
+            Op.set(Z0,Z0P,1);
+            Op.set(Dn,DnP,+0.5); 
+            Op.set(Dn,UpP,-0.5);
+            }
+        else
+        if(opname == "projUp")
+            {
+            Op.set(Up,UpP,1);
+            }
+        else
+        if(opname == "projZ0")
+            {
+            Op.set(Z0,Z0P,1);
+            }
+        else
+        if(opname == "projDn")
+            {
+            Op.set(Dn,DnP,1);
+            }
+        else
+        if(opname == "XUp")
+            {
+            //m = +1 state along x axis
+            Op = IQTensor(s);
+            Op.set(Up,0.5);
+            Op.set(Z0,ISqrt2);
+            Op.set(Dn,0.5);
+            }
+        else
+        if(opname == "XZ0")
+            {
+            //m = 0 state along x axis
+            Op = IQTensor(s);
+            Op.set(Up,+ISqrt2);
+            Op.set(Dn,-ISqrt2);
+            }
+        else
+        if(opname == "XDn")
+            {
+            //m = -1 state along x axis
+            Op = IQTensor(s);
+            Op.set(Up,0.5);
+            Op.set(Z0,-ISqrt2);
+            Op.set(Dn,0.5);
+            }
+        else
+        if(opname == "S2")
+            {
+            auto ssp1 = (s.m()==2 ? 0.75 : 2.);
+            Op.set(Up,UpP,ssp1); 
+            Op.set(Dn,DnP,ssp1);
+            if(s.m() > 2)
+                Op.set(Z0,Z0P,ssp1);
+            }
+        else
+            {
+            Error("Operator " + opname + " name not recognized");
+            }
+
+        return Op;
         }
-    else
-    if(opname == "Sz2")
+    };
+
+inline SpinOne::
+SpinOne(int N, 
+        Args const& args)
+    {
+    auto shedge = args.getBool("SHalfEdge",false);
+    auto Lshedge = args.getBool("SHalfLeftEdge",false);
+
+    auto sites = SiteStore(N);
+
+    auto start = 1;
+    if(shedge || Lshedge)
         {
-        if(s.m() == 2) Error("Sz^2 only non-trivial for S=1 sites");
-        Op.set(Up,UpP,1); 
-        Op.set(Dn,DnP,1);
-        }
-    else
-    if(opname == "Sx2")
-        {
-        if(s.m() == 2) Error("Sx^2 only non-trivial for S=1 sites");
-        Op.set(Up,UpP,0.5); 
-        Op.set(Up,DnP,0.5);
-        Op.set(Z0,Z0P,1.0);
-        Op.set(Dn,DnP,0.5); 
-        Op.set(Dn,UpP,0.5);
-        }
-    else
-    if(opname == "Sy2")
-        {
-        if(s.m() == 2) Error("Sy^2 only non-trivial for S=1 sites");
-        Op.set(Up,UpP,+0.5); 
-        Op.set(Up,DnP,-0.5);
-        Op.set(Z0,Z0P,1);
-        Op.set(Dn,DnP,+0.5); 
-        Op.set(Dn,UpP,-0.5);
-        }
-    else
-    if(opname == "projUp")
-        {
-        Op.set(Up,UpP,1);
-        }
-    else
-    if(opname == "projZ0")
-        {
-        if(s.m() == 2) Error("Can only form projZ0 for S=1 sites");
-        Op.set(Z0,Z0P,1);
-        }
-    else
-    if(opname == "projDn")
-        {
-        Op.set(Dn,DnP,1);
-        }
-    else
-    if(opname == "XUp")
-        {
-        //m = +1 state along x axis
-        Op = IQTensor(s);
-        Op.set(Up,0.5);
-        Op.set(Z0,ISqrt2);
-        Op.set(Dn,0.5);
-        }
-    else
-    if(opname == "XZ0")
-        {
-        //m = 0 state along x axis
-        Op = IQTensor(s);
-        Op.set(Up,+ISqrt2);
-        Op.set(Dn,-ISqrt2);
-        }
-    else
-    if(opname == "XDn")
-        {
-        //m = -1 state along x axis
-        Op = IQTensor(s);
-        Op.set(Up,0.5);
-        Op.set(Z0,-ISqrt2);
-        Op.set(Dn,0.5);
-        }
-    else
-    if(opname == "S2")
-        {
-        auto ssp1 = (s.m()==2 ? 0.75 : 2.);
-        Op.set(Up,UpP,ssp1); 
-        Op.set(Dn,DnP,ssp1);
-        if(s.m() > 2)
-            Op.set(Z0,Z0P,ssp1);
-        }
-    else
-        {
-        Error("Operator " + opname + " name not recognized");
+        if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
+        sites.set(1,SpinHalfSite(1));
+        start = 2;
         }
 
-    return Op;
+    for(int j = start; j < N; ++j)
+        {
+        sites.set(j,SpinOneSite(j));
+        }
+
+    if(shedge)
+        {
+        if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
+        sites.set(N,SpinHalfSite(N));
+        }
+    else
+        {
+        sites.set(N,SpinOneSite(N));
+        }
+
+    SiteSet::init(std::move(sites));
+    }
+
+void inline SpinOne::
+read(std::istream& s)
+    {
+    int N = itensor::read<int>(s);
+    if(N > 0)
+        {
+        auto store = SiteStore(N);
+        for(int j = 1; j <= N; ++j) 
+            {
+            auto I = IQIndex{};
+            I.read(s);
+            if(I.m() == 3) store.set(j,SpinOneSite(I));
+            else if(I.m() == 2) store.set(j,SpinHalfSite(I));
+            else Error(format("SpinOne cannot read index of size %d",I.m()));
+            }
+        init(std::move(store));
+        }
     }
 
 } //namespace itensor
