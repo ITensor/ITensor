@@ -92,6 +92,13 @@ operator*(IQIndexVal const& iv, ITensor const& T)
     return IndexVal(iv) * T;
     }
 
+IQTensor inline
+operator+(IQTensor A, ITensor const& B)
+    {
+    A += B;
+    return A;
+    }
+
 ITensor inline
 operator*(IQTensor const& T, ITensor const& t) 
     { 

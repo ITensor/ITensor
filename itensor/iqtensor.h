@@ -44,6 +44,9 @@ operator*(IQIndexVal const& iv, ITensor const& T);
 IQTensor& 
 operator+=(IQTensor& A, ITensor const& B);
 
+IQTensor 
+operator+(IQTensor A, ITensor const& B);
+
 ITensor 
 toITensor(IQTensor const& T);
 
