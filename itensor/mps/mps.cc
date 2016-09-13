@@ -1163,6 +1163,19 @@ void MPSt<ITensor>::swap(MPSt<ITensor>& other);
 template
 void MPSt<IQTensor>::swap(MPSt<IQTensor>& other);
 
+MPS
+toMPS(IQMPS const& psi)
+    {
+    auto res = MPS(psi.sites());
+    for(int j = 0; j <= psi.N()+1; ++j)
+        {
+        res.Anc(j) = psi.A(j).toITensor();
+        }
+    res.leftLim(psi.leftLim());
+    res.rightLim(psi.rightLim());
+    return res;
+    }
+
 InitState::
 InitState(const SiteSet& sites)
     : 

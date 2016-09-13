@@ -299,6 +299,9 @@ template <class Tensor>
 MPSt<Tensor>
 operator*(Complex z, MPSt<Tensor> res) { res *= z; return res; }
 
+MPS
+toMPS(IQMPS const& psi);
+
 class InitState
     {
     public:
