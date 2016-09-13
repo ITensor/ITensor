@@ -182,10 +182,14 @@ class HubbardSite
             Op.set(Dn,DnP,-0.5);
             }
         else
-        if(opname == "Sx")
+        if(opname == "S+")
+            {
+            Op.set(Dn,UpP,1); 
+            }
+        else
+        if(opname == "S-")
             {
             Op.set(Up,DnP,1); 
-            Op.set(Dn,UpP,1);
             }
         else
         if(opname == "S2")
