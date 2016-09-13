@@ -102,10 +102,10 @@ struct HTerm
     int
     Nops() const { return ops.size(); }
 
-    const SiteTerm&
+    SiteTerm const&
     first() const { return ops.front(); }
 
-    const SiteTerm&
+    SiteTerm const&
     last() const { return ops.back(); }
 
     bool

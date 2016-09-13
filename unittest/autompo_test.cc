@@ -248,4 +248,27 @@ SECTION("No QN MPO")
     CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
     }
 
+SECTION("Single Site Ops")
+    {
+    int L = 10;
+    auto sites = Hubbard(L);
+    auto ampo = AutoMPO(sites);
+
+    SECTION("Diagonal op")
+        {
+        auto n = 4;
+        ampo += "Nup",n;
+        auto Op = IQMPO(ampo);
+        for(auto i : range1(L))
+            {
+            auto state = InitState(sites,"Emp");
+            state.set(i,"Up");
+            auto psi = IQMPS(state);
+            auto x = overlap(psi,Op,psi);
+            if(i == n) CHECK_CLOSE(x,1.);
+            else       CHECK_CLOSE(x,0.);
+            }
+        }
+    }
+
 }

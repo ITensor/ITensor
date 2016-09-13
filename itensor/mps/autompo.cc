@@ -27,7 +27,7 @@ SiteTerm::
 SiteTerm() : i(-1), coef(0) { }
 
 SiteTerm::
-SiteTerm(const std::string& op_,
+SiteTerm(const string& op_,
          int i_,
          Real coef_)
     :
@@ -59,7 +59,7 @@ HTerm::
 HTerm() { }
 
 HTerm::
-HTerm(const std::string& op1_,
+HTerm(const string& op1_,
       int i1_,
       Real x_)
     { 
@@ -67,9 +67,9 @@ HTerm(const std::string& op1_,
     }
 
 HTerm::
-HTerm(const std::string& op1_,
+HTerm(const string& op1_,
       int i1_,
-      const std::string& op2_,
+      const string& op2_,
       int i2_,
       Real x_)
     { 
@@ -78,7 +78,7 @@ HTerm(const std::string& op1_,
     }
 
 void HTerm::
-add(const std::string& op,
+add(const string& op,
     int i,
     Real x)
     {
@@ -234,7 +234,7 @@ Accumulator(AutoMPO* pa_,
 
 AutoMPO::Accumulator::
 Accumulator(AutoMPO* pa_, 
-            const std::string& op_)
+            const string& op_)
     :
     pa(pa_),
     state(Op),
@@ -298,7 +298,7 @@ operator,(const char* op_)
     }
 
 AutoMPO::Accumulator& AutoMPO::Accumulator::
-operator,(const std::string& op_)
+operator,(const string& op_)
     {
     if(state == New)
         {
@@ -394,18 +394,25 @@ struct SiteQN
     {
     SiteTerm st;
     QN q;
+
     SiteQN() { }
-    SiteQN(const SiteTerm& st_,
-           const QN& q_)
-        :
-        st(st_),
+
+    SiteQN(SiteTerm const& st_,
+           QN const& q_)
+      : st(st_),
         q(q_)
-        {
-        }
+        { }
     };
 
+std::ostream&
+operator<<(std::ostream & s, SiteQN const& sq)
+    {
+    s << "SiteQN: " << sq.st << ", " << sq.q;
+    return s;
+    }
+
 void
-plusAppend(std::string& s, const std::string& a)
+plusAppend(string & s, string const& a)
     {
     if(s.size() == 0 || s == "0") s = a;
     else 
@@ -419,7 +426,7 @@ plusAppend(std::string& s, const std::string& a)
 
 
 string
-startTerm(const std::string& op)
+startTerm(const string& op)
     {
     static array<pair<string,string>,6>
            rewrites =
@@ -439,7 +446,7 @@ startTerm(const std::string& op)
     }
 
 string
-endTerm(const std::string& op)
+endTerm(const string& op)
     {
     static array<pair<string,string>,6>
            rewrites =
@@ -473,44 +480,51 @@ toMPOImpl(AutoMPO const& am,
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
         {
-        Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
+        Error("Only at most 2-operator terms allowed for exact AutoMPO conversion to MPO/IQMPO");
         }
 
     //Special SiteTerm objects indicating either
     //a string of identities coming from the first
     //site of the system or the completed Hamitonian
     //for the left-hand side of the system
-    SiteTerm IL("IL",0),
-             HL("HL",0);
+    auto IL = SiteTerm("IL",0);
+    auto HL = SiteTerm("HL",0);
 
-    vector<vector<SiteQN>> basis(N+1);
-    for(int n = 0; n < N; ++n)
+    auto basis = vector<vector<SiteQN>>(N+1);
+    for(int n = 0; n < N; ++n)  
+        {
         basis.at(n).emplace_back(IL,QN());
-    for(int n = 1; n <= N; ++n)
+        }
+    for(int n = 1; n <= N; ++n) 
+        {
         basis.at(n).emplace_back(HL,QN());
+        }
 
-    const QN Zero;
+    const auto Zero = QN{};
 
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
     //(unique including their coefficient)
     //and starting a string of operators (i.e. first op of an HTerm)
     for(auto& ht : am.terms())
-    for(auto n : range(ht.first().i,ht.last().i))
         {
-        auto& bn = basis.at(n);
-        auto test_has_first = [&ht](SiteQN const& sq){ return sq.st == ht.first(); };
-        bool has_first = (stdx::find_if(bn,test_has_first) != bn.end());
-        if(!has_first) 
+        for(auto n = ht.first().i; n <= ht.last().i; ++n)
             {
-            auto Op = sites.op(ht.first().op,ht.first().i);
-            if(checkqn)
+            auto& bn = basis.at(n);
+            auto test_has_first = [&ht](SiteQN const& sq){ return sq.st == ht.first(); };
+            bool has_first = (stdx::find_if(bn,test_has_first) != bn.end());
+            if(!has_first) 
                 {
-                bn.emplace_back(ht.first(),-div(Op));
-                }
-            else
-                {
-                bn.emplace_back(ht.first(),Zero);
+                auto Op = sites.op(ht.first().op,ht.first().i);
+                //printfln("Adding Op to basis at %d, Op=\n%s",n,Op);
+                if(checkqn)
+                    {
+                    bn.emplace_back(ht.first(),-div(Op));
+                    }
+                else
+                    {
+                    bn.emplace_back(ht.first(),Zero);
+                    }
                 }
             }
         }
@@ -530,7 +544,7 @@ toMPOImpl(AutoMPO const& am,
         }
 
     auto links = vector<IndexT>(N+1);
-    vector<IndexQN> inqn;
+    auto inqn = vector<IndexQN>{};
     for(int n = 0; n <= N; ++n)
         {
         auto& bn = basis.at(n);
@@ -554,6 +568,7 @@ toMPOImpl(AutoMPO const& am,
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
         links.at(n) = IQIndex(nameint("Hl",n),std::move(inqn));
+        //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
         //    {
@@ -572,7 +587,7 @@ toMPOImpl(AutoMPO const& am,
     //For lattice site "j", ht_by_n[j] contains
     //all HTerms (operator strings) which begin on,
     //end on, or cross site "j"
-    vector<vector<HTerm>> ht_by_n(N+1);
+    auto ht_by_n = vector<vector<HTerm>>(N+1);
     for(auto& ht : am.terms()) 
     for(auto& st : ht.ops)
         {
@@ -584,7 +599,7 @@ toMPOImpl(AutoMPO const& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Anc(n);
+        auto& W = H.Aref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -600,7 +615,8 @@ toMPOImpl(AutoMPO const& am,
 #ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
 #endif
-            auto rc = setElt(dag(row)(r+1)) * setElt(col(c+1));
+            //auto rc = setElt(dag(row)(r+1)) * setElt(col(c+1));
+            auto rc = setElt(dag(row)(r+1),col(c+1));
 
             //Start a new operator string
             if(cst.i == n && rst == IL)
@@ -654,9 +670,13 @@ toMPOImpl(AutoMPO const& am,
                     */
 
                 if(isFermionic(cst))
+                    {
                     W += sites.op("F",n) * rc;
+                    }
                 else
+                    {
                     W += sites.op("Id",n) * rc;
+                    }
 #ifdef SHOW_AUTOMPO
                 if(isFermionic(cst)) ws[r][c] = "F";
                 else                 ws[r][c] = "1";
@@ -681,9 +701,13 @@ toMPOImpl(AutoMPO const& am,
                     ws[r][c] = op;
                     auto coef = ht.last().coef;
                     if(isApproxReal(coef))
+                        {
                         ws[r][c] = format("%.2f %s",coef.real(),op);
+                        }
                     else
+                        {
                         ws[r][c] = format("%.2f %s",coef,op);
+                        }
 #endif
                     }
                 }
@@ -721,8 +745,8 @@ toMPOImpl(AutoMPO const& am,
 #endif
         }
 
-    H.Anc(1) *= setElt(links.at(0)(1));
-    H.Anc(N) *= setElt(dag(links.at(N))(1));
+    H.Aref(1) *= setElt(links.at(0)(1));
+    H.Aref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 
@@ -863,7 +887,7 @@ toExpH_ZW1(const AutoMPO& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Anc(n);
+        auto& W = H.Aref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -959,8 +983,8 @@ toExpH_ZW1(const AutoMPO& am,
 #endif
         }
 
-    H.Anc(1) *= setElt(links.at(0)(1));
-    H.Anc(N) *= setElt(dag(links.at(N))(1));
+    H.Aref(1) *= setElt(links.at(0)(1));
+    H.Aref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 
