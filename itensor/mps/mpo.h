@@ -52,6 +52,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::leftLim;
 
     using Parent::A;
+    using Parent::Aref;
     using Parent::Anc;
 
     using Parent::doWrite;
