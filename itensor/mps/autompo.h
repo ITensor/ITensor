@@ -126,6 +126,9 @@ struct HTerm
 
     bool
     operator!=(HTerm const& other) const { return !operator==(other); }
+
+    bool
+    operator<(HTerm const& other) const;
     };
 
 struct LessNoCoef

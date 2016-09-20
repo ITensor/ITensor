@@ -3,8 +3,10 @@
 //    (See accompanying LICENSE file.)
 //
 #include <algorithm>
+#include <map>
 #include "itensor/util/print_macro.h"
 #include "itensor/mps/autompo.h"
+#include "itensor/tensor/algs.h"
 
 using std::find;
 using std::cout;
@@ -15,8 +17,24 @@ using std::array;
 using std::pair;
 using std::make_pair;
 using std::move;
+using std::min;
+using std::max;
+using std::map;
+using std::set;
 
 namespace itensor {
+
+bool
+isZero(Cplx const& z, Real thresh = 1E-13) { return std::abs(z) < thresh; }
+
+bool
+less(Real x, Real y, Real eps = 1E-12)
+    {
+    Real ax = std::fabs(x);
+    Real ay = std::fabs(y);
+    Real scale = (ax < ay ? ay : ax);
+    return (y-x) >= scale*eps;
+    }
 
 bool
 equal(Cplx x, Cplx y, Real eps = 1E-12)
@@ -25,6 +43,16 @@ equal(Cplx x, Cplx y, Real eps = 1E-12)
     Real ay = std::abs(y);
     Real scale = (ax < ay ? ay : ax);
     return std::abs(x-y) <= scale*eps;
+    }
+
+bool
+less(Cplx const& z1, Cplx const& z2, Real eps = 1E-12) 
+    { 
+    if(not equal(z1.real(),z2.real(),eps)) 
+        {
+        return less(z1.real(),z2.real(),eps);
+        }
+    return less(z1.imag(),z2.imag());
     }
 
 bool
@@ -59,6 +87,14 @@ isFermionic(SiteTerm const& st)
     return false;
     }
 
+SiteTermProd 
+mult(SiteTermProd first, 
+     SiteTermProd const& second)
+    {
+    first.insert(first.end(), second.begin(), second.end());
+    return first;
+    }    
+
 bool
 isFermionic(SiteTermProd const& sprod)
     {
@@ -69,6 +105,68 @@ isFermionic(SiteTermProd const& sprod)
         if(isFermionic(st)) isf = !isf;
         }
     return isf;
+    }
+
+string
+fermionicTerm(const string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cdagup","Adagup"),
+           make_pair("Cup","Aup"),
+           make_pair("Cdagdn","Adagdn*Fup"),
+           make_pair("Cdn","Adn*Fup"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
+
+void 
+rewriteFermionic(SiteTermProd & prod, 
+                 bool isleftFermionic)
+    {
+    if(prod.empty()) Error("Empty product in rewriteFermionic is not expected.");    
+    
+    int i = prod.front().i;
+    for(auto& st : prod)
+        if(st.i != i)
+            {
+            Error("Multi-site product in rewriteFermionic is not expected.");    
+            }
+
+    // Rewrite a fermionic single site product using the Jordan-Wigner string            
+    bool isSiteFermionic = isFermionic(prod);
+    if(isSiteFermionic)
+        {
+        for(auto& st : prod) if(isFermionic(st)) st.op = fermionicTerm(st.op);
+        }
+    
+    // Add a FermiPhase operator at the end if the product of operators
+    // to the left (including this site) is fermionic
+    if((isleftFermionic && !isSiteFermionic) || (!isleftFermionic && isSiteFermionic))
+        {
+        prod.emplace_back("F", i);         
+        }
+    }
+
+IQTensor
+computeProd(SiteSet const& sites, 
+            SiteTermProd const& p)
+    {
+    auto i = p.front().i;
+    auto op = sites.op(p.front().op,i);
+    for(auto it = p.begin()+1; it != p.end(); ++it)
+        {
+        if(it->i != i) Error("Op on wrong site");
+        op = multSiteOps(op,sites.op(it->op,i));
+        }
+    return op;
     }
 
 void HTerm::
@@ -124,6 +222,13 @@ operator==(HTerm const& o) const
         }
 
     return true;
+    }
+
+bool HTerm::
+operator<(HTerm const& o) const 
+    { 
+    if(not equal(coef,o.coef,1E-12)) return less(coef,o.coef,1E-12);
+    return (ops < o.ops);
     }
 
 bool LessNoCoef::
@@ -710,17 +815,744 @@ toMPOImpl(AutoMPO const& am,
     return H;
     }
 
-template<>
-MPO 
-toMPO(AutoMPO const& am, Args const& args) 
-    { 
-    return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
+//
+// Start of approximate toMPO definitions and functions
+//
+
+struct IQMPOMatElem
+    {
+    QN rowqn, colqn;
+    int row, col;
+    HTerm val;
+    
+    IQMPOMatElem() { }
+
+    IQMPOMatElem(const QN &rqn, const QN &cqn, int r, int c, const HTerm &t) : 
+        rowqn(rqn), colqn(cqn), row(r), col(c), val(t) {};
+        
+    bool 
+    operator==(const IQMPOMatElem &other) const
+        {
+        return rowqn == other.rowqn && colqn == other.colqn && 
+                row == other.row && col == other.col && 
+                val == other.val;
+        }
+
+    bool
+    operator<(IQMPOMatElem const& o) const
+        {
+        if(row != o.row)
+            {
+            return row < o.row;
+            }
+        else if(col != o.col)
+            {
+            return col < o.col;
+            }
+        else if(rowqn != o.rowqn)
+            {
+            return rowqn < o.rowqn;
+            }
+        else if(colqn != o.colqn)
+            {
+            return colqn < o.colqn;
+            }
+        return val < o.val;
+        }
+    };
+    
+struct MatIndex
+    {
+    int row, col;
+    MatIndex(int r, int c) : row(r), col(c) {};
+    
+    bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
+    };
+
+struct MatElem
+    {
+    MatIndex ind;
+    Complex val;
+    
+    MatElem(MatIndex index, Complex v) : ind(index), val(v) {};
+    
+    bool operator==(const MatElem &other) const {return ind == other.ind && val == other.val; }
+    };
+
+struct ComplexMatrix
+    {
+    Matrix Re;
+    Matrix Im;
+    
+    ComplexMatrix() {};
+    
+    ComplexMatrix(const std::vector<MatElem> &M);
+    
+    bool isComplex() const { return Im.size() != 0ul; };
+    
+    Complex operator() (int i, int j) const;
+
+    int Nrows() { return nrows(Re); }
+
+    int Ncols() { return ncols(Re); }
+    };
+
+size_t nrows(ComplexMatrix const& C) { return nrows(C.Re); }
+size_t ncols(ComplexMatrix const& C) { return ncols(C.Re); }
+
+ComplexMatrix::
+ComplexMatrix(vector<MatElem> const& M)
+    {
+    int nr = 0, nc = 0;
+    bool isComplex = false;
+    
+    for(const MatElem &elem : M)
+        {
+        nr = max(nr, elem.ind.row);
+        nc = max(nc, elem.ind.col);
+        if(!isReal(elem.val))
+            isComplex = true;
+        }
+    
+    resize(Re,nr,nc);
+    if(isComplex) resize(Im,nr, nc);
+        
+    for(const MatElem &elem : M)
+        {
+        Re(elem.ind.row,elem.ind.col) = elem.val.real();
+        if(!isReal(elem.val))
+            Im(elem.ind.row,elem.ind.col) = elem.val.imag();
+        }
     }
+    
+Cplx ComplexMatrix::
+operator()(int i, int j) const
+    {
+    Complex z = 0.;
+    if(Im.size() > 0ul)
+        {
+        z += Complex(0, Im(i,j));
+        }
+    if(Re.size() > 0ul)
+        {
+        z += Complex(Re(i,j),0);
+        }
+    return z;
+    }
+
+void 
+decomposeTerm(int n, 
+              SiteTermProd const& ops, 
+              SiteTermProd & left, 
+              SiteTermProd & onsite, 
+              SiteTermProd & right)
+    {
+    auto isOnSiteOrOnTheRight = [&n](const SiteTerm &t) {return t.i >= n;};
+    auto startOfOnSite = find_if(ops.begin(), ops.end(), isOnSiteOrOnTheRight);
+    
+    auto isOnTheRight = [&n](const SiteTerm &t) {return t.i > n;};
+    auto startOfRightPart = find_if(startOfOnSite, ops.end(), isOnTheRight);
+
+    left = SiteTermProd(ops.begin(), startOfOnSite);
+    onsite = SiteTermProd(startOfOnSite, startOfRightPart);
+    right = SiteTermProd(startOfRightPart, ops.end());
+    }  
+
+struct Block
+    {
+    using Basis = map<SiteTermProd,int>;
+    Basis left;
+    Basis right;
+    vector<MatElem> mat;        
+    };
+
+using QNBlock = map<QN, Block>;
+using IQMatEls = set<IQMPOMatElem>;
+using MPOMatrix = vector<vector<IQTensor>>;
+
+// Returns a 1-based index of the SiteTermProd ops in the vector
+// If ops is not in the vector adds it is added
+int
+posInBlock(SiteTermProd const& ops, 
+           Block::Basis & b)
+    {
+    auto it = b.find(ops);
+    if(it != b.end()) return it->second;
+    int i = 1+static_cast<int>(b.size());
+    b[ops] = i;
+    return i;
+    }
+    
+//
+// Construct left & right partials and the 
+// coefficients matrix on each link as well as the temporary MPO
+//
+void
+partitionHTerms(SiteSet const& sites,
+                AutoMPO::storage const& terms,
+                vector<QNBlock> & qbs, 
+                vector<IQMatEls> & tempMPO)
+    {
+    auto N = sites.N();
+
+    //
+    // qnmap caches the quantum numbers of various products
+    // of operators encountered while building the QNBlock
+    // data structures at each bond
+    //
+    // TODO: The qnmap keys are just strings, which assumes
+    //       all operators with the same name have the same
+    //       QN divergence. This wouldn't be true e.g. for
+    //       a spin model with different spin sizes at 
+    //       different sites.
+    //
+    auto qnmap = map<string,QN>();
+    auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+        {
+        QN qn;
+        for(auto& st : prod)
+            {
+            auto it = qnmap.find(st.op);
+            if(it != qnmap.end())
+                {
+                qn += it->second;
+                }
+            else
+                {
+                auto Op = sites.op(st.op,st.i);
+                auto OpQN = -div(Op);
+                qnmap[st.op] = OpQN;
+                qn += OpQN;
+                }
+            }
+        return qn;
+        };
+
+    qbs.resize(N);
+    tempMPO.resize(N);
+
+    for(HTerm const& ht : terms)
+    for(int n = ht.first().i; n <= ht.last().i; ++n)
+        {
+        SiteTermProd left, onsite, right;
+        decomposeTerm(n, ht.ops, left, onsite, right);
+        
+        TIMER_START(10)
+        auto lqn = calcQN(left);
+        auto sqn = calcQN(onsite);
+        TIMER_STOP(10)
+        
+        TIMER_START(11)
+        int j=0,k=0;
+
+        // qbs.at(i) are the blocks at the link between sites i+1 and i+2
+        // i.e. qbs.at(0) are the blocks at the link between sites 1 and 2
+        // and qbs.at(N-2) are the blocks at the link between sites N-1 and N
+        // for site n the link on the left is qbs.at(n-2) and the link on the right is part.at(n-1)
+        if(left.empty())
+            {
+            if(not right.empty()) // term starting on site n
+                {
+                k = posInBlock(right, qbs.at(n-1)[sqn].right);
+                }
+            }
+        else
+            {
+            auto& leftlink = qbs.at(n-2)[lqn];
+            if(right.empty()) // term ending on site n
+                {
+                j = posInBlock(onsite, leftlink.right);
+                }
+            else
+                {
+                j = posInBlock(mult(onsite,right), leftlink.right);
+                k = posInBlock(right, qbs.at(n-1)[lqn+sqn].right);
+                }
+            auto l = posInBlock(left,leftlink.left);
+            leftlink.mat.emplace_back(MatIndex(l, j), ht.coef);
+            }
+            
+        // Place the coefficient of the HTerm when the term starts
+        Complex c = j==0 ? ht.coef : 1;
+        
+        bool leftF = isFermionic(left);
+        if(onsite.empty())
+            {
+            if(leftF) onsite.emplace_back("F",n);
+            else      onsite.emplace_back("Id",n);
+            }
+        else
+            {
+            rewriteFermionic(onsite, leftF);
+            }
+        TIMER_STOP(11)
+        
+        //
+        // Add only unique IQMPOMatElems to tempMPO
+        // TODO: assumes terms are unique I think!
+        // 
+        TIMER_START(12)
+        auto& tn = tempMPO.at(n-1);
+        auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+
+        auto it = tn.find(el);
+        if(it == tn.end()) tn.insert(move(el));
+
+        TIMER_STOP(12)
+        }
+
+    ////
+    //// Debugging printout
+    ////
+    //for(auto n = 1; n <= N; ++n)
+    //    {
+    //    printfln("===== tempMPO at %d =====",n);
+    //    for(auto& el : tempMPO.at(n-1))
+    //        {
+    //        printfln("(r,c) = (%d,%d)",el.row,el.col);
+    //        printfln("QNs %s %s",el.rowqn,el.colqn);
+    //        printfln("HTerm = \n%s",el.val);
+    //        println();
+    //        }
+    //    }
+
+//#ifdef SHOW_AUTOMPO
+//    println("Left and Right Partials:");
+//    for(unsigned n=0; n<part.size(); n++)
+//        {
+//        for(const auto &pqn : part.at(n))
+//            {
+//            const Partition &p = pqn.second;
+//
+//            println("Left, QN = ", pqn.first);
+//            for(const SiteTermProd &prod : p.left)
+//                println(prod);
+//            println("Right, QN = ", pqn.first);
+//            for(const SiteTermProd &prod : p.right)
+//                println(prod);
+//            println("Coef, QN = ", pqn.first);
+//            for(const MatElem &elem : p.mat)
+//                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
+//            }
+//        println("=========================================");
+//        }
+//        
+//    println();
+//    println("TempMPO Elements:");
+//    for(unsigned n=0; n<tempMPO.size(); n++)
+//        {
+//        for(IQMPOMatElem const& elem: tempMPO.at(n))
+//            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
+//        println("=========================================");
+//        }
+//#endif   
+
+    //for(int n = 1; n <= N; ++n)
+    //    {
+    //    printfln("======== Site %d ==========",n);
+    //    printfln("%d QNBlocks",qbs.at(n-1).size());
+    //    for(auto& qb : qbs.at(n-1) )
+    //        {
+    //        auto& qn = qb.first;
+
+    //        println("QN = ",qn);
+    //        int l1 = 0,
+    //            l2 = 0,
+    //            l3 = 0;
+    //        int r1 = 0,
+    //            r2 = 0,
+    //            r3 = 0;
+    //        println("Left basis elems:");
+    //        for(auto& it : qb.second.left)
+    //            {
+    //            //printfln("   %s -> %d",it.first,it.second);
+    //            if(it.first.size() == 1ul) ++l1;
+    //            if(it.first.size() == 2ul) ++l2;
+    //            if(it.first.size() == 3ul) ++l3;
+    //            }
+    //        printfln("  %d 1-ops",l1);
+    //        printfln("  %d 2-ops",l2);
+    //        printfln("  %d 3-ops",l3);
+    //        //printfln("  %d total",l1+l2+l3);
+    //        println("Right basis elems:");
+    //        for(auto& it : qb.second.right)
+    //            {
+    //            //printfln("   %s -> %d",it.first,it.second);
+    //            if(it.first.size() == 1ul) ++r1;
+    //            if(it.first.size() == 2ul) ++r2;
+    //            if(it.first.size() == 3ul) ++r3;
+    //            }
+    //        printfln("  %d 1-ops",r1);
+    //        printfln("  %d 2-ops",r2);
+    //        printfln("  %d 3-ops",r3);
+    //        //printfln("  %d total",r1+r2+r3);
+
+    //        // Convert the block matrix elements to a dense matrix
+    //        auto C = ComplexMatrix(qb.second.mat);
+
+    //        printfln("C is %d x %d",C.Re.Nrows(),C.Re.Ncols());
+    //        println();
+    //        //println("C.Re = \n",C.Re);
+    //        //PAUSE
+    //        }
+    //    }
+    }
+
+         
+
+struct QNProd
+    {
+    QN q;
+    SiteTermProd prod;
+    QNProd() { }
+    QNProd(QN const& qq, SiteTermProd const& pp) : q(qq), prod(pp) { }
+    };
+bool
+operator<(QNProd const& p1, QNProd const& p2)
+    {
+    if(p1.q != p2.q) return p1.q < p2.q;
+    return p1.prod < p2.prod;
+    }
+using MPOPiece = map<QNProd,ComplexMatrix>;
+
+// SVD the coefficients matrix on each link and construct the compressed MPO matrix
+void
+compressMPO(SiteSet const& sites,
+            vector<QNBlock> const& qbs, 
+            vector<IQMatEls> const& tempMPO,
+            vector<MPOPiece> & finalMPO, 
+            vector<IQIndex> & links, 
+            bool isExpH = false, 
+            Complex tau = 0,
+            const Args& args = Args::global())
+    {
+    const int N = sites.N();
+    Real eps = 1E-14;
+
+    int minm = args.getInt("Minm",1);
+    int maxm = args.getInt("Maxm",5000);
+    Real cutoff = args.getReal("Cutoff",1E-16);
+    //printfln("Using cutoff = %.2E",cutoff);
+    //printfln("Using minm = %d",minm);
+    //printfln("Using maxm = %d",maxm);
+
+    finalMPO.resize(N);
+    links.resize(N+1);
+    
+    auto V_n = map<QN, ComplexMatrix>();
+    
+    const QN ZeroQN;
+    
+    int d0 = isExpH ? 1 : 2;
+    
+    links.at(0) = IQIndex("Hl0",Index("hl0_0",d0),ZeroQN);
+
+    auto max_d = links.at(0).m();
+    for(int n = 1; n <= N; ++n)
+        {
+        //printfln("=== Making compressed MPO at site %d ===",n);
+        //Put in factor of (-tau) if isExpH==true
+        if(isExpH) Error("Need to put in factor of (-tau)");
+
+        auto V_npp = map<QN, ComplexMatrix>();
+
+        int nsector = 1; //always have ZeroQN sector
+
+        for(auto& qb : qbs.at(n-1) )
+            {
+            auto& qn = qb.first;
+            if(qn != ZeroQN) ++nsector;
+
+            // Convert the block matrix elements to a dense matrix
+            auto C = ComplexMatrix(qb.second.mat);
+
+            //println("<><><><><><><> Doing SVD: <><><><><><><><><><>");
+            //println("qn = ",qn);
+            //println("C.Re = \n",C.Re);
+
+            auto& Vq = V_npp[qn];
+            auto& Vre = Vq.Re;
+            auto& Vim = Vq.Im;
+
+            Vector D;
+            if(C.isComplex())
+                {                    
+                Error("Complex case not handled yet");
+                //ComplexMatrix U;
+                //SVD(C.Re, C.Im, U.Re, U.Im, D, Vre,Vim);
+                }
+            else
+                {
+                Matrix U;                
+                SVD(C.Re, U, D, Vre);
+                }
+
+            //square singular vals for call to truncate
+            for(auto& d : D) d = sqr(d);
+            truncate(D,maxm,minm,cutoff);
+            int m = D.size();
+
+            int nc = ncols(C.Re);
+            resize(Vre,m,nc);
+            if(C.isComplex()) resize(Vim,m,nc);
+
+            //println("Vre = \n",Vre);
+            //println("<><><><><><><><><><><><><><><><><><><><><><><>");
+            }
+
+        int count = 0;
+        auto inqn = stdx::reserve_vector<IndexQN>(nsector);
+        // Make sure zero QN is first in the list of indices
+        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+nrows(V_npp[ZeroQN].Re)),ZeroQN);        
+        for(auto const& qb : qbs.at(n-1))
+            {
+            QN const& q = qb.first;
+            if(q == ZeroQN) continue; // was already taken care of
+            int m = nrows(V_npp[q].Re);
+            inqn.emplace_back(Index(format("hl%d_%d",n,count++),m),q);
+            }
+        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
+
+        //printfln("()()()() Link size at %d is %d",n,links.at(n).m());
+
+        //
+        // Construct the compressed MPO
+        //
+        auto& fm = finalMPO.at(n-1);
+
+        auto& IdM = fm[QNProd{ZeroQN,SiteTermProd(1,{"Id",n})}];
+        IQIndex& ll = links.at(n-1);
+        IQIndex& rl = links.at(n);
+
+        Index li = findByQN(ll,ZeroQN);
+        Index ri = findByQN(rl,ZeroQN);
+        IdM.Re = Matrix(li.m(),ri.m());
+        IdM.Im = Matrix(li.m(),ri.m());
+        IdM.Re(1,1) = 1.;
+        if(!isExpH) IdM.Re(2,2) = 1.;
+
+        for(IQMPOMatElem const& elem: tempMPO.at(n-1))
+            {
+            int j = elem.row;
+            int k = elem.col;
+            auto& t = elem.val;
+            
+            if(isZero(t.coef,eps)) continue;
+
+            auto& M = fm[QNProd{elem.rowqn,t.ops}];
+
+            if(nrows(M.Re)==0)
+                {
+                auto li = findByQN(ll,elem.rowqn);
+                auto ri = findByQN(rl,elem.colqn);
+                M.Re = Matrix(li.m(),ri.m());
+                M.Im = Matrix(li.m(),ri.m());
+                }
+
+            int rowOffset = isExpH ? 1 : 2;
+
+            //rowShift & colShift account for special identity
+            //entries in zero QN block of MPO
+            auto rowShift = (elem.rowqn==ZeroQN) ? d0 : 0;
+            auto colShift = (elem.colqn==ZeroQN) ? d0 : 0;
+
+            if(j==0 && k==0)	// on-site terms
+                {
+                M.Re(rowOffset,1) += t.coef.real();
+                M.Im(rowOffset,1) += t.coef.imag();
+                }
+            else if(j==0)  	// terms starting on site n
+                {
+                auto& V = V_npp[elem.colqn];
+                for(size_t i = 1; i <= nrows(V); ++i)
+                    {
+                    auto z = t.coef*V(i,k);
+                    M.Re(rowOffset,i+colShift) += z.real();
+                    M.Im(rowOffset,i+colShift) += z.imag();
+                    }
+                }
+            else if(k==0) 	// terms ending on site n
+                {
+                auto& V = V_n[elem.rowqn];
+                for(size_t r = 1; r <= nrows(V); ++r)
+                    {
+                    auto z = t.coef*V(r,j);
+                    M.Re(r+rowShift,1) += z.real();
+                    M.Im(r+rowShift,1) += z.imag();
+                    }
+                }
+            else 
+                {
+                auto& Vr = V_n[elem.rowqn];
+                auto& Vc = V_npp[elem.colqn];
+                for(size_t r = 1; r <= nrows(Vr); ++r)
+                for(size_t c = 1; c <= nrows(Vc); ++c) 
+                    {
+                    auto z = t.coef*Vr(r,j)*Vc(c,k);
+                    M.Re(r+rowShift,c+colShift) += z.real();
+                    M.Im(r+rowShift,c+colShift) += z.imag();
+                    }
+                }
+            }
+
+        // Store SVD computed at this step for next link
+        V_n = move(V_npp);
+        
+        max_d = max(max_d, links.at(n).m());
+        }
+        
+    //println("Maximal dimension of the MPO is ", max_d);
+    
+    ////
+    //// Debugging printout
+    ////
+    //println("Final MPO is:");
+    //for(int n=1; n<=N; ++n)
+    //    {
+    //    println("---------------------------------------------");
+    //    println("Site n = ",n);
+    //    println("links.at(n-1) = ",links.at(n-1));
+    //    println("links.at(n) = ",links.at(n));
+    //    for(auto& qnp_m : finalMPO.at(n-1))
+    //        {
+    //        auto& row = links.at(n-1);
+    //        auto& col = links.at(n);
+
+    //        auto rq = qnp_m.first.q;
+
+    //        auto& prod = qnp_m.first.prod;
+    //        auto Op = computeProd(sites,prod);
+    //        auto sq = div(Op);
+    //        auto cq = rq-sq;
+
+    //        auto ri = findByQN(row,rq);
+    //        auto ci = findByQN(col,cq);
+
+    //        println("row QN = ",rq);
+    //        println("site QN = ",sq);
+    //        println("col QN = ",cq);
+    //        println("row Index = ",ri);
+    //        println("col Index = ",ci);
+    //        println("Op = ",qnp_m.first.prod);
+    //        println("M.Re = \n",qnp_m.second.Re);
+    //        println();
+    //        }
+    //    println("---------------------------------------------");
+    //    //PAUSE
+    //    }
+    }
+
+IQMPO
+constructMPOTensors(SiteSet const& sites,
+                    vector<MPOPiece> const& finalMPO, 
+                    vector<IQIndex> const& links, 
+                    bool isExpH = false)
+    {
+    IQMPO H(sites);
+    int N = sites.N();
+
+    for(int n = 1; n <= N; ++n)
+        {
+        auto& row = links.at(n-1);
+        auto& col = links.at(n);
+        auto& W = H.Aref(n);
+
+        W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+
+        auto T = IQTensor(dag(row),col);
+
+        //printfln("n = %d finalMPO size = %d",n,finalMPO.at(n-1).size());
+        for(auto& qp_M : finalMPO.at(n-1))
+            {
+            auto rq = qp_M.first.q;
+            auto& prod = qp_M.first.prod;
+            auto& M = qp_M.second;
+
+            auto Op = computeProd(sites,prod);
+            auto sq = div(Op);
+            auto cq = rq-sq;
+            //-rq + sq + cq == 0
+            //==> cq = rq - sq
+
+            auto ri = findByQN(row,rq);
+            auto ci = findByQN(col,cq);
+            auto t = matrixTensor(M.Re,ri,ci);
+            auto inrm = norm(M.Im);
+            if(inrm > 1E-12)
+                {
+                auto Ti = matrixTensor(M.Im,ri,ci);
+                t += Complex_i*Ti;
+                }
+            auto TT = T;
+            TT += t;
+            W += TT*Op;
+            }
+        }
+
+    int min_n = isExpH ? 1 : 2;
+    H.Aref(1) *= setElt(links.at(0)(min_n));
+    H.Aref(N) *= setElt(dag(links.at(N))(1));   
+    
+    return H;
+    }
+
+IQMPO
+svdIQMPO(AutoMPO const& am, 
+         Args const& args)
+    {
+    bool isExpH = false;
+    Cplx tau = 0.;
+    auto qbs = vector<QNBlock>();
+    auto tempMPO = vector<IQMatEls>();
+
+    //println("Calling partitionHTerms");
+    //START_TIMER(1)
+    partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
+    //STOP_TIMER(1)
+
+    //return IQMPO();
+    
+    auto finalMPO = vector<MPOPiece>();
+    auto links = vector<IQIndex>();
+
+    //println("Calling compressMPO");
+    //START_TIMER(2)
+    compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+    //STOP_TIMER(2)
+
+    //EXIT
+    //return IQMPO();
+    
+    //println("Calling constructMPOTensors");
+    //START_TIMER(3)
+    auto H = constructMPOTensors(am.sites(),finalMPO, links);
+    //STOP_TIMER(3)
+
+    return H;
+    }
+
 template<>
 IQMPO 
-toMPO(AutoMPO const& am, Args const& args) 
+toMPO(AutoMPO const& am, 
+      Args const& args) 
     { 
-    return toMPOImpl<IQTensor>(am,args);
+    //
+    // TODO: change Exact=false to be the default
+    //
+    if(args.getBool("Exact",true))
+        {
+        return toMPOImpl<IQTensor>(am,args);
+        }
+    return svdIQMPO(am,args);
+    }
+
+template<>
+MPO 
+toMPO(AutoMPO const& am, 
+      Args const& args) 
+    { 
+    IQMPO res = toMPOImpl<IQTensor>(am,{args,"CheckQN",false});
+    return res.toMPO();
     }
 
 //template<>
