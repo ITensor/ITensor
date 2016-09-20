@@ -879,64 +879,25 @@ struct MatElem
     bool operator==(const MatElem &other) const {return ind == other.ind && val == other.val; }
     };
 
-struct ComplexMatrix
+CMatrix
+toCMatrix(vector<MatElem> const& M)
     {
-    Matrix Re;
-    Matrix Im;
-    
-    ComplexMatrix() {};
-    
-    ComplexMatrix(const std::vector<MatElem> &M);
-    
-    bool isComplex() const { return Im.size() != 0ul; };
-    
-    Complex operator() (int i, int j) const;
-
-    int Nrows() { return nrows(Re); }
-
-    int Ncols() { return ncols(Re); }
-    };
-
-size_t nrows(ComplexMatrix const& C) { return nrows(C.Re); }
-size_t ncols(ComplexMatrix const& C) { return ncols(C.Re); }
-
-ComplexMatrix::
-ComplexMatrix(vector<MatElem> const& M)
-    {
+    CMatrix C;
     int nr = 0, nc = 0;
-    bool isComplex = false;
     
     for(MatElem const& elem : M)
         {
         nr = max(nr,1+elem.ind.row);
         nc = max(nc,1+elem.ind.col);
-        if(!isReal(elem.val)) isComplex = true;
         }
     
-    resize(Re,nr,nc);
-    if(isComplex) resize(Im,nr, nc);
+    resize(C,nr,nc);
         
     for(MatElem const& elem : M)
         {
-        Re(elem.ind.row,elem.ind.col) = elem.val.real();
-        if(!isReal(elem.val))
-            Im(elem.ind.row,elem.ind.col) = elem.val.imag();
+        C(elem.ind.row,elem.ind.col) = elem.val;
         }
-    }
-    
-Cplx ComplexMatrix::
-operator()(int i, int j) const
-    {
-    Complex z = 0.;
-    if(Im.size() > 0ul)
-        {
-        z += Complex(0, Im(i,j));
-        }
-    if(Re.size() > 0ul)
-        {
-        z += Complex(Re(i,j),0);
-        }
-    return z;
+    return C;
     }
 
 void 
@@ -1212,7 +1173,7 @@ operator<(QNProd const& p1, QNProd const& p2)
     if(p1.q != p2.q) return p1.q < p2.q;
     return p1.prod < p2.prod;
     }
-using MPOPiece = map<QNProd,ComplexMatrix>;
+using MPOPiece = map<QNProd,CMatrix>;
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
 void
@@ -1238,7 +1199,7 @@ compressMPO(SiteSet const& sites,
     finalMPO.resize(N);
     links.resize(N+1);
     
-    auto V_n = map<QN, ComplexMatrix>();
+    auto V_n = map<QN, CMatrix>();
     
     const QN ZeroQN;
     
@@ -1253,7 +1214,7 @@ compressMPO(SiteSet const& sites,
         //Put in factor of (-tau) if isExpH==true
         if(isExpH) Error("Need to put in factor of (-tau)");
 
-        auto V_npp = map<QN, ComplexMatrix>();
+        auto V_npp = map<QN, CMatrix>();
 
         int nsector = 1; //always have ZeroQN sector
 
@@ -1263,37 +1224,28 @@ compressMPO(SiteSet const& sites,
             if(qn != ZeroQN) ++nsector;
 
             // Convert the block matrix elements to a dense matrix
-            auto C = ComplexMatrix(qb.second.mat);
+            auto C = toCMatrix(qb.second.mat);
 
             //println("<><><><><><><> Doing SVD: <><><><><><><><><><>");
             //println("qn = ",qn);
             //println("C.Re = \n",C.Re);
 
-            auto& Vq = V_npp[qn];
-            auto& Vre = Vq.Re;
-            auto& Vim = Vq.Im;
+            //auto& Vq = V_npp[qn];
+            //auto& Vre = Vq.Re;
+            //auto& Vim = Vq.Im;
+            auto& V = V_npp[qn];
 
+            CMatrix U;
             Vector D;
-            if(C.isComplex())
-                {                    
-                Error("Complex case not handled yet");
-                //ComplexMatrix U;
-                //SVD(C.Re, C.Im, U.Re, U.Im, D, Vre,Vim);
-                }
-            else
-                {
-                Matrix U;                
-                SVD(C.Re, U, D, Vre);
-                }
+            SVD(C,U,D,V);
 
             //square singular vals for call to truncate
             for(auto& d : D) d = sqr(d);
             truncate(D,maxm,minm,cutoff);
             int m = D.size();
 
-            int nc = ncols(C.Re);
-            resize(Vre,nc,m);
-            if(C.isComplex()) resize(Vim,nc,m);
+            int nc = ncols(C);
+            resize(V,nc,m);
 
             //println("Vre = \n",Vre);
             //println("<><><><><><><><><><><><><><><><><><><><><><><>");
@@ -1302,12 +1254,12 @@ compressMPO(SiteSet const& sites,
         int count = 0;
         auto inqn = stdx::reserve_vector<IndexQN>(nsector);
         // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+ncols(V_npp[ZeroQN].Re)),ZeroQN);        
+        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+ncols(V_npp[ZeroQN])),ZeroQN);        
         for(auto const& qb : qbs.at(n-1))
             {
             QN const& q = qb.first;
             if(q == ZeroQN) continue; // was already taken care of
-            int m = ncols(V_npp[q].Re);
+            int m = ncols(V_npp[q]);
             inqn.emplace_back(Index(format("hl%d_%d",n,count++),m),q);
             }
         links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
@@ -1325,10 +1277,9 @@ compressMPO(SiteSet const& sites,
 
         Index li = findByQN(ll,ZeroQN);
         Index ri = findByQN(rl,ZeroQN);
-        IdM.Re = Matrix(li.m(),ri.m());
-        IdM.Im = Matrix(li.m(),ri.m());
-        IdM.Re(0,0) = 1.;
-        if(!isExpH) IdM.Re(1,1) = 1.;
+        IdM = CMatrix(li.m(),ri.m());
+        IdM(0,0) = 1.;
+        if(!isExpH) IdM(1,1) = 1.;
 
         for(IQMPOMatElem const& elem: tempMPO.at(n-1))
             {
@@ -1338,14 +1289,13 @@ compressMPO(SiteSet const& sites,
             
             if(isZero(t.coef,eps)) continue;
 
-            ComplexMatrix& M = fm[QNProd{elem.rowqn,t.ops}];
+            auto& M = fm[QNProd{elem.rowqn,t.ops}];
 
-            if(nrows(M.Re)==0)
+            if(nrows(M)==0)
                 {
                 auto li = findByQN(ll,elem.rowqn);
                 auto ri = findByQN(rl,elem.colqn);
-                M.Re = Matrix(li.m(),ri.m());
-                M.Im = Matrix(li.m(),ri.m());
+                M = CMatrix(li.m(),ri.m());
                 }
 
             int rowOffset = isExpH ? 0 : 1;
@@ -1357,8 +1307,7 @@ compressMPO(SiteSet const& sites,
 
             if(j==-1 && k==-1)	// on-site terms
                 {
-                M.Re(rowOffset,0) += t.coef.real();
-                M.Im(rowOffset,0) += t.coef.imag();
+                M(rowOffset,0) += t.coef;
                 }
             else if(j==-1)  	// terms starting on site n
                 {
@@ -1366,8 +1315,7 @@ compressMPO(SiteSet const& sites,
                 for(size_t i = 0; i < ncols(V); ++i)
                     {
                     auto z = t.coef*V(k,i);
-                    M.Re(rowOffset,i+colShift) += z.real();
-                    M.Im(rowOffset,i+colShift) += z.imag();
+                    M(rowOffset,i+colShift) += z;
                     }
                 }
             else if(k==-1) 	// terms ending on site n
@@ -1376,8 +1324,7 @@ compressMPO(SiteSet const& sites,
                 for(size_t r = 0; r < ncols(V); ++r)
                     {
                     auto z = t.coef*V(j,r);
-                    M.Re(r+rowShift,0) += z.real();
-                    M.Im(r+rowShift,0) += z.imag();
+                    M(r+rowShift,0) += z;
                     }
                 }
             else 
@@ -1388,8 +1335,7 @@ compressMPO(SiteSet const& sites,
                 for(size_t c = 0; c < ncols(Vc); ++c) 
                     {
                     auto z = t.coef*Vr(j,r)*Vc(k,c);
-                    M.Re(r+rowShift,c+colShift) += z.real();
-                    M.Im(r+rowShift,c+colShift) += z.imag();
+                    M(r+rowShift,c+colShift) += z;
                     }
                 }
             }
@@ -1475,13 +1421,7 @@ constructMPOTensors(SiteSet const& sites,
 
             auto ri = findByQN(row,rq);
             auto ci = findByQN(col,cq);
-            auto t = matrixTensor(M.Re,ri,ci);
-            auto inrm = norm(M.Im);
-            if(inrm > 1E-12)
-                {
-                auto Ti = matrixTensor(M.Im,ri,ci);
-                t += 1_i*Ti;
-                }
+            auto t = matrixTensor(M,ri,ci);
             auto TT = T;
             TT += t;
             W += TT*Op;
