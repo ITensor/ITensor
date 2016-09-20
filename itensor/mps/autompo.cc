@@ -1292,8 +1292,8 @@ compressMPO(SiteSet const& sites,
             int m = D.size();
 
             int nc = ncols(C.Re);
-            resize(Vre,m,nc);
-            if(C.isComplex()) resize(Vim,m,nc);
+            resize(Vre,nc,m);
+            if(C.isComplex()) resize(Vim,nc,m);
 
             //println("Vre = \n",Vre);
             //println("<><><><><><><><><><><><><><><><><><><><><><><>");
@@ -1302,12 +1302,12 @@ compressMPO(SiteSet const& sites,
         int count = 0;
         auto inqn = stdx::reserve_vector<IndexQN>(nsector);
         // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+nrows(V_npp[ZeroQN].Re)),ZeroQN);        
+        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+ncols(V_npp[ZeroQN].Re)),ZeroQN);        
         for(auto const& qb : qbs.at(n-1))
             {
             QN const& q = qb.first;
             if(q == ZeroQN) continue; // was already taken care of
-            int m = nrows(V_npp[q].Re);
+            int m = ncols(V_npp[q].Re);
             inqn.emplace_back(Index(format("hl%d_%d",n,count++),m),q);
             }
         links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
@@ -1363,9 +1363,9 @@ compressMPO(SiteSet const& sites,
             else if(j==-1)  	// terms starting on site n
                 {
                 auto& V = V_npp[elem.colqn];
-                for(size_t i = 0; i < nrows(V); ++i)
+                for(size_t i = 0; i < ncols(V); ++i)
                     {
-                    auto z = t.coef*V(i,k);
+                    auto z = t.coef*V(k,i);
                     M.Re(rowOffset,i+colShift) += z.real();
                     M.Im(rowOffset,i+colShift) += z.imag();
                     }
@@ -1373,9 +1373,9 @@ compressMPO(SiteSet const& sites,
             else if(k==-1) 	// terms ending on site n
                 {
                 auto& V = V_n[elem.rowqn];
-                for(size_t r = 0; r < nrows(V); ++r)
+                for(size_t r = 0; r < ncols(V); ++r)
                     {
-                    auto z = t.coef*V(r,j);
+                    auto z = t.coef*V(j,r);
                     M.Re(r+rowShift,0) += z.real();
                     M.Im(r+rowShift,0) += z.imag();
                     }
@@ -1384,10 +1384,10 @@ compressMPO(SiteSet const& sites,
                 {
                 auto& Vr = V_n[elem.rowqn];
                 auto& Vc = V_npp[elem.colqn];
-                for(size_t r = 0; r < nrows(Vr); ++r)
-                for(size_t c = 0; c < nrows(Vc); ++c) 
+                for(size_t r = 0; r < ncols(Vr); ++r)
+                for(size_t c = 0; c < ncols(Vc); ++c) 
                     {
-                    auto z = t.coef*Vr(r,j)*Vc(c,k);
+                    auto z = t.coef*Vr(j,r)*Vc(k,c);
                     M.Re(r+rowShift,c+colShift) += z.real();
                     M.Im(r+rowShift,c+colShift) += z.imag();
                     }
@@ -1480,24 +1480,31 @@ constructMPOTensors(SiteSet const& sites,
             if(inrm > 1E-12)
                 {
                 auto Ti = matrixTensor(M.Im,ri,ci);
-                t += Complex_i*Ti;
+                t += 1_i*Ti;
                 }
             auto TT = T;
             TT += t;
             W += TT*Op;
+            W.scaleTo(1.);
             }
         }
 
-    for(int n = 1; n <= N; ++n)
-        {
-        auto& W = H.Aref(n);
-        if(div(W) != QN())
-            {
-            Print(n);
-            Print(div(W));
-            PAUSE
-            }
-        }
+//#ifdef DEBUG
+//    auto mscale = LogNum(1.);
+//    for(int n = 1; n <= N; ++n)
+//        {
+//        auto& W = H.Aref(n);
+//        if(W.scale() > mscale) mscale = W.scale();
+//        W.scaleTo(1.);
+//        if(div(W) != QN())
+//            {
+//            Print(n);
+//            Print(div(W));
+//            PAUSE
+//            }
+//        }
+//    Print(mscale);
+//#endif
 
     int min_n = isExpH ? 1 : 2;
     H.Aref(1) *= setElt(links.at(0)(min_n));
