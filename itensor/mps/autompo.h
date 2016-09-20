@@ -37,18 +37,18 @@ toMPO(AutoMPO const& a,
 //
 template <typename Tensor>
 MPOt<Tensor>
-toExpH(const AutoMPO& a,
-       Complex tau,
-       const Args& args = Args::global());
+toExpH(AutoMPO const& a,
+       Cplx tau,
+       Args const& args = Args::global());
 
 
 
 //Instantiations of templates to allow us to define them
 //later in autompo.cc
-template<> MPO toMPO<ITensor>(const AutoMPO& a, const Args& args);
-template<> IQMPO toMPO<IQTensor>(const AutoMPO& a, const Args& args);
-template<> MPO toExpH<ITensor>(const AutoMPO& a, Complex tau, const Args& args);
-template<> IQMPO toExpH<IQTensor>(const AutoMPO& a, Complex tau, const Args& args);
+template<> MPO toMPO<ITensor>(AutoMPO const& a, Args const& args);
+template<> IQMPO toMPO<IQTensor>(AutoMPO const& a, Args const& args);
+template<> MPO toExpH<ITensor>(AutoMPO const& a, Cplx tau, Args const& args);
+template<> IQMPO toExpH<IQTensor>(AutoMPO const& a, Cplx tau, Args const& args);
 
 
 struct SiteTerm
@@ -65,7 +65,7 @@ struct SiteTerm
     operator==(SiteTerm const& o) const { return (op == o.op && i == o.i); }
 
     bool
-    operator!=(const SiteTerm& other) const { return !operator==(other); }
+    operator!=(SiteTerm const& other) const { return !operator==(other); }
 
     bool
     operator<(SiteTerm const& o) const
@@ -165,7 +165,7 @@ class AutoMPO
                     const char* opname);
 
         Accumulator(AutoMPO* pa, 
-                    const std::string& opname);
+                    std::string const& opname);
 
         ~Accumulator();
         
@@ -182,7 +182,7 @@ class AutoMPO
         operator,(const char* op);
 
         Accumulator&
-        operator,(const std::string& op);
+        operator,(std::string const& op);
         };
 
     public:
@@ -210,18 +210,17 @@ class AutoMPO
 
     void
     reset() { terms_.clear(); }
-
     };
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTerm& t);
+operator<<(std::ostream& s, SiteTerm const& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const HTerm& t);
+operator<<(std::ostream& s, HTerm const& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const AutoMPO& a);
+operator<<(std::ostream& s, AutoMPO const& a);
 
-}
+} //namespace itensor
 
 #endif
