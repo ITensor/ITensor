@@ -7,6 +7,7 @@
 
 #include "itensor/global.h"
 #include "itensor/mps/mpo.h"
+#include <set>
 
 namespace itensor {
 
@@ -54,45 +55,61 @@ struct SiteTerm
     {
     std::string op;
     int i;
-    Complex coef;
 
     SiteTerm();
 
-    SiteTerm(const std::string& op,
-             int i,
-             Real coef = 1);
+    SiteTerm(std::string const& op,
+             int i);
 
     bool
-    operator==(const SiteTerm& other) const;
+    operator==(SiteTerm const& o) const { return (op == o.op && i == o.i); }
 
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
 
     bool
-    proportialTo(const SiteTerm& other) const;
+    operator<(SiteTerm const& o) const
+        {
+        if(i != o.i) return i < o.i;
+        return op < o.op;
+        }
+
+    bool
+    operator>(SiteTerm const& o) const
+        {
+        if(i != o.i) return i > o.i;
+        return op > o.op;
+        }
     };
+
+using SiteTermProd = std::vector<SiteTerm>;
 
 bool
 isFermionic(SiteTerm const& st);
 
 struct HTerm
     {
-    std::vector<SiteTerm> ops;
+    Cplx coef = 0.;
+    SiteTermProd ops;
 
-    HTerm();
+    HTerm() : coef(1.) { }
 
-    HTerm(const std::string& op1,
-          int i1,
-          Real x = 1);
+    HTerm(Cplx z, SiteTermProd const& prod) : coef(z), ops(prod) { }
 
-    HTerm(const std::string& op1_,
-          int i1_,
-          const std::string& op2_,
-          int i2_,
-          Real x_ = 1);
+    HTerm(Cplx z, SiteTermProd && prod) : coef(z), ops(std::move(prod)) { }
+
+    //HTerm(const std::string& op1,
+    //      int i1,
+    //      Real x = 1);
+
+    //HTerm(const std::string& op1_,
+    //      int i1_,
+    //      const std::string& op2_,
+    //      int i2_,
+    //      Real x_ = 1);
 
     void
-    add(const std::string& op,
+    add(std::string const& op,
         int i,
         Real x = 1);
 
@@ -117,9 +134,6 @@ struct HTerm
     bool
     contains(int i) const;
 
-    Complex
-    coef() const;
-
     HTerm&
     operator*=(Real x);
 
@@ -127,19 +141,25 @@ struct HTerm
     operator*=(Complex x);
 
     bool
-    operator==(const HTerm& other) const;
+    operator==(HTerm const& other) const;
 
     bool
-    operator!=(const HTerm& other) const;
+    operator!=(HTerm const& other) const { return !operator==(other); }
     };
 
-void
-sort(HTerm & ht);
+struct LessNoCoef
+    {
+    bool
+    operator()(HTerm const& t1, HTerm const& t2) const;
+    };
 
 class AutoMPO
     {
+    public:
+    using storage = std::set<HTerm,LessNoCoef>;
+    private:
     SiteSet sites_;
-    std::vector<HTerm> terms_;
+    storage terms_;
 
     enum State { New, Op };
 
@@ -193,7 +213,7 @@ class AutoMPO
     SiteSet const&
     sites() const { return sites_; }
 
-    std::vector<HTerm> const&
+    storage const&
     terms() const { return terms_; }
 
     operator MPO() const { return toMPO<ITensor>(*this); }
@@ -205,14 +225,7 @@ class AutoMPO
     operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(HTerm t) 
-        { 
-        if(abs(t.coef()) != 0) 
-            {
-            sort(t);
-            terms_.push_back(t); 
-            }
-        }
+    add(HTerm const& t);
 
     void
     reset() { terms_.clear(); }

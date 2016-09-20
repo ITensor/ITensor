@@ -14,75 +14,104 @@ using std::vector;
 using std::array;
 using std::pair;
 using std::make_pair;
+using std::move;
 
 namespace itensor {
+
+bool
+equal(Cplx x, Cplx y, Real eps = 1E-12)
+    {
+    Real ax = std::abs(x);
+    Real ay = std::abs(y);
+    Real scale = (ax < ay ? ay : ax);
+    return std::abs(x-y) <= scale*eps;
+    }
 
 bool
 isReal(const Cplx& z) { return z.imag() == 0; }
 
 bool
-isApproxReal(const Cplx& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
+isApproxReal(Cplx const& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
 
 SiteTerm::
-SiteTerm() : i(-1), coef(0) { }
+SiteTerm() : i(-1) { }
 
 SiteTerm::
-SiteTerm(const string& op_,
-         int i_,
-         Real coef_)
+SiteTerm(string const& op_,
+         int i_)
     :
     op(op_),
-    i(i_),
-    coef(coef_)
+    i(i_)
     { }
 
-bool SiteTerm::
-operator==(const SiteTerm& other) const
-    {
-    return (op == other.op && i == other.i && abs(coef-other.coef) < 1E-12);
-    }
-
-bool SiteTerm::
-proportialTo(const SiteTerm& other) const
-    {
-    return (op == other.op && i == other.i);
-    }
-
 bool
-isFermionic(const SiteTerm& st)
+isFermionic(SiteTerm const& st)
     {
+#ifdef DEBUG
+    for(char c : st.op)
+    if(c == '*')
+        {
+        Print(st.op);
+        Error("SiteTerm contains a '*' but isFermionic does not handle this case");
+        }
+#endif
     if(!st.op.empty() && st.op.front() == 'C') return true;
     return false;
     }
 
-HTerm::
-HTerm() { }
-
-HTerm::
-HTerm(const string& op1_,
-      int i1_,
-      Real x_)
-    { 
-    add(op1_,i1_,x_);
+bool
+isFermionic(SiteTermProd const& sprod)
+    {
+    bool isf = false;
+    for(auto& st : sprod)
+        {
+        //Flip isf in a Z2 fashion for every fermionic operator
+        if(isFermionic(st)) isf = !isf;
+        }
+    return isf;
     }
 
-HTerm::
-HTerm(const string& op1_,
-      int i1_,
-      const string& op2_,
-      int i2_,
-      Real x_)
-    { 
-    add(op1_,i1_,x_);
-    add(op2_,i2_);
-    }
+//HTerm::
+//HTerm(string const& op1_,
+//      int i1_,
+//      Real x_)
+//    { 
+//    add(op1_,i1_,x_);
+//    }
+//
+//HTerm::
+//HTerm(const string& op1_,
+//      int i1_,
+//      const string& op2_,
+//      int i2_,
+//      Real x_)
+//    { 
+//    add(op1_,i1_,x_);
+//    add(op2_,i2_);
+//    }
 
 void HTerm::
-add(const string& op,
+add(string const& op,
     int i,
     Real x)
     {
-    ops.emplace_back(op,i,x);
+    //The following ensures operators remain
+    //in site order within the vector "ops"
+    auto it = ops.begin();
+    while(it != ops.end() && it->i <= i) ++it;
+
+    auto t = SiteTerm(op,i);
+
+    // If the operator is fermionic and being inserted in between existing operators 
+    // need to check if an extra minus is required
+    if(it != ops.end() && isFermionic(t))
+        { 
+        auto rightOps = SiteTermProd(it,ops.end());
+        if(isFermionic(rightOps)) coef *= -1;
+        }   
+
+    coef *= x;
+    ops.insert(it,t);
     }
 
 bool HTerm::
@@ -106,20 +135,11 @@ contains(int i) const
     return i >= first().i && i <= last().i; 
     }
 
-Complex HTerm::
-coef() const
-    {
-    if(Nops() == 0) return 0;
-    Complex c = 1;
-    for(const auto& op : ops) c *= op.coef;
-    return c;
-    }
-
 HTerm& HTerm::
 operator*=(Real x)
     {
     if(Nops() == 0) Error("No operators in HTerm");
-    ops.front().coef *= x;
+    coef *= x;
     return *this;
     }
 
@@ -127,17 +147,18 @@ HTerm& HTerm::
 operator*=(Complex x)
     {
     if(Nops() == 0) Error("No operators in HTerm");
-    ops.front().coef *= x;
+    coef *= x;
     return *this;
     }
 
 bool HTerm::
-operator==(const HTerm& other) const
+operator==(HTerm const& o) const
     {
-    if(Nops() != other.Nops()) return false;
+    if(not equal(coef,o.coef,1E-12)) return false;
+    if(Nops() != o.Nops()) return false;
 
     for(size_t n = 0; n <= ops.size(); ++n)
-    if(ops[n] != other.ops.at(n)) 
+    if(ops[n] != o.ops.at(n)) 
         {
         return false;
         }
@@ -145,57 +166,17 @@ operator==(const HTerm& other) const
     return true;
     }
 
-bool HTerm::
-operator!=(const HTerm& other) const
-    {
-    return !operator==(other);
-    }
-
-void
-sort(HTerm & ht)
-    {
-    if(ht.ops.size() <= 1) return;
-
-    auto op = [&ht](size_t n)->SiteTerm& { return ht.ops.at(n); };
-
-    //print("Before sorting, ops are:");
-    //for(auto n : range(ht.ops.size()))
-    //    {
-    //    printf(" %s*%s_%d",op(n).coef,op(n).op,op(n).i);
-    //    }
-    //println();
-
-    //Do bubble sort: O(n^2) but allows making 
-    //pair-wise comparison for fermion signs
-    bool did_swap = true;
-    while(did_swap)
+bool LessNoCoef::
+operator()(HTerm const& t1, HTerm const& t2) const
+    { 
+    if(t1.ops.size() != t2.ops.size()) return t1.ops.size() < t2.ops.size();
+            
+    for(size_t j = 0ul; j < t1.ops.size(); ++j)
         {
-        did_swap = false;
-        for(auto n : range(ht.ops.size()-1))
-            {
-            if(op(n).i == op(n+1).i) 
-                {
-                Error("AutoMPO: cannot put two operators on same site in a single term");
-                }
-            if(op(n).i > op(n+1).i) 
-                {
-                std::swap(op(n),op(n+1));
-                did_swap = true;
-                if(isFermionic(op(n)) && isFermionic(op(n+1)))
-                    {
-                    op(n+1).coef *= -1;
-                    }
-                }
-            }
+        if(t1.ops[j] != t2.ops[j]) return t1.ops[j] < t2.ops[j];
         }
-    //print("After sorting, ops are:");
-    //for(auto n : range(ht.ops.size()))
-    //    {
-    //    printf(" %s*%s_%d",op(n).coef,op(n).op,op(n).i);
-    //    }
-    //println();
+    return false;
     }
-
 
 AutoMPO::Accumulator::
 Accumulator(AutoMPO* pa_, 
@@ -310,6 +291,25 @@ operator,(const string& op_)
         Error("Invalid input to AutoMPO (two strings in a row?)");
         }
     return *this;
+    }
+
+void AutoMPO::
+add(HTerm const& t)
+    {
+    if(abs(t.coef) == 0.0) return;
+
+    auto it = terms_.find(t);
+    if(it == terms_.end())
+        {
+        terms_.insert(move(t));
+        }
+    else //found duplicate
+        {
+        auto nt = t;
+        nt.coef += it->coef;
+        terms_.erase(it);
+        terms_.insert(move(nt));
+        }
     }
 
 /*
@@ -567,7 +567,7 @@ toMPOImpl(AutoMPO const& am,
             }
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
-        links.at(n) = IQIndex(nameint("Hl",n),std::move(inqn));
+        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
         //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
@@ -634,12 +634,9 @@ toMPOImpl(AutoMPO const& am,
                 //    PrintData(W);
                 //    EXIT
                 //    }
-                W += cst.coef * sites.op(op,n) * rc;
+                W += sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
-                if(isApproxReal(cst.coef))
-                    ws[r][c] = format("%.2f %s",cst.coef.real(),op);
-                else
-                    ws[r][c] = format("%.2f %s",cst.coef,op);
+                ws[r][c] = op;
 #endif
                 }
 
@@ -696,10 +693,10 @@ toMPOImpl(AutoMPO const& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
                     auto op = endTerm(ht.last().op);
-                    W += ht.last().coef * sites.op(op,n) * rc;
+                    W += ht.coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
-                    auto coef = ht.last().coef;
+                    auto coef = ht.coef;
                     if(isApproxReal(coef))
                         {
                         ws[r][c] = format("%.2f %s",coef.real(),op);
@@ -720,11 +717,11 @@ toMPOImpl(AutoMPO const& am,
                     {
 #ifdef SHOW_AUTOMPO
                     if(isApproxReal(ht.first().coef))
-                        ws[r][c] = format("%.2f %s",ht.first().coef.real(),ht.first().op);
+                        ws[r][c] = format("%.2f %s",ht.coef.real(),ht.first().op);
                     else
-                        ws[r][c] = format("%.2f %s",ht.first().coef,ht.first().op);
+                        ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.first().coef * sites.op(ht.first().op,n) * rc;
+                    W += ht.coef * sites.op(ht.first().op,n) * rc;
                     }
                 }
 
@@ -792,8 +789,6 @@ toExpH_ZW1(const AutoMPO& am,
         Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
         }
 
-    bool is_complex = std::fabs(tau.imag()) > std::fabs(1E-12*tau.real());
-
     //Special SiteTerm objects indicating either
     //a string of identities coming from the first
     //site of the system or the completed Hamitonian
@@ -856,7 +851,7 @@ toExpH_ZW1(const AutoMPO& am,
             }
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
-        links.at(n) = IQIndex(nameint("Hl",n),std::move(inqn));
+        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
 
         //if(n <= 2 or n == N)
         //    {
@@ -908,15 +903,11 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst.i == n && rst == IL)
                 {
 #ifdef SHOW_AUTOMPO
-                if(isApproxReal(cst.coef))
-                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef.real(),cst.op);
-                else
-                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
+                ws[r][c] = format("(-t)*%s",cst.op);
 #endif
                 auto opname = startTerm(cst.op);
-                auto op = cst.coef * sites.op(opname,n) * rc;
-                if(is_complex) op *= (-tau);
-                else           op *= (-tau.real());
+                auto op = sites.op(opname,n) * rc;
+                op *= (-tau);
                 W += op;
                 }
 
@@ -929,9 +920,13 @@ toExpH_ZW1(const AutoMPO& am,
                 else                 plusAppend(ws[r][c],"1");
 #endif
                 if(isFermionic(cst))
+                    {
                     W += sites.op("F",n) * rc;
+                    }
                 else
+                    {
                     W += sites.op("Id",n) * rc;
+                    }
                 }
 
             //End operator strings
@@ -943,7 +938,7 @@ toExpH_ZW1(const AutoMPO& am,
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = ht.last().op;
 #endif
-                    W += ht.last().coef * sites.op(endTerm(ht.last().op),n) * rc;
+                    W += ht.coef * sites.op(endTerm(ht.last().op),n) * rc;
                     }
                 }
 
@@ -959,9 +954,8 @@ toExpH_ZW1(const AutoMPO& am,
                     else
                         plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef,ht.first().op));
 #endif
-                    auto op = ht.first().coef * sites.op(ht.first().op,n) * rc;
-                    if(is_complex) op *= (-tau);
-                    else           op *= (-tau.real());
+                    auto op = ht.coef * sites.op(ht.first().op,n) * rc;
+                    op *= (-tau);
                     W += op;
                     }
                 }
@@ -1021,23 +1015,22 @@ toExpH<ITensor>(const AutoMPO& a,
     }
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTerm& t)
+operator<<(std::ostream& s, SiteTerm const& t)
     {
-    if(isReal(t.coef))
-        s << format("%f * %s(%d)",t.coef.real(),t.op,t.i);
-    else
-        s << format("%f * %s(%d)",t.coef,t.op,t.i);
+    s << t.op << "(" << t.i << ")";
     return s;
     }
 
 
 std::ostream& 
-operator<<(std::ostream& s, const HTerm& t)
+operator<<(std::ostream& s, HTerm const& t)
     {
     const char* pfix = "";
-    if(abs(t.coef()-1.0) > 1E-12) 
-        s << (isReal(t.coef()) ? format("%f ",t.coef().real()) : format("%f ",t.coef()));
-    for(const auto& st : t.ops) 
+    if(abs(t.coef-1.0) > 1E-12) 
+        {
+        s << (isReal(t.coef) ? format("%f ",t.coef.real()) : format("%f ",t.coef));
+        }
+    for(auto& st : t.ops) 
         {
         s << format("%s%s(%d)",pfix,st.op,st.i);
         pfix = " ";
