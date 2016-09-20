@@ -98,16 +98,6 @@ struct HTerm
 
     HTerm(Cplx z, SiteTermProd && prod) : coef(z), ops(std::move(prod)) { }
 
-    //HTerm(const std::string& op1,
-    //      int i1,
-    //      Real x = 1);
-
-    //HTerm(const std::string& op1_,
-    //      int i1_,
-    //      const std::string& op2_,
-    //      int i2_,
-    //      Real x_ = 1);
-
     void
     add(std::string const& op,
         int i,
@@ -124,15 +114,6 @@ struct HTerm
 
     SiteTerm const&
     last() const { return ops.back(); }
-
-    bool
-    startsOn(int i) const;
-
-    bool
-    endsOn(int i) const;
-
-    bool
-    contains(int i) const;
 
     HTerm&
     operator*=(Real x);

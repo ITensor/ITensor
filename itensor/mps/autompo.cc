@@ -71,25 +71,6 @@ isFermionic(SiteTermProd const& sprod)
     return isf;
     }
 
-//HTerm::
-//HTerm(string const& op1_,
-//      int i1_,
-//      Real x_)
-//    { 
-//    add(op1_,i1_,x_);
-//    }
-//
-//HTerm::
-//HTerm(const string& op1_,
-//      int i1_,
-//      const string& op2_,
-//      int i2_,
-//      Real x_)
-//    { 
-//    add(op1_,i1_,x_);
-//    add(op2_,i2_);
-//    }
-
 void HTerm::
 add(string const& op,
     int i,
@@ -112,27 +93,6 @@ add(string const& op,
 
     coef *= x;
     ops.insert(it,t);
-    }
-
-bool HTerm::
-startsOn(int i) const 
-    { 
-    if(ops.empty()) Error("No operators in HTerm");
-    return first().i == i; 
-    }
-
-bool HTerm::
-endsOn(int i) const 
-    { 
-    if(ops.empty()) Error("No operators in HTerm");
-    return last().i == i; 
-    }
-
-bool HTerm::
-contains(int i) const 
-    { 
-    if(ops.empty()) Error("No operators in HTerm");
-    return i >= first().i && i <= last().i; 
     }
 
 HTerm& HTerm::
