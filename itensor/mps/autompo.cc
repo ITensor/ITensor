@@ -906,18 +906,17 @@ ComplexMatrix(vector<MatElem> const& M)
     int nr = 0, nc = 0;
     bool isComplex = false;
     
-    for(const MatElem &elem : M)
+    for(MatElem const& elem : M)
         {
-        nr = max(nr, elem.ind.row);
-        nc = max(nc, elem.ind.col);
-        if(!isReal(elem.val))
-            isComplex = true;
+        nr = max(nr,1+elem.ind.row);
+        nc = max(nc,1+elem.ind.col);
+        if(!isReal(elem.val)) isComplex = true;
         }
     
     resize(Re,nr,nc);
     if(isComplex) resize(Im,nr, nc);
         
-    for(const MatElem &elem : M)
+    for(MatElem const& elem : M)
         {
         Re(elem.ind.row,elem.ind.col) = elem.val.real();
         if(!isReal(elem.val))
@@ -970,7 +969,7 @@ using QNBlock = map<QN, Block>;
 using IQMatEls = set<IQMPOMatElem>;
 using MPOMatrix = vector<vector<IQTensor>>;
 
-// Returns a 1-based index of the SiteTermProd ops in the vector
+// Returns a 0-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
 int
 posInBlock(SiteTermProd const& ops, 
@@ -978,7 +977,7 @@ posInBlock(SiteTermProd const& ops,
     {
     auto it = b.find(ops);
     if(it != b.end()) return it->second;
-    int i = 1+static_cast<int>(b.size());
+    int i = static_cast<int>(b.size());
     b[ops] = i;
     return i;
     }
@@ -1043,7 +1042,7 @@ partitionHTerms(SiteSet const& sites,
         TIMER_STOP(10)
         
         TIMER_START(11)
-        int j=0,k=0;
+        int j=-1,k=-1;
 
         // qbs.at(i) are the blocks at the link between sites i+1 and i+2
         // i.e. qbs.at(0) are the blocks at the link between sites 1 and 2
@@ -1073,7 +1072,7 @@ partitionHTerms(SiteSet const& sites,
             }
             
         // Place the coefficient of the HTerm when the term starts
-        Complex c = j==0 ? ht.coef : 1;
+        Cplx c = (j == -1) ? ht.coef : 1;
         
         bool leftF = isFermionic(left);
         if(onsite.empty())
@@ -1224,7 +1223,7 @@ compressMPO(SiteSet const& sites,
             vector<IQIndex> & links, 
             bool isExpH = false, 
             Complex tau = 0,
-            const Args& args = Args::global())
+            Args const& args = Args::global())
     {
     const int N = sites.N();
     Real eps = 1E-14;
@@ -1328,8 +1327,8 @@ compressMPO(SiteSet const& sites,
         Index ri = findByQN(rl,ZeroQN);
         IdM.Re = Matrix(li.m(),ri.m());
         IdM.Im = Matrix(li.m(),ri.m());
-        IdM.Re(1,1) = 1.;
-        if(!isExpH) IdM.Re(2,2) = 1.;
+        IdM.Re(0,0) = 1.;
+        if(!isExpH) IdM.Re(1,1) = 1.;
 
         for(IQMPOMatElem const& elem: tempMPO.at(n-1))
             {
@@ -1339,7 +1338,7 @@ compressMPO(SiteSet const& sites,
             
             if(isZero(t.coef,eps)) continue;
 
-            auto& M = fm[QNProd{elem.rowqn,t.ops}];
+            ComplexMatrix& M = fm[QNProd{elem.rowqn,t.ops}];
 
             if(nrows(M.Re)==0)
                 {
@@ -1349,44 +1348,44 @@ compressMPO(SiteSet const& sites,
                 M.Im = Matrix(li.m(),ri.m());
                 }
 
-            int rowOffset = isExpH ? 1 : 2;
+            int rowOffset = isExpH ? 0 : 1;
 
             //rowShift & colShift account for special identity
             //entries in zero QN block of MPO
             auto rowShift = (elem.rowqn==ZeroQN) ? d0 : 0;
             auto colShift = (elem.colqn==ZeroQN) ? d0 : 0;
 
-            if(j==0 && k==0)	// on-site terms
+            if(j==-1 && k==-1)	// on-site terms
                 {
-                M.Re(rowOffset,1) += t.coef.real();
-                M.Im(rowOffset,1) += t.coef.imag();
+                M.Re(rowOffset,0) += t.coef.real();
+                M.Im(rowOffset,0) += t.coef.imag();
                 }
-            else if(j==0)  	// terms starting on site n
+            else if(j==-1)  	// terms starting on site n
                 {
                 auto& V = V_npp[elem.colqn];
-                for(size_t i = 1; i <= nrows(V); ++i)
+                for(size_t i = 0; i < nrows(V); ++i)
                     {
                     auto z = t.coef*V(i,k);
                     M.Re(rowOffset,i+colShift) += z.real();
                     M.Im(rowOffset,i+colShift) += z.imag();
                     }
                 }
-            else if(k==0) 	// terms ending on site n
+            else if(k==-1) 	// terms ending on site n
                 {
                 auto& V = V_n[elem.rowqn];
-                for(size_t r = 1; r <= nrows(V); ++r)
+                for(size_t r = 0; r < nrows(V); ++r)
                     {
                     auto z = t.coef*V(r,j);
-                    M.Re(r+rowShift,1) += z.real();
-                    M.Im(r+rowShift,1) += z.imag();
+                    M.Re(r+rowShift,0) += z.real();
+                    M.Im(r+rowShift,0) += z.imag();
                     }
                 }
             else 
                 {
                 auto& Vr = V_n[elem.rowqn];
                 auto& Vc = V_npp[elem.colqn];
-                for(size_t r = 1; r <= nrows(Vr); ++r)
-                for(size_t c = 1; c <= nrows(Vc); ++c) 
+                for(size_t r = 0; r < nrows(Vr); ++r)
+                for(size_t c = 0; c < nrows(Vc); ++c) 
                     {
                     auto z = t.coef*Vr(r,j)*Vc(c,k);
                     M.Re(r+rowShift,c+colShift) += z.real();
@@ -1489,6 +1488,17 @@ constructMPOTensors(SiteSet const& sites,
             }
         }
 
+    for(int n = 1; n <= N; ++n)
+        {
+        auto& W = H.Aref(n);
+        if(div(W) != QN())
+            {
+            Print(n);
+            Print(div(W));
+            PAUSE
+            }
+        }
+
     int min_n = isExpH ? 1 : 2;
     H.Aref(1) *= setElt(links.at(0)(min_n));
     H.Aref(N) *= setElt(dag(links.at(N))(1));   
@@ -1536,13 +1546,12 @@ IQMPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
-    //
-    // TODO: change Exact=false to be the default
-    //
-    if(args.getBool("Exact",true))
+    if(args.getBool("Exact",false))
         {
+        println("Using 'Exact' mode to make MPO");
         return toMPOImpl<IQTensor>(am,args);
         }
+    println("Using approx/svd construction of MPO");
     return svdIQMPO(am,args);
     }
 
@@ -1551,7 +1560,7 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
-    IQMPO res = toMPOImpl<IQTensor>(am,{args,"CheckQN",false});
+    IQMPO res = toMPO<IQTensor>(am,{args,"CheckQN",false});
     return res.toMPO();
     }
 
