@@ -80,7 +80,8 @@ class DataRange
         if(n >= size_) 
             {
             std::cout << "offset = " << n << std::endl;
-            std::cout << "max offset (size-1) = " << (size_==0 ? -1ul : size_-1ul) << std::endl;
+            if(size_ == 0) std::cout << "size_ = " << size_ << std::endl;
+            else std::cout << "max offset (size-1) = " << (size_-1ul) << std::endl;
             Error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
@@ -94,7 +95,8 @@ class DataRange
         if(n >= size_) 
             {
             std::cout << "offset = " << n << std::endl;
-            std::cout << "max offset (size-1) = " << (size_==0 ? -1ul : size_-1ul) << std::endl;
+            if(size_ == 0) std::cout << "size_ = " << size_ << std::endl;
+            else std::cout << "max offset (size-1) = " << (size_-1ul) << std::endl;
             Error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
