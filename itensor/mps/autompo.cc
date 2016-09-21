@@ -1495,10 +1495,10 @@ toMPO(AutoMPO const& am,
     { 
     if(args.getBool("Exact",false))
         {
-        println("Using 'Exact' mode to make MPO");
+        println("Using 'Exact' mode to make MPO/IQMPO");
         return toMPOImpl<IQTensor>(am,args);
         }
-    println("Using approx/svd construction of MPO");
+    //println("Using approx/svd construction of MPO");
     return svdIQMPO(am,args);
     }
 
