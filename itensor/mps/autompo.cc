@@ -1191,7 +1191,7 @@ compressMPO(SiteSet const& sites,
 
     int minm = args.getInt("Minm",1);
     int maxm = args.getInt("Maxm",5000);
-    Real cutoff = args.getReal("Cutoff",1E-16);
+    Real cutoff = args.getReal("Cutoff",1E-13);
     //printfln("Using cutoff = %.2E",cutoff);
     //printfln("Using minm = %d",minm);
     //printfln("Using maxm = %d",maxm);
