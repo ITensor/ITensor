@@ -208,45 +208,45 @@ SECTION("Hubbard")
 
     }
 
-SECTION("No QN MPO")
-    {
-    auto N = 10;
-    auto h = 0.732;
-    auto sites = SpinHalf(N);
-    auto ampo = AutoMPO(sites);
-    for(auto j = 1; j < N; ++j)
-        {
-        ampo += "Sx",j,"Sx",j+1;
-        }
-    for(auto j = 1; j <= N; ++j)
-        {
-        ampo += h,"Sz",j;
-        }
-    auto H = MPO(ampo);
-
-    auto AllUp = InitState(sites,"Up");
-    auto L = AllUp;
-    auto R = AllUp;
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
-
-    L = AllUp;
-    R = AllUp;
-    L.set(1,"Dn");
-    R.set(1,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
-
-    L = AllUp;
-    R = AllUp;
-    L.set(1,"Dn");
-    L.set(2,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
-
-    L = AllUp;
-    R = AllUp;
-    L.set(3,"Dn");
-    R.set(4,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
-    }
+//SECTION("No QN MPO")
+//    {
+//    auto N = 10;
+//    auto h = 0.732;
+//    auto sites = SpinHalf(N);
+//    auto ampo = AutoMPO(sites);
+//    for(auto j = 1; j < N; ++j)
+//        {
+//        ampo += "Sx",j,"Sx",j+1;
+//        }
+//    for(auto j = 1; j <= N; ++j)
+//        {
+//        ampo += h,"Sz",j;
+//        }
+//    auto H = toMPO<ITensor>(ampo,{"Exact",true});
+//
+//    auto AllUp = InitState(sites,"Up");
+//    auto L = AllUp;
+//    auto R = AllUp;
+//    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+//
+//    L = AllUp;
+//    R = AllUp;
+//    L.set(1,"Dn");
+//    R.set(1,"Dn");
+//    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+//
+//    L = AllUp;
+//    R = AllUp;
+//    L.set(1,"Dn");
+//    L.set(2,"Dn");
+//    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+//
+//    L = AllUp;
+//    R = AllUp;
+//    L.set(3,"Dn");
+//    R.set(4,"Dn");
+//    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+//    }
 
 SECTION("Single Site Ops")
     {
@@ -269,6 +269,27 @@ SECTION("Single Site Ops")
             else       CHECK_CLOSE(x,0.);
             }
         }
+
+    //SECTION("Off diagonal, fermionic op")
+    //    {
+    //    auto n = 4;
+    //    ampo += "Cdagup",n;
+    //    auto Op = IQMPO(ampo);
+    //    //PrintData(Op.A(1));
+    //    //PrintData(Op.A(2));
+    //    //PrintData(Op.A(3));
+    //    //PrintData(Op.A(4));
+    //    for(auto i : range1(L))
+    //        {
+    //        auto state = InitState(sites,"Emp");
+    //        auto vac = IQMPS(state);
+    //        state.set(i,"Up");
+    //        auto psi = IQMPS(state);
+    //        auto x = overlap(psi,Op,vac);
+    //        if(i == n) CHECK_CLOSE(x,1.);
+    //        else       CHECK_CLOSE(x,0.);
+    //        }
+    //    }
     }
 
 }
