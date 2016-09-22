@@ -137,13 +137,13 @@ class MPOt : private MPSt<Tensor>
 
     }; //class MPOt<Tensor>
 
-template<typename T>
-MPOt<T>&
-addAssumeOrth(MPOt<T> & L, MPOt<T> const& R, Args const& args = Args::global()) 
-    { 
-    addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
-    return L;
-    }
+// template<typename T>
+// MPOt<T>&
+// addAssumeOrth(MPOt<T> & L, MPOt<T> const& R, Args const& args = Args::global()) 
+//     { 
+//     addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
+//     return L;
+//     }
 
 
 template<class T>
