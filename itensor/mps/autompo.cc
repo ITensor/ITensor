@@ -1060,105 +1060,8 @@ partitionHTerms(SiteSet const& sites,
 
         TIMER_STOP(12)
         }
-
-    ////
-    //// Debugging printout
-    ////
-    //for(auto n = 1; n <= N; ++n)
-    //    {
-    //    printfln("===== tempMPO at %d =====",n);
-    //    for(auto& el : tempMPO.at(n-1))
-    //        {
-    //        printfln("(r,c) = (%d,%d)",el.row,el.col);
-    //        printfln("QNs %s %s",el.rowqn,el.colqn);
-    //        printfln("HTerm = \n%s",el.val);
-    //        println();
-    //        }
-    //    }
-
-//#ifdef SHOW_AUTOMPO
-//    println("Left and Right Partials:");
-//    for(unsigned n=0; n<part.size(); n++)
-//        {
-//        for(const auto &pqn : part.at(n))
-//            {
-//            const Partition &p = pqn.second;
-//
-//            println("Left, QN = ", pqn.first);
-//            for(const SiteTermProd &prod : p.left)
-//                println(prod);
-//            println("Right, QN = ", pqn.first);
-//            for(const SiteTermProd &prod : p.right)
-//                println(prod);
-//            println("Coef, QN = ", pqn.first);
-//            for(const MatElem &elem : p.mat)
-//                println(elem.ind.row,',',elem.ind.col,'\t',elem.val);
-//            }
-//        println("=========================================");
-//        }
-//        
-//    println();
-//    println("TempMPO Elements:");
-//    for(unsigned n=0; n<tempMPO.size(); n++)
-//        {
-//        for(IQMPOMatElem const& elem: tempMPO.at(n))
-//            println(elem.rowqn,',',elem.row,'\t',elem.colqn,',',elem.col,'\t',elem.val.coef,'\t',elem.val.ops);
-//        println("=========================================");
-//        }
-//#endif   
-
-    //for(int n = 1; n <= N; ++n)
-    //    {
-    //    printfln("======== Site %d ==========",n);
-    //    printfln("%d QNBlocks",qbs.at(n-1).size());
-    //    for(auto& qb : qbs.at(n-1) )
-    //        {
-    //        auto& qn = qb.first;
-
-    //        println("QN = ",qn);
-    //        int l1 = 0,
-    //            l2 = 0,
-    //            l3 = 0;
-    //        int r1 = 0,
-    //            r2 = 0,
-    //            r3 = 0;
-    //        println("Left basis elems:");
-    //        for(auto& it : qb.second.left)
-    //            {
-    //            //printfln("   %s -> %d",it.first,it.second);
-    //            if(it.first.size() == 1ul) ++l1;
-    //            if(it.first.size() == 2ul) ++l2;
-    //            if(it.first.size() == 3ul) ++l3;
-    //            }
-    //        printfln("  %d 1-ops",l1);
-    //        printfln("  %d 2-ops",l2);
-    //        printfln("  %d 3-ops",l3);
-    //        //printfln("  %d total",l1+l2+l3);
-    //        println("Right basis elems:");
-    //        for(auto& it : qb.second.right)
-    //            {
-    //            //printfln("   %s -> %d",it.first,it.second);
-    //            if(it.first.size() == 1ul) ++r1;
-    //            if(it.first.size() == 2ul) ++r2;
-    //            if(it.first.size() == 3ul) ++r3;
-    //            }
-    //        printfln("  %d 1-ops",r1);
-    //        printfln("  %d 2-ops",r2);
-    //        printfln("  %d 3-ops",r3);
-    //        //printfln("  %d total",r1+r2+r3);
-
-    //        // Convert the block matrix elements to a dense matrix
-    //        auto C = ComplexMatrix(qb.second.mat);
-
-    //        printfln("C is %d x %d",C.Re.Nrows(),C.Re.Ncols());
-    //        println();
-    //        //println("C.Re = \n",C.Re);
-    //        //PAUSE
-    //        }
-    //    }
     }
 
-         
 
 struct QNProd
     {
@@ -1226,13 +1129,6 @@ compressMPO(SiteSet const& sites,
             // Convert the block matrix elements to a dense matrix
             auto C = toCMatrix(qb.second.mat);
 
-            //println("<><><><><><><> Doing SVD: <><><><><><><><><><>");
-            //println("qn = ",qn);
-            //println("C.Re = \n",C.Re);
-
-            //auto& Vq = V_npp[qn];
-            //auto& Vre = Vq.Re;
-            //auto& Vim = Vq.Im;
             auto& V = V_npp[qn];
 
             CMatrix U;
@@ -1246,9 +1142,6 @@ compressMPO(SiteSet const& sites,
 
             int nc = ncols(C);
             resize(V,nc,m);
-
-            //println("Vre = \n",Vre);
-            //println("<><><><><><><><><><><><><><><><><><><><><><><>");
             }
 
         int count = 0;
@@ -1263,8 +1156,6 @@ compressMPO(SiteSet const& sites,
             inqn.emplace_back(Index(format("hl%d_%d",n,count++),m),q);
             }
         links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
-
-        //printfln("()()()() Link size at %d is %d",n,links.at(n).m());
 
         //
         // Construct the compressed MPO
@@ -1345,46 +1236,7 @@ compressMPO(SiteSet const& sites,
         
         max_d = max(max_d, links.at(n).m());
         }
-        
     //println("Maximal dimension of the MPO is ", max_d);
-    
-    ////
-    //// Debugging printout
-    ////
-    //println("Final MPO is:");
-    //for(int n=1; n<=N; ++n)
-    //    {
-    //    println("---------------------------------------------");
-    //    println("Site n = ",n);
-    //    println("links.at(n-1) = ",links.at(n-1));
-    //    println("links.at(n) = ",links.at(n));
-    //    for(auto& qnp_m : finalMPO.at(n-1))
-    //        {
-    //        auto& row = links.at(n-1);
-    //        auto& col = links.at(n);
-
-    //        auto rq = qnp_m.first.q;
-
-    //        auto& prod = qnp_m.first.prod;
-    //        auto Op = computeProd(sites,prod);
-    //        auto sq = div(Op);
-    //        auto cq = rq-sq;
-
-    //        auto ri = findByQN(row,rq);
-    //        auto ci = findByQN(col,cq);
-
-    //        println("row QN = ",rq);
-    //        println("site QN = ",sq);
-    //        println("col QN = ",cq);
-    //        println("row Index = ",ri);
-    //        println("col Index = ",ci);
-    //        println("Op = ",qnp_m.first.prod);
-    //        println("M.Re = \n",qnp_m.second.Re);
-    //        println();
-    //        }
-    //    println("---------------------------------------------");
-    //    //PAUSE
-    //    }
     }
 
 IQMPO
@@ -1428,23 +1280,6 @@ constructMPOTensors(SiteSet const& sites,
             W.scaleTo(1.);
             }
         }
-
-//#ifdef DEBUG
-//    auto mscale = LogNum(1.);
-//    for(int n = 1; n <= N; ++n)
-//        {
-//        auto& W = H.Aref(n);
-//        if(W.scale() > mscale) mscale = W.scale();
-//        W.scaleTo(1.);
-//        if(div(W) != QN())
-//            {
-//            Print(n);
-//            Print(div(W));
-//            PAUSE
-//            }
-//        }
-//    Print(mscale);
-//#endif
 
     int min_n = isExpH ? 1 : 2;
     H.Aref(1) *= setElt(links.at(0)(min_n));
