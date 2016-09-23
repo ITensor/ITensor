@@ -43,7 +43,7 @@ rows(Mat_&& M,
      size_t rstop)
     -> decltype(makeRef(std::forward<Mat_>(M),MatRange{}))
     {
-    return subMatrix(std::forward<Mat_>(M),rstart,rstop,0,nrows(M));
+    return subMatrix(std::forward<Mat_>(M),rstart,rstop,0,ncols(M));
     }
 
 template<typename Mat_>
