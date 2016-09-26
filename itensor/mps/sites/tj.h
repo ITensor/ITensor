@@ -134,6 +134,20 @@ class tJSite
             Op.set(Dn,DnP,-1);
             }
         else
+        if(opname == "Fup")
+            {
+            Op.set(Em,EmP,+1); 
+            Op.set(Up,UpP,-1);
+            Op.set(Dn,DnP,+1);
+            }
+        else
+        if(opname == "Fdn")
+            {
+            Op.set(Em,EmP,+1); 
+            Op.set(Up,UpP,+1);
+            Op.set(Dn,DnP,-1);
+            }
+        else
         if(opname == "Sz")
             {
             Op.set(Up,UpP,+0.5); 
