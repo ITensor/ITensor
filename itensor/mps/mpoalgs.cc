@@ -312,12 +312,12 @@ fitApplyMPO(Real fac,
             {
             if(verbose)
                 {
-                println("Sweep=",sw,", HS=",ha,", Bond=(",b,",",b+1,")");
+                printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
                 }
 
             auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);
-            Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
+            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
             rwfK *= K.A(b+1);
 
             auto wfK = lwfK*rwfK;
@@ -342,9 +342,13 @@ fitApplyMPO(Real fac,
                 }
 
             if(ha == 1)
+                {
                 BK.at(b) = lwfK * dag(prime(res.A(b)));
+                }
             else
+                {
                 BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
+                }
             }
         }
     }
