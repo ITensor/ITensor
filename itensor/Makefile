@@ -118,7 +118,7 @@ itdata/diag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/combiner.h
 itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/qdense.h
+ITDEPHEADERS+= itdata/qdense.h itdata/qutil.h
 itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/qcombiner.h
