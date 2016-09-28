@@ -580,10 +580,10 @@ toMPOImpl(AutoMPO const& am,
             bool has_first = (stdx::find_if(bn,test_has_first) != bn.end());
             if(!has_first) 
                 {
-                auto Op = sites.op(ht.first().op,ht.first().i);
                 //printfln("Adding Op to basis at %d, Op=\n%s",n,Op);
                 if(checkqn)
                     {
+                    auto Op = sites.op(ht.first().op,ht.first().i);
                     bn.emplace_back(ht.first(),-div(Op));
                     }
                 else
@@ -699,7 +699,7 @@ toMPOImpl(AutoMPO const& am,
                 //    PrintData(W);
                 //    EXIT
                 //    }
-                W += sites.op(op,n) * rc;
+                W += Tensor{sites.op(op,n)} * rc;
 #ifdef SHOW_AUTOMPO
                 ws[r][c] = op;
 #endif
@@ -733,11 +733,11 @@ toMPOImpl(AutoMPO const& am,
 
                 if(isFermionic(cst))
                     {
-                    W += sites.op("F",n) * rc;
+                    W += Tensor{sites.op("F",n)} * rc;
                     }
                 else
                     {
-                    W += sites.op("Id",n) * rc;
+                    W += Tensor{sites.op("Id",n)} * rc;
                     }
 #ifdef SHOW_AUTOMPO
                 if(isFermionic(cst)) ws[r][c] = "F";
@@ -758,7 +758,7 @@ toMPOImpl(AutoMPO const& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
                     auto op = endTerm(ht.last().op);
-                    W += ht.coef * sites.op(op,n) * rc;
+                    W += ht.coef * Tensor{sites.op(op,n)} * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
                     auto coef = ht.coef;
@@ -786,7 +786,7 @@ toMPOImpl(AutoMPO const& am,
                     else
                         ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.coef * sites.op(ht.first().op,n) * rc;
+                    W += ht.coef * Tensor{sites.op(ht.first().op,n)} * rc;
                     }
                 }
 
@@ -1330,10 +1330,10 @@ toMPO(AutoMPO const& am,
     { 
     if(args.getBool("Exact",false))
         {
-        println("Using 'Exact' mode to make MPO/IQMPO");
+        println("Using exact conversion of AutoMPO->IQMPO");
         return toMPOImpl<IQTensor>(am,args);
         }
-    //println("Using approx/svd construction of MPO");
+    println("Using approx/svd conversion of AutoMPO->IQMPO");
     return svdIQMPO(am,args);
     }
 
@@ -1342,7 +1342,16 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
-    IQMPO res = toMPO<IQTensor>(am,{args,"CheckQN",false});
+    //
+    // NOTE: for MPO, Exact=true is the default currently
+    //
+    if(args.getBool("Exact",true))
+        {
+        println("Using exact conversion of AutoMPO->MPO");
+        return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
+        }
+    println("Using approx/svd conversion of AutoMPO->MPO");
+    IQMPO res = svdIQMPO(am,{args,"CheckQN",false});
     return res.toMPO();
     }
 
