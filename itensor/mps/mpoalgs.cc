@@ -290,15 +290,14 @@ fitApplyMPO(Real fac,
 
     const auto origPsi = psi;
 
-    auto BK = vector<Tensor>(N+2);
+    res.position(1);
 
+    auto BK = vector<Tensor>(N+2);
     BK.at(N) = origPsi.A(N)*K.A(N)*dag(prime(res.A(N)));
     for(auto n = N-1; n > 2; --n)
         {
         BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
-
-    res.position(1);
 
     for(auto sw : range1(sweeps.nsweep()))
         {
@@ -394,6 +393,8 @@ fitApplyMPO(Real mpsfac,
     auto N = psiA.N();
     auto nsweep = args.getInt("Nsweep",1);
 
+    res.position(1);
+
     vector<Tensor> B(N+2),
                    BK(N+2);
 
@@ -405,7 +406,6 @@ fitApplyMPO(Real mpsfac,
         BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
 
-    res.position(1);
 
     for(int sw = 1; sw <= nsweep; ++sw)
         {
