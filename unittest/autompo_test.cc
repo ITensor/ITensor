@@ -5,6 +5,7 @@
 #include "itensor/util/print_macro.h"
 
 #include "ExpIsing.h"
+#include "ExpHeisenberg.h"
 
 using namespace itensor;
 
@@ -326,6 +327,39 @@ SECTION("toExpH ITensor")
     auto anrm2 = overlap(apsi,apsi);
 
     CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+    }
+
+SECTION("toExpH IQTensor")
+    {
+    int N = 10;
+    Real tau = 0.01;
+
+    auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+    {
+    ampo +=     "Sz",j,"Sz",j+1;
+    ampo += 0.5,"S+",j,"S-",j+1;
+    ampo += 0.5,"S-",j,"S+",j+1;
+    }
+
+    auto expH = toExpH<IQTensor>(ampo,tau,{"Exact",true});
+    auto expHexact = IQMPO(ExpHeisenberg(sites,tau));
+
+    auto state = InitState(sites);
+    for(auto j : range1(N)) state.set(j,j%2==0 ? "Up" : "Dn");
+    auto psi = IQMPS(state);
+
+    IQMPS xpsi;
+    exactApplyMPO(psi,expHexact,xpsi);
+    auto xnrm2 = overlap(xpsi,xpsi);
+
+    IQMPS apsi;
+    exactApplyMPO(psi,expH,apsi);
+    auto anrm2 = overlap(xpsi,xpsi);
+
+    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
     }
 
 }
