@@ -312,7 +312,7 @@ SECTION("toExpH ITensor")
         {
         ampo += -h,"Sx",j;
         }
-    auto expH = toExpH<ITensor>(ampo,tau,{"Exact",true});
+    auto expH = toExpH<ITensor>(ampo,tau);
 
     auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
 
@@ -344,7 +344,7 @@ SECTION("toExpH IQTensor")
     ampo += 0.5,"S-",j,"S+",j+1;
     }
 
-    auto expH = toExpH<IQTensor>(ampo,tau,{"Exact",true});
+    auto expH = toExpH<IQTensor>(ampo,tau);
     auto expHexact = IQMPO(ExpHeisenberg(sites,tau));
 
     auto state = InitState(sites);
