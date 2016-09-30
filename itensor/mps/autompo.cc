@@ -530,6 +530,15 @@ endTerm(const string& op)
     return op;
     }
 
+//Helper for toMPOImpl
+template<typename T>
+T
+convert_tensor(IQTensor && t) { return std::move(t); }
+
+template<>
+ITensor
+convert_tensor(IQTensor && t) { return toITensor(t); }
+
 template<typename Tensor>
 MPOt<Tensor>
 toMPOImpl(AutoMPO const& am,
@@ -699,7 +708,7 @@ toMPOImpl(AutoMPO const& am,
                 //    PrintData(W);
                 //    EXIT
                 //    }
-                W += Tensor{sites.op(op,n)} * rc;
+                W += convert_tensor<Tensor>(sites.op(op,n)) * rc;
 #ifdef SHOW_AUTOMPO
                 ws[r][c] = op;
 #endif
@@ -733,11 +742,11 @@ toMPOImpl(AutoMPO const& am,
 
                 if(isFermionic(cst))
                     {
-                    W += Tensor{sites.op("F",n)} * rc;
+                    W += convert_tensor<Tensor>(sites.op("F",n)) * rc;
                     }
                 else
                     {
-                    W += Tensor{sites.op("Id",n)} * rc;
+                    W += convert_tensor<Tensor>(sites.op("Id",n)) * rc;
                     }
 #ifdef SHOW_AUTOMPO
                 if(isFermionic(cst)) ws[r][c] = "F";
@@ -758,7 +767,7 @@ toMPOImpl(AutoMPO const& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
                     auto op = endTerm(ht.last().op);
-                    W += ht.coef * Tensor{sites.op(op,n)} * rc;
+                    W += ht.coef * convert_tensor<Tensor>(sites.op(op,n)) * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
                     auto coef = ht.coef;
@@ -786,7 +795,7 @@ toMPOImpl(AutoMPO const& am,
                     else
                         ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.coef * Tensor{sites.op(ht.first().op,n)} * rc;
+                    W += ht.coef * convert_tensor<Tensor>(sites.op(ht.first().op,n)) * rc;
                     }
                 }
 
