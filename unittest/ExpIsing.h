@@ -66,7 +66,7 @@ init_()
         W = ITensor(sites_(n),prime(sites_(n)),row,col);
 
         W += sites_.op("Id",n) * row(1) * col(1);
-        W += -tau_ * (-h_) * sites_.op("Sx",n) * row(1) * col(1);
+        W += -tau_ * (-h_) * ITensor(sites_.op("Sx",n)) * row(1) * col(1);
 
         W += -tau_ * sites_.op("Sz",n) * row(1) * col(2);
         W += sites_.op("Sz",n) * row(2) * col(1);

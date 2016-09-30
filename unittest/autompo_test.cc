@@ -312,21 +312,33 @@ SECTION("toExpH ITensor")
         {
         ampo += -h,"Sx",j;
         }
-    auto expH = toExpH<ITensor>(ampo,tau);
 
-    auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
-
-    auto psi = MPS(sites);
-
-    MPS xpsi;
-    exactApplyMPO(psi,expHexact,xpsi);
-    auto xnrm2 = overlap(xpsi,xpsi);
-
-    MPS apsi;
-    exactApplyMPO(psi,expH,apsi);
-    auto anrm2 = overlap(apsi,apsi);
-
-    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+    SECTION("Real time")
+        {
+        auto expH = toExpH<ITensor>(ampo,tau*1_i);
+        auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
+        auto psi = MPS(sites);
+        MPS xpsi;
+        exactApplyMPO(psi,expHexact,xpsi);
+        auto xnrm2 = overlap(xpsi,xpsi);
+        MPS apsi;
+        exactApplyMPO(psi,expH,apsi);
+        auto anrm2 = overlap(apsi,apsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        }
+    SECTION("Imaginary time")
+        {
+        auto expH = toExpH<ITensor>(ampo,tau);
+        auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
+        auto psi = MPS(sites);
+        MPS xpsi;
+        exactApplyMPO(psi,expHexact,xpsi);
+        auto xnrm2 = overlap(xpsi,xpsi);
+        MPS apsi;
+        exactApplyMPO(psi,expH,apsi);
+        auto anrm2 = overlap(apsi,apsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        }
     }
 
 SECTION("toExpH IQTensor")
@@ -344,22 +356,34 @@ SECTION("toExpH IQTensor")
     ampo += 0.5,"S-",j,"S+",j+1;
     }
 
-    auto expH = toExpH<IQTensor>(ampo,tau);
-    auto expHexact = IQMPO(ExpHeisenberg(sites,tau));
-
     auto state = InitState(sites);
     for(auto j : range1(N)) state.set(j,j%2==0 ? "Up" : "Dn");
     auto psi = IQMPS(state);
 
-    IQMPS xpsi;
-    exactApplyMPO(psi,expHexact,xpsi);
-    auto xnrm2 = overlap(xpsi,xpsi);
-
-    IQMPS apsi;
-    exactApplyMPO(psi,expH,apsi);
-    auto anrm2 = overlap(xpsi,xpsi);
-
-    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+    SECTION("Real time")
+        {
+        auto expH = toExpH<IQTensor>(ampo,tau*1_i);
+        auto expHexact = IQMPO(ExpHeisenberg(sites,tau*1_i));
+        IQMPS xpsi;
+        exactApplyMPO(psi,expHexact,xpsi);
+        auto xnrm2 = overlap(xpsi,xpsi);
+        IQMPS apsi;
+        exactApplyMPO(psi,expH,apsi);
+        auto anrm2 = overlap(xpsi,xpsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        }
+    SECTION("Imaginary time")
+        {
+        auto expH = toExpH<IQTensor>(ampo,tau);
+        auto expHexact = IQMPO(ExpHeisenberg(sites,tau));
+        IQMPS xpsi;
+        exactApplyMPO(psi,expHexact,xpsi);
+        auto xnrm2 = overlap(xpsi,xpsi);
+        IQMPS apsi;
+        exactApplyMPO(psi,expH,apsi);
+        auto anrm2 = overlap(xpsi,xpsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        }
     }
 
 }
