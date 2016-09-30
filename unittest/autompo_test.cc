@@ -4,6 +4,8 @@
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/print_macro.h"
 
+#include "ExpIsing.h"
+
 using namespace itensor;
 
 TEST_CASE("AutoMPO Test")
@@ -290,6 +292,40 @@ SECTION("Single Site Ops")
     //        else       CHECK_CLOSE(x,0.);
     //        }
     //    }
+    }
+
+SECTION("toExpH ITensor")
+    {
+    int N = 10;
+    Real h = 0.2;
+    Real tau = 0.01234;
+
+    auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        }
+    for(int j = 1; j <= N; ++j)
+        {
+        ampo += -h,"Sx",j;
+        }
+    auto expH = toExpH<ITensor>(ampo,tau,{"Exact",true});
+
+    auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
+
+    auto psi = MPS(sites);
+
+    MPS xpsi;
+    exactApplyMPO(psi,expHexact,xpsi);
+    auto xnrm2 = overlap(xpsi,xpsi);
+
+    MPS apsi;
+    exactApplyMPO(psi,expH,apsi);
+    auto anrm2 = overlap(apsi,apsi);
+
+    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
     }
 
 }
