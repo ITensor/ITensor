@@ -406,24 +406,40 @@ SECTION("Hubbard, Complex Hopping")
 
     for(auto b : range1(N-1))
         {
-        auto rstate1 = InitState(sites,"Emp");
-        rstate1.set(b,"Up");
-        auto rstate2 = InitState(sites,"Emp");
-        rstate2.set(b+1,"Up");
-        auto rpsi1 = IQMPS(rstate1);
-        auto rpsi2 = IQMPS(rstate2);
-        CHECK_CLOSE(overlapC(rpsi2,H,rpsi1),-t*std::polar(1.,-phi/4.));
+        auto rstate1u = InitState(sites,"Emp");
+        rstate1u.set(b,"Up");
+        auto rstate2u = InitState(sites,"Emp");
+        rstate2u.set(b+1,"Up");
+        auto rpsi1u = IQMPS(rstate1u);
+        auto rpsi2u = IQMPS(rstate2u);
+        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,-phi/4.));
+
+        auto rstate1d = InitState(sites,"Emp");
+        rstate1d.set(b,"Dn");
+        auto rstate2d = InitState(sites,"Emp");
+        rstate2d.set(b+1,"Dn");
+        auto rpsi1d = IQMPS(rstate1d);
+        auto rpsi2d = IQMPS(rstate2d);
+        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,-phi/4.));
         }
 
     for(auto c : range1(2,N))
         {
-        auto lstate1 = InitState(sites,"Emp");
-        lstate1.set(c,"Up");
-        auto lstate2 = InitState(sites,"Emp");
-        lstate2.set(c-1,"Up");
-        auto lpsi1 = IQMPS(lstate1);
-        auto lpsi2 = IQMPS(lstate2);
-        CHECK_CLOSE(overlapC(lpsi2,H,lpsi1),-t*std::polar(1.,+phi/4.));
+        auto lstate1u = InitState(sites,"Emp");
+        lstate1u.set(c,"Up");
+        auto lstate2u = InitState(sites,"Emp");
+        lstate2u.set(c-1,"Up");
+        auto lpsi1u = IQMPS(lstate1u);
+        auto lpsi2u = IQMPS(lstate2u);
+        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,+phi/4.));
+
+        auto lstate1d = InitState(sites,"Emp");
+        lstate1d.set(c,"Up");
+        auto lstate2d = InitState(sites,"Emp");
+        lstate2d.set(c-1,"Up");
+        auto lpsi1d = IQMPS(lstate1d);
+        auto lpsi2d = IQMPS(lstate2d);
+        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,+phi/4.));
         }
 
     }
