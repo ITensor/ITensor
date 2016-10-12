@@ -386,4 +386,46 @@ SECTION("toExpH IQTensor")
         }
     }
 
+SECTION("Hubbard, Complex Hopping")
+    {
+    auto N = 40;
+    auto sites = Hubbard(N);
+
+    auto t = 0.5;
+    auto phi = 0.123;
+
+    auto ampo = AutoMPO(sites);
+    for(auto b : range1(N-1))
+        {
+        ampo += (-t*std::polar(1.,-phi/4.)),"Cdagup",b,"Cup",b+1;
+        ampo += (-t*std::polar(1.,+phi/4.)),"Cdagup",b+1,"Cup",b;
+        ampo += (-t*std::polar(1.,-phi/4.)),"Cdagdn",b,"Cdn",b+1;
+        ampo += (-t*std::polar(1.,+phi/4.)),"Cdagdn",b+1,"Cdn",b;
+        }
+    auto H = IQMPO(ampo);
+
+    for(auto b : range1(N-1))
+        {
+        auto rstate1 = InitState(sites,"Emp");
+        rstate1.set(b,"Up");
+        auto rstate2 = InitState(sites,"Emp");
+        rstate2.set(b+1,"Up");
+        auto rpsi1 = IQMPS(rstate1);
+        auto rpsi2 = IQMPS(rstate2);
+        CHECK_CLOSE(overlapC(rpsi2,H,rpsi1),-t*std::polar(1.,-phi/4.));
+        }
+
+    for(auto c : range1(2,N))
+        {
+        auto lstate1 = InitState(sites,"Emp");
+        lstate1.set(c,"Up");
+        auto lstate2 = InitState(sites,"Emp");
+        lstate2.set(c-1,"Up");
+        auto lpsi1 = IQMPS(lstate1);
+        auto lpsi2 = IQMPS(lstate2);
+        CHECK_CLOSE(overlapC(lpsi2,H,lpsi1),-t*std::polar(1.,+phi/4.));
+        }
+
+    }
+
 }
