@@ -389,7 +389,7 @@ SECTION("toExpH IQTensor")
 
 SECTION("Hubbard, Complex Hopping")
     {
-    auto N = 40;
+    auto N = 10;
     auto sites = Hubbard(N);
 
     auto t = 0.5;
@@ -413,7 +413,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2u.set(b+1,"Up");
         auto rpsi1u = IQMPS(rstate1u);
         auto rpsi2u = IQMPS(rstate2u);
-        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,+phi/4.));
 
         auto rstate1d = InitState(sites,"Emp");
         rstate1d.set(b,"Dn");
@@ -421,7 +421,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2d.set(b+1,"Dn");
         auto rpsi1d = IQMPS(rstate1d);
         auto rpsi2d = IQMPS(rstate2d);
-        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,+phi/4.));
         }
 
     for(auto c : range1(2,N))
@@ -432,7 +432,7 @@ SECTION("Hubbard, Complex Hopping")
         lstate2u.set(c-1,"Up");
         auto lpsi1u = IQMPS(lstate1u);
         auto lpsi2u = IQMPS(lstate2u);
-        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,-phi/4.));
 
         auto lstate1d = InitState(sites,"Emp");
         lstate1d.set(c,"Up");
@@ -440,7 +440,7 @@ SECTION("Hubbard, Complex Hopping")
         lstate2d.set(c-1,"Up");
         auto lpsi1d = IQMPS(lstate1d);
         auto lpsi2d = IQMPS(lstate2d);
-        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,-phi/4.));
         }
     }
 
