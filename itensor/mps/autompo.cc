@@ -1223,7 +1223,7 @@ compressMPO(SiteSet const& sites,
                 auto& V = V_n[elem.rowqn];
                 for(size_t r = 0; r < ncols(V); ++r)
                     {
-                    auto z = t.coef*V(j,r);
+                    auto z = t.coef*conj(V(j,r));
                     M(r+rowShift,0) += z;
                     }
                 }
@@ -1234,7 +1234,7 @@ compressMPO(SiteSet const& sites,
                 for(size_t r = 0; r < ncols(Vr); ++r)
                 for(size_t c = 0; c < ncols(Vc); ++c) 
                     {
-                    auto z = t.coef*Vr(j,r)*Vc(k,c);
+                    auto z = t.coef*conj(Vr(j,r))*Vc(k,c);
                     M(r+rowShift,c+colShift) += z;
                     }
                 }

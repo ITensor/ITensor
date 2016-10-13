@@ -389,7 +389,7 @@ SECTION("toExpH IQTensor")
 
 SECTION("Hubbard, Complex Hopping")
     {
-    auto N = 40;
+    auto N = 10;
     auto sites = Hubbard(N);
 
     auto t = 0.5;
@@ -413,7 +413,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2u.set(b+1,"Up");
         auto rpsi1u = IQMPS(rstate1u);
         auto rpsi2u = IQMPS(rstate2u);
-        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,+phi/4.));
 
         auto rstate1d = InitState(sites,"Emp");
         rstate1d.set(b,"Dn");
@@ -421,7 +421,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2d.set(b+1,"Dn");
         auto rpsi1d = IQMPS(rstate1d);
         auto rpsi2d = IQMPS(rstate2d);
-        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,+phi/4.));
         }
 
     for(auto c : range1(2,N))
@@ -432,7 +432,7 @@ SECTION("Hubbard, Complex Hopping")
         lstate2u.set(c-1,"Up");
         auto lpsi1u = IQMPS(lstate1u);
         auto lpsi2u = IQMPS(lstate2u);
-        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,-phi/4.));
 
         auto lstate1d = InitState(sites,"Emp");
         lstate1d.set(c,"Up");
@@ -440,14 +440,111 @@ SECTION("Hubbard, Complex Hopping")
         lstate2d.set(c-1,"Up");
         auto lpsi1d = IQMPS(lstate1d);
         auto lpsi2d = IQMPS(lstate2d);
-        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,-phi/4.));
         }
+    }
 
+SECTION("Ladder with Complex Hopping")
+    {
+    auto N = 8;
+    auto sites = Hubbard(N);
+
+    auto tpara = 0.5;
+    auto tperp = 0.2;
+    auto phi = 0.123;
+
+    auto ampo = AutoMPO(sites);
+	for(int j=1; j<=N; j+=1)
+		{
+        if(j < N-1)
+            {
+            if(phi==0)
+                {
+                ampo += -tpara,"Cdagup",j,"Cup",j+2;
+                ampo += -tpara,"Cdagup",j+2,"Cup",j;
+                ampo += -tpara,"Cdagdn",j,"Cdn",j+2;
+                ampo += -tpara,"Cdagdn",j+2,"Cdn",j;
+                }
+            else
+                {
+                ampo += (-(tpara)*std::polar(1.,-phi/2.)),"Cdagup",j,"Cup",j+2;
+                ampo += (-(tpara)*std::polar(1.,+phi/2.)),"Cdagup",j+2,"Cup",j;
+                ampo += (-(tpara)*std::polar(1.,-phi/2.)),"Cdagdn",j,"Cdn",j+2;
+                ampo += (-(tpara)*std::polar(1.,+phi/2.)),"Cdagdn",j+2,"Cdn",j;
+                }
+            }
+        if(j%2 == 1)
+            {
+            ampo += -tperp,"Cdagup",j,"Cup",j+1;
+            ampo += -tperp,"Cdagup",j+1,"Cup",j;
+            ampo += -tperp,"Cdagdn",j,"Cdn",j+1;
+            ampo += -tperp,"Cdagdn",j+1,"Cdn",j;
+            }
+		}
+	auto Hx = toMPO<IQTensor>(ampo,{"Exact",true});
+	auto Ha = toMPO<IQTensor>(ampo,{"Exact",false});
+
+	for(int j=1; j<=N; j+=1)
+		{
+        if(j < N-1)
+            {
+            //Right hop
+            {
+            auto s1 = InitState(sites,"Emp");
+            s1.set(j,"Up");
+            auto s2 = InitState(sites,"Emp");
+            s2.set(j+2,"Up");
+            auto p1 = IQMPS(s1);
+            auto p2 = IQMPS(s2);
+            CHECK_CLOSE(overlapC(p2,Hx,p1),-(tpara)*std::polar(1.,+phi/2.));
+            CHECK_CLOSE(overlapC(p2,Ha,p1),-(tpara)*std::polar(1.,+phi/2.));
+            }
+
+            //Left hop
+            {
+            auto s1 = InitState(sites,"Emp");
+            s1.set(j+2,"Up");
+            auto s2 = InitState(sites,"Emp");
+            s2.set(j,"Up");
+            auto p1 = IQMPS(s1);
+            auto p2 = IQMPS(s2);
+            CHECK_CLOSE(overlapC(p2,Hx,p1),-(tpara)*std::polar(1.,-phi/2.));
+            CHECK_CLOSE(overlapC(p2,Ha,p1),-(tpara)*std::polar(1.,-phi/2.));
+            }
+
+            }
+        if(j%2 == 1)
+            {
+            //Right hop
+            {
+            auto s1 = InitState(sites,"Emp");
+            s1.set(j,"Up");
+            auto s2 = InitState(sites,"Emp");
+            s2.set(j+1,"Up");
+            auto p1 = IQMPS(s1);
+            auto p2 = IQMPS(s2);
+            CHECK_CLOSE(overlapC(p2,Hx,p1),-tperp);
+            CHECK_CLOSE(overlapC(p2,Ha,p1),-tperp);
+            }
+
+            //Left hop
+            {
+            auto s1 = InitState(sites,"Emp");
+            s1.set(j+1,"Up");
+            auto s2 = InitState(sites,"Emp");
+            s2.set(j,"Up");
+            auto p1 = IQMPS(s1);
+            auto p2 = IQMPS(s2);
+            CHECK_CLOSE(overlapC(p2,Hx,p1),-tperp);
+            CHECK_CLOSE(overlapC(p2,Ha,p1),-tperp);
+            }
+            }
+        }
     }
 
 SECTION("Spinless")
     {
-    auto N = 10;
+    auto N = 4;
     auto sites = Spinless(N);
     auto ampo = AutoMPO(sites);
     auto t = 0.5;
@@ -456,8 +553,15 @@ SECTION("Spinless")
         ampo += -t,"Cdag",b,"C",b+1;
         ampo += -t,"Cdag",b+1,"C",b;
         }
+    //Approx IQMPO construction
     auto Ha = toMPO<IQTensor>(ampo,{"Exact",false});
+    //Exact IQMPO construction
     auto Hx = toMPO<IQTensor>(ampo,{"Exact",true});
+
+    for(auto j : range1(N))
+        {
+        CHECK(not isComplex(Ha.A(j)));
+        }
 
     for(auto b : range1(N-1))
         {
@@ -482,7 +586,6 @@ SECTION("Spinless")
         CHECK_CLOSE(overlap(lpsi2,Hx,lpsi1),-t);
         CHECK_CLOSE(overlap(lpsi2,Ha,lpsi1),-t);
         }
-
     }
 
 

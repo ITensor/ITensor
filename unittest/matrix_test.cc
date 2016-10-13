@@ -1548,6 +1548,25 @@ SECTION("Singular Value Decomp")
         //Print(relnrm);
         CHECK(relnrm < 1E-13);
         }
+
+    SECTION("Complex SVD")
+        {
+        auto M = CMatrix(10,10);
+        for(auto r : range(nrows(M)))
+        for(auto c : range(nrows(M)))
+            {
+            M(r,c) = Global::random() + 1_i*Global::random();
+            }
+
+        CMatrix U,V;
+        Vector d;
+        SVD(M,U,d,V);
+
+        auto D = Matrix(d.size(),d.size());
+        diagonal(D) &= d;
+
+        CHECK(norm(M-U*D*conj(transpose(V))) < 1E-12);
+        }
     }
 
 //SECTION("Complex SVD")
