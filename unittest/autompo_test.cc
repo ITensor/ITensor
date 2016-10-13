@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor/mps/autompo.h"
 #include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/sites/spinless.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/print_macro.h"
 
@@ -443,5 +444,46 @@ SECTION("Hubbard, Complex Hopping")
         }
 
     }
+
+SECTION("Spinless")
+    {
+    auto N = 10;
+    auto sites = Spinless(N);
+    auto ampo = AutoMPO(sites);
+    auto t = 0.5;
+    for(auto b : range1(N-1))
+        {
+        ampo += -t,"Cdag",b,"C",b+1;
+        ampo += -t,"Cdag",b+1,"C",b;
+        }
+    auto Ha = toMPO<IQTensor>(ampo,{"Exact",false});
+    auto Hx = toMPO<IQTensor>(ampo,{"Exact",true});
+
+    for(auto b : range1(N-1))
+        {
+        auto rstate1 = InitState(sites,"Emp");
+        rstate1.set(b,"Occ");
+        auto rstate2 = InitState(sites,"Emp");
+        rstate2.set(b+1,"Occ");
+        auto rpsi1 = IQMPS(rstate1);
+        auto rpsi2 = IQMPS(rstate2);
+        CHECK_CLOSE(overlap(rpsi2,Hx,rpsi1),-t);
+        CHECK_CLOSE(overlap(rpsi2,Ha,rpsi1),-t);
+        }
+
+    for(auto b : range1(2,N))
+        {
+        auto lstate1 = InitState(sites,"Emp");
+        lstate1.set(b,"Occ");
+        auto lstate2 = InitState(sites,"Emp");
+        lstate2.set(b-1,"Occ");
+        auto lpsi1 = IQMPS(lstate1);
+        auto lpsi2 = IQMPS(lstate2);
+        CHECK_CLOSE(overlap(lpsi2,Hx,lpsi1),-t);
+        CHECK_CLOSE(overlap(lpsi2,Ha,lpsi1),-t);
+        }
+
+    }
+
 
 }

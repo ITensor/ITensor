@@ -500,7 +500,7 @@ startTerm(const string& op)
            make_pair("Cup","Aup*F"),
            make_pair("Cdagdn","Adagdn"),
            make_pair("Cdn","Adn"),
-           make_pair("C","A*F"),
+           make_pair("C","A*F"), //A*F is -A, so essentially a trick for putting in a -1
            make_pair("Cdag","Adag")
            }};
     for(auto& p : rewrites)
