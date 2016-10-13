@@ -544,7 +544,7 @@ SECTION("Ladder with Complex Hopping")
 
 SECTION("Spinless")
     {
-    auto N = 10;
+    auto N = 4;
     auto sites = Spinless(N);
     auto ampo = AutoMPO(sites);
     auto t = 0.5;
@@ -553,8 +553,15 @@ SECTION("Spinless")
         ampo += -t,"Cdag",b,"C",b+1;
         ampo += -t,"Cdag",b+1,"C",b;
         }
+    //Approx IQMPO construction
     auto Ha = toMPO<IQTensor>(ampo,{"Exact",false});
+    //Exact IQMPO construction
     auto Hx = toMPO<IQTensor>(ampo,{"Exact",true});
+
+    for(auto j : range1(N))
+        {
+        CHECK(not isComplex(Ha.A(j)));
+        }
 
     for(auto b : range1(N-1))
         {
@@ -579,7 +586,6 @@ SECTION("Spinless")
         CHECK_CLOSE(overlap(lpsi2,Hx,lpsi1),-t);
         CHECK_CLOSE(overlap(lpsi2,Ha,lpsi1),-t);
         }
-
     }
 
 
