@@ -52,11 +52,11 @@ class LocalMPOSet
     operator bool() const { return bool(Op_); }
 
     bool
-    doWrite() const { return false; }
+    doWrite() const { return lmpo_.front().doWrite(); }
     void
     doWrite(bool val) 
         { 
-        if(val) Error("Write to disk not yet supported LocalMPOSet");
+        for(auto& lm : lmpo_) lm.doWrite(val);
         }
 
     };
