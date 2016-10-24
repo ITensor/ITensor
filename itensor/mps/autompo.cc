@@ -1252,10 +1252,13 @@ IQMPO
 constructMPOTensors(SiteSet const& sites,
                     vector<MPOPiece> const& finalMPO, 
                     vector<IQIndex> const& links, 
-                    bool isExpH = false)
+                    Args const& args = Args::global())
     {
     IQMPO H(sites);
     int N = sites.N();
+
+    auto isExpH = args.getBool("IsExpH",false);
+    auto infinite = args.getBool("Infinite",false);
 
     for(int n = 1; n <= N; ++n)
         {
@@ -1291,8 +1294,16 @@ constructMPOTensors(SiteSet const& sites,
         }
 
     int min_n = isExpH ? 1 : 2;
-    H.Aref(1) *= setElt(links.at(0)(min_n));
-    H.Aref(N) *= setElt(dag(links.at(N))(1));   
+    if(infinite)
+        {
+        H.Aref(0) = setElt(links.at(0)(min_n));
+        H.Aref(N+1) = setElt(dag(links.at(N))(1));   
+        }
+    else
+        {
+        H.Aref(1) *= setElt(links.at(0)(min_n));
+        H.Aref(N) *= setElt(dag(links.at(N))(1));   
+        }
     
     return H;
     }
@@ -1326,7 +1337,7 @@ svdIQMPO(AutoMPO const& am,
     
     //println("Calling constructMPOTensors");
     //START_TIMER(3)
-    auto H = constructMPOTensors(am.sites(),finalMPO, links);
+    auto H = constructMPOTensors(am.sites(),finalMPO,links,args);
     //STOP_TIMER(3)
 
     return H;
