@@ -29,13 +29,13 @@ class InputFile
     void 
     close();
 
-    const std::string&
+    std::string const&
     filename() const { return filename_; }
 
     std::ifstream&
     file() { return file_; }
 
-    const std::ifstream&
+    std::ifstream const&
     file() const { return file_; }
 
     bool
@@ -48,7 +48,7 @@ class InputFile
     };
 
 std::ostream& 
-operator<<(std::ostream &s, InputFile& a);
+operator<<(std::ostream &s, InputFile const& a);
 
 /* 
 To read in a table:
