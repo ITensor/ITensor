@@ -222,7 +222,7 @@ DMRGWorker(MPSt<Tensor>& psi,
                         args.getString("WriteDir","./"));
                 }
 
-            psi.doWrite(true);
+            //psi.doWrite(true);
             PH.doWrite(true);
             }
 
