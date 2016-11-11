@@ -38,7 +38,8 @@ void InputFile::close()
 ostream& 
 operator<<(ostream &s, InputFile const& a)
     {
-    auto f = InputFile(a.filename());
+    auto fname = a.filename();
+    InputFile f(fname);
     f.open();
     s << "Input filename is " << f.filename() << endl;
     char c;
