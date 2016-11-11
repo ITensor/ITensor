@@ -92,7 +92,10 @@ mkdebugdir:
 clean:	
 	@rm -fr *.o .debug_objs util/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
-GDEPHEADERS=real.h global.h index.h util/readwrite.h
+util/input.o: util/input.h
+.debug_objs/util/input.o: util/input.h
+
+GDEPHEADERS=real.h global.h index.h util/readwrite.h util/input.h
 GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten.ih \
 tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h util/safe_ptr.h
 tensor/vec.o: $(GDEPHEADERS)

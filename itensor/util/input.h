@@ -21,7 +21,9 @@ class InputFile
     {
     public:
 
-    InputFile(std::string fname) : filename_(fname), opened_(0) {}
+    InputFile() : opened_(false) { }
+
+    InputFile(std::string fname) : filename_(fname), opened_(false) {}
 
     void 
     open();
