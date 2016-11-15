@@ -38,6 +38,9 @@ class SiteSet
     //Create generic SiteSet of N sites with local dimension d
     SiteSet(int N, int d);
 
+    //Create SiteSet from vector of provided IQIndices (0-indexed)
+    SiteSet(std::vector<IQIndex> const& inds);
+
     explicit operator bool() const { return bool(sites_); }
 
     int 
@@ -241,6 +244,17 @@ SiteSet(int N, int d)
         auto I = IQIndex(format("Site %d",j),
                          Index(format("site %d",j),d,Site),QN());
         sites.set(j,GenericSite(I));
+        }
+    SiteSet::init(std::move(sites));
+    }
+
+inline SiteSet::
+SiteSet(std::vector<IQIndex> const& inds)
+    {
+    auto sites = SiteStore(inds.size());
+    for(auto j : range(inds))
+        {
+        sites.set(1+j,GenericSite(inds.at(j)));
         }
     SiteSet::init(std::move(sites));
     }
