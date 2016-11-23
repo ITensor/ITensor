@@ -137,16 +137,20 @@ offsetOf(std::vector<BlOf> const& offsets,
     return -1;
     }
 
-template<typename T>
 Cplx
-doTask(GetElt<IQIndex>& G, QDense<T> const& d)
+doTask(GetElt<IQIndex>& G, QDenseReal const& d)
+    {
+    auto* pelt = d.getElt(G.is,G.inds);
+    if(pelt) return Cplx(*pelt,0.);
+    return Cplx(0.,0.);
+    }
+Cplx
+doTask(GetElt<IQIndex>& G, QDenseCplx const& d)
     {
     auto* pelt = d.getElt(G.is,G.inds);
     if(pelt) return *pelt;
-    return 0;
+    return Cplx(0.,0.);
     }
-template Cplx doTask(GetElt<IQIndex>&, QDense<Real> const&);
-template Cplx doTask(GetElt<IQIndex>&, QDense<Cplx> const&);
 
 template<typename E, typename T>
 void
