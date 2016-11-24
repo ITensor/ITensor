@@ -1371,6 +1371,19 @@ svdIQMPO(AutoMPO const& am,
         H = constructMPOTensors(am.sites(),finalMPO,links,args);
         }
 
+#ifdef DEBUG
+    if(is_real)
+        {
+        for(auto n : range1(H.N()))
+            {
+            if(isComplex(H.A(n)))
+                {
+                Error("Complex tensor produced from real AutoMPO terms");
+                }
+            }
+        }
+#endif
+
     return H;
     }
 
