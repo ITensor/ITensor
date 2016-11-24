@@ -878,35 +878,37 @@ struct MatIndex
     bool operator==(const MatIndex &other) const {return row == other.row && col == other.col; }
     };
 
+template<typename T>
 struct MatElem
     {
     MatIndex ind;
-    Complex val;
+    T val;
     
-    MatElem(MatIndex index, Complex v) : ind(index), val(v) {};
+    MatElem(MatIndex index, T v) : ind(index), val(v) {};
     
-    bool operator==(const MatElem &other) const {return ind == other.ind && val == other.val; }
+    bool operator==(MatElem const& other) const {return ind == other.ind && val == other.val; }
     };
 
-CMatrix
-toCMatrix(vector<MatElem> const& M)
+template<typename T>
+Mat<T>
+toMatrix(vector<MatElem<T>> const& vm)
     {
-    CMatrix C;
+    Mat<T> M;
     int nr = 0, nc = 0;
     
-    for(MatElem const& elem : M)
+    for(auto const& elem : vm)
         {
         nr = max(nr,1+elem.ind.row);
         nc = max(nc,1+elem.ind.col);
         }
     
-    resize(C,nr,nc);
+    resize(M,nr,nc);
         
-    for(MatElem const& elem : M)
+    for(auto const& elem : vm)
         {
-        C(elem.ind.row,elem.ind.col) = elem.val;
+        M(elem.ind.row,elem.ind.col) = elem.val;
         }
-    return C;
+    return M;
     }
 
 void 
@@ -927,23 +929,26 @@ decomposeTerm(int n,
     right = SiteTermProd(startOfRightPart, ops.end());
     }  
 
+template<typename T>
 struct Block
     {
     using Basis = map<SiteTermProd,int>;
     Basis left;
     Basis right;
-    vector<MatElem> mat;        
+    vector<MatElem<T>> mat;        
     };
 
-using QNBlock = map<QN, Block>;
+template<typename T>
+using QNBlock = map<QN, Block<T>>;
 using IQMatEls = set<IQMPOMatElem>;
 using MPOMatrix = vector<vector<IQTensor>>;
 
 // Returns a 0-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
+template<typename T>
 int
 posInBlock(SiteTermProd const& ops, 
-           Block::Basis & b)
+           typename Block<T>::Basis & b)
     {
     auto it = b.find(ops);
     if(it != b.end()) return it->second;
@@ -951,15 +956,30 @@ posInBlock(SiteTermProd const& ops,
     b[ops] = i;
     return i;
     }
-    
+
+template<typename T, typename V>
+auto
+forceType(V x) -> stdx::enable_if_t<std::is_same<T,V>::value,T>
+    {
+    return x;
+    }
+template<typename T,
+         class = stdx::enable_if_t<std::is_same<T,Real>::value>>
+T
+forceType(Cplx z) { return z.real(); }
+
+Real
+conj(Real x) { return x; }
+
 //
 // Construct left & right partials and the 
 // coefficients matrix on each link as well as the temporary MPO
 //
+template<typename T>
 void
 partitionHTerms(SiteSet const& sites,
                 AutoMPO::storage const& terms,
-                vector<QNBlock> & qbs, 
+                vector<QNBlock<T>> & qbs, 
                 vector<IQMatEls> & tempMPO)
     {
     auto N = sites.N();
@@ -1022,7 +1042,7 @@ partitionHTerms(SiteSet const& sites,
             {
             if(not right.empty()) // term starting on site n
                 {
-                k = posInBlock(right, qbs.at(n-1)[sqn].right);
+                k = posInBlock<T>(right, qbs.at(n-1)[sqn].right);
                 }
             }
         else
@@ -1030,15 +1050,15 @@ partitionHTerms(SiteSet const& sites,
             auto& leftlink = qbs.at(n-2)[lqn];
             if(right.empty()) // term ending on site n
                 {
-                j = posInBlock(onsite, leftlink.right);
+                j = posInBlock<T>(onsite, leftlink.right);
                 }
             else
                 {
-                j = posInBlock(mult(onsite,right), leftlink.right);
-                k = posInBlock(right, qbs.at(n-1)[lqn+sqn].right);
+                j = posInBlock<T>(mult(onsite,right), leftlink.right);
+                k = posInBlock<T>(right, qbs.at(n-1)[lqn+sqn].right);
                 }
-            auto l = posInBlock(left,leftlink.left);
-            leftlink.mat.emplace_back(MatIndex(l, j), ht.coef);
+            auto l = posInBlock<T>(left,leftlink.left);
+            leftlink.mat.emplace_back(MatIndex(l, j),forceType<T>(ht.coef));
             }
             
         // Place the coefficient of the HTerm when the term starts
@@ -1085,14 +1105,16 @@ operator<(QNProd const& p1, QNProd const& p2)
     if(p1.q != p2.q) return p1.q < p2.q;
     return p1.prod < p2.prod;
     }
-using MPOPiece = map<QNProd,CMatrix>;
+template<typename T>
+using MPOPiece = map<QNProd,Mat<T>>;
 
 // SVD the coefficients matrix on each link and construct the compressed MPO matrix
+template<typename T>
 void
 compressMPO(SiteSet const& sites,
-            vector<QNBlock> const& qbs, 
+            vector<QNBlock<T>> const& qbs, 
             vector<IQMatEls> const& tempMPO,
-            vector<MPOPiece> & finalMPO, 
+            vector<MPOPiece<T>> & finalMPO, 
             vector<IQIndex> & links, 
             bool isExpH = false, 
             Complex tau = 0,
@@ -1111,7 +1133,7 @@ compressMPO(SiteSet const& sites,
     finalMPO.resize(N);
     links.resize(N+1);
     
-    auto V_n = map<QN, CMatrix>();
+    auto V_n = map<QN, Mat<T>>();
     
     const QN ZeroQN;
     
@@ -1126,7 +1148,7 @@ compressMPO(SiteSet const& sites,
         //Put in factor of (-tau) if isExpH==true
         if(isExpH) Error("Need to put in factor of (-tau)");
 
-        auto V_npp = map<QN, CMatrix>();
+        auto V_npp = map<QN, Mat<T>>();
 
         int nsector = 1; //always have ZeroQN sector
 
@@ -1136,20 +1158,20 @@ compressMPO(SiteSet const& sites,
             if(qn != ZeroQN) ++nsector;
 
             // Convert the block matrix elements to a dense matrix
-            auto C = toCMatrix(qb.second.mat);
+            auto M = toMatrix(qb.second.mat);
 
             auto& V = V_npp[qn];
 
-            CMatrix U;
+            Mat<T> U;
             Vector D;
-            SVD(C,U,D,V);
+            SVD(M,U,D,V);
 
             //square singular vals for call to truncate
             for(auto& d : D) d = sqr(d);
             truncate(D,maxm,minm,cutoff);
             int m = D.size();
 
-            int nc = ncols(C);
+            int nc = ncols(M);
             resize(V,nc,m);
             }
 
@@ -1177,7 +1199,7 @@ compressMPO(SiteSet const& sites,
 
         Index li = findByQN(ll,ZeroQN);
         Index ri = findByQN(rl,ZeroQN);
-        IdM = CMatrix(li.m(),ri.m());
+        IdM = Mat<T>(li.m(),ri.m());
         IdM(0,0) = 1.;
         if(!isExpH) IdM(1,1) = 1.;
 
@@ -1195,7 +1217,7 @@ compressMPO(SiteSet const& sites,
                 {
                 auto li = findByQN(ll,elem.rowqn);
                 auto ri = findByQN(rl,elem.colqn);
-                M = CMatrix(li.m(),ri.m());
+                M = Mat<T>(li.m(),ri.m());
                 }
 
             int rowOffset = isExpH ? 0 : 1;
@@ -1205,16 +1227,18 @@ compressMPO(SiteSet const& sites,
             auto rowShift = (elem.rowqn==ZeroQN) ? d0 : 0;
             auto colShift = (elem.colqn==ZeroQN) ? d0 : 0;
 
+            auto coef = forceType<T>(t.coef);
+
             if(j==-1 && k==-1)	// on-site terms
                 {
-                M(rowOffset,0) += t.coef;
+                M(rowOffset,0) += coef;
                 }
             else if(j==-1)  	// terms starting on site n
                 {
                 auto& V = V_npp[elem.colqn];
                 for(size_t i = 0; i < ncols(V); ++i)
                     {
-                    auto z = t.coef*V(k,i);
+                    auto z = coef*V(k,i);
                     M(rowOffset,i+colShift) += z;
                     }
                 }
@@ -1223,7 +1247,7 @@ compressMPO(SiteSet const& sites,
                 auto& V = V_n[elem.rowqn];
                 for(size_t r = 0; r < ncols(V); ++r)
                     {
-                    auto z = t.coef*conj(V(j,r));
+                    auto z = coef*conj(V(j,r));
                     M(r+rowShift,0) += z;
                     }
                 }
@@ -1234,7 +1258,7 @@ compressMPO(SiteSet const& sites,
                 for(size_t r = 0; r < ncols(Vr); ++r)
                 for(size_t c = 0; c < ncols(Vc); ++c) 
                     {
-                    auto z = t.coef*conj(Vr(j,r))*Vc(k,c);
+                    auto z = coef*conj(Vr(j,r))*Vc(k,c);
                     M(r+rowShift,c+colShift) += z;
                     }
                 }
@@ -1248,9 +1272,10 @@ compressMPO(SiteSet const& sites,
     //println("Maximal dimension of the MPO is ", max_d);
     }
 
+template<typename T>
 IQMPO
 constructMPOTensors(SiteSet const& sites,
-                    vector<MPOPiece> const& finalMPO, 
+                    vector<MPOPiece<T>> const& finalMPO, 
                     vector<IQIndex> const& links, 
                     Args const& args = Args::global())
     {
@@ -1268,7 +1293,7 @@ constructMPOTensors(SiteSet const& sites,
 
         W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        auto T = IQTensor(dag(row),col);
+        auto rc = IQTensor(dag(row),col);
 
         //printfln("n = %d finalMPO size = %d",n,finalMPO.at(n-1).size());
         for(auto& qp_M : finalMPO.at(n-1))
@@ -1286,9 +1311,7 @@ constructMPOTensors(SiteSet const& sites,
             auto ri = findByQN(row,rq);
             auto ci = findByQN(col,cq);
             auto t = matrixTensor(M,ri,ci);
-            auto TT = T;
-            TT += t;
-            W += TT*Op;
+            W += (rc+t)*Op;
             W.scaleTo(1.);
             }
         }
@@ -1314,31 +1337,39 @@ svdIQMPO(AutoMPO const& am,
     {
     bool isExpH = false;
     Cplx tau = 0.;
-    auto qbs = vector<QNBlock>();
-    auto tempMPO = vector<IQMatEls>();
 
-    //println("Calling partitionHTerms");
-    //START_TIMER(1)
-    partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
-    //STOP_TIMER(1)
+    bool is_real = true;
+    for(auto& t : am.terms())
+        {
+        if(t.coef.imag() != 0.0)
+            {
+            is_real = false;
+            break;
+            }
+        }
 
-    //return IQMPO();
-    
-    auto finalMPO = vector<MPOPiece>();
-    auto links = vector<IQIndex>();
+    IQMPO H;
 
-    //println("Calling compressMPO");
-    //START_TIMER(2)
-    compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
-    //STOP_TIMER(2)
-
-    //EXIT
-    //return IQMPO();
-    
-    //println("Calling constructMPOTensors");
-    //START_TIMER(3)
-    auto H = constructMPOTensors(am.sites(),finalMPO,links,args);
-    //STOP_TIMER(3)
+    if(is_real)
+        {
+        auto qbs = vector<QNBlock<Real>>();
+        auto tempMPO = vector<IQMatEls>();
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
+        auto finalMPO = vector<MPOPiece<Real>>();
+        auto links = vector<IQIndex>();
+        compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+        H = constructMPOTensors(am.sites(),finalMPO,links,args);
+        }
+    else
+        {
+        auto qbs = vector<QNBlock<Cplx>>();
+        auto tempMPO = vector<IQMatEls>();
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
+        auto finalMPO = vector<MPOPiece<Cplx>>();
+        auto links = vector<IQIndex>();
+        compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+        H = constructMPOTensors(am.sites(),finalMPO,links,args);
+        }
 
     return H;
     }

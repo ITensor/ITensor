@@ -142,14 +142,7 @@ cplx(IVs&&... ivs) const
                 [](indexval_type const& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
 	try {
-        if(z.imag()==0.)
-            {
-            return Cplx(z.real()*scale_.real0(),0.);
-            }
-        else
-            {
-            return z*scale_.real0(); 
-            }
+        return z*scale_.real0(); 
 	    }
 	catch(TooBigForReal const& e)
 	    {
