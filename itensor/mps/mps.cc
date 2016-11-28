@@ -770,24 +770,56 @@ int MPSt<IQTensor>::orthoCenter() const;
 
 template <class Tensor>
 void MPSt<Tensor>::
-orthogonalize(const Args& args)
+orthogonalize(Args const& args)
     {
-    auto cut_fac = args.getReal("CutFac",0.1);
-    //Do a half-sweep to the right, orthogonalizing each bond
-    //but lower the cutoff since the basis to the right
-    //might not be ortho: don't want to over truncate
+    if(doWrite()) Error("Cannot call orthogonalize when doWrite()==true");
+
+    auto cutoff = args.getReal("Cutoff",1E-13);
+    auto dargs = Args{"Cutoff",cutoff};
+
+    //Build environment tensors from the left
+    auto E = vector<Tensor>(N_+1);
+    E.at(1) = A_.at(1)*dag(prime(A_.at(1),Link,10));
+    for(int j = 2; j < N_; ++j)
+        {
+        E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),Link,10));
+        }
+
+    auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),10));
+
+    Tensor U,D;
+    diagHermitian(rho,U,D,dargs);
+
+#ifdef DEBUG
+    auto diff = rho-dag(U)*D*prime(U,10);
+    if(itensor::norm(diff) > 1E-12) Error("Incorrect diag");
+#endif
+
+    auto O = U * A_.at(N_) * A_.at(N_-1);
+    A_.at(N_) = dag(U);
+
+    for(int j = N_-1; j > 1; --j)
+        {
+        rho = E.at(j-1) * O * dag(prime(O,10));
+        diagHermitian(rho,U,D,dargs);
+#ifdef DEBUG
+        auto diff = rho-dag(U)*D*prime(U,10);
+        if(itensor::norm(diff) > 1E-12) Error("Incorrect diag");
+#endif
+        O *= U;
+        O *= A_.at(j-1);
+        A_.at(j) = dag(U);
+        }
+
+    A_.at(1) = O;
+
     l_orth_lim_ = 0;
-    r_orth_lim_ = N()+1;
-    //Use smaller cutoff to orthogonalize w/ minimal truncation
-    auto orig_cut = args.getReal("Cutoff",MIN_CUT);
-    position(N_,{args,"Cutoff",cut_fac*orig_cut});
-    //Now basis is ortho, ok to truncate
-    position(1,args);
+    r_orth_lim_ = 2;
     }
 template
-void MPSt<ITensor>::orthogonalize(const Args& args);
+void MPSt<ITensor>::orthogonalize(Args const& args);
 template
-void MPSt<IQTensor>::orthogonalize(const Args& args);
+void MPSt<IQTensor>::orthogonalize(Args const& args);
 
 //Methods for use internally by checkOrtho
 ITensor
