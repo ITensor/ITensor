@@ -776,6 +776,10 @@ orthogonalize(Args const& args)
 
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
+    if(args.defined("Maxm")) 
+        {
+        dargs.add("Maxm",args.getInt("Maxm"));
+        }
 
     //Build environment tensors from the left
     auto E = vector<Tensor>(N_+1);
