@@ -792,7 +792,13 @@ orthogonalize(Args const& args)
 
 #ifdef DEBUG
     auto diff = rho-dag(U)*D*prime(U,10);
-    if(itensor::norm(diff) > 1E-12) Error("Incorrect diag");
+    if(itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
+        {
+        PrintData(diff);
+        printfln("norm(rho) = %.2E",itensor::norm(rho));
+        printfln("norm(diff) = %.2E",itensor::norm(diff));
+        Error("Incorrect diag (1)");
+        }
 #endif
 
     auto O = U * A_.at(N_) * A_.at(N_-1);
@@ -804,7 +810,13 @@ orthogonalize(Args const& args)
         diagHermitian(rho,U,D,dargs);
 #ifdef DEBUG
         auto diff = rho-dag(U)*D*prime(U,10);
-        if(itensor::norm(diff) > 1E-12) Error("Incorrect diag");
+        if(itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
+            {
+            PrintData(diff);
+            printfln("norm(rho) = %.2E",itensor::norm(rho));
+            printfln("norm(diff) = %.2E",itensor::norm(diff));
+            Error("Incorrect diag (2)");
+            }
 #endif
         O *= U;
         O *= A_.at(j-1);
