@@ -42,26 +42,20 @@ diagHImpl(ITensor rho,
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
 
-    Index active;
-    for(auto& I : rho.inds())
-        if(I.primeLevel() == 0)
-            {
-            active = I;
-            break;
-            }
-
-    if(!active)
-        {
-        Print(rho.inds());
-        Error("Tensor must have one unprimed index");
-        }
-
     if(rho.r() != 2)
         {
         Print(rho.r());
         Print(rho);
         Error("Rank greater than 2 in diag_hermitian");
         }
+
+    auto i1 = rho.inds().front();
+    auto i2 = rho.inds().back();
+
+    auto active = (i1.primeLevel() < i2.primeLevel()) ? i1 : i2;
+
+    auto pdiff = std::abs(i1.primeLevel()-i2.primeLevel());
+
 
     //Depending on the sign of the scale, calling .toMatrix11NoScale 
     //yields a matrix proportional to either rho or -rho.
@@ -114,7 +108,7 @@ diagHImpl(ITensor rho,
     auto newmid = Index(active.rawname(),m,active.type());
 
     U = ITensor({active,newmid},Dense<T>{move(UU.storage())}); 
-    D = ITensor({prime(newmid),newmid},DiagReal{DD.begin(),DD.end()},rho.scale());
+    D = ITensor({prime(newmid,pdiff),newmid},DiagReal{DD.begin(),DD.end()},rho.scale());
 
     if(not rho.scale().isTooBigForReal())
         {
@@ -152,17 +146,10 @@ diagHImpl(IQTensor    rho,
         Error("diag_hermitian requires rank 2 input tensor");
         }
     
-    IQIndex ai;
-    for(auto& I : rho.inds())
-        {
-        if(I.primeLevel()==0)
-            {
-            ai = I;
-            break;
-            }
-        }
-
-    if(not ai) Error("in diag_hermitian rho should have one primed and one unprimed IQIndex");
+    auto i1 = rho.inds().front();
+    auto i2 = rho.inds().back();
+    auto ai = (i1.primeLevel() < i2.primeLevel()) ? i1 : i2;
+    auto pdiff = std::abs(i1.primeLevel()-i2.primeLevel());
 
 #ifdef DEBUG
     auto Zero = QN();
@@ -175,7 +162,7 @@ diagHImpl(IQTensor    rho,
 
     if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
-    auto blocks = doTask(GetBlocks<T>{rho.inds(),ai,prime(ai)},rho.store());
+    auto blocks = doTask(GetBlocks<T>{rho.inds(),ai,prime(ai,pdiff)},rho.store());
     auto Nblock = blocks.size();
 
     size_t totaldsize = 0,
@@ -313,7 +300,7 @@ diagHImpl(IQTensor    rho,
     auto d = IQIndex("d",move(iq),-ai.dir());
 
     auto Uis = IQIndexSet(dag(ai),dag(d));
-    auto Dis = IQIndexSet(prime(d),dag(d));
+    auto Dis = IQIndexSet(prime(d,pdiff),dag(d));
 
     auto Ustore = QDense<T>(Uis,QN());
     auto Dstore = QDiagReal(Dis);
