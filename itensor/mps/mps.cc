@@ -564,16 +564,16 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-plusEq(const MPSt<Tensor>& R,
-       const Args& args)
+plusEq(MPSt<Tensor> const& R,
+       Args const& args)
     {
     //cout << "calling new orthog in sum" << endl;
     if(!itensor::isOrtho(*this))
         {
         try { 
-            orthogonalize(); 
+            orthogonalize();
             }
-        catch(const ResultIsZero& rz) 
+        catch(ResultIsZero const& rz) 
             { 
             *this = R;
             return *this;
@@ -586,7 +586,7 @@ plusEq(const MPSt<Tensor>& R,
         try { 
             oR.orthogonalize(); 
             }
-        catch(const ResultIsZero& rz) 
+        catch(ResultIsZero const& rz) 
             { 
             return *this;
             }
