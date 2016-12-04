@@ -129,6 +129,9 @@ mixedIQTensor(IQIndex const& i1,
 std::ostream& 
 operator<<(std::ostream & s, IQTensor const& t);
 
+struct AddITensor;
+const char*
+typeNameOf(AddITensor const&);
 
 
 } //namespace itensor
