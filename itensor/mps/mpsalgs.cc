@@ -7,6 +7,7 @@
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/tensor/slicemat.h"
 
 namespace itensor {
 
@@ -46,34 +47,43 @@ plussers(IQIndex const& l1, IQIndex const& l2,
          IQIndex& sumind, 
          IQTensor& first, IQTensor& second)
     {
-    map<Index,Index> l1map, l2map;
-    vector<IndexQN> iq;
-    for(IndexQN const& x : l1)
+    auto siq = stdx::reserve_vector<IndexQN>(l1.nindex()+l2.nindex());
+    for(auto iq1 : l1)
         {
-        Index jj(x.index.rawname(),x.m(),x.type());
-        l1map[x.index] = jj;
-        iq.push_back(IndexQN(jj,x.qn));
+        auto s1 = Index(iq1.index.rawname(),iq1.m(),iq1.type());
+        siq.emplace_back(s1,iq1.qn);
         }
-    for(IndexQN const& x : l2)
+    for(auto iq2 : l2)
         {
-        Index jj(x.index.rawname(),x.m(),x.type());
-        l2map[x.index] = jj;
-        iq.push_back(IndexQN(jj,x.qn));
+        auto s2 = Index(iq2.index.rawname(),iq2.m(),iq2.type());
+        siq.emplace_back(s2,iq2.qn);
         }
-    sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
+#ifdef DEBUG
+    if(siq.empty()) Error("siq is empty in plussers");
+#endif
+    sumind = IQIndex(sumind.rawname(),std::move(siq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(IndexQN const& il1 : l1)
+    int n = 1;
+    for(auto iq1 : l1)
         {
-        Index& s1 = l1map[il1.index];
-        auto t = delta(il1.index,s1);
+        auto s1 = sumind.index(n);
+        auto t = ITensor(iq1.index,s1);
+        auto ot = ordered(t,iq1.index,s1);
+        auto minsize = std::min(iq1.index.m(),s1.m());
+        for(auto i : range1(minsize)) ot(i,i) = 1.0;
         first += t;
+        ++n;
         }
     second = IQTensor(dag(l2),sumind);
-    for(IndexQN const& il2 : l2)
+    for(auto iq2 : l2)
         {
-        Index& s2 = l2map[il2.index];
-        auto t = delta(il2.index,s2);
+        auto s2 = sumind.index(n);
+        auto t = ITensor(iq2.index,s2);
+        auto ot = ordered(t,iq2.index,s2);
+        auto minsize = std::min(iq2.index.m(),s2.m());
+        for(auto i : range1(minsize)) ot(i,i) = 1.0;
         second += t;
+        ++n;
         }
     }
 
