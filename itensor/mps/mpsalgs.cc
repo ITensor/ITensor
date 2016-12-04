@@ -21,6 +21,7 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
+using std::move;
 
 void 
 plussers(Index const& l1, 
@@ -43,7 +44,8 @@ plussers(Index const& l1,
     }
 
 void 
-plussers(IQIndex const& l1, IQIndex const& l2, 
+plussers(IQIndex const& l1, 
+         IQIndex const& l2, 
          IQIndex& sumind, 
          IQTensor& first, IQTensor& second)
     {
@@ -67,22 +69,20 @@ plussers(IQIndex const& l1, IQIndex const& l2,
     for(auto iq1 : l1)
         {
         auto s1 = sumind.index(n);
-        auto t = ITensor(iq1.index,s1);
-        auto ot = ordered(t,iq1.index,s1);
+        auto D = Matrix(iq1.index.m(),s1.m());
         auto minsize = std::min(iq1.index.m(),s1.m());
-        for(auto i : range1(minsize)) ot(i,i) = 1.0;
-        first += t;
+        for(auto i : range(minsize)) D(i,i) = 1.0;
+        first += matrixTensor(move(D),iq1.index,s1);
         ++n;
         }
     second = IQTensor(dag(l2),sumind);
     for(auto iq2 : l2)
         {
         auto s2 = sumind.index(n);
-        auto t = ITensor(iq2.index,s2);
-        auto ot = ordered(t,iq2.index,s2);
+        auto D = Matrix(iq2.index.m(),s2.m());
         auto minsize = std::min(iq2.index.m(),s2.m());
-        for(auto i : range1(minsize)) ot(i,i) = 1.0;
-        second += t;
+        for(auto i : range(minsize)) D(i,i) = 1.0;
+        second += matrixTensor(move(D),iq2.index,s2);
         ++n;
         }
     }
@@ -115,13 +115,13 @@ addAssumeOrth(MPSType      & L,
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    L.Anc(1) = L.A(1) * first[1] + R.A(1) * second[1];
+    L.Aref(1) = L.A(1) * first.at(1) + R.A(1) * second.at(1);
     for(auto i : range1(2,N-1))
         {
-        L.Anc(i) = dag(first[i-1]) * L.A(i) * first[i] 
-                     + dag(second[i-1]) * R.A(i) * second[i];
+        L.Aref(i) = dag(first.at(i-1)) * L.A(i) * first.at(i) 
+                     + dag(second.at(i-1)) * R.A(i) * second.at(i);
         }
-    L.Anc(N) = dag(first[N-1]) * L.A(N) + dag(second[N-1]) * R.A(N);
+    L.Aref(N) = dag(first.at(N-1)) * L.A(N) + dag(second.at(N-1)) * R.A(N);
 
     L.noprimelink();
 
