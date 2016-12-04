@@ -64,16 +64,19 @@ class IQIndexDat
         { }
 
     //Disallow copying
-    IQIndexDat(const IQIndexDat&) = delete;
+    IQIndexDat(IQIndexDat const&) = delete;
 
     void 
     operator=(IQIndexDat const&) = delete;
+
+    void
+    setStore(storage && iq) { iq_ = std::move(iq); }
 
     storage const&
     inds() const { return iq_; }
 
     long
-    size() { return iq_.size(); }
+    size() const { return iq_.size(); }
 
     Index const&
     index(long i) { return iq_[i-1].index; }
@@ -98,9 +101,6 @@ class IQIndexDat
 
     storage const&
     store() const { return iq_; }
-
-    storage &
-    store() { return iq_; }
     };
 
 void 
@@ -112,7 +112,9 @@ write(std::ostream & s, IQIndexDat const& d)
 void 
 read(std::istream & s, IQIndexDat & d) 
     { 
-    read(s,d.store()); 
+    IQIndexDat::storage store;
+    read(s,store); 
+    d.setStore(std::move(store));
     }
 
 //
@@ -143,19 +145,19 @@ IQIndex(std::string const& name,
 //    return pd->inds();
 //    }
 
-IQIndex::const_iterator IQIndex::
-begin() const 
-    { 
-    IQINDEX_CHECK_NULL
-    return pd->begin();
-    }
-
-IQIndex::const_iterator IQIndex::
-end() const 
-    { 
-    IQINDEX_CHECK_NULL
-    return pd->end();
-    }
+//IQIndex::const_iterator IQIndex::
+//begin() const 
+//    { 
+//    IQINDEX_CHECK_NULL
+//    return pd->begin();
+//    }
+//
+//IQIndex::const_iterator IQIndex::
+//end() const 
+//    { 
+//    IQINDEX_CHECK_NULL
+//    return pd->end();
+//    }
 
 long IQIndex::
 nblock() const 
@@ -245,7 +247,7 @@ showm(IQIndex const& I)
 #endif
     ostringstream oh; 
     oh << "m=" << I.m() << " | ";
-    for(const IndexQN& iq : I)
+    for(auto iq : I)
         {
         oh << iq.qn << ":" << iq.m() << " ";
         }
@@ -454,17 +456,17 @@ makeStorage(storage && iq)
 bool
 hasindex(IQIndex const& J, Index const& i)
     { 
-    for(auto& j : J)
+    for(auto n : range(J.nindex()))
         {
-        if(j == i) return true;
+        if(J[n] == i) return true;
         }
     return false;
     }
 
 long
-findindex(const IQIndex& J, const Index& i)
+findindex(IQIndex const& J, Index const& i)
     { 
-    for(long j = 1; j <= J.nindex(); ++j)
+    for(auto j : range1(J.nindex()))
         {
         if(J.index(j) == i) return j;
         }
@@ -472,13 +474,13 @@ findindex(const IQIndex& J, const Index& i)
     }
 
 long
-offset(const IQIndex& I, const Index& i)
+offset(IQIndex const& I, Index const& i)
     {
     long os = 0;
-    for(const IndexQN& iq : I)
+    for(auto n : range(I.nindex()))
         {
-        if(iq == i) return os;
-        os += iq.m();
+        if(I[n] == i) return os;
+        os += I[n].m();
         }
     Print(I);
     Print(i);
@@ -501,9 +503,9 @@ qn(const IQIndex& I, const Index& i)
     }
 
 Index
-findByQN(const IQIndex& I, const QN& qn)
+findByQN(IQIndex const& I, QN const& qn)
     { 
-    for(auto& iq : I)
+    for(auto iq : I)
         { 
         if(iq.qn == qn) return Index(iq);
         }
@@ -514,7 +516,7 @@ findByQN(const IQIndex& I, const QN& qn)
     }
 
 ostream& 
-operator<<(ostream &o, const IQIndex& I)
+operator<<(ostream & o, IQIndex const& I)
     {
     if(!I) 
         { 
@@ -522,8 +524,10 @@ operator<<(ostream &o, const IQIndex& I)
         return o;
         }
     o << "IQIndex" << Index(I) << " <" << I.dir() << ">" << "\n";
-    for(long j = 1; j <= I.nindex(); ++j) 
+    for(auto j : range1(I.nindex()))
+        {
         o << "  " << I.index(j) << " " <<  I.qn(j) << "\n";
+        }
     return o;
     }
 

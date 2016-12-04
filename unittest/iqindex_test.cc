@@ -123,19 +123,21 @@ SECTION("Iterator")
                      is[4],QN(+2));
 
     auto n = 1;
-    for(auto& i : I)
+    for(auto i : I)
         {
         CHECK(i.index == is[n]);
         ++n;
         }
+    CHECK(n == 1+I.nindex());
 
     auto I4 = prime(I,4);
     n = 1;
-    for(auto& i : I4)
+    for(auto i : I4)
         {
         CHECK(i.index == prime(is[n],4));
         ++n;
         }
+    CHECK(n == 1+I.nindex());
     }
 
 
