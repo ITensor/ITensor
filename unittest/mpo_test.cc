@@ -3,6 +3,7 @@
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/spinone.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/mps/sites/hubbard.h"
 
 using namespace itensor;
 using namespace std;
@@ -51,6 +52,60 @@ SECTION("Orthogonalize")
             }
         CHECK(norm(rho-id) < 1E-10);
         }
+    }
+
+SECTION("Add MPOs")
+    {
+    auto N = 50;
+    auto sites = Hubbard(N);
+
+
+    auto makeInds = [N](std::string name) -> vector<IQIndex>
+        {
+        auto ll = vector<IQIndex>(N);
+        for(auto n : range1(N-1))
+            {
+            ll.at(n) = IQIndex(nameint(name,n),
+                               Index("a",2),QN("Sz=",-1,"Nf=",-1),
+                               Index("a",2),QN("Sz=",-1,"Nf=",+1),
+                               Index("b",2),QN("Sz=",-1,"Nf=",0),
+                               Index("c",2),QN("Sz=",+1,"Nf=",0),
+                               Index("d",2),QN("Sz=",+1,"Nf=",-1),
+                               Index("d",2),QN("Sz=",+1,"Nf=",+1));
+            }
+        return ll;
+        };
+
+    auto l1 = makeInds("I1_");
+    auto l2 = makeInds("I2_");
+
+    auto Z = QN("Sz=",0,"Nf=",0);
+
+    auto A = IQMPO(sites);
+    auto B = IQMPO(sites);
+    A.Aref(1) = randomTensor(Z,sites(1),l1.at(1));
+    B.Aref(1) = randomTensor(Z,sites(1),l2.at(1));
+    for(int n = 2; n < N; ++n)
+        {
+        A.Aref(n) = randomTensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
+        B.Aref(n) = randomTensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
+        }
+    A.Aref(N) = randomTensor(Z,sites(N),dag(l1.at(N-1)));
+    B.Aref(N) = randomTensor(Z,sites(N),dag(l2.at(N-1)));
+
+    auto C = sum(A,B);
+
+    auto AA = overlap(A,A);
+    auto AB = overlap(A,B);
+    auto AC = overlap(A,C);
+    auto BB = overlap(B,B);
+    auto BC = overlap(B,C);
+    auto CC = overlap(C,C);
+
+    // |(A+B)-C|^2 = (A+B-C)*(A+B-C) = A*A+2A*B-2A*C+B*B-2B*C+C*C
+
+    auto diff2 = AA+2*AB-2*AC+BB-2*BC+CC;
+    CHECK(diff2 < 1E-12);
     }
 
 }
