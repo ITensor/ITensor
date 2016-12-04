@@ -2,7 +2,6 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include <map>
 #include "itensor/mps/mps.h"
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
@@ -11,7 +10,6 @@
 
 namespace itensor {
 
-using std::map;
 using std::istream;
 using std::ostream;
 using std::cout;
