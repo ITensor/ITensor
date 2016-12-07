@@ -116,6 +116,13 @@ truncate(Vector & P,
     long origm = P.size();
     long n = origm-1;
     Real docut = 0;
+
+    //Special case if P's are zero
+    if(P(0) == 0.0)
+        {
+        resize(P,1); 
+        return std::make_tuple(0.,0.);
+        }
     
     if(origm == 1) 
         {
@@ -151,7 +158,11 @@ truncate(Vector & P,
         {
         Real scale = 1.0;
         //if doRelCutoff, use normalized P's when truncating
-        if(doRelCutoff) scale = sumels(P);
+        if(doRelCutoff) 
+            {
+            scale = sumels(P);
+            if(scale == 0.0) scale = 1.0;
+            }
 
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==minm)
@@ -162,6 +173,7 @@ truncate(Vector & P,
             }
         truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
+
 
     if(n < 0) n = 0;
 
