@@ -794,16 +794,16 @@ orthogonalize(Args const& args)
     Tensor U,D;
     diagHermitian(rho,U,D,dargs);
 
-#ifdef DEBUG
-    auto diff = rho-dag(U)*D*prime(U,10);
-    if(itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
-        {
-        PrintData(diff);
-        printfln("norm(rho) = %.2E",itensor::norm(rho));
-        printfln("norm(diff) = %.2E",itensor::norm(diff));
-        Error("Incorrect diag (1)");
-        }
-#endif
+//#ifdef DEBUG
+//    auto diff = rho-dag(U)*D*prime(U,10);
+//    if(itensor::norm(diff) > 1E-14 && itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
+//        {
+//        PrintData(diff);
+//        printfln("norm(rho) = %.2E",itensor::norm(rho));
+//        printfln("norm(diff) = %.2E",itensor::norm(diff));
+//        Error("Incorrect diag (1)");
+//        }
+//#endif
 
     auto O = U * A_.at(N_) * A_.at(N_-1);
     A_.at(N_) = dag(U);
@@ -811,17 +811,22 @@ orthogonalize(Args const& args)
     for(int j = N_-1; j > 1; --j)
         {
         rho = E.at(j-1) * O * dag(prime(O,10));
-        diagHermitian(rho,U,D,dargs);
-#ifdef DEBUG
-        auto diff = rho-dag(U)*D*prime(U,10);
-        if(itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
-            {
-            PrintData(diff);
-            printfln("norm(rho) = %.2E",itensor::norm(rho));
-            printfln("norm(diff) = %.2E",itensor::norm(diff));
-            Error("Incorrect diag (2)");
-            }
-#endif
+        //printfln("Dimension of rho = %d",rho.inds().front().m());
+        //printfln("Args: maxm=%d, cutoff=%.2E",dargs.getInt("Maxm",50000),dargs.getReal("Cutoff",0.0));
+        auto spec = diagHermitian(rho,U,D,dargs);
+        //print("Eigs kept:");
+        //for(auto& v : spec.eigsKept()) printf(" %.1E",v);
+        //println();
+//#ifdef DEBUG
+//        auto diff = rho-dag(U)*D*prime(U,10);
+//        if(itensor::norm(diff) > 1E-14 && itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
+//            {
+//            PrintData(diff);
+//            printfln("norm(rho) = %.2E",itensor::norm(rho));
+//            printfln("norm(diff) = %.2E",itensor::norm(diff));
+//            Error("Incorrect diag (2)");
+//            }
+//#endif
         O *= U;
         O *= A_.at(j-1);
         A_.at(j) = dag(U);
