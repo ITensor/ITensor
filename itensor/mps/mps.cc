@@ -776,10 +776,8 @@ orthogonalize(Args const& args)
 
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
-    if(args.defined("Maxm")) 
-        {
-        dargs.add("Maxm",args.getInt("Maxm"));
-        }
+    auto maxm_set = args.defined("Maxm");
+    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
 
     //Build environment tensors from the left
     auto E = vector<Tensor>(N_+1);
@@ -794,44 +792,26 @@ orthogonalize(Args const& args)
     Tensor U,D;
     diagHermitian(rho,U,D,dargs);
 
-//#ifdef DEBUG
-//    auto diff = rho-dag(U)*D*prime(U,10);
-//    if(itensor::norm(diff) > 1E-14 && itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
-//        {
-//        PrintData(diff);
-//        printfln("norm(rho) = %.2E",itensor::norm(rho));
-//        printfln("norm(diff) = %.2E",itensor::norm(diff));
-//        Error("Incorrect diag (1)");
-//        }
-//#endif
-
+    //O is partial overlap of previous and new MPS
     auto O = U * A_.at(N_) * A_.at(N_-1);
     A_.at(N_) = dag(U);
 
     for(int j = N_-1; j > 1; --j)
         {
+        if(not maxm_set)
+            {
+            //Infer maxm from bond dim of original MPS
+            //i.e. upper bound on rank of rho
+            auto ci = commonIndex(O,E.at(j-1));
+            auto maxm = (ci) ? ci.m() : 1l;
+            dargs.add("Maxm",maxm);
+            }
         rho = E.at(j-1) * O * dag(prime(O,10));
-        //printfln("Dimension of rho = %d",rho.inds().front().m());
-        //printfln("Args: maxm=%d, cutoff=%.2E",dargs.getInt("Maxm",50000),dargs.getReal("Cutoff",0.0));
         auto spec = diagHermitian(rho,U,D,dargs);
-        //print("Eigs kept:");
-        //for(auto& v : spec.eigsKept()) printf(" %.1E",v);
-        //println();
-//#ifdef DEBUG
-//        auto diff = rho-dag(U)*D*prime(U,10);
-//        if(itensor::norm(diff) > 1E-14 && itensor::norm(diff)/itensor::norm(rho) > 1E-12) 
-//            {
-//            PrintData(diff);
-//            printfln("norm(rho) = %.2E",itensor::norm(rho));
-//            printfln("norm(diff) = %.2E",itensor::norm(diff));
-//            Error("Incorrect diag (2)");
-//            }
-//#endif
         O *= U;
         O *= A_.at(j-1);
         A_.at(j) = dag(U);
         }
-
     A_.at(1) = O;
 
     l_orth_lim_ = 0;
