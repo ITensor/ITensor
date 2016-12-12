@@ -80,7 +80,7 @@ SECTION("PositionTest")
 SECTION("Orthogonalize")
     {
     auto N = 10;
-    auto m = 4;
+    auto m = 20;
     auto sites = SpinHalf(10);
     auto psi = MPS(sites);
 
@@ -103,8 +103,18 @@ SECTION("Orthogonalize")
 
     auto opsi = psi;
 
-    psi.orthogonalize();
+    //for(auto b : range1(psi.N()-1))
+    //    {
+    //    Print(linkInd(psi,b));
+    //    }
+
+    psi.orthogonalize({"Cutoff",1E-16});
     CHECK_CLOSE(overlap(opsi,psi),1.0);
+
+    //for(auto b : range1(psi.N()-1))
+    //    {
+    //    Print(linkInd(psi,b));
+    //    }
 
     for(int n = N; n > 1; --n)
         {
@@ -117,6 +127,13 @@ SECTION("Orthogonalize")
             }
         CHECK(norm(rho-id) < 1E-10);
         }
+
+    psi.orthogonalize({"Maxm=",10,"Cutoff=",1E-16});
+    for(auto b : range1(psi.N()-1))
+        {
+        CHECK(linkInd(psi,b).m() <= 10);
+        }
+
     }
 
 }
