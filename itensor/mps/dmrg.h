@@ -10,6 +10,7 @@
 #include "itensor/mps/localmpo_mps.h"
 #include "itensor/mps/sweeps.h"
 #include "itensor/mps/DMRGObserver.h"
+#include "itensor/util/cputime.h"
 
 
 namespace itensor {
@@ -205,6 +206,7 @@ DMRGWorker(MPSt<Tensor>& psi,
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
+        cpu_time sw_time;
         args.add("Sweep",sw);
         args.add("Cutoff",sweeps.cutoff(sw));
         args.add("Minm",sweeps.minm(sw));
@@ -233,21 +235,13 @@ DMRGWorker(MPSt<Tensor>& psi,
                 printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,(b+1));
                 }
 
-            TIMER_START(49)
             PH.position(b,psi);
-            TIMER_STOP(49)
 
-            START_TIMER(50)
             auto phi = psi.A(b)*psi.A(b+1);
-            STOP_TIMER(50)
 
-            START_TIMER(51)
             energy = davidson(PH,phi,args);
-            STOP_TIMER(51)
             
-            START_TIMER(52)
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
-            STOP_TIMER(52)
 
 
             if(!quiet)
@@ -269,7 +263,10 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             obs.measure(args);
 
+
             } //for loop over b
+
+        printfln("    Wall time for sweep %d was %s",sw,showtime(sw_time.sincemark().wall));
 
         if(obs.checkDone(args)) break;
     
