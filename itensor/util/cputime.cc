@@ -65,7 +65,7 @@ firstwall()
     return firstwall_;
     }
 
-std::string inline
+std::string
 showtime(double time)
     {
     if(time < -1.0e-5) 
