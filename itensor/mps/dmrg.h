@@ -266,7 +266,9 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             } //for loop over b
 
-        printfln("    Wall time for sweep %d was %s",sw,showtime(sw_time.sincemark().wall));
+        auto sm = sw_time.sincemark();
+        printfln("    Sweep %d CPU time = %s (Wall time = %s)",
+                  sw,showtime(sm.time),showtime(sm.wall));
 
         if(obs.checkDone(args)) break;
     
