@@ -74,7 +74,7 @@ swapUnitCells(MPSType & psi)
     auto Nuc = psi.N()/2;
     for(auto n : range1(Nuc))
         {
-        psi.Anc(n).swap(psi.Anc(Nuc+n));
+        psi.Aref(n).swap(psi.Aref(Nuc+n));
         }
     }
 
@@ -174,7 +174,7 @@ idmrg(MPSt<Tensor> & psi,
             println("Randomizing psi");
             for(int j = 1; j <= psi.N(); ++j)
                 {
-                randomize(psi.Anc(j));
+                randomize(psi.Aref(j));
                 }
             psi.normalize();
             }
@@ -188,7 +188,7 @@ idmrg(MPSt<Tensor> & psi,
         args.add("Energy",energy);
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
-        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
+        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Aref(Nuc),D,psi.Aref(Nuc+1));
         D /= norm(D);
         
         //Prepare MPO for next step
@@ -212,9 +212,9 @@ idmrg(MPSt<Tensor> & psi,
 
         //Prepare MPS for next step
         swapUnitCells(psi);
-        if(lastV) psi.Anc(Nuc+1) *= lastV;
-        psi.Anc(1) *= D;
-        psi.Anc(N0) *= D;
+        if(lastV) psi.Aref(Nuc+1) *= lastV;
+        psi.Aref(1) *= D;
+        psi.Aref(N0) *= D;
         psi.position(1);
 
         ++sw;
@@ -280,7 +280,7 @@ idmrg(MPSt<Tensor> & psi,
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
         D = Tensor();
-        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),args);
+        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Aref(Nuc),D,psi.Aref(Nuc+1),args);
         D /= norm(D);
 
         //Prepare MPO for next step
@@ -304,7 +304,7 @@ idmrg(MPSt<Tensor> & psi,
         //Prepare MPS for next step
         swapUnitCells(psi);
 
-        psi.Anc(N0) *= D;
+        psi.Aref(N0) *= D;
 
         if((obs.checkDone(args) && sw%2==0)
            || sw == sweeps.nsweep()) 
@@ -314,12 +314,12 @@ idmrg(MPSt<Tensor> & psi,
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
                 Tensor d;
-                svd(psi.A(b)*psi.A(b+1),psi.Anc(b),d,psi.Anc(b+1));
-                psi.Anc(b) *= d;
+                svd(psi.A(b)*psi.A(b+1),psi.Aref(b),d,psi.Aref(b+1));
+                psi.Aref(b) *= d;
                 }
-            psi.Anc(Nuc+1) *= lastV;
+            psi.Aref(Nuc+1) *= lastV;
 
-            psi.Anc(0) = D;
+            psi.Aref(0) = D;
 
             break;
             }
@@ -332,17 +332,17 @@ idmrg(MPSt<Tensor> & psi,
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
                 Tensor d;
-                svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Anc(b),d,wpsi.Anc(b+1));
-                wpsi.Anc(b) *= d;
+                svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Aref(b),d,wpsi.Aref(b+1));
+                wpsi.Aref(b) *= d;
                 }
-            wpsi.Anc(Nuc+1) *= lastV;
-            wpsi.Anc(0) = D;
+            wpsi.Aref(Nuc+1) *= lastV;
+            wpsi.Aref(0) = D;
             writeToFile(format("psi_%d",sw),wpsi);
             writeToFile("sites",wpsi.sites());
             }
 
-        psi.Anc(Nuc+1) *= lastV;
-        psi.Anc(1) *= D;
+        psi.Aref(Nuc+1) *= lastV;
+        psi.Aref(1) *= D;
 
         psi.orthogonalize();
         psi.normalize();
