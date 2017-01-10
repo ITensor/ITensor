@@ -425,5 +425,13 @@ multSub(MatRefc<V> M,
 template void multSub(MatRefc<Real>,VecRefc<Real>,VecRef<Real>,bool);
 template void multSub(MatRefc<Cplx>,VecRefc<Cplx>,VecRef<Cplx>,bool);
 
+Matrix
+eye(size_t Nr, size_t Nc)
+    {
+    auto M = Matrix(Nr,Nc);
+    auto N = std::min(Nr,Nc);
+    for(auto j : range(N)) M(j,j) = 1.0;
+    return M;
+    }
 
 } //namespace itensor

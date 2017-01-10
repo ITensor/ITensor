@@ -162,6 +162,11 @@ multSub(MatRefc<V> M,
 //     CMatrixRefc B,
 //     CMatrixRef  C);
 
+//Create an NrxNc matrix
+//with 1's along the diagonal
+Matrix
+eye(size_t Nr, size_t Nc);
+
 //Reducing number of columns does not affect
 //remaining data (column major storage)
 template<typename V>
