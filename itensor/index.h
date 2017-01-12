@@ -17,7 +17,7 @@ class IndexVal;
 namespace detail {
     struct RandomID
         {
-        using result_type = std::mt19937_64::result_type;
+        using result_type = std::mt19937::result_type;
 
         RandomID()
             : rng(std::time(NULL) + getpid())
@@ -27,7 +27,7 @@ namespace detail {
         operator()() { return rng(); }
 
         private:
-        std::mt19937_64 rng;
+        std::mt19937 rng;
         };
 
     struct SequentialID
@@ -62,11 +62,7 @@ namespace detail {
 class Index
     {
     public:
-#ifdef RANDOM_INDEX_IDS
     using IDGenerator = detail::RandomID;
-#else
-    using IDGenerator = detail::SequentialID;
-#endif
     using id_type = IDGenerator::result_type;
     using indexval_type = IndexVal;
     using prime_type = int;
