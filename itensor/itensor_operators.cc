@@ -66,7 +66,8 @@ checkArrows(IQIndexSet const& is1,
                 println("----------------------------------------");
                 println("IQIndexSet 2 = \n",is2);
                 println("----------------------------------------");
-                printfln("Mismatched IQIndex %s",I1);
+                printfln("Mismatched IQIndex from set 1 %s",I1);
+                printfln("Mismatched IQIndex from set 2 %s",I2);
                 Error("Mismatched IQIndex arrows");
                 }
             }
