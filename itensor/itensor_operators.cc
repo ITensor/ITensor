@@ -100,6 +100,19 @@ operator*=(ITensorT const& R)
 
     if(!L || !R) Error("Default constructed ITensor in product");
 
+    if(L.r() == 0)
+        {
+        auto z = L.cplx();
+        *this = R*z;
+        return *this;
+        }
+    else if(R.r()==0)
+        {
+        auto z = R.cplx();
+        *this *= z;
+        return *this;
+        }
+
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 
     auto C = doTask(Contract<index_type>{L.inds(),R.inds()},
