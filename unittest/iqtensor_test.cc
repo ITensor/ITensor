@@ -837,6 +837,26 @@ SECTION("Scalar")
     CHECK_CLOSE(fabs(val), norm(S));
     }
 
+SECTION("Contraction with Scalar")
+    {
+    auto T1 = randomTensor(QN(),L1,L2,S1,S2);
+    auto T2 = randomTensor(QN(),S1,L2,S2,L1);
+    auto S = T1*dag(T2);
+    CHECK(S.r() == 0);
+    auto T3 = S * T1;
+
+    auto z = S.cplx();
+    for(int i1 = 1; i1 <= L1.m(); ++i1)
+    for(int i2 = 1; i2 <= L2.m(); ++i2)
+    for(int j1 = 1; j1 <= S1.m(); ++j1)
+    for(int j2 = 1; j2 <= S2.m(); ++j2)
+        {
+        auto val = z*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
+        CHECK_CLOSE(val,T3.real(L1(i1),L2(i2),S1(j1),S2(j2)));
+        }
+
+    }
+
 SECTION("Mixed Storage")
     {
     auto s = IQIndex("s",Index("s+",1,Site),QN(+1),
