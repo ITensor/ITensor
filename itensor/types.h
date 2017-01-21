@@ -41,8 +41,14 @@ std::string inline
 formatVal(double val)
     {
     if(std::fabs(val) > 1E-10)
+        {
         return format("%s",val);
-    return format("%.8E",val);
+        }
+    else if(std::fabs(val) == 0.0)
+        {
+        return "0";
+        }
+    return format("%.2E",val);
     }
 
 std::string inline
