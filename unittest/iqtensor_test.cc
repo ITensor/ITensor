@@ -855,6 +855,19 @@ SECTION("Contraction with Scalar")
         CHECK_CLOSE(val,T3.real(L1(i1),L2(i2),S1(j1),S2(j2)));
         }
 
+    //Make scalar from constructor
+    auto Q = IQTensor(1.+3_i);
+    auto q = Q.cplx();
+    auto T4 = Q * T1;
+    for(int i1 = 1; i1 <= L1.m(); ++i1)
+    for(int i2 = 1; i2 <= L2.m(); ++i2)
+    for(int j1 = 1; j1 <= S1.m(); ++j1)
+    for(int j2 = 1; j2 <= S2.m(); ++j2)
+        {
+        auto val = q*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
+        CHECK_CLOSE(val,T4.real(L1(i1),L2(i2),S1(j1),S2(j2)));
+        }
+
     }
 
 SECTION("Mixed Storage")
