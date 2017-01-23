@@ -72,14 +72,6 @@ class ITensorT
     explicit
     ITensorT(Cplx val);
 
-    //Construct rank n tensor, all
-    //elements set to zero except the single
-    //entry specified by the IndexVal/IQIndexVal args
-    //template <typename... IVals>
-    //explicit
-    //ITensorT(indexval_type const& iv1, 
-    //         IVals const&... rest);
-
     //Automatic conversion IQTensor -> ITensor
     operator ITensor() const;
 
@@ -276,19 +268,6 @@ class ITensorT
 
     void
     swap(ITensorT & other);
-
-    //
-    // Deprecated methods for backwards compatibility
-    // 
-
-    //Real
-    //norm() const;
-
-    //const indexset_type&
-    //indices() const { return is_; }
-
-    //void
-    //randomize();
 
     }; // class ITensorT
 
