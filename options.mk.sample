@@ -67,8 +67,8 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 #PLATFORM=mkl
 ## MKL example (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
-#BLAS_LAPACK_LIBFLAGS=-L/opt/intel/composer_xe_2013_sp1.1.106/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
-#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
+#BLAS_LAPACK_LIBFLAGS=-L/opt/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
+#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/mkl/include
 
 ##
 ## Example using the OpenBLAS library (http://www.openblas.net/)

@@ -64,7 +64,7 @@ checkArrows(IQIndexSet const& is1,
                 println("----------------------------------------");
                 println("IQIndexSet 1 = \n",is1);
                 println("----------------------------------------");
-                println("IQIndexSet 2 = \n",is1);
+                println("IQIndexSet 2 = \n",is2);
                 println("----------------------------------------");
                 printfln("Mismatched IQIndex %s",I1);
                 Error("Mismatched IQIndex arrows");
@@ -82,7 +82,10 @@ void
 checkSameDiv(IQTensor const& T1,
              IQTensor const& T2)
     {
-    if(div(T1) != div(T2)) Error("div(T1) must equal div(T2) when adding T1+T2");
+    if(div(T1) != div(T2)) 
+        {
+        Error(format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+        }
     }
 
 } //namespace detail
@@ -95,6 +98,19 @@ operator*=(ITensorT const& R)
     auto& L = *this;
 
     if(!L || !R) Error("Default constructed ITensor in product");
+
+    if(L.r() == 0)
+        {
+        auto z = L.cplx();
+        *this = R*z;
+        return *this;
+        }
+    else if(R.r()==0)
+        {
+        auto z = R.cplx();
+        *this *= z;
+        return *this;
+        }
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 

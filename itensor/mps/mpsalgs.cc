@@ -2,15 +2,14 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include <map>
 #include "itensor/mps/mps.h"
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/tensor/slicemat.h"
 
 namespace itensor {
 
-using std::map;
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -20,6 +19,7 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
+using std::move;
 
 void 
 plussers(Index const& l1, 
@@ -42,38 +42,46 @@ plussers(Index const& l1,
     }
 
 void 
-plussers(IQIndex const& l1, IQIndex const& l2, 
+plussers(IQIndex const& l1, 
+         IQIndex const& l2, 
          IQIndex& sumind, 
          IQTensor& first, IQTensor& second)
     {
-    map<Index,Index> l1map, l2map;
-    vector<IndexQN> iq;
-    for(IndexQN const& x : l1)
+    auto siq = stdx::reserve_vector<IndexQN>(l1.nindex()+l2.nindex());
+    for(auto iq1 : l1)
         {
-        Index jj(x.index.rawname(),x.m(),x.type());
-        l1map[x.index] = jj;
-        iq.push_back(IndexQN(jj,x.qn));
+        auto s1 = Index(iq1.index.rawname(),iq1.m(),iq1.type());
+        siq.emplace_back(s1,iq1.qn);
         }
-    for(IndexQN const& x : l2)
+    for(auto iq2 : l2)
         {
-        Index jj(x.index.rawname(),x.m(),x.type());
-        l2map[x.index] = jj;
-        iq.push_back(IndexQN(jj,x.qn));
+        auto s2 = Index(iq2.index.rawname(),iq2.m(),iq2.type());
+        siq.emplace_back(s2,iq2.qn);
         }
-    sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
+#ifdef DEBUG
+    if(siq.empty()) Error("siq is empty in plussers");
+#endif
+    sumind = IQIndex(sumind.rawname(),std::move(siq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(IndexQN const& il1 : l1)
+    int n = 1;
+    for(auto iq1 : l1)
         {
-        Index& s1 = l1map[il1.index];
-        auto t = delta(il1.index,s1);
-        first += t;
+        auto s1 = sumind.index(n);
+        auto D = Matrix(iq1.index.m(),s1.m());
+        auto minsize = std::min(iq1.index.m(),s1.m());
+        for(auto i : range(minsize)) D(i,i) = 1.0;
+        first += matrixTensor(move(D),iq1.index,s1);
+        ++n;
         }
     second = IQTensor(dag(l2),sumind);
-    for(IndexQN const& il2 : l2)
+    for(auto iq2 : l2)
         {
-        Index& s2 = l2map[il2.index];
-        auto t = delta(il2.index,s2);
-        second += t;
+        auto s2 = sumind.index(n);
+        auto D = Matrix(iq2.index.m(),s2.m());
+        auto minsize = std::min(iq2.index.m(),s2.m());
+        for(auto i : range(minsize)) D(i,i) = 1.0;
+        second += matrixTensor(move(D),iq2.index,s2);
+        ++n;
         }
     }
 
@@ -105,13 +113,13 @@ addAssumeOrth(MPSType      & L,
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    L.Anc(1) = L.A(1) * first[1] + R.A(1) * second[1];
+    L.Aref(1) = L.A(1) * first.at(1) + R.A(1) * second.at(1);
     for(auto i : range1(2,N-1))
         {
-        L.Anc(i) = dag(first[i-1]) * L.A(i) * first[i] 
-                     + dag(second[i-1]) * R.A(i) * second[i];
+        L.Aref(i) = dag(first.at(i-1)) * L.A(i) * first.at(i) 
+                     + dag(second.at(i-1)) * R.A(i) * second.at(i);
         }
-    L.Anc(N) = dag(first[N-1]) * L.A(N) + dag(second[N-1]) * R.A(N);
+    L.Aref(N) = dag(first.at(N-1)) * L.A(N) + dag(second.at(N-1)) * R.A(N);
 
     L.noprimelink();
 

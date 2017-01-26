@@ -89,16 +89,53 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 ITensor
-matrixTensor(Matrix&& M, const Index& i1, const Index& i2)
+matrixTensor(Matrix&& M, Index const& i1, Index const& i2)
     {
     auto res = ITensor({i1,i2},DenseReal{std::move(M.storage())});
     M.clear();
     return res;
     }
 
+ITensor
+matrixTensor(Matrix const& M, const Index& i1, const Index& i2)
+    {
+    return matrixTensor(Matrix(M),i1,i2);
+    }
 
 ITensor
-combiner(std::vector<Index> inds, const Args& args)
+matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
+    {
+    bool isReal = true;
+    for(auto& el : M)
+    if(std::fabs(el.imag()) > 1E-14)
+        {
+        isReal = false;
+        break;
+        }
+    ITensor res;
+    if(isReal)
+        {
+        auto store = vector<Real>(M.size());
+        for(auto n : range(M.size())) store[n] = M.store()[n].real();
+        res = ITensor({i1,i2},DenseReal{std::move(store)});
+        }
+    else
+        {
+        res = ITensor({i1,i2},DenseCplx{std::move(M.storage())});
+        }
+    M.clear();
+    return res;
+    }
+
+ITensor
+matrixTensor(CMatrix const& M, const Index& i1, const Index& i2)
+    {
+    return matrixTensor(CMatrix(M),i1,i2);
+    }
+
+
+ITensor
+combiner(std::vector<Index> inds, Args const& args)
     {
     if(inds.empty()) Error("No indices passed to combiner");
     long rm = 1;

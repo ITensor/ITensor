@@ -347,20 +347,45 @@ diagHermitian(ITensorT<I> const& M,
     {
     if(!args.defined("IndexName")) args.add("IndexName","d");
 
+    //
+    // Pick an arbitrary index and do some analysis
+    // on its prime level spacing
+    //
+    auto k = M.inds().front();
+    auto kps = stdx::reserve_vector<int>(rank(M));
+    for(auto& i : M.inds()) if(i.noprimeEquals(k)) kps.push_back(i.primeLevel());
+    if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
+        {
+        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
+        }
+    auto nk = kps.size();
+    std::sort(kps.begin(),kps.end());
+    //idiff == "inner" difference between cluster of low-prime-level copies
+    //         of k, if more than one
+    auto idiff = kps.at(nk/2-1)-kps.front();
+    //mdiff == max prime-level difference of copies of k
+    auto mdiff = kps.back()-kps.front();
+    //pdiff == spacing between lower and higher prime level index pairs
+    auto pdiff = mdiff-idiff;
+
     auto inds = stdx::reserve_vector<I>(rank(M)/2);
     for(auto& i : M.inds())
-        { 
-        if(i.primeLevel() == 0) inds.push_back(i);
+    for(auto& j : M.inds())
+        {
+        if(i.noprimeEquals(j) && i.primeLevel()+pdiff == j.primeLevel())
+            {
+            inds.push_back(i);
+            }
+        }
+    if(inds.empty() || rank(M)/2 != (long)inds.size()) 
+        {
+        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
 
-    if(inds.empty()) 
-        {
-        Error("Input tensor to diagHermitian should have pairs of indices with prime level 0 and 1");
-        }
     auto comb = combiner(std::move(inds),args);
     auto Mc = M*comb;
 
-    auto combP = dag(prime(comb));
+    auto combP = dag(prime(comb,pdiff));
     try {
         Mc = combP * Mc;
         }

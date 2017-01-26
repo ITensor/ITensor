@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor/decomp.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 using namespace std;
@@ -270,6 +271,30 @@ SECTION("ITensor diagHermitian")
         diagHermitian(T,U,D);
         CHECK(norm(T-conj(U)*D*prime(U)) < 1E-12);
         }
+
+    SECTION("Rank 2 - Primes 1 and 2")
+        {
+        auto i = Index("i",10);
+        auto T = randomTensor(i,prime(i));
+        T += swapPrime(T,0,1);
+        //Raise prime level of T
+        T.prime();
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,prime(i)));
+        CHECK(norm(T-U*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Multiple Prime Levels")
+        {
+        auto i = Index("i",3);
+
+        auto T = randomTensor(prime(i),prime(i,2),prime(i,5),prime(i,6));
+        T += swapPrime(swapPrime(T,1,5),2,6);
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(norm(T-U*D*prime(U,4)) < 1E-12);
+        }
     }
 
 SECTION("IQTensor diagHermitian")
@@ -318,6 +343,21 @@ SECTION("IQTensor diagHermitian")
         CHECK(not hasindex(U,prime(I)));
         CHECK(not hasindex(U,prime(J)));
         CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Rank 2 - Primes 1 and 2")
+        {
+        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
+        auto T = randomTensor(QN(),dag(I),prime(I));
+        T += dag(swapPrime(T,0,1));
+        //Raise prime level of T
+        //and prime level spacing between inds
+        T.mapprime(1,4);
+        T.mapprime(0,1);
+        IQTensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
         }
     }
 

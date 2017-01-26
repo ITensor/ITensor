@@ -14,6 +14,41 @@ namespace itensor {
 //Forward declarations
 class IndexVal;
 
+namespace detail {
+    struct RandomID
+        {
+        using result_type = std::mt19937::result_type;
+
+        RandomID()
+            : rng(std::time(NULL) + getpid())
+            { }
+
+        result_type
+        operator()() { return rng(); }
+
+        private:
+        std::mt19937 rng;
+        };
+
+    struct SequentialID
+        {
+        using result_type = std::uint_fast32_t;
+
+        SequentialID() : id(1) { }
+
+        result_type
+        operator()()
+            { 
+            auto res = id;
+            id += 1;
+            return res; 
+            }
+
+        private:
+        result_type id = 0;
+        };
+    } //namespace detail
+
 //
 // Index
 //
@@ -27,7 +62,7 @@ class IndexVal;
 class Index
     {
     public:
-    using IDGenerator = std::mt19937;
+    using IDGenerator = detail::RandomID;
     using id_type = IDGenerator::result_type;
     using indexval_type = IndexVal;
     using prime_type = int;
@@ -271,6 +306,7 @@ IndexType
 getIndexType(Args const& args, 
              Args::Name const& name, 
              IndexType default_val);
+
 
 } //namespace itensor
 

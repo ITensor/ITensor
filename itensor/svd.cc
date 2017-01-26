@@ -281,7 +281,7 @@ svdImpl(IQTensor A,
         }
     
     auto L = IQIndex(lname,move(Liq),uI.dir());
-    auto R = IQIndex(lname,move(Riq),vI.dir());
+    auto R = IQIndex(rname,move(Riq),vI.dir());
 
     auto Uis = IQIndexSet(uI,dag(L));
     auto Dis = IQIndexSet(L,R);

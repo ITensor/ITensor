@@ -100,7 +100,13 @@ ITensorT<IndexT>
 randomTensor(IndexSetT<IndexT> const& inds);
 
 ITensor
-matrixTensor(Matrix&& M, Index const& i1, Index const& i2);
+matrixTensor(Matrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(Matrix const& M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
 
 template<typename... Indxs>

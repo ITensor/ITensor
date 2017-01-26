@@ -18,18 +18,17 @@ typeNameOf(DenseReal const& d) { return "DenseReal"; }
 const char*
 typeNameOf(DenseCplx const& d) { return "DenseCplx"; }
 
-template<typename T>
 Cplx 
-doTask(GetElt<Index> const& g, Dense<T> const& d)
+doTask(GetElt<Index> const& g, DenseReal const& d)
+    {
+    return Cplx(d[offset(g.is,g.inds)],0.);
+    }
+
+Cplx 
+doTask(GetElt<Index> const& g, DenseCplx const& d)
     {
     return d[offset(g.is,g.inds)];
     }
-template
-Cplx 
-doTask(GetElt<Index> const& g, Dense<Real> const& d);
-template
-Cplx 
-doTask(GetElt<Index> const& g, Dense<Cplx> const& d);
 
 template<typename E, typename T>
 struct SetEltHelper

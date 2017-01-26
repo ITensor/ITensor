@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor/iqindex.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 using namespace std;
@@ -105,6 +106,38 @@ SECTION("Constructors")
         CHECK(I.qn(3) == QN(+1));
         CHECK(I.qn(4) == QN(+2));
         }
+    }
+
+SECTION("Iterator")
+    {
+    auto is = vector<Index>(4+1);
+    is[1] = Index("i1",1);
+    is[2] = Index("i2",2);
+    is[3] = Index("i3",3);
+    is[4] = Index("i4",4);
+
+    auto I = IQIndex("I",
+                     is[1],QN(-1),
+                     is[2],QN(0),
+                     is[3],QN(+1),
+                     is[4],QN(+2));
+
+    auto n = 1;
+    for(auto i : I)
+        {
+        CHECK(i.index == is[n]);
+        ++n;
+        }
+    CHECK(n == 1+I.nindex());
+
+    auto I4 = prime(I,4);
+    n = 1;
+    for(auto i : I4)
+        {
+        CHECK(i.index == prime(is[n],4));
+        ++n;
+        }
+    CHECK(n == 1+I.nindex());
     }
 
 

@@ -13,6 +13,7 @@ namespace itensor {
 struct IndexQN;
 class IQIndexDat;
 class IQIndexVal;
+class IQIndexIter;
 
 template<typename IndexT>
 class ITensorT;
@@ -28,7 +29,7 @@ class IQIndex : public Index
     using storage = std::vector<IndexQN>;
     using storage_ptr = std::shared_ptr<IQIndexDat>;
     using indexval_type = IQIndexVal;
-    using const_iterator = storage::const_iterator;
+    using const_iterator = IQIndexIter;
     using parent = Index;
     private:
     storage_ptr pd;
@@ -354,6 +355,54 @@ IQIndex(std::string const& name,
     parent::operator=(I);
     makeStorage(std::move(iq));
     }
+
+class IQIndexIter
+    { 
+    public:
+    using iterator_category = std::forward_iterator_tag;
+    private:
+    IQIndex const& I_;
+    long n_ = 0;
+    public: 
+
+    IQIndexIter(IQIndex const& I) : I_(I), n_(1l) { }
+    
+    IndexQN
+    operator*() { return IndexQN(I_.index(n_),I_.qn(n_)); }  
+
+    IQIndexIter& 
+    operator++() { increment(); return *this; } 
+
+    IQIndexIter 
+    operator++(int) { auto prev = *this; increment(); return prev; } 
+
+    bool
+    operator==(IQIndexIter const& o) const { return (I_ == o.I_) && (n_ == o.n_); }
+
+    bool
+    operator!=(IQIndexIter const& o) const { return !operator==(o); }
+
+    private:
+
+    void
+    increment() { ++n_; }
+
+    public:
+    //For developer use only; for making end iterator
+    IQIndexIter static
+    makeEnd(IQIndex const& I)
+        {
+        auto end = IQIndexIter(I);
+        end.n_ = 1+I.nindex();
+        return end;
+        }
+    }; 
+
+IQIndex::const_iterator inline IQIndex::
+begin() const { return IQIndexIter(*this); }
+
+IQIndex::const_iterator inline IQIndex::
+end() const { return const_iterator::makeEnd(*this); }
 
 } //namespace itensor
 

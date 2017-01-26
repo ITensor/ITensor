@@ -137,6 +137,9 @@ struct AddITensor
         { }
     };
 
+const char*
+typeNameOf(AddITensor const&) { return "AddITensor"; }
+
 struct Adder
     {
     const Real f = 1.;
@@ -199,6 +202,7 @@ operator+=(IQTensor & T,
 
     Permutation P(rank);
     Labels block_ind(rank);
+    decltype(rank) nfound = 0;
     for(auto i : range(rank))
     for(auto I : range(rank))
         {
@@ -207,8 +211,16 @@ operator+=(IQTensor & T,
             {
             block_ind[I] = (j-1);
             P.setFromTo(i,I);
+            ++nfound;
             break;
             }
+        }
+
+    if(nfound != rank)
+        {
+        Print(T.inds());
+        Print(t.inds());
+        Error("Adding IQTensor+=ITensor, index of ITensor not a subset of any IQIndex");
         }
 
     auto tdiv = calcDiv(T.inds(),block_ind);

@@ -7,6 +7,7 @@
 
 #include "itensor/global.h"
 #include "itensor/mps/mpo.h"
+#include <set>
 
 namespace itensor {
 
@@ -36,63 +37,69 @@ toMPO(AutoMPO const& a,
 //
 template <typename Tensor>
 MPOt<Tensor>
-toExpH(const AutoMPO& a,
-       Complex tau,
-       const Args& args = Args::global());
+toExpH(AutoMPO const& a,
+       Cplx tau,
+       Args const& args = Args::global());
 
 
 
 //Instantiations of templates to allow us to define them
 //later in autompo.cc
-template<> MPO toMPO<ITensor>(const AutoMPO& a, const Args& args);
-template<> IQMPO toMPO<IQTensor>(const AutoMPO& a, const Args& args);
-template<> MPO toExpH<ITensor>(const AutoMPO& a, Complex tau, const Args& args);
-template<> IQMPO toExpH<IQTensor>(const AutoMPO& a, Complex tau, const Args& args);
+template<> MPO toMPO<ITensor>(AutoMPO const& a, Args const& args);
+template<> IQMPO toMPO<IQTensor>(AutoMPO const& a, Args const& args);
+template<> MPO toExpH<ITensor>(AutoMPO const& a, Cplx tau, Args const& args);
+template<> IQMPO toExpH<IQTensor>(AutoMPO const& a, Cplx tau, Args const& args);
 
 
 struct SiteTerm
     {
     std::string op;
     int i;
-    Complex coef;
 
     SiteTerm();
 
-    SiteTerm(const std::string& op,
-             int i,
-             Real coef = 1);
+    SiteTerm(std::string const& op,
+             int i);
 
     bool
-    operator==(const SiteTerm& other) const;
+    operator==(SiteTerm const& o) const { return (op == o.op && i == o.i); }
 
     bool
-    operator!=(const SiteTerm& other) const { return !operator==(other); }
+    operator!=(SiteTerm const& other) const { return !operator==(other); }
 
     bool
-    proportialTo(const SiteTerm& other) const;
+    operator<(SiteTerm const& o) const
+        {
+        if(i != o.i) return i < o.i;
+        return op < o.op;
+        }
+
+    bool
+    operator>(SiteTerm const& o) const
+        {
+        if(i != o.i) return i > o.i;
+        return op > o.op;
+        }
     };
+
+using SiteTermProd = std::vector<SiteTerm>;
 
 bool
 isFermionic(SiteTerm const& st);
 
 struct HTerm
     {
-    std::vector<SiteTerm> ops;
+    Cplx coef = 0.;
+    SiteTermProd ops;
 
-    HTerm();
+    HTerm() : coef(1.) { }
 
-    HTerm(const std::string& op1,
-          int i1,
-          Real x = 1);
+    HTerm(Cplx z, SiteTermProd const& prod) : coef(z), ops(prod) { }
 
-    HTerm(const std::string& op1_,
-          int i1_,
-          const std::string& op2_,
-          int i2_,
-          Real x_ = 1);
+    HTerm(Cplx z, SiteTermProd && prod) : coef(z), ops(std::move(prod)) { }
 
     void
-    add(const std::string& op,
+    add(std::string const& op,
         int i,
         Real x = 1);
 
@@ -102,23 +109,11 @@ struct HTerm
     int
     Nops() const { return ops.size(); }
 
-    const SiteTerm&
+    SiteTerm const&
     first() const { return ops.front(); }
 
-    const SiteTerm&
+    SiteTerm const&
     last() const { return ops.back(); }
-
-    bool
-    startsOn(int i) const;
-
-    bool
-    endsOn(int i) const;
-
-    bool
-    contains(int i) const;
-
-    Complex
-    coef() const;
 
     HTerm&
     operator*=(Real x);
@@ -127,19 +122,28 @@ struct HTerm
     operator*=(Complex x);
 
     bool
-    operator==(const HTerm& other) const;
+    operator==(HTerm const& other) const;
 
     bool
-    operator!=(const HTerm& other) const;
+    operator!=(HTerm const& other) const { return !operator==(other); }
+
+    bool
+    operator<(HTerm const& other) const;
     };
 
-void
-sort(HTerm & ht);
+struct LessNoCoef
+    {
+    bool
+    operator()(HTerm const& t1, HTerm const& t2) const;
+    };
 
 class AutoMPO
     {
-    const SiteSet& sites_;
-    std::vector<HTerm> terms_;
+    public:
+    using storage = std::set<HTerm,LessNoCoef>;
+    private:
+    SiteSet sites_;
+    storage terms_;
 
     enum State { New, Op };
 
@@ -164,7 +168,7 @@ class AutoMPO
                     const char* opname);
 
         Accumulator(AutoMPO* pa, 
-                    const std::string& opname);
+                    std::string const& opname);
 
         ~Accumulator();
         
@@ -181,7 +185,7 @@ class AutoMPO
         operator,(const char* op);
 
         Accumulator&
-        operator,(const std::string& op);
+        operator,(std::string const& op);
         };
 
     public:
@@ -193,7 +197,7 @@ class AutoMPO
     SiteSet const&
     sites() const { return sites_; }
 
-    std::vector<HTerm> const&
+    storage const&
     terms() const { return terms_; }
 
     operator MPO() const { return toMPO<ITensor>(*this); }
@@ -205,29 +209,21 @@ class AutoMPO
     operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(HTerm t) 
-        { 
-        if(abs(t.coef()) != 0) 
-            {
-            sort(t);
-            terms_.push_back(t); 
-            }
-        }
+    add(HTerm const& t);
 
     void
     reset() { terms_.clear(); }
-
     };
 
 std::ostream& 
-operator<<(std::ostream& s, const SiteTerm& t);
+operator<<(std::ostream& s, SiteTerm const& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const HTerm& t);
+operator<<(std::ostream& s, HTerm const& t);
 
 std::ostream& 
-operator<<(std::ostream& s, const AutoMPO& a);
+operator<<(std::ostream& s, AutoMPO const& a);
 
-}
+} //namespace itensor
 
 #endif

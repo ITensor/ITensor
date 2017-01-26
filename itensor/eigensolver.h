@@ -117,7 +117,6 @@ davidson(BigMatrixT const& A,
 
     Real qnorm = NAN;
 
-    size_t t = 0; //which eigenvector we are currently targeting
     Vector D;
     CMatrix U;
 
@@ -131,6 +130,8 @@ davidson(BigMatrixT const& A,
 
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
+
+    size_t t = 0; //which eigenvector we are currently targeting
 
     int iter = 0;
     for(int ii = 0; ii <= actual_maxiter; ++ii)
@@ -176,7 +177,7 @@ davidson(BigMatrixT const& A,
             q += (-lambda)*phi_t;
 
             //Fix sign
-            if(U(t,0).real() < 0)
+            if(U(0,t).real() < 0)
                 {
                 phi_t *= -1;
                 q *= -1;
@@ -361,16 +362,16 @@ davidson(BigMatrixT const& A,
 
     //Compute any remaining eigenvalues and eigenvectors requested
     //(zero indexed) value of t indicates how many have been "targeted" so far
+    if(debug_level_ >= 2 && t+1 < nget) printfln("Max iter. reached, computing remaining %d evecs",nget-t-1);
     for(size_t j = t+1; j < nget; ++j)
         {
-        Error("Need to check this section for transpose diagSymmetric U convention");
         eigs.at(j) = D(j);
         auto& phi_j = phi.at(j);
-        auto Nr = nrows(U);
-        phi_j = U(0,t)*V[0];
-        for(auto k : range(Nr-1))
+        size_t Nr = nrows(U);
+        phi_j = U(0,j)*V[0];
+        for(size_t k = 1; k < std::min(V.size(),Nr); ++k)
             {
-            phi_j += U(k,1+t)*V[k];
+            phi_j += U(k,j)*V[k];
             }
         }
 

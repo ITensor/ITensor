@@ -36,14 +36,15 @@ void InputFile::close()
     }
 
 ostream& 
-operator<<(ostream &s, InputFile& a)
+operator<<(ostream &s, InputFile const& a)
     {
-    a.open();
+    auto fname = a.filename();
+    InputFile f(fname);
+    f.open();
+    s << "Input filename is " << f.filename() << endl;
     char c;
-    s << "Input filename is " << a.filename() << endl;
-    while(a.file().get(c))
-	s << c;
-    a.close();
+    while(f.file().get(c)) s << c;
+    f.close();
     return s;
     }
 

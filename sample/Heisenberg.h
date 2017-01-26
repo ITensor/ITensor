@@ -26,15 +26,12 @@ class Heisenberg
     //
     // Data Members
 
-    const SiteSet& sites_;
-    int Ny_,
-        Nx_;
+    SiteSet const& sites_;
+    int N_;
     Real J_, 
-         Boundary_h_,
          Jz_;
     bool initted_,
-         infinite_,
-         open_y_;
+         infinite_;
     IQMPO H;
 
     //
@@ -51,13 +48,10 @@ Heisenberg(SiteSet const& sites,
   : sites_(sites), 
     initted_(false)
     { 
-    Ny_ = args.getInt("Ny",1);
-    Nx_ = sites_.N()/Ny_;
+    N_ = sites_.N();
     J_ = args.getReal("J",1.);
-    Boundary_h_ = args.getReal("Boundary_h",0.);
     Jz_ = args.getReal("Jz",J_);
     infinite_ = args.getBool("Infinite",false);
-    open_y_ = args.getBool("Open",false);
     }
 
 void inline Heisenberg::
@@ -67,23 +61,18 @@ init_()
 
     H = IQMPO(sites_);
 
-    int Ns = sites_.N(),
-        kpm = Ny_,
-        kd = Ny_+2,
-        start = 2;
-
-    std::vector<IQIndex> links(Ns+1);
+    std::vector<IQIndex> links(N_+1);
 
     //The names of these indices refer to their Sz quantum numbers
-    std::vector<Index> q0(Ns+1),
-                       qP(Ns+1),
-                       qM(Ns+1);
+    std::vector<Index> q0(N_+1),
+                       qP(N_+1),
+                       qM(N_+1);
 
-    for(int l = 0; l <= Ns; ++l) 
+    for(int l = 0; l <= N_; ++l) 
         {
-        q0.at(l) = Index(nameint("q0_",l),kd);
-        qP.at(l) = Index(nameint("qP_",l),kpm);
-        qM.at(l) = Index(nameint("qM_",l),kpm);
+        q0.at(l) = Index(nameint("q0_",l),3);
+        qP.at(l) = Index(nameint("qP_",l),1);
+        qM.at(l) = Index(nameint("qM_",l),1);
 
         links.at(l) = IQIndex(nameint("hl",l),
                               q0[l],QN( 0),
@@ -92,94 +81,45 @@ init_()
                               Out);
         }
 
-    IQIndex const& last = (infinite_ ? links.at(0) : links.at(Ns));
+    IQIndex const& last = (infinite_ ? links.at(0) : links.at(N_));
 
-    for(int n = 1; n <= Ns; ++n)
+    for(int n = 1; n <= N_; ++n)
         {
-        auto& W = H.Anc(n);
+        auto& W = H.Aref(n);
         auto row = dag(links.at(n-1));
-        auto col = (n==Ns ? last : links.at(n));
+        auto col = (n==N_ ? last : links.at(n));
 
-        W = IQTensor(dag(sites_.si(n)),sites_.siP(n),row,col);
+        W = IQTensor(dag(sites_(n)),prime(sites_(n)),row,col);
 
         W += sites_.op("Id",n) * row(1) * col(1); //ending state
         W += sites_.op("Id",n) * row(2) * col(2); //starting state
 
-        //
-        //Sz Sz terms
-        //
         W += sites_.op("Sz",n) * row(3) * col(1);
-        //Horizontal bonds
-        W += sites_.op("Sz",n) * row(start) * col(kd) * Jz_;
+        W += sites_.op("Sz",n) * row(2) * col(3) * Jz_;
 
-        //
-        //S+ S- terms
-        //
-        W += sites_.op("Sm",n) * row(kd+1) * col(1);
-        //Horizontal bonds
-        W += sites_.op("Sp",n) * row(start) * col(kd+kpm) * J_/2;
+        W += sites_.op("Sm",n) * row(4) * col(1);
+        W += sites_.op("Sp",n) * row(2) * col(4) * J_/2;
 
-        //
-        //S- S+ terms
-        //
-        W += sites_.op("Sp",n) * row(kd+kpm+1) * col(1);
-        //Horizontal bonds
-        W += sites_.op("Sm",n) * row(start) * col(kd+2*kpm) * J_/2;
-
-        //Add boundary field if requested
-        auto x = (n-1)/Ny_+1; 
-        auto y = (n-1)%Ny_+1;
-        if(Boundary_h_ != 0 && (x == 1 || x == Nx_))
-            {
-            Real eff_h = Boundary_h_;
-            if(J_ > 0) eff_h *= (x%2==1 ? -1 : 1)*(y%2==1 ? -1 : 1);
-            printfln("Applying staggered h of %.2f at site %d (%d,%d)",eff_h,n,x,y);
-            W += sites_.op("Sz",n) * row(start) * col(1) * eff_h;
-            }
-
-        //The following only apply if Ny_ > 1:
-
-        //Strings of off-diagonal identity ops
-        for(int q = 1; q <= Ny_-1; ++q)
-            { 
-            W += sites_.op("Id",n) * row(3+q) * col(2+q); 
-            W += sites_.op("Id",n) * row(kd+1+q) * col(kd+q); 
-            W += sites_.op("Id",n) * row(kd+kpm+1+q) * col(kd+kpm+q); 
-            }
-
-        //Periodic BC bond (only for width 3 ladders or greater)
-        if(!open_y_ && y == 1 && Ny_ >= 3)
-            {
-            W += sites_.op("Sz",n) * row(start) * col(kd-1) * Jz_;
-            W += sites_.op("Sp",n) * row(start) * col(kd+kpm-1) * J_/2;
-            W += sites_.op("Sm",n) * row(start) * col(kd+2*kpm-1) * J_/2;
-            }
-
-        //N.N. bond along column
-        if(y != Ny_)
-            {
-            W += sites_.op("Sz",n) * row(start) * col(3) * Jz_;
-            W += sites_.op("Sp",n) * row(start) * col(kd+1) * J_/2;
-            W += sites_.op("Sm",n) * row(start) * col(kd+kpm+1) * J_/2;
-            }
+        W += sites_.op("Sp",n) * row(5) * col(1);
+        W += sites_.op("Sm",n) * row(2) * col(5) * J_/2;
         }
 
-    auto LH = setElt(links.at(0)(start));
+    auto LH = setElt(links.at(0)(2));
     auto RH = setElt(dag(last)(1));
 
     if(not infinite_)
         {
         //Multiply first and last
         //MPO tensor by edge vectors
-        H.Anc(1) *= LH;
-        H.Anc(Ns) *= RH;
+        H.Aref(1) *= LH;
+        H.Aref(N_) *= RH;
         }
     else
         {
         //Store edge vectors just before
         //and after first and last sites
-        H.Anc(0) = LH;
-        H.Anc(Ns+1) = RH;
+        H.Aref(0) = LH;
+        H.Aref(N_+1) = RH;
         }
 
     initted_ = true;

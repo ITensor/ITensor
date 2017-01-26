@@ -351,25 +351,32 @@ void inline Sweeps::
 tableInit(InputGroup& table)
     {
     if(!table.GotoGroup()) 
+        {
         Error("Couldn't find table " + table.name());
+        }
 
-    minm_ = std::vector<int>(nsweep_+1);
-    maxm_ = std::vector<int>(nsweep_+1);
-    cutoff_ = std::vector<Real>(nsweep_+1);
-    niter_ = std::vector<int>(nsweep_+1);
-    noise_ = std::vector<Real>(nsweep_+1);
+    minm_ = std::vector<int>(nsweep_+1,0);
+    maxm_ = std::vector<int>(nsweep_+1,0);
+    cutoff_ = std::vector<Real>(nsweep_+1,0);
+    niter_ = std::vector<int>(nsweep_+1,0);
+    noise_ = std::vector<Real>(nsweep_+1,0);
 
+    //printfln("Got nsweep_=%d",nsweep_);
     table.SkipLine(); //SkipLine so we can have a table key
-    int n_last = 1;
+    int n_last = nsweep_;
     for(int i = 1; i <= nsweep_; i++)
         {
         table.file() >> maxm_[i] >> minm_[i] >> cutoff_[i] >> niter_[i] >> noise_[i];
+        //printfln("Line %d: %d %d %.2E %d %.2E",i,maxm_[i],minm_[i],cutoff_[i],niter_[i],noise_[i]);
         if(maxm_[i] == 0)
           {
+          //printfln("Got maxm_[i]==0 at line number i=%d",i);
           n_last = i - 1 ;
+          //printfln("Set n_last equal to n_last=%d",n_last);
           break ;
           }
         }
+    //printfln("Filling n_last+1=%d to nsweep_=%d",n_last+1,nsweep_);
     for(int i = n_last + 1; i <= nsweep_; i++)
        {
        maxm_[i] = maxm_[n_last];

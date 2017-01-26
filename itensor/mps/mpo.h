@@ -52,6 +52,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::leftLim;
 
     using Parent::A;
+    using Parent::Aref;
     using Parent::Anc;
 
     using Parent::doWrite;
@@ -136,13 +137,13 @@ class MPOt : private MPSt<Tensor>
 
     }; //class MPOt<Tensor>
 
-template<typename T>
-MPOt<T>&
-addAssumeOrth(MPOt<T> & L, MPOt<T> const& R, Args const& args = Args::global()) 
-    { 
-    addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
-    return L;
-    }
+//template<typename T>
+//MPOt<T>&
+//addAssumeOrth(MPOt<T> & L, MPOt<T> const& R, Args const& args = Args::global()) 
+//    { 
+//    MPSt<T>::addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
+//    return L;
+//    }
 
 
 template<class T>

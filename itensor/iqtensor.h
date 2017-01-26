@@ -44,6 +44,9 @@ operator*(IQIndexVal const& iv, ITensor const& T);
 IQTensor& 
 operator+=(IQTensor& A, ITensor const& B);
 
+IQTensor 
+operator+(IQTensor A, ITensor const& B);
+
 ITensor 
 toITensor(IQTensor const& T);
 
@@ -126,6 +129,9 @@ mixedIQTensor(IQIndex const& i1,
 std::ostream& 
 operator<<(std::ostream & s, IQTensor const& t);
 
+struct AddITensor;
+const char*
+typeNameOf(AddITensor const&);
 
 
 } //namespace itensor

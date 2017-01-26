@@ -326,6 +326,7 @@ computeScalefac(Storage & dat)
     //       and T *= 1./scalefac
     //       Have TensorRef use dnrm2 and dscal
     auto scalefac = doTask(NormNoScale{},dat);
+    //Here the NAN acts as a flag meaning "don't rescale"
     if(std::fabs(scalefac) < 1E-11) return NAN;
     doTask(Mult<Real>{1./scalefac},dat);
     return scalefac;

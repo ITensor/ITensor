@@ -1,4 +1,4 @@
-//
+////
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
@@ -13,14 +13,6 @@ namespace itensor {
 // represent the Hilbert space of a 
 // system as a set of Site indices.
 //
-// Classes derived from SiteSet are
-// responsible for implementing 
-// site operators such as Sz for 
-// spin models, Cdag for particle
-// models, etc. whereas the SiteSet
-// base class is reponsible for
-// enforcing a consistent interface.
-//
 // The convention for operators is
 // that they are 2-index IQTensors
 // with the Site IQIndex pointing
@@ -31,127 +23,270 @@ namespace itensor {
 // of our MPS)
 //
 
-class SiteSet;
-using Model = SiteSet; //for backwards compatibility
+class GenericSite;
+struct SiteStore;
 
 class SiteSet
     {
+    std::shared_ptr<SiteStore> sites_;
     public:
 
     using String = std::string;
-    using DefaultOpsT = std::vector<String>;
 
     SiteSet() { }
 
-    SiteSet(std::ifstream& s) { }
+    //Create generic SiteSet of N sites with local dimension d
+    SiteSet(int N, int d);
 
-    //Number of Sites
+    //Create SiteSet from vector of provided IQIndices (0-indexed)
+    SiteSet(std::vector<IQIndex> const& inds);
+
+    explicit operator bool() const { return bool(sites_); }
+
     int 
-    N() const { return getN(); }
+    N() const;
 
     //Index at Site i
-    const IQIndex&
-    operator()(int i) const { return getSi(i); }
-
-    //Index at Site i, alternate version
-    const IQIndex& 
-    si(int i) const { return getSi(i); }
-
-    //Primed Index at Site i
-    IQIndex 
-    siP(int i) const { return prime(getSi(i)); }
+    IQIndex
+    operator()(int i) const;
 
     //Index at site i set to a certain state
     //indicated by the string "state"
-    //e.g. sites("Up",5) returns the IQIndexVal
+    //e.g. sites(5,"Up") returns the IQIndexVal
     //representing the spin up state on site 5
     //(assuming a spin SiteSet such as SpinHalf)
     IQIndexVal
-    operator()(int i, const String& state) const
-        { return getState(i,state); }
-
-    IQIndexVal
-    st(int i, const String& state) const
-        { return getState(i,state); }
-
-    IQIndexVal
-    stP(int i, const String& state) const
-        { return prime(getState(i,state)); }
-
+    operator()(int i, String const& state) const;
 
     //Get the operator indicated by
     //"opname" located at site i
     IQTensor
-    op(const String& opname, int i,
-       const Args& args = Global::args()) const;
-
-    DefaultOpsT
-    defaultOps(const Args& args = Global::args()) const 
-        { return getDefaultOps(args); }
+    op(String const& opname, int i,
+       Args const& args = Args::global()) const;
 
     void 
-    read(std::istream& s) { doRead(s); }
+    read(std::istream & s) { readType<GenericSite>(s); }
 
     void 
-    write(std::ostream& s) const { doWrite(s); }
+    write(std::ostream & s) const;
 
-    virtual 
-    ~SiteSet() { }
+    //
+    // Older interface for backwards compatibility
+    //
 
-    //Implementations (To Be Overridden by Derived Classes) 
+    //Index at Site i, alternate name
+    IQIndex
+    si(int i) const { return operator()(i); }
 
-    private:
+    //Primed Index at Site i
+    IQIndex 
+    siP(int i) const { return prime(operator()(i)); }
 
-    virtual int
-    getN() const = 0;
+    //Alternate name for operator()(i,state)
+    IQIndexVal
+    st(int i, String const& state) const
+        { return operator()(i,state); }
 
-    virtual IQIndex const&
-    getSi(int i) const = 0;
+    IQIndexVal
+    stP(int i, String const& state) const
+        { return prime(operator()(i,state)); }
 
-    virtual IQIndexVal
-    getState(int i, const String& state) const
-        {
-        Error("getState not defined in class derived from SiteSet");
-        return IQIndexVal();
-        }
-
-    virtual IQTensor
-    getOp(int i, String const& opname, Args const& args) const
-        {
-        Error("getOp not defined in class derived from SiteSet");
-        return IQTensor();
-        }
-
-    virtual DefaultOpsT
-    getDefaultOps(const Args& args) const { return DefaultOpsT(); }
 
     protected:
 
-    virtual void
-    doRead(std::istream& s) { Error("doRead not defined in class derived from SiteSet"); }
+    void
+    init(SiteStore && sites);
 
-    virtual void
-    doWrite(std::ostream& s) const { Error("doWrite not defined in class derived from SiteSet"); }
-
-    private:
-
-    std::string
-    op1(const std::string& opname, size_t n) const;
-
-    std::string
-    op2(const std::string& opname, size_t n) const;
+    template<typename SiteType>
+    void
+    readType(std::istream & s);
 
     };
 
-inline IQTensor SiteSet::
-op(const String& opname, int i, 
-   const Args& args) const
+//
+// "Base" type for virtual mechanism
+//
+class SiteBase 
     { 
+    public:
+
+    SiteBase() { }
+
+    virtual ~SiteBase() { }
+
+    IQIndex virtual
+    index() const = 0;
+
+    IQTensor virtual
+    op(std::string const& opname,
+       Args const& args) const = 0;
+
+    IQIndexVal virtual
+    state(std::string const& state) = 0;
+    };
+
+//
+// Derived "box" type with virtual methods
+// Wraps any object implementing the "SiteType" interface
+//
+template<typename SiteType>
+class SiteHolder : public SiteBase
+    { 
+    SiteType s;
+    public:
+
+    SiteHolder() { }
+
+    SiteHolder(SiteType && s_) : s(std::move(s_)) { }
+
+    virtual ~SiteHolder() { }
+
+    IQIndex virtual
+    index() const { return s.index(); }
+
+    IQTensor virtual
+    op(std::string const& opname,
+       Args const& args) const
+        {
+        return s.op(opname,args);
+        }
+
+    IQIndexVal virtual
+    state(std::string const& state)
+        {
+        return s.state(state);
+        }
+    };
+
+class GenericSite
+    { 
+    IQIndex i;
+    public:
+
+    GenericSite() { }
+
+    GenericSite(IQIndex i_) : i(i_) { }
+
+    IQIndex
+    index() const { return i; }
+
+    IQTensor
+    op(std::string const& opname,
+       Args const& args) const
+        {
+        Error("\'op\' method not defined for generic site");
+        return IQTensor{};
+        }
+
+    IQIndexVal
+    state(std::string const& state)
+        {
+        Error("\'state\' method not defined for generic site");
+        return IQIndexVal{};
+        }
+    };
+
+
+struct SiteStore
+    {
+    using sptr = std::unique_ptr<SiteBase>;
+    using storage = std::vector<sptr>;
+    private:
+    storage sites_;
+    public:
+
+    SiteStore() { }
+
+    SiteStore(int N) : sites_(1+N) { }
+
+    template<typename SiteType>
+    void
+    set(int i, SiteType && s) 
+        {
+        sites_.at(i) = sptr(new SiteHolder<SiteType>(std::move(s)));
+        }
+
+    int
+    N() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
+
+    IQIndex
+    si(int j) const 
+        { 
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->index();
+        }
+
+    IQIndexVal
+    state(int j,
+          std::string const& state)
+        {
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->state(state);
+        }
+
+    IQTensor
+    op(int j,
+       std::string const& opname,
+       Args const& args) const
+        {
+        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        return sites_[j]->op(opname,args);
+        }
+    };
+
+
+inline SiteSet::
+SiteSet(int N, int d)
+    {
+    auto sites = SiteStore(N);
+    for(int j = 1; j <= N; ++j)
+        {
+        auto I = IQIndex(format("Site %d",j),
+                         Index(format("site %d",j),d,Site),QN());
+        sites.set(j,GenericSite(I));
+        }
+    SiteSet::init(std::move(sites));
+    }
+
+inline SiteSet::
+SiteSet(std::vector<IQIndex> const& inds)
+    {
+    auto sites = SiteStore(inds.size());
+    for(auto j : range(inds))
+        {
+        sites.set(1+j,GenericSite(inds.at(j)));
+        }
+    SiteSet::init(std::move(sites));
+    }
+
+
+int inline SiteSet::
+N() const { return sites_ ? sites_->N() : 0; }
+
+inline IQIndex SiteSet::
+operator()(int i) const
+    {
+    if(not *this) Error("Cannot retrieve site from default-initialized SiteSet");
+    return sites_->si(i);
+    }
+
+IQIndexVal inline SiteSet::
+operator()(int i, String const& state) const
+    {
+    if(not *this) Error("Cannot retrieve state from default-initialized SiteSet");
+    return sites_->state(i,state);
+    }
+
+inline IQTensor SiteSet::
+op(String const& opname, int i, 
+   Args const& args) const
+    { 
+    if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
     if(opname == "Id")
         {
         IQIndex s = dag(si(i));
         IQIndex sP = siP(i);
-        IQTensor id_(s,sP);
+        auto id_ = IQTensor(s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
             id_.set(s(j),sP(j),1);
@@ -167,48 +302,108 @@ op(const String& opname, int i,
         }
     else
         {
+        auto op1 = [](std::string const& opname, size_t n)
+            {
+            return opname.substr(0,n);
+            };
+        auto op2 = [](std::string const& opname, size_t n)
+            {
+            return opname.substr(n+1);
+            };
+
         //If opname of the form "Name1*Name2",
         //return product of Name1 operator times Name2 operator
-        const
-        std::size_t found = opname.find_first_of('*');
+        auto found = opname.find_first_of('*');
         if(found != std::string::npos)
             {
             try {
-            return multSiteOps(getOp(i,op1(opname,found),args),
-                               getOp(i,op2(opname,found),args));
+            return multSiteOps(sites_->op(i,op1(opname,found),args),
+                               sites_->op(i,op2(opname,found),args));
                 }
-            catch(const ITError& e)
+            catch(ITError const& e)
                 {
                 println("opname = ",opname);
                 printfln("found = %s",found);
                 Error("More than one * in operator name string?");
                 }
             }
-
-        return getOp(i,opname,args);
+        return sites_->op(i,opname,args);
         }
     }
 
-std::string inline SiteSet::
-op1(const std::string& opname, size_t n) const
-    {
-    return opname.substr(0,n);
+void inline SiteSet::
+init(SiteStore && store)
+    { 
+    sites_ = std::make_shared<SiteStore>(std::move(store));
     }
 
-std::string inline SiteSet::
-op2(const std::string& opname, size_t n) const
+template<typename SiteType>
+void SiteSet::
+readType(std::istream & s)
     {
-    return opname.substr(n+1);
+    int N = itensor::read<int>(s);
+    if(N > 0)
+        {
+        auto store = SiteStore(N);
+        for(int j = 1; j <= N; ++j) 
+            {
+            auto I = IQIndex{};
+            I.read(s);
+            store.set(j,SiteType(I));
+            }
+        init(std::move(store));
+        }
+    }
+
+void inline SiteSet::
+write(std::ostream & s) const
+    {
+    itensor::write(s,N());
+    if(sites_)
+        {
+        for(int j = 1; j <= N(); ++j) 
+            {
+            sites_->si(j).write(s);
+            }
+        }
     }
 
 inline std::ostream& 
-operator<<(std::ostream& s, const SiteSet& M)
+operator<<(std::ostream& s, SiteSet const& sites)
     {
     s << "SiteSet:\n";
-    for(int j = 1; j <= M.N(); ++j) 
-        s << format("si(%d) = %s\n",j,M.si(j));
+    for(int j = 1; j <= sites.N(); ++j) 
+        {
+        s << format("site %d = %s\n",j,sites(j));
+        }
     return s;
     }
+
+template<typename SiteType>
+class BasicSiteSet : public SiteSet
+    {
+    public:
+
+    BasicSiteSet() { }
+
+    BasicSiteSet(int N, 
+                 Args const& args = Args::global())
+        {
+        auto sites = SiteStore(N);
+        for(int j = 1; j <= N; ++j)
+            {
+            sites.set(j,SiteType(j,args));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
+    void
+    read(std::istream& s)
+        {
+        SiteSet::readType<SiteType>(s);
+        }
+
+    };
 
 } //namespace itensor
 
