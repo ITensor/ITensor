@@ -85,27 +85,15 @@ class Z3Site
         if(opname == "Tau")
             {
             Op.set(Zer,ZerP,1);
-            Op.set(One,OneP,cos(2.*Pi/3.));
-            Op.set(Two,TwoP,cos(4.*Pi/3.));
-
-            auto TauI = IQTensor(s,sP);
-            TauI.set(One,OneP,sin(2.*Pi/3.));
-            TauI.set(Two,TwoP,sin(4.*Pi/3.));
-
-            Op += TauI*Cplx_i;
+            Op.set(One,OneP,cos(2.*Pi/3.)+sin(2.*Pi/3.)*1_i);
+            Op.set(Two,TwoP,cos(4.*Pi/3.)+sin(4.*Pi/3.)*1_i);
             }
         else
         if(opname == "TauDag")
             {
             Op.set(Zer,ZerP,1);
-            Op.set(One,OneP,cos(2.*Pi/3.));
-            Op.set(Two,TwoP,cos(4.*Pi/3.));
-
-            auto TauI = IQTensor(s,sP);
-            TauI.set(One,OneP,-sin(2.*Pi/3.));
-            TauI.set(Two,TwoP,-sin(4.*Pi/3.));
-
-            Op += TauI*Cplx_i;
+            Op.set(One,OneP,cos(2.*Pi/3.)-sin(2.*Pi/3.)*1_i);
+            Op.set(Two,TwoP,cos(4.*Pi/3.)-sin(4.*Pi/3.)*1_i);
             }
         else
         if(opname == "Proj0")
