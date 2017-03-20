@@ -66,7 +66,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ##
 
 #PLATFORM=mkl
-## MKL example (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
+## MKL example - you may need to change the names of the folders below
 #BLAS_LAPACK_LIBFLAGS=-L/opt/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
 #BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/mkl/include
 

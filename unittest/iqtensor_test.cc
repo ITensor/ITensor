@@ -867,7 +867,6 @@ SECTION("Contraction with Scalar")
         auto val = q*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
         CHECK_CLOSE(val,T4.real(L1(i1),L2(i2),S1(j1),S2(j2)));
         }
-
     }
 
 SECTION("Mixed Storage")
