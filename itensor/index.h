@@ -279,6 +279,11 @@ IndexVal inline
 mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
+//Make a new index with same properties as I,
+//but a different id number (will not compare equal)
+//and primelevel zero (or specified value)
+Index
+sim(Index const& I, int plev = 0);
 
 //Returns a string version of this Index's bond dimension.
 std::string
