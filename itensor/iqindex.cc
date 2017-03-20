@@ -138,6 +138,18 @@ IQIndex(std::string const& name,
     makeStorage(std::move(ind_qn));
     }
 
+// Constructor taking a storage pointer
+IQIndex::
+IQIndex(std::string const& name, 
+        storage_ptr const& p,
+        Arrow dir,
+        int plev)
+  : Index(name,totalM(p->store()),p->store().front().index.type(),plev),
+    pd(p),
+    dir_(dir)
+    {
+    }
+
 //const IQIndexDat::storage& IQIndex::
 //inds() const 
 //    { 
@@ -237,6 +249,12 @@ read(istream& s)
     pd = make_shared<IQIndexDat>();
     itensor::read(s,*pd);
     return *this;
+    }
+
+IQIndex
+sim(IQIndex const& I, int plev)
+    {
+    return IQIndex("~"+I.rawname(),I.store(),I.dir(),plev);
     }
 
 string
