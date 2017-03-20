@@ -134,6 +134,11 @@ class ITensorT
     mapprime(VarArgs&&... vargs)
         { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
+    template<typename... VarArgs>
+    ITensorT& 
+    sim(VarArgs&&... vargs)
+        { itensor::sim(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
     //
     // Element Transformation Methods
     //
@@ -306,6 +311,11 @@ template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
 mapprime(ITensorT<IndexT> A, 
          VarArgs&&... vargs);
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+sim(ITensorT<IndexT> A, 
+    VarArgs&&... vargs);
 
 template<typename IndexT>
 bool

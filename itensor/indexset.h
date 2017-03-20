@@ -313,6 +313,21 @@ mapprime(IndexSetT<IndexT>& is,
          int plevnew, 
          IndexType type = All);
 
+//Replace all indices of type t by 'similar' indices 
+//with same properties but which don't compare equal 
+//to the indices they replace (using sim(IndexT) function)
+template<typename IndexT>
+void 
+sim(IndexSetT<IndexT> & is, 
+    IndexType t);
+
+//Replace index I with a 'similar' index having same properties
+//but which does not compare equal to it (using sim(I) function)
+template<typename IndexT>
+void 
+sim(IndexSetT<IndexT> & is, 
+    IndexT const& I);
+
 //
 // IndexSetT helper methods
 //
