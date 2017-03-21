@@ -115,8 +115,8 @@ class IQIndex : public Index
     //
 
     // Constructor taking a storage pointer
-    IQIndex(std::string const& name, 
-            storage_ptr const& p,
+    IQIndex(storage_ptr const& p,
+            std::string const& name, 
             Arrow dir = Out, 
             int plev = 0);
 
