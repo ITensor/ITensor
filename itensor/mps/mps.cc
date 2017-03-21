@@ -779,16 +779,17 @@ orthogonalize(Args const& args)
     auto maxm_set = args.defined("Maxm");
     if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
 
+    int plev = 14741;
+
     //Build environment tensors from the left
     auto E = vector<Tensor>(N_+1);
-    E.at(1) = A_.at(1)*dag(prime(A_.at(1),Link,10));
+    E.at(1) = A_.at(1)*dag(prime(A_.at(1),Link,plev));
     for(int j = 2; j < N_; ++j)
         {
-        E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),Link,10));
+        E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),Link,plev));
         }
 
-    auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),10));
-
+    auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),plev));
     Tensor U,D;
     diagHermitian(rho,U,D,dargs);
 
@@ -806,7 +807,7 @@ orthogonalize(Args const& args)
             auto maxm = (ci) ? ci.m() : 1l;
             dargs.add("Maxm",maxm);
             }
-        rho = E.at(j-1) * O * dag(prime(O,10));
+        rho = E.at(j-1) * O * dag(prime(O,plev));
         auto spec = diagHermitian(rho,U,D,dargs);
         O *= U;
         O *= A_.at(j-1);
