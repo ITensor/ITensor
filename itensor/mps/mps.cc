@@ -783,7 +783,8 @@ orthogonalize(Args const& args)
 
     //Build environment tensors from the left
     auto E = vector<Tensor>(N_+1);
-    E.at(1) = A_.at(1)*dag(prime(A_.at(1),Link,plev));
+    auto ci = commonIndex(A_.at(1),A_.at(2),Link);
+    E.at(1) = A_.at(1)*dag(prime(A_.at(1),ci,plev));
     for(int j = 2; j < N_; ++j)
         {
         E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),Link,plev));
