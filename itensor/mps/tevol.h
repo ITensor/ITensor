@@ -43,7 +43,7 @@ gateTEvol(const Iterable& gatelist,
 
 template <class Iterable, class Tensor>
 Real
-gateTEvol(const Iterable& gatelist, 
+gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
@@ -61,19 +61,41 @@ gateTEvol(const Iterable& gatelist,
 
     Real tsofar = 0;
     Real tot_norm = psi.normalize();
-    psi.position(gatelist.front().i());
     if(verbose) 
         {
         printfln("Taking %d steps of timestep %.5f, total time %.5f",nt,tstep,ttotal);
         }
+    psi.position(gatelist.front().i1());
     for(int tt = 1; tt <= nt; ++tt)
         {
-        for(const BondGate<Tensor>& G : gatelist)
+        auto g = gatelist.begin();
+        auto i1 = g->i1();
+        auto i2 = g->i2();
+        auto AA = psi.A(i1)*psi.A(i2)*g->gate();
+        AA.mapprime(1,0,Site);
+        for(++g; g != gatelist.end(); ++g)
             {
-            const int lastpos = psi.orthoCenter();
-            const int closest = abs(lastpos-G.i1()) < abs(lastpos-G.i2()) ? G.i1() : G.i2();
-            psi.position(closest);
-            applyGate(G,psi);
+            //Last i1,i2
+            auto l1 = i1;
+            auto l2 = i2;
+            //Current i1,i2
+            i1 = g->i1();
+            i2 = g->i2();
+            //SVD AA to restore MPS form
+            //before applying current gate
+            if(i1 >= l2)
+                {
+                psi.svdBond(l1,AA,Fromleft,args);
+                psi.position(i1); //does no work if position already i1
+                }
+            else if(i2 <= l1)
+                {
+                psi.svdBond(l1,AA,Fromright,args);
+                psi.position(i2); //does no work if position already i2
+                }
+            //Apply current gate
+            AA = psi.A(i1)*psi.A(i2)*g->gate();
+            AA.mapprime(1,0,Site);
             }
 
         if(normalize)
