@@ -323,7 +323,7 @@ int inline
 Nf(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
 
 int inline
-Pf(QN const& q) { return Nf(q)%2; }
+Pf(QN const& q) { return std::abs(Nf(q))%2; }
 
 int inline
 Nfp(QN const& q) { return Pf(q); }
