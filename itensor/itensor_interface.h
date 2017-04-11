@@ -72,14 +72,6 @@ class ITensorT
     explicit
     ITensorT(Cplx val);
 
-    //Construct rank n tensor, all
-    //elements set to zero except the single
-    //entry specified by the IndexVal/IQIndexVal args
-    //template <typename... IVals>
-    //explicit
-    //ITensorT(indexval_type const& iv1, 
-    //         IVals const&... rest);
-
     //Automatic conversion IQTensor -> ITensor
     operator ITensor() const;
 
@@ -141,6 +133,11 @@ class ITensorT
     ITensorT& 
     mapprime(VarArgs&&... vargs)
         { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    sim(VarArgs&&... vargs)
+        { itensor::sim(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     //
     // Element Transformation Methods
@@ -277,19 +274,6 @@ class ITensorT
     void
     swap(ITensorT & other);
 
-    //
-    // Deprecated methods for backwards compatibility
-    // 
-
-    //Real
-    //norm() const;
-
-    //const indexset_type&
-    //indices() const { return is_; }
-
-    //void
-    //randomize();
-
     }; // class ITensorT
 
 //
@@ -327,6 +311,11 @@ template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
 mapprime(ITensorT<IndexT> A, 
          VarArgs&&... vargs);
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+sim(ITensorT<IndexT> A, 
+    VarArgs&&... vargs);
 
 template<typename IndexT>
 bool

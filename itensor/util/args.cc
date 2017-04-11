@@ -92,8 +92,25 @@ Val(Name const& name, long ival)
     rval_(ival)
     { }
 
+
 Args::Val::
 Val(Name const& name, int ival)
+    :
+    name_(chopSpaceEq(name)),
+    type_(Numeric),
+    rval_(ival)
+    { }
+
+Args::Val::
+Val(Name const& name, unsigned long ival)
+    :
+    name_(chopSpaceEq(name)),
+    type_(Numeric),
+    rval_(ival)
+    { }
+
+Args::Val::
+Val(Name const& name, unsigned int ival)
     :
     name_(chopSpaceEq(name)),
     type_(Numeric),

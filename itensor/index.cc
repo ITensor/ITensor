@@ -307,9 +307,15 @@ operator==(IndexVal const& iv, Index const& I)
     return iv.index == I;
     }
 
+Index
+sim(Index const& I, int plev)
+    {
+    return Index("~"+I.rawname(),I.m(),I.type(),plev);
+    }
 
 string
 showm(Index const& I) { return nameint("m=",I.m()); }
+
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)

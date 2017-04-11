@@ -25,7 +25,11 @@ totalM(IQIndex::storage const& storage)
         tm += iq.index.m();
 #ifdef DEBUG
         if(iq.index.type() != storage.front().type())
+            {
+            Print(iq.index.type());
+            Print(storage.front().type());
             Error("Indices must have the same type");
+            }
 #endif
         }
     return tm;
@@ -138,6 +142,18 @@ IQIndex(std::string const& name,
     makeStorage(std::move(ind_qn));
     }
 
+// Constructor taking a storage pointer
+IQIndex::
+IQIndex(storage_ptr const& p,
+        std::string const& name, 
+        Arrow dir,
+        int plev)
+  : Index(name,totalM(p->store()),p->store().front().index.type(),plev),
+    pd(p),
+    dir_(dir)
+    {
+    }
+
 //const IQIndexDat::storage& IQIndex::
 //inds() const 
 //    { 
@@ -237,6 +253,12 @@ read(istream& s)
     pd = make_shared<IQIndexDat>();
     itensor::read(s,*pd);
     return *this;
+    }
+
+IQIndex
+sim(IQIndex const& I, int plev)
+    {
+    return IQIndex(I.store(),"~"+I.rawname(),I.dir(),plev);
     }
 
 string

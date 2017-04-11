@@ -187,10 +187,12 @@ applyGate(Tensor const& gate,
           MPSt<Tensor>& psi,
           Args const& args)
     {
+    auto fromleft = args.getBool("Fromleft",true);
     const int c = psi.orthoCenter();
     Tensor AA = psi.A(c) * psi.A(c+1) * gate;
     AA.noprime();
-    psi.svdBond(c,AA,Fromleft,args);
+    if(fromleft) psi.svdBond(c,AA,Fromleft,args);
+    else         psi.svdBond(c,AA,Fromright,args);
     }
 
 template <class Tensor>

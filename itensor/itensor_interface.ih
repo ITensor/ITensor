@@ -449,6 +449,15 @@ mapprime(ITensorT<IndexT> A,
     return A;
     }
 
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+sim(ITensorT<IndexT> A, 
+    VarArgs&&... vargs)
+    {
+    A.sim(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
 template<typename IndexT>
 bool
 hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)

@@ -74,7 +74,7 @@ class SpinHalfSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,+0.5);
             Op.set(Dn,UpP,+0.5);
             }
@@ -84,7 +84,7 @@ class SpinHalfSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,-0.5);
             Op.set(Dn,UpP,+0.5);
             }
@@ -94,7 +94,7 @@ class SpinHalfSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,+0.5*Cplx_i);
             Op.set(Dn,UpP,-0.5*Cplx_i);
             }
@@ -126,7 +126,7 @@ class SpinHalfSite
             }
         else
             {
-            Error("Operator " + opname + " name not recognized");
+            Error("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;

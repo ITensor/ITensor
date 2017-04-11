@@ -429,6 +429,34 @@ mapprime(IndexSetT<IndexT>& is,
 #endif
 	}
 
+template<typename IndexT>
+void 
+sim(IndexSetT<IndexT> & is, 
+    IndexType t)
+    {
+    for(auto n : range(is))
+        {
+        if(is[n].type() == t)
+            {
+            is[n] = sim(is[n]);
+            }
+        }
+    }
+
+template<typename IndexT>
+void 
+sim(IndexSetT<IndexT> & is, 
+    IndexT const& I)
+    {
+    for(auto n : range(is))
+        {
+        if(is[n] == I)
+            {
+            is[n] = sim(I);
+            }
+        }
+    }
+
 //
 //
 // IndexSetT helper methods

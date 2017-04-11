@@ -40,8 +40,14 @@ applyConj(Cplx & z) { imagRef(z) *= -1; }
 std::string inline
 formatVal(double val)
     {
-    if(std::fabs(val) > 1E-10)
-        return format("%s",val);
+    if(val == 0.0 || val >= 1E-7)
+        {
+        return format("%.7f",val);
+        }
+    else if(val <= -1E-7)
+        {
+        return format("%.6f",val);
+        }
     return format("%.8E",val);
     }
 

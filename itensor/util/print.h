@@ -6,6 +6,7 @@
 #define __ITENSOR_PRINT_H
 
 #include "itensor/util/tinyformat.h"
+#include "itensor/util/stdx.h"
 
 namespace itensor {
 
@@ -33,14 +34,16 @@ println()
     std::cout << std::endl;
     }
 
-template <typename T>
+template <typename T,
+          class = stdx::require_not<std::is_convertible<T,std::ostream const&>>>
 void
 println(const T& arg)
     {
     std::cout << arg << std::endl;
     }
 
-template <typename T, typename... VArgs>
+template <typename T, typename... VArgs,
+          class = stdx::require_not<std::is_convertible<T,std::ostream const&>>>
 void
 println(const T& arg1, VArgs&&... vargs)
     {
@@ -48,7 +51,8 @@ println(const T& arg1, VArgs&&... vargs)
     println(std::forward<VArgs>(vargs)...);
     }
 
-template <typename T>
+template <typename T,
+          class = stdx::require_not<std::is_convertible<T,std::ostream const&>>>
 void
 print(const T& arg)
     {
@@ -56,13 +60,76 @@ print(const T& arg)
     std::cout.flush();
     }
 
-template <typename T, typename... VArgs>
+template <typename T, typename... VArgs,
+          class = stdx::require_not<std::is_convertible<T,std::ostream const&>>>
 void
 print(const T& arg1, VArgs&&... vargs)
     {
     std::cout << arg1;
     print(std::forward<VArgs>(vargs)...);
     }
+
+
+////////////////////////////////
+////////////////////////////////
+////////////////////////////////
+
+template <typename... VArgs>
+void
+printf(std::ostream & os, const char* fmt_string, VArgs&&... vargs)
+    {
+    tinyformat::format(os,fmt_string,std::forward<VArgs>(vargs)...);
+    std::cout.flush();
+    }
+
+template <typename... VArgs>
+void
+printfln(std::ostream & os, const char* fmt_string, VArgs&&... vargs)
+    {
+    tinyformat::format(os,fmt_string,std::forward<VArgs>(vargs)...);
+    os << std::endl;
+    }
+
+void inline
+println(std::ostream & os)
+    {
+    os << std::endl;
+    }
+
+template <typename T>
+void
+println(std::ostream & os, const T& arg)
+    {
+    os << arg << std::endl;
+    }
+
+template <typename T, typename... VArgs>
+void
+println(std::ostream & os, const T& arg1, VArgs&&... vargs)
+    {
+    os << arg1;
+    println(os,std::forward<VArgs>(vargs)...);
+    }
+
+template <typename T>
+void
+print(std::ostream & os, const T& arg)
+    {
+    os << arg;
+    os.flush();
+    }
+
+template <typename T, typename... VArgs>
+void
+print(std::ostream & os, const T& arg1, VArgs&&... vargs)
+    {
+    os << arg1;
+    print(os,std::forward<VArgs>(vargs)...);
+    }
+
+////////////////////////////////
+////////////////////////////////
+////////////////////////////////
 
 template<typename T>
 void
