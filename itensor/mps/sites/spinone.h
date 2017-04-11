@@ -93,7 +93,7 @@ class SpinOneSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,ISqrt2); 
             Op.set(Z0,UpP,ISqrt2);
             Op.set(Z0,DnP,ISqrt2); 
@@ -105,7 +105,7 @@ class SpinOneSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,+ISqrt2); 
             Op.set(Z0,UpP,-ISqrt2);
             Op.set(Z0,DnP,+ISqrt2); 
@@ -117,7 +117,7 @@ class SpinOneSite
             //mixedIQTensor call needed here
             //because as an IQTensor, Op would
             //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,-ISqrt2*1_i); 
             Op.set(Z0,UpP,+ISqrt2*1_i);
             Op.set(Z0,DnP,-ISqrt2*1_i); 
