@@ -987,35 +987,44 @@ partitionHTerms(SiteSet const& sites,
     {
     auto N = sites.N();
 
-    //
-    // qnmap caches the quantum numbers of various products
-    // of operators encountered while building the QNBlock
-    // data structures at each bond
-    //
-    // TODO: The qnmap keys are just strings, which assumes
+    // TODO: This version of calcQN uses a "qnmap" to improve
+    //       the speed.
+    //       The qnmap keys are just strings, which assumes
     //       all operators with the same name have the same
     //       QN divergence. This wouldn't be true e.g. for
     //       a spin model with different spin sizes at 
     //       different sites.
     //
-    auto qnmap = map<string,QN>();
-    auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+    //auto qnmap = map<string,QN>();
+    //auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+    //    {
+    //    QN qn;
+    //    for(auto& st : prod)
+    //        {
+    //        auto it = qnmap.find(st.op);
+    //        if(it != qnmap.end())
+    //            {
+    //            qn += it->second;
+    //            }
+    //        else
+    //            {
+    //            auto Op = sites.op(st.op,st.i);
+    //            auto OpQN = -div(Op);
+    //            qnmap[st.op] = OpQN;
+    //            qn += OpQN;
+    //            }
+    //        }
+    //    return qn;
+    //    };
+
+    auto calcQN = [&sites](SiteTermProd const& prod)
         {
         QN qn;
         for(auto& st : prod)
             {
-            auto it = qnmap.find(st.op);
-            if(it != qnmap.end())
-                {
-                qn += it->second;
-                }
-            else
-                {
-                auto Op = sites.op(st.op,st.i);
-                auto OpQN = -div(Op);
-                qnmap[st.op] = OpQN;
-                qn += OpQN;
-                }
+            auto Op = sites.op(st.op,st.i);
+            auto OpQN = -div(Op);
+            qn += OpQN;
             }
         return qn;
         };
@@ -1090,6 +1099,19 @@ partitionHTerms(SiteSet const& sites,
         TIMER_START(12)
         auto& tn = tempMPO.at(n-1);
         auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+
+        ////TODO DEBUG
+        //auto target = QN(-2,2);
+        //if(lqn == target || (lqn+sqn == target))
+        //    {
+        //    Print(lqn);
+        //    Print(lqn+sqn);
+        //    Print(sqn);
+        //    printfln("j,k = %d,%d",j,k);
+        //    Print(ht);
+        //    Print(HTerm(c,onsite));
+        //    PAUSE
+        //    }
 
         auto it = tn.find(el);
         if(it == tn.end()) tn.insert(move(el));
