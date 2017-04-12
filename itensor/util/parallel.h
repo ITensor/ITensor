@@ -4,76 +4,12 @@
 #include <sstream>
 #include <vector>
 #include <type_traits>
+#include "itensor/util/readwrite.h"
+#include "itensor/util/args.h"
 
 #define DEFAULT_BUFSIZE 500000
 
 namespace itensor {
-
-//
-// doRead is a templated function which uses the read method
-// of an object to read it from a stream, unless the object
-// is plain-old-data (pod) in which case it calls the stream's
-// read method directly.
-//
-// Usage: 
-//  XType x;
-//  doRead(some_input_stream,x);
-//
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct DoRead
-    {
-    DoRead(std::istream& data, T& obj)
-        {
-        obj.read(data);
-        }
-    };
-template<typename T>
-struct DoRead<T, true>
-    {
-    DoRead(std::istream& data, T& val)
-        {
-        data.read((char*) &val, sizeof(val));
-        }
-    };
-template<typename T>
-void
-doRead(std::istream& data, T& val)
-    {
-    DoRead<T>(data,val);
-    }
-
-//
-// doWrite is a templated functionwhich uses the write method
-// of an object to write it from a stream, unless the object
-// is plain-old-data (pod) in which case it calls the stream's
-// write method directly.
-//
-// Usage: 
-//  XType x = ...;
-//  doWrite(some_output_stream,x);
-//
-template<typename T, bool isPod = std::is_pod<T>::value>
-struct DoWrite
-    {
-    DoWrite(std::ostream& data, const T& obj)
-        {
-        obj.write(data);
-        }
-    };
-template<typename T>
-struct DoWrite<T, true>
-    {
-    DoWrite(std::ostream& data, const T& val)
-        {
-        data.write((char*) &val, sizeof(val));
-        }
-    };
-template<typename T>
-void
-doWrite(std::ostream& data, const T& val)
-    {
-    DoWrite<T>(data,val);
-    }
 
 class Environment
     {
@@ -83,7 +19,7 @@ class Environment
     public:
 
     Environment(int argc, char* argv[],
-                const Args& args = Global::args());
+                Args const& args = Args::global());
 
     ~Environment() { MPI_Finalize(); }
 
@@ -129,14 +65,14 @@ class Environment
     private:
 
     //Make this class non-copyable
-    void operator=(const Environment&);
-    Environment(const Environment&);
+    void operator=(Environment const&);
+    Environment(Environment const&);
 
     };
 
 class MailBox
     {
-    const Environment* env_;
+    Environment const* env_;
     MPI_Comm com;
     int other_node_;
     char flag_;
@@ -149,9 +85,9 @@ class MailBox
 
     MailBox();
 
-    MailBox(const Environment& env, 
+    MailBox(Environment const& env, 
             int other_node,
-            const Args& args = Global::args());
+            Args const& args = Args::global());
 
     ~MailBox();
 
@@ -184,9 +120,9 @@ class MailBox
     receive(std::stringstream& data);
 
     template <class T> void 
-    send(const T& obj);
+    send(T const& obj);
     void 
-    send(const std::stringstream& data);
+    send(std::stringstream const& data);
 
     template <class T> 
     void 
@@ -206,7 +142,7 @@ class MailBox
         MPI_Irecv(&flag_,1,MPI_CHAR,other_node_,flagTag(),com,&req_); 
         }
 
-    static int new_tag(const Environment& env, int other_node)
+    static int new_tag(Environment const& env, int other_node)
         {
         static std::vector<int> tag(env.nnodes(),0);
         tag.at(other_node) += 3;
@@ -223,7 +159,7 @@ class MailBox
 
 inline Environment::
 Environment(int argc, char* argv[],
-            const Args& args)
+            Args const& args)
     : buffer(args.getInt("Bufsize",DEFAULT_BUFSIZE))
     { 
     MPI_Init(&argc,&argv); 
@@ -238,9 +174,9 @@ broadcast(T& obj) const
     if(nnodes_ == 1) return;
     const int root = 0;
     std::stringstream datastream;
-    if(rank_ == root) doWrite(datastream,obj);
+    if(rank_ == root) write(datastream,obj);
     broadcast(datastream);
-    if(rank_ != root) doRead(datastream,obj);
+    if(rank_ != root) read(datastream,obj);
     }
 
 void inline Environment::
@@ -301,9 +237,9 @@ MailBox()
     }
 
 inline MailBox::
-MailBox(const Environment& env, 
+MailBox(Environment const& env, 
         int other_node,
-        const Args& args)
+        Args const& args)
     : 
     env_(&env), 
     com(MPI_COMM_WORLD), 
@@ -355,7 +291,7 @@ receive(T& obj)
     { 
     std::stringstream data; 
     receive(data); 
-    doRead(data,obj);
+    read(data,obj);
     }
 
 template <class T, typename... Args>
@@ -365,13 +301,13 @@ receive(Args&&... args)
     std::stringstream data; 
     receive(data); 
     T obj(std::forward<Args>(args)...);
-    doRead(data,obj);
+    read(data,obj);
     return obj;
     }
 
 
 void inline MailBox::
-send(const std::stringstream& data)
+send(std::stringstream const& data)
     {
     checkValid();
     sdata.assign(data.str());
@@ -393,10 +329,10 @@ send(const std::stringstream& data)
 
 template <class T> 
 void inline MailBox::
-send(const T& obj)
+send(T const& obj)
     {
     std::stringstream data; 
-    doWrite(data,obj);
+    write(data,obj);
     send(data); 
     }
 
