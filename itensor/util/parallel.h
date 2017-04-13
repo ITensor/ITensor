@@ -50,6 +50,11 @@ class Environment
     template <class T>
     void 
     broadcast(T& obj) const;
+
+    template <class T, class... Rest>
+    void 
+    broadcast(T & obj, Rest &... rest) const;
+
     void 
     broadcast(std::stringstream& data) const;
 
@@ -168,8 +173,8 @@ Environment(int argc, char* argv[],
     }
 
 template <class T>
-void inline Environment::
-broadcast(T& obj) const
+void Environment::
+broadcast(T & obj) const
     {
     if(nnodes_ == 1) return;
     const int root = 0;
@@ -177,6 +182,14 @@ broadcast(T& obj) const
     if(rank_ == root) write(datastream,obj);
     broadcast(datastream);
     if(rank_ != root) read(datastream,obj);
+    }
+
+template <class T, class... Rest>
+void Environment::
+broadcast(T & obj, Rest &... rest) const
+    {
+    broadcast(obj);
+    broadcast(rest...);
     }
 
 void inline Environment::
