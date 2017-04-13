@@ -112,24 +112,24 @@ template void randomize(ITensorT<IQIndex> & T, Args const& args);
 
 
 template<typename I>
-void
-write(std::ostream& s, ITensorT<I> const& T)
+void ITensorT<I>::
+write(std::ostream& s) const
     {
-    write(s,T.inds());
-    write(s,T.scale());
+    itensor::write(s,inds());
+    itensor::write(s,scale());
     auto type = StorageType::Null;
-    if(T.store()) 
+    if(store()) 
         {
-        type = doTask(StorageType{},T.store());
+        type = doTask(StorageType{},store());
         }
-    write(s,type);
-    if(T.store()) 
+    itensor::write(s,type);
+    if(store()) 
         {
-        doTask(Write{s},T.store());
+        doTask(Write{s},store());
         }
     }
-template void write(std::ostream& s, ITensorT<Index> const& T);
-template void write(std::ostream& s, ITensorT<IQIndex> const& T);
+template void ITensorT<Index>::write(std::ostream& s) const;
+template void ITensorT<IQIndex>::write(std::ostream& s) const;
 
 template<class I>
 ITensorT<I>
