@@ -58,6 +58,7 @@ class IQIndex : public Index
             Arrow dir = Out, 
             int plev = 0);
 
+
     //number of quantum number blocks
     long 
     nblock() const;
@@ -98,10 +99,26 @@ class IQIndex : public Index
     IQIndex& 
     read(std::istream& s);
 
+    storage_ptr const&
+    store() const { return pd; }
+
     private:
 
     void
     makeStorage(storage && iq);
+
+    public:
+
+    //
+    // Advanced / developer methods.
+    // Not intended for normal usage.
+    //
+
+    // Constructor taking a storage pointer
+    IQIndex(storage_ptr const& p,
+            std::string const& name, 
+            Arrow dir = Out, 
+            int plev = 0);
 
     }; //class IQIndex
 
@@ -242,6 +259,14 @@ qn(IQIndex const& I, Index const& i);
 
 Index
 findByQN(IQIndex const& I, QN const& qn);
+
+//Make a new index with same properties as I,
+//but a different id number (will not compare equal)
+//and primelevel zero (or specified value)
+//For efficiency, internal sector Index objects
+//are the same as I.
+IQIndex
+sim(IQIndex const& I, int plev = 0);
 
 std::string 
 showm(IQIndex const& I);

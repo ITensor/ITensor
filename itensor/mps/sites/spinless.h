@@ -108,7 +108,7 @@ class SpinlessSite
             }
         else
             {
-            Error("Operator " + opname + " name not recognized");
+            Error("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;

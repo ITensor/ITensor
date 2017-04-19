@@ -155,16 +155,18 @@ rewriteFermionic(SiteTermProd & prod,
         }
     }
 
-IQTensor
+template<typename Tensor>
+Tensor
 computeProd(SiteSet const& sites, 
             SiteTermProd const& p)
     {
     auto i = p.front().i;
-    auto op = sites.op(p.front().op,i);
+    Tensor op = sites.op(p.front().op,i);
     for(auto it = p.begin()+1; it != p.end(); ++it)
         {
         if(it->i != i) Error("Op on wrong site");
-        op = multSiteOps(op,sites.op(it->op,i));
+        Tensor t = sites.op(it->op,i);
+        op = multSiteOps(op,t);
         }
     return op;
     }
@@ -980,39 +982,49 @@ void
 partitionHTerms(SiteSet const& sites,
                 AutoMPO::storage const& terms,
                 vector<QNBlock<T>> & qbs, 
-                vector<IQMatEls> & tempMPO)
+                vector<IQMatEls> & tempMPO,
+                bool checkqns = true)
     {
     auto N = sites.N();
 
-    //
-    // qnmap caches the quantum numbers of various products
-    // of operators encountered while building the QNBlock
-    // data structures at each bond
-    //
-    // TODO: The qnmap keys are just strings, which assumes
+    // TODO: This version of calcQN uses a "qnmap" to improve
+    //       the speed.
+    //       The qnmap keys are just strings, which assumes
     //       all operators with the same name have the same
     //       QN divergence. This wouldn't be true e.g. for
     //       a spin model with different spin sizes at 
     //       different sites.
     //
-    auto qnmap = map<string,QN>();
-    auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+    //auto qnmap = map<string,QN>();
+    //auto calcQN = [&qnmap,&sites](SiteTermProd const& prod)
+    //    {
+    //    QN qn;
+    //    for(auto& st : prod)
+    //        {
+    //        auto it = qnmap.find(st.op);
+    //        if(it != qnmap.end())
+    //            {
+    //            qn += it->second;
+    //            }
+    //        else
+    //            {
+    //            auto Op = sites.op(st.op,st.i);
+    //            auto OpQN = -div(Op);
+    //            qnmap[st.op] = OpQN;
+    //            qn += OpQN;
+    //            }
+    //        }
+    //    return qn;
+    //    };
+
+    auto calcQN = [&sites](SiteTermProd const& prod)
         {
         QN qn;
         for(auto& st : prod)
             {
-            auto it = qnmap.find(st.op);
-            if(it != qnmap.end())
-                {
-                qn += it->second;
-                }
-            else
-                {
-                auto Op = sites.op(st.op,st.i);
-                auto OpQN = -div(Op);
-                qnmap[st.op] = OpQN;
-                qn += OpQN;
-                }
+            auto Op = sites.op(st.op,st.i);
+            auto OpQN = -div(Op);
+            qn += OpQN;
             }
         return qn;
         };
@@ -1027,8 +1039,12 @@ partitionHTerms(SiteSet const& sites,
         decomposeTerm(n, ht.ops, left, onsite, right);
         
         TIMER_START(10)
-        auto lqn = calcQN(left);
-        auto sqn = calcQN(onsite);
+        QN lqn,sqn;
+        if(checkqns)
+            {
+            lqn = calcQN(left);
+            sqn = calcQN(onsite);
+            }
         TIMER_STOP(10)
         
         TIMER_START(11)
@@ -1083,6 +1099,19 @@ partitionHTerms(SiteSet const& sites,
         TIMER_START(12)
         auto& tn = tempMPO.at(n-1);
         auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+
+        ////TODO DEBUG
+        //auto target = QN(-2,2);
+        //if(lqn == target || (lqn+sqn == target))
+        //    {
+        //    Print(lqn);
+        //    Print(lqn+sqn);
+        //    Print(sqn);
+        //    printfln("j,k = %d,%d",j,k);
+        //    Print(ht);
+        //    Print(HTerm(c,onsite));
+        //    PAUSE
+        //    }
 
         auto it = tn.find(el);
         if(it == tn.end()) tn.insert(move(el));
@@ -1272,14 +1301,17 @@ compressMPO(SiteSet const& sites,
     //println("Maximal dimension of the MPO is ", max_d);
     }
 
-template<typename T>
-IQMPO
+QN
+div(ITensor const& t) { return QN{}; }
+
+template<typename Tensor, typename T>
+MPOt<Tensor>
 constructMPOTensors(SiteSet const& sites,
                     vector<MPOPiece<T>> const& finalMPO, 
                     vector<IQIndex> const& links, 
                     Args const& args = Args::global())
     {
-    IQMPO H(sites);
+    MPOt<Tensor> H(sites);
     int N = sites.N();
 
     auto isExpH = args.getBool("IsExpH",false);
@@ -1291,9 +1323,9 @@ constructMPOTensors(SiteSet const& sites,
         auto& col = links.at(n);
         auto& W = H.Aref(n);
 
-        W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+        W = Tensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        auto rc = IQTensor(dag(row),col);
+        auto rc = Tensor(dag(row),col);
 
         //printfln("n = %d finalMPO size = %d",n,finalMPO.at(n-1).size());
         for(auto& qp_M : finalMPO.at(n-1))
@@ -1302,16 +1334,23 @@ constructMPOTensors(SiteSet const& sites,
             auto& prod = qp_M.first.prod;
             auto& M = qp_M.second;
 
-            auto Op = computeProd(sites,prod);
-            auto sq = div(Op);
-            auto cq = rq-sq;
-            //-rq + sq + cq == 0
-            //==> cq = rq - sq
-
-            auto ri = findByQN(row,rq);
-            auto ci = findByQN(col,cq);
-            auto t = matrixTensor(M,ri,ci);
-            W += (rc+t)*Op;
+            auto Op = computeProd<Tensor>(sites,prod);
+            if(std::is_same<Tensor,IQTensor>::value)
+                {
+                auto sq = div(Op);
+                auto cq = rq-sq;
+                //-rq + sq + cq == 0
+                //==> cq = rq - sq
+                auto ri = findByQN(row,rq);
+                auto ci = findByQN(col,cq);
+                auto t = matrixTensor(M,ri,ci);
+                W += (rc+t)*Op;
+                }
+            else
+                {
+                auto t = matrixTensor(M,row,col);
+                W += (rc+t)*Op;
+                }
             W.scaleTo(1.);
             }
         }
@@ -1331,8 +1370,9 @@ constructMPOTensors(SiteSet const& sites,
     return H;
     }
 
-IQMPO
-svdIQMPO(AutoMPO const& am, 
+template<typename Tensor>
+MPOt<Tensor>
+svdMPO(AutoMPO const& am, 
          Args const& args)
     {
     bool isExpH = false;
@@ -1348,27 +1388,29 @@ svdIQMPO(AutoMPO const& am,
             }
         }
 
-    IQMPO H;
+    MPOt<Tensor> H;
+
+    auto checkqns = args.getBool("CheckQN",true);
 
     if(is_real)
         {
         auto qbs = vector<QNBlock<Real>>();
         auto tempMPO = vector<IQMatEls>();
-        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
         auto finalMPO = vector<MPOPiece<Real>>();
         auto links = vector<IQIndex>();
         compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
-        H = constructMPOTensors(am.sites(),finalMPO,links,args);
+        H = constructMPOTensors<Tensor,Real>(am.sites(),finalMPO,links,args);
         }
     else
         {
         auto qbs = vector<QNBlock<Cplx>>();
         auto tempMPO = vector<IQMatEls>();
-        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO);
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
         auto finalMPO = vector<MPOPiece<Cplx>>();
         auto links = vector<IQIndex>();
         compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
-        H = constructMPOTensors(am.sites(),finalMPO,links,args);
+        H = constructMPOTensors<Tensor,Cplx>(am.sites(),finalMPO,links,args);
         }
 
 #ifdef DEBUG
@@ -1398,7 +1440,7 @@ toMPO(AutoMPO const& am,
         return toMPOImpl<IQTensor>(am,args);
         }
     println("Using approx/svd conversion of AutoMPO->IQMPO");
-    return svdIQMPO(am,args);
+    return svdMPO<IQTensor>(am,args);
     }
 
 template<>
@@ -1406,17 +1448,13 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
-    //
-    // NOTE: for MPO, Exact=true is the default currently
-    //
-    if(args.getBool("Exact",true))
+    if(args.getBool("Exact",false))
         {
         println("Using exact conversion of AutoMPO->MPO");
         return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
         }
     println("Using approx/svd conversion of AutoMPO->MPO");
-    IQMPO res = svdIQMPO(am,{args,"CheckQN",false});
-    return res.toMPO();
+    return svdMPO<ITensor>(am,{args,"CheckQN",false});
     }
 
 //template<>

@@ -43,7 +43,7 @@ gateTEvol(const Iterable& gatelist,
 
 template <class Iterable, class Tensor>
 Real
-gateTEvol(const Iterable& gatelist, 
+gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
@@ -61,19 +61,45 @@ gateTEvol(const Iterable& gatelist,
 
     Real tsofar = 0;
     Real tot_norm = psi.normalize();
-    psi.position(gatelist.front().i());
     if(verbose) 
         {
         printfln("Taking %d steps of timestep %.5f, total time %.5f",nt,tstep,ttotal);
         }
+    psi.position(gatelist.front().i1());
     for(int tt = 1; tt <= nt; ++tt)
         {
-        for(const BondGate<Tensor>& G : gatelist)
+        auto g = gatelist.begin();
+        while(g != gatelist.end())
             {
-            const int lastpos = psi.orthoCenter();
-            const int closest = abs(lastpos-G.i1()) < abs(lastpos-G.i2()) ? G.i1() : G.i2();
-            psi.position(closest);
-            applyGate(G,psi);
+            auto i1 = g->i1();
+            auto i2 = g->i2();
+            auto AA = psi.A(i1)*psi.A(i2)*g->gate();
+            AA.mapprime(1,0,Site);
+
+            ++g;
+            if(g != gatelist.end())
+                {
+                //Look ahead to next gate position
+                auto ni1 = g->i1();
+                auto ni2 = g->i2();
+                //SVD AA to restore MPS form
+                //before applying current gate
+                if(ni1 >= i2)
+                    {
+                    psi.svdBond(i1,AA,Fromleft,args);
+                    psi.position(ni1); //does no work if position already ni1
+                    }
+                else
+                    {
+                    psi.svdBond(i1,AA,Fromright,args);
+                    psi.position(ni2); //does no work if position already ni2
+                    }
+                }
+            else
+                {
+                //No next gate to analyze, just restore MPS form
+                psi.svdBond(i1,AA,Fromright,args);
+                }
             }
 
         if(normalize)

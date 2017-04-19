@@ -138,13 +138,13 @@ void BondGate<Tensor>::
 makeSwapGate(SiteSet const& sites)
     {
     auto s1 = sites(i1_);
-    auto s2 = sites(i1_);
-    auto a = Tensor(s1,prime(s2));
-    auto b = Tensor(s2,prime(s1));
+    auto s2 = sites(i2_);
+    auto a = Tensor(dag(s1),prime(s2));
+    auto b = Tensor(dag(s2),prime(s1));
     for(auto j : range1(s1))
         {
-        a.set(s1(j),prime(s2)(j),1.);
-        b.set(s2(j),prime(s1)(j),1.);
+        a.set(dag(s1)(j),prime(s2)(j),1.);
+        b.set(dag(s2)(j),prime(s1)(j),1.);
         }
     gate_ = a*b;
     }

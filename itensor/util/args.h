@@ -223,6 +223,8 @@ class Args
                       
         Val(Name const& name, long ival);
         Val(Name const& name, int ival);
+        Val(Name const& name, unsigned long ival);
+        Val(Name const& name, unsigned int ival);
                       
         Val(Name const& name, Real rval);
 

@@ -140,5 +140,38 @@ SECTION("Iterator")
     CHECK(n == 1+I.nindex());
     }
 
+SECTION("sim function")
+    {
+    auto i1 = Index("i1",5,Site);
+    auto i2 = Index("i2",8,Site);
+    auto i3 = Index("i3",2,Site);
+    auto I = IQIndex("I",
+                     i1,QN(-1),
+                     i2,QN(0),
+                     i3,QN(+1));
+
+    auto S1 = sim(I);
+    for(auto n : range1(I.nindex()))
+        {
+        CHECK(I.index(n) == S1.index(n));
+        }
+    CHECK(S1 != I);
+    CHECK(S1.type() == I.type());
+    CHECK(S1.m() == I.m());
+    CHECK(S1.dir() == I.dir());
+    CHECK(S1.primeLevel() == 0);
+
+    auto S2 = sim(prime(I));
+    for(auto n : range1(I.nindex()))
+        {
+        CHECK(I.index(n) == S2.index(n));
+        }
+    CHECK(S2 != I);
+    CHECK(S2.type() == I.type());
+    CHECK(S2.m() == I.m());
+    CHECK(S2.dir() == I.dir());
+    CHECK(S2.primeLevel() == 0);
+    }
+
 
 }

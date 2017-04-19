@@ -278,7 +278,8 @@ operator()(int i, String const& state) const
     }
 
 inline IQTensor SiteSet::
-op(String const& opname, int i, 
+op(String const& opname, 
+   int i, 
    Args const& args) const
     { 
     if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
@@ -316,16 +317,8 @@ op(String const& opname, int i,
         auto found = opname.find_first_of('*');
         if(found != std::string::npos)
             {
-            try {
-            return multSiteOps(sites_->op(i,op1(opname,found),args),
-                               sites_->op(i,op2(opname,found),args));
-                }
-            catch(ITError const& e)
-                {
-                println("opname = ",opname);
-                printfln("found = %s",found);
-                Error("More than one * in operator name string?");
-                }
+            return multSiteOps(op(op1(opname,found),i,args),
+                               op(op2(opname,found),i,args));
             }
         return sites_->op(i,opname,args);
         }

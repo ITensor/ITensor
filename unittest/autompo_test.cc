@@ -226,30 +226,62 @@ SECTION("No QN MPO")
         {
         ampo += h,"Sz",j;
         }
-    auto H = toMPO<ITensor>(ampo,{"Exact",true});
 
-    auto AllUp = InitState(sites,"Up");
-    auto L = AllUp;
-    auto R = AllUp;
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+    SECTION("Exact version")
+        {
+        auto H = toMPO<ITensor>(ampo,{"Exact",true});
 
-    L = AllUp;
-    R = AllUp;
-    L.set(1,"Dn");
-    R.set(1,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+        auto AllUp = InitState(sites,"Up");
+        auto L = AllUp;
+        auto R = AllUp;
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
 
-    L = AllUp;
-    R = AllUp;
-    L.set(1,"Dn");
-    L.set(2,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        R.set(1,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
 
-    L = AllUp;
-    R = AllUp;
-    L.set(3,"Dn");
-    R.set(4,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        L.set(2,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(3,"Dn");
+        R.set(4,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        }
+
+    SECTION("Approx version")
+        {
+        auto H = toMPO<ITensor>(ampo,{"Exact",false});
+
+        auto AllUp = InitState(sites,"Up");
+        auto L = AllUp;
+        auto R = AllUp;
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        R.set(1,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        L.set(2,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(3,"Dn");
+        R.set(4,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        }
     }
 
 SECTION("Single Site Ops")
