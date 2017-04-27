@@ -166,7 +166,8 @@ real(IVals&&... ivs) const
     if(fabs(z.imag()) > 1E-14*fabs(z.real()))
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("tensor is Complex valued, use .cplx(...) method");
+        //Error("tensor is Complex valued, use .cplx(...) method");
+        throw ITError("tensor is complex valued, use .cplx(...) method");
         }
     return z.real();
     }
