@@ -6,7 +6,8 @@
 #define __ITENSOR_SCALAR_H
 
 #include "itensor/itdata/task_types.h"
-#include "itensor/itdata/itdata.h"
+//#include "itensor/itdata/itdata.h"
+#include "itensor/itdata/dotask.h"
 #include "itensor/iqindex.h"
 #include "itensor/detail/call_rewrite.h"
 
@@ -114,10 +115,9 @@ template<typename E, typename I, typename T>
 void
 doTask(SetElt<E,I> const& S, Scalar<T> const& d, ManageStore & m)
     {
-    if(std::is_same<E,Cplx>::value && isReal(d))
+    if(not std::is_same<E,T>::value)
         {
-        //If d is real but elt is complex, change type of d
-        auto& nd = *m.makeNewData<ScalarCplx>();
+        auto& nd = *m.makeNewData<Scalar<E>>();
         nd.val = S.elt;
         }
     else
@@ -222,7 +222,8 @@ auto constexpr inline
 doTask(StorageType const& S, ScalarCplx const& d) ->StorageType::Type { return StorageType::ScalarCplx; }
 
 
-template<typename I, typename T,typename StoreType>
+template<typename I, typename T, typename StoreType,
+         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
 void
 doTask(Contract<I> & C,
        Scalar<T> const& L,
@@ -237,13 +238,17 @@ doTask(Contract<I> & C,
         }
     else //Scalar L is complex
         {
-        Error("Not implemented"); //TODO
-        //auto* nd = m.makeNewData<StoreType>(R);
-        //doTask(Mult<Cplx>(L.val),*nd);
+        //Error("Not implemented"); //TODO
+        println("Calling doTask on newData storage pointer");
+        m.makeNewData<StoreType>(R);
+//#ifdef REGISTER_ITDATA_HEADER_FILES
+        doTask(Mult<Cplx>(L.val),m.newData());
+//#endif
         }
     }
 
-template<typename I, typename T,typename StoreType>
+template<typename I, typename T,typename StoreType,
+         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
 void
 doTask(Contract<I> & C,
        StoreType const& L,
@@ -261,21 +266,20 @@ doTask(Contract<I> & C,
         }
     }
 
-template<typename T1, typename T2>
+template<typename I, typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
+doTask(PlusEQ<I> const& P,
        Scalar<T1> const& d1,
        Scalar<T2> const& d2,
        ManageStore & m)
     {
-    auto s = d1.val + d2.val;
+    auto s = d1.val + P.fac()*d2.val;
     if(isReal(d1) && isCplx(d2))
         {
         m.makeNewData<ScalarCplx>(s);
         }
     else
         {
-        Error("Not implemented");
         auto& d1ref = *m.modifyData(d1);
         detail::assign(d1ref.val,s);
         }
