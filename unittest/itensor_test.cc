@@ -2310,6 +2310,97 @@ SECTION("IndexVal times Scalar")
 //    CHECK(Norm(v-t2.diag()) < 1E-12);
 //    }
 
+SECTION("Scalar Storage")
+    {
+    auto S1 = ITensor(1.);
+    CHECK_CLOSE(S1.real(),1.);
+
+    auto S2 = ITensor(1.)*2.;
+    CHECK_CLOSE(S2.real(),2.);
+
+    auto ZA = ITensor(1._i);
+    CHECK_CLOSE(ZA.cplx(),1._i);
+
+    auto ZB = ITensor(-1.+2._i);
+    CHECK_CLOSE(ZB.cplx(),-1+2._i);
+
+    SECTION("Set")
+        {
+        S1.set(4.5);
+        CHECK_CLOSE(S1.real(),4.5);
+        S1.set(1.+3._i);
+        CHECK(isComplex(S1));
+        CHECK_CLOSE(S1.cplx(),1.+3._i);
+
+        ZA.set(2.-3._i);
+        CHECK_CLOSE(ZA.cplx(),2.-3._i);
+        ZA.set(3.0);
+        CHECK(isReal(ZA));
+        CHECK_CLOSE(ZA.real(),3.);
+        }
+
+    SECTION("Norm")
+        {
+        CHECK_CLOSE(norm(S1),1.);
+        CHECK_CLOSE(norm(S2),2.);
+        auto Sn2 = ITensor(-2.);
+        CHECK_CLOSE(norm(Sn2),2.);
+
+        CHECK_CLOSE(norm(ZA),std::norm(ZA.cplx()));
+        }
+
+    auto i = Index("i",3);
+    auto j = Index("j",4);
+    auto T = randomTensor(i,j);
+    auto TC = randomTensorC(i,j);
+
+    SECTION("Multiply on right")
+        {
+        auto R = T*S1;
+        CHECK(norm(R-T) < 1E-12);
+        R = T*S2;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = TC*S2;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = T*ZA;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+        R = TC*ZA;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Multiply on left")
+        {
+        auto R = S1*T;
+        CHECK(norm(R-T) < 1E-12);
+        R = S2*T;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = S2*TC;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = ZA*T;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+
+        R = ZA*TC;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Add & Subtract")
+        {
+        auto R = S1 + S2;
+        CHECK_CLOSE(R.real(),3.);
+
+        R = ZA+ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()+ZB.cplx());
+
+        R = S1 - S2;
+        CHECK_CLOSE(R.real(),-1.);
+
+        R = ZA-ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()-ZB.cplx());
+        }
+    }
+
 
 
 
