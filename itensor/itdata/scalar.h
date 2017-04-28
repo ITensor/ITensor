@@ -222,49 +222,53 @@ auto constexpr inline
 doTask(StorageType const& S, ScalarCplx const& d) ->StorageType::Type { return StorageType::ScalarCplx; }
 
 
-template<typename I, typename T, typename StoreType,
-         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
-void
-doTask(Contract<I> & C,
-       Scalar<T> const& L,
-       StoreType const& R,
-       ManageStore & m)
-    {
-    if(isReal(L))
-        {
-        //Make left-hand tensor have R as storage
-        m.assignPointerRtoL();
-        C.scalefac = detail::ensureReal(L.val);
-        }
-    else //Scalar L is complex
-        {
-        //Error("Not implemented"); //TODO
-        println("Calling doTask on newData storage pointer");
-        m.makeNewData<StoreType>(R);
-//#ifdef REGISTER_ITDATA_HEADER_FILES
-        doTask(Mult<Cplx>(L.val),m.newData());
-//#endif
-        }
-    }
-
-template<typename I, typename T,typename StoreType,
-         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
-void
-doTask(Contract<I> & C,
-       StoreType const& L,
-       Scalar<T> const& R)
-    {
-    if(isReal(R))
-        {
-        //Just multiply value of Scalar into scalefac 
-        //of Contract task object
-        C.scalefac = detail::ensureReal(R.val);
-        }
-    else //Scalar R is complex
-        {
-        Error("Complex case currently not handled (2)"); //TODO
-        }
-    }
+//
+// These Contract implementations are correct, but currently
+// not used due to rank==0 case caught by ITensorT operator*= function
+//
+//template<typename I, typename T, typename StoreType,
+//         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
+//void
+//doTask(Contract<I> & C,
+//       Scalar<T> const& L,
+//       StoreType const& R,
+//       ManageStore & m)
+//    {
+//    C.Nis = C.Ris;
+//    if(isReal(L))
+//        {
+//        //Make left-hand tensor have R as storage
+//        m.assignPointerRtoL();
+//        C.scalefac = detail::ensureReal(L.val);
+//        }
+//    else //Scalar L is complex
+//        {
+//        m.makeNewData<StoreType>(R);
+//        doTask(Mult<Cplx>(L.val),m.newData());
+//        }
+//    }
+//
+//template<typename I, typename T,typename StoreType,
+//         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >
+//void
+//doTask(Contract<I> & C,
+//       StoreType const& L,
+//       Scalar<T> const& R,
+//       ManageStore & m)
+//    {
+//    C.Nis = C.Lis;
+//    if(isReal(R))
+//        {
+//        //Just multiply value of Scalar into scalefac 
+//        //of Contract task object
+//        C.scalefac = detail::ensureReal(R.val);
+//        }
+//    else //Scalar R is complex
+//        {
+//        m.modifyData();
+//        doTask(Mult<Cplx>(R.val),m.parg1());
+//        }
+//    }
 
 template<typename I, typename T1, typename T2>
 void
