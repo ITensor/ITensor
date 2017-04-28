@@ -529,9 +529,16 @@ apply(ITensorT<I> T, F&& f)
 
 template<typename I>
 bool
-isComplex(const ITensorT<I>& T)
+isComplex(ITensorT<I> const& T)
     {
     return doTask(CheckComplex{},T.store());
+    }
+
+template<typename I>
+bool
+isReal(ITensorT<I> const& T)
+    {
+    return not isComplex(T);
     }
 
 template<typename I>

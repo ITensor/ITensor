@@ -389,6 +389,10 @@ template<typename I>
 bool
 isComplex(ITensorT<I> const& T);
 
+template<typename I>
+bool
+isReal(ITensorT<I> const& T);
+
 //return number of indices of T
 //(same as order)
 template<typename I>
