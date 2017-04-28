@@ -391,58 +391,23 @@ tableInit(InputGroup& table)
 void inline Sweeps::
 write(std::ostream& s) const
     {
-    size_t maxm_size = maxm_.size();
-    s.write((char*) &maxm_size,sizeof(maxm_size));
-    for(auto el : maxm_) s.write((char*) &el,sizeof(el));
-
-    size_t minm_size = minm_.size();
-    s.write((char*) &minm_size,sizeof(minm_size));
-    for(auto el : minm_) s.write((char*) &el,sizeof(el));
-
-    size_t niter_size = niter_.size();
-    s.write((char*) &niter_size,sizeof(niter_size));
-    for(auto el : niter_) s.write((char*) &el,sizeof(el));
-
-    size_t cutoff_size = cutoff_.size();
-    s.write((char*) &cutoff_size,sizeof(cutoff_size));
-    for(auto el : cutoff_) s.write((char*) &el,sizeof(el));
-
-    size_t noise_size = noise_.size();
-    s.write((char*) &noise_size,sizeof(noise_size));
-    for(auto el : noise_) s.write((char*) &el,sizeof(el));
-
-    s.write((char*) &nsweep_,sizeof(nsweep_));
+    itensor::write(s,maxm_);
+    itensor::write(s,minm_);
+    itensor::write(s,cutoff_);
+    itensor::write(s,niter_);
+    itensor::write(s,noise_);
+    itensor::write(s,nsweep_);
     }
 
 void inline Sweeps::
 read(std::istream& s)
     {
-    size_t maxm_size = 0;
-    s.read((char*) &maxm_size,sizeof(maxm_size));
-    maxm_.resize(maxm_size);
-    for(auto& el : maxm_) s.read((char*) &el,sizeof(el));
-
-    size_t minm_size = 0;
-    s.read((char*) &minm_size,sizeof(minm_size));
-    minm_.resize(minm_size);
-    for(auto& el : minm_) s.read((char*) &el,sizeof(el));
-
-    size_t niter_size = 0;
-    s.read((char*) &niter_size,sizeof(niter_size));
-    niter_.resize(niter_size);
-    for(auto& el : niter_) s.read((char*) &el,sizeof(el));
-
-    size_t cutoff_size = 0;
-    s.read((char*) &cutoff_size,sizeof(cutoff_size));
-    cutoff_.resize(cutoff_size);
-    for(auto& el : cutoff_) s.read((char*) &el,sizeof(el));
-
-    size_t noise_size = 0;
-    s.read((char*) &noise_size,sizeof(noise_size));
-    noise_.resize(noise_size);
-    for(auto& el : noise_) s.read((char*) &el,sizeof(el));
-
-    s.read((char*) &nsweep_,sizeof(nsweep_));
+    itensor::read(s,maxm_);
+    itensor::read(s,minm_);
+    itensor::read(s,cutoff_);
+    itensor::read(s,niter_);
+    itensor::read(s,noise_);
+    itensor::read(s,nsweep_);
     }
 
 inline std::ostream&
