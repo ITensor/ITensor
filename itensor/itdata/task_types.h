@@ -422,7 +422,9 @@ struct StorageType
         QDenseCplx=7,
         QCombiner=8,
         QDiagReal=9,
-        QDiagCplx=10
+        QDiagCplx=10,
+        ScalarReal=11,
+        ScalarCplx=12
         }; 
     };
 

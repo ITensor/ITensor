@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITREAL_H
-#define __ITENSOR_ITREAL_H
+#ifndef __ITENSOR_DENSE_H
+#define __ITENSOR_DENSE_H
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/util/readwrite.h"

@@ -32,11 +32,14 @@ ITensorT(Complex val)
     :
     scale_(1.)
     { 
-    //TODO: change storage type to IQTDiag?
-    if(val.imag()==0)
-        store_ = newITData<Diag<Real>>(1,val.real());
+    if(val.imag()==0.)
+        {
+        store_ = newITData<ScalarReal>(val.real());
+        }
     else
-        store_ = newITData<Diag<Complex>>(1,val);
+        {
+        store_ = newITData<ScalarCplx>(val);
+        }
     }
 
 //IQTensor::

@@ -26,9 +26,13 @@ ITensorT(Cplx val)
   : scale_(1.)
     { 
     if(val.imag() == 0)
-        store_ = newITData<DenseReal>(1,val.real());
+        {
+        store_ = newITData<ScalarReal>(val.real());
+        }
     else
-        store_ = newITData<DenseCplx>(1,val);
+        {
+        store_ = newITData<ScalarCplx>(val);
+        }
     //if(val.imag() == 0)
     //    store_ = newITData<Diag<Real>>(1,val.real());
     //else
