@@ -19,6 +19,22 @@ class QCombiner
         size_t block  = 0,
                start  = 0,
                extent = 0;
+
+        void 
+        write(std::ostream& s) const
+            { 
+            s.write((char*)&block, sizeof(size_t));
+            s.write((char*)&start, sizeof(size_t));
+            s.write((char*)&extent, sizeof(size_t));
+            }
+    
+        void 
+        read(std::istream& s)
+            { 
+            s.read((char*)&block, sizeof(size_t));
+            s.read((char*)&start, sizeof(size_t));
+            s.read((char*)&extent, sizeof(size_t));
+            }
         };
     public:
     using storage_type = std::vector<BlockRange>;
@@ -43,8 +59,17 @@ class QCombiner
         store_.resize(area(R_));
         }
 
+    explicit
+    QCombiner(Range && range, storage_type && store)
+      : R_(std::move(range)),
+        store_(std::move(store))
+        { }
+
     Range const&
     range() const { return R_; }
+
+    storage_type const&
+    store() const { return store_; }
 
     void
     setBlockRange(Range::iterator const& bit,
@@ -71,11 +96,11 @@ class QCombiner
 const char*
 typeNameOf(QCombiner const& d);
 
-void inline
-read(std::istream& s, QCombiner & dat) { }
+void
+read(std::istream& s, QCombiner & dat);
 
-void inline
-write(std::ostream& s, QCombiner const& dat) { }
+void
+write(std::ostream& s, QCombiner const& dat);
 
 Cplx
 doTask(GetElt<IQIndex> const& g, QCombiner const& c);

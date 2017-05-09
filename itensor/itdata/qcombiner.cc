@@ -17,6 +17,26 @@ namespace itensor {
 const char*
 typeNameOf(QCombiner const& d) { return "QCombiner"; }
 
+void 
+read(std::istream& s, QCombiner & dat)
+    {
+    Range range;
+    itensor::read(s,range);
+
+    using storage_type = typename QCombiner::storage_type;
+    storage_type store;
+    itensor::read(s,store);
+
+    dat = QCombiner(std::move(range),std::move(store));
+    }
+
+void
+write(std::ostream& s, QCombiner const& dat)
+    {
+    itensor::write(s,dat.range());
+    itensor::write(s,dat.store());
+    }
+
 Cplx
 doTask(GetElt<IQIndex> const& g, QCombiner const& c)
     {
