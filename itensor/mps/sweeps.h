@@ -422,22 +422,22 @@ read(std::istream& s)
     maxm_.resize(maxm_size);
     for(auto& el : maxm_) s.read((char*) &el,sizeof(el));
 
-    auto minm_size = 0;
+    size_t minm_size = 0;
     s.read((char*) &minm_size,sizeof(minm_size));
     minm_.resize(minm_size);
     for(auto& el : minm_) s.read((char*) &el,sizeof(el));
 
-    auto niter_size = 0;
+    size_t niter_size = 0;
     s.read((char*) &niter_size,sizeof(niter_size));
     niter_.resize(niter_size);
     for(auto& el : niter_) s.read((char*) &el,sizeof(el));
 
-    auto cutoff_size = 0;
+    size_t cutoff_size = 0;
     s.read((char*) &cutoff_size,sizeof(cutoff_size));
     cutoff_.resize(cutoff_size);
     for(auto& el : cutoff_) s.read((char*) &el,sizeof(el));
 
-    auto noise_size = 0;
+    size_t noise_size = 0;
     s.read((char*) &noise_size,sizeof(noise_size));
     noise_.resize(noise_size);
     for(auto& el : noise_) s.read((char*) &el,sizeof(el));
