@@ -58,6 +58,10 @@ class Environment
     void 
     broadcast(std::stringstream& data) const;
 
+    template <typename T>
+    void
+    scatterVector(std::vector<T> &v);
+
     void 
     barrier() const { MPI_Barrier(MPI_COMM_WORLD); }
 
@@ -66,6 +70,14 @@ class Environment
 
     double 
     sum(double r) const;
+
+    template <typename T>
+    T
+    sum(T &obj) const;
+
+    template <typename T>
+    T
+    allSum(T &obj) const;
 
     private:
 
@@ -227,6 +239,50 @@ broadcast(std::stringstream& data) const
         }
     }
 
+template <typename T>
+void Environment::
+scatterVector(std::vector<T> &v)
+    {
+    if(nnodes_ == 1) return;
+    const int root = 0;
+    
+    long mySize;
+
+    if(rank() == root) 
+        { 
+        auto n = v.size();
+        long blockSizes[nnodes_];
+        long blockSize = n / nnodes_;
+
+        for(int i = 0; i < nnodes_; i++)
+            blockSizes[i] = blockSize;
+        if (n % nnodes_ != 0)
+            for(int i = 0; i < (n % nnodes_); i++)
+            blockSizes[i]++;
+
+        MPI_Scatter(blockSizes, 1, MPI_LONG, &mySize, 1, MPI_LONG, root, MPI_COMM_WORLD);
+
+        auto sum = blockSizes[0];
+        for (int i = 1; i < nnodes_; ++i)
+            {
+            MailBox mailbox(*this, i);
+            for (int j = 0; j < blockSizes[i]; ++j)
+                {
+                mailbox.send(v[sum + j]);
+                }
+            sum += blockSizes[i];
+            }
+        v.resize(mySize);
+        }
+    else
+        {
+        MPI_Scatter(NULL, 1, MPI_LONG, &mySize, 1, MPI_LONG, root, MPI_COMM_WORLD);   
+        v.resize(mySize);
+        MailBox mailbox(*this, root);
+        for (int i = 0; i < mySize; ++i) { mailbox.receive(v[i]); }
+        }
+    }
+
 double inline Environment::
 sum(double r) const
     {
@@ -236,6 +292,41 @@ sum(double r) const
     return res;
     }
 
+template <typename T>
+T Environment::
+sum(T &obj) const
+    {
+    if(nnodes_ == 1) return obj;
+    const int root = 0;
+
+    T result = obj;
+    if(rank() == 0)
+        {
+        for (int i = 1; i < nnodes_; ++i)
+            {
+            MailBox mailbox(*this, i);
+            T temp;
+            mailbox.receive(temp);
+            result += temp;
+            }
+        }
+    else
+        {
+        MailBox mailbox(*this, root);
+        mailbox.send(obj);
+        }
+    return result;
+    }
+
+template <typename T>
+T inline Environment::
+allSum(T &obj) const
+    {
+    if(nnodes_ == 1) return obj;
+    T result = sum(obj);
+    broadcast(result);
+    return result;
+    }
 
 //
 // MailBox
