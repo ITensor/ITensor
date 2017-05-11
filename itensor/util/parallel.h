@@ -260,26 +260,23 @@ scatterVector(std::vector<T> &v)
             for(int i = 0; i < (n % nnodes_); i++)
             blockSizes[i]++;
 
-        MPI_Scatter(blockSizes, 1, MPI_LONG, &mySize, 1, MPI_LONG, root, MPI_COMM_WORLD);
+        MPI_Scatter(blockSizes,1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);
 
-        auto sum = blockSizes[0];
+        auto itp = blockSizes[0];
         for (int i = 1; i < nnodes_; ++i)
             {
             MailBox mailbox(*this, i);
-            for (int j = 0; j < blockSizes[i]; ++j)
-                {
-                mailbox.send(v[sum + j]);
-                }
-            sum += blockSizes[i];
+            mailbox.send(std::vector<T>(v.begin()+itp,v.begin()+itp+blockSizes[i]));
+            itp += blockSizes[i];
             }
         v.resize(mySize);
         }
     else
         {
-        MPI_Scatter(NULL, 1, MPI_LONG, &mySize, 1, MPI_LONG, root, MPI_COMM_WORLD);   
+        MPI_Scatter(NULL,1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);   
         v.resize(mySize);
         MailBox mailbox(*this, root);
-        for (int i = 0; i < mySize; ++i) { mailbox.receive(v[i]); }
+        mailbox.receive(v);
         }
     }
 
@@ -304,7 +301,7 @@ sum(T &obj) const
         {
         for (int i = 1; i < nnodes_; ++i)
             {
-            MailBox mailbox(*this, i);
+            MailBox mailbox(*this,i);
             T temp;
             mailbox.receive(temp);
             result += temp;
@@ -312,7 +309,7 @@ sum(T &obj) const
         }
     else
         {
-        MailBox mailbox(*this, root);
+        MailBox mailbox(*this,root);
         mailbox.send(obj);
         }
     return result;
