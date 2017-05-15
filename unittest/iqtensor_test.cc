@@ -855,9 +855,9 @@ SECTION("Contraction with Scalar")
         CHECK_CLOSE(val,T3.real(L1(i1),L2(i2),S1(j1),S2(j2)));
         }
 
-    //Make scalar from constructor
-    auto Q = IQTensor(1.+3_i);
-    auto q = Q.cplx();
+    //Make real scalar tensor from constructor
+    auto Q = IQTensor(2);
+    auto q = Q.real();
     auto T4 = Q * T1;
     for(int i1 = 1; i1 <= L1.m(); ++i1)
     for(int i2 = 1; i2 <= L2.m(); ++i2)
@@ -866,6 +866,108 @@ SECTION("Contraction with Scalar")
         {
         auto val = q*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
         CHECK_CLOSE(val,T4.real(L1(i1),L2(i2),S1(j1),S2(j2)));
+        }
+
+    ////Make complex scalar tensor from constructor
+    //auto Q = IQTensor(1.+3_i);
+    //auto q = Q.cplx();
+    //auto T4 = Q * T1;
+    //for(int i1 = 1; i1 <= L1.m(); ++i1)
+    //for(int i2 = 1; i2 <= L2.m(); ++i2)
+    //for(int j1 = 1; j1 <= S1.m(); ++j1)
+    //for(int j2 = 1; j2 <= S2.m(); ++j2)
+    //    {
+    //    auto val = q*T1.cplx(L1(i1),L2(i2),S1(j1),S2(j2));
+    //    CHECK_CLOSE(val,T4.cplx(L1(i1),L2(i2),S1(j1),S2(j2)));
+    //    }
+    }
+
+SECTION("Scalar Storage")
+    {
+    auto S1 = IQTensor(1.);
+    CHECK_CLOSE(S1.real(),1.);
+
+    auto S2 = IQTensor(1.)*2.;
+    CHECK_CLOSE(S2.real(),2.);
+
+    auto ZA = IQTensor(1._i);
+    CHECK_CLOSE(ZA.cplx(),1._i);
+
+    auto ZB = IQTensor(-1.+2._i);
+    CHECK_CLOSE(ZB.cplx(),-1+2._i);
+
+    SECTION("Set")
+        {
+        S1.set(4.5);
+        CHECK_CLOSE(S1.real(),4.5);
+        S1.set(1.+3._i);
+        CHECK(isComplex(S1));
+        CHECK_CLOSE(S1.cplx(),1.+3._i);
+
+        ZA.set(2.-3._i);
+        CHECK_CLOSE(ZA.cplx(),2.-3._i);
+        ZA.set(3.0);
+        CHECK(isReal(ZA));
+        CHECK_CLOSE(ZA.real(),3.);
+        }
+
+    SECTION("Norm")
+        {
+        CHECK_CLOSE(norm(S1),1.);
+        CHECK_CLOSE(norm(S2),2.);
+        auto Sn2 = IQTensor(-2.);
+        CHECK_CLOSE(norm(Sn2),2.);
+
+        CHECK_CLOSE(norm(ZA),std::norm(ZA.cplx()));
+        }
+
+    auto T = randomTensor(QN(),L1,L2);
+    auto TC = randomTensorC(QN(),L1,L2);
+
+    SECTION("Multiply on right")
+        {
+        auto R = T*S1;
+        CHECK(norm(R-T) < 1E-12);
+        R = T*S2;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = TC*S2;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = T*ZA;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+        R = TC*ZA;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Multiply on left")
+        {
+        auto R = S1*T;
+        CHECK(norm(R-T) < 1E-12);
+        R = S2*T;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = S2*TC;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = ZA*T;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+
+        R = ZA*TC;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Add & Subtract")
+        {
+        auto R = S1 + S2;
+        CHECK_CLOSE(R.real(),3.);
+
+        R = ZA+ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()+ZB.cplx());
+
+        R = S1 - S2;
+        CHECK_CLOSE(R.real(),-1.);
+
+        R = ZA-ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()-ZB.cplx());
         }
     }
 

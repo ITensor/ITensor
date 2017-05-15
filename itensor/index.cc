@@ -240,7 +240,7 @@ operator<<(std::ostream & s, Index const& t)
     s << "," << t.type().c_str();
     if(Global::showIDs()) 
         {
-        s << "," << (t.id() % 1000);
+        s << "|" << (t.id() % 1000);
         //s << "," << t.id();
         }
     s << ")"; 

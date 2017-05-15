@@ -6,6 +6,7 @@
 #define __ITENSOR_LOCALMPO
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
@@ -76,6 +77,19 @@ class LocalMPO
              const Args& args = Global::args());
 
     //
+    //Use an MPO having boundary indices capped off by left and
+    //right boundary tensors LH and RH at positions LHlim and RHlim
+    //These positions indicate the site number of the right-most MPO
+    //tensor included in LH and the left-most MPO tensor included in RH.
+    //
+    LocalMPO(MPOt<Tensor> const& H, 
+             Tensor const& LH, 
+             int LHlim,
+             Tensor const& RH,
+             int RHlim,
+             Args const& args = Args::global());
+
+    //
     // Sparse Matrix Methods
     //
 
@@ -120,26 +134,26 @@ class LocalMPO
         RHlim_ = Op_->N()+1;
         }
 
-    const Tensor&
+    Tensor const&
     L() const { return PH_[LHlim_]; }
     // Replace left edge tensor at current bond
     void
-    L(const Tensor& nL) { PH_[LHlim_] = nL; }
+    L(Tensor const& nL) { PH_[LHlim_] = nL; }
     // Replace left edge tensor bordering site j
     // (so that nL includes sites < j)
     void
-    L(int j, const Tensor& nL);
+    L(int j, Tensor const& nL);
 
 
-    const Tensor&
+    Tensor const&
     R() const { return PH_[RHlim_]; }
     // Replace right edge tensor at current bond
     void
-    R(const Tensor& nR) { PH_[RHlim_] = nR; }
+    R(Tensor const& nR) { PH_[RHlim_] = nR; }
     // Replace right edge tensor bordering site j
     // (so that nR includes sites > j)
     void
-    R(int j, const Tensor& nR);
+    R(int j, Tensor const& nR);
 
     const MPOt<Tensor>&
     H() const 
@@ -177,6 +191,12 @@ class LocalMPO
 
     const std::string&
     writeDir() const { return writedir_; }
+
+    int
+    leftLim() const { return LHlim_; }
+
+    int
+    rightLim() const { return RHlim_; }
 
     private:
 
@@ -312,6 +332,29 @@ LocalMPO(const MPSt<Tensor>& Psi,
     PH_[Psi.N()+1] = RP;
     if(args.defined("NumCenter"))
         numCenter(args.getInt("NumCenter"));
+    }
+
+template <class Tensor>
+inline LocalMPO<Tensor>::
+LocalMPO(MPOt<Tensor> const& H, 
+         Tensor const& LH, 
+         int LHlim,
+         Tensor const& RH,
+         int RHlim,
+         Args const& args)
+    : Op_(&H),
+      PH_(H.N()+2),
+      LHlim_(LHlim),
+      RHlim_(RHlim),
+      nc_(2),
+      do_write_(false),
+      writedir_("."),
+      Psi_(0)
+    { 
+    PH_.at(LHlim) = LH;
+    PH_.at(RHlim) = RH;
+    if(H.N()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(args.defined("NumCenter")) numCenter(args.getInt("NumCenter"));
     }
 
 template <class Tensor> inline
@@ -502,6 +545,10 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 auto rl = RHlim_;
+                //printfln(" Making environment with rl=%d (using H[%d])",rl,rl-1);
+                //Print(PH_.at(rl));
+                //Print(Op_->A(rl-1));
+                //Print(psi.A(rl-1));
                 if(PH_.at(rl))
                     {
                     PH_.at(rl-1) = PH_.at(rl)*psi.A(rl-1);
@@ -512,6 +559,8 @@ makeR(const MPSType& psi, int k)
                     }
                 PH_.at(rl-1) *= Op_->A(rl-1);
                 PH_.at(rl-1) *= dag(prime(psi.A(rl-1)));
+                //printfln("PH[%d] = \n%s",rl-1,PH_.at(rl-1));
+                //PAUSE
                 setRHlim(RHlim_-1);
                 }
             }

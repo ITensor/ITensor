@@ -103,7 +103,7 @@ class IndexSetT : public RangeT<index_type_>
     operator[](size_type i)
         { 
 #ifdef DEBUG
-        if(i >= parent::size()) Error("IndexSetT[i] arg out of range");
+        if(i >= parent::size()) throw ITError("IndexSetT[i] arg out of range");
 #endif
         return parent::index(i);
         }
@@ -113,7 +113,7 @@ class IndexSetT : public RangeT<index_type_>
     index(size_type I)
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) Error("IndexSetT.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSetT.index(i) arg out of range");
 #endif
         return operator[](I-1);
         }
@@ -123,7 +123,7 @@ class IndexSetT : public RangeT<index_type_>
     operator[](size_type i) const
         { 
 #ifdef DEBUG
-        if(i >= parent::size()) Error("IndexSetT[i] arg out of range");
+        if(i >= parent::size()) throw ITError("IndexSetT[i] arg out of range");
 #endif
         return parent::index(i);
         }
@@ -133,7 +133,7 @@ class IndexSetT : public RangeT<index_type_>
     index(size_type I) const
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) Error("IndexSetT.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSetT.index(i) arg out of range");
 #endif
         return operator[](I-1);
         }
