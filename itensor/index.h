@@ -17,7 +17,7 @@ class IndexVal;
 namespace detail {
     struct RandomID
         {
-        using rng_type = std::mt19937_64;
+        using rng_type = std::mt19937;
         using result_type = typename rng_type::result_type;
 
         RandomID()
