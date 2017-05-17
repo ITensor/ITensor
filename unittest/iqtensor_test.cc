@@ -2,6 +2,7 @@
 #include "itensor/iqtensor.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/util/range.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 using namespace std;
@@ -609,6 +610,24 @@ SECTION("Combiner")
         auto nA2 = R * dag(C);
         CHECK(norm(nA2-A) < 1E-11);
 
+        }
+
+    SECTION("Combiner Single Index Regression Test")
+        {
+        auto s1 = IQIndex("s1",Index("Em",1),QN("Sz=", 0,"Pf=",0),
+                               Index("Up",1),QN("Sz=",+1,"Pf=",1),
+                               Index("Dn",1),QN("Sz=",-1,"Pf=",1),
+                               Index("UD",1),QN("Sz=", 0,"Pf=",0));
+        auto s2 = IQIndex("s2",Index("Em",1),QN("Sz=", 0,"Pf=",0),
+                               Index("Up",1),QN("Sz=",+1,"Pf=",1),
+                               Index("Dn",1),QN("Sz=",-1,"Pf=",1),
+                               Index("UD",1),QN("Sz=", 0,"Pf=",0));
+        auto T = randomTensor(QN{},s1,s2);
+        auto cmb = combiner(s1);
+        auto ci = cmb.inds().front();
+        auto Tc = cmb*T;
+        //Following line was causing an error:
+        Tc *= dag(prime(Tc,ci));
         }
 
 
