@@ -75,12 +75,16 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 libitensor.$(DYLIB_EXT): $(OBJECTS)
+ifdef _ITENSOR_MAKE_DYLIB
 	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT)"
 	@$(CCCOM) $(DYLIB_FLAGS) -o $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT) $(OBJECTS) $(BLAS_LAPACK_LIBFLAGS)
+endif
 
 libitensor-g.$(DYLIB_EXT): mkdebugdir $(GOBJECTS)
+ifdef _ITENSOR_MAKE_DYLIB
 	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT)"
 	@$(CCCOM) $(DYLIB_FLAGS) -o $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT) $(GOBJECTS) $(BLAS_LAPACK_LIBFLAGS)
+endif
 
 touch_all_headers:
 	@touch all.h
