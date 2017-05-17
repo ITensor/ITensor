@@ -7,7 +7,7 @@
 ##
 ## Set which compiler to use by defining CCCOM:
 ## GNU GCC compiler
-CCCOM=g++ -m64 -std=c++11
+CCCOM=g++ -m64 -std=c++11 -fPIC
 
 ## Clang compiler (good to use on Mac OS)
 #CCCOM=clang++ -std=c++11
@@ -129,3 +129,13 @@ CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
 CCGFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
 LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
+
+## Determine shared library extension
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+  DYLIB_EXT ?= dylib
+  DYLIB_FLAGS ?= -dynamiclib
+else
+  DYLIB_EXT ?= so
+  DYLIB_FLAGS ?= -shared
+endif
