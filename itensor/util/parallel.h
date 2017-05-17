@@ -16,6 +16,29 @@ class Environment;
 void
 parallelDebugWait(Environment const& env);
 
+template <class T>
+void
+broadcast(Environment const& env, T & obj);
+
+template <class T, class... Rest>
+void 
+broadcast(Environment const& env, T & obj, Rest &... rest);
+
+template <typename T>
+void 
+scatterVector(Environment const& env, std::vector<T> &v);
+
+double
+sum(Environment const& env, double r);
+
+template <typename T>
+T
+sum(Environment const& env, T &obj);
+
+template <typename T>
+T
+allSum(Environment const& env, T &obj);
+
 class Environment
     {
     int rank_,
@@ -66,6 +89,18 @@ class Environment
     //Make this class non-copyable
     void operator=(Environment const&);
     Environment(Environment const&);
+
+    public:
+
+    //Deprecated methods: kept here for backwards compatibility
+
+    template <class T>
+    void 
+    broadcast(T& obj) const;
+
+    template <class T, class... Rest>
+    void 
+    broadcast(T & obj, Rest &... rest) const;
 
     };
 
@@ -243,6 +278,20 @@ broadcast(Environment const& env, T & obj, Rest &... rest)
     broadcast(env,rest...);
     }
 
+template <class T>
+void Environment::
+broadcast(T& obj) const 
+    { 
+    broadcast(*this,obj); 
+    }
+
+template <class T, class... Rest>
+void Environment::
+broadcast(T & obj, Rest &... rest) const
+    { 
+    broadcast(*this,obj,rest...); 
+    }
+
 template <typename T>
 void 
 scatterVector(Environment const& env, std::vector<T> &v)
@@ -321,7 +370,7 @@ sum(Environment const& env, T &obj)
     }
 
 template <typename T>
-T inline 
+T
 allSum(Environment const& env, T &obj)
     {
     if(env.nnodes() == 1) return obj;
