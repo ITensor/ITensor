@@ -289,7 +289,7 @@ template <class T, class... Rest>
 void Environment::
 broadcast(T & obj, Rest &... rest) const
     { 
-    broadcast(*this,obj,rest...); 
+    itensor::broadcast(*this,obj,rest...); 
     }
 
 template <typename T>
@@ -299,22 +299,23 @@ scatterVector(Environment const& env, std::vector<T> &v)
     if(env.nnodes() == 1) return;
     const int root = 0;
     
-    long mySize;
 
-    if(env.rank() == root) 
+    if(env.firstNode())
         { 
         auto nnodes = env.nnodes();
         auto n = v.size();
-        long blockSizes[nnodes];
+        auto blockSizes = std::vector<long>(nnodes);
         long blockSize = n / nnodes;
 
-        for(int i = 0; i < nnodes; i++)
-            blockSizes[i] = blockSize;
-        if (n % nnodes != 0)
-            for(int i = 0; i < (n % nnodes); i++)
-            blockSizes[i]++;
+        for(int i = 0; i < nnodes; i++) blockSizes[i] = blockSize;
 
-        MPI_Scatter(blockSizes,1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);
+        if (n % nnodes != 0)
+            {
+            for(int i = 0; i < (n % nnodes); i++) ++blockSizes[i];
+            }
+
+        long mySize = 0l;
+        MPI_Scatter(blockSizes.data(),1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);
 
         auto itp = blockSizes[0];
         for (int i = 1; i < nnodes; ++i)
@@ -327,6 +328,7 @@ scatterVector(Environment const& env, std::vector<T> &v)
         }
     else
         {
+        long mySize = 0l;
         MPI_Scatter(NULL,1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);   
         v.resize(mySize);
         MailBox mailbox(env,root);
