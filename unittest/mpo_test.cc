@@ -108,4 +108,23 @@ SECTION("Add MPOs")
     CHECK(diff2 < 1E-12);
     }
 
+SECTION("Regression Test")
+    {
+    auto sites = Hubbard(2);
+
+    auto A = IQMPO(sites);
+    auto Ia = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
+                          Index("1",1),QN("Sz",-1,"Nf",-1));
+    A.Aref(1) = randomTensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
+    A.Aref(2) = randomTensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
+
+    auto B = IQMPO(sites);
+    auto Ib = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
+                          Index("1",1),QN("Sz",-1,"Nf",-1));
+    B.Aref(1) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
+    B.Aref(2) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
+
+    REQUIRE_NOTHROW(A.plusEq(B));
+    }
+
 }
