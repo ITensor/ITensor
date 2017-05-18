@@ -344,7 +344,27 @@ combiner(std::vector<IQIndex> cinds,
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",cinds.front().type());
     auto cr = cinds.size();
-    auto cdir = cinds.front().dir();
+
+
+    auto cdir = Out;
+    if(args.defined("IndexDir"))
+        {
+        cdir = toArrow(args.getInt("IndexDir"));
+        }
+    else
+        {
+        //If not specified by user, make combined IQIndex
+        //point Out unless all combined indices have In arrows.
+        auto allin = true;
+        for(auto& i : cinds) 
+            if(i.dir() != In)
+                {
+                allin = false;
+                break;
+                }
+        if(allin) cdir = In;
+        }
+
 
     auto C = QCombiner{cinds};
 
