@@ -1,6 +1,6 @@
 //
 // Distributed under the ITensor Library License, Version 1.2
-//    (See accompanying LICENSE file.)
+// (See accompanying LICENSE file.)
 //
 #ifndef __ITENSOR_SPINONE_H
 #define __ITENSOR_SPINONE_H
@@ -106,10 +106,10 @@ class SpinOneSite
             //because as an IQTensor, Op would
             //not have a well defined QN flux
             Op = mixedIQTensor(dag(s),sP);
-            Op.set(Up,Z0P,+ISqrt2); 
-            Op.set(Z0,UpP,-ISqrt2);
-            Op.set(Z0,DnP,+ISqrt2); 
-            Op.set(Dn,Z0P,-ISqrt2);
+            Op.set(Up,Z0P,-ISqrt2); 
+            Op.set(Z0,UpP,+ISqrt2);
+            Op.set(Z0,DnP,-ISqrt2); 
+            Op.set(Dn,Z0P,+ISqrt2);
             }
         else
         if(opname == "Sy")
@@ -118,10 +118,10 @@ class SpinOneSite
             //because as an IQTensor, Op would
             //not have a well defined QN flux
             Op = mixedIQTensor(dag(s),sP);
-            Op.set(Up,Z0P,-ISqrt2*1_i); 
-            Op.set(Z0,UpP,+ISqrt2*1_i);
-            Op.set(Z0,DnP,-ISqrt2*1_i); 
-            Op.set(Dn,Z0P,+ISqrt2*1_i);
+            Op.set(Up,Z0P,+ISqrt2*1_i); 
+            Op.set(Z0,UpP,-ISqrt2*1_i);
+            Op.set(Z0,DnP,+ISqrt2*1_i); 
+            Op.set(Dn,Z0P,-ISqrt2*1_i);
             }
         else
         if(opname == "Sp" || opname == "S+")
