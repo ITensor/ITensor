@@ -27,7 +27,9 @@ enum class QType {
             QDiagRealAllSame, 
             QDiagCplx, 
             QDiagCplxAllSame, 
-            QCombiner 
+            QCombiner,
+            DiagReal,
+            DiagCplx
           };
 
 struct GetQType
@@ -37,12 +39,15 @@ struct GetQType
     QType operator()(QDiagReal const& d) const { return d.allSame() ? QType::QDiagRealAllSame : QType::QDiagReal; }
     QType operator()(QDiagCplx const& d) const { return d.allSame() ? QType::QDiagCplxAllSame : QType::QDiagCplx; }
     QType operator()(QCombiner const& d) const { return QType::QCombiner; }
+    QType operator()(DiagReal const& d) const { return QType::DiagReal; }
+    QType operator()(DiagCplx const& d) const { return QType::DiagCplx; }
     template<typename T>
     QType operator()(T const& d) const { return QType::OtherType; }
     };
 
+template<typename I>
 QType
-typeOf(IQTensor const& t) 
+typeOf(ITensorT<I> const& t) 
     { 
     return applyFunc(GetQType{},t.store()); 
     }
@@ -58,6 +63,8 @@ operator<<(std::ostream& s, QType t)
     else if(t == QType::QDiagCplx) s << "QDiagCplx";
     else if(t == QType::QDiagCplxAllSame) s << "QDiagCplxAllSame";
     else if(t == QType::QCombiner) s << "QCombiner";
+    else if(t == QType::DiagReal) s << "DiagReal";
+    else if(t == QType::DiagCplx) s << "DiagCplx";
     else Error("Unrecognized QType value");
     return s;
     }
@@ -273,7 +280,7 @@ SECTION("RandomizeTest")
     CHECK_EQUAL(D,div(T));
     }
 
-SECTION("ITensor Conversion")
+SECTION("QDense ITensor Conversion")
     {
     SECTION("Case 1")
         {
@@ -293,6 +300,35 @@ SECTION("ITensor Conversion")
         for(int j2 = 1; j2 <= L2.m(); ++j2)
             CHECK_CLOSE(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
                         itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
+        }
+    }
+
+SECTION("QDiag ITensor Conversion")
+    {
+    SECTION("Case 1 (delta/allSame)")
+        {
+        auto D = delta(dag(L1),prime(L1));
+        auto d = toITensor(D);
+        CHECK(typeOf(d) == QType::DiagReal);
+        Index l1 = L1;
+        for(auto i : range1(L1))
+        for(auto j : range1(L1))
+            {
+            CHECK_CLOSE(D.real(L1(i),prime(L1)(j)),d.real(l1(i),prime(l1)(j)));
+            }
+        }
+    SECTION("Case 2")
+        {
+        auto D = delta(dag(L1),prime(L1));
+        randomize(D);
+        auto d = toITensor(D);
+        CHECK(typeOf(d) == QType::DiagReal);
+        Index l1 = L1;
+        for(auto i : range1(L1))
+        for(auto j : range1(L1))
+            {
+            CHECK_CLOSE(D.real(L1(i),prime(L1)(j)),d.real(l1(i),prime(l1)(j)));
+            }
         }
     }
 
@@ -1007,6 +1043,7 @@ SECTION("Mixed Storage")
         CHECK_CLOSE(t.real(s(i),prime(s)(j)),T.real(s(i),prime(s)(j)));
         }
     }
+
 
 //SECTION("Non-contracting product")
 //    {
