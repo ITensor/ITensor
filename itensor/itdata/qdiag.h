@@ -169,6 +169,11 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real>& G, QDiagReal & D)
     {
+    if(D.allSame())
+        {
+        D.val = 0;
+        D.store.resize(D.length);
+        }
     stdx::generate(D,G.f);
     }
 
@@ -194,6 +199,11 @@ template<typename F>
 void
 doTask(GenerateIT<F,Cplx>& G, QDiagCplx & D)
     {
+    if(D.allSame())
+        {
+        D.val = 0;
+        D.store.resize(D.length);
+        }
     stdx::generate(D,G.f);
     }
 
