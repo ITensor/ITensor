@@ -314,6 +314,10 @@ getBlock(QDiag<V> & D,
     return DataRange<V>{ncd,cdr.size()};
     }
 
+template<typename V>
+ITensor
+doTask(ToITensor & T, QDiag<V> const& d);
+
 } //namespace itensor
 
 #endif
