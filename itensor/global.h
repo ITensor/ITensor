@@ -20,6 +20,30 @@ namespace itensor {
 
 enum Direction { Fromright, Fromleft, BothDir, NoDir };
 
+Direction inline
+toDirection(int i)
+    {
+    if(static_cast<int>(Fromright) == i) return Fromright;
+    if(static_cast<int>(Fromleft) == i) return Fromleft;
+    if(static_cast<int>(BothDir) == i) return BothDir;
+    return NoDir;
+    }
+
+Direction inline
+getDirection(Args const& args,
+             Args::Name const& name)
+    {
+    return toDirection(args.getInt(name));
+    }
+
+Direction inline
+getDirection(Args const& args,
+             Args::Name const& name,
+             Direction default_val)
+    {
+    return toDirection(args.getInt(name,default_val));
+    }
+
 const Real MIN_CUT = 1E-15;
 const int MAX_M = 5000;
 
