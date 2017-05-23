@@ -6,6 +6,7 @@
 #define __ITENSOR_LAPACK_WRAP_h
 
 #include <vector>
+#include "itensor/config.h"
 #include "itensor/types.h"
 #include "itensor/util/timers.h"
 

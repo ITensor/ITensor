@@ -11,6 +11,34 @@
 
 namespace itensor {
 
+class Environment;
+
+void
+parallelDebugWait(Environment const& env);
+
+template <class T>
+void
+broadcast(Environment const& env, T & obj);
+
+template <class T, class... Rest>
+void 
+broadcast(Environment const& env, T & obj, Rest &... rest);
+
+template <typename T>
+void 
+scatterVector(Environment const& env, std::vector<T> &v);
+
+double
+sum(Environment const& env, double r);
+
+template <typename T>
+T
+sum(Environment const& env, T &obj);
+
+template <typename T>
+T
+allSum(Environment const& env, T &obj);
+
 class Environment
     {
     int rank_,
@@ -47,9 +75,6 @@ class Environment
     // Communication and flow control
     //
 
-    template <class T>
-    void 
-    broadcast(T& obj) const;
     void 
     broadcast(std::stringstream& data) const;
 
@@ -59,14 +84,23 @@ class Environment
     void 
     abort(int code) const { MPI_Abort(MPI_COMM_WORLD,code); }
 
-    double 
-    sum(double r) const;
-
     private:
 
     //Make this class non-copyable
     void operator=(Environment const&);
     Environment(Environment const&);
+
+    public:
+
+    //Deprecated methods: kept here for backwards compatibility
+
+    template <class T>
+    void 
+    broadcast(T& obj) const;
+
+    template <class T, class... Rest>
+    void 
+    broadcast(T & obj, Rest &... rest) const;
 
     };
 
@@ -157,6 +191,28 @@ class MailBox
 
     }; //class MailBox
 
+void inline
+parallelDebugWait(Environment const& env)
+    {
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printfln("Node %d PID %d on %s",env.rank(),getpid(),hostname);
+#ifdef DEBUG
+    //
+    // If compiled in debug mode, require file GO to exist before
+    // proceeding. This is to make it possible to attach a debugger
+    // such as gdb to each thread before the calculation starts.
+    //
+    if(env.nnodes() > 1)
+        {
+        while(!fileExists("GO")) sleep(2);
+        printfln("Process %d found file GO, exiting wait loop",env.rank());
+        }
+    env.barrier();
+    if(env.firstNode()) system("rm -f GO");
+#endif
+    } 
+
 inline Environment::
 Environment(int argc, char* argv[],
             Args const& args)
@@ -165,18 +221,6 @@ Environment(int argc, char* argv[],
     MPI_Init(&argc,&argv); 
     MPI_Comm_rank(MPI_COMM_WORLD,&rank_); 
     MPI_Comm_size(MPI_COMM_WORLD,&nnodes_); 
-    }
-
-template <class T>
-void inline Environment::
-broadcast(T& obj) const
-    {
-    if(nnodes_ == 1) return;
-    const int root = 0;
-    std::stringstream datastream;
-    if(rank_ == root) write(datastream,obj);
-    broadcast(datastream);
-    if(rank_ != root) read(datastream,obj);
     }
 
 void inline Environment::
@@ -214,15 +258,128 @@ broadcast(std::stringstream& data) const
         }
     }
 
-double inline Environment::
-sum(double r) const
+template <class T>
+void
+broadcast(Environment const& env, T & obj)
     {
-    if(nnodes_ == 1) return r;
+    if(env.nnodes() == 1) return;
+    const int root = 0;
+    std::stringstream datastream;
+    if(env.rank() == root) write(datastream,obj);
+    env.broadcast(datastream);
+    if(env.rank() != root) read(datastream,obj);
+    }
+
+template <class T, class... Rest>
+void 
+broadcast(Environment const& env, T & obj, Rest &... rest)
+    {
+    broadcast(env,obj);
+    broadcast(env,rest...);
+    }
+
+template <class T>
+void Environment::
+broadcast(T& obj) const 
+    { 
+    broadcast(*this,obj); 
+    }
+
+template <class T, class... Rest>
+void Environment::
+broadcast(T & obj, Rest &... rest) const
+    { 
+    itensor::broadcast(*this,obj,rest...); 
+    }
+
+template <typename T>
+void 
+scatterVector(Environment const& env, std::vector<T> &v)
+    {
+    if(env.nnodes() == 1) return;
+    const int root = 0;
+    
+
+    if(env.firstNode())
+        { 
+        auto nnodes = env.nnodes();
+        auto n = v.size();
+        auto blockSizes = std::vector<long>(nnodes);
+        long blockSize = n / nnodes;
+
+        for(int i = 0; i < nnodes; i++) blockSizes[i] = blockSize;
+
+        if (n % nnodes != 0)
+            {
+            for(int i = 0; i < (n % nnodes); i++) ++blockSizes[i];
+            }
+
+        long mySize = 0l;
+        MPI_Scatter(blockSizes.data(),1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);
+
+        auto itp = blockSizes[0];
+        for (int i = 1; i < nnodes; ++i)
+            {
+            MailBox mailbox(env,i);
+            mailbox.send(std::vector<T>(v.begin()+itp,v.begin()+itp+blockSizes[i]));
+            itp += blockSizes[i];
+            }
+        v.resize(mySize);
+        }
+    else
+        {
+        long mySize = 0l;
+        MPI_Scatter(NULL,1,MPI_LONG,&mySize,1,MPI_LONG,root,MPI_COMM_WORLD);   
+        v.resize(mySize);
+        MailBox mailbox(env,root);
+        mailbox.receive(v);
+        }
+    }
+
+double inline
+sum(Environment const& env, double r)
+    {
+    if(env.nnodes() == 1) return r;
     double res = 0;
     MPI_Reduce(&r,&res,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     return res;
     }
 
+template <typename T>
+T
+sum(Environment const& env, T &obj)
+    {
+    if(env.nnodes() == 1) return obj;
+    const int root = 0;
+
+    T res = obj;
+    if(env.rank() == 0)
+        {
+        for (int i = 1; i < env.nnodes(); ++i)
+            {
+            MailBox mailbox(env,i);
+            T tmp;
+            mailbox.receive(tmp);
+            res += tmp;
+            }
+        }
+    else
+        {
+        MailBox mailbox(env,root);
+        mailbox.send(obj);
+        }
+    return res;
+    }
+
+template <typename T>
+T
+allSum(Environment const& env, T &obj)
+    {
+    if(env.nnodes() == 1) return obj;
+    T result = sum(env,obj);
+    broadcast(env,result);
+    return result;
+    }
 
 //
 // MailBox

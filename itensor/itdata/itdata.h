@@ -78,6 +78,7 @@ struct ITData
 template<typename T>
 class ITWrap : public ITData
     {
+    static_assert(containsType<StorageTypes,stdx::decay_t<T>>{},"Data type not in list of registered storage types");
     public:
 
     T d;
@@ -85,7 +86,6 @@ class ITWrap : public ITData
     template<typename... VArgs>
     ITWrap(VArgs&&... vargs) : d(std::forward<VArgs>(vargs)...) 
         { 
-        //static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
         }
 
     virtual ~ITWrap() { }

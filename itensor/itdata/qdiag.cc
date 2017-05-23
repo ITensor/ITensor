@@ -147,8 +147,6 @@ template<typename T>
 Cplx
 doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
     {
-    if(D.allSame()) return D.val;
-
     auto r = G.is.r();
 #ifdef DEBUG
     if(G.is.r() != decltype(r)(G.inds.size())) 
@@ -158,6 +156,14 @@ doTask(GetElt<IQIndex>& G, QDiag<T> const& D)
         }
 #endif
     if(r == 0) return D.store.front();
+
+    auto first_i = (G.inds.empty() ? 0 : G.inds.front());
+    //Check if inds_ reference an
+    //element on the diagonal, else zero
+    for(auto i : G.inds) if(i != first_i) return 0;
+
+    if(D.allSame()) return D.val;
+
     auto n = G.inds[0];
 #ifdef DEBUG
     if(n > (decltype(n))D.size()) Error("index out of range in getElt(QDiag..)");
@@ -505,6 +511,7 @@ template void doTask(Contract<IQIndex>& Con,QDense<Real> const& A,QDiag<Real> co
 template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const& A,QDiag<Real> const& B,ManageStore& m);
 template void doTask(Contract<IQIndex>& Con,QDense<Real> const& A,QDiag<Cplx> const& B,ManageStore& m);
 template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const& A,QDiag<Cplx> const& B,ManageStore& m);
+
 
 } //namespace itensor
 

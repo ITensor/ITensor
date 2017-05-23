@@ -17,6 +17,26 @@ namespace itensor {
 const char*
 typeNameOf(QCombiner const& d) { return "QCombiner"; }
 
+void 
+read(std::istream& s, QCombiner & dat)
+    {
+    Range range;
+    itensor::read(s,range);
+
+    using storage_type = typename QCombiner::storage_type;
+    storage_type store;
+    itensor::read(s,store);
+
+    dat = QCombiner(std::move(range),std::move(store));
+    }
+
+void
+write(std::ostream& s, QCombiner const& dat)
+    {
+    itensor::write(s,dat.range());
+    itensor::write(s,dat.store());
+    }
+
 Cplx
 doTask(GetElt<IQIndex> const& g, QCombiner const& c)
     {
@@ -174,32 +194,6 @@ combine(QDense<T>   const& d,
         }
     }
 
-void
-combReplaceIndex(IQIndexSet  const& dis,
-                 IQIndexSet  const& Cis,
-                 IQIndexSet       & Nis)
-    {
-    auto jc = findindex(dis,Cis[0]);
-
-    if(jc >= 0) //uncombining
-        {
-        //Has Cis[0], replace with Cis[1]
-        Nis = replaceInd(dis,jc,Cis[1]);
-        }
-    else //combining
-        {
-        //Has Cis[1], replace with cind
-        auto ju = findindex(dis,Cis[1]);
-        if(ju < 0)
-            {
-            println("IQIndexSet of regular IQTensor =\n",dis);
-            println("IQIndexSet of combiner/delta =\n",Cis);
-            println("Missing IQIndex: ",Cis[1]);
-            Error("IQCombiner: missing IQIndex");
-            }
-        Nis = replaceInd(dis,ju,Cis[0]);
-        }
-    }
 
 template<typename T>
 void
@@ -299,11 +293,7 @@ doTask(Contract<IQIndex> & C,
        QCombiner  const& cmb,
        ManageStore       & m)
     {
-    if(C.Ris.r()==2)
-        {
-        combReplaceIndex(C.Lis,C.Ris,C.Nis);
-        }
-    else if(hasindex(C.Lis,C.Ris[0]))
+    if(hasindex(C.Lis,C.Ris[0]))
         {
         uncombine(d,cmb,C.Lis,C.Ris,C.Nis,m,true);
         }
@@ -322,12 +312,7 @@ doTask(Contract<IQIndex> & C,
        QDense<T>    const& d,
        ManageStore       & m)
     { 
-    if(C.Lis.r()==2)
-        {
-        combReplaceIndex(C.Ris,C.Lis,C.Nis);
-        m.assignPointerRtoL();
-        }
-    else if(hasindex(C.Ris,C.Lis[0]))
+    if(hasindex(C.Ris,C.Lis[0]))
         {
         uncombine(d,cmb,C.Ris,C.Lis,C.Nis,m,false);
         }

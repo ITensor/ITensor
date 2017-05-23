@@ -416,6 +416,8 @@ doTask(PlusEQ<IQIndex> const& P,
        QDense<TB>      const& B,
        ManageStore          & m)
     {
+    if(B.store.size() == 0) return;
+
     if(isReal(A) && isCplx(B))
         {
         auto *nA = m.makeNewData<QDenseCplx>(A.offsets,A.begin(),A.end());

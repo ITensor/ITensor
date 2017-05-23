@@ -169,6 +169,11 @@ template<typename F>
 void
 doTask(GenerateIT<F,Real>& G, QDiagReal & D)
     {
+    if(D.allSame())
+        {
+        D.val = 0;
+        D.store.resize(D.length);
+        }
     stdx::generate(D,G.f);
     }
 
@@ -194,6 +199,11 @@ template<typename F>
 void
 doTask(GenerateIT<F,Cplx>& G, QDiagCplx & D)
     {
+    if(D.allSame())
+        {
+        D.val = 0;
+        D.store.resize(D.length);
+        }
     stdx::generate(D,G.f);
     }
 
@@ -313,6 +323,10 @@ getBlock(QDiag<V> & D,
     auto ncd = const_cast<V*>(cdr.data());
     return DataRange<V>{ncd,cdr.size()};
     }
+
+template<typename V>
+ITensor
+doTask(ToITensor & T, QDiag<V> const& d);
 
 } //namespace itensor
 

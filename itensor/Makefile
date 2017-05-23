@@ -23,6 +23,7 @@ SOURCES+= itdata/qdense.cc
 SOURCES+= itdata/qcombiner.cc 
 SOURCES+= itdata/qdiag.cc
 SOURCES+= itdata/qmixed.cc
+SOURCES+= itdata/scalar.cc 
 ##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
 SOURCES+= itensor_interface.cc 
@@ -73,14 +74,26 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
+libitensor.$(DYLIB_EXT): $(OBJECTS)
+ifdef _ITENSOR_MAKE_DYLIB
+	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT)"
+	@$(CCCOM) $(DYLIB_FLAGS) -o $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT) $(OBJECTS) $(BLAS_LAPACK_LIBFLAGS)
+endif
+
+libitensor-g.$(DYLIB_EXT): mkdebugdir $(GOBJECTS)
+ifdef _ITENSOR_MAKE_DYLIB
+	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT)"
+	@$(CCCOM) $(DYLIB_FLAGS) -o $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT) $(GOBJECTS) $(BLAS_LAPACK_LIBFLAGS)
+endif
+
 touch_all_headers:
 	@touch all.h
 	@touch all_basic.h
 	@touch all_mps.h
 
-build: libitensor.a touch_all_headers
+build: libitensor.a libitensor.$(DYLIB_EXT) touch_all_headers
 
-debug: libitensor-g.a touch_all_headers
+debug: libitensor-g.a libitensor-g.$(DYLIB_EXT) touch_all_headers
 
 mkdebugdir:
 	@mkdir -p .debug_objs
@@ -133,6 +146,9 @@ itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/qmixed.h
 itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/scalar.h
+itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)

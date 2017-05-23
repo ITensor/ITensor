@@ -7,15 +7,15 @@
 ##
 ## Set which compiler to use by defining CCCOM:
 ## GNU GCC compiler
-CCCOM=g++ -m64 -std=c++11
+CCCOM=g++ -m64 -std=c++11 -fPIC
 
 ## Clang compiler (good to use on Mac OS)
-#CCCOM=clang++ -std=c++11
+#CCCOM=clang++ -std=c++11 -fPIC
 
 ## GCC On Windows cygwin
 ## Extra flags are workaround for limitations
 ## of this compiler with Windows binary format
-#CCCOM=g++ -std=c++11 -Wa,-mbig-obj -O2
+#CCCOM=g++ -std=c++11 -Wa,-mbig-obj -O2 -fPIC
 
 ## Intel C++ Compiler not recommended,
 ## As of June 2016 it does not fully support C++11
@@ -111,9 +111,6 @@ PREFIX=$(THIS_DIR)
 ITENSOR_LIBDIR=$(PREFIX)/lib
 ITENSOR_INCLUDEDIR=$(PREFIX)
 
-OPTIMIZATIONS+= -DPLATFORM_$(PLATFORM) -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
-DEBUGFLAGS+= -DPLATFORM_$(PLATFORM) -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
-
 ITENSOR_LIBNAMES=itensor
 ITENSOR_LIBFLAGS=$(patsubst %,-l%, $(ITENSOR_LIBNAMES))
 ITENSOR_LIBFLAGS+= $(BLAS_LAPACK_LIBFLAGS)
@@ -132,3 +129,14 @@ CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
 CCGFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
 LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
+
+## Determine shared library extension
+_ITENSOR_MAKE_DYLIB=1
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+  DYLIB_EXT ?= dylib
+  DYLIB_FLAGS ?= -dynamiclib
+else
+  DYLIB_EXT ?= so
+  DYLIB_FLAGS ?= -shared
+endif

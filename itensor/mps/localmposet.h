@@ -17,7 +17,14 @@ class LocalMPOSet
 
     LocalMPOSet() { }
 
-    LocalMPOSet(std::vector<MPOt<Tensor> > const& Op,
+    LocalMPOSet(std::vector<MPOt<Tensor>> const& Op,
+                Args const& args = Args::global());
+
+    LocalMPOSet(std::vector<MPOt<Tensor>> const& H, 
+                std::vector<Tensor> const& LH, 
+                int LHlim,
+                std::vector<Tensor> const& RH,
+                int RHlim,
                 Args const& args = Args::global());
 
     void
@@ -39,6 +46,38 @@ class LocalMPOSet
     void
     position(int b, 
              MPSType const& psi);
+
+    std::vector<Tensor>
+    L() const 
+        { 
+        auto L = std::vector<Tensor>(lmpo_.size());
+        for(auto n : range(lmpo_)) L.at(n) = lmpo_.at(n).L();
+        return L;
+        }
+    std::vector<Tensor>
+    R() const 
+        { 
+        auto R = std::vector<Tensor>(lmpo_.size());
+        for(auto n : range(lmpo_)) R.at(n) = lmpo_.at(n).R();
+        return R;
+        }
+
+    void
+    L(std::vector<Tensor> const& nL)
+        { 
+        for(auto n : range(lmpo_)) lmpo_.at(n).L(nL.at(n));
+        }
+    void
+    R(std::vector<Tensor> const& nR)
+        { 
+        for(auto n : range(lmpo_)) lmpo_.at(n).R(nR.at(n));
+        }
+
+    void
+    shift(int j, Direction dir, Tensor const& A)
+        {
+        for(auto n : range(lmpo_)) lmpo_[n].shift(j,dir,A);
+        }
 
     int
     numCenter() const { return lmpo_.front().numCenter(); }
@@ -72,6 +111,24 @@ LocalMPOSet(std::vector<MPOt<Tensor>> const& Op,
     for(auto n : range(lmpo_.size()))
         {
         lmpo_[n] = LocalMPOT(Op.at(n));
+        }
+    }
+
+template <class Tensor>
+inline LocalMPOSet<Tensor>::
+LocalMPOSet(std::vector<MPOt<Tensor>> const& H, 
+            std::vector<Tensor> const& LH, 
+            int LHlim,
+            std::vector<Tensor> const& RH,
+            int RHlim,
+            Args const& args)
+  : Op_(&H),
+    lmpo_(H.size())
+    { 
+    using LocalMPOT = LocalMPO<Tensor>;
+    for(auto n : range(lmpo_.size()))
+        {
+        lmpo_[n] = LocalMPOT(H.at(n),LH.at(n),LHlim,RH.at(n),RHlim,args);
         }
     }
 

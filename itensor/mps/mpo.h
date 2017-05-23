@@ -40,6 +40,8 @@ class MPOt : private MPSt<Tensor>
 
     MPOt();
 
+    MPOt(int N);
+
     MPOt(SiteSet const& sites, 
          Real _refNorm = DefaultLogRefScale);
 

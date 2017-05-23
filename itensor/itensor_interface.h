@@ -230,6 +230,16 @@ class ITensorT
     ITensorT&
     operator/=(ITensorT const& other);
 
+    //
+    // Read from and write to streams
+    //
+
+    void
+    read(std::istream& s);
+
+    void
+    write(std::ostream& s) const;
+
 
     //
     // Developer / advanced methods
@@ -379,6 +389,10 @@ template<typename I>
 bool
 isComplex(ITensorT<I> const& T);
 
+template<typename I>
+bool
+isReal(ITensorT<I> const& T);
+
 //return number of indices of T
 //(same as order)
 template<typename I>
@@ -423,13 +437,6 @@ template<typename I>
 Cplx
 sumelsC(ITensorT<I> const& t);
 
-template<typename I>
-void
-read(std::istream& s, ITensorT<I>& T);
-
-template<typename I>
-void
-write(std::ostream& s, ITensorT<I> const& T);
 
 //
 // Given Tensors which represent operator matrices

@@ -166,7 +166,8 @@ real(IVals&&... ivs) const
     if(fabs(z.imag()) > 1E-14*fabs(z.real()))
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("tensor is Complex valued, use .cplx(...) method");
+        //Error("tensor is Complex valued, use .cplx(...) method");
+        throw ITError("tensor is complex valued, use .cplx(...) method");
         }
     return z.real();
     }
@@ -528,9 +529,16 @@ apply(ITensorT<I> T, F&& f)
 
 template<typename I>
 bool
-isComplex(const ITensorT<I>& T)
+isComplex(ITensorT<I> const& T)
     {
     return doTask(CheckComplex{},T.store());
+    }
+
+template<typename I>
+bool
+isReal(ITensorT<I> const& T)
+    {
+    return not isComplex(T);
     }
 
 template<typename I>
@@ -602,32 +610,32 @@ readType(std::istream& s, CtrArgs&&... args)
     }
 
 template<typename I>
-void
-read(std::istream& s, ITensorT<I> & T)
+void ITensorT<I>::
+read(std::istream& s)
     {
-    IndexSetT<I> is;
-    read(s,is);
+    itensor::read(s,is_);
     LogNum scale;
-    read(s,scale);
+    itensor::read(s,scale_);
     auto type = StorageType::Null;
-    read(s,type);
-    ITensor::storage_ptr p;
+    itensor::read(s,type);
     if(type==StorageType::Null) { /*intentionally left blank*/  }
-    else if(type==StorageType::DenseReal) { p = readType<DenseReal>(s); }
-    else if(type==StorageType::DenseCplx) { p = readType<DenseCplx>(s); }
-    else if(type==StorageType::Combiner) { p = readType<Combiner>(s); }
-    else if(type==StorageType::DiagReal) { p = readType<Diag<Real>>(s); }
-    else if(type==StorageType::DiagCplx) { p = readType<Diag<Cplx>>(s); }
-    else if(type==StorageType::QDenseReal) { p = readType<QDense<Real>>(s); }
-    else if(type==StorageType::QDenseCplx) { p = readType<QDense<Cplx>>(s); }
-    else if(type==StorageType::QDiagReal) { p = readType<QDiag<Real>>(s); }
-    else if(type==StorageType::QDiagCplx) { p = readType<QDiag<Cplx>>(s); }
-    else if(type==StorageType::QCombiner) { p = readType<QCombiner>(s); }
+    else if(type==StorageType::DenseReal) { store_ = readType<DenseReal>(s); }
+    else if(type==StorageType::DenseCplx) { store_ = readType<DenseCplx>(s); }
+    else if(type==StorageType::Combiner) { store_ = readType<Combiner>(s); }
+    else if(type==StorageType::DiagReal) { store_ = readType<Diag<Real>>(s); }
+    else if(type==StorageType::DiagCplx) { store_ = readType<Diag<Cplx>>(s); }
+    else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
+    else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
+    else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
+    else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
+    else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
+    else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
+    else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");
         }
-    T = ITensorT<I>(std::move(is),std::move(p),scale);
+    //T = ITensorT<I>(std::move(is),std::move(p),scale);
     }
 
 struct Write
@@ -648,9 +656,9 @@ doTask(Write & W, D const& d)
     write(W.s,d);
     }
 
-template<typename I>
-void
-write(std::ostream& s, ITensorT<I> const& T);
+//template<typename I>
+//void
+//write(std::ostream& s, ITensorT<I> const& T);
 
 
 } // namespace itensor

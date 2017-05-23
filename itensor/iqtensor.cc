@@ -32,11 +32,14 @@ ITensorT(Complex val)
     :
     scale_(1.)
     { 
-    //TODO: change storage type to IQTDiag?
-    if(val.imag()==0)
-        store_ = newITData<Diag<Real>>(1,val.real());
+    if(val.imag()==0.)
+        {
+        store_ = newITData<ScalarReal>(val.real());
+        }
     else
-        store_ = newITData<Diag<Complex>>(1,val);
+        {
+        store_ = newITData<ScalarCplx>(val);
+        }
     }
 
 //IQTensor::
@@ -288,6 +291,21 @@ template ITensor doTask(ToITensor & T, QDense<Cplx> const& d);
 
 template<typename V>
 ITensor
+doTask(ToITensor & T, QDiag<V> const& qd)
+    {
+    Diag<V> d;
+    if(qd.allSame()) d = Diag<V>(qd.length,qd.val);
+    else             d = Diag<V>(qd.begin(),qd.end());
+    auto r = T.is.r();
+    auto inds = IndexSetBuilder(r);
+    for(auto j : range(r)) inds.setIndex(j,T.is[j]);
+    return ITensor{inds.build(),std::move(d),T.scale};
+    }
+template ITensor doTask(ToITensor & T, QDiagReal const& d);
+template ITensor doTask(ToITensor & T, QDiagCplx const& d);
+
+template<typename V>
+ITensor
 doTask(ToITensor & T, 
        QMixed<V> const& d)
     {
@@ -341,7 +359,27 @@ combiner(std::vector<IQIndex> cinds,
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",cinds.front().type());
     auto cr = cinds.size();
-    auto cdir = cinds.front().dir();
+
+
+    auto cdir = Out;
+    if(args.defined("IndexDir"))
+        {
+        cdir = toArrow(args.getInt("IndexDir"));
+        }
+    else
+        {
+        //If not specified by user, make combined IQIndex
+        //point Out unless all combined indices have In arrows.
+        auto allin = true;
+        for(auto& i : cinds) 
+            if(i.dir() != In)
+                {
+                allin = false;
+                break;
+                }
+        if(allin) cdir = In;
+        }
+
 
     auto C = QCombiner{cinds};
 

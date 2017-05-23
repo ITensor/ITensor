@@ -2,6 +2,7 @@
 #include "itensor/iqtensor.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/util/range.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 using namespace std;
@@ -26,7 +27,9 @@ enum class QType {
             QDiagRealAllSame, 
             QDiagCplx, 
             QDiagCplxAllSame, 
-            QCombiner 
+            QCombiner,
+            DiagReal,
+            DiagCplx
           };
 
 struct GetQType
@@ -36,12 +39,15 @@ struct GetQType
     QType operator()(QDiagReal const& d) const { return d.allSame() ? QType::QDiagRealAllSame : QType::QDiagReal; }
     QType operator()(QDiagCplx const& d) const { return d.allSame() ? QType::QDiagCplxAllSame : QType::QDiagCplx; }
     QType operator()(QCombiner const& d) const { return QType::QCombiner; }
+    QType operator()(DiagReal const& d) const { return QType::DiagReal; }
+    QType operator()(DiagCplx const& d) const { return QType::DiagCplx; }
     template<typename T>
     QType operator()(T const& d) const { return QType::OtherType; }
     };
 
+template<typename I>
 QType
-typeOf(IQTensor const& t) 
+typeOf(ITensorT<I> const& t) 
     { 
     return applyFunc(GetQType{},t.store()); 
     }
@@ -57,6 +63,8 @@ operator<<(std::ostream& s, QType t)
     else if(t == QType::QDiagCplx) s << "QDiagCplx";
     else if(t == QType::QDiagCplxAllSame) s << "QDiagCplxAllSame";
     else if(t == QType::QCombiner) s << "QCombiner";
+    else if(t == QType::DiagReal) s << "DiagReal";
+    else if(t == QType::DiagCplx) s << "DiagCplx";
     else Error("Unrecognized QType value");
     return s;
     }
@@ -272,7 +280,7 @@ SECTION("RandomizeTest")
     CHECK_EQUAL(D,div(T));
     }
 
-SECTION("ITensor Conversion")
+SECTION("QDense ITensor Conversion")
     {
     SECTION("Case 1")
         {
@@ -292,6 +300,35 @@ SECTION("ITensor Conversion")
         for(int j2 = 1; j2 <= L2.m(); ++j2)
             CHECK_CLOSE(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
                         itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
+        }
+    }
+
+SECTION("QDiag ITensor Conversion")
+    {
+    SECTION("Case 1 (delta/allSame)")
+        {
+        auto D = delta(dag(L1),prime(L1));
+        auto d = toITensor(D);
+        CHECK(typeOf(d) == QType::DiagReal);
+        Index l1 = L1;
+        for(auto i : range1(L1))
+        for(auto j : range1(L1))
+            {
+            CHECK_CLOSE(D.real(L1(i),prime(L1)(j)),d.real(l1(i),prime(l1)(j)));
+            }
+        }
+    SECTION("Case 2")
+        {
+        auto D = delta(dag(L1),prime(L1));
+        randomize(D);
+        auto d = toITensor(D);
+        CHECK(typeOf(d) == QType::DiagReal);
+        Index l1 = L1;
+        for(auto i : range1(L1))
+        for(auto j : range1(L1))
+            {
+            CHECK_CLOSE(D.real(L1(i),prime(L1)(j)),d.real(l1(i),prime(l1)(j)));
+            }
         }
     }
 
@@ -611,6 +648,24 @@ SECTION("Combiner")
 
         }
 
+    SECTION("Combiner Single Index Regression Test")
+        {
+        auto s1 = IQIndex("s1",Index("Em",1),QN("Sz=", 0,"Pf=",0),
+                               Index("Up",1),QN("Sz=",+1,"Pf=",1),
+                               Index("Dn",1),QN("Sz=",-1,"Pf=",1),
+                               Index("UD",1),QN("Sz=", 0,"Pf=",0));
+        auto s2 = IQIndex("s2",Index("Em",1),QN("Sz=", 0,"Pf=",0),
+                               Index("Up",1),QN("Sz=",+1,"Pf=",1),
+                               Index("Dn",1),QN("Sz=",-1,"Pf=",1),
+                               Index("UD",1),QN("Sz=", 0,"Pf=",0));
+        auto T = randomTensor(QN{},s1,s2);
+        auto cmb = combiner(s1);
+        auto ci = cmb.inds().front();
+        auto Tc = cmb*T;
+        //Following line was causing an error:
+        Tc *= dag(prime(Tc,ci));
+        }
+
 
     } //Combiner
 
@@ -855,9 +910,9 @@ SECTION("Contraction with Scalar")
         CHECK_CLOSE(val,T3.real(L1(i1),L2(i2),S1(j1),S2(j2)));
         }
 
-    //Make scalar from constructor
-    auto Q = IQTensor(1.+3_i);
-    auto q = Q.cplx();
+    //Make real scalar tensor from constructor
+    auto Q = IQTensor(2);
+    auto q = Q.real();
     auto T4 = Q * T1;
     for(int i1 = 1; i1 <= L1.m(); ++i1)
     for(int i2 = 1; i2 <= L2.m(); ++i2)
@@ -866,6 +921,108 @@ SECTION("Contraction with Scalar")
         {
         auto val = q*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
         CHECK_CLOSE(val,T4.real(L1(i1),L2(i2),S1(j1),S2(j2)));
+        }
+
+    ////Make complex scalar tensor from constructor
+    //auto Q = IQTensor(1.+3_i);
+    //auto q = Q.cplx();
+    //auto T4 = Q * T1;
+    //for(int i1 = 1; i1 <= L1.m(); ++i1)
+    //for(int i2 = 1; i2 <= L2.m(); ++i2)
+    //for(int j1 = 1; j1 <= S1.m(); ++j1)
+    //for(int j2 = 1; j2 <= S2.m(); ++j2)
+    //    {
+    //    auto val = q*T1.cplx(L1(i1),L2(i2),S1(j1),S2(j2));
+    //    CHECK_CLOSE(val,T4.cplx(L1(i1),L2(i2),S1(j1),S2(j2)));
+    //    }
+    }
+
+SECTION("Scalar Storage")
+    {
+    auto S1 = IQTensor(1.);
+    CHECK_CLOSE(S1.real(),1.);
+
+    auto S2 = IQTensor(1.)*2.;
+    CHECK_CLOSE(S2.real(),2.);
+
+    auto ZA = IQTensor(1._i);
+    CHECK_CLOSE(ZA.cplx(),1._i);
+
+    auto ZB = IQTensor(-1.+2._i);
+    CHECK_CLOSE(ZB.cplx(),-1+2._i);
+
+    SECTION("Set")
+        {
+        S1.set(4.5);
+        CHECK_CLOSE(S1.real(),4.5);
+        S1.set(1.+3._i);
+        CHECK(isComplex(S1));
+        CHECK_CLOSE(S1.cplx(),1.+3._i);
+
+        ZA.set(2.-3._i);
+        CHECK_CLOSE(ZA.cplx(),2.-3._i);
+        ZA.set(3.0);
+        CHECK(isReal(ZA));
+        CHECK_CLOSE(ZA.real(),3.);
+        }
+
+    SECTION("Norm")
+        {
+        CHECK_CLOSE(norm(S1),1.);
+        CHECK_CLOSE(norm(S2),2.);
+        auto Sn2 = IQTensor(-2.);
+        CHECK_CLOSE(norm(Sn2),2.);
+
+        CHECK_CLOSE(norm(ZA),std::norm(ZA.cplx()));
+        }
+
+    auto T = randomTensor(QN(),L1,L2);
+    auto TC = randomTensorC(QN(),L1,L2);
+
+    SECTION("Multiply on right")
+        {
+        auto R = T*S1;
+        CHECK(norm(R-T) < 1E-12);
+        R = T*S2;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = TC*S2;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = T*ZA;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+        R = TC*ZA;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Multiply on left")
+        {
+        auto R = S1*T;
+        CHECK(norm(R-T) < 1E-12);
+        R = S2*T;
+        CHECK(norm(R-2*T) < 1E-12);
+        R = S2*TC;
+        CHECK(norm(R-2*TC) < 1E-12);
+
+        R = ZA*T;
+        CHECK(isComplex(R));
+        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+
+        R = ZA*TC;
+        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        }
+    SECTION("Add & Subtract")
+        {
+        auto R = S1 + S2;
+        CHECK_CLOSE(R.real(),3.);
+
+        R = ZA+ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()+ZB.cplx());
+
+        R = S1 - S2;
+        CHECK_CLOSE(R.real(),-1.);
+
+        R = ZA-ZB;
+        CHECK_CLOSE(R.cplx(),ZA.cplx()-ZB.cplx());
         }
     }
 
@@ -886,6 +1043,7 @@ SECTION("Mixed Storage")
         CHECK_CLOSE(t.real(s(i),prime(s)(j)),T.real(s(i),prime(s)(j)));
         }
     }
+
 
 //SECTION("Non-contracting product")
 //    {

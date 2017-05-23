@@ -41,6 +41,14 @@ namespace itensor {
 enum Arrow { In = -1, Out = 1, Neither = 0 };
 
 Arrow inline
+toArrow(int i)
+    {
+    int In_int = static_cast<int>(In);
+    if(In_int == i) return In;
+    return Out;
+    }
+
+Arrow inline
 operator-(Arrow dir)
     {
 #ifdef DEBUG

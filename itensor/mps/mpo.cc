@@ -21,13 +21,22 @@ using std::string;
 template <class Tensor>
 MPOt<Tensor>::
 MPOt() 
-    : 
-    Parent(),
+  : Parent(),
     logrefNorm_(DefaultLogRefScale)
     { 
     }
 template MPOt<ITensor>::MPOt();
 template MPOt<IQTensor>::MPOt();
+
+template<class T>
+MPOt<T>::
+MPOt(int N)
+  : Parent(N),
+    logrefNorm_(DefaultLogRefScale)
+    { 
+    }
+template MPOt<ITensor>::MPOt(int N);
+template MPOt<IQTensor>::MPOt(int N);
 
 template <class Tensor>
 MPOt<Tensor>::

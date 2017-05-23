@@ -12,11 +12,21 @@ itensor: configure
 	@echo Building ITensor library
 	@echo
 	@cd itensor && $(MAKE)
+    
 
 configure:
 	@echo
 	@echo Configure: Writing current dir to this_dir.mk
 	@echo THIS_DIR=`pwd` > this_dir.mk
+	@echo "#ifndef __ITENSOR_CONFIG_H" > itensor/config.h
+	@echo "#define __ITENSOR_CONFIG_H\n" >> itensor/config.h
+	@echo "#ifndef PLATFORM_$(PLATFORM)" >> itensor/config.h
+	@echo "#define PLATFORM_$(PLATFORM)" >> itensor/config.h
+	@echo "#endif" >> itensor/config.h
+	@echo "#ifndef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES" >> itensor/config.h
+	@echo "#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0" >> itensor/config.h
+	@echo "#endif" >> itensor/config.h
+	@echo "\n#endif " >> itensor/config.h
 
 clean:
 	@echo "Removing temporary build files"
@@ -26,6 +36,7 @@ clean:
 	@cd unittest && $(MAKE) clean
 	@rm -f lib/*
 	@rm -f this_dir.mk
+	@rm -f itensor/config.h
 
 distclean: clean
 	@rm -f this_dir.mk options.mk
