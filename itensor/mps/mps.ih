@@ -205,7 +205,7 @@ checkOrtho(const MPSt<Tensor>& psi,
 
     IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
     Tensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
-    Tensor Delta = makeKroneckerDelta(link,4);
+    Tensor Delta = delta(link, prime(link, 4));
     Tensor Diff = rho - Delta;
 
     const
