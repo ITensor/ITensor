@@ -99,9 +99,29 @@ svdImpl(ITensor const& A,
         showargs.add("AbsoluteCutoff",absoluteCutoff);
         showEigs(probs,truncerr,A.scale(),showargs);
         }
-    
-    Index uL(lname,m,litype),
-          vL(rname,m,ritype);
+
+    Index uL, vL;
+
+    if((D.r()==2) && (D.inds().front()!=D.inds().back())){
+        // Reverse indeces if needed to preserve the same order
+        if (hasindex(U, D.inds().front())){
+            uL = D.inds().front();
+            vL = D.inds().back();
+        }
+        else{
+            uL = D.inds().back();
+            vL = D.inds().front();
+        }
+        uL.setm(m);
+        vL.setm(m);
+    }
+    else{
+        uL = Index(lname,m,litype);
+        vL = Index(rname,m,ritype);
+    }
+
+//    Index uL(lname,m,litype);
+//    Index vL(rname,m,ritype);
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
