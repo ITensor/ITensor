@@ -49,7 +49,7 @@ nameint(string const& f, int n)
 Index::id_type Index::
 generateID()
     {
-    static Index::IDGenerator G;
+    static thread_local Index::IDGenerator G;
     return G();
     }
 
