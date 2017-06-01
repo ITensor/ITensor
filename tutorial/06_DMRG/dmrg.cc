@@ -58,8 +58,8 @@ int main()
 
             //Define tensor (references/aliases)
             //to hold SVD results
-            auto& A = psi.Anc(b);   //nc means 'non-const'
-            auto& B = psi.Anc(b+1); //nc means 'non-const'
+            auto& A = psi.Aref(b);  //ref means reference
+            auto& B = psi.Aref(b+1); //ref means reference
             ITensor D;
 
             //Add code:
