@@ -737,7 +737,7 @@ position(int i, Args const& args)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),Fromleft,args);
+            orthMPS(Aref(l_orth_lim_+1),Aref(l_orth_lim_+2),Fromleft,args);
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
             }
@@ -745,7 +745,7 @@ position(int i, Args const& args)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),Fromright,args);
+            orthMPS(Aref(r_orth_lim_-2),Aref(r_orth_lim_-1),Fromright,args);
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
             }

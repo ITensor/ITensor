@@ -95,10 +95,10 @@ class MPSt
     A(int i) const;
 
     void
-    setA(int i, Tensor const& nA) { Anc(i) = nA; }
+    setA(int i, Tensor const& nA) { Aref(i) = nA; }
 
     void
-    setA(int i, Tensor && nA) { Anc(i) = std::move(nA); }
+    setA(int i, Tensor && nA) { Aref(i) = std::move(nA); }
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
@@ -269,11 +269,11 @@ addAssumeOrth(MPSType      & L,
 
 template<class T>
 MPSt<T>& 
-operator*=(MPSt<T> & psi, Real a) { psi.Anc(psi.leftLim()+1) *= a; return psi; }
+operator*=(MPSt<T> & psi, Real a) { psi.Aref(psi.leftLim()+1) *= a; return psi; }
 
 template<class T>
 MPSt<T>& 
-operator/=(MPSt<T> & psi, Real a) { psi.Anc(psi.leftLim()+1) /= a; return psi; }
+operator/=(MPSt<T> & psi, Real a) { psi.Aref(psi.leftLim()+1) /= a; return psi; }
 
 template<class T>
 MPSt<T>
@@ -285,11 +285,11 @@ operator*(Real r, MPSt<T> psi) { psi *= r; return psi; }
 
 template<class T>
 MPSt<T>& 
-operator*=(MPSt<T> & psi, Cplx z) { psi.Anc(psi.leftLim()+1) *= z; return psi; }
+operator*=(MPSt<T> & psi, Cplx z) { psi.Aref(psi.leftLim()+1) *= z; return psi; }
 
 template<class T>
 MPSt<T>& 
-operator/=(MPSt<T> & psi, Cplx z) { psi.Anc(psi.leftLim()+1) /= z; return psi; }
+operator/=(MPSt<T> & psi, Cplx z) { psi.Aref(psi.leftLim()+1) /= z; return psi; }
 
 template <class T>
 MPSt<T>
