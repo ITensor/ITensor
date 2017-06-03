@@ -8,6 +8,7 @@
 #include "itensor/indextype.h"
 #include "itensor/indexname.h"
 #include "itensor/arrow.h"
+#include <thread>
 
 namespace itensor {
 
@@ -19,9 +20,9 @@ namespace detail {
         {
         using rng_type = std::mt19937_64;
         using result_type = typename rng_type::result_type;
-
+        std::hash<std::thread::id> hasher;
         RandomID()
-            : rng(std::time(NULL) + getpid())
+            : rng(std::clock() + hasher(std::this_thread::get_id()))
             { }
 
         result_type
