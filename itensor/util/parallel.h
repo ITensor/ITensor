@@ -236,7 +236,7 @@ broadcast(std::stringstream& data) const
             rem = size%buffer.size();
         MPI_Bcast(&quo,1,MPI_INT,root,MPI_COMM_WORLD);
         MPI_Bcast(&rem,1,MPI_INT,root,MPI_COMM_WORLD);
-        std::cout << "Doing broadcast (quo,rem) = (" << quo << "," << rem << ")" << std::endl;
+        //std::cout << "Doing broadcast (quo,rem) = (" << quo << "," << rem << ")" << std::endl;
         for(int q = 0; q < quo; ++q)
             { 
             MPI_Bcast(const_cast<char*>(data.str().data())+q*buffer.size(),buffer.size(),MPI_CHAR,root,MPI_COMM_WORLD); 

@@ -99,6 +99,12 @@ OPTIMIZATIONS=-O2 -DNDEBUG -Wall
 
 ## Flags to give the compiler for "debug mode"
 DEBUGFLAGS=-DDEBUG -g -Wall -pedantic
+#
+## Set this to 1 if you want ITensor to also build dynamic libraries
+## These can be faster to link and give smaller binary sizes
+## You may need to set you LD_LIBRARY_PATH to include the ITensor lib/
+## folder in order to link with the dynamic libraries
+ITENSOR_MAKE_DYLIB=0
 
 
 ###
@@ -131,7 +137,6 @@ LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
 LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 ## Determine shared library extension
-_ITENSOR_MAKE_DYLIB=1
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
   DYLIB_EXT ?= dylib

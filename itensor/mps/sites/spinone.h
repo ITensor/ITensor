@@ -17,6 +17,8 @@ class SpinOne : public SiteSet
     SpinOne(int N, 
             Args const& args = Args::global());
 
+    SpinOne(std::vector<IQIndex> const& inds);
+
     void
     read(std::istream& s);
 
@@ -217,6 +219,24 @@ class SpinOneSite
         return Op;
         }
     };
+
+inline SpinOne::
+SpinOne(std::vector<IQIndex> const& inds)
+    {
+    int N = inds.size();
+    auto sites = SiteStore(N);
+    for(int j = 1, i = 0; j <= N; ++j, ++i)
+        {
+        auto& Ii = inds.at(i);
+        if(Ii.m() != 3)
+            {
+            printfln("IQIndex at entry %d = %s",i,Ii);
+            Error("Only S=1 IQIndices allowed in SpinOne(vector<IQIndex>) constructor");
+            }
+        sites.set(j,SpinOneSite(Ii));
+        }
+    SiteSet::init(std::move(sites));
+    }
 
 inline SpinOne::
 SpinOne(int N, 

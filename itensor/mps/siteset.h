@@ -390,6 +390,18 @@ class BasicSiteSet : public SiteSet
         SiteSet::init(std::move(sites));
         }
 
+    BasicSiteSet(std::vector<IQIndex> const& inds)
+        {
+        int N = inds.size();
+        auto sites = SiteStore(N);
+        for(int j = 1, i = 0; j <= N; ++j, ++i)
+            {
+            auto& Ii = inds.at(i);
+            sites.set(j,SiteType(Ii));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
     void
     read(std::istream& s)
         {
@@ -397,6 +409,47 @@ class BasicSiteSet : public SiteSet
         }
 
     };
+
+template<typename SiteSetT,
+         class = stdx::enable_if_t<std::is_base_of<SiteSet,SiteSetT>::value>>
+SiteSetT
+merge(SiteSetT const& sites1,
+      SiteSetT const& sites2,
+      Args const& args = Args::global())
+    {
+    auto N1 = sites1.N();
+    auto N2 = sites2.N();
+    auto start1 = args.getInt("Start1",1);
+    auto end1 = args.getInt("End1",N1);
+    auto start2 = args.getInt("Start2",1);
+    auto end2 = args.getInt("End2",N2);
+    if(end1 <= start1)
+        {
+        println("Start1=",start1);
+        println("End1=",end1);
+        Error("end1 must be greater than start1");
+        }
+    if(end2 <= start2)
+        {
+        println("Start2=",start2);
+        println("End2=",end2);
+        Error("end2 must be greater than start2");
+        }
+    auto nsize = (end1-start1+1)+(end2-start2+1);
+    auto inds = std::vector<IQIndex>(nsize);
+    auto i = 0;
+    for(auto j1 : range1(start1,end1))
+        {
+        inds.at(i) = sites1(j1);
+        ++i;
+        }
+    for(auto j2 : range1(start2,end2))
+        {
+        inds.at(i) = sites2(j2);
+        ++i;
+        }
+    return SiteSetT{inds};
+    }
 
 } //namespace itensor
 

@@ -110,7 +110,8 @@ Index b8("b8",8);
 
 Index J("J",10),
       K("K",10),
-      L("L",10);
+      L("L",10),
+      M("M",10);
 
 IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
 
@@ -1427,17 +1428,31 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     CHECK_CLOSE(R.real(),val);
     }
 
-SECTION("Contract All Dense Inds; Diag result")
+SECTION("Contract All Dense Inds; Rank == 1 Diag result")
     {
     auto T = randomTensor(J,K);
     
     auto d = delta(J,K,L);
     auto R = d*T;
-    CHECK(typeOf(R) == Type::DiagReal);
+    CHECK(typeOf(R) == Type::DenseReal);
     CHECK(hasindex(R,L));
     auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
     for(long j = 1; j <= minjkl; ++j)
         CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
+    }
+
+SECTION("Contract All Dense Inds; Rank > 1 Diag result")
+    {
+    auto T = randomTensor(J,K);
+    
+    auto d = delta(J,K,L,M);
+    auto R = d*T;
+    CHECK(typeOf(R) == Type::DiagReal);
+    CHECK(hasindex(R,L));
+    CHECK(hasindex(R,M));
+    auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+    for(long j = 1; j <= minjkl; ++j)
+        CHECK_CLOSE(R.real(L(j),M(j)), T.real(J(j),K(j)));
     }
 SECTION("Two-index delta Tensor as Index Replacer")
     {
