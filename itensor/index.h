@@ -89,9 +89,6 @@ class Index
     // Returns the bond dimension
     long 
     m() const { return m_; }
-    // Sets the bond dimension, use with care
-    void
-    setm(int m) { m_ = m; }
 
     // Returns the prime level
     int 
