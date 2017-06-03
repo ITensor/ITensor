@@ -111,10 +111,17 @@ contractDiagDense(Diag<T1>  const& d,
                              Tref,tind,
                              Nref,Nind);
             }
-        if(nsize==1)
-            m.makeNewData<Diag<T3>>(1,nstore.front());
+        if(rank(Nis)==1)
+            {
+            m.makeNewData<Dense<T3>>(std::move(nstore));
+            }
         else
-            m.makeNewData<Diag<T3>>(std::move(nstore));
+            {
+            if(nsize==1)
+                m.makeNewData<Diag<T3>>(1,nstore.front());
+            else
+                m.makeNewData<Diag<T3>>(std::move(nstore));
+            }
         }
     }
 
