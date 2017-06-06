@@ -7,6 +7,7 @@
 #include <iostream>
 #include "itensor/util/args.h"
 #include "itensor/util/error.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
@@ -124,6 +125,28 @@ Val(Name const& name, Real rval)
     type_(Numeric),
     rval_(rval)
     { }
+
+void Args::Val::
+read(std::istream& s)
+    { 
+    itensor::read(s, name_);
+    itensor::read(s, type_);
+    if(type_ == String)
+        itensor::read(s, sval_);
+    else
+        itensor::read(s, rval_);
+    }
+
+void Args::Val::
+write(std::ostream& s) const
+    { 
+    itensor::write(s, name_);
+    itensor::write(s, type_);
+    if(type_ == String)
+        itensor::write(s, sval_);
+    else
+        itensor::write(s, rval_);
+    }
 
 void Args::Val::
 assertType(Type t) const
@@ -406,6 +429,17 @@ operator+=(Args const& args)
     return *this;
     }
 
+void Args::
+read(std::istream& s)
+    {
+    itensor::read(s,vals_);
+    }
+
+void Args::
+write(std::ostream& s) const
+    {
+    itensor::write(s,vals_);
+    }
 
 Args
 operator+(Args args, Args const& other)

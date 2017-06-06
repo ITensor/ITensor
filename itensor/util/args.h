@@ -156,6 +156,14 @@ class Args
         return gos_;
         }
 
+    // Read Args object from binary
+    void
+    read(std::istream& s);
+
+    // Write Args object to binary
+    void
+    write(std::ostream& s) const;
+
     private:
 
     void
@@ -255,6 +263,12 @@ class Args
         Type
         type() const { return type_; }
 
+        void
+        read(std::istream& s);
+
+        void
+        write(std::ostream& s) const;
+        
         private:
 
         void
