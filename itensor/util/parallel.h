@@ -336,6 +336,30 @@ scatterVector(Environment const& env, std::vector<T> &v)
         }
     }
 
+template <typename T>
+void 
+gatherVector(Environment const& env, std::vector<T> &v)
+    { 
+    if(env.nnodes() == 1) return;
+    const int root = 0;
+    
+    if(env.firstNode())
+        { 
+        for(int i = 1; i < env.nnodes(); i++)
+            {
+            MailBox mailbox(env,i);
+            std::vector<T> tmp;
+            mailbox.receive(tmp);
+            v.insert(v.end(), tmp.begin(), tmp.end());
+            }
+        }
+    else
+        {
+        MailBox mailbox(env,root);
+        mailbox.send(v);
+        }
+    }
+
 double inline
 sum(Environment const& env, double r)
     {

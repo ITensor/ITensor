@@ -140,5 +140,25 @@ SECTION("Chop Spaces and Equals Signs")
     CHECK(args.getInt("Maxm")==100);
     }
 
+SECTION("Read/Write")
+    {
+    Args o1("Quiet",true,"Sz",1,"Pinning",-0.5,"Name","name");
+    std::stringstream data;
+
+    o1.write(data);
+
+    Args o2;
+    o2.read(data);
+
+    CHECK(o2.defined("Quiet"));
+    CHECK(o2.getBool("Quiet"));
+    CHECK(o2.defined("Sz"));
+    CHECK(o2.getInt("Sz") == 1);
+    CHECK(o2.defined("Pinning"));
+    CHECK(o2.getReal("Pinning") == -0.5);
+    CHECK(o2.defined("Name"));
+    CHECK(o2.getString("Name") == "name");
+    }
+
 }
 
