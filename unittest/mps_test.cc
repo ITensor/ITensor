@@ -136,4 +136,12 @@ SECTION("Orthogonalize")
 
     }
 
+SECTION("Overlap - 1 site")
+    {
+    auto psi = MPS(1);
+    auto s = Index("s",2);
+    psi.Aref(1) = randomTensor(s);
+    CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).real());
+    }
+
 }

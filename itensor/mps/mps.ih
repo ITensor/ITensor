@@ -257,18 +257,12 @@ overlapC(MPSType const& psi,
 
     auto l1 = linkInd(psi,1);
     auto L = phi.A(1);
-    if(l1) 
-        {
-        L *= dag(prime(psi.A(1),l1)); 
-        }
-    else   
-        {
-        L *= dag(psi.A(1));
-        }
+    if(l1) L *= dag(prime(psi.A(1),l1)); 
+    else   L *= dag(psi.A(1));
 
+    if(N == 1) return L.cplx();
 
-    auto i = N;
-    for(i = 2; i < N; ++i) 
+    for(decltype(N) i = 2; i < N; ++i) 
         { 
         L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
         }
