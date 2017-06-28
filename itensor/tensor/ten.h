@@ -620,6 +620,20 @@ class Ten : public TensorType
         data_.swap(other.data_);
         }
 
+    void
+    read(std::istream& s)
+        {
+        itensor::read(s,range_);
+        itensor::read(s,data_);
+        }
+
+    void
+    write(std::ostream& s) const
+        {
+        itensor::write(s,range_);
+        itensor::write(s,data_);
+        }
+
     private:
 
     void

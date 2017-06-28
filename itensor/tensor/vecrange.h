@@ -95,6 +95,20 @@ class VecRangeT : public VecRangeType
         stride_ = 1;
         }
 
+    void
+    read(std::istream& s)
+        {
+        itensor::read(s,ext_);
+        itensor::read(s,stride_);
+        }
+
+    void
+    write(std::ostream& s) const
+        {
+        itensor::write(s,ext_);
+        itensor::write(s,stride_);
+        }
+
     };
 
 template<size_t S>
