@@ -7,6 +7,7 @@
 #include <functional>
 #include "itensor/util/input.h"
 #include "itensor/global.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
