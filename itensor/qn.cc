@@ -45,7 +45,7 @@ QN(Args const& args)
     auto hasSz = args.defined("Sz");
     auto start = hasSz ? 1 : 0;
 
-    if(hasSz) qn_[0] = args.getInt("Sz");
+    if(hasSz) qn_[0] = QNVal(args.getInt("Sz"));
 
     if(args.defined("Nb"))
         {

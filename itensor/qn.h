@@ -73,7 +73,7 @@ struct QNVal
 
     QNVal() { }
 
-    QNVal(qn_t v) : val_(v), mod_(1) { }
+    explicit QNVal(qn_t v) : val_(v), mod_(1) { }
 
     QNVal(qn_t v, qn_t m) : mod_(m) { set(v); }
 
