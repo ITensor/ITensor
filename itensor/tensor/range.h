@@ -299,8 +299,6 @@ class RangeBuilderT
     bool auto_compute_strides_ = true;
     public:
 
-    RangeBuilderT() { }
-
     RangeBuilderT(size_type size)
       : store_(size)
         { }
