@@ -184,7 +184,17 @@ read(std::istream& s)
     {
     itensor::read(s,primelevel_);
     itensor::read(s,type_);
-    itensor::read(s,id_);
+    if(Global::read32BitIDs())
+        {
+        using ID32 = std::mt19937::result_type;
+        ID32 oldid = 0;
+        itensor::read(s,oldid);
+        id_ = oldid;
+        }
+    else
+        {
+        itensor::read(s,id_);
+        }
     itensor::read(s,m_);
     itensor::read(s,name_);
 

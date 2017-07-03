@@ -182,6 +182,12 @@ class Global
             ++depcount;
             }
         }
+    static bool& 
+    read32BitIDs()
+        {
+        static bool read32_ = false;
+        return read32_;
+        }
     };
 
 #define PrintData(X) PrintEither(true,#X,X)
