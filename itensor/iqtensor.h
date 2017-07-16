@@ -77,6 +77,9 @@ div(IQTensor const& T);
 IQTensor
 combiner(std::vector<IQIndex> inds, Args const& args = Global::args());
 
+IQIndex
+combinedIndex(IQTensor const& C);
+
 template<typename... Inds>
 IQTensor
 combiner(IQIndex const& i1, 

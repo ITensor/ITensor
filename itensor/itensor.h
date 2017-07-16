@@ -40,6 +40,9 @@ combiner(Index const& i1,
     return combiner(std::vector<Index>{i1,inds...});
     }
 
+Index
+combinedIndex(ITensor const& C);
+
 
 //Construct diagonal ITensor with diagonal 
 //elements set to 1.0

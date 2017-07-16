@@ -1521,6 +1521,8 @@ SECTION("Combiner")
         CHECK(ci);
         CHECK(ci.m() == s1.m()*s2.m());
 
+        CHECK(ci == combinedIndex(C));
+
         for(int i1 = 1; i1 <= s1.m(); ++i1)
         for(int i2 = 1; i2 <= s2.m(); ++i2)
         for(int i3 = 1; i3 <= s3.m(); ++i3)
