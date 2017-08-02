@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace itensor{
 void error(const std::string& s);
 void error(const std::string& s, int line,const char* file);
 #define Error(exp)  error(exp, __LINE__, __FILE__)
@@ -61,6 +62,6 @@ error(const std::string& s, int line, const char* file = 0)
     abort();
     }
 
-
+}
 
 #endif
