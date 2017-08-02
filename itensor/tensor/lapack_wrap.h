@@ -37,6 +37,8 @@ namespace itensor {
 
 #include "cblas.h"
 #include "lapacke.h"
+#undef I //lapacke.h includes complex.h which defined an `I` macro
+         //that can cause problems, so best to undefine it
 
 namespace itensor {
 using LAPACK_INT = lapack_int;
