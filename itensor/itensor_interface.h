@@ -101,9 +101,16 @@ class ITensorT
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage
     //from Real to Complex unless val.imag()!=0 
-    template<typename... VArgs>
+    template<typename IV, typename... VArgs>
+    auto
+    set(IV const& iv1, VArgs&&... ivs)
+        -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>;
+
     void
-    set(VArgs&&... vargs);
+    set(Cplx val);
+
+    void
+    set(std::vector<indexval_type> const& ivs, Cplx val);
 
     //
     // Index Prime Level Methods
