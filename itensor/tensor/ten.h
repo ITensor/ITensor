@@ -178,6 +178,9 @@ class TenRefc : public TensorType
     reference
     operator()(Inds&&... ii) const;
 
+    reference
+    operator[](size_t n) const;
+
     void
     clear() { d_.clear(); prange_ = nullptr; }
 
@@ -277,6 +280,9 @@ class TenRef : public TenRefc<range_type_,value_type_>
         { 
         return const_cast<reference>(parent::operator()(std::forward<Inds>(ii)...)); 
         }
+
+    reference
+    operator[](size_t n) const;
 
     iterator
     begin() const { return iterator(store(),parent::range()); }
@@ -557,6 +563,12 @@ class Ten : public TensorType
     template <typename... Inds>
     reference
     operator()(Inds&&... ii);
+
+    const_reference
+    operator[](size_t n) const;
+
+    reference
+    operator[](size_t n);
 
 
     //template<typename Indices>

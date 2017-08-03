@@ -61,6 +61,13 @@ operator()(Inds&&... ii) const -> reference
     }
 
 template<typename R,typename T>
+auto TenRefc<R,T>::
+operator[](size_t n) const -> reference
+    { 
+    return d_[n];
+    }
+
+template<typename R,typename T>
 void TenRefc<R,T>::
 pointTo(tensor_type const& t)
     {
@@ -216,11 +223,32 @@ operator()() -> reference
     }
 
 template<typename R,typename T>
+auto inline Ten<R,T>::
+operator[](size_t n) const -> const_reference
+    { 
+    return data_[n];
+    }
+
+template<typename R,typename T>
+auto inline Ten<R,T>::
+operator[](size_t n) -> reference
+    { 
+    return data_[n];
+    }
+
+template<typename R,typename T>
 template <typename... Inds>
 auto Ten<R,T>::
 operator()(Inds&&... ii) -> reference
     { 
     return store()[offset(range_,std::forward<Inds>(ii)...)]; 
+    }
+
+template<typename R,typename T>
+auto TenRef<R,T>::
+operator[](size_t n) const -> reference
+    { 
+    return store()[n];
     }
 
 template<typename R, typename V>
