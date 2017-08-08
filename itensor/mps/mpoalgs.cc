@@ -238,6 +238,20 @@ template
 IQMPS
 exactApplyMPO(const IQMPS& x, const IQMPO& K, const Args&);
 
+template<class Tensor>
+MPSt<Tensor>
+fitApplyMPO(MPSt<Tensor> const& psi,
+            MPOt<Tensor> const& K,
+            Args const& args)
+    {
+    MPSt<Tensor> res;
+    fitApplyMPO(1.,psi,K,res,args);
+    return res;
+    }
+template
+MPSt<ITensor> fitApplyMPO(MPSt<ITensor> const& psi, MPOt<ITensor> const& K, Args const& args);
+template
+MPSt<IQTensor> fitApplyMPO(MPSt<IQTensor> const& psi, MPOt<IQTensor> const& K, Args const& args);
 
 template<class Tensor>
 void
@@ -261,20 +275,28 @@ fitApplyMPO(Real fac,
             MPSt<Tensor>& res,
             Args const& args)
     {
-    const auto nsweep = args.getInt("Nsweep",1);
+    auto nsweep = args.getInt("Nsweep",1);
     Sweeps sweeps(nsweep);
-    const auto cutoff = args.getReal("Cutoff",-1);
+    auto cutoff = args.getReal("Cutoff",-1);
     if(cutoff >= 0) sweeps.cutoff() = cutoff;
-    const auto maxm = args.getInt("Maxm",-1);
+    auto maxm = args.getInt("Maxm",-1);
     if(maxm >= 1) sweeps.maxm() = maxm;
     fitApplyMPO(fac,psi,K,res,sweeps,args);
     }
 template
 void
-fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
+fitApplyMPO(Real fac,
+            MPSt<ITensor> const& psi,
+            MPOt<ITensor> const& K,
+            MPSt<ITensor>& res,
+            Args const& args);
 template
 void
-fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
+fitApplyMPO(Real fac,
+            MPSt<IQTensor> const& psi,
+            MPOt<IQTensor> const& K,
+            MPSt<IQTensor>& res,
+            Args const& args);
 
 template<class Tensor>
 void
@@ -291,6 +313,7 @@ fitApplyMPO(Real fac,
 
     const auto origPsi = psi;
 
+    if(not res) res = origPsi;
     res.position(1);
 
     auto BK = vector<Tensor>(N+2);
@@ -325,12 +348,6 @@ fitApplyMPO(Real fac,
             wfK *= fac;
 
             if(normalize) wfK /= norm(wfK);
-            //Print(K.A(b).inds());
-            //Print(K.A(b+1).inds());
-            //Print(BK.at(b-1).inds());
-            //Print(BK.at(b+2).inds());
-            //Print(wfK);
-            //PAUSE
             auto PH = LocalOp<Tensor>(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
             auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
 
@@ -354,10 +371,20 @@ fitApplyMPO(Real fac,
     }
 template
 void
-fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res, const Sweeps&, Args args);
+fitApplyMPO(Real fac,
+            MPSt<ITensor> const& psi,
+            MPOt<ITensor> const& K,
+            MPSt<ITensor>& res, 
+            Sweeps const&, 
+            Args args);
 template
 void
-fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res, const Sweeps&, Args args);
+fitApplyMPO(Real fac,
+            MPSt<IQTensor> const& psi,
+            MPOt<IQTensor> const& K,
+            MPSt<IQTensor>& res, 
+            Sweeps const&, 
+            Args args);
 
 template<class Tensor>
 Real
@@ -372,10 +399,20 @@ fitApplyMPO(MPSt<Tensor> const& psiA,
     }
 template
 Real
-fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
+fitApplyMPO(MPSt<ITensor> const& psiA, 
+            Real mpofac,
+            MPSt<ITensor> const& psiB,
+            MPOt<ITensor> const& K,
+            MPSt<ITensor> & res,
+            Args const& args);
 template
 Real
-fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
+fitApplyMPO(MPSt<IQTensor> const& psiA, 
+            Real mpofac,
+            MPSt<IQTensor> const& psiB,
+            MPOt<IQTensor> const& K,
+            MPSt<IQTensor> & res,
+            Args const& args);
 
 template<class Tensor>
 Real
@@ -448,22 +485,34 @@ fitApplyMPO(Real mpsfac,
     }
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
+fitApplyMPO(Real mpsfac,
+            MPSt<ITensor> const& psiA, 
+            Real mpofac,
+            MPSt<ITensor> const& psiB,
+            MPOt<ITensor> const& K,
+            MPSt<ITensor>& res,
+            Args const& args);
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
+fitApplyMPO(Real mpsfac,
+            MPSt<IQTensor> const& psiA, 
+            Real mpofac,
+            MPSt<IQTensor> const& psiB,
+            MPOt<IQTensor> const& K,
+            MPSt<IQTensor> & res,
+            Args const& args);
 
 template<class Tensor>
 void 
-expsmallH(const MPOt<Tensor>& H, 
-          MPOt<Tensor>& K, 
+expsmallH(MPOt<Tensor> const& H, 
+          MPOt<Tensor> & K, 
           Real tau, 
           Real Etot, 
           Real Kcutoff,
           Args args)
     {
-    const int ord = args.getInt("ExpHOrder",50);
-    const bool verbose = args.getBool("Verbose",false);
+    int ord = args.getInt("ExpHOrder",50);
+    bool verbose = args.getBool("Verbose",false);
     args.add("Cutoff",MIN_CUT);
     args.add("Maxm",MAX_M);
 
@@ -499,10 +548,10 @@ expsmallH(const MPOt<Tensor>& H,
     }
 template
 void 
-expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, Args args);
+expsmallH(MPO const& H, MPO & K, Real tau, Real Etot, Real Kcutoff, Args args);
 template
 void 
-expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, Args args);
+expsmallH(IQMPO const& H, IQMPO & K, Real tau, Real Etot, Real Kcutoff, Args args);
 
 template<class Tensor>
 void 

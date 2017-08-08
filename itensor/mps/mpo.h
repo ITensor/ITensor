@@ -322,6 +322,12 @@ exactApplyMPO(MPSt<Tensor> const& x,
 //   Minm (default: res.minm()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
 template<class Tensor>
+MPSt<Tensor>
+fitApplyMPO(MPSt<Tensor> const& psi,
+            MPOt<Tensor> const& K,
+            Args const& args = Args::global());
+
+template<class Tensor>
 void
 fitApplyMPO(MPSt<Tensor> const& psi,
             MPOt<Tensor> const& K,
