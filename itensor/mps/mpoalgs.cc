@@ -173,53 +173,104 @@ template
 void 
 zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
 
-//Expensive: scales as m^3 k^3!
+
 template<class Tensor>
-void 
-exactApplyMPO(MPSt<Tensor> const& x, 
-              MPOt<Tensor> const& K, 
-              MPSt<Tensor>      & res,
+MPSt<Tensor>
+exactApplyMPO(MPOt<Tensor> const& K,
+              MPSt<Tensor> const& psi,
               Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
+    auto cutoff = args.getReal("Cutoff",1E-13);
+    auto dargs = Args{"Cutoff",cutoff};
+    auto maxm_set = args.defined("Maxm");
+    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
+    auto verbose = args.getBool("Verbose",false);
 
-    auto orthog = args.getBool("Orthog",true);
+    int plev = 14741;
 
-    auto N = x.N();
-    if(K.N() != N) Error("Mismatched N in exactApplyMPO");
+    auto res = psi;
 
-//    auto Kx = MPSt<Tensor>(x.sites());
-    MPSt<Tensor> Kx(x);
+    auto N = psi.N();
 
-    Kx.Anc(1) = x.A(1) * K.A(1);
-    for(auto j : range1(N-1))
+    //Set up conjugate psi and K
+    auto psic = psi;
+    auto Kc = K;
+    for(auto j : range1(N)) 
         {
-        //Compute product of MPS tensor and MPO tensor
-        Kx.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
-
-        //Add common IQIndices to combiner
-        auto cinds = stdx::reserve_vector<IndexT>(Kx.A(j).r());
-        for(auto& I : Kx.A(j).inds())
+        if(j == 1)
             {
-            if(hasindex(Kx.A(j+1),I))
-                cinds.push_back(I);
+            auto ci = commonIndex(psi.A(1),psi.A(2),Link);
+            psic.Aref(j) = dag(mapprime(psi.A(j),Site,0,2,ci,0,plev));
+            ci = commonIndex(K.A(1),K.A(2),Link);
+            Kc.Aref(j) = dag(mapprime(K.A(j),Site,0,2,ci,0,plev));
             }
-        auto comb = combiner(std::move(cinds));
-
-        //Apply combiner to product tensors
-        Kx.Anc(j) = Kx.A(j) * comb; //m^3 k^3 d
-        Kx.Anc(j+1) = dag(comb) * Kx.A(j+1); //m^3 k^3 d
+        else
+            {
+            psic.Aref(j) = dag(mapprime(psi.A(j),Site,0,2,Link,0,plev));
+            Kc.Aref(j) = dag(mapprime(K.A(j),Site,0,2,Link,0,plev));
+            }
         }
-    Kx.mapprime(1,0,Site);
-    if(orthog) Kx.orthogonalize(args);
-    res = Kx;
-    } //void exact_applyMPO
+
+    //Build environment tensors from the left
+    if(verbose) print("Building environment tensors...");
+    auto E = std::vector<Tensor>(N+1);
+    E.at(1) = psi.A(1)*K.A(1)*Kc.A(1)*psic.A(1);
+    for(int j = 2; j < N; ++j)
+        {
+        E.at(j) = E.at(j-1)*psi.A(j)*K.A(j)*Kc.A(j)*psic.A(j);
+        assert(rank(E[j])==4);
+        }
+    if(verbose) println("done");
+
+    for(auto j : range1(N)) Kc.Aref(j).mapprime(Site,1,4);
+
+    //O is the representation of the product of K*psi in the new MPS basis
+    auto O = psi.A(N)*K.A(N);
+    O.noprime(Site);
+
+    auto rho = E.at(N-1) * O * dag(prime(O,plev));
+    Tensor U,D;
+    dargs.add("IndexName=",nameint("a",N));
+    auto spec = diagHermitian(rho,U,D,dargs);
+    if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
+
+    res.Aref(N) = dag(U);
+
+    O = O*U*psi.A(N-1)*K.A(N-1);
+    O.noprime(Site);
+
+    for(int j = N-1; j > 1; --j)
+        {
+        if(not maxm_set)
+            {
+            //Infer maxm from bond dim of original MPS
+            //times bond dim of MPO
+            //i.e. upper bound on rank of rho
+            auto cip = commonIndex(psi.A(j),E.at(j-1));
+            auto ciw = commonIndex(K.A(j),E.at(j-1));
+            auto maxm = (cip) ? cip.m() : 1l;
+            maxm *= (ciw) ? ciw.m() : 1l;
+            dargs.add("Maxm",maxm);
+            }
+        rho = E.at(j-1) * O * dag(prime(O,plev));
+        dargs.add("IndexName=",nameint("a",j));
+        auto spec = diagHermitian(rho,U,D,dargs);
+        O = O*U*psi.A(j-1)*K.A(j-1);
+        O.noprime(Site);
+        res.Aref(j) = dag(U);
+        if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),commonIndex(U,D).m());
+        }
+
+    res.Aref(1) = O;
+
+    return res;
+    }
 template
-void 
-exactApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args&);
+MPS
+exactApplyMPO(MPO const& K, MPS const& x, Args const&);
 template
-void 
-exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args&);
+IQMPS
+exactApplyMPO(IQMPO const& K, IQMPS const& x, Args const&);
 
 template<class Tensor>
 MPSt<Tensor>
@@ -227,16 +278,30 @@ exactApplyMPO(MPSt<Tensor> const& x,
               MPOt<Tensor> const& K,
               Args const& args)
     {
-    MPSt<Tensor> res;
-    exactApplyMPO(x,K,res,args);
-    return res;
+    return exactApplyMPO(K,x,args);
     }
 template
 MPS
-exactApplyMPO(const MPS& x, const MPO& K, const Args&);
+exactApplyMPO(MPS const& x, MPO const& K, Args const&);
 template
 IQMPS
-exactApplyMPO(const IQMPS& x, const IQMPO& K, const Args&);
+exactApplyMPO(IQMPS const& x, IQMPO const& K, Args const&);
+
+template<class Tensor>
+void 
+exactApplyMPO(MPSt<Tensor> const& x, 
+              MPOt<Tensor> const& K, 
+              MPSt<Tensor>      & res,
+              Args const& args)
+    {
+    res = exactApplyMPO(K,x);
+    }
+template
+void 
+exactApplyMPO(MPS const& x, MPO const& K, MPS& res, Args const&);
+template
+void 
+exactApplyMPO(IQMPS const& x, IQMPO const& K, IQMPS& res, Args const&);
 
 template<class Tensor>
 MPSt<Tensor>
