@@ -245,8 +245,8 @@ operator<(Index const& i1, Index const& i2)
 std::ostream& 
 operator<<(std::ostream & s, Index const& t)
     {
-    s << "(" << t.rawname();
-    s << "," << t.m();
+    s << "(\"" << t.rawname();
+    s << "\"," << t.m();
     s << "," << t.type().c_str();
     if(Global::showIDs()) 
         {
