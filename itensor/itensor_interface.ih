@@ -424,6 +424,15 @@ setElt(IVal const& iv1,
     return D;
     }
 
+template <typename IndexT>
+ITensorT<IndexT> ITensorT<IndexT>::
+operator-() 
+    { 
+    auto res = *this;
+    res.scale_.negate();
+    return res;
+    }
+
 template<typename I>
 ITensorT<I> 
 operator*(ITensorT<I> A, ITensorT<I> const& B) { A *= B; return A; }
@@ -469,6 +478,7 @@ operator/(ITensorT<I> A, ITensorT<I> const& B) { A /= B; return A; }
 template<typename I>
 ITensorT<I>
 operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return B; }
+
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>

@@ -4,6 +4,7 @@
 #include "itensor/util/range.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/iqindex.h"
+#include "itensor/util/print_macro.h"
 #include <cstdlib>
 
 using namespace std;
@@ -2429,7 +2430,26 @@ SECTION("Scalar Storage")
         }
     }
 
-
+SECTION("ITensor Negation")
+    {
+    auto i = Index("i",2);
+    auto j = Index("j",2);
+    auto k = Index("k",2);
+    auto T = randomTensor(i,j,k);
+    //Print(T.real(i(1),j(1),k(1)));
+    auto oT = T;
+    auto N = -T;
+    //Print(oT.real(i(1),j(1),k(1)));
+    //Print(T.real(i(1),j(1),k(1)));
+    //Print(N.real(i(1),j(1),k(1)));
+    for(auto ii : range1(i))
+    for(auto ij : range1(j))
+    for(auto ik : range1(k))
+        {
+        CHECK_CLOSE(oT.real(i(ii),j(ij),k(ik)),T.real(i(ii),j(ij),k(ik)));
+        CHECK_CLOSE(-oT.real(i(ii),j(ij),k(ik)),N.real(i(ii),j(ij),k(ik)));
+        }
+    }
 
 
 } //TEST_CASE("ITensor")

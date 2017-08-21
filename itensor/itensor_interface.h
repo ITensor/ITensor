@@ -228,8 +228,8 @@ class ITensorT
     operator/=(Cplx z) { return operator*=(1./z); }
 
     //Negation
-    ITensorT&
-    operator-() { scale_.negate(); return *this; }
+    ITensorT
+    operator-();
 
     //Non-contracting product
     //All matching Index pairs automatically merged
