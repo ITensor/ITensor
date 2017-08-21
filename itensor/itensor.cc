@@ -161,4 +161,26 @@ combiner(std::vector<Index> inds, Args const& args)
     return ITensor(IndexSet(std::move(inds)),Combiner{});
     }
 
+struct IsCombiner
+    {
+    template<typename D>
+    bool 
+    operator()(D const& d) { return false; }
+    bool
+    operator()(Combiner const& d) { return true; }
+    };
+
+Index
+combinedIndex(ITensor const& C)
+    {
+#ifdef DEBUG
+    auto iscombiner = applyFunc(IsCombiner{},C.store());
+    if(not iscombiner)
+        {
+        throw ITError("Called combinedIndex on ITensor that is not a combiner");
+        }
+#endif
+    return C.inds().front();
+    }
+
 } //namespace itensor

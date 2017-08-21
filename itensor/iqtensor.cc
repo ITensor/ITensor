@@ -433,6 +433,28 @@ combiner(std::vector<IQIndex> cinds,
     return IQTensor{newind.build(),std::move(C)};
     }
 
+struct IsQCombiner
+    {
+    template<typename D>
+    bool 
+    operator()(D const& d) { return false; }
+    bool
+    operator()(QCombiner const& d) { return true; }
+    };
+
+IQIndex
+combinedIndex(IQTensor const& C)
+    {
+#ifdef DEBUG
+    auto iscombiner = applyFunc(IsQCombiner{},C.store());
+    if(not iscombiner)
+        {
+        throw ITError("Called combinedIndex on ITensor that is not a combiner");
+        }
+#endif
+    return C.inds().front();
+    }
+
 IQIndex
 findIQInd(IQTensor const& T, 
           Index    const& i)

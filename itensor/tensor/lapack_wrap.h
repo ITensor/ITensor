@@ -37,6 +37,8 @@ namespace itensor {
 
 #include "cblas.h"
 #include "lapacke.h"
+#undef I //lapacke.h includes complex.h which defined an `I` macro
+         //that can cause problems, so best to undefine it
 
 namespace itensor {
 using LAPACK_INT = lapack_int;
@@ -305,7 +307,7 @@ void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
 #ifdef PLATFORM_lapacke
 lapack_int LAPACKE_zheev(int matrix_order, char jobz, char uplo, lapack_int n,
                          lapack_complex_double* a, lapack_int lda, double* w);
-#elif PLATFORM_acml
+#elif defined PLATFORM_acml
 void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
             double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
             LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len);

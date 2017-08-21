@@ -346,6 +346,17 @@ CHECK(isComplex(T));
 CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
 }
 
+SECTION("Set Using vector<IndexVal>")
+{
+auto T = ITensor(s1,s2);
+auto v12 = vector<IndexVal>{{s2(2),s1(1)}};
+T.set(v12,12);
+auto v21 = vector<IndexVal>{{s1(2),s2(1)}};
+T.set(v21,21);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+}
+
 SECTION("IndexValConstructors")
 {
 SECTION("Rank 1")
@@ -1520,6 +1531,8 @@ SECTION("Combiner")
         auto ci = commonIndex(C,R1);
         CHECK(ci);
         CHECK(ci.m() == s1.m()*s2.m());
+
+        CHECK(ci == combinedIndex(C));
 
         for(int i1 = 1; i1 <= s1.m(); ++i1)
         for(int i2 = 1; i2 <= s2.m(); ++i2)

@@ -154,6 +154,20 @@ write(std::ostream& s, const Cplx& z)
     }
 
 template<typename T>
+void
+read(std::istream& s, std::vector<T> & v);
+template<typename T>
+void
+write(std::ostream& s, std::vector<T> const& v);
+
+template<typename T, size_t N>
+void
+read(std::istream& s, std::array<T,N> & a);
+template<typename T, size_t N>
+void
+write(std::ostream& s, std::array<T,N> const& a);
+
+template<typename T>
 auto
 read(std::istream& s, std::vector<T> & v)
     -> stdx::if_compiles_return<void,decltype(itensor::read(s,v[0]))>
@@ -186,6 +200,36 @@ write(std::ostream& s, std::vector<T> const& v)
     else
         {
         for(auto& el : v) itensor::write(s,el);
+        }
+    }
+
+template<typename T, size_t N>
+auto
+read(std::istream& s, std::array<T,N> & a)
+    -> stdx::if_compiles_return<void,decltype(itensor::read(s,a[0]))>
+    {
+    if(std::is_pod<T>::value)
+        {
+        s.read((char*)a.data(), sizeof(T)*N);
+        }
+    else
+        {
+        for(auto& el : a) itensor::read(s,el);
+        }
+    }
+
+template<typename T, size_t N>
+auto
+write(std::ostream& s, std::array<T,N> const& a)
+    -> stdx::if_compiles_return<void,decltype(itensor::write(s,a[0]))>
+    {
+    if(std::is_pod<T>::value)
+        {
+        s.write((char*)a.data(), sizeof(T)*N);
+        }
+    else
+        {
+        for(auto& el : a) itensor::write(s,el);
         }
     }
 
