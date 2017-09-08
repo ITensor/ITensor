@@ -1434,12 +1434,13 @@ IQMPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
+    auto verbose = args.getBool("Verbose",false);
     if(args.getBool("Exact",false))
         {
-        println("Using exact conversion of AutoMPO->IQMPO");
+        if(verbose) println("Using exact conversion of AutoMPO->IQMPO");
         return toMPOImpl<IQTensor>(am,args);
         }
-    println("Using approx/svd conversion of AutoMPO->IQMPO");
+    if(verbose) println("Using approx/svd conversion of AutoMPO->IQMPO");
     return svdMPO<IQTensor>(am,args);
     }
 
