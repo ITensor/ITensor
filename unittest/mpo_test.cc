@@ -4,6 +4,7 @@
 #include "itensor/mps/sites/spinone.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 using namespace std;
@@ -125,6 +126,46 @@ SECTION("Regression Test")
     B.Aref(2) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
 
     REQUIRE_NOTHROW(A.plusEq(B));
+    }
+
+SECTION("Overlap <psi|HK|phi>")
+    {
+    detail::seed_quickran(1);
+
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto psi = MPS(sites);
+    auto phi = MPS(sites);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto Hdag = H;
+    auto K = H;
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 0.2;
+        K.Aref(j) *= 0.3;
+        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,Site));
+        }
+
+    auto Hdphi = exactApplyMPO(Hdag,phi,{"Cutoff=",1E-13,"Maxm=",5000});
+    auto Kpsi = exactApplyMPO(K,psi,{"Cutoff=",1E-13,"Maxm=",5000});
+
+    //Print(overlap(phi,H,K,psi));
+    //Print(overlap(Hdphi,Kpsi));
+    CHECK_CLOSE(overlap(phi,H,K,psi),overlap(Hdphi,Kpsi));
     }
 
 }
