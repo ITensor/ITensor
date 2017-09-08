@@ -197,11 +197,12 @@ exactApplyMPO(MPOt<Tensor> const& K,
     auto Kc = K;
     for(auto j : range1(N)) 
         {
+        //Modify prime levels of psic and Kc
         if(j == 1)
             {
             auto ci = commonIndex(psi.A(1),psi.A(2),Link);
             psic.Aref(j) = dag(mapprime(psi.A(j),Site,0,2,ci,0,plev));
-            ci = commonIndex(K.A(1),K.A(2),Link);
+            ci = commonIndex(Kc.A(1),Kc.A(2),Link);
             Kc.Aref(j) = dag(mapprime(K.A(j),Site,0,2,ci,0,plev));
             }
         else
@@ -221,8 +222,6 @@ exactApplyMPO(MPOt<Tensor> const& K,
         assert(rank(E[j])==4);
         }
     if(verbose) println("done");
-
-    for(auto j : range1(N)) Kc.Aref(j).mapprime(Site,1,4);
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi.A(N)*K.A(N);
