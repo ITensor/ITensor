@@ -14,15 +14,18 @@ class MyClass
     public:
     
     //Default constructor
-    MyClass();
+    MyClass() : i_(0) { }
 
-    MyClass(std::string name, int i);
+    MyClass(std::string name, int i)
+      : i_(i),
+        name_(name)
+        { }
 
     std::string const&
-    name() const;
+    name() const { return name_; }
 
     int
-    value() const;
+    value() const { return i_; }
 
     };
 
@@ -31,14 +34,16 @@ class MyClass
 //using cout << m << endl; where m is a MyClass instance.
 //
 //It also allows printing using the print,println,printf, and
-//printfln functions. Use the "%s" flag to print custom objects
-//with printf and printfln.
+//printfln functions defined by ITensor. 
+//Use the "%s" token to print custom objects such as a MyClass
+//object with printf and printfln.
 //
-//See myclass.cc for implementation.
-//
-std::ostream&
-operator<<(std::ostream& s, MyClass const& m);
+inline std::ostream&
+operator<<(std::ostream& s, MyClass const& m)
+    {
+    s << "MyClass(" << m.name() << "," << m.value() << ")";
+    return s;
+    }
 
-//Implementation code is in myclass.cc ...
 
-#endif
+#endif //__MY_CLASS_H

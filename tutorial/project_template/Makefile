@@ -15,9 +15,9 @@ APP=myappname
 #    will auto-detect if these headers have changed and recompile your app.
 HEADERS=myclass.h
 
-# 5. For any additional .cc files making up your project,
+# 5. For any additional .cc (source) files making up your project,
 #    add their full filenames here.
-CCFILES=$(APP).cc myclass.cc
+CCFILES=$(APP).cc
 
 #################################################################
 #################################################################
