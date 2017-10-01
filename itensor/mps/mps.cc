@@ -1691,4 +1691,20 @@ operator<<(std::ostream& s, InitState const& state)
     return s;
     }
 
+MPS
+toMPS(IQMPS const& psi)
+    {
+    int N = psi.N();
+    MPS res;
+    if(psi.sites()) res = MPS(psi.sites());
+    else            res = MPS(N);
+    for(int j = 0; j <= N+1; ++j)
+        {
+        res.Aref(j) = ITensor(psi.A(j));
+        }
+    res.leftLim(psi.leftLim());
+    res.rightLim(psi.rightLim());
+    return res;
+    }
+
 } //namespace itensor

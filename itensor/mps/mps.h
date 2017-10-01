@@ -337,6 +337,9 @@ class InitState
 // Other Methods Related to MPSt
 //
 
+MPS
+toMPS(IQMPS const& psi);
+
 template<typename T>
 bool
 isComplex(MPSt<T> const& psi);
