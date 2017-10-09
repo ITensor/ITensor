@@ -162,7 +162,20 @@ template<typename F, typename T>
 void
 doTask(VisitIT<F> & V, QDiag<T> const& d)
     {
-    for(auto& elt : d.store) detail::call<void>(V.f,elt*V.scale_fac);
+    if(d.allSame()) 
+        {
+        for(decltype(d.length) j = 0; j < d.length; ++j) 
+            {
+            detail::call<void>(V.f,V.scale_fac * d.val);
+            }
+        }
+    else
+        {
+        for(auto& elt : d.store) 
+            {
+            detail::call<void>(V.f,elt*V.scale_fac);
+            }
+        }
     }
 
 template<typename F>

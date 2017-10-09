@@ -654,6 +654,31 @@ SECTION("Diag Apply")
     CHECK(norm(2*dc - adcc) < 1E-12);
     }
 
+SECTION("Diag Visit")
+    {
+    auto i = Index("i",4);
+    auto j = Index("j",4);
+
+    auto vr = vector<Real>{{3.,4.,5.,6.}};
+    auto vc = vector<Cplx>{{3._i,4.,5._i,6.}};
+
+    auto dr = diagTensor(vr,i,j);
+    auto dc = diagTensor(vc,i,j);
+
+    auto rtot1 = stdx::accumulate(vr,0.);
+    auto rtot2 = 0.;
+    auto doTotr = [&rtot2](Real r) { rtot2 += r; };
+    dr.visit(doTotr);
+    CHECK_CLOSE(rtot1,rtot2);
+
+    auto ctot1 = stdx::accumulate(vc,0._i);
+    auto ctot2 = 0._i;
+    auto doTotc = [&ctot2](Cplx c) { ctot2 += c; };
+    dc.visit(doTotc);
+    CHECK_CLOSE(ctot1,ctot2);
+
+    }
+
 }
 
 SECTION("SumDifference")

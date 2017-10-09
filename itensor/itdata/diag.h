@@ -157,6 +157,26 @@ doTask(ApplyIT<F>& A, Diag<T> const& d, ManageStore & m)
         }
     }
 
+template<typename F, typename T>
+void
+doTask(VisitIT<F>& V, Diag<T> const& d)
+    { 
+    if(d.allSame()) 
+        {
+        for(decltype(d.length) j = 0; j < d.length; ++j) 
+            {
+            detail::call<void>(V.f,V.scale_fac * d.val);
+            }
+        }
+    else
+        {
+        for(auto& elt : d) 
+            {
+            detail::call<void>(V.f,V.scale_fac * elt);
+            }
+        }
+    }
+
 template <typename T>
 Cplx
 doTask(GetElt<Index> const& g, Diag<T> const& d);
