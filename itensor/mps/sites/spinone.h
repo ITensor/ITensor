@@ -146,6 +146,7 @@ class SpinOneSite
         else
         if(opname == "Sx2")
             {
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,UpP,0.5); 
             Op.set(Up,DnP,0.5);
             Op.set(Z0,Z0P,1.0);
@@ -155,6 +156,7 @@ class SpinOneSite
         else
         if(opname == "Sy2")
             {
+            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,UpP,+0.5); 
             Op.set(Up,DnP,-0.5);
             Op.set(Z0,Z0P,1);
@@ -180,6 +182,7 @@ class SpinOneSite
         if(opname == "XUp")
             {
             //m = +1 state along x axis
+            Op = mixedIQTensor(dag(s),sP);
             Op = IQTensor(s);
             Op.set(Up,0.5);
             Op.set(Z0,ISqrt2);
@@ -189,6 +192,7 @@ class SpinOneSite
         if(opname == "XZ0")
             {
             //m = 0 state along x axis
+            Op = mixedIQTensor(dag(s),sP);
             Op = IQTensor(s);
             Op.set(Up,+ISqrt2);
             Op.set(Dn,-ISqrt2);
@@ -197,6 +201,7 @@ class SpinOneSite
         if(opname == "XDn")
             {
             //m = -1 state along x axis
+            Op = mixedIQTensor(dag(s),sP);
             Op = IQTensor(s);
             Op.set(Up,0.5);
             Op.set(Z0,-ISqrt2);
