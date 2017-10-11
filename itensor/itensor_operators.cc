@@ -197,11 +197,12 @@ template<typename IndexT>
 ITensorT<IndexT>& ITensorT<IndexT>::
 operator+=(ITensorT const& R)
     {
-    if(this->r() != R.r()) Error("ITensorT::operator+=: different number of indices");
     auto& L = *this;
-    if(!L) { return (L=R); }
+    if(!L) { return (L=R); } //special case when this (L) is not initialized
     if(!R) Error("Right-hand-side of ITensor += is default constructed");
     if(&L == &R) return operator*=(2.);
+
+    if(this->r() != R.r()) Error("ITensorT::operator+=: different number of indices");
 
     using permutation = typename PlusEQ<index_type>::permutation;
 
