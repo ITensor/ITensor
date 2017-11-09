@@ -400,6 +400,10 @@ template<typename V>
 ITensor
 doTask(ToITensor & T, QDense<V> const& d);
 
+template<typename V>
+bool
+doTask(IsEmpty, QDense<V> const& d) { return d.offsets.empty(); }
+
 } //namespace itensor
 
 #endif

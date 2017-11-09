@@ -492,17 +492,10 @@ dir(IQTensor const& T,
 	}
 
 bool
-isZero(const IQTensor& T, const Args& args)
+isEmpty(IQTensor const& T)
     {
-    Error("Not implemented");
-    //if(T.empty()) return true;
-    ////done with all fast checks
-    //if(args.getBool("Fast",false)) return false;
-    //for(const ITensor& t : T.blocks())
-    //    {
-    //    if(!isZero(t)) return false;
-    //    }
-    return true;
+    if(not T.store()) return true;
+    return doTask(IsEmpty{},T.store());
     }
 
 //template<typename T>

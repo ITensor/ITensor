@@ -341,6 +341,10 @@ template<typename V>
 ITensor
 doTask(ToITensor & T, QDiag<V> const& d);
 
+template<typename V>
+bool
+doTask(IsEmpty, QDiag<V> const& d) { return (d.length == 0ul); }
+
 } //namespace itensor
 
 #endif

@@ -520,6 +520,10 @@ struct ToITensor
 inline const char*
 typeNameOf(ToITensor const&) { return "ToITensor"; }
 
+struct IsEmpty { };
+inline const char*
+typeNameOf(IsEmpty const&) { return "IsEmpty"; }
+
 } //namespace itensor 
 
 #endif

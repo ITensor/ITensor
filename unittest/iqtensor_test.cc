@@ -1044,6 +1044,19 @@ SECTION("Mixed Storage")
         }
     }
 
+SECTION("isEmpty Function")
+    {
+    IQTensor T;
+    CHECK(isEmpty(T));
+
+    T = randomTensor(QN{},S1,S2,S3,S4);
+    CHECK(not isEmpty(T));
+
+    auto D = delta(S3,dag(S1),S4,dag(S2));
+    CHECK(typeOf(D) == QType::QDiagRealAllSame);
+    CHECK(not isEmpty(D));
+    }
+
 
 //SECTION("Non-contracting product")
 //    {
