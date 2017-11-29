@@ -65,7 +65,7 @@ davidson(BigMatrixT const& A,
          Args const& args)
     {
     auto maxiter_ = args.getInt("MaxIter",2);
-    auto errgoal_ = args.getReal("ErrGoal",1E-4);
+    auto errgoal_ = args.getReal("ErrGoal",1E-14);
     auto debug_level_ = args.getInt("DebugLevel",-1);
     auto miniter_ = args.getInt("MinIter",1);
 
