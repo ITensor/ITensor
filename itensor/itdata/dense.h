@@ -296,6 +296,18 @@ doTask(PlusEQ<Index> const& P,
        Dense<T2> const& D2,
        ManageStore & m);
 
+template<typename T>
+void
+doTask(Order<Index> const& P,
+       Dense<T> & dA);
+
+template<typename T>
+void
+permuteDense(Permutation const& P,
+             Dense<T>   const& dA,
+             IndexSet   const& Ais,
+             Dense<T>        & dB,
+             IndexSet   const& Bis);
 
 } //namespace itensor
 

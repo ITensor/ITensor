@@ -112,13 +112,13 @@ ITensor
 matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
 
-template<typename... Indxs>
-TensorRef1
-ordered(ITensor & T, Indxs&&... inds);
+//template<typename... Indxs>
+//TensorRef1
+//ordered(ITensor & T, Indxs&&... inds);
 
-template<typename... Indxs>
-CTensorRef1
-orderedC(ITensor & T, Indxs&&... inds);
+//template<typename... Indxs>
+//CTensorRef1
+//orderedC(ITensor & T, Indxs&&... inds);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);

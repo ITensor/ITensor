@@ -96,41 +96,6 @@ randomTensor(const IndexSetT<IndexT>& inds)
     return random(ITensorT<IndexT>{inds});
     }
 
-template<typename V, typename... Indxs>
-TenRef<Range1,V>
-ordered_impl(ITensor & T, Indxs&&... inds)
-    {
-    T.scaleTo(1.);
-    auto getData = [](Dense<V> & d) -> DataRange<V> 
-        { 
-        return makeDataRange(d.data(),d.size()); 
-        };
-    auto d = applyFunc(getData,T.store());
-    constexpr auto size = sizeof...(inds);
-    auto indarr = std::array<Index,size>{{static_cast<Index>(inds)...}};
-    auto P = Permutation(T.r());
-    calcPerm(T.inds(),indarr,P);
-    return makeRef(d,permuteRangeTo<Range1>(T.inds(),P));
-    }
-
-template<typename... Indxs>
-TensorRef1
-ordered(ITensor & T, Indxs&&... inds)
-    {
-    if(!T.store()) detail::allocReal(T);
-    else if(isComplex(T)) Error("ITensor is complex; use orderedC instead of ordered");
-    return ordered_impl<Real>(T,std::forward<Indxs>(inds)...);
-    }
-
-template<typename... Indxs>
-CTensorRef1
-orderedC(ITensor & T, Indxs&&... inds)
-    {
-    if(!T.store()) detail::allocCplx(T);
-    else           doTask(MakeCplx{},T.store());
-    return ordered_impl<Cplx>(T,std::forward<Indxs>(inds)...);
-    }
-
 } //namespace itensor
 
 #endif

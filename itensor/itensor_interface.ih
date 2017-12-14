@@ -615,7 +615,7 @@ rank(ITensorT<I> const& T) { return rank(T.inds()); }
 //(same as rank)
 template<typename I>
 long
-order(ITensorT<I> const& T) { return rank(T.inds()); }
+ord(ITensorT<I> const& T) { return rank(T.inds()); }
 
 template<typename I>
 Real
@@ -664,6 +664,15 @@ sumelsC(ITensorT<I> const& t)
     {
     auto z = doTask(SumEls<I>{t.inds()},t.store());
     return t.scale().real0()*z;
+    }
+
+
+template <typename IndexT,typename... Indxs>
+ITensorT<IndexT>
+order(ITensorT<IndexT> A, Indxs&&... inds)
+    {
+    A.order(IndexSetT<IndexT>(inds...));
+    return A;
     }
 
 template<typename T, typename... CtrArgs>
