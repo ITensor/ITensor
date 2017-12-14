@@ -357,9 +357,13 @@ combiner(std::vector<IQIndex> cinds,
     {
     if(cinds.empty()) Error("No indices passed to combiner");
     auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",cinds.front().type());
     auto cr = cinds.size();
 
+    auto ctype = cinds.front().type();
+    bool same_type = true;
+    for(const auto& i : cinds) if(i.type() != ctype) same_type = false;
+    auto default_type = same_type ? ctype : Link;
+    auto itype = getIndexType(args,"IndexType",default_type);
 
     auto cdir = Out;
     if(args.defined("IndexDir"))
@@ -419,7 +423,9 @@ combiner(std::vector<IQIndex> cinds,
 
     auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
     for(auto n : range(qms)) 
+        {
         cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
+        }
     auto cind = IQIndex{cname,std::move(cstore),cdir};
 
     auto newind = IQIndexSetBuilder(1+cinds.size());

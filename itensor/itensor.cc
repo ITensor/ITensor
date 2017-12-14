@@ -143,9 +143,12 @@ combiner(std::vector<Index> inds, Args const& args)
     {
     if(inds.empty()) Error("No indices passed to combiner");
     long rm = 1;
+    IndexType ctype = inds.front().type();
+    bool same_type = true;
     for(const auto& i : inds)
         {
         rm *= i.m();
+        if(i.type() != ctype) same_type = false;
         }
     //increase size by 1
     inds.push_back(Index());
@@ -156,7 +159,8 @@ combiner(std::vector<Index> inds, Args const& args)
         }
     //create combined index
     auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",Link);
+    IndexType default_type = (same_type) ? ctype : Link;
+    auto itype = getIndexType(args,"IndexType",default_type);
     inds.front() = Index(cname,rm,itype);
     return ITensor(IndexSet(std::move(inds)),Combiner{});
     }
