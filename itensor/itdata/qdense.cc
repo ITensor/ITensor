@@ -600,7 +600,57 @@ template void doTask(NCProd<IQIndex>&,QDense<Cplx> const&,QDense<Real> const&,Ma
 template void doTask(NCProd<IQIndex>&,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
 template void doTask(NCProd<IQIndex>&,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
 
+template<typename T>
+void
+permuteQDense(Permutation  const& P,
+              QDense<T>    const& dA,
+              IQIndexSet   const& Ais,
+              QDense<T>         & dB,
+              IQIndexSet        & Bis)
+    {
+    // Recalculate new indexset by permuting
+    // original indexset (otherwise it segfaults)
+    auto r = Ais.r();
+    auto bind = IQIndexSetBuilder(r);
+    for(auto i : range(r))
+        {
+        bind.setIndex(P.dest(i),Ais[i]);
+        }
+    Bis = bind.build();
+    dB = QDense<T>(Bis,doTask(CalcDiv{Ais},dA));
+    // Perform permutation
+    Labels Ablock(r,-1),
+          Bblock(r,-1);
+    Range Arange,
+          Brange;
+    for(auto aio : dA.offsets)
+        {
+        //Compute bi, new block index of blk
+        computeBlockInd(aio.block,Ais,Ablock);
+        for(auto j : range(Ablock))
+            Bblock.at(P.dest(j)) = Ablock[j];
+        Arange.init(make_indexdim(Ais,Ablock));
+        Brange.init(make_indexdim(Bis,Bblock));
 
+        auto bblock = getBlock(dB,Bis,Bblock);
+        auto bref = makeRef(bblock,&Brange);
+        auto aref = makeTenRef(dA.data(),aio.offset,dA.size(),&Arange);
+
+        bref += permute(aref,P);
+        }
+    }
+
+template<typename T>
+void
+doTask(Order<IQIndex> const& O,
+       QDense<T> & dB)
+    {
+    auto const dA = dB;
+    auto Bis = O.is2();
+    permuteQDense(O.perm(),dA,O.is1(),dB,Bis);
+    }
+template void doTask(Order<IQIndex> const&,QDense<Real> &);
+template void doTask(Order<IQIndex> const&,QDense<Cplx> &);
 
 } //namespace itensor
 

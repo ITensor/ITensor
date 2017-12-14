@@ -115,9 +115,9 @@ template<size_t S>
 size_t
 rank(VecRangeT<S> const& R) { return 1ul; }
 
-template<size_t S>
-size_t
-order(VecRangeT<S> const& R) { return 1ul; }
+//template<size_t S>
+//size_t
+//order(VecRangeT<S> const& R) { return 1ul; }
 
 //make VecRange with same extent but stride()==1
 template<size_t S>

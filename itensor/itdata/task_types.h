@@ -309,6 +309,41 @@ template<typename I>
 const char*
 typeNameOf(PlusEQ<I> const&) { return "PlusEQ"; }
 
+template<typename IndexT>
+class Order
+    {
+    using permutation = Permutation;
+    using index_type = IndexT;
+    using iset_type = IndexSetT<index_type>;
+    private:
+    const Permutation *perm_ = nullptr;
+    const iset_type *is1_ = nullptr,
+                    *is2_ = nullptr;
+    public:
+
+
+    Order(Permutation const& P,
+          iset_type const& is1,
+          iset_type const& is2) :
+        perm_(&P),
+        is1_(&is1),
+        is2_(&is2)
+        { }
+
+    Permutation const&
+    perm() const { return *perm_; }
+
+    iset_type const&
+    is1() const { return *is1_; }
+
+    iset_type const&
+    is2() const { return *is2_; }
+
+    };
+
+template<typename I>
+const char*
+typeNameOf(Order<I> const&) { return "Order"; }
 
 //
 // Helper for Contract and NCProd

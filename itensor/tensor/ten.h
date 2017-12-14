@@ -784,14 +784,14 @@ template<typename R,typename T>
 auto
 rank(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
 
-//order is alias for rank, preferred in applied math literature
+//ord is alias for rank, order is preferred in applied math literature over rank
 template<typename R,typename T>
 auto
-order(TenRefc<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+ord(TenRefc<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
 
 template<typename R,typename T>
 auto
-order(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+ord(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
 
 template<typename R, typename V>
 Real

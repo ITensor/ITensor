@@ -202,6 +202,11 @@ doTask(PlusEQ<Index> const& P,
        Diag<T2> const& D2,
        ManageStore & m);
 
+template<typename T>
+void
+doTask(Order<Index> const& P,
+       Diag<T> & dA) { }
+
 template<typename N, typename T>
 void
 doTask(Fill<N> const& f, Diag<T> const& d, ManageStore& m);
