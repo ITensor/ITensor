@@ -499,7 +499,7 @@ makeL(const MPSType& psi, int k)
                 const int ll = LHlim_;
                 PH_.at(ll+1) = (!PH_.at(ll) ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
                 PH_[ll+1] *= dag(prime(Psi_->A(ll+1),Link));
-                setLHlim(LHlim_+1);
+                setLHlim(ll+1);
                 }
             }
         else //normal MPO case
@@ -517,7 +517,7 @@ makeL(const MPSType& psi, int k)
                     }
                 PH_.at(ll+1) *= Op_->A(ll+1);
                 PH_.at(ll+1) *= dag(prime(psi.A(ll+1)));
-                setLHlim(LHlim_+1);
+                setLHlim(ll+1);
                 }
             }
         }
@@ -537,7 +537,7 @@ makeR(const MPSType& psi, int k)
                 const int rl = RHlim_;
                 PH_.at(rl-1) = (!PH_.at(rl) ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
                 PH_[rl-1] *= dag(prime(Psi_->A(rl-1),Link));
-                setRHlim(RHlim_-1);
+                setRHlim(rl-1);
                 }
             }
         else //normal MPO case
@@ -561,7 +561,7 @@ makeR(const MPSType& psi, int k)
                 PH_.at(rl-1) *= dag(prime(psi.A(rl-1)));
                 //printfln("PH[%d] = \n%s",rl-1,PH_.at(rl-1));
                 //PAUSE
-                setRHlim(RHlim_-1);
+                setRHlim(rl-1);
                 }
             }
         }
@@ -592,17 +592,7 @@ setLHlim(int val)
     if(!PH_.at(LHlim_))
         {
         std::string fname = PHFName(LHlim_);
-        std::ifstream s(fname.c_str());
-        if(s.good())
-            {
-            read(s,PH_.at(LHlim_));
-            s.close();
-            }
-        else
-            {
-            println("Tried to read file ",fname);
-            Error("Missing file");
-            }
+        readFromFile(fname,PH_.at(LHlim_));
         }
     }
 
@@ -631,17 +621,7 @@ setRHlim(int val)
     if(!PH_.at(RHlim_))
         {
         std::string fname = PHFName(RHlim_);
-        std::ifstream s(fname.c_str());
-        if(s.good())
-            {
-            read(s,PH_.at(RHlim_));
-            s.close();
-            }
-        else
-            {
-            println("Tried to read file ",fname);
-            Error("Missing file");
-            }
+        readFromFile(fname,PH_.at(RHlim_));
         }
     }
 
