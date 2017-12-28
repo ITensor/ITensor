@@ -357,13 +357,7 @@ combiner(std::vector<IQIndex> cinds,
     {
     if(cinds.empty()) Error("No indices passed to combiner");
     auto cname = args.getString("IndexName","cmb");
-    auto cr = cinds.size();
-
-    auto ctype = cinds.front().type();
-    bool same_type = true;
-    for(const auto& i : cinds) if(i.type() != ctype) same_type = false;
-    auto default_type = same_type ? ctype : Link;
-    auto itype = getIndexType(args,"IndexType",default_type);
+    auto itype = getIndexType(args,"IndexType",Link);
 
     auto cdir = Out;
     if(args.defined("IndexDir"))
@@ -400,7 +394,7 @@ combiner(std::vector<IQIndex> cinds,
         QNm qm;
         //For this sector, figure out the total QN (qm.q)
         //and combined sector size (qm.m)
-        for(auto j : range(cr))
+        for(auto j : range(cinds))
             {
             qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
             qm.m *= cinds[j].index(1+I[j]).m();
