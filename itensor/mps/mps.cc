@@ -792,7 +792,7 @@ orthogonalize(Args const& args)
 
     auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),plev));
     Tensor U,D;
-    diagHermitian(rho,U,D,dargs);
+    diagHermitian(rho,U,D,{dargs,"IndexType=",Link});
 
     //O is partial overlap of previous and new MPS
     auto O = U * A_.at(N_) * A_.at(N_-1);
@@ -809,7 +809,7 @@ orthogonalize(Args const& args)
             dargs.add("Maxm",maxm);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
-        auto spec = diagHermitian(rho,U,D,dargs);
+        auto spec = diagHermitian(rho,U,D,{dargs,"IndexType=",Link});
         O *= U;
         O *= A_.at(j-1);
         A_.at(j) = dag(U);
