@@ -249,9 +249,9 @@ template<typename index_type, size_t start>
 auto
 rank(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
 
-template<typename index_type, size_t start>
-auto
-order(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
+//template<typename index_type, size_t start>
+//auto
+//order(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
 
 
 template<typename index_type,size_t start>

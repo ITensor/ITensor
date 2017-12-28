@@ -378,6 +378,18 @@ getElt(IQIndexSet const& is,
     return nullptr;
     }
 
+template<typename T>
+void
+doTask(Order<IQIndex> const& P,
+       QDense<T>           & dA);
+
+template<typename T>
+void
+permuteQDense(Permutation const& P,
+             QDense<T>    const& dA,
+             IQIndexSet   const& Ais,
+             QDense<T>         & dB,
+             IQIndexSet   const& Bis);
 
 //template<typename BlockSparseStore, typename Indexable>
 //auto

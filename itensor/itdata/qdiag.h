@@ -273,6 +273,11 @@ doTask(Contract<IQIndex>& Con,
        QDiag<VB> const& B,
        ManageStore& m);
 
+template<typename T>
+void
+doTask(Order<IQIndex> const& P,
+       QDiag<T> & dA) { }
+
 template<typename Indexable>
 std::tuple<size_t,size_t,IntArray>
 diagBlockBounds(IQIndexSet const& is,

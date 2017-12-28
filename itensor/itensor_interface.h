@@ -237,6 +237,9 @@ class ITensorT
     ITensorT&
     operator/=(ITensorT const& other);
 
+    ITensorT&
+    order(indexset_type const& iset);
+
     //
     // Read from and write to streams
     //
@@ -410,7 +413,7 @@ rank(ITensorT<I> const& T);
 //(same as rank)
 template<typename I>
 long
-order(ITensorT<I> const& T);
+ord(ITensorT<I> const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
