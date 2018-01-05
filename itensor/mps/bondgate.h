@@ -23,7 +23,8 @@ class BondGate
 
     enum Type { tReal,  //real-time gate
                 tImag,  //imaginary-time gate
-                Swap }; //exchange states of sites i1 and i2
+                Swap,
+                Custom }; //exchange states of sites i1 and i2
 
     BondGate(SiteSet const& sites, 
              int i1, 
@@ -35,6 +36,11 @@ class BondGate
              Type type, 
              Real tau, 
              Tensor bondH);
+
+    BondGate(SiteSet const& sites, 
+             int i1, 
+             int i2,
+             Tensor gate);
 
     int i1() const { return i1_; }
 
@@ -131,6 +137,19 @@ BondGate(SiteSet const& sites,
         term = gate_ * bondH;
         term.mapprime(2,1);
         }
+    }
+
+template <class Tensor>
+BondGate<Tensor>::
+BondGate(SiteSet const& sites, 
+         int i1, 
+         int i2,
+         Tensor gate)
+  : type_(Custom)
+    {
+    i1_ = i1;
+    i2_ = i2;
+    gate_ = gate;
     }
 
 template <class Tensor>
