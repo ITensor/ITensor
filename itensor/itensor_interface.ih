@@ -115,7 +115,7 @@ ITensorT<IndexT>::
 operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *this; }
 
 
-template<typename IndexT> 
+template<typename IndexT>
 template <typename... IVs>
 Cplx ITensorT<IndexT>::
 cplx(IVs&&... ivs) const
@@ -126,7 +126,7 @@ cplx(IVs&&... ivs) const
 
     constexpr size_t size = sizeof...(ivs);
     auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
-    if(size != size_t(inds().r())) 
+    if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -141,19 +141,19 @@ cplx(IVs&&... ivs) const
     detail::permute_map(is_,vals,inds,
                 [](indexval_type const& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
-	try {
+    try {
         return z*scale_.real0(); 
-	    }
-	catch(TooBigForReal const& e)
-	    {
-	    println("too big for real in cplx(...), scale = ",scale());
-	    throw e;
-	    }
-	catch(TooSmallForReal)
-	    {
+        }
+    catch(TooBigForReal const& e)
+        {
+        println("too big for real in cplx(...), scale = ",scale());
+        throw e;
+        }
+    catch(TooSmallForReal)
+        {
         println("warning: too small for real in cplx(...)");
-	    return Cplx(0.,0.);
-	    }
+        return Cplx(0.,0.);
+        }
     return Cplx(NAN,NAN);
     }
 
@@ -189,9 +189,32 @@ getVals(Iter it,
             "Last argument to .set method must be Real or Cplx scalar");
     }
 
+template<typename IntT,
+         typename Iter,
+         typename Int>
+auto
+getInts(Iter it,
+        Cplx & z,
+        Int const& iv)
+    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+                         void>
+    {
+    static_assert(stdx::false_regardless_of<IntT>::value,
+            "Last argument to .set method must be Real or Cplx scalar");
+    }
+
 template<typename IndexValT, typename Iter>
 void
 getVals(Iter it,
+        Cplx & z,
+        Cplx const& w)
+    {
+    z = w;
+    }
+
+template<typename IntT, typename Iter>
+void
+getInts(Iter it,
         Cplx & z,
         Cplx const& w)
     {
@@ -215,9 +238,37 @@ getVals(Iter it,
     getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
+template<typename IntT,
+         typename Iter,
+         typename Int, 
+         typename... Rest>
+auto
+getInts(Iter it,
+        Cplx & z,
+        Int const& iv,
+        Rest&&... rest)
+    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+                         void>
+    {
+    *it = static_cast<IntT>(iv);
+    getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
+    }
+
 template<typename IndexValT, typename Iter, typename... Rest>
 bool
 getVals(Iter it,
+        Cplx & z,
+        Cplx w,
+        Rest&&... rest)
+    {
+    static_assert(stdx::false_regardless_of<Iter>::value,
+            "New value passed to .set method must be last argument");
+    return false;
+    }
+
+template<typename IntT, typename Iter, typename... Rest>
+bool
+getInts(Iter it,
         Cplx & z,
         Cplx w,
         Rest&&... rest)
@@ -269,6 +320,44 @@ set(IV const& iv1, VArgs&&... vargs)
     }
 
 template<typename IndexT>
+template<typename... VArgs>
+auto ITensorT<IndexT>::
+set(int const& iv1, VArgs&&... vargs)
+    -> stdx::if_compiles_return<void,decltype(iv1)>
+    {
+    static constexpr auto size = 1+(sizeof...(vargs)-1);
+    std::array<int,size> ints;
+    Cplx z;
+    detail::getInts<int>(ints.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
+    if(size != size_t(inds().r())) 
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : ints) println(iv);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+                     inds().r(),size));
+        }
+    auto inds = IntArray(is_.r(),0);
+    for(auto i : range(size))
+        inds[i] = ints[i]-1;
+    //TODO: if !store_ and !is_real, call allocCplx instead
+    //and move this line after check for is_real
+    if(!store_) detail::allocReal(*this,inds);
+    scaleTo(1.);
+    if(z.imag()==0.0)
+        {
+        doTask(SetElt<Real,IndexT>{z.real(),is_,inds},store_);
+        }
+    else
+        {
+        doTask(SetElt<Cplx,IndexT>{z,is_,inds},store_);
+        }
+    }
+
+template<typename IndexT>
 void ITensorT<IndexT>::
 set(Cplx val)
     {
@@ -292,6 +381,21 @@ set(Cplx val)
 
 template<typename IndexT>
 void ITensorT<IndexT>::
+set(Real val)
+    {
+    if(0 != size_t(inds().r())) 
+        {
+        Error(format("Wrong number of IndexVals passed to set (expected %d, got 0)",
+                     inds().r()));
+        }
+    auto inds = IntArray(0,1);
+    if(!store_) detail::allocReal(*this,inds); 
+    scaleTo(1.);
+    doTask(SetElt<Real,IndexT>{val,is_,inds},store_);
+    }
+
+template<typename IndexT>
+void ITensorT<IndexT>::
 set(std::vector<typename IndexT::indexval_type> const& ivals,
     Cplx val)
     {
@@ -310,6 +414,41 @@ set(std::vector<typename IndexT::indexval_type> const& ivals,
     auto inds = IntArray(is_.r(),0);
     detail::permute_map(is_,ivals,inds,
                         [](indexval_type const& iv) { return iv.val-1; });
+    if(!store_) detail::allocReal(*this,inds); 
+    scaleTo(1.);
+    if(val.imag()==0.0)
+        {
+        doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
+        }
+    else
+        {
+        doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
+        }
+    }
+
+template<typename IndexT>
+void ITensorT<IndexT>::
+set(std::vector<int> const& ints,
+    Cplx val)
+    {
+    auto size = ints.size();
+    if(size != size_t(inds().r())) 
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : ints) println(iv);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+                     inds().r(),size));
+        }
+    auto inds = IntArray(is_.r(),0);
+    for(auto i : range(size))
+        inds[i] = ints[i]-1;
+    //TODO: if !store_ and !is_real, call allocCplx instead
+    //detail::permute_map(is_,ivals,inds,
+    //                    [](indexval_type const& iv) { return iv.val-1; });
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(val.imag()==0.0)

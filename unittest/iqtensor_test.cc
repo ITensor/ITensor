@@ -1130,6 +1130,17 @@ CHECK(CIT.inds().index(4).dir()==O3.inds().index(2).dir());
 
 }
 
+SECTION("Set with int")
+{
+auto I = IQIndex("I",Index("I+",1),QN(+1),
+                     Index("I-",1),QN(-1));
+auto J = IQIndex("J",Index("I+",2),QN(+1),
+                     Index("I-",2),QN(-1));
+auto T = IQTensor(I,J);
+T.set(2,1,21.0);
+CHECK_CLOSE(T.real(J(1),I(2)),21.0);
+}
+
 //SECTION("Non-contracting product")
 //    {
 //    SECTION("Case 1")

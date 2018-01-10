@@ -347,12 +347,46 @@ CHECK(isComplex(T));
 CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
 }
 
+SECTION("Set Elements Using int")
+{
+auto T = ITensor(s1,s2);
+T.set(1,1,11.0);
+T.set(1,2,12.0);
+T.set(2,1,21.0);
+T.set(2,2,22.0);
+CHECK(!isComplex(T));
+CHECK_CLOSE(T.real(s1(1),s2(1)),11.0);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12.0);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21.0);
+CHECK_CLOSE(T.real(s1(2),s2(2)),22.0);
+
+auto T2 = order(T,s2,s1);
+
+T2.set(2,1,3.0);
+CHECK_CLOSE(T2.real(s1(1),s2(2)),3.0);
+
+T2.set(2,1,3+5_i);
+CHECK(isComplex(T2));
+CHECK_CLOSE(T2.cplx(s1(1),s2(2)),3+5_i);
+}
+
 SECTION("Set Using vector<IndexVal>")
 {
 auto T = ITensor(s1,s2);
 auto v12 = vector<IndexVal>{{s2(2),s1(1)}};
 T.set(v12,12);
 auto v21 = vector<IndexVal>{{s1(2),s2(1)}};
+T.set(v21,21);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+}
+
+SECTION("Set Using vector<int>")
+{
+auto T = ITensor(s1,s2);
+auto v12 = vector<int>{{1,2}};
+T.set(v12,12);
+auto v21 = vector<int>{{2,1}};
 T.set(v21,21);
 CHECK_CLOSE(T.real(s1(1),s2(2)),12);
 CHECK_CLOSE(T.real(s1(2),s2(1)),21);

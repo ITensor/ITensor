@@ -106,11 +106,22 @@ class ITensorT
     set(IV const& iv1, VArgs&&... ivs)
         -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>;
 
+    template<typename... VArgs>
+    auto
+    set(int const& iv1, VArgs&&... ivs)
+        -> stdx::if_compiles_return<void,decltype(iv1)>;
+
     void
     set(Cplx val);
 
     void
+    set(Real val);
+
+    void
     set(std::vector<indexval_type> const& ivs, Cplx val);
+
+    void
+    set(std::vector<int> const& ivs, Cplx val);
 
     //
     // Index Prime Level Methods
