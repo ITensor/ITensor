@@ -108,7 +108,7 @@ class ITensorT
 
     template<typename... VArgs>
     auto
-    set(int const& iv1, VArgs&&... ivs)
+    set(int iv1, VArgs&&... ivs)
         -> stdx::if_compiles_return<void,decltype(iv1)>;
 
     void
