@@ -1929,6 +1929,18 @@ CHECK(ITD.inds().index(3)==O4.inds().index(1));
 
 }
 
+SECTION("Index Test")
+{
+Index i("i",2),
+      j("j",2),
+      k("k",2);
+ITensor T(i,j,k);
+CHECK(T.index(1) == T.inds()[0]);
+CHECK(T.index(2) == T.inds()[1]);
+CHECK(T.index(3) == T.inds()[2]);
+
+}
+
 SECTION("RealImagPart")
     {
     auto f1 = 2.124;
