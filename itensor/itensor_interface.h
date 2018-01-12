@@ -94,9 +94,18 @@ class ITensorT
     Real
     real(IndexVals&&... ivs) const;
 
+    template <typename IV, typename... IVs>
+    Cplx
+    cplx(IV const& iv1, IVs&&... ivs) const;
+
+    Cplx
+    cplx() const;
+
+    /*
     template <typename... IndexVals>
     Cplx
     cplx(IndexVals&&... ivs) const;
+    */
 
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage
