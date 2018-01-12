@@ -36,6 +36,8 @@ class ITensorT
     using index_type = index_type_;
     using indexval_type = typename index_type::indexval_type;
     using indexset_type = IndexSetT<index_type>;
+    using range_type = RangeT<index_type>;
+    using size_type = typename range_type::size_type;
     using storage_ptr = PData;
     using const_storage_ptr = CPData;
     using scale_type = LogNum;
@@ -86,6 +88,10 @@ class ITensorT
     //Access index set
     indexset_type const&
     inds() const { return is_; }
+
+    //Access index
+    index_type const&
+    index(size_type I) const { return is_.index(I); }
 
     //evaluates to false if default constructed
     explicit operator bool() const { return bool(is_) || bool(store_); }
