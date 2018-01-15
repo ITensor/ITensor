@@ -350,20 +350,20 @@ CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
 SECTION("Set Elements Using int")
 {
 auto T = ITensor(s1,s2);
-T.set(1,1,11.0);
-T.set(1,2,12.0);
-T.set(2,1,21.0);
-T.set(2,2,22.0);
+T.set(1,1,11);
+T.set(1,2,12);
+T.set(2,1,21);
+T.set(2,2,22);
 CHECK(!isComplex(T));
-CHECK_CLOSE(T.real(s1(1),s2(1)),11.0);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12.0);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21.0);
-CHECK_CLOSE(T.real(s1(2),s2(2)),22.0);
+CHECK_CLOSE(T.real(s1(1),s2(1)),11);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+CHECK_CLOSE(T.real(s1(2),s2(2)),22);
 
 auto T2 = order(T,s2,s1);
 
-T2.set(2,1,3.0);
-CHECK_CLOSE(T2.real(s1(1),s2(2)),3.0);
+T2.set(2,1,3);
+CHECK_CLOSE(T2.real(s1(1),s2(2)),3);
 
 T2.set(2,1,3+5_i);
 CHECK(isComplex(T2));
@@ -2434,6 +2434,8 @@ SECTION("Scalar Storage")
         {
         S1.set(4.5);
         CHECK_CLOSE(S1.real(),4.5);
+        S1.set(4);
+        CHECK_CLOSE(S1.real(),4);
         S1.set(1.+3._i);
         CHECK(isComplex(S1));
         CHECK_CLOSE(S1.cplx(),1.+3._i);

@@ -106,16 +106,13 @@ class ITensorT
     set(IV const& iv1, VArgs&&... ivs)
         -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>;
 
-    template<typename... VArgs>
+    template<typename Int, typename... VArgs>
     auto
-    set(int iv1, VArgs&&... ivs)
-        -> stdx::if_compiles_return<void,decltype(iv1)>;
+    set(Int iv1, VArgs&&... ivs)
+        -> stdx::enable_if_t<std::is_same<Int,int>::value,void>;
 
     void
     set(Cplx val);
-
-    void
-    set(Real val);
 
     void
     set(std::vector<indexval_type> const& ivs, Cplx val);

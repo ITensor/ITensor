@@ -189,32 +189,9 @@ getVals(Iter it,
             "Last argument to .set method must be Real or Cplx scalar");
     }
 
-template<typename IntT,
-         typename Iter,
-         typename Int>
-auto
-getInts(Iter it,
-        Cplx & z,
-        Int const& iv)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
-                         void>
-    {
-    static_assert(stdx::false_regardless_of<IntT>::value,
-            "Last argument to .set method must be Real or Cplx scalar");
-    }
-
 template<typename IndexValT, typename Iter>
 void
 getVals(Iter it,
-        Cplx & z,
-        Cplx const& w)
-    {
-    z = w;
-    }
-
-template<typename IntT, typename Iter>
-void
-getInts(Iter it,
         Cplx & z,
         Cplx const& w)
     {
@@ -238,22 +215,6 @@ getVals(Iter it,
     getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
-template<typename IntT,
-         typename Iter,
-         typename Int, 
-         typename... Rest>
-auto
-getInts(Iter it,
-        Cplx & z,
-        Int const& iv,
-        Rest&&... rest)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
-                         void>
-    {
-    *it = iv-1;
-    getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
-    }
-
 template<typename IndexValT, typename Iter, typename... Rest>
 bool
 getVals(Iter it,
@@ -266,16 +227,64 @@ getVals(Iter it,
     return false;
     }
 
-template<typename IntT, typename Iter, typename... Rest>
-bool
+template<typename IntT,
+         typename Iter,
+         typename Int>
+auto
 getInts(Iter it,
         Cplx & z,
-        Cplx w,
+        Int const& iv)
+    -> stdx::enable_if_t<!(std::is_convertible<Int,Cplx>::value),
+                         void>
+    {
+    static_assert(stdx::false_regardless_of<IntT>::value,
+            "Last argument to .set method must be Real or Cplx scalar");
+    }
+
+template<typename IntT,
+         typename Iter,
+         typename Int>
+auto
+getInts(Iter it,
+        Cplx & z,
+        Int const& w)
+    -> stdx::enable_if_t<std::is_convertible<Int,Cplx>::value,
+                         void>
+    {
+    z = w;
+    }
+
+template<typename IntT,
+         typename Iter,
+         typename Int,
+         typename... Rest>
+auto
+getInts(Iter it,
+        Cplx & z,
+        Int const& w,
         Rest&&... rest)
+    -> stdx::enable_if_t<!(std::is_same<Int,int>::value),
+                         void>
     {
     static_assert(stdx::false_regardless_of<Iter>::value,
             "New value passed to .set method must be last argument");
     return false;
+    }
+
+template<typename IntT,
+         typename Iter,
+         typename Int,
+         typename... Rest>
+auto
+getInts(Iter it,
+        Cplx & z,
+        Int const& w,
+        Rest&&... rest)
+    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+                         void>
+    {
+    *it = w-1;
+    getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
 } //namespace detail
@@ -320,15 +329,17 @@ set(IV const& iv1, VArgs&&... vargs)
     }
 
 template<typename IndexT>
-template<typename... VArgs>
+template<typename Int,
+         typename... VArgs>
 auto ITensorT<IndexT>::
-set(int iv1, VArgs&&... vargs)
-    -> stdx::if_compiles_return<void,decltype(iv1)>
+set(Int iv1, VArgs&&... vargs)
+    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+                         void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
     auto ints = IntArray(is_.r(),0);
     Cplx z;
-    detail::getInts<int>(ints.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
+    detail::getInts<Int>(ints.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
     if(size != size_t(inds().r())) 
         {
         println("---------------------------------------------");
@@ -374,21 +385,6 @@ set(Cplx val)
         {
         doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
         }
-    }
-
-template<typename IndexT>
-void ITensorT<IndexT>::
-set(Real val)
-    {
-    if(0 != size_t(inds().r())) 
-        {
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got 0)",
-                     inds().r()));
-        }
-    auto inds = IntArray(0,1);
-    if(!store_) detail::allocReal(*this,inds); 
-    scaleTo(1.);
-    doTask(SetElt<Real,IndexT>{val,is_,inds},store_);
     }
 
 template<typename IndexT>
