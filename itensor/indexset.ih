@@ -208,6 +208,33 @@ prime(IndexSetT<IndexT>& is,
     prime(is,All,inc); 
     }
 
+template<typename IndexT, typename... VArgs>
+void
+primeLevel(IndexSetT<IndexT>& is,
+           VArgs&&... vargs)
+    {
+    constexpr size_t size = sizeof...(vargs);
+    auto ints = std::array<int,size>{{static_cast<int>(vargs)...}};
+
+    if(size != size_t(is.r()))
+        {
+        println("---------------------------------------------");
+        println("IndexSet indices = \n",is,"\n");
+        println("---------------------------------------------");
+        println("Prime levels provided = ");
+        for(auto& i : ints) println(i);
+        println("---------------------------------------------");
+        Error(format("Wrong number of prime levels passed to primeLevel (expected %d, got %d)",is.r(),size));
+        }
+
+    int i = 0;
+    for(auto& J : is)
+        {
+        J.primeLevel(ints[i]);
+        i++;
+        }
+    }
+
 //template<typename IndexT, typename... Inds>
 //void 
 //prime(IndexSetT<IndexT>& is, 

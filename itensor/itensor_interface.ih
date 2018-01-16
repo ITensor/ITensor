@@ -623,6 +623,15 @@ prime(ITensorT<IndexT> A,
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
+primeLevel(ITensorT<IndexT> A, 
+           VarArgs&&... vargs)
+    {
+    A.primeLevel(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
 primeExcept(ITensorT<IndexT> A, 
             VarArgs&&... vargs)
     {
