@@ -278,7 +278,7 @@ template<typename IntT,
 auto
 getInts(Iter it,
         Cplx & z,
-        Int const& w,
+        Int w,
         Rest&&... rest)
     -> stdx::enable_if_t<std::is_same<Int,int>::value,
                          void>
