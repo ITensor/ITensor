@@ -98,14 +98,12 @@ class ITensorT
     Cplx
     cplx(IV const& iv1, IVs&&... ivs) const;
 
+    template <typename... Ints>
+    Cplx
+    cplx(int iv1, Ints&&... ivs) const;
+
     Cplx
     cplx() const;
-
-    /*
-    template <typename... IndexVals>
-    Cplx
-    cplx(IndexVals&&... ivs) const;
-    */
 
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage
