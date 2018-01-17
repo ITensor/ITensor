@@ -1137,8 +1137,8 @@ auto I = IQIndex("I",Index("I+",1),QN(+1),
 auto J = IQIndex("J",Index("I+",2),QN(+1),
                      Index("I-",2),QN(-1));
 auto T = IQTensor(I,J);
-T.set(2,1,21.0);
-CHECK_CLOSE(T.real(J(1),I(2)),21.0);
+T.set(2,1,21);
+CHECK_CLOSE(T.real(J(1),I(2)),21);
 }
 
 //SECTION("Non-contracting product")

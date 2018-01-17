@@ -1929,6 +1929,74 @@ CHECK(ITD.inds().index(3)==O4.inds().index(1));
 
 }
 
+SECTION("Order Test: Dots Syntax")
+{
+Index i("i",2),
+      j("j",3),
+      k("k",4);
+auto jp = prime(j);
+
+auto IT = randomTensor(i,j,jp,k);
+
+auto O1 = order(IT,"...",i);
+CHECK(IT.inds().index(1)==O1.inds().index(4));
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O2 = order(IT,"...",j,i);
+CHECK(IT.inds().index(1)==O2.inds().index(4));
+CHECK(IT.inds().index(2)==O2.inds().index(3));
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O3 = order(IT,"...",jp,i,j);
+CHECK(IT.inds().index(1)==O3.inds().index(3));
+CHECK(IT.inds().index(2)==O3.inds().index(4));
+CHECK(IT.inds().index(3)==O3.inds().index(2));
+CHECK(IT.inds().index(4)==O3.inds().index(1));
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O3.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O4 = order(IT,j,"...");
+CHECK(IT.inds().index(2)==O4.inds().index(1));
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O4.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O5 = order(IT,jp,k,i,"...");
+CHECK(IT.inds().index(1)==O5.inds().index(3));
+CHECK(IT.inds().index(2)==O5.inds().index(4));
+CHECK(IT.inds().index(3)==O5.inds().index(1));
+CHECK(IT.inds().index(4)==O5.inds().index(2));
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O5.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+}
+
 SECTION("RealImagPart")
     {
     auto f1 = 2.124;
