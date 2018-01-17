@@ -799,11 +799,186 @@ sumelsC(ITensorT<I> const& t)
     }
 
 
+/*
+namespace detail {
+
+template<typename IndexValT, 
+         typename Iter,
+         typename IV>
+auto
+getInds(Iter it,
+        Cplx & z,
+        IV const& iv)
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
+                      || std::is_same<IV,IQIndexVal>::value,
+                         void>
+    {
+    static_assert(stdx::false_regardless_of<IndexValT>::value,
+            "Last argument to .set method must be Real or Cplx scalar");
+    }
+
+template<typename IndexValT, typename Iter>
+void
+getInds(Iter it,
+        Cplx & z,
+        Cplx const& w)
+    {
+    z = w;
+    }
+
+template<typename IndexValT, 
+         typename Iter, 
+         typename IV, 
+         typename... Rest>
+auto
+getInds(Iter it,
+        Cplx & z,
+        IV const& iv,
+        Rest&&... rest)
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value
+                      || std::is_same<IV,IQIndexVal>::value,
+                         void>
+    {
+    *it = static_cast<IndexValT>(iv);
+    getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
+    }
+
+template<typename IndexValT, typename Iter, typename... Rest>
+bool
+getInds(Iter it,
+        Cplx & z,
+        Cplx w,
+        Rest&&... rest)
+    {
+    static_assert(stdx::false_regardless_of<Iter>::value,
+            "New value passed to .set method must be last argument");
+    return false;
+    }
+
+template <typename IndexT>
+IndexSetT<IndexT>
+moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
+    {
+    auto rf = isf.r();
+    auto r = is.r();
+
+    if(rf >= r)
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",is,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n",isf," '...'\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
+        }
+
+    auto iso = IndexSetT<IndexT>(r);
+
+    auto i = 0;
+    for(auto I : isf) 
+        {
+        if(!hasindex(is,I))
+            {
+            println("---------------------------------------------");
+            println("Tensor indices = \n",is,"\n");
+            println("---------------------------------------------");
+            println("Indices provided = \n",isf," '...'\n");
+            println("---------------------------------------------");
+            Error(format("Bad index passed to order"));
+            }
+        iso[i] = I;
+        i++;
+        }
+
+    auto j = r-rf;
+    for(auto J : is)
+        {
+        if(!hasindex(isf,J))
+            {
+            iso[j] = J;
+            j++;
+            }
+        }
+
+    return iso;
+    }
+
+} //namespace detail
+*/
+
 template <typename IndexT,typename... Indxs>
 ITensorT<IndexT>
-order(ITensorT<IndexT> A, Indxs&&... inds)
+order(ITensorT<IndexT> A, IndexT const& ind1, Indxs&&... inds)
     {
-    A.order(IndexSetT<IndexT>(inds...));
+    A.order(IndexSetT<IndexT>(ind1, inds...));
+    return A;
+    }
+
+namespace detail {
+
+template <typename IndexT>
+IndexSetT<IndexT>
+moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
+    {
+    auto rb = isb.r();
+    auto r = is.r();
+
+    if(rb >= r)
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",is,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n'...' ",isb,"\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
+        }
+
+    auto iso = IndexSetT<IndexT>(r);
+
+    auto i = r-rb;
+    for(auto I : isb) 
+        {
+        if(!hasindex(is,I))
+            {
+            println("---------------------------------------------");
+            println("Tensor indices = \n",is,"\n");
+            println("---------------------------------------------");
+            println("Indices provided = \n'...' ",isb,"\n");
+            println("---------------------------------------------");
+            Error(format("Bad index passed to order"));
+            }
+        iso[i] = I;
+        i++;
+        }
+
+    auto j = 0;
+    for(auto J : is)
+        {
+        if(!hasindex(isb,J))
+            {
+            iso[j] = J;
+            j++;
+            }
+        }
+
+    return iso;
+    }
+
+} //namespace detail
+
+template <typename IndexT,typename... Indxs>
+ITensorT<IndexT>
+order(ITensorT<IndexT> A, std::string const& dots, Indxs&&... inds)
+    {
+    PrintDat("Test order dots");
+
+    if(dots != "...")
+        Error(format("Wrong string passed to order (expected '...', got '%d')",dots));
+
+    auto isb = IndexSetT<IndexT>(inds...);
+    auto is = detail::moveToBack(isb, A.inds());
+    A.order(is);
+
     return A;
     }
 
