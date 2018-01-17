@@ -1869,6 +1869,10 @@ auto jp = prime(j);
 auto IT = randomTensor(i,j,jp,k);
 
 auto O1 = order(IT,jp,k,j,i);
+CHECK(IT.inds().index(1)==O1.inds().index(4));
+CHECK(IT.inds().index(2)==O1.inds().index(3));
+CHECK(IT.inds().index(3)==O1.inds().index(1));
+CHECK(IT.inds().index(4)==O1.inds().index(2));
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1877,12 +1881,11 @@ for(auto kk : range1(k.m()))
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
-CHECK(IT.inds().index(1)==O1.inds().index(4));
-CHECK(IT.inds().index(2)==O1.inds().index(3));
-CHECK(IT.inds().index(3)==O1.inds().index(1));
-CHECK(IT.inds().index(4)==O1.inds().index(2));
-
 auto O2 = order(IT,j,i,k,jp);
+CHECK(IT.inds().index(1)==O2.inds().index(2));
+CHECK(IT.inds().index(2)==O2.inds().index(1));
+CHECK(IT.inds().index(3)==O2.inds().index(4));
+CHECK(IT.inds().index(4)==O2.inds().index(3));
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1891,14 +1894,13 @@ for(auto kk : range1(k.m()))
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
-CHECK(IT.inds().index(1)==O2.inds().index(2));
-CHECK(IT.inds().index(2)==O2.inds().index(1));
-CHECK(IT.inds().index(3)==O2.inds().index(4));
-CHECK(IT.inds().index(4)==O2.inds().index(3));
-
 auto CIT = randomTensorC(i,j,jp,k);
 
 auto O3 = order(CIT,jp,k,i,j);
+CHECK(CIT.inds().index(1)==O3.inds().index(3));
+CHECK(CIT.inds().index(2)==O3.inds().index(4));
+CHECK(CIT.inds().index(3)==O3.inds().index(1));
+CHECK(CIT.inds().index(4)==O3.inds().index(2));
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1907,25 +1909,19 @@ for(auto kk : range1(k.m()))
     CHECK_CLOSE(CIT.cplx(i(ii),j(jj),jp(jjp),k(kk)),O3.cplx(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
-CHECK(CIT.inds().index(1)==O3.inds().index(3));
-CHECK(CIT.inds().index(2)==O3.inds().index(4));
-CHECK(CIT.inds().index(3)==O3.inds().index(1));
-CHECK(CIT.inds().index(4)==O3.inds().index(2));
-
 auto data = randomData(i.m());
 auto ITD = diagTensor(data,i,j,k);
 
 auto O4 = order(ITD,k,i,j);
+CHECK(ITD.inds().index(1)==O4.inds().index(2));
+CHECK(ITD.inds().index(2)==O4.inds().index(3));
+CHECK(ITD.inds().index(3)==O4.inds().index(1));
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto kk : range1(k.m()))
     {
     CHECK_CLOSE(ITD.real(i(ii),j(jj),k(kk)),O4.real(i(ii),j(jj),k(kk)));
     }
-
-CHECK(ITD.inds().index(1)==O4.inds().index(2));
-CHECK(ITD.inds().index(2)==O4.inds().index(3));
-CHECK(ITD.inds().index(3)==O4.inds().index(1));
 
 }
 
