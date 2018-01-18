@@ -347,7 +347,7 @@ CHECK(isComplex(T));
 CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
 }
 
-SECTION("Set Elements Using int")
+SECTION("Set and Get Elements Using int")
 {
 auto T = ITensor(s1,s2);
 T.set(1,1,11);
@@ -359,15 +359,15 @@ CHECK_CLOSE(T.real(s1(1),s2(1)),11);
 CHECK_CLOSE(T.real(s1(1),s2(2)),12);
 CHECK_CLOSE(T.real(s1(2),s2(1)),21);
 CHECK_CLOSE(T.real(s1(2),s2(2)),22);
+CHECK_CLOSE(T.real(1,1),11);
+CHECK_CLOSE(T.real(1,2),12);
+CHECK_CLOSE(T.real(2,1),21);
+CHECK_CLOSE(T.real(2,2),22);
 
-auto T2 = order(T,s2,s1);
-
-T2.set(2,1,3);
-CHECK_CLOSE(T2.real(s1(1),s2(2)),3);
-
-T2.set(2,1,3+5_i);
-CHECK(isComplex(T2));
-CHECK_CLOSE(T2.cplx(s1(1),s2(2)),3+5_i);
+T.set(2,1,3+5_i);
+CHECK(isComplex(T));
+CHECK_CLOSE(T.cplx(s1(2),s2(1)),3+5_i);
+CHECK_CLOSE(T.cplx(2,1),3+5_i);
 }
 
 SECTION("Set Using vector<IndexVal>")
