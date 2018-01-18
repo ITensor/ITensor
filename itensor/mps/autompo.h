@@ -200,6 +200,9 @@ class AutoMPO
     storage const&
     terms() const { return terms_; }
 
+    int
+    size() const { return terms_.size(); }
+
     operator MPO() const { return toMPO<ITensor>(*this); }
 
     operator IQMPO() const { return toMPO<IQTensor>(*this); }
