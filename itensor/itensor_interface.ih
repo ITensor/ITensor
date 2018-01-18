@@ -170,9 +170,9 @@ cplx(int iv1, Ints&&... ivs) const
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
         println("---------------------------------------------");
-        println("Indices provided = ");
-        for(auto& iv : ints) println(iv);
-        println("---------------------------------------------");
+        print("Indices provided = ");
+        for(auto i : ints) print(" ",i);
+        println("\n---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
         }
 
