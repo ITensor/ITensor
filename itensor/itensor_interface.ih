@@ -337,7 +337,7 @@ set(Int iv1, VArgs&&... vargs)
                          void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
-    auto ints = IntArray(is_.r(),0);
+    auto ints = IntArray(size,0);
     Cplx z;
     detail::getInts<Int>(ints.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
     if(size != size_t(inds().r())) 
@@ -345,8 +345,9 @@ set(Int iv1, VArgs&&... vargs)
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
         println("---------------------------------------------");
-        println("Indices provided = ");
-        for(auto& iv : ints) println(iv);
+        print("Indices provided =");
+        for(auto& i : ints) print(" ",1+i);
+        println();
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().r(),size));
