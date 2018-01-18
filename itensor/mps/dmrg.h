@@ -232,7 +232,7 @@ DMRGWorker(MPSt<Tensor>& psi,
             {
             if(!quiet)
                 {
-                printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,(b+1));
+                printfln("Sweep=%d, HS=%d, Bond=%d/%d",sw,ha,b,(N-1));
                 }
 
             PH.position(b,psi);
