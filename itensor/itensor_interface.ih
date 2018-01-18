@@ -114,18 +114,17 @@ template<typename IndexT>
 ITensorT<IndexT>::
 operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *this; }
 
-
 template<typename IndexT>
-template <typename... IVs>
+template<typename IV, typename... IVs>
 Cplx ITensorT<IndexT>::
-cplx(IVs&&... ivs) const
+cplx(IV const& iv1, IVs&&... ivs) const
     {
     using indexval_type = typename IndexT::indexval_type;
 
     if(!store()) Error("tensor storage unallocated");
 
-    constexpr size_t size = sizeof...(ivs);
-    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
+    constexpr size_t size = sizeof...(ivs)+1;
+    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(iv1),static_cast<indexval_type>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -140,6 +139,73 @@ cplx(IVs&&... ivs) const
     auto inds = IntArray(size);
     detail::permute_map(is_,vals,inds,
                 [](indexval_type const& iv) { return iv.val-1; });
+    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+    try {
+        return z*scale_.real0(); 
+        }
+    catch(TooBigForReal const& e)
+        {
+        println("too big for real in cplx(...), scale = ",scale());
+        throw e;
+        }
+    catch(TooSmallForReal)
+        {
+        println("warning: too small for real in cplx(...)");
+        return Cplx(0.,0.);
+        }
+    return Cplx(NAN,NAN);
+    }
+
+template<typename IndexT>
+template<typename... Ints>
+Cplx ITensorT<IndexT>::
+cplx(int iv1, Ints&&... ivs) const
+    {
+    if(!store()) Error("tensor storage unallocated");
+
+    constexpr size_t size = sizeof...(ivs)+1;
+    auto ints = std::array<int,size>{{iv1,static_cast<int>(ivs)...}};
+    if(size != size_t(inds().r()))
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        print("Indices provided = ");
+        for(auto i : ints) print(" ",i);
+        println("\n---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        }
+
+    auto inds = IntArray(size);
+    for(auto i : range(size))
+        inds[i] = ints[i]-1;
+    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+    try {
+        return z*scale_.real0(); 
+        }
+    catch(TooBigForReal const& e)
+        {
+        println("too big for real in cplx(...), scale = ",scale());
+        throw e;
+        }
+    catch(TooSmallForReal)
+        {
+        println("warning: too small for real in cplx(...)");
+        return Cplx(0.,0.);
+        }
+    return Cplx(NAN,NAN);
+    }
+
+template<typename IndexT>
+Cplx ITensorT<IndexT>::
+cplx() const
+    {
+    if(inds().r() != 0)
+        {
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().r()));
+        }
+    constexpr size_t size = 0;
+    auto inds = IntArray(size);
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
     try {
         return z*scale_.real0(); 
