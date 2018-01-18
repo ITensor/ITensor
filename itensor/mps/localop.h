@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_LOCAL_OP
 #define __ITENSOR_LOCAL_OP
 #include "itensor/iqtensor.h"
+//#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
@@ -267,12 +268,14 @@ deltaRho(Tensor const& AA,
         if(!RIsNull()) drho *= R();
         drho *= (*Op2_);
         }
-
     drho.noprime();
     drho = combine * drho;
     auto ci = commonIndex(combine,drho);
-    
     drho *= dag(prime(drho,ci));
+
+    //Expedient to ensure drho is Hermitian
+    drho = drho + dag(swapPrime(drho,0,1));
+    drho /= 2.;
 
     return drho;
     }
