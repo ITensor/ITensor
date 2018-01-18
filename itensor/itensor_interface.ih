@@ -200,6 +200,10 @@ template<typename IndexT>
 Cplx ITensorT<IndexT>::
 cplx() const
     {
+    if(inds().r() != 0)
+        {
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().r()));
+        }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
