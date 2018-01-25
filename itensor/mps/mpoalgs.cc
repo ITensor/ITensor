@@ -185,6 +185,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     auto maxm_set = args.defined("Maxm");
     if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
     auto verbose = args.getBool("Verbose",false);
+    auto siteType = getIndexType(args,"SiteType",Site);
 
     int plev = 14741;
 
@@ -201,14 +202,14 @@ exactApplyMPO(MPOt<Tensor> const& K,
         if(j == 1)
             {
             auto ci = commonIndex(psi.A(1),psi.A(2),Link);
-            psic.Aref(j) = dag(mapprime(psi.A(j),Site,0,2,ci,0,plev));
+            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,ci,0,plev));
             ci = commonIndex(Kc.A(1),Kc.A(2),Link);
-            Kc.Aref(j) = dag(mapprime(K.A(j),Site,0,2,ci,0,plev));
+            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,ci,0,plev));
             }
         else
             {
-            psic.Aref(j) = dag(mapprime(psi.A(j),Site,0,2,Link,0,plev));
-            Kc.Aref(j) = dag(mapprime(K.A(j),Site,0,2,Link,0,plev));
+            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,Link,0,plev));
+            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,Link,0,plev));
             }
         }
 
@@ -225,7 +226,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi.A(N)*K.A(N);
-    O.noprime(Site);
+    O.noprime(siteType);
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
     Tensor U,D;
@@ -236,7 +237,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     res.Aref(N) = dag(U);
 
     O = O*U*psi.A(N-1)*K.A(N-1);
-    O.noprime(Site);
+    O.noprime(siteType);
 
     for(int j = N-1; j > 1; --j)
         {
@@ -255,7 +256,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
         dargs.add("IndexName=",nameint("a",j));
         auto spec = diagHermitian(rho,U,D,dargs);
         O = O*U*psi.A(j-1)*K.A(j-1);
-        O.noprime(Site);
+        O.noprime(siteType);
         res.Aref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),commonIndex(U,D).m());
         }
