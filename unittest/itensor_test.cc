@@ -1331,6 +1331,25 @@ SECTION("Prime")
     CHECK(T.inds()[3] == prime(x,2));
     }
 
+SECTION("PrimeLevel")
+    {
+    Index x("x",2,Xtype),
+          z("z",2,Ztype),
+          v("v",2,Vtype);
+    ITensor T(x,z,v,prime(x));
+    T.primeLevel(2,4,3,5);
+    CHECK(T.inds()[0] == prime(x,2));
+    CHECK(T.inds()[1] == prime(z,4));
+    CHECK(T.inds()[2] == prime(v,3));
+    CHECK(T.inds()[3] == prime(x,5));
+
+    auto T2 = primeLevel(T,3,2,1,0);
+    CHECK(T2.inds()[0] == prime(x,3));
+    CHECK(T2.inds()[1] == prime(z,2));
+    CHECK(T2.inds()[2] == prime(v,1));
+    CHECK(T2.inds()[3] == prime(x,0));
+    }
+
 SECTION("SwapPrimeTest")
     {
     CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);

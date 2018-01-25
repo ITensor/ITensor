@@ -142,6 +142,11 @@ class ITensorT
         { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
+    ITensorT& 
+    primeLevel(VarArgs&&... vargs)
+        { itensor::primeLevel(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
     ITensorT&
     primeExcept(VarArgs&&... vargs)
         { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
@@ -331,6 +336,11 @@ template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
 prime(ITensorT<IndexT> A, 
       VarArgs&&... vargs);
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+primeLevel(ITensorT<IndexT> A, 
+           VarArgs&&... vargs);
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>

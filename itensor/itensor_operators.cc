@@ -158,7 +158,8 @@ order(IndexSetT<IndexT> const& iset)
     auto Bis = bind.build();
 
     auto O = Order<IndexT>{P,Ais,Bis};
-    doTask(O, A.store());
+    if(A.store())
+        doTask(O, A.store());
 
     A.is_.swap(Bis);
 
