@@ -866,11 +866,189 @@ sumelsC(ITensorT<I> const& t)
     }
 
 
+namespace detail {
+
+// Adapted from:
+// https://stackoverflow.com/questions/18017543/c11-variable-number-of-arguments-same-specific-type
+template<typename...>
+  struct and_;
+
+template<>
+struct and_<>
+  : public std::true_type
+    { };
+
+template<typename B1>
+  struct and_<B1>
+    : public B1
+      { };
+
+template<typename B1, typename B2>
+  struct and_<B1, B2>
+    : public std::conditional<B1::value, B2, B1>::type
+      { };
+
+template<typename B1, typename B2, typename B3, typename... Bn>
+  struct and_<B1, B2, B3, Bn...>
+    : public std::conditional<B1::value, and_<B2, B3, Bn...>, B1>::type
+      { };
+
+// TODO: check for incorrect inputs
+template<typename IndexT,
+         typename Iter,
+         typename Ind1,
+         typename Ind2>
+void
+getInds(Iter it,
+        Ind1 & z,
+        Ind2 const& w)
+    {
+    z = w;
+    }
+
+template<typename IndexT,
+         typename Iter,
+         typename Ind,
+         typename... Rest>
+void
+getInds(Iter it,
+        Ind & z,
+        IndexT const& ind,
+        Rest&&... rest)
+    {
+    *it = ind;
+    getInds<IndexT>(++it,z,std::forward<Rest&&>(rest)...);
+    }
+
+template <typename IndexT>
+IndexSetT<IndexT>
+moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
+    {
+    auto rf = isf.r();
+    auto r = is.r();
+
+    if(rf >= r)
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",is,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n",isf," '...'\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
+        }
+
+    auto iso = IndexSetT<IndexT>(r);
+
+    auto i = 0;
+    for(auto I : isf) 
+        {
+        if(!hasindex(is,I))
+            {
+            println("---------------------------------------------");
+            println("Tensor indices = \n",is,"\n");
+            println("---------------------------------------------");
+            println("Indices provided = \n",isf," '...'\n");
+            println("---------------------------------------------");
+            Error(format("Bad index passed to order"));
+            }
+        iso[i] = I;
+        i++;
+        }
+
+    auto j = rf;
+    for(auto J : is)
+        {
+        if(!hasindex(isf,J))
+            {
+            iso[j] = J;
+            j++;
+            }
+        }
+
+    return iso;
+    }
+
+template <typename IndexT>
+IndexSetT<IndexT>
+moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
+    {
+    auto rb = isb.r();
+    auto r = is.r();
+
+    if(rb >= r)
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",is,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n'...' ",isb,"\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
+        }
+
+    auto iso = IndexSetT<IndexT>(r);
+
+    auto i = r-rb;
+    for(auto I : isb) 
+        {
+        if(!hasindex(is,I))
+            {
+            println("---------------------------------------------");
+            println("Tensor indices = \n",is,"\n");
+            println("---------------------------------------------");
+            println("Indices provided = \n'...' ",isb,"\n");
+            println("---------------------------------------------");
+            Error(format("Bad index passed to order"));
+            }
+        iso[i] = I;
+        i++;
+        }
+
+    auto j = 0;
+    for(auto J : is)
+        {
+        if(!hasindex(isb,J))
+            {
+            iso[j] = J;
+            j++;
+            }
+        }
+
+    return iso;
+    }
+
+} //namespace detail
+
+template <typename IndexT,typename... Indxs>
+typename std::enable_if<detail::and_<std::is_same<IndexT, Indxs>...>::value, ITensorT<IndexT>>::type
+order(ITensorT<IndexT> A, IndexT ind1, Indxs&... inds)
+    {
+    A.order(IndexSetT<IndexT>(ind1, inds...));
+    return A;
+    }
+
+template <typename IndexT,typename... Indxs>
+typename std::enable_if<!(detail::and_<std::is_same<IndexT, Indxs>...>::value), ITensorT<IndexT>>::type
+order(ITensorT<IndexT> A, IndexT ind1, Indxs&... inds)
+    {
+    static constexpr auto size = 1+(sizeof...(inds)-1);
+    auto isf = IndexSetT<IndexT>(size);
+    std::string dots;
+    detail::getInds<IndexT>(isf.begin(),dots,ind1,std::forward<Indxs&&>(inds)...);
+
+    if(dots != "...")
+        Error(format("Wrong string passed to order (expected '...', got '%d')",dots));
+
+    A.order(detail::moveToFront(isf, A.inds()));
+    return A;
+    }
+
 template <typename IndexT,typename... Indxs>
 ITensorT<IndexT>
-order(ITensorT<IndexT> A, Indxs&&... inds)
+order(ITensorT<IndexT> A, std::string const& dots, Indxs&&... inds)
     {
-    A.order(IndexSetT<IndexT>(inds...));
+    if(dots != "...")
+        Error(format("Wrong string passed to order (expected '...', got '%d')",dots));
+    A.order(detail::moveToBack(IndexSetT<IndexT>(inds...), A.inds()));
     return A;
     }
 
