@@ -903,30 +903,27 @@ template<typename B1, typename B2, typename B3, typename... Bn>
       { };
 
 // TODO: check for incorrect inputs
+
 template<typename IndexT,
-         typename Iter,
-         typename Ind1,
-         typename Ind2>
+         typename Iter>
 void
-getInds(Iter it,
-        Ind1 & z,
-        Ind2 const& w)
+getDotInds(Iter it,
+           std::string const& dots)
     {
-    z = w;
+    if(dots != "...")
+        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
     }
 
 template<typename IndexT,
          typename Iter,
-         typename Ind,
          typename... Rest>
 void
-getInds(Iter it,
-        Ind & z,
-        IndexT const& ind,
-        Rest&&... rest)
+getDotInds(Iter it,
+           IndexT const& ind,
+           Rest&&... rest)
     {
     *it = ind;
-    getInds<IndexT>(++it,z,std::forward<Rest&&>(rest)...);
+    getDotInds<IndexT>(++it,std::forward<Rest&&>(rest)...);
     }
 
 template <typename IndexT>
@@ -949,7 +946,7 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
     auto iso = IndexSetT<IndexT>(r);
 
     auto i = 0;
-    for(auto I : isf) 
+    for(auto& I : isf) 
         {
         if(!hasindex(is,I))
             {
@@ -965,7 +962,7 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
         }
 
     auto j = rf;
-    for(auto J : is)
+    for(auto& J : is)
         {
         if(!hasindex(isf,J))
             {
@@ -997,7 +994,7 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
     auto iso = IndexSetT<IndexT>(r);
 
     auto i = r-rb;
-    for(auto I : isb) 
+    for(auto& I : isb) 
         {
         if(!hasindex(is,I))
             {
@@ -1013,7 +1010,7 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
         }
 
     auto j = 0;
-    for(auto J : is)
+    for(auto& J : is)
         {
         if(!hasindex(isb,J))
             {
@@ -1041,11 +1038,7 @@ order(ITensorT<IndexT> A, IndexT ind1, Indxs&... inds)
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
     auto isf = IndexSetT<IndexT>(size);
-    std::string dots;
-    detail::getInds<IndexT>(isf.begin(),dots,ind1,std::forward<Indxs&&>(inds)...);
-
-    if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%d')",dots));
+    detail::getDotInds<IndexT>(isf.begin(),ind1,std::forward<Indxs&&>(inds)...);
 
     A.order(detail::moveToFront(isf, A.inds()));
     return A;
@@ -1056,7 +1049,7 @@ ITensorT<IndexT>
 order(ITensorT<IndexT> A, std::string const& dots, Indxs&&... inds)
     {
     if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%d')",dots));
+        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
     A.order(detail::moveToBack(IndexSetT<IndexT>(inds...), A.inds()));
     return A;
     }
