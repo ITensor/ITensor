@@ -1964,7 +1964,7 @@ auto jp = prime(j);
 auto IT = randomTensor(i,j,jp,k);
 
 auto O1 = order(IT,"...",i);
-CHECK(IT.inds().index(1)==O1.inds().index(4));
+CHECK(O1.index(4) == i);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1974,8 +1974,8 @@ for(auto kk : range1(k.m()))
     }
 
 auto O2 = order(IT,"...",j,i);
-CHECK(IT.inds().index(1)==O2.inds().index(4));
-CHECK(IT.inds().index(2)==O2.inds().index(3));
+CHECK(O2.inds().index(3) == j);
+CHECK(O2.inds().index(4) == i);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1985,10 +1985,10 @@ for(auto kk : range1(k.m()))
     }
 
 auto O3 = order(IT,"...",jp,i,j);
-CHECK(IT.inds().index(1)==O3.inds().index(3));
-CHECK(IT.inds().index(2)==O3.inds().index(4));
-CHECK(IT.inds().index(3)==O3.inds().index(2));
-CHECK(IT.inds().index(4)==O3.inds().index(1));
+CHECK(O3.inds().index(1)==k);
+CHECK(O3.inds().index(2)==jp);
+CHECK(O3.inds().index(3)==i);
+CHECK(O3.inds().index(4)==j);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -1998,7 +1998,7 @@ for(auto kk : range1(k.m()))
     }
 
 auto O4 = order(IT,j,"...");
-CHECK(IT.inds().index(2)==O4.inds().index(1));
+CHECK(O4.inds().index(1) == j);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
@@ -2008,10 +2008,10 @@ for(auto kk : range1(k.m()))
     }
 
 auto O5 = order(IT,jp,k,i,"...");
-CHECK(IT.inds().index(1)==O5.inds().index(3));
-CHECK(IT.inds().index(2)==O5.inds().index(4));
-CHECK(IT.inds().index(3)==O5.inds().index(1));
-CHECK(IT.inds().index(4)==O5.inds().index(2));
+CHECK(O5.inds().index(1) == jp);
+CHECK(O5.inds().index(2) == k);
+CHECK(O5.inds().index(3) == i);
+CHECK(O5.inds().index(4) == j);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
