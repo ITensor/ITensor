@@ -292,6 +292,30 @@ max_element(Container && C)
     std::max_element(std::begin(C),std::end(C));
     }
 
+// Adapted from:
+// https://stackoverflow.com/questions/18017543/c11-variable-number-of-arguments-same-specific-type
+template<typename...>
+  struct and_;
+
+template<>
+struct and_<>
+  : public std::true_type
+    { };
+
+template<typename B1>
+  struct and_<B1>
+    : public B1
+      { };
+
+template<typename B1, typename B2>
+  struct and_<B1, B2>
+    : public std::conditional<B1::value, B2, B1>::type
+      { };
+
+template<typename B1, typename B2, typename B3, typename... Bn>
+  struct and_<B1, B2, B3, Bn...>
+    : public std::conditional<B1::value, and_<B2, B3, Bn...>, B1>::type
+      { };
 
 } //namespace stdx
 

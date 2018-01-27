@@ -877,30 +877,6 @@ sumelsC(ITensorT<I> const& t)
 
 namespace detail {
 
-// Adapted from:
-// https://stackoverflow.com/questions/18017543/c11-variable-number-of-arguments-same-specific-type
-template<typename...>
-  struct and_;
-
-template<>
-struct and_<>
-  : public std::true_type
-    { };
-
-template<typename B1>
-  struct and_<B1>
-    : public B1
-      { };
-
-template<typename B1, typename B2>
-  struct and_<B1, B2>
-    : public std::conditional<B1::value, B2, B1>::type
-      { };
-
-template<typename B1, typename B2, typename B3, typename... Bn>
-  struct and_<B1, B2, B3, Bn...>
-    : public std::conditional<B1::value, and_<B2, B3, Bn...>, B1>::type
-      { };
 
 // TODO: check for incorrect inputs
 
@@ -920,10 +896,10 @@ template<typename IndexT,
 void
 getDotInds(Iter it,
            IndexT const& ind,
-           Rest&&... rest)
+           Rest const&... rest)
     {
     *it = ind;
-    getDotInds<IndexT>(++it,std::forward<Rest&&>(rest)...);
+    getDotInds<IndexT>(++it,std::forward<Rest const&>(rest)...);
     }
 
 template <typename IndexT>
@@ -1024,33 +1000,51 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
 
 } //namespace detail
 
-template <typename IndexT,typename... Indxs>
-typename std::enable_if<detail::and_<std::is_same<IndexT, Indxs>...>::value, ITensorT<IndexT>>::type
-order(ITensorT<IndexT> A, IndexT ind1, Indxs&... inds)
-    {
-    A.order(IndexSetT<IndexT>(ind1, inds...));
-    return A;
-    }
-
-template <typename IndexT,typename... Indxs>
-typename std::enable_if<!(detail::and_<std::is_same<IndexT, Indxs>...>::value), ITensorT<IndexT>>::type
-order(ITensorT<IndexT> A, IndexT ind1, Indxs&... inds)
+//Version of order accepting syntax: T.order(i,j,"...")
+template <typename IndexT>
+template <typename... Indxs>
+typename std::enable_if<not (stdx::and_<std::is_same<IndexT, Indxs>...>::value), 
+                        ITensorT<IndexT>&>::type
+ITensorT<IndexT>::
+order(IndexT const& ind1, Indxs const&... inds)
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
     auto isf = IndexSetT<IndexT>(size);
-    detail::getDotInds<IndexT>(isf.begin(),ind1,std::forward<Indxs&&>(inds)...);
-
-    A.order(detail::moveToFront(isf, A.inds()));
-    return A;
+    detail::getDotInds<IndexT>(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
+    order(detail::moveToFront(isf,this->inds()));
+    return *this;
     }
 
-template <typename IndexT,typename... Indxs>
-ITensorT<IndexT>
-order(ITensorT<IndexT> A, std::string const& dots, Indxs&&... inds)
+//Version of order accepting syntax: T.order(i,j,k)
+template <typename IndexT>
+template <typename... Indxs>
+typename std::enable_if<(stdx::and_<std::is_same<IndexT, Indxs>...>::value), 
+                        ITensorT<IndexT>&>::type
+ITensorT<IndexT>::
+order(IndexT const& ind1, Indxs const&... inds)
+    {
+    order(IndexSetT<IndexT>(ind1, inds...));
+    return *this;
+    }
+
+//Version of order accepting syntax: T.order("...",j,k)
+template <typename IndexT>
+template <typename... Indxs>
+ITensorT<IndexT>& ITensorT<IndexT>::
+order(std::string const& dots, Indxs const&... inds)
     {
     if(dots != "...")
         Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
-    A.order(detail::moveToBack(IndexSetT<IndexT>(inds...), A.inds()));
+    order(detail::moveToBack(IndexSetT<IndexT>(inds...),this->inds()));
+    return *this;
+    }
+
+//order function which returns a new ITensor 
+template <typename IndexT, typename... Indxs>
+ITensorT<IndexT>
+order(ITensorT<IndexT> A, Indxs const&... inds)
+    {
+    A.order(std::forward<Indxs const&>(inds)...);
     return A;
     }
 
