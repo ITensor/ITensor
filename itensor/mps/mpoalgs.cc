@@ -186,6 +186,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
     auto verbose = args.getBool("Verbose",false);
     auto siteType = getIndexType(args,"SiteType",Site);
+    auto linkType = getIndexType(args,"LinkType",Link);
 
     int plev = 14741;
 
@@ -201,15 +202,15 @@ exactApplyMPO(MPOt<Tensor> const& K,
         //Modify prime levels of psic and Kc
         if(j == 1)
             {
-            auto ci = commonIndex(psi.A(1),psi.A(2),Link);
+            auto ci = commonIndex(psi.A(1),psi.A(2),linkType);
             psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,ci,0,plev));
-            ci = commonIndex(Kc.A(1),Kc.A(2),Link);
+            ci = commonIndex(Kc.A(1),Kc.A(2),linkType);
             Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,ci,0,plev));
             }
         else
             {
-            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,Link,0,plev));
-            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,Link,0,plev));
+            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,linkType,0,plev));
+            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,linkType,0,plev));
             }
         }
 
