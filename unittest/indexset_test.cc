@@ -416,6 +416,16 @@ SECTION("Map Prime")
         }
     }
 
+SECTION("PrimeLevel")
+    {
+    IndexSet is(i2,i3,prime(i2),i4);
+    primeLevel(is,1,2,4,5);
+    CHECK(is[0] == prime(i2,1));
+    CHECK(is[1] == prime(i3,2));
+    CHECK(is[2] == prime(i2,4));
+    CHECK(is[3] == prime(i4,5));
+    }
+
 } //PrimeLevelMethods
 
 SECTION("IndexSet Iterator")

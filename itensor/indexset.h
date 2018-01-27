@@ -206,6 +206,11 @@ void
 prime(IndexSetT<IndexT>& is, 
       int inc = 1);
 
+template<typename IndexT, typename... VArgs>
+void
+primeLevel(IndexSetT<IndexT>& is,
+           VArgs&&... vargs);
+
 //
 // Increment primelevels of indices in the
 // set by matching them against a list
