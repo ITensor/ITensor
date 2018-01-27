@@ -141,6 +141,17 @@ order(IndexSetT<IndexT> const& iset)
     auto& A = *this;
     auto Ais = A.inds();
     auto r = Ais.r();
+
+    if(r != size_t(iset.r()))
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",Ais,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n",iset,"\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of Indexes passed to order (expected %d, got %d)",r,iset.r()));
+        }
+
     // Get permutation
     auto P = Permutation(r);
     calcPerm(Ais,iset,P);

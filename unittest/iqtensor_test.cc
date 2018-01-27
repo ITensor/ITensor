@@ -1072,14 +1072,6 @@ auto jp = prime(j);
 auto IT = randomTensor(QN(0),i,j,jp,dag(k));
 
 auto O1 = order(IT,jp,k,j,i);
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
 CHECK(IT.inds().index(1)==O1.inds().index(4));
 CHECK(IT.inds().index(2)==O1.inds().index(3));
 CHECK(IT.inds().index(3)==O1.inds().index(1));
@@ -1088,16 +1080,15 @@ CHECK(IT.inds().index(1).dir()==O1.inds().index(4).dir());
 CHECK(IT.inds().index(2).dir()==O1.inds().index(3).dir());
 CHECK(IT.inds().index(3).dir()==O1.inds().index(1).dir());
 CHECK(IT.inds().index(4).dir()==O1.inds().index(2).dir());
-
-auto O2 = order(IT,j,i,k,jp);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
 for(auto kk : range1(k.m()))
     {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
+auto O2 = order(IT,j,i,k,jp);
 CHECK(IT.inds().index(1)==O2.inds().index(2));
 CHECK(IT.inds().index(2)==O2.inds().index(1));
 CHECK(IT.inds().index(3)==O2.inds().index(4));
@@ -1106,18 +1097,17 @@ CHECK(IT.inds().index(1).dir()==O2.inds().index(2).dir());
 CHECK(IT.inds().index(2).dir()==O2.inds().index(1).dir());
 CHECK(IT.inds().index(3).dir()==O2.inds().index(4).dir());
 CHECK(IT.inds().index(4).dir()==O2.inds().index(3).dir());
-
-auto CIT = randomTensorC(QN(0),i,j,jp,k);
-
-auto O3 = order(CIT,jp,k,i,j);
 for(auto ii : range1(i.m()))
 for(auto jj : range1(j.m()))
 for(auto jjp : range1(jp.m()))
 for(auto kk : range1(k.m()))
     {
-    CHECK_CLOSE(CIT.cplx(i(ii),j(jj),jp(jjp),k(kk)),O3.cplx(i(ii),j(jj),jp(jjp),k(kk)));
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
+auto CIT = randomTensorC(QN(0),i,j,jp,k);
+
+auto O3 = order(CIT,jp,k,i,j);
 CHECK(CIT.inds().index(1)==O3.inds().index(3));
 CHECK(CIT.inds().index(2)==O3.inds().index(4));
 CHECK(CIT.inds().index(3)==O3.inds().index(1));
@@ -1126,7 +1116,98 @@ CHECK(CIT.inds().index(1).dir()==O3.inds().index(3).dir());
 CHECK(CIT.inds().index(2).dir()==O3.inds().index(4).dir());
 CHECK(CIT.inds().index(3).dir()==O3.inds().index(1).dir());
 CHECK(CIT.inds().index(4).dir()==O3.inds().index(2).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(CIT.cplx(i(ii),j(jj),jp(jjp),k(kk)),O3.cplx(i(ii),j(jj),jp(jjp),k(kk)));
+    }
 
+}
+
+SECTION("Order Test: Dots Syntax")
+{
+auto i = IQIndex("i",Index("i-1",1),QN(-1),
+                     Index("i+1",1),QN(+1));
+auto j = IQIndex("j",Index("j-1",2),QN(-1),
+                     Index("j_0",2),QN( 0),
+                     Index("j+1",2),QN(+1));
+auto k = IQIndex("k",Index("k-1",2),QN(-1),
+                     Index("k_0",3),QN( 0),
+                     Index("k+1",2),QN(+1));
+auto jp = prime(j);
+
+auto IT = randomTensor(QN(0),i,j,jp,dag(k));
+
+auto O1 = order(IT,"...",i);
+CHECK(IT.inds().index(1)==O1.inds().index(4));
+CHECK(IT.inds().index(1).dir()==O1.inds().index(4).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O2 = order(IT,"...",j,i);
+CHECK(IT.inds().index(1)==O2.inds().index(4));
+CHECK(IT.inds().index(2)==O2.inds().index(3));
+CHECK(IT.inds().index(1).dir()==O2.inds().index(4).dir());
+CHECK(IT.inds().index(2).dir()==O2.inds().index(3).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O3 = order(IT,"...",k,j,i);
+CHECK(IT.inds().index(1)==O3.inds().index(4));
+CHECK(IT.inds().index(2)==O3.inds().index(3));
+CHECK(IT.inds().index(3)==O3.inds().index(1));
+CHECK(IT.inds().index(4)==O3.inds().index(2));
+CHECK(IT.inds().index(1).dir()==O3.inds().index(4).dir());
+CHECK(IT.inds().index(2).dir()==O3.inds().index(3).dir());
+CHECK(IT.inds().index(3).dir()==O3.inds().index(1).dir());
+CHECK(IT.inds().index(4).dir()==O3.inds().index(2).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O3.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O4 = order(IT,k,"...");
+CHECK(IT.inds().index(4)==O4.inds().index(1));
+CHECK(IT.inds().index(4).dir()==O4.inds().index(1).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O4.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
+
+auto O5 = order(IT,k,jp,i,"...");
+CHECK(IT.inds().index(1)==O5.inds().index(3));
+CHECK(IT.inds().index(2)==O5.inds().index(4));
+CHECK(IT.inds().index(3)==O5.inds().index(2));
+CHECK(IT.inds().index(4)==O5.inds().index(1));
+CHECK(IT.inds().index(1).dir()==O5.inds().index(3).dir());
+CHECK(IT.inds().index(2).dir()==O5.inds().index(4).dir());
+CHECK(IT.inds().index(3).dir()==O5.inds().index(2).dir());
+CHECK(IT.inds().index(4).dir()==O5.inds().index(1).dir());
+for(auto ii : range1(i.m()))
+for(auto jj : range1(j.m()))
+for(auto jjp : range1(jp.m()))
+for(auto kk : range1(k.m()))
+    {
+    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O5.real(i(ii),j(jj),jp(jjp),k(kk)));
+    }
 
 }
 
