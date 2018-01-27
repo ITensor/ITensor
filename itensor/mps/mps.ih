@@ -175,7 +175,7 @@ maxM(MPST const& psi)
     int maxM_ = 0;
     for(int b = 1; b < psi.N(); ++b) 
         {
-        int mb = linkInd(psi,b).m();
+        int mb = commonIndex(psi.A(b),psi.A(b+1)).m();
         maxM_ = std::max(mb,maxM_);
         }
     return maxM_;
