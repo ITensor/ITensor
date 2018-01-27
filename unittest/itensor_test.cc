@@ -1866,6 +1866,16 @@ Index i("i",2),
       k("k",4);
 auto jp = prime(j);
 
+//Check that order works on tensor with null storage:
+auto N = ITensor(i,j,k);
+CHECK(N.index(1) == i);
+CHECK(N.index(2) == j);
+CHECK(N.index(3) == k);
+N = order(N,j,k,i);
+CHECK(N.index(1) == j);
+CHECK(N.index(2) == k);
+CHECK(N.index(3) == i);
+
 auto IT = randomTensor(i,j,jp,k);
 
 auto O1 = order(IT,jp,k,j,i);
