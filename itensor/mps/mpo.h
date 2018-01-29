@@ -65,6 +65,8 @@ class MPOt : private MPSt<Tensor>
 
     Real
     logRefNorm() const { return logrefNorm_; }
+    void
+    logRefNorm(Real lrn) { logrefNorm_ = lrn; }
 
     MPOt&
     plusEq(const MPOt& R,
@@ -119,7 +121,6 @@ class MPOt : private MPSt<Tensor>
     friend class MPOt<IQTensor>;
     
     public:
-
 
     //
     // Deprecated methods
@@ -180,6 +181,10 @@ operator*(MPOt<T> W, Cplx z) { return W *= z; }
 template<typename T>
 MPOt<T>
 operator*(Cplx z, MPOt<T> W) { return W *= z; }
+
+//Convert an IQMPO to an MPO
+MPO
+toMPO(IQMPO const& K);
 
 template<typename T>
 bool

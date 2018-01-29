@@ -322,6 +322,23 @@ putMPOLinks(IQMPO& W, Args const& args)
     W.Aref(N) *= dag(links.at(N-1)(1));
     }
 
+MPO
+toMPO(IQMPO const& K)
+    {
+    int N = K.N();
+    MPO res;
+    if(K.sites()) res = MPO(K.sites());
+    else          res = MPO(N);
+    res.logRefNorm(K.logRefNorm());
+    for(int j = 0; j <= N+1; ++j)
+        {
+        res.Aref(j) = ITensor(K.A(j));
+        }
+    res.leftLim(K.leftLim());
+    res.rightLim(K.rightLim());
+    return res;
+    }
+
 template<typename T>
 bool
 isComplex(MPOt<T> const& W)
