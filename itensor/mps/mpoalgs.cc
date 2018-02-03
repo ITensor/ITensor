@@ -263,6 +263,8 @@ exactApplyMPO(MPOt<Tensor> const& K,
         }
 
     res.Aref(1) = O;
+    res.leftLim(0);
+    res.rightLim(2);
 
     return res;
     }
