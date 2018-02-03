@@ -117,11 +117,10 @@ template<typename T>
 Real
 norm(MPSt<T> const& psi)
     {
-    if(isOrtho(psi))
-        {
-        return itensor::norm(psi.A(orthoCenter(psi)));
-        }
-    return std::sqrt(overlap(psi,psi)); 
+    if(not isOrtho(psi)) Error("\
+MPS must have well-defined ortho center to compute norm; \
+call .position(j) or .orthogonalize() to set ortho center");
+    return itensor::norm(psi.A(orthoCenter(psi)));
     }
 
 template<typename T>
