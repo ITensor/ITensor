@@ -196,7 +196,11 @@ parallelDebugWait(Environment const& env)
     {
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
-    printfln("Node %d PID %d on %s",env.rank(),getpid(),hostname);
+    for(int n = 0; n < env.nnodes(); ++n)
+        {
+        if(env.rank() == n) printfln("Node %d PID %d on %s",env.rank(),getpid(),hostname);
+        env.barrier();
+        }
 #ifdef DEBUG
     //
     // If compiled in debug mode, require file GO to exist before
@@ -239,6 +243,7 @@ broadcast(std::stringstream& data) const
         //std::cout << "Doing broadcast (quo,rem) = (" << quo << "," << rem << ")" << std::endl;
         for(int q = 0; q < quo; ++q)
             { 
+            //printfln("Node %d q = %d/%d",rank_,q,(quo-1));
             MPI_Bcast(const_cast<char*>(data.str().data())+q*buffer.size(),buffer.size(),MPI_CHAR,root,MPI_COMM_WORLD); 
             }
         MPI_Bcast(const_cast<char*>(data.str().data())+quo*buffer.size(),rem+shift,MPI_CHAR,root,MPI_COMM_WORLD);
@@ -248,14 +253,17 @@ broadcast(std::stringstream& data) const
         int quo=0,rem=0;
         MPI_Bcast(&quo,1,MPI_INT,root,MPI_COMM_WORLD);
         MPI_Bcast(&rem,1,MPI_INT,root,MPI_COMM_WORLD);
+        //printfln("Node %d got quo,rem = %d,%d",rank_,quo,rem);
         for(int q = 0; q < quo; ++q)
             { 
+            //printfln("Node %d q = %d/%d",rank_,q,(quo-1));
             MPI_Bcast(&buffer.front(),buffer.size(),MPI_CHAR,root,MPI_COMM_WORLD); 
             data.write(&buffer.front(),buffer.size());
             }
         MPI_Bcast(&buffer.front(),rem+shift,MPI_CHAR,root,MPI_COMM_WORLD);
         data.write(&buffer.front(),rem+shift);
         }
+    //printfln("%d reached end of broadcast(stringstream)",rank_);
     }
 
 template <class T>
