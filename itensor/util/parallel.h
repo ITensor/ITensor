@@ -265,9 +265,9 @@ broadcast(Environment const& env, T & obj)
     if(env.nnodes() == 1) return;
     const int root = 0;
     std::stringstream datastream;
-    if(env.rank() == root) write(datastream,obj);
+    if(env.rank() == root) itensor::write(datastream,obj);
     env.broadcast(datastream);
-    if(env.rank() != root) read(datastream,obj);
+    if(env.rank() != root) itensor::read(datastream,obj);
     }
 
 template <class T, class... Rest>
@@ -282,7 +282,7 @@ template <class T>
 void Environment::
 broadcast(T& obj) const 
     { 
-    broadcast(*this,obj); 
+    itensor::broadcast<T>(*this,obj); 
     }
 
 template <class T, class... Rest>
@@ -472,7 +472,7 @@ receive(T& obj)
     { 
     std::stringstream data; 
     receive(data); 
-    read(data,obj);
+    itensor::read(data,obj);
     }
 
 template <class T, typename... Args>
@@ -482,7 +482,7 @@ receive(Args&&... args)
     std::stringstream data; 
     receive(data); 
     T obj(std::forward<Args>(args)...);
-    read(data,obj);
+    itensor::read(data,obj);
     return obj;
     }
 
@@ -513,7 +513,7 @@ void inline MailBox::
 send(T const& obj)
     {
     std::stringstream data; 
-    write(data,obj);
+    itensor::write(data,obj);
     send(data); 
     }
 
