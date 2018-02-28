@@ -119,8 +119,7 @@ template<typename IV, typename... IVs>
 auto ITensorT<IndexT>::
 cplx(IV const& iv1, IVs&&... ivs) const
     -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
-                         || std::is_same<IV,IQIndexVal>::value,
-                         Cplx>
+                         || std::is_same<IV,IQIndexVal>::value, Cplx>
     {
     using indexval_type = typename IndexT::indexval_type;
 
@@ -163,13 +162,13 @@ template<typename IndexT>
 template<typename Int, typename... Ints>
 auto ITensorT<IndexT>::
 cplx(Int iv1, Ints&&... ivs) const
-    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
+    -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
                          Cplx>
     {
     if(!store()) Error("tensor storage unallocated");
 
     constexpr size_t size = sizeof...(ivs)+1;
-    auto ints = std::array<Int,size>{{iv1,static_cast<Int>(ivs)...}};
+    auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -178,7 +177,7 @@ cplx(Int iv1, Ints&&... ivs) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",inds().r(),size));
         }
 
     auto inds = IntArray(size);
@@ -252,8 +251,7 @@ auto
 getVals(Iter it,
         Cplx & z,
         IV const& iv)
-    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
-                      || std::is_same<IV,IQIndexVal>::value,
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
                          void>
     {
     static_assert(stdx::false_regardless_of<IndexValT>::value,
@@ -278,8 +276,7 @@ getVals(Iter it,
         Cplx & z,
         IV const& iv,
         Rest&&... rest)
-    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
-                      || std::is_same<IV,IQIndexVal>::value,
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
                          void>
     {
     *it = static_cast<IndexValT>(iv);
@@ -300,12 +297,12 @@ getVals(Iter it,
 
 template<typename IntT,
          typename Iter,
-         typename Int>
+         typename Arg>
 auto
 getInts(Iter it,
         Cplx & z,
-        Int const& iv)
-    -> stdx::enable_if_t<!(std::is_convertible<Int,Cplx>::value),
+        Arg const& iv)
+    -> stdx::enable_if_t<!(std::is_convertible<Arg,Cplx>::value),
                          void>
     {
     static_assert(stdx::false_regardless_of<IntT>::value,
@@ -314,12 +311,12 @@ getInts(Iter it,
 
 template<typename IntT,
          typename Iter,
-         typename Int>
+         typename Arg>
 auto
 getInts(Iter it,
         Cplx & z,
-        Int const& w)
-    -> stdx::enable_if_t<std::is_convertible<Int,Cplx>::value,
+        Arg const& w)
+    -> stdx::enable_if_t<std::is_convertible<Arg,Cplx>::value,
                          void>
     {
     z = w;
@@ -334,7 +331,7 @@ getInts(Iter it,
         Cplx & z,
         Int const& w,
         Rest&&... rest)
-    -> stdx::enable_if_t<!(std::is_convertible<Int,int>::value),
+    -> stdx::enable_if_t<!(std::is_same<Int,int>::value || std::is_same<Int,long int>::value),
                          void>
     {
     static_assert(stdx::false_regardless_of<Iter>::value,
@@ -351,7 +348,7 @@ getInts(Iter it,
         Cplx & z,
         Int w,
         Rest&&... rest)
-    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
+    -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
                          void>
     {
     *it = w-1;
@@ -365,7 +362,8 @@ template<typename IndexT>
 template<typename IV, typename... VArgs>
 auto ITensorT<IndexT>::
 set(IV const& iv1, VArgs&&... vargs)
-    -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value
+                         || std::is_same<IV,IQIndexVal>::value, void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
     std::array<indexval_type,size> vals;
@@ -400,11 +398,10 @@ set(IV const& iv1, VArgs&&... vargs)
     }
 
 template<typename IndexT>
-template<typename Int,
-         typename... VArgs>
+template<typename Int, typename... VArgs>
 auto ITensorT<IndexT>::
 set(Int iv1, VArgs&&... vargs)
-    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
+    -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
                          void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
@@ -420,7 +417,7 @@ set(Int iv1, VArgs&&... vargs)
         for(auto& i : ints) print(" ",1+i);
         println();
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        Error(format("Wrong number of ints passed to set (expected %d, got %d)",
                      inds().r(),size));
         }
     //TODO: if !store_ and !is_real, call allocCplx instead

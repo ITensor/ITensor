@@ -103,14 +103,14 @@ class ITensorT
     template <typename IV, typename... IVs>
     auto
     cplx(IV const& iv1, IVs&&... ivs) const
-        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value
-                             || std::is_same<IV,IQIndexVal>::value,
+        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
                              Cplx>;
 
     template <typename Int, typename... Ints>
     auto
     cplx(Int iv1, Ints&&... ivs) const
-        -> stdx::enable_if_t<std::is_convertible<Int,int>::value,Cplx>;
+        -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
+                             Cplx>;
 
     Cplx
     cplx() const;
@@ -121,12 +121,14 @@ class ITensorT
     template<typename IV, typename... VArgs>
     auto
     set(IV const& iv1, VArgs&&... ivs)
-        -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>;
+        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
+                             void>;
 
     template<typename Int, typename... VArgs>
     auto
     set(Int iv1, VArgs&&... ivs)
-        -> stdx::enable_if_t<std::is_convertible<Int,int>::value,void>;
+        -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
+                             void>;
 
     void
     set(Cplx val);
