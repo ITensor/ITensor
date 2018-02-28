@@ -101,12 +101,16 @@ class ITensorT
     real(IndexVals&&... ivs) const;
 
     template <typename IV, typename... IVs>
-    Cplx
-    cplx(IV const& iv1, IVs&&... ivs) const;
+    auto
+    cplx(IV const& iv1, IVs&&... ivs) const
+        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value
+                             || std::is_same<IV,IQIndexVal>::value,
+                             Cplx>;
 
-    template <typename... Ints>
-    Cplx
-    cplx(int iv1, Ints&&... ivs) const;
+    template <typename Int, typename... Ints>
+    auto
+    cplx(Int iv1, Ints&&... ivs) const
+        -> stdx::enable_if_t<std::is_convertible<Int,int>::value,Cplx>;
 
     Cplx
     cplx() const;
@@ -122,7 +126,7 @@ class ITensorT
     template<typename Int, typename... VArgs>
     auto
     set(Int iv1, VArgs&&... ivs)
-        -> stdx::enable_if_t<std::is_same<Int,int>::value,void>;
+        -> stdx::enable_if_t<std::is_convertible<Int,int>::value,void>;
 
     void
     set(Cplx val);

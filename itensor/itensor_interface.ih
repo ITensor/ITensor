@@ -116,8 +116,11 @@ operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *t
 
 template<typename IndexT>
 template<typename IV, typename... IVs>
-Cplx ITensorT<IndexT>::
+auto ITensorT<IndexT>::
 cplx(IV const& iv1, IVs&&... ivs) const
+    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
+                         || std::is_same<IV,IQIndexVal>::value,
+                         Cplx>
     {
     using indexval_type = typename IndexT::indexval_type;
 
@@ -157,14 +160,16 @@ cplx(IV const& iv1, IVs&&... ivs) const
     }
 
 template<typename IndexT>
-template<typename... Ints>
-Cplx ITensorT<IndexT>::
-cplx(int iv1, Ints&&... ivs) const
+template<typename Int, typename... Ints>
+auto ITensorT<IndexT>::
+cplx(Int iv1, Ints&&... ivs) const
+    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
+                         Cplx>
     {
     if(!store()) Error("tensor storage unallocated");
 
     constexpr size_t size = sizeof...(ivs)+1;
-    auto ints = std::array<int,size>{{iv1,static_cast<int>(ivs)...}};
+    auto ints = std::array<Int,size>{{iv1,static_cast<Int>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -329,7 +334,7 @@ getInts(Iter it,
         Cplx & z,
         Int const& w,
         Rest&&... rest)
-    -> stdx::enable_if_t<!(std::is_same<Int,int>::value),
+    -> stdx::enable_if_t<!(std::is_convertible<Int,int>::value),
                          void>
     {
     static_assert(stdx::false_regardless_of<Iter>::value,
@@ -346,7 +351,7 @@ getInts(Iter it,
         Cplx & z,
         Int w,
         Rest&&... rest)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
                          void>
     {
     *it = w-1;
@@ -399,7 +404,7 @@ template<typename Int,
          typename... VArgs>
 auto ITensorT<IndexT>::
 set(Int iv1, VArgs&&... vargs)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
+    -> stdx::enable_if_t<std::is_convertible<Int,int>::value,
                          void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
