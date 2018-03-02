@@ -103,14 +103,12 @@ class ITensorT
     template <typename IV, typename... IVs>
     auto
     cplx(IV const& iv1, IVs&&... ivs) const
-        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
-                             Cplx>;
+         -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>;
 
     template <typename Int, typename... Ints>
     auto
-    cplx(Int iv1, Ints&&... ivs) const
-        -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
-                             Cplx>;
+    cplx(Int iv1, Ints... ivs) const
+        -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>;
 
     Cplx
     cplx() const;
@@ -121,14 +119,12 @@ class ITensorT
     template<typename IV, typename... VArgs>
     auto
     set(IV const& iv1, VArgs&&... ivs)
-        -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value || std::is_same<IV,IQIndexVal>::value,
-                             void>;
+        -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>;
 
     template<typename Int, typename... VArgs>
     auto
     set(Int iv1, VArgs&&... ivs)
-        -> stdx::enable_if_t<std::is_same<Int,int>::value || std::is_same<Int,long int>::value,
-                             void>;
+        -> stdx::enable_if_t<std::is_integral<Int>::value,void>;
 
     void
     set(Cplx val);
