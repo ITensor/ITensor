@@ -265,15 +265,19 @@ class ITensorT
     ITensorT&
     operator/=(ITensorT const& other);
 
-    template<typename... Indxs>
-    typename std::enable_if<not (stdx::and_<std::is_same<index_type, Indxs>...>::value), 
-                             ITensorT<index_type>&>::type
-    order(index_type const& ind1, Indxs const&... inds);
+    //template<typename... Indxs>
+    //ITensorT&
+    //order(index_type const& ind1, Indxs const&... inds);
 
     template<typename... Indxs>
-    typename std::enable_if<(stdx::and_<std::is_same<index_type, Indxs>...>::value), 
-                             ITensorT<index_type>&>::type
-    order(index_type const& ind1, Indxs const&... inds);
+    auto 
+    order(index_type const& ind1, Indxs const&... inds)
+    -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
+
+    template <typename... Indxs>
+    auto 
+    order(index_type const& ind1, Indxs const&... inds)
+        -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
 
     template<typename... Indxs>
     ITensorT&
