@@ -370,6 +370,31 @@ CHECK_CLOSE(T.cplx(s1(2),s2(1)),3+5_i);
 CHECK_CLOSE(T.cplx(2,1),3+5_i);
 }
 
+SECTION("Set and Get Elements Using long int")
+{
+auto T = ITensor(s1,s2);
+long int i1 = 1,
+         i2 = 2;
+T.set(i1,i1,11);
+T.set(1,i2,12);
+T.set(i2,1,21);
+T.set(i2,2,22);
+CHECK(!isComplex(T));
+CHECK_CLOSE(T.real(s1(1),s2(1)),11);
+CHECK_CLOSE(T.real(s1(1),s2(2)),12);
+CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+CHECK_CLOSE(T.real(s1(2),s2(2)),22);
+CHECK_CLOSE(T.real(i1,i1),11);
+CHECK_CLOSE(T.real(i1,2),12);
+CHECK_CLOSE(T.real(2,i1),21);
+CHECK_CLOSE(T.real(i2,2),22);
+
+T.set(i2,i1,3+5_i);
+CHECK(isComplex(T));
+CHECK_CLOSE(T.cplx(s1(2),s2(1)),3+5_i);
+CHECK_CLOSE(T.cplx(i2,i1),3+5_i);
+}
+
 SECTION("Set Using vector<IndexVal>")
 {
 auto T = ITensor(s1,s2);

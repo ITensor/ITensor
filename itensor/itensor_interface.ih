@@ -116,8 +116,9 @@ operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *t
 
 template<typename IndexT>
 template<typename IV, typename... IVs>
-Cplx ITensorT<IndexT>::
+auto ITensorT<IndexT>::
 cplx(IV const& iv1, IVs&&... ivs) const
+    -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>
     {
     using indexval_type = typename IndexT::indexval_type;
 
@@ -157,14 +158,15 @@ cplx(IV const& iv1, IVs&&... ivs) const
     }
 
 template<typename IndexT>
-template<typename... Ints>
-Cplx ITensorT<IndexT>::
-cplx(int iv1, Ints&&... ivs) const
+template<typename Int, typename... Ints>
+auto ITensorT<IndexT>::
+cplx(Int iv1, Ints... ivs) const
+    -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
     {
     if(!store()) Error("tensor storage unallocated");
 
     constexpr size_t size = sizeof...(ivs)+1;
-    auto ints = std::array<int,size>{{iv1,static_cast<int>(ivs)...}};
+    auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -173,7 +175,7 @@ cplx(int iv1, Ints&&... ivs) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",inds().r(),size));
         }
 
     auto inds = IntArray(size);
@@ -247,9 +249,7 @@ auto
 getVals(Iter it,
         Cplx & z,
         IV const& iv)
-    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
-                      || std::is_same<IV,IQIndexVal>::value,
-                         void>
+    -> stdx::if_compiles_return<void,decltype(iv.index),decltype(iv.val)>
     {
     static_assert(stdx::false_regardless_of<IndexValT>::value,
             "Last argument to .set method must be Real or Cplx scalar");
@@ -273,9 +273,7 @@ getVals(Iter it,
         Cplx & z,
         IV const& iv,
         Rest&&... rest)
-    -> stdx::enable_if_t<std::is_same<IV,IndexVal>::value 
-                      || std::is_same<IV,IQIndexVal>::value,
-                         void>
+    -> stdx::if_compiles_return<void,decltype(iv.index),decltype(iv.val)>
     {
     *it = static_cast<IndexValT>(iv);
     getVals<IndexValT>(++it,z,std::forward<Rest&&>(rest)...);
@@ -295,13 +293,12 @@ getVals(Iter it,
 
 template<typename IntT,
          typename Iter,
-         typename Int>
+         typename Arg>
 auto
 getInts(Iter it,
         Cplx & z,
-        Int const& iv)
-    -> stdx::enable_if_t<!(std::is_convertible<Int,Cplx>::value),
-                         void>
+        Arg const& iv)
+    -> stdx::enable_if_t<not std::is_convertible<Arg,Cplx>::value,void>
     {
     static_assert(stdx::false_regardless_of<IntT>::value,
             "Last argument to .set method must be Real or Cplx scalar");
@@ -309,13 +306,12 @@ getInts(Iter it,
 
 template<typename IntT,
          typename Iter,
-         typename Int>
+         typename Arg>
 auto
 getInts(Iter it,
         Cplx & z,
-        Int const& w)
-    -> stdx::enable_if_t<std::is_convertible<Int,Cplx>::value,
-                         void>
+        Arg const& w)
+    -> stdx::enable_if_t<std::is_convertible<Arg,Cplx>::value,void>
     {
     z = w;
     }
@@ -329,8 +325,7 @@ getInts(Iter it,
         Cplx & z,
         Int const& w,
         Rest&&... rest)
-    -> stdx::enable_if_t<!(std::is_same<Int,int>::value),
-                         void>
+    -> stdx::enable_if_t<not std::is_integral<Int>::value,void>
     {
     static_assert(stdx::false_regardless_of<Iter>::value,
             "New value passed to .set method must be last argument");
@@ -346,8 +341,7 @@ getInts(Iter it,
         Cplx & z,
         Int w,
         Rest&&... rest)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
-                         void>
+    -> stdx::enable_if_t<std::is_integral<Int>::value,void>
     {
     *it = w-1;
     getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
@@ -395,12 +389,10 @@ set(IV const& iv1, VArgs&&... vargs)
     }
 
 template<typename IndexT>
-template<typename Int,
-         typename... VArgs>
+template<typename Int, typename... VArgs>
 auto ITensorT<IndexT>::
 set(Int iv1, VArgs&&... vargs)
-    -> stdx::enable_if_t<std::is_same<Int,int>::value,
-                         void>
+    -> stdx::enable_if_t<std::is_integral<Int>::value,void>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
     auto ints = IntArray(size,0);
@@ -415,7 +407,7 @@ set(Int iv1, VArgs&&... vargs)
         for(auto& i : ints) print(" ",1+i);
         println();
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        Error(format("Wrong number of ints passed to set (expected %d, got %d)",
                      inds().r(),size));
         }
     //TODO: if !store_ and !is_real, call allocCplx instead
@@ -1003,10 +995,9 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
 //Version of order accepting syntax: T.order(i,j,"...")
 template <typename IndexT>
 template <typename... Indxs>
-typename std::enable_if<not (stdx::and_<std::is_same<IndexT, Indxs>...>::value), 
-                        ITensorT<IndexT>&>::type
-ITensorT<IndexT>::
+auto ITensorT<IndexT>::
 order(IndexT const& ind1, Indxs const&... inds)
+    -> stdx::enable_if_t<not stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
     auto isf = IndexSetT<IndexT>(size);
@@ -1018,10 +1009,9 @@ order(IndexT const& ind1, Indxs const&... inds)
 //Version of order accepting syntax: T.order(i,j,k)
 template <typename IndexT>
 template <typename... Indxs>
-typename std::enable_if<(stdx::and_<std::is_same<IndexT, Indxs>...>::value), 
-                        ITensorT<IndexT>&>::type
-ITensorT<IndexT>::
+auto ITensorT<IndexT>::
 order(IndexT const& ind1, Indxs const&... inds)
+    -> stdx::enable_if_t<stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
     {
     order(IndexSetT<IndexT>(ind1, inds...));
     return *this;

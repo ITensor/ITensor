@@ -142,7 +142,7 @@ order(IndexSetT<IndexT> const& iset)
     auto Ais = A.inds();
     auto r = Ais.r();
 
-    if(r != size_t(iset.r()))
+    if(size_t(r) != size_t(iset.r()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",Ais,"\n");
