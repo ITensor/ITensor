@@ -1180,7 +1180,7 @@ SECTION("Case 2")
         {
         diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
         }
-    CHECK(diff < 1E-13);
+    CHECK(diff < 1E-11);
     }
 SECTION("Case 3")
     {
