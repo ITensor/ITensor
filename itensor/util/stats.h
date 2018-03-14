@@ -7,6 +7,7 @@
 
 #include "itensor/real.h"
 #include "itensor/tensor/vec.h"
+#include "itensor/global.h"
 
 namespace itensor {
 

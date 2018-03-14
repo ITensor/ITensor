@@ -8,6 +8,7 @@
 #include "math.h"
 #include "itensor/types.h"
 #include "itensor/util/print.h"
+#include "itensor/util/error.h"
 
 namespace itensor {
 
