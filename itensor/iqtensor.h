@@ -113,6 +113,10 @@ template <typename... Inds>
 IQTensor
 randomTensor(QN const& q, IQIndex const& i1, Inds &&... inds);
 
+template<typename... Inds>
+IQTensor
+randomTensor(QN const& q, IQIndexSet const& is);
+
 template <typename... VArgs>
 IQTensor
 randomTensorC(QN const& q, VArgs&&... vargs);
