@@ -15,6 +15,7 @@
 #include "itensor/util/args.h"
 #include "itensor/real.h"
 #include "itensor/util/timers.h"
+#include "itensor/detail/algs.h"
 
 namespace itensor {
 
@@ -203,6 +204,13 @@ PrintEither(bool pdat,
     Global::printdat() = pdat;
     PrintNice(tok,X);
     Global::printdat() = savep;
+    }
+
+void inline
+seedRNG(int seed)
+    {
+    Global::random(seed);
+    detail::seed_quickran(seed);
     }
 
 } //namespace itensor
