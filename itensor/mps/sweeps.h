@@ -39,7 +39,10 @@ class Sweeps
     Sweeps(int nsweeps, 
            int minm = 1, 
            int maxm = 500, 
-           Real cutoff = 1E-8);
+           Real cutoff = 1E-8,
+           Real noise = 0.);
+
+    Sweeps(Args const& args);
 
     Sweeps(int nsweeps, InputGroup& sweep_table);
     
@@ -113,7 +116,7 @@ class Sweeps
     private:
 
     void 
-    init(int min_m, int max_m, Real cut);
+    init(Args const& args);
 
     void 
     tableInit(InputGroup& table);
@@ -291,11 +294,24 @@ Sweeps()
     { }
 
 inline Sweeps::
-Sweeps(int nsw, int min_m, int max_m, Real cut)
-    :
-    nsweep_(nsw)
+Sweeps(int nsw, 
+       int min_m, 
+       int max_m, 
+       Real cut,
+       Real noise)
+  : nsweep_(nsw)
     {
-    init(min_m,max_m,cut);
+    init({"Minm",min_m,
+          "Maxm",max_m,
+          "Cutoff",cut,
+          "Noise",noise});
+    }
+
+inline Sweeps::
+Sweeps(Args const& args)
+    {
+    nsweep_ = args.getInt("Nsweep");
+    init(args);
     }
 
 inline Sweeps::
@@ -331,21 +347,26 @@ nsweep(int val)
 
 
 void inline Sweeps::
-init(int min_m, int max_m, Real cut)
+init(Args const& args)
     {
+    auto min_m = args.getInt("Minm",1);
+    auto max_m = args.getInt("Maxm");
+    auto cutoff = args.getReal("Cutoff");
+    auto noise = args.getReal("Noise",0.);
+    auto niter = args.getInt("Niter",2);
+
     minm_ = std::vector<int>(nsweep_+1,min_m);
     maxm_ = std::vector<int>(nsweep_+1,max_m);
-    cutoff_ = std::vector<Real>(nsweep_+1,cut);
-    niter_ = std::vector<int>(nsweep_+1,2);
-    noise_ = std::vector<Real>(nsweep_+1,0);
+    cutoff_ = std::vector<Real>(nsweep_+1,cutoff);
+    niter_ = std::vector<int>(nsweep_+1,niter);
+    noise_ = std::vector<Real>(nsweep_+1,noise);
 
-    //Set number of Davidson iterations
-    const int Max_niter = 9;
-    for(int s = 1; s <= std::min(4,nsweep_); ++s)
-        {
-        niter_.at(s) = std::max(Max_niter-s+1,2);
-        }
-
+    ////Set number of Davidson iterations
+    //const int Max_niter = 9;
+    //for(int s = 1; s <= std::min(4,nsweep_); ++s)
+    //    {
+    //    niter_.at(s) = std::max(Max_niter-s+1,2);
+    //    }
     } //Sweeps::init
 
 void inline Sweeps::
