@@ -62,11 +62,13 @@ for(auto scale : range(topscale))
                     "IndexType=",Ytype,"IndexName=",yname});
 
     auto l13 = commonIndex(F1,F3);
-    A = F1 * noprime(F4) * prime(F2,2) * prime(F3,l13,2);
 
     // TODO:
-    // Add code here combining F1, F2, F3, F4 to make 
-    // new "A" tensor at the next scale
+    // Add code here combining F1, F2, F3, F4 to
+    // correctly make new "A" tensor at the next scale
+    //
+    // Hint: use the Print(...) command to print
+    // and inspect each intermediate tensor.
     //
     // A = F1 * ... ; ? 
     //
