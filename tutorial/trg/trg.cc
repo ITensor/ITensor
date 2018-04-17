@@ -13,9 +13,9 @@ using namespace itensor;
 
 int main()
 {
-Real T = 3.;
+Real T = 3.0;
 int maxm = 20;
-int topscale = 6;
+int topscale = 8;
 
 auto m0 = 2;
 auto x = Index("x0",m0,Xtype);
