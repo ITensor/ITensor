@@ -7,7 +7,7 @@ using namespace itensor;
 // Tutorial instructions:
 //
 // Look for two places in the code below
-// where there are comments with a TODO #.
+// where there are comments with a TODO.
 // Read the task and insert the missing code.
 //
 
@@ -64,7 +64,7 @@ for(auto scale : range(topscale))
     auto l13 = commonIndex(F1,F3);
     A = F1 * noprime(F4) * prime(F2,2) * prime(F3,l13,2);
 
-    // TODO #1:
+    // TODO:
     // Add code here combining F1, F2, F3, F4 to make 
     // new "A" tensor at the next scale
     //
@@ -82,18 +82,7 @@ auto yt2 = prime(yt,2);
 
 auto Trx = delta(xt,xt2);
 auto Try = delta(yt,yt2);
-
-//
-// TODO #2:
-// Add code here that uses the delta tensors
-// above to trace the x and y indices of A
-// to get a scalar tensor.
-//
-// Then extract the scalar value of A to get
-// the partition function Z
-//
-Real Z = 0.; //just a place holder, insert correct code
-//
+auto Z = (Trx*A*Try).real();
 
 Real Ns = pow(2,1+topscale);
 
