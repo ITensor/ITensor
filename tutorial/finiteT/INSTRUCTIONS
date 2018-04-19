@@ -1,0 +1,41 @@
+Building the codes
+--------------------
+
+To compile the ancilla code: 
+    make app=ancilla
+
+To compile the METTS code: 
+    make app=metts
+
+Running the Codes
+--------------------
+
+Edit the files inputfile_ancilla
+and inputfile_metts.
+
+Then:
+./ancilla inputfile_ancilla
+./metts inputfile_metts
+
+Coding Activity
+-------------------
+
+(1) Compile and run the ancilla
+code. It will generate output files
+"en.dat" and "sus.dat" giving
+the energy density and susceptibility
+as a function of 'coolness' beta.
+
+(2) Search the file "metts.cc" for
+lines labeled TODO (3 of these)
+
+Add the missing definitions of 
+the PUp projection matrix and
+upState and downState vectors
+to enable measurement in the X
+basis.
+
+Then change the "dir" variable
+(near the end of main)
+to switch from "Z" to "X" on
+alternating even/odd steps.

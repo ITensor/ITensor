@@ -1,0 +1,12 @@
+input
+{
+
+N = 20
+
+beta = 2.0
+tau = 0.002
+
+cutoff = 1E-10
+maxm = 1000
+
+}

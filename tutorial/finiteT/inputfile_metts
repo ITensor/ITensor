@@ -1,0 +1,15 @@
+input
+{
+
+N = 20
+
+beta = 1.0
+tau = 0.001
+
+cutoff = 1E-8
+maxm = 200
+
+nwarm = 10
+nmetts = 400
+
+}
