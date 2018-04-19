@@ -1,7 +1,11 @@
 LIBRARY_DIR=../..
 
+ifdef app
+APP=$(app)
+else
 APP=ancilla
 APP=metts
+endif
 
 HEADERS=
 
