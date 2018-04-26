@@ -190,6 +190,8 @@ class AutoMPO
 
     public:
 
+    AutoMPO() { }
+
     AutoMPO(SiteSet const& sites) 
       : sites_(sites)
         { }
