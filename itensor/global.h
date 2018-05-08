@@ -83,112 +83,25 @@ enum Printdat { ShowData, HideData };
 class Global
     {
     public:
-    static bool& 
-    checkArrows()
-        {
-        static bool checkArrows_ = true;
-        return checkArrows_;
-        }
-    static bool& 
-    debug1()
-        {
-        static bool debug1_ = false;
-        return debug1_;
-        }
-    static bool& 
-    debug2()
-        {
-        static bool debug2_ = false;
-        return debug2_;
-        }
-    static bool& 
-    debug3()
-        {
-        static bool debug3_ = false;
-        return debug3_;
-        }
-    static bool& 
-    debug4()
-        {
-        static bool debug4_ = false;
-        return debug4_;
-        }
+    static bool& checkArrows();
+    static bool& debug1();
+    static bool& debug2();
+    static bool& debug3();
+    static bool& debug4();
+
     //Global named arguments
-    static Args&
-    args()
-        {
-        return Args::global();
-        }
-    void static
-    args(const Args::Name& name, bool bval)
-        {
-        Args::global().add(name,bval);
-        }
-    void static
-    args(const Args::Name& name, int ival)
-        {
-        Args::global().add(name,ival);
-        }
-    void static
-    args(const Args::Name& name, Real rval)
-        {
-        Args::global().add(name,rval);
-        }
-    void static
-    args(const Args::Name& name, const std::string& sval)
-        {
-        Args::global().add(name,sval);
-        }
-    static bool& 
-    printdat()
-        {
-        static bool printdat_ = false;
-        return printdat_;
-        }
-    static Real& 
-    printScale()
-        {
-        static Real printScale_ = 1E-10;
-        return printScale_;
-        }
-    static bool& 
-    showIDs()
-        {
-        static bool showIDs_ = true;
-        return showIDs_;
-        }
-    static Real
-    random(int seed = 0)
-        {
-        using Generator = std::mt19937;
-        using Distribution = std::uniform_real_distribution<Real>;
+    static Args& args();
 
-        static Generator rng(std::time(NULL)+getpid());
-        static Distribution dist(0,1);
-
-        if(seed != 0)  //reseed rng
-            {
-            rng = Generator(seed);
-            }
-
-        return dist(rng);
-        }
-    void static
-    warnDeprecated(const std::string& message)
-        {
-        static int depcount = 1;
-        if(depcount <= 10)
-            {
-            println("\n\n",message,"\n");
-            ++depcount;
-            }
-        }
-    static bool& 
-    read32BitIDs()
-        {
-        static bool read32_ = false;
-        return read32_;
-        }
+    void static args(const Args::Name& name, bool bval);
+    void static args(const Args::Name& name, int ival);
+    void static args(const Args::Name& name, Real rval);
+    void static args(const Args::Name& name, const std::string& sval);
+    static bool& printdat();
+    static Real& printScale();
+    static bool& showIDs();
+    static Real random(int seed = 0);
+    void static warnDeprecated(const std::string& message);
+    static bool& read32BitIDs();
     };
 
 #define PrintData(X) PrintEither(true,#X,X)
