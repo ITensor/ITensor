@@ -10,6 +10,7 @@
 #include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/lapack_wrap.h"
+#include "itensor/util/tensorstats.h"
 
 namespace itensor {
 
@@ -286,6 +287,10 @@ doTask(Contract<Index> & C,
     auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
     STOP_TIMER(4)
     auto tN = makeTenRef(nd->data(),nd->size(),&(C.Nis));
+
+#ifdef COLLECT_TSTATS
+    tstats(tL,Lind,tR,Rind,tN,Nind);
+#endif
 
     START_TIMER(2)
     contract(tL,Lind,tR,Rind,tN,Nind);
