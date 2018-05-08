@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_SPINTWO_H
 #define __ITENSOR_SPINTWO_H
 #include "itensor/mps/siteset.h"
+#include "itensor/mps/sites/spinhalf.h"
 
 // Code written by Samuel Gozel
 

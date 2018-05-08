@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/types.h"
 #include "itensor/util/typelist.h"
 
 namespace itensor 

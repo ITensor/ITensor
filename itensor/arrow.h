@@ -6,6 +6,7 @@
 #define __ITENSOR_ARROW_H
 
 #include <iostream>
+#include "itensor/util/error.h"
 
 namespace itensor {
 

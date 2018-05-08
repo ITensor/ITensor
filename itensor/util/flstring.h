@@ -6,7 +6,7 @@
 #ifndef _ITENSOR_STRING_H_
 #define _ITENSOR_STRING_H_
 #include <string>
-#include "itensor/matrix/types.h"
+#include "itensor/tensor/types.h"
 #include "itensor/util/error.h"
 
 namespace itensor {
