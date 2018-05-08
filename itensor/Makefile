@@ -129,9 +129,9 @@ GDEPHEADERS+= tensor/permutation.h tensor/slicerange.h tensor/sliceten.h \
 tensor/contract.h itdata/task_types.h indexset.ih indexset.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
-ITDEPHEADERS= itdata/dense.h
-itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS= itdata/dense.h 
+itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS) util/tensorstats.h
+.debug_objs/itdata/dense.o: $(ITDEPHEADERS) $(GDEPHEADERS) util/tensorstats.h
 ITDEPHEADERS+= itdata/diag.h
 itdata/diag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/diag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
@@ -139,8 +139,8 @@ ITDEPHEADERS+= itdata/combiner.h
 itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/combiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/qdense.h itdata/qutil.h
-itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS) util/tensorstats.h
+.debug_objs/itdata/qdense.o: $(ITDEPHEADERS) $(GDEPHEADERS) util/tensorstats.h
 ITDEPHEADERS+= itdata/qcombiner.h
 itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
