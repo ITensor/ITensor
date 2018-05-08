@@ -221,7 +221,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     for(int j = 2; j < N; ++j)
         {
         E.at(j) = E.at(j-1)*psi.A(j)*K.A(j)*Kc.A(j)*psic.A(j);
-        assert(rank(E[j])==4);
+        //assert(rank(E[j])==4);
         }
     if(verbose) println("done");
 
