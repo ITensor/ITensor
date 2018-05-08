@@ -93,8 +93,8 @@ struct QNVal
     void
     set(qn_t v);
 
-    QNVal&
-    operator-() { set(-val_); return *this; }
+    QNVal
+    operator-() const { return QNVal(-val_, mod_); }
     };
 
 //
