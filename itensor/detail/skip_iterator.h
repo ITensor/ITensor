@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_SKIP_ITERATOR_H
 #define __ITENSOR_SKIP_ITERATOR_H
 
+#include <iostream>
 #include <iterator>
 
 namespace itensor {

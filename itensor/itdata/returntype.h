@@ -7,6 +7,7 @@
 
 #include "itensor/util/stdx.h"
 #include "itensor/util/typelist.h"
+#include "itensor/itdata/itdata.h"
 
 namespace itensor {
 

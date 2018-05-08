@@ -4,6 +4,7 @@
 //
 #ifndef __ITENSOR_TEVOLOBSERVER_H
 #define __ITENSOR_TEVOLOBSERVER_H
+#include "itensor/util/readwrite.h"
 #include "itensor/mps/observer.h"
 
 namespace itensor {

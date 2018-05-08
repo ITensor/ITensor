@@ -4,6 +4,7 @@
 //
 #ifndef __ITENSOR_DMRGOBSERVER_H
 #define __ITENSOR_DMRGOBSERVER_H
+#include "itensor/mps/mps.h"
 #include "itensor/mps/observer.h"
 #include "itensor/spectrum.h"
 

@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cctype>
 #include <iostream>
+#include "itensor/util/error.h"
 #include "itensor/util/print.h"
 
 #ifdef DEBUG

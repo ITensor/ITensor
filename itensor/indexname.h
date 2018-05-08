@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cctype>
 #include <iostream>
+#include "itensor/util/error.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);
