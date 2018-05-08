@@ -17,7 +17,7 @@ itensor: configure
 configure:
 	@echo
 	@echo Configure: Writing current dir to this_dir.mk
-	@echo THIS_DIR=`pwd` > this_dir.mk
+	@echo "THIS_DIR=${CURDIR}" > this_dir.mk
 	@echo "#ifndef __ITENSOR_CONFIG_H" > itensor/config.h
 	@echo "#define __ITENSOR_CONFIG_H" >> itensor/config.h
 	@echo "" >> itensor/config.h

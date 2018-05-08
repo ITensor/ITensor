@@ -65,17 +65,17 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 
 install: build debug
 
-libitensor.a: $(OBJECTS)
+$(ITENSOR_LIBDIR)/libitensor.a: $(OBJECTS)
 	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor.a"
 	@ar r $(ITENSOR_LIBDIR)/libitensor.a $(OBJECTS)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
-libitensor-g.a: mkdebugdir $(GOBJECTS)
+$(ITENSOR_LIBDIR)/libitensor-g.a: mkdebugdir $(GOBJECTS)
 	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor-g.a"
 	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
 	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
-libitensor.$(DYLIB_EXT): $(OBJECTS)
+$(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT): $(OBJECTS)
 ifdef ITENSOR_MAKE_DYLIB
 ifeq ($(ITENSOR_MAKE_DYLIB),1)
 	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT)"
@@ -83,7 +83,7 @@ ifeq ($(ITENSOR_MAKE_DYLIB),1)
 endif
 endif
 
-libitensor-g.$(DYLIB_EXT): mkdebugdir $(GOBJECTS)
+$(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT): mkdebugdir $(GOBJECTS)
 ifdef ITENSOR_MAKE_DYLIB
 ifeq ($(ITENSOR_MAKE_DYLIB),1)
 	@echo "Building dynamic library $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT)"
@@ -96,9 +96,9 @@ touch_all_headers:
 	@touch all_basic.h
 	@touch all_mps.h
 
-build: libitensor.a libitensor.$(DYLIB_EXT) touch_all_headers
+build: $(ITENSOR_LIBDIR)/libitensor.a $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT) touch_all_headers
 
-debug: libitensor-g.a libitensor-g.$(DYLIB_EXT) touch_all_headers
+debug: $(ITENSOR_LIBDIR)/libitensor-g.a $(ITENSOR_LIBDIR)/libitensor-g.$(DYLIB_EXT) touch_all_headers
 
 mkdebugdir:
 	@mkdir -p .debug_objs
