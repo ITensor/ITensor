@@ -231,7 +231,7 @@ Real ITensorT<IndexT>::
 real(IVals&&... ivs) const
     {
     auto z = cplx(std::forward<IVals>(ivs)...);
-    if(fabs(z.imag()) > 1E-14*fabs(z.real()))
+    if(fabs(z.imag) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());
         //Error("tensor is Complex valued, use .cplx(...) method");
