@@ -309,9 +309,10 @@ davidson(BigMatrixT const& A,
                     }
                 }
             q *= 1./qnrm;
+            q.scaleTo(1.);
             ++pass;
             }
-        if(debug_level_ >= 3) println("Done with orthog step");
+        if(debug_level_ >= 3) println("Done with orthog step, tot_pass=",tot_pass);
 
         //Check V's are orthonormal
         //Mat Vo(ni+1,ni+1,NAN); 
