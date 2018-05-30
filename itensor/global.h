@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include <memory>
 #include <random>
 #include <unistd.h>
 #include <memory>

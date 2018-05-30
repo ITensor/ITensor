@@ -59,13 +59,15 @@ gateTEvol(Iterable const& gatelist,
         Error("Timestep not commensurate with total time");
         }
 
-    Real tsofar = 0;
-    Real tot_norm = psi.normalize();
     if(verbose) 
         {
         printfln("Taking %d steps of timestep %.5f, total time %.5f",nt,tstep,ttotal);
         }
+
     psi.position(gatelist.front().i1());
+    Real tot_norm = norm(psi);
+
+    Real tsofar = 0;
     for(int tt = 1; tt <= nt; ++tt)
         {
         auto g = gatelist.begin();

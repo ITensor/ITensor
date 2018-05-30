@@ -272,12 +272,14 @@ davidson(BigMatrixT const& A,
             for(auto k : range(ni))
                 {
                 Vq[k] = (dag(V[k])*q).cplx();
+                //printfln("pass=%d Vq[%d] = %s",pass,k,Vq[k]);
                 }
             for(auto k : range(ni))
                 {
                 q += (-Vq[k])*V[k];
                 }
             auto qnrm = norm(q);
+            //printfln("pass=%d qnrm=%s",pass,qnrm);
             if(qnrm < 1E-10)
                 {
                 //Orthogonalization failure,
@@ -309,9 +311,10 @@ davidson(BigMatrixT const& A,
                     }
                 }
             q *= 1./qnrm;
+            q.scaleTo(1.);
             ++pass;
             }
-        if(debug_level_ >= 3) println("Done with orthog step");
+        if(debug_level_ >= 3) println("Done with orthog step, tot_pass=",tot_pass);
 
         //Check V's are orthonormal
         //Mat Vo(ni+1,ni+1,NAN); 
@@ -375,7 +378,7 @@ davidson(BigMatrixT const& A,
             }
         }
 
-    if(debug_level_ >= 3)
+    if(debug_level_ >= 4)
         {
         //Check V's are orthonormal
         auto Vo_final = CMatrix(iter+1,iter+1);
