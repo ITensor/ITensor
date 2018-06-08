@@ -27,7 +27,7 @@ class SpinlessSite
         auto q_occ = QN("Nf=",1);
         if(not conserve_Nf) q_occ = QN("Pf=",1);
         s = IQIndex{nameint("Spinless ",n),
-            Index(nameint("Emp ",n),1,Site),QN(),
+            Index(nameint("Emp ",n),1,Site),QN({0,-1}),
             Index(nameint("Occ ",n),1,Site),q_occ};
         }
 

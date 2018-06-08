@@ -11,6 +11,7 @@
 #include "itensor/itdata/qdense.h"
 #include "itensor/itdata/qutil.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/fermion.h"
 
 using std::vector;
 using std::move;
@@ -409,6 +410,7 @@ add(PlusEQ<IQIndex> const& P,
         }
     }
 
+
 template<typename TA, typename TB>
 void
 doTask(PlusEQ<IQIndex> const& P,
@@ -459,10 +461,15 @@ doTask(Contract<IQIndex>& Con,
     STOP_TIMER(33)
     auto& C = *nd;
 
+    //--------------------------------------------------------------------//
+    Permutation pL,pR;
+    unriffle(Con.Lis,Con.Ris,pL,pR);
+    //--------------------------------------------------------------------//
+
     //Function to execute for each pair of
     //contracted blocks of A and B
     auto do_contract = 
-        [&Con,&Lind,&Rind,&Cind]
+        [&Con,&Lind,&Rind,&Cind,&pL,&pR]    // [&Con,&Lind,&Rind,&Cind]
         (DataRange<const VA> ablock, Labels const& Ablockind,
          DataRange<const VB> bblock, Labels const& Bblockind,
          DataRange<VC>       cblock, Labels const& Cblockind)
@@ -484,8 +491,33 @@ doTask(Contract<IQIndex>& Con,
 
         //Compute cref += aref*bref
         START_TIMER(2)
-        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
+
+        //----------------------------------------------------------------//
+        // Print(Global::debug1());
+        if(Global::debug1())
+            {
+            //compute number of fermion over fermion crossings
+            auto Aswaps = total_swaps(pL,Con.Lis,Ablockind);
+            auto Bswaps = total_swaps(pR,Con.Ris,Bblockind);
+            auto swaps  = Aswaps+Bswaps;
+            auto fermion_sign = std::pow(-1,swaps);
+            if(fermion_sign < 0){println("-1");}
+
+            contract(aref,Lind,bref,Rind,cref,Cind,fermion_sign,1.);
+            }
+        else
+            {
+            contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
+            }
+
+
+
+        //----------------------------------------------------------------//
+
+        
+        
         STOP_TIMER(2)
+
         };
 
     START_TIMER(20)
