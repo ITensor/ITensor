@@ -493,7 +493,7 @@ doTask(Contract<IQIndex>& Con,
         START_TIMER(2)
 
         //----------------------------------------------------------------//
-        // Print(Global::debug1());
+        Print(Global::debug1());
         if(Global::debug1())
             {
             //compute number of fermion over fermion crossings

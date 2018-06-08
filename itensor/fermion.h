@@ -27,16 +27,13 @@ unriffle(IndexSetT<index_type> const& Ais,
     permA   = Permutation(rA,-1);   //reinitialize the permutations
     permB   = Permutation(rB,-1);   //with default values -1
 
-    //TYLER: so this needs to change. We walk forward through A finding matches
-    //the B logic is the same
-    //naive: after the A loop exits, we shift the image by + number of matches.
-    for(auto i=rA-1; i>=0; --i)     //descending i= rA-1,...,0
+    for(auto i:range(rA))           //ascending i= 0,...,rA-1
         {
         for(auto j: range(rB))      //ascending j=0,...,rB-1
             {
             if(Ais[i]==Bis[j])
                 {
-                permA[i] = rA-1-n;
+                permA[i] = n;
                 permB[j] = n;
                 n++;
                 continue;
@@ -50,6 +47,10 @@ unriffle(IndexSetT<index_type> const& Ais,
             {
             permA[i]=k;
             k++;
+            }
+        else
+            {
+            permA[i]=permA[i]+rA-n;
             }
         }
 
