@@ -10,7 +10,7 @@
 namespace itensor {
 
 // from two indexsets (possibly) sharing some indices, produce the permutations
-// of thier labels (0-indexed) which would produce 'standard' orientation e.g.
+// of their labels (0-indexed) which would produce 'standard' orientation e.g.
 // if:      Ais   = J,K,I               Bis   = P,I,J,Q
 // then:    permA = (0,1),(1,0),(2,2)   permB = (0,2),(1,1),(2,0),(3,3)
 template <class index_type>
@@ -113,9 +113,8 @@ total_swaps(Permutation const& P, IQIndexSet const I, IntArray const& block)
     auto i1 = I[0].qn(1);  //first index/sector of 0th IQIndex of B
     for(auto c=1; c<=QNSize(); ++c)
         {
-        if(not isActive(i1,c)) break;        //checks if mod !=0
+        if(not isActive(i1,c)) break;        //returns 1 until past dim of qn
         if(not isFermionic(i1,c)) continue;  //skip non-fermionic
-
         auto cib = IntArray();
         for(auto i:range(rI))
             {
@@ -127,7 +126,6 @@ total_swaps(Permutation const& P, IQIndexSet const I, IntArray const& block)
                 cib.push_back(i);
                 }
             }
-
         num_swaps += count_filtered_swaps(P,cib);
         }
     return num_swaps;
