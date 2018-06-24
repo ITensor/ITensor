@@ -10,7 +10,7 @@
 #include "itensor/util/print.h"
 #include "itensor/itensor_interface.h"
 
-#define COLLECT_TSTATS
+//#define COLLECT_TSTATS
 
 #ifdef COLLECT_TSTATS
 namespace itensor {
