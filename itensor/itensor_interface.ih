@@ -149,7 +149,7 @@ cplx(IV const& iv1, IVs&&... ivs) const
         println("too big for real in cplx(...), scale = ",scale());
         throw e;
         }
-    catch(TooSmallForReal)
+    catch(TooSmallForReal const&)
         {
         println("warning: too small for real in cplx(...)");
         return Cplx(0.,0.);
@@ -190,7 +190,7 @@ cplx(Int iv1, Ints... ivs) const
         println("too big for real in cplx(...), scale = ",scale());
         throw e;
         }
-    catch(TooSmallForReal)
+    catch(TooSmallForReal const&)
         {
         println("warning: too small for real in cplx(...)");
         return Cplx(0.,0.);
@@ -217,7 +217,7 @@ cplx() const
         println("too big for real in cplx(...), scale = ",scale());
         throw e;
         }
-    catch(TooSmallForReal)
+    catch(TooSmallForReal const&)
         {
         println("warning: too small for real in cplx(...)");
         return Cplx(0.,0.);
