@@ -27,6 +27,9 @@ struct Permutation
 
     Permutation(size_type size);
 
+    //TYLER
+    Permutation(size_type size, size_type val);
+
     size_type
     size() const { return store_.size(); }
 
@@ -67,6 +70,13 @@ Permutation(size_type size)
         store_[n] = n;
     }
 
+//TYLER: for constructing permutations.
+inline Permutation::
+Permutation(size_type size, size_type val)
+  : store_(size,val)
+     {
+     //intentionally left blank
+     }
 
 Permutation inline
 inverse(Permutation const& P)

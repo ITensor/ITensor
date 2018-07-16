@@ -14,8 +14,7 @@ namespace itensor {
 //Parent type for all ranges
 class RangeType { };
 
-template<typename index_type,
-         size_t start = 0>
+template<typename index_type, size_t start = 0>
 class RangeT;
 
 template<typename range_type>
