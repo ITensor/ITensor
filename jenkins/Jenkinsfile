@@ -1,0 +1,66 @@
+pipeline {
+  agent none
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '8', daysToKeepStr: '20'))
+    timeout(time: 1, unit: 'HOURS')
+  }
+  stages {
+    stage('test') {
+      parallel {
+        stage('linux-lapack') {
+          agent {
+            dockerfile {
+              filename 'Dockerfile.ubuntu'
+              dir 'jenkins'
+              args '-v /etc/passwd:/etc/passwd -v /etc/group:/etc/group'
+            }
+          }
+          environment {
+            PLATFORM = 'lapack'
+          }
+          steps {
+            sh '''sed '/^PLATFORM=/,/^$/s/^/#/;/^#PLATFORM='$PLATFORM'$/,/^$/s/^#//' options.mk.sample > options.mk'''
+            sh 'make -j2'
+            sh 'make -j2 -C sample'
+            sh 'make -C unittest'
+          }
+        }
+
+        stage('linux-openblas') {
+          agent {
+            dockerfile {
+              filename 'Dockerfile.ubuntu'
+              dir 'jenkins'
+              args '-v /etc/passwd:/etc/passwd -v /etc/group:/etc/group'
+            }
+          }
+          environment {
+            PLATFORM = 'openblas'
+          }
+          steps {
+            sh '''sed '/^PLATFORM=/,/^$/s/^/#/;/^#PLATFORM='$PLATFORM'$/,/^$/s/^#//' options.mk.sample > options.mk'''
+            sh 'make -j2'
+            sh 'make -j2 -C sample'
+            sh 'make -C unittest'
+          }
+        }
+
+        stage('osx') {
+          agent {
+            label 'osx'
+          }
+          environment {
+            PLATFORM = 'macos'
+          }
+          steps {
+            sh '''sed '/^PLATFORM=/,/^$/s/^/#/;/^#PLATFORM='$PLATFORM'$/,/^$/s/^#//' options.mk.sample > options.mk'''
+            sh 'make -j2'
+            sh 'make -j2 -C sample'
+            sh 'make -C unittest'
+          }
+        }
+      }
+    }
+  }
+}
