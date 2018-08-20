@@ -24,11 +24,25 @@ class SpinlessSite
     SpinlessSite(int n, Args const& args = Args::global())
         {
         auto conserve_Nf = args.getBool("ConserveNf",true);
-        auto q_occ = QN("Nf=",1);
-        if(not conserve_Nf) q_occ = QN("Pf=",1);
-        s = IQIndex{nameint("Spinless ",n),
-            Index(nameint("Emp ",n),1,Site),QN(),
-            Index(nameint("Occ ",n),1,Site),q_occ};
+        auto oddevenupdown = args.getBool("OddEvenUpDown",false);
+
+        if(!oddevenupdown) //usual case
+            {
+            auto q_occ = QN("Nf=",1);
+            if(not conserve_Nf) q_occ = QN("Pf=",1);
+            s = IQIndex{nameint("Spinless ",n),
+                Index(nameint("Emp ",n),1,Site),QN(),
+                Index(nameint("Occ ",n),1,Site),q_occ};
+            }
+        else
+            {
+            QN q_occ;
+            if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
+            else       q_occ = QN("Sz",-1,"Nf=",1);
+            s = IQIndex{nameint("Spinless ",n),
+                Index(nameint("Emp ",n),1,Site),QN(),
+                Index(nameint("Occ ",n),1,Site),q_occ};
+            }
         }
 
     IQIndex
