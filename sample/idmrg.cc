@@ -12,7 +12,24 @@ int main(int argc, char* argv[])
 
     auto sites = SpinOne(N);
 
-    IQMPO H = Heisenberg(sites,{"Infinite=",true});
+    bool use_autompo = true;
+
+    IQMPO H;
+
+    if(use_autompo)
+    {
+        auto ampo = AutoMPO(sites);
+        for(int j = 1; j <= N; ++j)
+        {
+            ampo += 0.5,"S+",j,"S-",j+1;
+            ampo += 0.5,"S-",j,"S+",j+1;
+            ampo +=     "Sz",j,"Sz",j+1;
+        }
+
+        H = toMPO<IQTensor>(ampo, {"Infinite",true, "Verbose",true});
+    }
+    else
+        H = Heisenberg(sites,{"Infinite=",true});
 
     auto sweeps = Sweeps(20);
     sweeps.maxm() = 20,80,140,200;
