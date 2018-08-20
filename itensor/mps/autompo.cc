@@ -983,9 +983,13 @@ partitionHTerms(SiteSet const& sites,
                 AutoMPO::storage const& terms,
                 vector<QNBlock<T>> & qbs, 
                 vector<IQMatEls> & tempMPO,
-                bool checkqns = true)
+                Args const& args = Args::global())
     {
     auto N = sites.N();
+
+
+    auto checkqns = args.getBool("CheckQN",true);
+    auto infinite = args.getBool("Infinite",false);
 
     // TODO: This version of calcQN uses a "qnmap" to improve
     //       the speed.
@@ -1017,12 +1021,13 @@ partitionHTerms(SiteSet const& sites,
     //    return qn;
     //    };
 
-    auto calcQN = [&sites](SiteTermProd const& prod)
+    auto calcQN = [&sites](SiteTermProd const& prod, bool infinite, int N)
         {
         QN qn;
         for(auto& st : prod)
             {
-            auto Op = sites.op(st.op,st.i);
+            int ind = infinite ? (st.i-1)%N + 1 : st.i;
+            auto Op = sites.op(st.op,ind);
             auto OpQN = -div(Op);
             qn += OpQN;
             }
@@ -1033,17 +1038,19 @@ partitionHTerms(SiteSet const& sites,
     tempMPO.resize(N);
 
     for(HTerm const& ht : terms)
-    for(int n = ht.first().i; n <= ht.last().i; ++n)
+    for(int n1 = ht.first().i; n1 <= ht.last().i; ++n1)
         {
         SiteTermProd left, onsite, right;
-        decomposeTerm(n, ht.ops, left, onsite, right);
-        
+        decomposeTerm(n1, ht.ops, left, onsite, right);
+
+        int n = infinite ? (n1-1)%N+1 : n1;
+
         TIMER_START(10)
         QN lqn,sqn;
         if(checkqns)
             {
-            lqn = calcQN(left);
-            sqn = calcQN(onsite);
+            lqn = calcQN(left, infinite, N);
+            sqn = calcQN(onsite, infinite, N);
             }
         TIMER_STOP(10)
         
@@ -1063,7 +1070,10 @@ partitionHTerms(SiteSet const& sites,
             }
         else
             {
-            auto& leftlink = qbs.at(n-2)[lqn];
+            int prev = n-2;
+            if(infinite && prev < 0)
+                prev += N;
+            auto& leftlink = qbs.at(prev)[lqn];
             if(right.empty()) // term ending on site n
                 {
                 j = posInBlock<T>(onsite, leftlink.right);
@@ -1095,10 +1105,17 @@ partitionHTerms(SiteSet const& sites,
         //
         // Add only unique IQMPOMatElems to tempMPO
         // TODO: assumes terms are unique I think!
-        // 
+        //
         TIMER_START(12)
         auto& tn = tempMPO.at(n-1);
+
+        if(infinite && n1 > N)
+			// Replace st.i by a value within the unit cell
+			for(SiteTerm &st : onsite)
+				st.i = n;
+
         auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
+
 
         ////TODO DEBUG
         //auto target = QN(-2,2);
@@ -1301,6 +1318,143 @@ compressMPO(SiteSet const& sites,
     //println("Maximal dimension of the MPO is ", max_d);
     }
 
+// Use the coefficients matrix on each link to construct the MPO matrix (w/o SVD)
+template<typename T>
+void
+constructExactFinalMPO(SiteSet const& sites,
+			vector<QNBlock<T>> const& qbs,
+			vector<IQMatEls> const& tempMPO,
+			vector<MPOPiece<T>> & finalMPO,
+			vector<IQIndex> & links,
+			bool isExpH = false,
+			Complex tau = 0,
+			Args const& args = Args::global())
+{
+	const int N = sites.N();
+	Real eps = 1E-14;
+
+	auto infinite = args.getBool("Infinite",false);
+
+	finalMPO.resize(N);
+	links.resize(N+1);
+
+	const QN ZeroQN;
+
+	int d0 = isExpH ? 1 : 2;
+
+	// Construct links
+	for(int n = 1; n <= N; ++n)
+	{
+		// Count number of different QN sectors
+		int nsector = 1; //always have ZeroQN sector
+		int m0 = 0; // ZeroQN block size
+
+		for (auto &qb : qbs.at(n - 1)) {
+			auto &qn = qb.first;
+			if (qn != ZeroQN)
+				++nsector;
+			else
+				m0 = qb.second.right.size();
+		}
+
+		int count = 0;
+		auto inqn = stdx::reserve_vector<IndexQN>(nsector);
+		// Make sure zero QN is first in the list of indices
+		inqn.emplace_back(Index(format("hl%d_%d", n, count++), d0 + m0), ZeroQN);
+		for (auto const &qb : qbs.at(n - 1)) {
+			QN const &q = qb.first;
+			if (q == ZeroQN) continue; // was already taken care of
+			int m = qb.second.right.size();
+			inqn.emplace_back(Index(format("hl%d_%d", n, count++), m), q);
+		}
+
+		links.at(n) = IQIndex(nameint("Hl", n), move(inqn));
+	}
+
+	if(infinite)
+		links.at(0) = links.at(N);
+	else
+		links.at(0) = IQIndex("Hl0",Index("hl0_0",d0),ZeroQN);
+
+
+	// Construct finalMPO
+	for(int n = 1; n <= N; ++n)
+	{
+		auto &fm = finalMPO.at(n - 1);
+
+		auto &IdM = fm[QNProd{ZeroQN, SiteTermProd(1, {"Id", n})}];
+		IQIndex &ll = links.at(n - 1);
+		IQIndex &rl = links.at(n);
+
+		Index li = findByQN(ll, ZeroQN);
+		Index ri = findByQN(rl, ZeroQN);
+		IdM = Mat<T>(li.m(), ri.m());
+		IdM(0, 0) = 1.;
+		if (!isExpH) IdM(1, 1) = 1.;
+
+		for (IQMPOMatElem const &elem: tempMPO.at(n - 1))
+		{
+			int j = elem.row;
+			int k = elem.col;
+			auto &t = elem.val;
+
+			if (isZero(t.coef, eps)) continue;
+
+			auto &M = fm[QNProd{elem.rowqn, t.ops}];
+
+			if (nrows(M) == 0)
+			{
+				auto li = findByQN(ll, elem.rowqn);
+				auto ri = findByQN(rl, elem.colqn);
+				M = Mat<T>(li.m(), ri.m());
+			}
+
+			int rowOffset = isExpH ? 0 : 1;
+
+			//rowShift & colShift account for special identity
+			//entries in zero QN block of MPO
+			auto rowShift = (elem.rowqn == ZeroQN) ? d0 : 0;
+			auto colShift = (elem.colqn == ZeroQN) ? d0 : 0;
+
+			auto coef = forceType<T>(t.coef);
+
+			if (j == -1 && k == -1)    // on-site terms
+				M(rowOffset, 0) += coef;
+			else if (j == -1)    // terms starting on site n
+				M(rowOffset, k + colShift) += coef;
+			else if (k == -1)    // terms ending on site n
+				M(j + rowShift, 0) += coef;
+			else
+				M(j + rowShift, k + colShift) += coef;
+		}
+	}
+}
+
+template<typename T>
+void
+constructFinalMPO(SiteSet const& sites,
+			vector<QNBlock<T>> const& qbs,
+			vector<IQMatEls> const& tempMPO,
+			vector<MPOPiece<T>> & finalMPO,
+			vector<IQIndex> & links,
+			bool isExpH = false,
+			Complex tau = 0,
+			Args const& args = Args::global())
+{
+	auto verbose = args.getBool("Verbose",false);
+	auto infinite = args.getBool("Infinite",false);
+
+	if(infinite)
+	{
+		if(verbose)
+			println("Skipping SVD for infinite MPO");
+
+		constructExactFinalMPO(sites,qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+	}
+	else
+		compressMPO(sites,qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+}
+
 QN
 div(ITensor const& t) { return QN{}; }
 
@@ -1390,26 +1544,24 @@ svdMPO(AutoMPO const& am,
 
     MPOt<Tensor> H;
 
-    auto checkqns = args.getBool("CheckQN",true);
-
     if(is_real)
         {
         auto qbs = vector<QNBlock<Real>>();
         auto tempMPO = vector<IQMatEls>();
-        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,args);
         auto finalMPO = vector<MPOPiece<Real>>();
         auto links = vector<IQIndex>();
-        compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+        constructFinalMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
         H = constructMPOTensors<Tensor,Real>(am.sites(),finalMPO,links,args);
         }
     else
         {
         auto qbs = vector<QNBlock<Cplx>>();
         auto tempMPO = vector<IQMatEls>();
-        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
+        partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,args);
         auto finalMPO = vector<MPOPiece<Cplx>>();
         auto links = vector<IQIndex>();
-        compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
+		constructFinalMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
         H = constructMPOTensors<Tensor,Cplx>(am.sites(),finalMPO,links,args);
         }
 
