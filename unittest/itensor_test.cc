@@ -1146,85 +1146,85 @@ SECTION("Scalar Result")
     }
 }
 
-SECTION("Non-contracting Product")
-{
-auto i = Index("i",8),
-     j = Index("j",3),
-     k = Index("k",7),
-     l = Index("l",10);
-SECTION("Case 1")
-    {
-    auto A = randomTensor(i,l,j);
-    auto B = randomTensor(k,j,l);
-    auto C = A/B;
-    auto diff = 0.;
-    for(auto ii : range1(i.m()))
-    for(auto jj : range1(j.m()))
-    for(auto kk : range1(k.m()))
-    for(auto ll : range1(l.m()))
-        {
-        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
-        }
-    CHECK(diff < 1E-13);
-    }
-SECTION("Case 2")
-    {
-    auto A = randomTensor(i,l,j);
-    auto B = randomTensor(l,j,k);
-    auto C = A/B;
-    auto diff = 0.;
-    for(auto ii : range1(i.m()))
-    for(auto jj : range1(j.m()))
-    for(auto kk : range1(k.m()))
-    for(auto ll : range1(l.m()))
-        {
-        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
-        }
-    CHECK(diff < 1E-11);
-    }
-SECTION("Case 3")
-    {
-    auto A = randomTensor(i,l,j);
-    auto B = randomTensor(l,j,k);
-    auto C = B/A;
-    auto diff = 0.;
-    for(auto ii : range1(i.m()))
-    for(auto jj : range1(j.m()))
-    for(auto kk : range1(k.m()))
-    for(auto ll : range1(l.m()))
-        {
-        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
-        }
-    CHECK(diff < 1E-13);
-    }
-SECTION("Case 4")
-    {
-    auto A = randomTensor(i);
-    auto B = randomTensor(j);
-    auto C = B/A;
-    auto diff = 0.;
-    for(auto ii : range1(i.m()))
-    for(auto jj : range1(j.m()))
-        {
-        diff += C.real(i(ii),j(jj)) - A.real(i(ii))*B.real(j(jj));
-        }
-    CHECK(diff < 1E-13);
-    }
-SECTION("Case 5")
-    {
-    auto A = randomTensor(i);
-    auto B = randomTensor(j,k);
-    auto C = B/A;
-    auto diff = 0.;
-    for(auto ii : range1(i.m()))
-    for(auto jj : range1(j.m()))
-    for(auto kk : range1(k.m()))
-        {
-        diff += C.real(k(kk),i(ii),j(jj)) - A.real(i(ii))*B.real(k(kk),j(jj));
-        }
-    CHECK(diff < 1E-13);
-    }
-}
+//SECTION("Non-contracting Product")
+//{
+//auto i = Index("i",8),
+//     j = Index("j",3),
+//     k = Index("k",7),
+//     l = Index("l",10);
+//SECTION("Case 1")
+//    {
+//    auto A = randomTensor(i,l,j);
+//    auto B = randomTensor(k,j,l);
+//    auto C = A/B;
+//    auto diff = 0.;
+//    for(auto ii : range1(i.m()))
+//    for(auto jj : range1(j.m()))
+//    for(auto kk : range1(k.m()))
+//    for(auto ll : range1(l.m()))
+//        {
+//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        }
+//    CHECK(diff < 1E-13);
+//    }
+//SECTION("Case 2")
+//    {
+//    auto A = randomTensor(i,l,j);
+//    auto B = randomTensor(l,j,k);
+//    auto C = A/B;
+//    auto diff = 0.;
+//    for(auto ii : range1(i.m()))
+//    for(auto jj : range1(j.m()))
+//    for(auto kk : range1(k.m()))
+//    for(auto ll : range1(l.m()))
+//        {
+//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        }
+//    CHECK(diff < 1E-11);
+//    }
+//SECTION("Case 3")
+//    {
+//    auto A = randomTensor(i,l,j);
+//    auto B = randomTensor(l,j,k);
+//    auto C = B/A;
+//    auto diff = 0.;
+//    for(auto ii : range1(i.m()))
+//    for(auto jj : range1(j.m()))
+//    for(auto kk : range1(k.m()))
+//    for(auto ll : range1(l.m()))
+//        {
+//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        }
+//    CHECK(diff < 1E-13);
+//    }
+//SECTION("Case 4")
+//    {
+//    auto A = randomTensor(i);
+//    auto B = randomTensor(j);
+//    auto C = B/A;
+//    auto diff = 0.;
+//    for(auto ii : range1(i.m()))
+//    for(auto jj : range1(j.m()))
+//        {
+//        diff += C.real(i(ii),j(jj)) - A.real(i(ii))*B.real(j(jj));
+//        }
+//    CHECK(diff < 1E-13);
+//    }
+//SECTION("Case 5")
+//    {
+//    auto A = randomTensor(i);
+//    auto B = randomTensor(j,k);
+//    auto C = B/A;
+//    auto diff = 0.;
+//    for(auto ii : range1(i.m()))
+//    for(auto jj : range1(j.m()))
+//    for(auto kk : range1(k.m()))
+//        {
+//        diff += C.real(k(kk),i(ii),j(jj)) - A.real(i(ii))*B.real(k(kk),j(jj));
+//        }
+//    CHECK(diff < 1E-13);
+//    }
+//}
 
 SECTION("Complex Contracting Product")
 {
