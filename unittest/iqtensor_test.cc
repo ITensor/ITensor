@@ -1249,6 +1249,12 @@ SECTION("Reindex")
     CHECK(hasindex(nT,prime(S3)));
     CHECK(hasindex(nT,S4));
     CHECK(hasindex(nT,prime(S4)));
+
+    auto J4 = IQIndex("J4",Index("J4_-",1,Site),QN(-1),
+                           Index("J4_0 ",1,Site),QN(0),
+                           Index("J4_+",1,Site),QN(+1));
+
+    CHECK_THROWS(nT = reindex(T,S1,S3,S2,J4));
     }
 
 //SECTION("Non-contracting product")

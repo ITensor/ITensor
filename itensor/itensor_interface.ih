@@ -884,6 +884,12 @@ reindex(ITensorT<IndexT> const& cT,
             {
             if(is[j].noprimeEquals(ipairs[oi]))
                 {
+                if(is[j].m() != ipairs[ni].m())
+                    {
+                    printfln("Old m = %d",is[j].m());
+                    printfln("New m would be = %d",ipairs[ni].m());
+                    throw ITError("Mismatch of index dimension in reindex");
+                    }
                 auto plev = is[j].primeLevel();
                 auto arrow_dir = is[j].dir();
                 is[j] = noprime(ipairs[ni]);
