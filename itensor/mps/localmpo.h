@@ -180,16 +180,18 @@ class LocalMPO
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val) 
+    doWrite(bool val,
+            Args const& args) 
         { 
-        if(Psi_ != 0)
-            Error("Write to disk not yet supported for LocalMPO initialized with an MPS");
+        if(Psi_ != 0) Error("Write to disk not yet supported for LocalMPO initialized with an MPS");
         if(!do_write_ && (val == true))
-            initWrite(); 
+            {
+            initWrite(args); 
+            }
         do_write_ = val; 
         }
 
-    const std::string&
+    std::string const&
     writeDir() const { return writedir_; }
 
     int
@@ -212,8 +214,8 @@ class LocalMPO
 
     LocalOp<Tensor> lop_;
 
-    bool do_write_;
-    std::string writedir_;
+    bool do_write_ = false;
+    std::string writedir_ = "./";
 
     const MPSt<Tensor>* Psi_;
 
@@ -235,7 +237,7 @@ class LocalMPO
     setRHlim(int val);
 
     void
-    initWrite();
+    initWrite(Args const& args);
 
     std::string
     PHFName(int j) const
@@ -252,8 +254,6 @@ LocalMPO()
       LHlim_(-1),
       RHlim_(-1),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(0)
     { }
 
@@ -266,8 +266,6 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(0)
     { 
     if(args.defined("NumCenter"))
@@ -283,8 +281,6 @@ LocalMPO(const MPSt<Tensor>& Psi,
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(&Psi)
     { 
     if(args.defined("NumCenter"))
@@ -301,8 +297,6 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(0)
     { 
     PH_[0] = LH;
@@ -324,8 +318,6 @@ LocalMPO(const MPSt<Tensor>& Psi,
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(&Psi)
     { 
     PH_[0] = LP;
@@ -347,8 +339,6 @@ LocalMPO(MPOt<Tensor> const& H,
       LHlim_(LHlim),
       RHlim_(RHlim),
       nc_(2),
-      do_write_(false),
-      writedir_("."),
       Psi_(0)
     { 
     PH_.at(LHlim) = LH;
@@ -627,10 +617,10 @@ setRHlim(int val)
 
 template <class Tensor>
 void inline LocalMPO<Tensor>::
-initWrite()
+initWrite(Args const& args)
     {
-    std::string global_write_dir = Global::args().getString("WriteDir","./");
-    writedir_ = mkTempDir("PH",global_write_dir);
+    auto basedir = args.getString("WriteDir","./");
+    writedir_ = mkTempDir("PH",basedir);
     }
 
 } //namespace itensor

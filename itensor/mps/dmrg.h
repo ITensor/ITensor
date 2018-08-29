@@ -226,7 +226,7 @@ DMRGWorker(MPSt<Tensor>& psi,
                 }
 
             //psi.doWrite(true);
-            PH.doWrite(true);
+            PH.doWrite(true,args);
             }
 
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
