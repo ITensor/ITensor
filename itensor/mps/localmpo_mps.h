@@ -78,7 +78,7 @@ class LocalMPO_MPS
     bool
     doWrite() const { return lmpo_.doWrite(); }
     void
-    doWrite(bool val) { lmpo_.doWrite(val); }
+    doWrite(bool val, Args const& args = Args::global()) { lmpo_.doWrite(val,args); }
 
     };
 

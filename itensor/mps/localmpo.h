@@ -181,7 +181,7 @@ class LocalMPO
     doWrite() const { return do_write_; }
     void
     doWrite(bool val,
-            Args const& args) 
+            Args const& args = Args::global()) 
         { 
         if(Psi_ != 0) Error("Write to disk not yet supported for LocalMPO initialized with an MPS");
         if(!do_write_ && (val == true))

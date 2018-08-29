@@ -93,9 +93,9 @@ class LocalMPOSet
     bool
     doWrite() const { return lmpo_.front().doWrite(); }
     void
-    doWrite(bool val) 
+    doWrite(bool val, Args const& args = Args::global()) 
         { 
-        for(auto& lm : lmpo_) lm.doWrite(val);
+        for(auto& lm : lmpo_) lm.doWrite(val,args);
         }
 
     };
