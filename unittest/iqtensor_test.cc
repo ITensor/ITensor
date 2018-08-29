@@ -1237,6 +1237,20 @@ CHECK_CLOSE(T.real(J(1),I(2)),21);
 CHECK_CLOSE(T.real(i2,i1),21);
 }
 
+SECTION("Reindex")
+    {
+
+    auto T = randomTensor(QN(),dag(S1),prime(S1),dag(S2),prime(S2));
+
+    auto nT = reindex(T,S1,S3,S2,S4);
+    
+    CHECK(ord(nT) == 4);
+    CHECK(hasindex(nT,S3));
+    CHECK(hasindex(nT,prime(S3)));
+    CHECK(hasindex(nT,S4));
+    CHECK(hasindex(nT,prime(S4)));
+    }
+
 //SECTION("Non-contracting product")
 //    {
 //    SECTION("Case 1")

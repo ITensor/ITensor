@@ -80,6 +80,8 @@ class IQIndex : public Index
 
     Arrow 
     dir() const { return dir_; }
+    void
+    dir(Arrow ndir) { dir_ = ndir; }
 
     IQIndexVal 
     operator()(long n) const;

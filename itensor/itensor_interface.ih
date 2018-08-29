@@ -866,6 +866,37 @@ sumelsC(ITensorT<I> const& t)
     return t.scale().real0()*z;
     }
 
+template<typename IndexT, typename... Inds>
+ITensorT<IndexT>
+reindex(ITensorT<IndexT> const& cT, 
+        IndexT o1, IndexT n1, 
+        Inds... inds) 
+    {
+    constexpr size_t size = 2+sizeof...(inds);
+    auto ipairs = std::array<IndexT,size>{{o1,n1,static_cast<IndexT>(inds)...}};
+
+    auto T = cT;
+    auto is = T.inds();
+
+    for(auto j : range(is))
+        {
+        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
+            {
+            if(is[j].noprimeEquals(ipairs[oi]))
+                {
+                auto plev = is[j].primeLevel();
+                auto arrow_dir = is[j].dir();
+                is[j] = noprime(ipairs[ni]);
+                is[j].primeLevel(plev);
+                is[j].dir(arrow_dir);
+                break;
+                }
+            }
+        }
+    auto nT = ITensorT<IndexT>(is,std::move(T.store()),T.scale());
+    return nT;
+    }
+
 
 namespace detail {
 

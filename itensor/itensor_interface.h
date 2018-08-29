@@ -498,6 +498,12 @@ template<typename I>
 Cplx
 sumelsC(ITensorT<I> const& t);
 
+template<typename IndexT, typename... Inds>
+ITensorT<IndexT>
+reindex(ITensorT<IndexT> const& cT, 
+        IndexT o1, IndexT n1, 
+        Inds... inds);
+
 
 //
 // Given Tensors which represent operator matrices
