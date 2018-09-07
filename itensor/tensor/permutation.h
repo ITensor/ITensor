@@ -130,7 +130,7 @@ template <typename Set1,
           typename Set2>
 Permutation
 calcPerm(Set1 const& s1,
-                 Set2 const& s2)
+         Set2 const& s2)
     {
     auto P = Permutation(s1.size());
     calcPerm(s1,s2,P);
