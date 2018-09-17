@@ -188,6 +188,11 @@ exactApplyMPO(MPOt<Tensor> const& K,
     auto siteType = getIndexType(args,"SiteType",Site);
     auto linkType = getIndexType(args,"LinkType",Link);
 
+    if(noprime(findtype(K.A(1),Site)) != findtype(psi.A(1),Site))
+        {
+        Error("MPS and MPO have different site indices in exactApplyMPO");
+        }
+
     int plev = 14741;
 
     auto res = psi;
