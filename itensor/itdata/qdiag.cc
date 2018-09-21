@@ -426,7 +426,7 @@ blockDiagDense(QDiag<VD> const& D,
         auto& C = *nd;
 
         auto do_contract =
-            [&D,&Dis,&Tis,&Cis,&DL,&TL,&CL]
+            [&D,&Dis,&Tis,&DL,&TL,&CL]
             (DataRange<const VT> tblock, IntArray const& Tblockind,
              DataRange<const VD> dblock, IntArray const& Dblockind,
              DataRange<VC>       cblock, IntArray const& Cblockind)
