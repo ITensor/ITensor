@@ -36,6 +36,9 @@ allocReal(IQTensor& T, IntArray const& inds);
 void
 allocCplx(ITensor& T);
 
+void inline
+allocCplx(IQTensor & T) { Error("allocCplx not defined for IQTensor"); }
+
 } //namespace detail
 
 template<typename IndexT>
