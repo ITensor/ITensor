@@ -8,6 +8,7 @@
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/iqindex.h"
+//#include "itensor/util/print_macro.h"
 
 //
 // Template Method Implementations
@@ -518,6 +519,22 @@ template <typename Func>
 ITensorT<IndexT>& ITensorT<IndexT>::
 generate(Func&& f)
     {
+    if(not this->store())
+        {
+        using RetType = decltype(f());
+        if(std::is_same<RetType,Real>::value)
+            {
+            detail::allocReal(*this); 
+            }
+        else if(std::is_same<RetType,Cplx>::value)
+            {
+            detail::allocCplx(*this); 
+            }
+        else
+            {
+            Error("generate: generator function must return Real or Cplx scalar value");
+            }
+        }
     scaleTo(1);
     doTask(GenerateIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
