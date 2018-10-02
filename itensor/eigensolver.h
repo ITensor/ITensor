@@ -385,7 +385,7 @@ davidson(BigMatrixT const& A,
         for(int r = 0; r < iter+1; ++r)
         for(int c = r; c < iter+1; ++c)
             {
-            auto z = (dag(V[r])*V[c]).real();
+            auto z = (dag(V[r])*V[c]).cplx();
             Vo_final(r,c) = std::abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
