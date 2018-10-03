@@ -79,7 +79,7 @@ diagHImpl(ITensor H,
     if(do_truncate)
         {
         //if(DD(1) < 0) DD *= -1; //DEBUG
-        tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
+        tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff,args);
         m = DD.size();
         reduceCols(UU,m);
         }
@@ -232,7 +232,7 @@ diagHImpl(IQTensor    H,
     if(do_truncate)
         {
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
-                                       absoluteCutoff,doRelCutoff);
+                                       absoluteCutoff,doRelCutoff,args);
         m = probs.size();
         alleigqn.resize(m);
         }

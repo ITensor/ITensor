@@ -80,7 +80,7 @@ svdImpl(ITensor const& A,
     if(do_truncate)
         {
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
-                                       absoluteCutoff,doRelCutoff);
+                                       absoluteCutoff,doRelCutoff,args);
         m = probs.size();
         resize(DD,m);
         reduceCols(UU,m);
@@ -224,7 +224,7 @@ svdImpl(IQTensor A,
     if(do_truncate)
         {
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
-                                       absoluteCutoff,doRelCutoff);
+                                       absoluteCutoff,doRelCutoff,args);
         m = probs.size();
         alleigqn.resize(m);
         }

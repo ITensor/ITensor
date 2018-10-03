@@ -410,7 +410,8 @@ truncate(Vector & P,
          long minm,
          Real cutoff,
          bool absoluteCutoff = false,
-         bool doRelCutoff = false);
+         bool doRelCutoff = false,
+         Args const& args = Args::global());
 
 template<typename V>
 MatRefc<V>

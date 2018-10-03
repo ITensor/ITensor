@@ -111,7 +111,8 @@ truncate(Vector & P,
          long minm,
          Real cutoff,
          bool absoluteCutoff,
-         bool doRelCutoff)
+         bool doRelCutoff,
+         Args const& args)
     {
     long origm = P.size();
     long n = origm-1;
