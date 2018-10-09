@@ -580,17 +580,11 @@ gmresImpl(BigMatrixT const& A,
             beta = norm(r);
             resid = beta/normb;
             if(resid < tol)
-                {
-                //tol = resid;
-                //max_iter = j;
                 return;
-                }
 
         } // end while loop
 
-        //tol = resid;
-
-    } // end gmres()
+    }
 
 
 template<class BigMatrixT, class Tensor>
