@@ -1,11 +1,52 @@
 #include "test.h"
-#include "eigensolver.h"
-#include "hams/Heisenberg.h"
-#include "sites/spinhalf.h"
-#include "localmpo.h"
+#include "itensor/eigensolver.h"
+#include "sample/Heisenberg.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/localmpo.h"
 
 using namespace itensor;
 using namespace std;
+
+template <class Tensor>
+class TensorMap
+    {
+    Tensor const* A_;
+    mutable long size_;
+    public:
+
+    TensorMap(Tensor const& A)
+      : A_(nullptr),
+        size_(-1)
+        {
+        A_ = &A;
+        }
+
+    void
+    product(Tensor const& x, Tensor& b) const
+        {
+        b = *A_*x;
+        b.mapprime(1,0);
+        }
+
+    long
+    size() const
+        {
+        if(size_ == -1)
+            {
+            size_ = 1;
+            for(auto& I : A_->inds())
+                {
+                if(I.primeLevel() > 0)
+                    size_ *= I.m();
+                }
+            }
+        return size_;
+        }
+
+    };
+
+using ITensorMap = TensorMap<ITensor>;
+using IQTensorMap = TensorMap<IQTensor>;
 
 TEST_CASE("EigenSolverTest")
 {
@@ -33,7 +74,7 @@ SECTION("FourSite")
     ITensor phi1 = psi.A(2) * psi.A(3);
 
     Real En1 = davidson(PH,phi1,"MaxIter=9");
-    CHECK_CLOSE(En1,-0.95710678118,1E-4);
+    CHECK_CLOSE(En1,-0.95710678118);
 
     cout << endl << endl;
     /*
@@ -133,8 +174,53 @@ SECTION("IQFourSite")
 
     Real En1 = davidson(PH,phi1,"MaxIter=9");
     //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;
-    CHECK_CLOSE(En1,-0.95710678118,1E-4);
+    CHECK_CLOSE(En1,-0.95710678118);
 
+
+    }
+
+SECTION("GMRES (ITensor)")
+    {
+    auto a1 = Index("a1",3,Site);
+    auto a2 = Index("a2",4,Site);
+    auto a3 = Index("a3",3,Site);
+
+    auto A = randomTensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomTensor(a1,a2,a3);
+    auto b = randomTensor(a1,a2,a3);
+
+    gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
+
+    CHECK_CLOSE(norm((A*x).mapprime(1,0)-b),0.0);
+
+    randomize(A,{"Complex",true});
+    randomize(x,{"Complex",true});
+    randomize(b,{"Complex",true});
+
+    gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
+
+    CHECK_CLOSE(norm((A*x).mapprime(1,0)-b)/norm(b),0.0);
+
+    }
+
+SECTION("GMRES (IQTensor)")
+    {
+    auto i = IQIndex("i",Index("+1",5),QN(+1),
+                          Index("0",5),QN(0),
+                          Index("-1",5),QN(-1));
+    auto j = IQIndex("j",Index("+1",5),QN(+1),
+                         Index("0",5),QN(0),
+                         Index("-1",5),QN(-1),
+                         In);
+    
+    auto A = randomTensor(QN(0),prime(dag(i)),prime(dag(j)),i,j);
+
+    auto x = randomTensor(QN(0),dag(i),dag(j));
+    auto b = randomTensor(QN(0),dag(i),dag(j));
+
+    gmres(IQTensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
+
+    CHECK_CLOSE(norm((A*x).mapprime(1,0)-b)/norm(b),0.0);
 
     }
 

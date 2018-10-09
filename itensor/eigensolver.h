@@ -409,26 +409,27 @@ davidson(BigMatrixT const& A,
 namespace gmres_details
     {
 
-    template<class Matrix, class Tensor, class RealT>
+    template<class Matrix, class Tensor, class T>
     void
-    update(Tensor &x, int k, Matrix &h, std::vector<RealT> s, std::vector<Tensor>& v)
+    update(Tensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<Tensor> const& v)
         {
+        std::vector<T> y(s);
 
         // Backsolve:
         for (int i = k; i >= 0; i--)
             {
-            s[i] /= h(i,i);
+            y[i] /= h(i,i);
             for (int j = i - 1; j >= 0; j--)
-                s[j] -= h(j,i) * s[i];
+                y[j] -= h(j,i) * y[i];
             }
 
         for (int j = 0; j <= k; j++)
-            x += v[j] * s[j];
+            x += v[j] * y[j];
         }
 
-    template<class RealT>
+    template<class T>
     void
-    generatePlaneRotation(RealT &dx, RealT &dy, RealT &cs, RealT &sn)
+    generatePlaneRotation(T const& dx, T const& dy, T& cs, T& sn)
         {
         if(dy == 0.0)
             {
@@ -437,23 +438,23 @@ namespace gmres_details
             }
         else if(std::abs(dy) > std::abs(dx))
             {
-            RealT temp = dx / dy;
+            T temp = dx / dy;
             sn = 1.0 / std::sqrt( 1.0 + temp*temp );
             cs = temp * sn;
             }
         else
             {
-            RealT temp = dy / dx;
+            T temp = dy / dx;
             cs = 1.0 / std::sqrt( 1.0 + temp*temp );
             sn = temp * cs;
             }
         }
 
-    template<class RealT>
+    template<class T>
     void
-    applyPlaneRotation(RealT &dx, RealT &dy, RealT &cs, RealT &sn)
+    applyPlaneRotation(T& dx, T& dy, T const& cs, T const& sn)
         {
-        RealT temp =  cs * dx + sn * dy;
+        T temp =  std::conj(cs) * dx + std::conj(sn) * dy;
         dy = -sn * dx + cs * dy;
         dx = temp;
         }
@@ -482,10 +483,11 @@ gmresImpl(BigMatrixT const& A,
           Tensor& Ax,
           Args const& args)
     {
-    auto m = A.size();
-    auto max_iter = args.getInt("MaxIter",10);
+    auto n = A.size();
+    auto max_iter = args.getInt("MaxIter",n);
+    auto m = args.getInt("RestartIter",max_iter);
     auto tol = args.getReal("ErrGoal",1E-14);
-    auto debug_level = args.getInt("DebugLevel",-1);
+    auto debug_level_ = args.getInt("DebugLevel",-1);
 
     auto H = Mat<T>(m+1,m+1);
 
@@ -517,7 +519,9 @@ gmresImpl(BigMatrixT const& A,
 
     while(j <= max_iter)
         {
+
         v[0] = r/beta;
+        v[0].scaleTo(1.0);
 
         std::fill(s.begin(), s.end(), 0.0);
         s[0] = beta; 
@@ -526,13 +530,32 @@ gmresImpl(BigMatrixT const& A,
             {
             Tensor w;
             A.product(v[i],w);
+
+            // Begin Arnoldi iteration
+            // TODO: turn into a function?
             for(k = 0; k<=i; k++)
                 {
                 gmres_details::dot(w, v[k], H(k,i));
                 w -= H(k,i)*v[k];
                 }
-            H(i+1,i) = norm(w);
-            v[i+1] = w/H(i+1,i);
+            auto normw = norm(w);
+
+            if(debug_level_ > 0)
+                println("norm(w) = ", normw);
+
+            H(i+1,i) = normw;
+            if(normw != 0)
+                {
+                v[i+1] = w/H(i+1,i);
+                v[i+1].scaleTo(1.0);
+                }
+            else
+                {
+                // Maybe this should be a warning?
+                // Also, maybe check if it is very close to zero?
+                // GMRES generally is converged at this point anyway
+                error("Norm of new Krylov vector is zero. Try raising 'ErrGoal'.");
+                }
 
             for(k = 0; k<i; k++)
                 gmres_details::applyPlaneRotation(H(k,i), H(k+1,i), cs[k], sn[k]);
@@ -542,11 +565,10 @@ gmresImpl(BigMatrixT const& A,
             gmres_details::applyPlaneRotation(s[i], s[i+1], cs[i], sn[i]);
 
             resid = std::abs(s[i+1])/normb;
+
             if(resid < tol)
                 {
                 gmres_details::update(x, i, H, s, v);
-                tol = resid;
-                max_iter = j;
                 return;
                 }
 
@@ -559,14 +581,14 @@ gmresImpl(BigMatrixT const& A,
             resid = beta/normb;
             if(resid < tol)
                 {
-                tol = resid;
-                max_iter = j;
+                //tol = resid;
+                //max_iter = j;
                 return;
                 }
 
         } // end while loop
 
-        tol = resid;
+        //tol = resid;
 
     } // end gmres()
 
@@ -578,15 +600,27 @@ gmres(BigMatrixT const& A,
       Tensor& x,
       Args const& args)
     {
+    auto debug_level_ = args.getInt("DebugLevel",-1);
+
     // Precompute Ax to figure out whether A or x is
     // complex, maybe there is a cleaner code design
     // to avoid this?
+    // Otherwise we would need to require that BigMatrixT
+    // has a function isComplex()
     Tensor Ax;
     A.product(x, Ax); 
     if(isComplex(b) || isComplex(Ax))
+        {
+        if(debug_level_ > 0)
+            println("Calling complex version of gmresImpl()");
         gmresImpl<Cplx>(A,b,x,Ax,args);
+        }
     else
+        {
+        if(debug_level_ > 0)
+            println("Calling real version of gmresImpl()");
         gmresImpl<Real>(A,b,x,Ax,args);
+        }
     }
 
 } //namespace itensor
