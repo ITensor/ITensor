@@ -44,7 +44,7 @@ class ITensorT
     private:
     indexset_type is_;
     mutable storage_ptr store_;
-    scale_type scale_;
+    IF_USESCALE(scale_type scale_;)
     public:
 
     //
@@ -317,14 +317,6 @@ class ITensorT
     explicit
     ITensorT(indexset_type const& is);
 
-    //Scale factor, used internally for efficient scalar ops.
-    //Mostly for developer use; not necessary to explicitly involve
-    //scale factors in user-level ITensor operations.
-    scale_type const&
-    scale() const { return scale_; }
-
-    scale_type&
-    scale() { return scale_; }
 
     storage_ptr&
     store() { return store_; }
@@ -332,13 +324,24 @@ class ITensorT
     const_storage_ptr
     store() const { return const_storage_ptr(store_); }
 
-    void 
-    scaleTo(scale_type const& newscale);
-    void 
-    scaleTo(Real newscale);
 
     void
     swap(ITensorT & other);
+    
+    
+#ifdef USESCALE
+    scale_type const&
+    scale() const { return scale_; }
+
+    scale_type&
+    scale() { return scale_; }
+    
+    void 
+    scaleTo(scale_type const& newscale);
+    
+    void 
+    scaleTo(Real newscale);
+#endif
 
     }; // class ITensorT
 
