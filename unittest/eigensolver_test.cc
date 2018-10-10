@@ -179,7 +179,7 @@ SECTION("IQFourSite")
 
     }
 
-SECTION("GMRES (ITensor)")
+SECTION("GMRES (ITensor, Real)")
     {
     auto a1 = Index("a1",3,Site);
     auto a2 = Index("a2",4,Site);
@@ -189,13 +189,23 @@ SECTION("GMRES (ITensor)")
     auto x = randomTensor(a1,a2,a3);
     auto b = randomTensor(a1,a2,a3);
 
+    // ITensorMap is defined above, it simply wraps an ITensor that is of the
+    // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
     gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).mapprime(1,0)-b),0.0);
+    CHECK_CLOSE(norm((A*x).mapprime(1,0)-b)/norm(b),0.0);
 
-    randomize(A,{"Complex",true});
-    randomize(x,{"Complex",true});
-    randomize(b,{"Complex",true});
+    }
+
+SECTION("GMRES (ITensor, Complex)")
+    {
+    auto a1 = Index("a1",3,Site);
+    auto a2 = Index("a2",4,Site);
+    auto a3 = Index("a3",3,Site);
+
+    auto A = randomTensorC(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomTensorC(a1,a2,a3);
+    auto b = randomTensorC(a1,a2,a3);
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
 

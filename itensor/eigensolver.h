@@ -427,7 +427,7 @@ namespace gmres_details
             x += v[j] * y[j];
         }
 
-    template<class T>
+    template<typename T>
     void
     generatePlaneRotation(T const& dx, T const& dy, T& cs, T& sn)
         {
@@ -438,35 +438,42 @@ namespace gmres_details
             }
         else if(std::abs(dy) > std::abs(dx))
             {
-            T temp = dx / dy;
+            auto temp = dx / dy;
             sn = 1.0 / std::sqrt( 1.0 + temp*temp );
             cs = temp * sn;
             }
         else
             {
-            T temp = dy / dx;
+            auto temp = dy / dx;
             cs = 1.0 / std::sqrt( 1.0 + temp*temp );
             sn = temp * cs;
             }
         }
 
-    template<class T>
     void
-    applyPlaneRotation(T& dx, T& dy, T const& cs, T const& sn)
+    applyPlaneRotation(Real& dx, Real& dy, Real const& cs, Real const& sn)
         {
-        T temp =  std::conj(cs) * dx + std::conj(sn) * dy;
+        auto temp =  cs * dx + sn * dy;
         dy = -sn * dx + cs * dy;
         dx = temp;
         }
 
-    template<class Tensor>
+    void
+    applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
+        {
+        auto temp =  std::conj(cs) * dx + std::conj(sn) * dy;
+        dy = -sn * dx + cs * dy;
+        dx = temp;
+        }
+
+    template<typename Tensor>
     void
     dot(Tensor const& A, Tensor const& B, Real& res)
         {
         res = (dag(A)*B).real();
         }
 
-    template<class Tensor>
+    template<typename Tensor>
     void
     dot(Tensor const& A, Tensor const& B, Cplx& res)
         {
@@ -475,7 +482,7 @@ namespace gmres_details
 
     }
 
-template<typename T, class BigMatrixT, class Tensor>
+template<typename T, typename BigMatrixT, typename Tensor>
 void
 gmresImpl(BigMatrixT const& A,
           Tensor const& b,
@@ -587,7 +594,7 @@ gmresImpl(BigMatrixT const& A,
     }
 
 
-template<class BigMatrixT, class Tensor>
+template<typename BigMatrixT, typename Tensor>
 void
 gmres(BigMatrixT const& A,
       Tensor const& b,
