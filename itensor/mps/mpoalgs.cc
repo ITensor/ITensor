@@ -102,12 +102,8 @@ applyMPO(MPOt<Tensor> const& K,
         res = exactApplyMPO(K,x,args);
     else if(method == "Fit")
         res = fitApplyMPO(x,K,args);
-    else if(method == "Exact")
-        Error("applyMPO method 'Exact' is deprecated, use 'DensityMatrix' instead");
-    else if(method == "ZipUp")
-        Error("applyMPO method 'ZipUp' currently unsupported, please use 'DensityMatrix' or 'Fit'");
     else
-        Error("applyMPO currently supports the following 'Methods': 'DensityMatrix', 'Fit'");
+        Error("applyMPO currently supports the following methods: 'DensityMatrix' (previously called with exactApplyMPO), 'Fit' (previously called with fitApplyMPO)");
 
     return res;
     }
