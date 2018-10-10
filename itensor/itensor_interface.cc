@@ -12,7 +12,7 @@ fill(Cplx z)
         if(is_) detail::allocReal(*this);
         else Error("Can't fill default-constructed tensor");
         }
-    scale_ = scale_type(1.);
+    IF_USESCALE(scale_ = scale_type(1.);)
     if(z.imag() == 0)
         doTask(Fill<Real>{z.real()},store_);
     else
@@ -89,8 +89,13 @@ norm(ITensorT<I> const& T)
 #ifdef DEBUG
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
 #endif
+
+#ifndef USESCALE
+    return doTask(NormNoScale{},T.store());
+#else
     auto fac = std::fabs(T.scale().real0());
     return fac * doTask(NormNoScale{},T.store());
+#endif
     }
 template Real norm(ITensorT<Index> const& T);
 template Real norm(ITensorT<IQIndex> const& T);

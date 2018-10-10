@@ -44,7 +44,7 @@ class ITensorT
     private:
     indexset_type is_;
     mutable storage_ptr store_;
-    scale_type scale_;
+    IF_USESCALE(scale_type scale_;)
     public:
 
     //
@@ -239,6 +239,7 @@ class ITensorT
     ITensorT& 
     operator-=(ITensorT const& other);
 
+#ifdef USESCALE
     //Multiplication by real scalar
     ITensorT&
     operator*=(Real fac) { scale_ *= fac; return *this; }
@@ -246,6 +247,15 @@ class ITensorT
     //Division by real scalar
     ITensorT&
     operator/=(Real fac) { scale_ /= fac; return *this; }
+#else
+    //Multiplication by real scalar
+    ITensorT&
+    operator*=(Real fac);
+
+    //Division by real scalar
+    ITensorT&
+    operator/=(Real fac);
+#endif
 
     //Multiplication by complex scalar
     ITensorT&
@@ -257,7 +267,7 @@ class ITensorT
 
     //Negation
     ITensorT
-    operator-();
+    operator-() const;
 
     //Non-contracting product
     //All matching Index pairs automatically merged
@@ -317,14 +327,6 @@ class ITensorT
     explicit
     ITensorT(indexset_type const& is);
 
-    //Scale factor, used internally for efficient scalar ops.
-    //Mostly for developer use; not necessary to explicitly involve
-    //scale factors in user-level ITensor operations.
-    scale_type const&
-    scale() const { return scale_; }
-
-    scale_type&
-    scale() { return scale_; }
 
     storage_ptr&
     store() { return store_; }
@@ -332,13 +334,40 @@ class ITensorT
     const_storage_ptr
     store() const { return const_storage_ptr(store_); }
 
-    void 
-    scaleTo(scale_type const& newscale);
-    void 
-    scaleTo(Real newscale);
 
     void
     swap(ITensorT & other);
+    
+    
+#ifdef USESCALE
+
+    scale_type const&
+    scale() const { return scale_; }
+
+    scale_type&
+    scale() { return scale_; }
+    
+    void 
+    scaleTo(scale_type const& newscale);
+    
+    void 
+    scaleTo(Real newscale);
+
+#else //not using scale, default case:
+
+    scale_type
+    scale() const { return scale_type(1.); }
+
+    //scale_type&
+    //scale() { return scale_; }
+    
+    void 
+    scaleTo(scale_type const& newscale) { }
+    
+    void 
+    scaleTo(Real newscale) { }
+
+#endif
 
     }; // class ITensorT
 

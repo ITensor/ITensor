@@ -105,7 +105,6 @@ svdImpl(ITensor const& A,
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
-
     D = ITensor({uL,vL},
                 Diag<Real>{DD.begin(),DD.end()},
                 A.scale()*signfix);
@@ -117,6 +116,7 @@ svdImpl(ITensor const& A,
     //density matrix eigs
     for(auto& el : DD) el = sqr(el);
 
+#ifdef USESCALE
     if(A.scale().isFiniteReal()) 
         {
         DD *= sqr(A.scale().real0());
@@ -125,6 +125,7 @@ svdImpl(ITensor const& A,
         {
         println("Warning: scale not finite real after svd");
         }
+#endif
 
     return Spectrum(move(DD),{"Truncerr",truncerr});
     }
@@ -354,11 +355,10 @@ svdImpl(IQTensor A,
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1. : +1.;
-
     U = IQTensor(Uis,move(Ustore));
     D = IQTensor(Dis,move(Dstore),A.scale()*signfix);
     V = IQTensor(Vis,move(Vstore),LogNum{signfix});
-
+    
     //Originally eigs were found without including scale
     //so put the scale back in
     if(A.scale().isFiniteReal())

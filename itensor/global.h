@@ -79,6 +79,12 @@ const int MAX_M = 5000;
 #define GET(container,j) (container[j])
 #endif	
 
+#ifdef USESCALE
+#define IF_USESCALE(X) X
+#else
+#define IF_USESCALE(X) 
+#endif
+
 enum Printdat { ShowData, HideData };
 
 

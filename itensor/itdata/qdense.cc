@@ -384,7 +384,7 @@ add(PlusEQ<IQIndex> const& P,
         {
         auto dA = realData(A);
         auto dB = realData(B);
-        daxpy_wrapper(dA.size(),P.fac(),dB.data(),1,dA.data(),1);
+        daxpy_wrapper(dA.size(),P.alpha(),dB.data(),1,dA.data(),1);
         }
     else
         {
@@ -404,7 +404,7 @@ add(PlusEQ<IQIndex> const& P,
             auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
             auto bblock = getBlock(B,P.is2(),Bblock);
             auto bref = makeRef(bblock,&Brange);
-            transform(permute(bref,P.perm()),aref,Adder{P.fac()});
+            transform(permute(bref,P.perm()),aref,Adder{P.alpha()});
             }
         }
     }
@@ -495,9 +495,11 @@ doTask(Contract<IQIndex>& Con,
                          do_contract);
     STOP_TIMER(20)
 
+#ifdef USESCALE
     START_TIMER(21)
     Con.scalefac = computeScalefac(C);
     STOP_TIMER(21)
+#endif
     }
 template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Real> const&,ManageStore&);
 template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
@@ -593,7 +595,9 @@ doTask(NCProd<IQIndex>& P,
                          C,Cis,
                          do_ncprod);
 
+#ifdef USESCALE
     P.scalefac = computeScalefac(C);
+#endif
     }
 template void doTask(NCProd<IQIndex>&,QDense<Real> const&,QDense<Real> const&,ManageStore&);
 template void doTask(NCProd<IQIndex>&,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);

@@ -214,12 +214,14 @@ showEigs(Vector const& P,
     printfln("minm = %d, maxm = %d, cutoff = %.2E, truncate = %s",minm,maxm,cutoff,do_truncate);
     printfln("Kept m=%d states, trunc. err. = %.3E", P.size(),truncerr);
     printfln("doRelCutoff = %s, absoluteCutoff = %s",doRelCutoff,absoluteCutoff);
-    printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());
+    IF_USESCALE(printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());)
 
     auto stop = std::min(size_t{10},P.size());
     auto Ps = Vector(subVector(P,0,stop));
 
-    //Real orderMag = log(std::fabs(P(0))) + scale.logNum();
+#ifndef USESCALE
+    print("Eigenvalues:");
+#else
     if(scale.logNum() < 10 && scale.isFiniteReal())
         {
         Ps *= sqr(scale.real0());
@@ -229,6 +231,7 @@ showEigs(Vector const& P,
         {
         print("Eigenvalues [not including scale = ",scale.logNum(),"]:");
         }
+#endif
 
     for(auto n : range(Ps))
         {

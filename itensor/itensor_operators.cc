@@ -119,8 +119,10 @@ operator*=(ITensorT const& R)
                     L.store(),
                     R.store());
 
+#ifdef USESCALE
     L.scale_ *= R.scale();
     if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;
+#endif
 
 #ifdef DEBUG
     //Check for duplicate indices
@@ -179,23 +181,30 @@ order(IndexSetT<IndexT> const& iset)
 template ITensorT<Index>& ITensorT<Index>::order(IndexSetT<Index> const& iset);
 template ITensorT<IQIndex>& ITensorT<IQIndex>::order(IndexSetT<IQIndex> const& iset);
 
+#ifndef USESCALE
+
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
-operator-=(const ITensorT& R)
+operator*=(Real r)
     {
-    auto& L = *this;
-    if(&L == &R) 
-        { 
-        L.scale_ = LogNum(0); 
-        return L;
-        }
-    L.scale().negate();
-    L += R;
-    L.scale().negate();
-    return L;
+    doTask(Mult<Real>{r},store_);
+    return *this;
     }
-template ITensorT<Index>& ITensorT<Index>::operator-=(const ITensorT& R);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator-=(const ITensorT& R);
+template ITensorT<Index>& ITensorT<Index>::operator*=(Real r);
+template ITensorT<IQIndex>& ITensorT<IQIndex>::operator*=(Real r);
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator/=(Real r)
+    {
+    auto fac = 1./r;
+    doTask(Mult<Real>{fac},store_);
+    return *this;
+    }
+template ITensorT<Index>& ITensorT<Index>::operator/=(Real r);
+template ITensorT<IQIndex>& ITensorT<IQIndex>::operator/=(Real r);
+
+#endif
 
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
@@ -223,8 +232,10 @@ operator/=(ITensorT const& R)
                     L.store(),
                     R.store());
 
+#ifdef USESCALE
     L.scale_ *= R.scale();
     if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;
+#endif
 
 #ifdef DEBUG
     //Check for duplicate indices
@@ -239,17 +250,14 @@ template ITensorT<Index>& ITensorT<Index>::operator/=(ITensorT<Index> const& R);
 template ITensorT<IQIndex>& ITensorT<IQIndex>::operator/=(ITensorT<IQIndex> const& R);
 
 template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
-operator+=(ITensorT const& R)
+void
+daxpy(ITensorT<IndexT> & L,
+      ITensorT<IndexT> const& R,
+      Real alpha)
     {
-    auto& L = *this;
-    if(!L) { return (L=R); } //special case when this (L) is not initialized
-    if(!R) Error("Right-hand-side of ITensor += is default constructed");
-    if(&L == &R) return operator*=(2.);
+    if(L.r() != R.r()) Error("ITensorT::operator+=: different number of indices");
 
-    if(this->r() != R.r()) Error("ITensorT::operator+=: different number of indices");
-
-    using permutation = typename PlusEQ<index_type>::permutation;
+    using permutation = typename PlusEQ<IndexT>::permutation;
 
     auto P = permutation(L.inds().size());
 
@@ -269,30 +277,63 @@ operator+=(ITensorT const& R)
         detail::checkArrows(L.inds(),R.inds(),shouldMatch);
         }
 
-    //If L store unallocated, just assign from R
-    if(!L.store() || L.scale().isZero()) return L = R;
+    if(!L.store()) Error("L not initialized in daxpy");
 
 #ifdef DEBUG
     detail::checkSameDiv(L,R);
 #endif
 
-    Real scalefac = 1.0;
+#ifdef USESCALE
     if(L.scale().magnitudeLessThan(R.scale())) 
         {
         L.scaleTo(R.scale()); 
         }
     else
         {
-        scalefac = (R.scale()/L.scale()).real();
+        alpha *= (R.scale()/L.scale()).real();
         }
+#endif
 
-    auto PEq = PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac};
+    auto PEq = PlusEQ<IndexT>{P,L.inds(),R.inds(),alpha};
     doTask(PEq,L.store(),R.store());
+    } 
+template void daxpy(ITensorT<Index> & L, ITensorT<Index> const& R, Real alpha);
+template void daxpy(ITensorT<IQIndex> & L, ITensorT<IQIndex> const& R, Real alpha);
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator+=(ITensorT const& R)
+    {
+    auto& L = *this;
+    if(!L || !L.store()) { return (L=R); } //special case when this (L) is not initialized
+    if(!R) Error("Right-hand-side of ITensor += is default constructed");
+    if(&L == &R) return operator*=(2.);
+
+    daxpy(L,R,1.);
     
     return L;
     } 
 template ITensorT<Index>& ITensorT<Index>::operator+=(ITensorT<Index> const& R);
 template ITensorT<IQIndex>& ITensorT<IQIndex>::operator+=(ITensorT<IQIndex> const& R);
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator-=(ITensorT const& R)
+    {
+    auto& L = *this;
+    if(!L || !L.store()) { return (L = -R); } //special case when this (L) is not initialized
+    if(!R) Error("Right-hand-side of ITensor -= is default constructed");
+    if(&L == &R) 
+        { 
+        L *= 0.;
+        return L;
+        }
+    daxpy(L,R,-1.);
+    return L;
+    }
+template ITensorT<Index>& ITensorT<Index>::operator-=(const ITensorT& R);
+template ITensorT<IQIndex>& ITensorT<IQIndex>::operator-=(const ITensorT& R);
+
 
 
 } //namespace itensor
