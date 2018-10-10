@@ -68,7 +68,7 @@ struct PrintIT
     std::ostream& s;
     LogNum const& x;
     IndexSetT<IndexT> const& is;
-    Real scalefac;
+    Real scalefac = 1.;
     bool print_data;
 
     PrintIT(std::ostream& s_,
@@ -86,6 +86,9 @@ struct PrintIT
               std::string type_name,
               Real nrm_no_scale = -1)
         {
+#ifndef USESCALE
+        s << format("{norm=%.2f (%s)}",std::fabs(scalefac)*nrm_no_scale,type_name);
+#else
         s << "{log(scale)=" << format("%.2f",x.logNum());
         if(nrm_no_scale > 0)
             {
@@ -94,6 +97,7 @@ struct PrintIT
             s << format("%.2f",std::fabs(scalefac)*nrm_no_scale);
             }
         s << " (" << type_name << ")}\n";
+#endif
         }
     };
 
@@ -238,8 +242,8 @@ template <typename F>
 struct VisitIT
     {
     F& f;
-    Real scale_fac;
-    VisitIT(F&& f_, const LogNum& scale)
+    Real scale_fac = 1.;
+    VisitIT(F&& f_, LogNum const& scale)
         : f(f_), scale_fac(scale.real0())
         { }
     };
@@ -278,22 +282,22 @@ struct PlusEQ
     const Permutation *perm_ = nullptr;
     const iset_type *is1_ = nullptr,
                     *is2_ = nullptr;
-    Real fac_ = NAN;
+    Real alpha_ = NAN;
     public:
 
 
     PlusEQ(Permutation const& P,
            iset_type const& is1,
            iset_type const& is2,
-           Real fac) :
+           Real alpha) :
         perm_(&P),
         is1_(&is1),
         is2_(&is2),
-        fac_(fac)
+        alpha_(alpha)
         { }
 
     Real
-    fac() const { return fac_; }
+    alpha() const { return alpha_; }
 
     Permutation const&
     perm() const { return *perm_; }
@@ -345,6 +349,7 @@ template<typename I>
 const char*
 typeNameOf(Order<I> const&) { return "Order"; }
 
+#ifdef USESCALE
 //
 // Helper for Contract and NCProd
 //
@@ -366,6 +371,7 @@ computeScalefac(Storage & dat)
     doTask(Mult<Real>{1./scalefac},dat);
     return scalefac;
     }
+#endif
 
 template<typename IndexT>
 struct Contract

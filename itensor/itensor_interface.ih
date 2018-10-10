@@ -46,48 +46,43 @@ template <typename... index_types>
 ITensorT<IndexT>::
 ITensorT(IndexT  const& i1,
          index_types const&... i2etc)
-  : is_(i1,i2etc...),
-    scale_(1.)
-    { }
+  : is_(i1,i2etc...)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
 
 template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(std::vector<index_type> const& inds)
-  : is_(inds),
-    scale_(1.)
-    { }
+  : is_(inds)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
 
 template<typename IndexT>
 template<size_t N> 
 ITensorT<IndexT>::
 ITensorT(std::array<index_type,N> const& inds)
-  : is_(inds),
-    scale_(1.)
-    { }
+  : is_(inds)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
 
 template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(std::initializer_list<index_type> inds)
-  : is_(inds),
-    scale_(1.)
-    { }
-
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
-
-//template<typename IndexT>
-//template <typename... IVals>
-//ITensorT<IndexT>::
-//ITensorT(indexval_type const& iv1, 
-//         IVals const&... rest) { Error("ITensorT(iv1,...) not implemented"); }
+  : is_(inds)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
 
 template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(indexset_type const& is)
-  : is_(is),
-    scale_(1.)
-    { }
+  : is_(is)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -96,9 +91,10 @@ ITensorT(indexset_type iset,
          LogNum const& scale)
     :
     is_(std::move(iset)),
-    store_(std::move(pdat)),
-    scale_(scale)
-    { }
+    store_(std::move(pdat))
+    { 
+    IF_USESCALE(scale_ = scale;)
+    }
 
 template<typename IndexT>
 template <class DataType>
@@ -107,12 +103,16 @@ ITensorT(indexset_type iset,
          DataType&& dat,
          LogNum const& scale) :
     is_(std::move(iset)),
-    store_(newITData<stdx::decay_t<DataType>>(std::move(dat))),
-    scale_(scale)
+    store_(newITData<stdx::decay_t<DataType>>(std::move(dat)))
     {
+    IF_USESCALE(scale_ = scale;)
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
                   "Error: cannot pass lvalues to ITensorT(...,DataType&& dat,...) constructor");
     }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
 
 template<typename IndexT>
 ITensorT<IndexT>::
@@ -145,8 +145,11 @@ cplx(IV const& iv1, IVs&&... ivs) const
     detail::permute_map(is_,vals,inds,
                 [](indexval_type const& iv) { return iv.val-1; });
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+#ifndef USESCALE
+    return z;
+#else
     try {
-        return z*scale_.real0(); 
+        return z*scale().real0(); 
         }
     catch(TooBigForReal const& e)
         {
@@ -159,6 +162,7 @@ cplx(IV const& iv1, IVs&&... ivs) const
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
+#endif
     }
 
 template<typename IndexT>
@@ -186,6 +190,9 @@ cplx(Int iv1, Ints... ivs) const
     for(auto i : range(size))
         inds[i] = ints[i]-1;
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+#ifndef USESCALE
+    return z;
+#else
     try {
         return z*scale_.real0(); 
         }
@@ -200,6 +207,7 @@ cplx(Int iv1, Ints... ivs) const
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
+#endif
     }
 
 template<typename IndexT>
@@ -213,6 +221,9 @@ cplx() const
     constexpr size_t size = 0;
     auto inds = IntArray(size);
     auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+#ifndef USESCALE
+    return z;
+#else
     try {
         return z*scale_.real0(); 
         }
@@ -227,6 +238,7 @@ cplx() const
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
+#endif
     }
 
 template<typename IndexT>
@@ -558,7 +570,7 @@ template <typename Func>
 const ITensorT<IndexT>& ITensorT<IndexT>::
 visit(Func&& f) const
     {
-    doTask(VisitIT<decltype(f)>{std::forward<Func>(f),LogNum{scale_.real0()}},store_);
+    doTask(VisitIT<decltype(f)>{std::forward<Func>(f),LogNum{scale().real0()}},store_);
     return *this;
     }
 
@@ -594,6 +606,7 @@ takeImag()
     return *this;
     }
 
+#ifdef USESCALE
 template<typename IndexT> 
 void ITensorT<IndexT>::
 scaleTo(scale_type const& newscale)
@@ -608,6 +621,7 @@ scaleTo(scale_type const& newscale)
 template<typename IndexT> 
 void ITensorT<IndexT>::
 scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
+#endif
 
 template<typename IndexT>
 void ITensorT<IndexT>::
@@ -615,7 +629,7 @@ swap(ITensorT & other)
     {
     is_.swap(other.is_);
     store_.swap(other.store_);
-    scale_.swap(other.scale_);
+    IF_USESCALE(scale_.swap(other.scale_);)
     }
 
 template <typename IVal, typename... IVals>
@@ -635,14 +649,29 @@ setElt(IVal const& iv1,
     return D;
     }
 
+#ifndef USESCALE
+
 template <typename IndexT>
 ITensorT<IndexT> ITensorT<IndexT>::
-operator-() 
+operator-() const
+    { 
+    auto res = *this;
+    doTask(Mult<Real>(-1.),res.store());
+    return res;
+    }
+
+#else
+
+template <typename IndexT>
+ITensorT<IndexT> ITensorT<IndexT>::
+operator-() const
     { 
     auto res = *this;
     res.scale_.negate();
     return res;
     }
+
+#endif
 
 template<typename I>
 ITensorT<I> 
@@ -883,7 +912,11 @@ Cplx
 sumelsC(ITensorT<I> const& t)
     {
     auto z = doTask(SumEls<I>{t.inds()},t.store());
+#ifndef USESCALE
+    return z;
+#else
     return t.scale().real0()*z;
+#endif
     }
 
 template<typename IndexT, typename... Inds>
@@ -1110,7 +1143,8 @@ read(std::istream& s)
     {
     itensor::read(s,is_);
     LogNum scale;
-    itensor::read(s,scale_);
+    itensor::read(s,scale);
+    IF_USESCALE(scale_ = scale;)
     auto type = StorageType::Null;
     itensor::read(s,type);
     if(type==StorageType::Null) { /*intentionally left blank*/  }
@@ -1130,7 +1164,6 @@ read(std::istream& s)
         {
         Error("Unrecognized type when reading tensor from istream");
         }
-    //T = ITensorT<I>(std::move(is),std::move(p),scale);
     }
 
 struct Write

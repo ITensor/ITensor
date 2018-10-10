@@ -63,6 +63,10 @@ main()
     //
     auto energy = dmrg(psi,H,sweeps,"Quiet");
 
+    Print(psi.A(10));
+    Print(psi.A(20));
+    Print(H.A(3));
+
     //
     // Print the final energy reported by DMRG
     //

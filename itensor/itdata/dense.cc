@@ -296,9 +296,11 @@ doTask(Contract<Index> & C,
     contract(tL,Lind,tR,Rind,tN,Nind);
     STOP_TIMER(2)
 
+#ifdef USESCALE
     START_TIMER(3)
     if(rsize > 1) C.scalefac = computeScalefac(*nd);
     STOP_TIMER(3)
+#endif
     }
 template void doTask(Contract<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
 template void doTask(Contract<Index>&,DenseCplx const&,DenseReal const&,ManageStore&);
@@ -326,7 +328,9 @@ doTask(NCProd<Index>& P,
 
     ncprod(tL,Lind,tR,Rind,tN,Nind);
 
+#ifdef USESCALE
     if(rsize > 1) P.scalefac = computeScalefac(*nd);
+#endif
     }
 template void doTask(NCProd<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
 template void doTask(NCProd<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
@@ -355,13 +359,13 @@ add(PlusEQ<Index> const& P,
         {
         auto d1 = realData(D1);
         auto d2 = realData(D2);
-        daxpy_wrapper(d1.size(),P.fac(),d2.data(),1,d1.data(),1);
+        daxpy_wrapper(d1.size(),P.alpha(),d2.data(),1,d1.data(),1);
         }
     else
         {
         auto ref1 = makeTenRef(D1.data(),D1.size(),&P.is1());
         auto ref2 = makeTenRef(D2.data(),D2.size(),&P.is2());
-        transform(permute(ref2,P.perm()),ref1,Adder{P.fac()});
+        transform(permute(ref2,P.perm()),ref1,Adder{P.alpha()});
         }
     }
 

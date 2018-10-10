@@ -277,7 +277,7 @@ doTask(PlusEQ<I> const& P,
        Scalar<T2> const& d2,
        ManageStore & m)
     {
-    auto s = d1.val + P.fac()*d2.val;
+    auto s = d1.val + P.alpha()*d2.val;
     if(isReal(d1) && isCplx(d2))
         {
         m.makeNewData<ScalarCplx>(s);

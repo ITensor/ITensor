@@ -239,6 +239,7 @@ class ITensorT
     ITensorT& 
     operator-=(ITensorT const& other);
 
+#ifdef USESCALE
     //Multiplication by real scalar
     ITensorT&
     operator*=(Real fac) { scale_ *= fac; return *this; }
@@ -246,6 +247,15 @@ class ITensorT
     //Division by real scalar
     ITensorT&
     operator/=(Real fac) { scale_ /= fac; return *this; }
+#else
+    //Multiplication by real scalar
+    ITensorT&
+    operator*=(Real fac);
+
+    //Division by real scalar
+    ITensorT&
+    operator/=(Real fac);
+#endif
 
     //Multiplication by complex scalar
     ITensorT&
@@ -257,7 +267,7 @@ class ITensorT
 
     //Negation
     ITensorT
-    operator-();
+    operator-() const;
 
     //Non-contracting product
     //All matching Index pairs automatically merged
@@ -330,6 +340,7 @@ class ITensorT
     
     
 #ifdef USESCALE
+
     scale_type const&
     scale() const { return scale_; }
 
@@ -341,6 +352,21 @@ class ITensorT
     
     void 
     scaleTo(Real newscale);
+
+#else //not using scale, default case:
+
+    scale_type
+    scale() const { return scale_type(1.); }
+
+    //scale_type&
+    //scale() { return scale_; }
+    
+    void 
+    scaleTo(scale_type const& newscale) { }
+    
+    void 
+    scaleTo(Real newscale) { }
+
 #endif
 
     }; // class ITensorT

@@ -189,13 +189,13 @@ add(PlusEQ<Index> const& P,
         {
         auto d1 = realData(D1);
         auto d2 = realData(D2);
-        daxpy_wrapper(d1.size(),P.fac(),d2.data(),1,d1.data(),1);
+        daxpy_wrapper(d1.size(),P.alpha(),d2.data(),1,d1.data(),1);
         }
     else
         {
         auto ref1 = makeVecRef(D1.data(),D1.size());
         auto ref2 = makeVecRef(D2.data(),D2.size());
-        transform(ref2,ref1,Adder{P.fac()});
+        transform(ref2,ref1,Adder{P.alpha()});
         }
     }
 
