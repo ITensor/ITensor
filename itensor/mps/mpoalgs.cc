@@ -89,6 +89,34 @@ void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, Args);
 template
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Args);
 
+template<class Tensor>
+MPSt<Tensor>
+applyMPO(MPOt<Tensor> const& K,
+         MPSt<Tensor> const& x,
+         Args const& args)
+    {
+    auto method = args.getString("Method","DensityMatrix");
+
+    MPSt<Tensor> res;
+    if(method == "DensityMatrix")
+        res = exactApplyMPO(K,x,args);
+    else if(method == "Fit")
+        res = fitApplyMPO(x,K,args);
+    else if(method == "Exact")
+        Error("applyMPO method 'Exact' is deprecated, use 'DensityMatrix' instead");
+    else if(method == "ZipUp")
+        Error("applyMPO method 'ZipUp' currently unsupported, please use 'DensityMatrix' or 'Fit'");
+    else
+        Error("applyMPO currently supports the following 'Methods': 'DensityMatrix', 'Fit'");
+
+    return res;
+    }
+template
+MPS
+applyMPO(MPO const& K, MPS const& x, Args const&);
+template
+IQMPS
+applyMPO(IQMPO const& K, IQMPS const& x, Args const&);
 
 template<class Tensor>
 void 

@@ -351,11 +351,9 @@ SECTION("toExpH ITensor")
         auto expH = toExpH<ITensor>(ampo,tau*1_i);
         auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
         auto psi = MPS(sites);
-        MPS xpsi;
-        exactApplyMPO(psi,expHexact,xpsi);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
-        MPS apsi;
-        exactApplyMPO(psi,expH,apsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
         auto anrm2 = overlap(apsi,apsi);
         CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
         }
@@ -364,11 +362,9 @@ SECTION("toExpH ITensor")
         auto expH = toExpH<ITensor>(ampo,tau);
         auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
         auto psi = MPS(sites);
-        MPS xpsi;
-        exactApplyMPO(psi,expHexact,xpsi);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
-        MPS apsi;
-        exactApplyMPO(psi,expH,apsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
         auto anrm2 = overlap(apsi,apsi);
         CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
         }
@@ -397,11 +393,9 @@ SECTION("toExpH IQTensor")
         {
         auto expH = toExpH<IQTensor>(ampo,tau*1_i);
         auto expHexact = IQMPO(ExpHeisenberg(sites,tau*1_i));
-        IQMPS xpsi;
-        exactApplyMPO(psi,expHexact,xpsi);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
-        IQMPS apsi;
-        exactApplyMPO(psi,expH,apsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
         auto anrm2 = overlap(xpsi,xpsi);
         CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
@@ -409,11 +403,9 @@ SECTION("toExpH IQTensor")
         {
         auto expH = toExpH<IQTensor>(ampo,tau);
         auto expHexact = IQMPO(ExpHeisenberg(sites,tau));
-        IQMPS xpsi;
-        exactApplyMPO(psi,expHexact,xpsi);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
-        IQMPS apsi;
-        exactApplyMPO(psi,expH,apsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
         auto anrm2 = overlap(xpsi,xpsi);
         CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
