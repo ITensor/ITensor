@@ -24,7 +24,7 @@ template<>
 ITensor::
 ITensorT(Cplx val) 
     { 
-    IF_USESCALE(scale_ = 1.;)
+    IF_USESCALE(scale_ = LogNum(1.);)
     if(val.imag() == 0)
         {
         store_ = newITData<ScalarReal>(val.real());
