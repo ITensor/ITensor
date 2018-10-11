@@ -128,6 +128,83 @@ SECTION("Regression Test")
     REQUIRE_NOTHROW(A.plusEq(B));
     }
 
+SECTION("applyMPO (DensityMatrix)")
+    {
+
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto psi = MPS(sites);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto K = MPO(ampo);
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 0.2;
+        K.Aref(j) *= 0.2;
+        }
+
+    // Apply K to psi to entangle psi
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100,"Method=","DensityMatrix"});
+    psi /= norm(psi);
+
+    auto Hpsi = applyMPO(H,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
+
+    CHECK_CLOSE(overlap(Hpsi,H,psi),overlap(Hpsi,Hpsi));
+
+    }
+
+SECTION("applyMPO (Fit)")
+    {
+
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto psi = MPS(sites);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto K = MPO(ampo);
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 0.2;
+        K.Aref(j) *= 0.2;
+        }
+
+    // Apply K to psi to entangle psi
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100,"Method=","DensityMatrix"});
+    psi /= norm(psi);
+
+    auto Hpsi = applyMPO(H,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","Fit","Normalize=",false,"Sweeps=",100});
+
+    CHECK_CLOSE(overlap(Hpsi,H,psi),overlap(Hpsi,Hpsi));
+
+    }
+
+
 SECTION("Overlap <psi|HK|phi>")
     {
     detail::seed_quickran(1);
@@ -160,8 +237,8 @@ SECTION("Overlap <psi|HK|phi>")
         Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,Site));
         }
 
-    auto Hdphi = exactApplyMPO(Hdag,phi,{"Cutoff=",1E-13,"Maxm=",5000});
-    auto Kpsi = exactApplyMPO(K,psi,{"Cutoff=",1E-13,"Maxm=",5000});
+    auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
+    auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
 
     //Print(overlap(phi,H,K,psi));
     //Print(overlap(Hdphi,Kpsi));

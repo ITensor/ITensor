@@ -30,6 +30,7 @@ main(int argc, char* argv[])
     args.add("Maxm",maxm);
     args.add("Cutoff",cutoff);
     args.add("Verbose",verbose);
+    args.add("Method","DensityMatrix");
 
     auto sites = SpinHalf(2*N);
 
@@ -87,7 +88,7 @@ main(int argc, char* argv[])
     Real tsofar = 0;
     for(int tt = 1; tt <= nt; ++tt)
         {
-        psi = exactApplyMPO(expH,psi,args);
+        psi = applyMPO(expH,psi,args);
 
         //Normalize wavefunction
         psi.Aref(1) /= norm(psi.A(1));

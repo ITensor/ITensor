@@ -97,6 +97,7 @@ main(int argc, char* argv[])
     Args args;
     args.add("Maxm",maxm);
     args.add("Cutoff",cutoff);
+    args.add("Method","DensityMatrix");
 
     auto ampo = AutoMPO(sites);
     for(auto j : range1(N-1))
@@ -154,7 +155,7 @@ main(int argc, char* argv[])
         println("Doing time evolution");
         for(int tt = 1; tt <= nt; ++tt)
             {
-            psi = exactApplyMPO(expH,psi,args);
+            psi = applyMPO(expH,psi,args);
             psi.Aref(1) /= norm(psi.A(1));
             }
 
