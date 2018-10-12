@@ -97,11 +97,17 @@ applyMPO(MPOt<Tensor> const& K,
     {
     auto method = args.getString("Method","DensityMatrix");
 
+    //This is done here because fitApplyMPO() has a different default behavior
+    //(for backwards compatability)
+    auto normalize = args.getBool("Normalize",false);
+    auto argsp = args;
+    argsp.add("Normalize=",normalize);
+
     MPSt<Tensor> res;
     if(method == "DensityMatrix")
-        res = exactApplyMPO(K,x,args);
+        res = exactApplyMPO(K,x,argsp);
     else if(method == "Fit")
-        res = fitApplyMPO(x,K,args);
+        res = fitApplyMPO(x,K,argsp);
     else
         Error("applyMPO currently supports the following methods: 'DensityMatrix' (previously called with exactApplyMPO), 'Fit' (previously called with fitApplyMPO)");
 
@@ -115,88 +121,36 @@ IQMPS
 applyMPO(IQMPO const& K, IQMPS const& x, Args const&);
 
 template<class Tensor>
-void 
-zipUpApplyMPO(MPSt<Tensor> const& psi, 
-              MPOt<Tensor> const& K, 
-              MPSt<Tensor>& res, 
-              Args const& args)
+MPSt<Tensor>
+applyMPO(MPOt<Tensor> const& K,
+         MPSt<Tensor> const& x,
+         MPSt<Tensor> const& x0,
+         Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
+    auto method = args.getString("Method","Fit");
 
-    const
-    bool allow_arb_position = args.getBool("AllowArbPosition",false);
+    //This is done here because fitApplyMPO() has a different default behavior
+    //(for backwards compatability)
+    auto normalize = args.getBool("Normalize",false);
+    auto argsp = args;
+    argsp.add("Normalize=",normalize);
 
-    if(&psi == &res)
-        Error("psi and res must be different MPS instances");
+    MPSt<Tensor> res = x0;
+    if(method == "DensityMatrix")
+        Error("applyMPO method 'DensityMatrix' does not accept an input MPS");
+    else if(method == "Fit")
+        fitApplyMPO(x,K,res,argsp);
+    else
+        Error("applyMPO currently supports the following methods: 'DensityMatrix' (previously called with exactApplyMPO), 'Fit' (previously called with fitApplyMPO)");
 
-    //Real cutoff = args.getReal("Cutoff",psi.cutoff());
-    //int maxm = args.getInt("Maxm",psi.maxm());
-
-    auto N = psi.N();
-    if(K.N() != N) 
-        Error("Mismatched N in zipUpApplyMPO");
-
-    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
-        Error("Ortho center of psi must be site 1");
-
-    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
-        Error("Ortho center of K must be site 1");
-
-#ifdef DEBUG
-    checkQNs(psi);
-    checkQNs(K);
-    /*
-    cout << "Checking divergence in zip" << endl;
-    for(int i = 1; i <= N; i++)
-	div(psi.A(i));
-    for(int i = 1; i <= N; i++)
-	div(K.A(i));
-    cout << "Done Checking divergence in zip" << endl;
-    */
-#endif
-
-    res = psi; 
-    res.primelinks(0,4);
-    res.mapprime(0,1,Site);
-
-    Tensor clust,nfork;
-    vector<int> midsize(N);
-    int maxdim = 1;
-    for(int i = 1; i < N; i++)
-        {
-        if(i == 1) { clust = psi.A(i) * K.A(i); }
-        else { clust = nfork * (psi.A(i) * K.A(i)); }
-        if(i == N-1) break; //No need to SVD for i == N-1
-
-        IndexT oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
-        nfork = Tensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
-        //if(clust.iten_size() == 0)	// this product gives 0 !!
-	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
-        IndexT mid = commonIndex(res.A(i),nfork,Link);
-        //assert(mid.dir() == In);
-        mid.dag();
-        midsize[i] = mid.m();
-        maxdim = std::max(midsize[i],maxdim);
-        assert(rightLinkInd(res,i+1).dir() == Out);
-        res.Anc(i+1) = Tensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
-        }
-    nfork = clust * psi.A(N) * K.A(N);
-    //if(nfork.iten_size() == 0)	// this product gives 0 !!
-	//throw ResultIsZero("nfork.iten size == 0");
-
-    res.svdBond(N-1,nfork,Fromright,args);
-    res.noprimelink();
-    res.mapprime(1,0,Site);
-    res.position(1);
-    } //void zipUpApplyMPO
+    return res;
+    }
 template
-void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args& args);
+MPS
+applyMPO(MPO const& K, MPS const& x, MPS const& x0, Args const&);
 template
-void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
-
+IQMPS
+applyMPO(IQMPO const& K, IQMPS const& x, IQMPS const& x0, Args const&);
 
 template<class Tensor>
 MPSt<Tensor>
@@ -209,6 +163,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     auto maxm_set = args.defined("Maxm");
     if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
     auto verbose = args.getBool("Verbose",false);
+    auto normalize = args.getBool("Normalize",false);
     auto siteType = getIndexType(args,"SiteType",Site);
     auto linkType = getIndexType(args,"LinkType",Link);
 
@@ -291,6 +246,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),commonIndex(U,D).m());
         }
 
+    if(normalize) O /= norm(O);
     res.Aref(1) = O;
     res.leftLim(0);
     res.rightLim(2);
@@ -817,6 +773,92 @@ template
 void
 applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const Args& args);
 
+
+//
+// For now this is unsupported
+//
+template<class Tensor>
+void 
+zipUpApplyMPO(MPSt<Tensor> const& psi, 
+              MPOt<Tensor> const& K, 
+              MPSt<Tensor>& res, 
+              Args const& args)
+    {
+    using IndexT = typename Tensor::index_type;
+
+    const
+    bool allow_arb_position = args.getBool("AllowArbPosition",false);
+
+    if(&psi == &res)
+        Error("psi and res must be different MPS instances");
+
+    //Real cutoff = args.getReal("Cutoff",psi.cutoff());
+    //int maxm = args.getInt("Maxm",psi.maxm());
+
+    auto N = psi.N();
+    if(K.N() != N) 
+        Error("Mismatched N in zipUpApplyMPO");
+
+    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
+        Error("Ortho center of psi must be site 1");
+
+    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
+        Error("Ortho center of K must be site 1");
+
+#ifdef DEBUG
+    checkQNs(psi);
+    checkQNs(K);
+    /*
+    cout << "Checking divergence in zip" << endl;
+    for(int i = 1; i <= N; i++)
+	div(psi.A(i));
+    for(int i = 1; i <= N; i++)
+	div(K.A(i));
+    cout << "Done Checking divergence in zip" << endl;
+    */
+#endif
+
+    res = psi; 
+    res.primelinks(0,4);
+    res.mapprime(0,1,Site);
+
+    Tensor clust,nfork;
+    vector<int> midsize(N);
+    int maxdim = 1;
+    for(int i = 1; i < N; i++)
+        {
+        if(i == 1) { clust = psi.A(i) * K.A(i); }
+        else { clust = nfork * (psi.A(i) * K.A(i)); }
+        if(i == N-1) break; //No need to SVD for i == N-1
+
+        IndexT oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
+        nfork = Tensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
+        //if(clust.iten_size() == 0)	// this product gives 0 !!
+	    //throw ResultIsZero("clust.iten size == 0");
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
+        IndexT mid = commonIndex(res.A(i),nfork,Link);
+        //assert(mid.dir() == In);
+        mid.dag();
+        midsize[i] = mid.m();
+        maxdim = std::max(midsize[i],maxdim);
+        assert(rightLinkInd(res,i+1).dir() == Out);
+        res.Anc(i+1) = Tensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
+        }
+    nfork = clust * psi.A(N) * K.A(N);
+    //if(nfork.iten_size() == 0)	// this product gives 0 !!
+	//throw ResultIsZero("nfork.iten size == 0");
+
+    res.svdBond(N-1,nfork,Fromright,args);
+    res.noprimelink();
+    res.mapprime(1,0,Site);
+    res.position(1);
+    } //void zipUpApplyMPO
+template
+void 
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args& args);
+template
+void 
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
 
 
 } //namespace itensor

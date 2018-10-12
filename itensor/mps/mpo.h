@@ -288,6 +288,13 @@ applyMPO(MPOt<Tensor> const& K,
          MPSt<Tensor> const& x,
          Args const& args = Args::global());
 
+template<class Tensor>
+MPSt<Tensor>
+applyMPO(MPOt<Tensor> const& K,
+         MPSt<Tensor> const& x,
+         MPSt<Tensor> const& x0,
+         Args const& args = Args::global());
+
 //
 // Applies an MPO to an MPS using the zip-up method described
 // more fully in Stoudenmire and White, New. J. Phys. 12, 055026 (2010).
