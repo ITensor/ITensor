@@ -131,6 +131,8 @@ SECTION("Regression Test")
 SECTION("applyMPO (DensityMatrix)")
     {
 
+    auto method = "DensityMatrix";
+
     auto N = 10;
     auto sites = SpinHalf(N);
 
@@ -157,18 +159,20 @@ SECTION("applyMPO (DensityMatrix)")
         }
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100,"Method=","DensityMatrix"});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
     psi /= norm(psi);
 
-    auto Hpsi = applyMPO(H,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
 
-    CHECK_CLOSE(overlap(Hpsi,H,psi),overlap(Hpsi,Hpsi));
+    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi),0.);
 
     }
 
 SECTION("applyMPO (Fit)")
     {
 
+    auto method = "Fit";
+
     auto N = 10;
     auto sites = SpinHalf(N);
 
@@ -195,12 +199,17 @@ SECTION("applyMPO (Fit)")
         }
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100,"Method=","DensityMatrix"});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
     psi /= norm(psi);
 
-    auto Hpsi = applyMPO(H,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","Fit","Normalize=",false,"Sweeps=",100});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
 
-    CHECK_CLOSE(overlap(Hpsi,H,psi),overlap(Hpsi,Hpsi));
+    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi),0.);
+
+    // Now with a trial starting state
+    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
+
+    CHECK_CLOSE(checkMPOProd(Hpsi_2,H,psi),0.);
 
     }
 
