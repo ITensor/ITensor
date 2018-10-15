@@ -356,6 +356,23 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
                     LAPACK_INT *info);
 #endif
 
+// SOLVE LINEAR SYSTEM Ax = b for x (Direct Solver by LU Decomposition for General A)
+void F77NAME(zgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_COMPLEX *a, LAPACK_INT *lda,
+                    LAPACK_INT *ipiv, LAPACK_COMPLEX *b, LAPACK_INT *ldb, 
+                    LAPACK_INT *info);
+
+void F77NAME(dgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, double *a, LAPACK_INT *lda,
+                    LAPACK_INT *ipiv, double *b, LAPACK_INT *ldb, 
+                    LAPACK_INT *info);
+
+// SOLVE LINEAR SYSTEM Ax = b for x (Direct Solver by Cholesky Decomposition for Symmetric-Positive-Definite A)
+void F77NAME(dposv)(char *uplo, LAPACK_INT *n, LAPACK_INT *nrhs, double * a, LAPACK_INT *lda, 
+                    double * b, LAPACK_INT *ldb, LAPACK_INT *info);
+
+void F77NAME(zposv)(char *uplo, LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
+                    LAPACK_COMPLEX *b, LAPACK_INT *ldb, LAPACK_INT *info);
+
+
 } //extern "C"
 #endif
 
@@ -583,6 +600,56 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               Cplx * d,    //eigenvalues
               Cplx * vl,   //left eigenvectors on return
               Cplx * vr);  //right eigenvectors on return
+
+
+//
+// (d/z)gesv
+//
+// The routine solves the system of linear equations for X:
+// A*X = B
+// by LU decomposition
+// where
+//         A is a square matrix.
+//         The columns of matrix B are individual right-hand sides.
+//         The columns of X are the corresponding solutions.
+// The matrix B is overwritten by X.
+//
+LAPACK_INT 
+zgesv_wrapper(LAPACK_INT n,     // rank of square matrix A    
+              LAPACK_INT nrhs,  // number of right hand sides b = matrix n x nrhs
+              Cplx const * A,    // matrix A
+              Cplx * b);        // matrix b
+
+LAPACK_INT 
+dgesv_wrapper(LAPACK_INT n,
+              LAPACK_INT nrhs,
+              LAPACK_REAL const * A,
+              LAPACK_REAL * b);
+
+//
+// (d/z)posv
+//
+// The routine solves the system of linear equations for X:
+// A*X = B
+// by Cholesky decomposition
+// where
+//         A is a square matrix Symmetric Positive-Definite
+//         The columns of matrix B are individual right-hand sides.
+//         The columns of X are the corresponding solutions.
+// The matrix B is overwritten by X.
+//
+LAPACK_INT 
+zposv_wrapper(LAPACK_INT n,     // rank of square matrix A    
+              LAPACK_INT nrhs,  // number of right hand sides b = matrix n x nrhs
+              Cplx const * A,   // matrix A
+              Cplx * b);        // matrix b
+
+LAPACK_INT 
+dposv_wrapper(LAPACK_INT n,
+              LAPACK_INT nrhs,
+              LAPACK_REAL const * A,
+              LAPACK_REAL * b);
+
 
 } //namespace itensor
 
