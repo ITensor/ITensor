@@ -10,6 +10,7 @@
 #include "itensor/util/range.h"
 #include "itensor/global.h"
 
+
 using std::move;
 using std::sqrt;
 using std::tuple;
@@ -30,6 +31,40 @@ namespace detail {
     hermitianDiag(int N, Cplx *Udata,Real *ddata)
         {
         return zheev_wrapper(N,Udata,ddata);
+        }
+
+    int
+    dtl_linSystem(int N, int Nb, Real const * Adata, Real * Bdata, Args const& args)
+        {
+        auto arg_method = args.getString("method","LU");
+        auto arg_dbg    = args.getBool("dbg",false);
+        LAPACK_INT info = 0;
+        if (arg_method == "CHOLESKY") {
+            if(arg_dbg) std::cout<<"[dtl_linSystem] calling dposv"<< std::endl;
+            info = dposv_wrapper(N,Nb,Adata,Bdata);
+        } else if (arg_method == "LU") {
+            if(arg_dbg) std::cout<<"[dtl_linSystem] calling dgesv"<< std::endl;
+            info = dgesv_wrapper(N,Nb,Adata,Bdata);
+        } else {
+            std::cout<<"[dtl_linSystem] Unsupported method: "<< arg_method << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        return info;
+        }
+    int
+    dtl_linSystem(int N, int Nb, Cplx const * Adata, Cplx * Bdata, Args const& args)
+        {
+        auto arg_method = args.getString("method","LU");
+        LAPACK_INT info = 0;
+        if (arg_method == "CHOLESKY") {
+            info = zposv_wrapper(N,Nb,Adata,Bdata);
+        } else if (arg_method == "LU") {
+            info = zgesv_wrapper(N,Nb,Adata,Bdata);
+        } else {
+            std::cout<<"[dtl_linSystem] Unsupported method: "<< arg_method << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        return info;
         }
 } //namespace detail
 
@@ -574,6 +609,7 @@ SVDRefImpl(MatRefc<T> const& M,
     return;
     }
 
+
 template<typename T>
 void
 SVDRef(MatRefc<T> const& M,
@@ -586,7 +622,6 @@ SVDRef(MatRefc<T> const& M,
     }
 template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,Real);
 template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&,Real);
-
 
 
 //void

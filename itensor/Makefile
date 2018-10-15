@@ -37,6 +37,7 @@ SOURCES+= decomp.cc
 SOURCES+= svd.cc 
 SOURCES+= hermitian.cc 
 SOURCES+= global.cc
+SOURCES+= linsystem.cc
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpsalgs.cc 
 SOURCES+= mps/mpo.cc 

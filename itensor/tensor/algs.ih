@@ -157,6 +157,7 @@ SVDRef(MatRefc<T> const& M,
        MatRef<T>  const& V,
        Real thresh);
 
+
 template<class MatM, 
          class MatU,
          class VecD,
@@ -177,6 +178,7 @@ SVD(MatM && M,
     resize(D,nsv);
     SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
     }
+
 
 } //namespace itensor
 
