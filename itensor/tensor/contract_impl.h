@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_CONTRACT_IH__
-#define __ITENSOR_CONTRACT_IH__
+#ifndef __ITENSOR_CONTRACT_IMPL_H__
+#define __ITENSOR_CONTRACT_IMPL_H__
 
 namespace itensor {
 

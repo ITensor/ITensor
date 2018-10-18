@@ -133,8 +133,8 @@ dag() { return conj(); }
 
 } //namespace itensor
 
-//See file itensor.ih for template/inline method implementations
-#include "itensor/itensor.ih"
+//See file itensor_impl.h for template/inline method implementations
+#include "itensor/itensor_impl.h"
 
 
 #endif
