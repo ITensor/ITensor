@@ -554,6 +554,6 @@ operator+(typename IndexSetIter<T>::difference_type d,
 
 } //namespace itensor
 
-#include "itensor/indexset.ih"
+#include "itensor/indexset_impl.h"
 
 #endif

@@ -476,7 +476,7 @@ operator<<(std::ostream& s, const InitState& state);
 
 } //namespace itensor
 
-#include "mps.ih"
+#include "mps_impl.h"
 
 
 #endif

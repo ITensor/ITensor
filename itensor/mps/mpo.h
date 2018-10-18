@@ -491,6 +491,6 @@ exactApplyMPO(MPSt<Tensor> const& x,
 
 } //namespace itensor
 
-#include "mpo.ih"
+#include "mpo_impl.h"
 
 #endif

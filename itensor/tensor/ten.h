@@ -877,6 +877,6 @@ operator<<(std::ostream & s, Ten<R,V> const& T);
 
 } //namespace itensor
 
-#include "ten.ih"
+#include "ten_impl.h"
 
 #endif

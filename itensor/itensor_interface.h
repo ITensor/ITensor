@@ -562,7 +562,7 @@ operator<<(std::ostream & s, IQTensor const& T);
 
 } //namespace itensor
 
-#include "itensor_interface.ih"
+#include "itensor_interface_impl.h"
 
 
 #endif

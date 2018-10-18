@@ -356,6 +356,6 @@ makeMatRefc(DataRange<T> const& D,
 
 } //namespace itensor
 
-#include "mat.ih"
+#include "mat_impl.h"
 
 #endif

@@ -146,7 +146,7 @@ typeNameOf(AddITensor const&);
 
 } //namespace itensor
 
-//See file iqtensor.ih for template/inline method implementations
-#include "itensor/iqtensor.ih"
+//See file iqtensor_impl.h for template/inline method implementations
+#include "itensor/iqtensor_impl.h"
 
 #endif

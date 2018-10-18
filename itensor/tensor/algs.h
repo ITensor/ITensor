@@ -108,6 +108,6 @@ SVD(MatM && M,
 
 } //namespace itensor
 
-#include "itensor/tensor/algs.ih"
+#include "itensor/tensor/algs_impl.h"
 
 #endif

@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_MATRIX_ALGS__IH_
-#define __ITENSOR_MATRIX_ALGS__IH_
+#ifndef __ITENSOR_MATRIX_ALGS_IMPL_H_
+#define __ITENSOR_MATRIX_ALGS_IMPL_H_
 
 namespace itensor {
 
