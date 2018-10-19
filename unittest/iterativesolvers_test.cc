@@ -1,5 +1,5 @@
 #include "test.h"
-#include "itensor/eigensolver.h"
+#include "itensor/iterativesolvers.h"
 #include "sample/Heisenberg.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/localmpo.h"
