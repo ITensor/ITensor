@@ -1477,7 +1477,7 @@ SECTION("Singular Value Decomp")
         M = randomMat(Nr,Nc);
         SVD(M,U,d,V);
         auto R2 = U*dMat(d)*transpose(V);
-        CHECK((norm(R2-M)/norm(M)) < 1E-14);
+        CHECK((norm(R2-M)/norm(M)) < 1E-13);
 
         Nr = 10;
         Nc = 20;
