@@ -87,7 +87,7 @@ struct PrintIT
               Real nrm_no_scale = -1)
         {
 #ifndef USESCALE
-        s << format("{norm=%.2f (%s)}",std::fabs(scalefac)*nrm_no_scale,type_name);
+        s << format("{norm=%.2f (%s)}\n",std::fabs(scalefac)*nrm_no_scale,type_name);
 #else
         s << "{log(scale)=" << format("%.2f",x.logNum());
         if(nrm_no_scale > 0)
