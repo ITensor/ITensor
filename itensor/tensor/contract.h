@@ -336,6 +336,6 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
 
 } //namespace itensor
 
-#include "itensor/tensor/contract.ih"
+#include "itensor/tensor/contract_impl.h"
 
 #endif

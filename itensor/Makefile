@@ -114,7 +114,7 @@ util/input.o: util/input.h
 .debug_objs/util/input.o: util/input.h
 
 GDEPHEADERS=real.h global.h index.h util/readwrite.h
-GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten.ih \
+GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten_impl.h \
 tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h util/safe_ptr.h
 tensor/vec.o: $(GDEPHEADERS)
 .debug_objs/tensor/vec.o: $(GDEPHEADERS)
@@ -123,11 +123,11 @@ tensor/mat.o: $(GDEPHEADERS)
 .debug_objs/tensor/mat.o: $(GDEPHEADERS)
 tensor/gemm.o: $(GDEPHEADERS)
 .debug_objs/tensor/gemm.o: $(GDEPHEADERS)
-GDEPHEADERS+= tensor/slicemat.h tensor/algs.h tensor/algs.ih
+GDEPHEADERS+= tensor/slicemat.h tensor/algs.h tensor/algs_impl.h
 tensor/algs.o: $(GDEPHEADERS)
 .debug_objs/tensor/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/permutation.h tensor/slicerange.h tensor/sliceten.h \
-tensor/contract.h itdata/task_types.h indexset.ih indexset.h
+tensor/contract.h itdata/task_types.h indexset_impl.h indexset.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
 ITDEPHEADERS= itdata/dense.h 
@@ -157,11 +157,11 @@ itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= indexset.ih indexset.h
+ITDEPHEADERS+= indexset_impl.h indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itensor_interface.h itensor_interface.ih \
-itensor.ih itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
+ITDEPHEADERS+= itensor_interface.h itensor_interface_impl.h \
+itensor_impl.h itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
 itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
@@ -174,7 +174,7 @@ qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= iqindex.h
 iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= iqtensor.ih iqtensor.h detail/skip_iterator.h
+ITDEPHEADERS+= iqtensor_impl.h iqtensor.h detail/skip_iterator.h
 iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= spectrum.h

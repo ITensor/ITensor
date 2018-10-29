@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_DMRG_H
 #define __ITENSOR_DMRG_H
 
-#include "itensor/eigensolver.h"
+#include "itensor/iterativesolvers.h"
 #include "itensor/mps/localmposet.h"
 #include "itensor/mps/localmpo_mps.h"
 #include "itensor/mps/sweeps.h"

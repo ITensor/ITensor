@@ -18,7 +18,7 @@
 //
 
 #include "itensor/decomp.h"
-#include "itensor/eigensolver.h"
+#include "itensor/iterativesolvers.h"
 #include "itensor/util/input.h"
 #include "itensor/util/autovector.h"
 #include "itensor/util/print_macro.h"

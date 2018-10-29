@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_EIGENSOLVER_H
-#define __ITENSOR_EIGENSOLVER_H
+#ifndef __ITENSOR_ITERATIVESOLVERS_H
+#define __ITENSOR_ITERATIVESOLVERS_H
 #include "itensor/util/range.h"
 #include "itensor/iqtensor.h"
 #include "itensor/tensor/algs.h"
@@ -37,6 +37,18 @@ std::vector<Real>
 davidson(BigMatrixT const& A, 
          std::vector<Tensor>& phi,
          Args const& args = Args::global());
+
+//
+// Use GMRES to iteratively solve A x = b for x.
+// (BigMatrixT objects must implement the methods product and size.)
+// Initial guess x is overwritten with the output.
+//
+template<typename BigMatrixT, typename Tensor>
+void
+gmres(BigMatrixT const& A,
+      Tensor const& b,
+      Tensor& x,
+      Args const& args = Args::global());
 
 //
 //
@@ -406,81 +418,80 @@ davidson(BigMatrixT const& A,
     return eigs;
     }
 
-namespace gmres_details
+namespace gmres_details {
+
+template<class Matrix, class Tensor, class T>
+void
+update(Tensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<Tensor> const& v)
     {
+    std::vector<T> y(s);
 
-    template<class Matrix, class Tensor, class T>
-    void
-    update(Tensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<Tensor> const& v)
+    // Backsolve:
+    for (int i = k; i >= 0; i--)
         {
-        std::vector<T> y(s);
-
-        // Backsolve:
-        for (int i = k; i >= 0; i--)
-            {
-            y[i] /= h(i,i);
-            for (int j = i - 1; j >= 0; j--)
-                y[j] -= h(j,i) * y[i];
-            }
-
-        for (int j = 0; j <= k; j++)
-            x += v[j] * y[j];
+        y[i] /= h(i,i);
+        for (int j = i - 1; j >= 0; j--)
+            y[j] -= h(j,i) * y[i];
         }
 
-    template<typename T>
-    void
-    generatePlaneRotation(T const& dx, T const& dy, T& cs, T& sn)
-        {
-        if(dy == 0.0)
-            {
-            cs = 1.0;
-            sn = 0.0;
-            }
-        else if(std::abs(dy) > std::abs(dx))
-            {
-            auto temp = dx / dy;
-            sn = 1.0 / std::sqrt( 1.0 + temp*temp );
-            cs = temp * sn;
-            }
-        else
-            {
-            auto temp = dy / dx;
-            cs = 1.0 / std::sqrt( 1.0 + temp*temp );
-            sn = temp * cs;
-            }
-        }
-
-    void
-    applyPlaneRotation(Real& dx, Real& dy, Real const& cs, Real const& sn)
-        {
-        auto temp =  cs * dx + sn * dy;
-        dy = -sn * dx + cs * dy;
-        dx = temp;
-        }
-
-    void
-    applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
-        {
-        auto temp =  std::conj(cs) * dx + std::conj(sn) * dy;
-        dy = -sn * dx + cs * dy;
-        dx = temp;
-        }
-
-    template<typename Tensor>
-    void
-    dot(Tensor const& A, Tensor const& B, Real& res)
-        {
-        res = (dag(A)*B).real();
-        }
-
-    template<typename Tensor>
-    void
-    dot(Tensor const& A, Tensor const& B, Cplx& res)
-        {
-        res = (dag(A)*B).cplx();
-        }
-
+    for (int j = 0; j <= k; j++)
+        x += v[j] * y[j];
     }
+
+template<typename T>
+void
+generatePlaneRotation(T const& dx, T const& dy, T& cs, T& sn)
+    {
+    if(dy == 0.0)
+        {
+        cs = 1.0;
+        sn = 0.0;
+        }
+    else if(std::abs(dy) > std::abs(dx))
+        {
+        auto temp = dx / dy;
+        sn = 1.0 / std::sqrt( 1.0 + temp*temp );
+        cs = temp * sn;
+        }
+    else
+        {
+        auto temp = dy / dx;
+        cs = 1.0 / std::sqrt( 1.0 + temp*temp );
+        sn = temp * cs;
+        }
+    }
+
+void inline
+applyPlaneRotation(Real& dx, Real& dy, Real const& cs, Real const& sn)
+    {
+    auto temp =  cs * dx + sn * dy;
+    dy = -sn * dx + cs * dy;
+    dx = temp;
+    }
+
+void inline
+applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
+    {
+    auto temp =  std::conj(cs) * dx + std::conj(sn) * dy;
+    dy = -sn * dx + cs * dy;
+    dx = temp;
+    }
+
+template<typename Tensor>
+void
+dot(Tensor const& A, Tensor const& B, Real& res)
+    {
+    res = (dag(A)*B).real();
+    }
+
+template<typename Tensor>
+void
+dot(Tensor const& A, Tensor const& B, Cplx& res)
+    {
+    res = (dag(A)*B).cplx();
+    }
+
+}//namespace gmres_details
 
 template<typename T, typename BigMatrixT, typename Tensor>
 void

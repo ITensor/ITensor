@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITENSOR_INTERFACE_IH_
-#define __ITENSOR_ITENSOR_INTERFACE_IH_
+#ifndef __ITENSOR_ITENSOR_INTERFACE_IMPL_H_
+#define __ITENSOR_ITENSOR_INTERFACE_IMPL_H_
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"

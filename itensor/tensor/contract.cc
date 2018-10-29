@@ -1133,7 +1133,7 @@ contractDiagFull(VectorRefc        A, Labels const& ai,
 // 
 // o Identify common index to A,B,C with largest
 //   extent and make this the innermost loop
-//   (similar to big index in transform method in ten.ih)
+//   (similar to big index in transform method in ten_impl.h)
 // o If A and B sufficiently small, permute one or both
 //   to group merged/unmerged indices together
 // o Move merged indices to front and parallelize similar

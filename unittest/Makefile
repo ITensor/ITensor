@@ -27,7 +27,7 @@ SOURCES+= decomp_test.cc
 SOURCES+= mps_test.cc
 SOURCES+= mpo_test.cc
 SOURCES+= autompo_test.cc
-SOURCES+= eigensolver_test.cc
+SOURCES+= iterativesolvers_test.cc
 SOURCES+= regression_test.cc
 #SOURCES+= spectrum_test.cc
 #SOURCES+= webpage_test.cc
@@ -122,8 +122,8 @@ decomp_test.o: $(LIBHEADERS)
 regression_test.o: $(LIBHEADERS)
 .debug_objs/regression_test.o: $(LIBHEADERS)
 
-eigensolver_test.o: $(ITENSOR_INCLUDEDIR)/itensor/eigensolver.h
-.debug_objs/eigensolver_test.o: $(ITENSOR_INCLUDEDIR)/itensor/eigensolver.h
+iterativesolvers_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iterativesolvers.h
+.debug_objs/iterativesolvers_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iterativesolvers.h
 
 webpage_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iqtensor.h
 .debug_objs/webpage_test.o: $(ITENSOR_INCLUDEDIR)/itensor/iqtensor.h

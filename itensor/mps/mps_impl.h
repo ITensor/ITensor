@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_MPS_IH_
-#define __ITENSOR_MPS_IH_
+#ifndef __ITENSOR_MPS_IMPL_H_
+#define __ITENSOR_MPS_IMPL_H_
 
 namespace itensor {
 
