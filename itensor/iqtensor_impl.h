@@ -133,14 +133,39 @@ combiner(IQIndex const& i1,
     return combiner(std::vector<IQIndex>{i1,inds...});
     }
 
+IQTensor inline
+delta(IQIndexSet const& is)
+    {
+    auto dat = QDiagReal(is,1.);
+    return IQTensor(std::move(is),std::move(dat));
+    }
+
 template<typename... Inds>
 IQTensor
 delta(IQIndex const& i1,
       Inds const&... inds)
     {
-    auto is = IQIndexSet(i1,inds...);
-    auto dat = QDiagReal(is,1.);
-    return IQTensor(std::move(is),std::move(dat));
+    return delta(IQIndexSet(i1,inds...));
+    }
+
+IQTensor inline
+delta(std::vector<IQIndex> const& is)
+    {
+    return delta(IQIndexSet(is));
+    }
+
+template<size_t N>
+IQTensor
+delta(std::array<IQIndex,N> const& is)
+    {
+    return delta(IQIndexSet(is));
+    }
+
+
+IQTensor inline
+delta(std::initializer_list<IQIndex> is)
+    {
+    return delta(IQIndexSet(is));
     }
 
 template<typename... Inds>
