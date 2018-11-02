@@ -59,8 +59,12 @@ namespace detail {
 // Can be compared with == operator (returns true if both
 // are copies of the same Index instance).
 //
-// To make an Index distinct from other copies, increase its primeLevel.
-//
+
+struct IndexQN;
+class IQIndexDat;
+class IQIndexVal;
+class IQIndexIter;
+
 class Index
     {
     public:
@@ -69,12 +73,17 @@ class Index
     using indexval_type = IndexVal;
     using prime_type = int;
     using extent_type = int;
+
+    using qnstorage = std::vector<IndexQN>;
+    using qn_ptr = std::shared_ptr<IQIndexDat>;
+
     private:
     id_type id_;
     prime_type primelevel_; 
     extent_type m_;
     IndexType type_;
     IndexName name_;
+    Arrow dir_ = Neither;
     public:
 
     Index();
@@ -85,6 +94,16 @@ class Index
           long m = 1, 
           IndexType it = Link, 
           int primelev = 0);
+
+    template<typename... Rest>
+    IQIndex(std::string const& name, 
+            Index const& i1, QN const& q1, 
+            Rest const&... etc);
+
+    IQIndex(std::string const& name, 
+            storage && ind_qn, 
+            Arrow dir = Out, 
+            int plev = 0);
 
     // Returns the bond dimension
     long 
@@ -119,12 +138,6 @@ class Index
     explicit operator int() const { return m(); }
     explicit operator long() const { return m(); }
     explicit operator size_t() const { return m(); }
-
-    // Returns the Arrow direction of this Index
-    Arrow 
-    dir() const { return Out; }
-    void 
-    dir(Arrow ndir) const {  }
 
     // Increase primelevel by 1 (or by optional amount inc)
     Index& 
@@ -175,10 +188,50 @@ class Index
     Index& 
     read(std::istream& s);
 
+    //
+    // QN related functions
+    // 
+    
+    //number of quantum number blocks
+    long 
+    nblock() const;
+      
+    //1-indexed
+    QN const& 
+    qn(long i) const;
+
+    Arrow 
+    dir() const { return dir_; }
+    void
+    dir(Arrow ndir) { dir_ = ndir; }
+
+    IQIndex& 
+    dag();
+
+    storage_ptr const&
+    store() const { return pd; }
+
+
     private:
+
+    void
+    makeStorage(storage && iq);
 
     Index::id_type 
     generateID();
+
+    public:
+
+    //
+    // Advanced / developer methods.
+    // Not intended for normal usage.
+    //
+
+    // Constructor taking a storage pointer
+    IQIndex(storage_ptr const& p,
+            std::string const& name, 
+            Arrow dir = Out, 
+            int plev = 0);
 
     }; //class Index
 
@@ -231,8 +284,17 @@ class IndexVal
     mapprime(int plevold, int plevnew, IndexType type = All) 
         { index.mapprime(plevold,plevnew,type); return *this; }
 
-    void
-    dag() { }
+    IndexVal& 
+    dag();
+
+    QN const&
+    qn() const;
+
+    IndexQN
+    indexqn() const;
+
+    IndexVal 
+    blockIndexVal() const;
 
     };
 
@@ -245,6 +307,52 @@ bool
 operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
+  
+//
+// IndexQN
+//
+struct IndexQN
+    {
+    Index index;
+    QN qn;
+
+    IndexQN() { }
+
+    IndexQN(Index const& i, 
+            QN const& q) 
+        : index(i), qn(q) 
+        { }
+
+    explicit operator Index() const { return index; }
+
+    void
+    dag() { index.dag(); }
+
+    auto
+    m() const -> decltype(index.m()) { return index.m(); }
+
+    IndexType
+    type() const { return index.type(); }
+
+    void
+    write(std::ostream & s) const;
+
+    void
+    read(std::istream & s);
+
+    };
+
+bool inline
+operator==(IndexQN const& iq, Index const& i) { return iq.index == i; }
+
+bool inline
+operator==(Index const& i, IndexQN const& iq) { return iq.index == i; }
+
+bool inline
+operator!=(IndexQN const& iq, Index const& i) { return iq.index != i; }
+
+bool inline
+operator!=(Index const& i, IndexQN const& iq) { return iq.index != i; }
 
 
 Index inline
@@ -314,6 +422,20 @@ getIndexType(Args const& args,
              Args::Name const& name, 
              IndexType default_val);
 
+
+//Make a new index with same properties as I,
+//but a different id number (will not compare equal)
+//and primelevel zero (or specified value)
+//For efficiency, internal sector Index objects
+//are the same as I.
+Index
+sim(Index const& I, int plev = 0);
+
+std::string 
+showm(Index const& I);
+
+std::ostream& 
+operator<<(std::ostream &s, IndexQN const& x);
 
 } //namespace itensor
 

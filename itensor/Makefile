@@ -16,32 +16,30 @@ SOURCES+= tensor/mat.cc
 SOURCES+= tensor/gemm.cc 
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
-SOURCES+= itdata/dense.cc 
-SOURCES+= itdata/combiner.cc 
-SOURCES+= itdata/diag.cc 
-SOURCES+= itdata/qdense.cc
-SOURCES+= itdata/qcombiner.cc 
-SOURCES+= itdata/qdiag.cc
-SOURCES+= itdata/qmixed.cc
-SOURCES+= itdata/scalar.cc 
-##SOURCES+= itdata/itlazy.cc
+#SOURCES+= itdata/dense.cc 
+#SOURCES+= itdata/combiner.cc 
+#SOURCES+= itdata/diag.cc 
+#SOURCES+= itdata/qdense.cc
+#SOURCES+= itdata/qcombiner.cc 
+#SOURCES+= itdata/qdiag.cc
+#SOURCES+= itdata/qmixed.cc
+#SOURCES+= itdata/scalar.cc 
 SOURCES+= index.cc 
-SOURCES+= itensor_interface.cc 
-SOURCES+= itensor_operators.cc 
-SOURCES+= itensor.cc 
-SOURCES+= qn.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= decomp.cc 
-SOURCES+= svd.cc 
-SOURCES+= hermitian.cc 
-SOURCES+= global.cc
-SOURCES+= mps/mps.cc 
-SOURCES+= mps/mpsalgs.cc 
-SOURCES+= mps/mpo.cc 
-SOURCES+= mps/mpoalgs.cc 
-SOURCES+= mps/autompo.cc
+#SOURCES+= itensor_interface.cc 
+#SOURCES+= itensor_operators.cc 
+#SOURCES+= itensor.cc 
+#SOURCES+= qn.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= decomp.cc 
+#SOURCES+= svd.cc 
+#SOURCES+= hermitian.cc 
+#SOURCES+= global.cc
+#SOURCES+= mps/mps.cc 
+#SOURCES+= mps/mpsalgs.cc 
+#SOURCES+= mps/mpo.cc 
+#SOURCES+= mps/mpoalgs.cc 
+#SOURCES+= mps/autompo.cc
 
 ####################################
 
@@ -171,9 +169,6 @@ itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= qn.h
 qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= iqindex.h
-iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= iqtensor_impl.h iqtensor.h detail/skip_iterator.h
 iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)

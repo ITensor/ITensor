@@ -359,5 +359,108 @@ getIndexType(const Args& args,
     return IndexType(args.getString(name).c_str());
     }
 
+QN const& IndexVal::
+qn() const 
+    { 
+    auto is = sectorInfo(*this);
+    return index.qn(is.sector);
+    }
+
+IndexVal IndexVal::
+blockIndexVal() const 
+    { 
+    auto is = sectorInfo(*this);
+    return IndexVal(index.index(is.sector),is.sind); 
+    }
+
+IndexVal&  IndexVal::
+dag() { index.dag(); return *this; }
+
+class IQIndexDat
+    {
+    public:
+    using storage = std::vector<IndexQN>;
+    using iterator = storage::iterator;
+    using const_iterator = storage::const_iterator;
+    private:
+    storage iq_;
+    public:
+
+    IQIndexDat() { }
+
+    //template<typename... Rest>
+    //IQIndexDat(Index const& i1, 
+    //           QN const& q1,
+    //           Rest const&... args) 
+    //    { 
+    //    constexpr auto size = sizeof...(args)/2+1;
+    //    iq_ = stdx::reserve_vector<IndexQN>(size);
+    //    detail::fill(iq_,i1,q1,args...);
+    //    }
+
+    explicit
+    IQIndexDat(storage const& ind_qn) 
+      : iq_(ind_qn)
+        { }
+
+    explicit
+    IQIndexDat(storage&& ind_qn) 
+      : iq_(std::move(ind_qn))
+        { }
+
+    //Disallow copying
+    IQIndexDat(IQIndexDat const&) = delete;
+
+    void 
+    operator=(IQIndexDat const&) = delete;
+
+    void
+    setStore(storage && iq) { iq_ = std::move(iq); }
+
+    storage const&
+    inds() const { return iq_; }
+
+    long
+    size() const { return iq_.size(); }
+
+    Index const&
+    index(long i) { return iq_[i-1].index; }
+
+    Index const&
+    operator[](long i) { return iq_[i].index; }
+
+    QN const&
+    qn(long i) { return iq_[i-1].qn; }
+
+    iterator
+    begin() { return iq_.begin(); }
+
+    iterator
+    end() { return iq_.end(); }
+
+    const_iterator
+    begin() const { return iq_.begin(); }
+
+    const_iterator
+    end()   const { return iq_.end(); }
+
+    storage const&
+    store() const { return iq_; }
+    };
+
+void 
+write(std::ostream & s, IQIndexDat const& d) 
+    { 
+    write(s,d.store()); 
+    }
+
+void 
+read(std::istream & s, IQIndexDat & d) 
+    { 
+    IQIndexDat::storage store;
+    read(s,store); 
+    d.setStore(std::move(store));
+    }
+
 } //namespace itensor
 
