@@ -46,22 +46,56 @@ combinedIndex(ITensor const& C);
 
 //Construct diagonal ITensor with diagonal 
 //elements set to 1.0
+ITensor
+delta(IndexSet const& is);
+
 template<typename... Inds>
 ITensor
 delta(Index const& i1,
       Inds const&... inds);
 
+ITensor
+delta(std::vector<Index> const& is);
+
+template<size_t N>
+ITensor
+delta(std::array<Index,N> const& is);
+
+ITensor
+delta(std::initializer_list<Index> is);
+
 //Construct diagonal ITensor,
 //diagonal elements given by container C
 //(Uses elements C.begin() up to C.end())
-template<typename Container, 
-         typename... Inds,
+template<typename Container,
          class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
                                 || stdx::containerOf<Cplx,Container>::value> >
 ITensor
 diagTensor(Container const& C,
+           IndexSet const& is);
+
+template<typename Container, 
+         typename... Inds>
+ITensor
+diagTensor(Container const& C,
            Index const& i1,
            Inds&&... inds);
+
+template<typename Container>
+ITensor
+diagTensor(Container const& C,
+           std::vector<Index> const& is);
+
+template<typename Container,
+         size_t N>
+ITensor
+diagTensor(Container const& C,
+           std::array<Index,N> const& is);
+
+template<typename Container>
+ITensor
+diagTensor(Container const& C,
+           std::initializer_list<Index> is);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)

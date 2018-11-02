@@ -54,27 +54,50 @@ operator*(IndexVal const& iv1, Cplx val)
     return res; 
     }
 
+ITensor inline
+delta(IndexSet const& is)
+    { 
+    auto len = minM(is);
+    return ITensor(std::move(is),DiagReal(len,1.));
+    }
+
 template<typename... Inds>
 ITensor
 delta(Index const& i1,
       Inds const&... inds)
     { 
-    auto is = IndexSet(i1,inds...);
-    auto len = minM(is);
-    return ITensor(std::move(is),DiagReal(len,1.));
+    return delta(IndexSet(i1,inds...));
     }
 
-template<typename Container, typename... Inds, class>
+ITensor inline
+delta(std::vector<Index> const& is)
+    {
+    return delta(IndexSet(is));
+    }
+
+template<size_t N>
+ITensor
+delta(std::array<Index,N> const& is)
+    {
+    return delta(IndexSet(is));
+    }
+
+
+ITensor inline
+delta(std::initializer_list<Index> is)
+    {
+    return delta(IndexSet(is));
+    }
+
+template<typename Container, class>
 ITensor
 diagTensor(Container const& C, 
-           Index const& i1,
-           Inds &&... inds)
+           IndexSet const& is)
     { 
-    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
     using size_type = decltype(C.size());
     //Compute min of all index dimensions
-    auto minm = i1.m();
+    auto minm = is[0].m();
     for(const auto& ind : is)
         if(ind.m() < minm) minm = ind.m();
     if(C.size() != size_type(minm))
@@ -88,6 +111,40 @@ diagTensor(Container const& C,
     return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
     }
 
+
+template<typename Container, typename... Inds>
+ITensor
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
+    { 
+    return diagTensor(C,IndexSet(i1,std::forward<Inds>(inds)...));
+    }
+
+template<typename Container>
+ITensor
+diagTensor(Container const& C, 
+           std::vector<Index> const& is)
+    { 
+    return diagTensor(C,IndexSet(is));
+    }
+
+template<typename Container,
+         size_t N>
+ITensor
+diagTensor(Container const& C, 
+           std::array<Index,N> const& is)
+    { 
+    return diagTensor(C,IndexSet(is));
+    }
+
+template<typename Container>
+ITensor
+diagTensor(Container const& C,
+           std::initializer_list<Index> is)
+    { 
+    return diagTensor(C,IndexSet(is));
+    }
 
 template<typename IndexT>
 ITensorT<IndexT>
