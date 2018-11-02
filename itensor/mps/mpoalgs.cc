@@ -50,8 +50,21 @@ nmultMPO(MPOType const& Aorig,
     B.primeall();
 
     res=A;
-    res.primelinks(0,4);
-    res.mapprime(1,2,Site);
+    for(auto i : range1(N))
+        {
+        if(i < N)
+            {
+            auto l = linkInd(res,i);
+            res.Aref(i).mapprime(l,0,4);
+            res.Aref(i+1).mapprime(l,0,4);
+            }
+        auto si = noprime(commonIndex(A.A(i),B.A(i)));
+        res.Aref(i).mapprime(si,1,2);
+        }
+
+    //Print(A);
+    //Print(B);
+    //Print(res);
 
     Tensor clust,nfork;
     for(int i = 1; i < N; ++i)
@@ -69,21 +82,40 @@ nmultMPO(MPOType const& Aorig,
 
         nfork = Tensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
 
-        denmatDecomp(clust,res.Anc(i),nfork,Fromleft,args);
+        //printfln("Before denmatDecomp i=%d:",i);
+        //Print(clust);
+        //Print(res.A(i));
+        //Print(nfork);
+
+        denmatDecomp(clust,res.Aref(i),nfork,Fromleft,args);
+
+        //printfln("After denmatDecomp i=%d:",i);
+        //Print(res.A(i));
+        //Print(nfork);
+        //println("--------------");
 
         auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
-        res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
+        auto si1 = noprime(commonIndex(A.A(i+1),B.A(i+1)));
+        res.Aref(i+1) = Tensor(mid,dag(si1),prime(si1,2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
 
     res.svdBond(N-1,nfork,Fromright);
-    res.noprimelink();
-    res.mapprime(2,1,Site);
+    for(auto i : range1(N))
+        {
+        if(i < N)
+            {
+            auto l = linkInd(res,i);
+            res.Aref(i).mapprime(l,l.primeLevel(),0);
+            res.Aref(i+1).mapprime(l,l.primeLevel(),0);
+            }
+        auto si = noprime(commonIndex(A.A(i),B.A(i)));
+        res.Aref(i).mapprime(si,2,1);
+        }
     res.orthogonalize();
-
-    }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+    }
 template
 void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, Args);
 template

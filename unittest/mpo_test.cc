@@ -296,4 +296,71 @@ SECTION("toMPO function")
 
     }
 
+
+SECTION("nmultMPO")
+    {
+    detail::seed_quickran(1);
+
+    auto N = 4;
+    auto sites = SpinHalf(N);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto Hdag = H;
+    auto K = H;
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 0.2;
+        K.Aref(j) *= 0.3;
+        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,Site));
+        }
+
+    MPO R;
+    nmultMPO(H,K,R,{"Cutoff=",1E-10});
+
+    auto randomMPS = [](SiteSet const& sites, 
+              int m)
+        {
+        auto psi = MPS(sites);
+        auto N = sites.N();
+        auto links = std::vector<Index>(N+1);
+        for(int j = 0; j <= N; ++j)
+            {
+            links.at(j) = Index(format("l_%d",j),m);
+            }
+        for(int j = 1; j <= N; ++j)
+            {
+            psi.Aref(j) = randomTensor(links.at(j-1),sites(j),links.at(j));
+            psi.Aref(j) /= norm(psi.A(j));
+            }
+        psi.Aref(1) *= randomTensor(links.at(0));
+        psi.Aref(N) *= randomTensor(links.at(N));
+        //printfln("<rpsi|rpsi> = %.12f",overlap(psi,psi));
+        psi.position(1);
+        psi.Aref(1) /= norm(psi.A(1));
+        return psi;
+        };
+
+    int Ntest = 4;
+    for(int n = 1; n <= Ntest; ++n)
+        {
+        auto psi = randomMPS(sites,4);
+        auto phi = randomMPS(sites,4);
+        auto oR = overlap(psi,R,phi);
+        auto oKH = overlap(psi,K,H,phi);
+        CHECK_DIFF(oR,oKH,1E-5);
+        }
+    }
+
 }
