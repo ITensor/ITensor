@@ -88,11 +88,9 @@ class MPOt : private MPSt<Tensor>
     void 
     primeall()	// sites i,i' -> i',i'';  link:  l -> l'
         {
-        for(int i = 1; i <= this->N(); i++)
+        for(auto i : range1(this->N()))
             {
-            Anc(i).mapprime(0,1,Link);
-            Anc(i).mapprime(1,2,Site);
-            Anc(i).mapprime(0,1,Site);
+            Aref(i).prime();
             }
         }
 
