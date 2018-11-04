@@ -314,7 +314,6 @@ SECTION("nmultMPO")
         ampo += 0.5,"S-",j,"S+",j+1;
         }
     auto H = MPO(ampo);
-    auto Hdag = H;
     auto K = MPO(ampo);
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
@@ -323,56 +322,51 @@ SECTION("nmultMPO")
         randomize(K.Aref(j));
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.3;
-        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,Site));
         }
 
-    auto nsites = vector<Index>(N+1);
-    for(auto n : range(nsites)) nsites.at(n) = Index(format("ns%d",n),2);
+    auto nsites = SpinHalf(N);
     for(auto j : range1(N))
         {
-        H.Aref(j) *= delta(nsites.at(j),sites(j));
+        K.Aref(j) *= prime(delta(Index(nsites(j)),sites(j)));
         }
 
-    Print(H);
-    Print(K);
+    MPO R;
+    nmultMPO(H,K,R,{"Cutoff=",1E-10});
 
-    //MPO R;
-    //nmultMPO(H,K,R,{"Cutoff=",1E-10});
+    auto randomMPS = [](SiteSet const& sites, 
+              int m)
+        {
+        auto psi = MPS(sites);
+        auto N = sites.N();
+        auto links = std::vector<Index>(N+1);
+        for(int j = 0; j <= N; ++j)
+            {
+            links.at(j) = Index(format("l_%d",j),m);
+            }
+        for(int j = 1; j <= N; ++j)
+            {
+            psi.Aref(j) = randomTensor(links.at(j-1),sites(j),links.at(j));
+            psi.Aref(j) /= norm(psi.A(j));
+            }
+        psi.Aref(1) *= randomTensor(links.at(0));
+        psi.Aref(N) *= randomTensor(links.at(N));
+        //printfln("<rpsi|rpsi> = %.12f",overlap(psi,psi));
+        psi.position(1);
+        psi.Aref(1) /= norm(psi.A(1));
+        return psi;
+        };
 
     //Print(R);
 
-    //auto randomMPS = [](SiteSet const& sites, 
-    //          int m)
-    //    {
-    //    auto psi = MPS(sites);
-    //    auto N = sites.N();
-    //    auto links = std::vector<Index>(N+1);
-    //    for(int j = 0; j <= N; ++j)
-    //        {
-    //        links.at(j) = Index(format("l_%d",j),m);
-    //        }
-    //    for(int j = 1; j <= N; ++j)
-    //        {
-    //        psi.Aref(j) = randomTensor(links.at(j-1),sites(j),links.at(j));
-    //        psi.Aref(j) /= norm(psi.A(j));
-    //        }
-    //    psi.Aref(1) *= randomTensor(links.at(0));
-    //    psi.Aref(N) *= randomTensor(links.at(N));
-    //    //printfln("<rpsi|rpsi> = %.12f",overlap(psi,psi));
-    //    psi.position(1);
-    //    psi.Aref(1) /= norm(psi.A(1));
-    //    return psi;
-    //    };
-
-    //int Ntest = 4;
-    //for(int n = 1; n <= Ntest; ++n)
-    //    {
-    //    auto psi = randomMPS(sites,4);
-    //    auto phi = randomMPS(sites,4);
-    //    auto oR = overlap(psi,R,phi);
-    //    auto oKH = overlap(psi,K,H,phi);
-    //    CHECK_DIFF(oR,oKH,1E-5);
-    //    }
+    int Ntest = 4;
+    for(int n = 1; n <= Ntest; ++n)
+        {
+        auto psi = randomMPS(nsites,4);
+        auto phi = randomMPS(sites,4);
+        auto oR = overlap(psi,R,phi);
+        auto oKH = overlap(psi,K,H,phi);
+        CHECK_DIFF(oR,oKH,1E-5);
+        }
     }
 
 }
