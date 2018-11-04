@@ -29,7 +29,7 @@ void inline
 write(std::ostream& s, Combiner const& dat) { }
 
 Cplx
-doTask(GetElt<Index> const& g, Combiner const& c);
+doTask(GetElt const& g, Combiner const& c);
 
 Real
 doTask(NormNoScale, Combiner const& d);
@@ -39,14 +39,14 @@ doTask(Conj, Combiner const& d);
 
 template<typename V>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<V>   const& d,
        Combiner const& cmb,
        ManageStore     & m);
 
 template<typename V>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Combiner const& cmb,
        Dense<V>   const& d,
        ManageStore     & m);
@@ -55,7 +55,7 @@ bool
 doTask(CheckComplex, Combiner const& d);
 
 void
-doTask(PrintIT<Index>& P, Combiner const& d);
+doTask(PrintIT& P, Combiner const& d);
 
 auto inline
 doTask(StorageType const& S, Combiner const& d) 

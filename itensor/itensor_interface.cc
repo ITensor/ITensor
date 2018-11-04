@@ -3,8 +3,7 @@
 namespace itensor {
 
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 fill(Cplx z)
     {
     if(!store_) 
@@ -19,13 +18,10 @@ fill(Cplx z)
         doTask(Fill<Cplx>{z},store_);
     return *this;
     }
-template ITensorT<Index>& ITensorT<Index>::fill(Cplx z);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::fill(Cplx z);
 
-template<typename IndexT> 
-IndexT
-commonIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+commonIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t)
     {
     for(auto& I : A.inds())
@@ -34,15 +30,12 @@ commonIndex(const ITensorT<IndexT>& A,
             {
             return I;
             }
-    return IndexT{};
+    return Index{};
     }
-template Index commonIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, IndexType t);
-template IQIndex commonIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, IndexType t);
 
-template<typename IndexT> 
-IndexT
-uniqueIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t)
     {
     for(auto& I : A.inds())
@@ -51,14 +44,11 @@ uniqueIndex(const ITensorT<IndexT>& A,
             {
             return I;
             }
-    return IndexT{};
+    return Index{};
     }
-template Index uniqueIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, IndexType t);
-template IQIndex uniqueIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, IndexType t);
 
-template<typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
+ITensor
+swapPrime(ITensor T, 
           int plev1, 
           int plev2,
           IndexType type)
@@ -79,12 +69,9 @@ swapPrime(ITensorT<IndexT> T,
     T.mapprime(tempLevel,plev2,type);
     return T; 
     }
-template ITensorT<Index> swapPrime(ITensorT<Index>, int, int, IndexType);
-template ITensorT<IQIndex> swapPrime(ITensorT<IQIndex>, int, int, IndexType);
 
-template<typename I>
 Real
-norm(ITensorT<I> const& T)
+norm(ITensor const& T)
     {
 #ifdef DEBUG
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
@@ -97,12 +84,9 @@ norm(ITensorT<I> const& T)
     return fac * doTask(NormNoScale{},T.store());
 #endif
     }
-template Real norm(ITensorT<Index> const& T);
-template Real norm(ITensorT<IQIndex> const& T);
 
-template<typename I>
 void
-randomize(ITensorT<I> & T, Args const& args)
+randomize(ITensor & T, Args const& args)
     {
     if(!T.store()) detail::allocReal(T);
 #ifdef DEBUG
@@ -112,12 +96,8 @@ randomize(ITensorT<I> & T, Args const& args)
     if(cplx) T.generate(detail::quickranCplx);
     else     T.generate(detail::quickran);
     }
-template void randomize(ITensorT<Index> & T, Args const& args);
-template void randomize(ITensorT<IQIndex> & T, Args const& args);
 
-
-template<typename I>
-void ITensorT<I>::
+void ITensor::
 write(std::ostream& s) const
     {
     itensor::write(s,inds());
@@ -133,19 +113,14 @@ write(std::ostream& s) const
         doTask(Write{s},store());
         }
     }
-template void ITensorT<Index>::write(std::ostream& s) const;
-template void ITensorT<IQIndex>::write(std::ostream& s) const;
 
-template<class I>
-ITensorT<I>
-multSiteOps(ITensorT<I> A, ITensorT<I> const& B) 
+ITensor
+multSiteOps(ITensor A, ITensor const& B) 
     {
     A.prime(Site);
     A *= B;
     A.mapprime(2,1,Site);
     return A;
     }
-template ITensorT<Index> multSiteOps(ITensorT<Index> A, ITensorT<Index> const& B);
-template ITensorT<IQIndex> multSiteOps(ITensorT<IQIndex> A, ITensorT<IQIndex> const& B);
 
 } //namespace itensor

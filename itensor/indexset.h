@@ -15,21 +15,15 @@
 namespace itensor {
 
 
-template<class IndexT>
-class IndexSetT;
-
-class IQIndex;
-
-//
-// IndexSetT
-//
-// Aliases:
-using IndexSet = IndexSetT<Index>;
-using IQIndexSet = IndexSetT<IQIndex>;
+class IndexSet;
 
 using IndexSetBuilder = RangeBuilderT<IndexSet>;
-using IQIndexSetBuilder = RangeBuilderT<IQIndexSet>;
 
+template<typename I>
+class IndexSetIter;
+
+//
+// IndexSet
 //
 // When constructed from a collection of indices,
 // (as an explicit set of arguments or via
@@ -38,14 +32,10 @@ using IQIndexSetBuilder = RangeBuilderT<IQIndexSet>;
 // keeps the indices in the order given.
 //
 
-template<typename index_type_> 
-class IndexSetIter;
-
-template <class index_type_>
-class IndexSetT : public RangeT<index_type_>
+class IndexSet : public RangeT<Index>
     {
     public:
-    using index_type = index_type_;
+    using index_type = Index;
     using extent_type = index_type;
     using range_type = RangeT<index_type>;
     using parent = RangeT<index_type>;
@@ -58,34 +48,34 @@ class IndexSetT : public RangeT<index_type_>
 
     public:
 
-    IndexSetT() { }
+    IndexSet() { }
 
     // construct from 1 or more indices
     template <typename... Inds>
     explicit
-    IndexSetT(index_type const& i1, 
+    IndexSet(index_type const& i1, 
               Inds&&... rest)
       : parent(i1,std::forward<Inds>(rest)...)
         { }
 
     template<typename IndxContainer>
     explicit
-    IndexSetT(IndxContainer && ii) 
+    IndexSet(IndxContainer && ii) 
       : parent(std::forward<IndxContainer>(ii)) { }
 
-    IndexSetT(std::initializer_list<index_type> ii) : parent(ii) { }
+    IndexSet(std::initializer_list<index_type> ii) : parent(ii) { }
 
     explicit
-    IndexSetT(storage_type && store) 
+    IndexSet(storage_type && store) 
       : parent(std::move(store)) 
         { }
 
-    IndexSetT&
-    operator=(storage_type&& store)
-        {
-        parent::operator=(std::move(store));
-        return *this;
-        }
+    //IndexSet&
+    //operator=(storage_type&& store)
+    //    {
+    //    parent::operator=(std::move(store));
+    //    return *this;
+    //    }
     
     explicit operator bool() const { return !parent::empty(); }
 
@@ -103,7 +93,7 @@ class IndexSetT : public RangeT<index_type_>
     operator[](size_type i)
         { 
 #ifdef DEBUG
-        if(i >= parent::size()) throw ITError("IndexSetT[i] arg out of range");
+        if(i >= parent::size()) throw ITError("IndexSet[i] arg out of range");
 #endif
         return parent::index(i);
         }
@@ -113,7 +103,7 @@ class IndexSetT : public RangeT<index_type_>
     index(size_type I)
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) throw ITError("IndexSetT.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSet.index(i) arg out of range");
 #endif
         return operator[](I-1);
         }
@@ -123,7 +113,7 @@ class IndexSetT : public RangeT<index_type_>
     operator[](size_type i) const
         { 
 #ifdef DEBUG
-        if(i >= parent::size()) throw ITError("IndexSetT[i] arg out of range");
+        if(i >= parent::size()) throw ITError("IndexSet[i] arg out of range");
 #endif
         return parent::index(i);
         }
@@ -133,7 +123,7 @@ class IndexSetT : public RangeT<index_type_>
     index(size_type I) const
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) throw ITError("IndexSetT.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSet.index(i) arg out of range");
 #endif
         return operator[](I-1);
         }
@@ -142,10 +132,10 @@ class IndexSetT : public RangeT<index_type_>
     range() const { return *this; }
 
     void
-    dag() { for(auto& J : *this) J.dag(); }
+    dag();
 
     void
-    swap(IndexSetT & other) { parent::swap(other); }
+    swap(IndexSet & other) { parent::swap(other); }
 
     index_type const&
     front() const { return parent::front().ind; }
@@ -154,61 +144,56 @@ class IndexSetT : public RangeT<index_type_>
     back() const { return parent::back().ind; }
 
     iterator
-    begin() { return iterator{*this}; }
+    begin();
 
     iterator
-    end() { return iterator::makeEnd(*this); }
+    end();
 
     const_iterator
-    begin() const { return const_iterator{*this}; }
+    begin() const;
 
     const_iterator
-    end() const { return const_iterator::makeEnd(*this); }
+    end() const;
 
     const_iterator
-    cbegin() const { return begin(); }
+    cbegin() const;
 
     const_iterator
-    cend() const { return end(); }
+    cend() const;
 
     };
 
-template<typename index_type>
 void
-read(std::istream& s, IndexSetT<index_type> & is);
+read(std::istream& s, IndexSet & is);
 
-template<typename index_type>
 void
-write(std::ostream& s, IndexSetT<index_type> const& is);
+write(std::ostream& s, IndexSet const& is);
 
-template<typename index_type>
 auto
-rangeBegin(IndexSetT<index_type> const& is) -> decltype(is.range().begin())
+rangeBegin(IndexSet const& is) -> decltype(is.range().begin())
     {
     return is.range().begin();
     }
 
-template<typename index_type>
 auto
-rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
+rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     {
     return is.range().end();
     }
 
 //
-// IndexSetT Primelevel Methods
+// IndexSet Primelevel Methods
 //
 
 // increment primelevel of all
 // indices by an amount "inc"
-template<typename IndexT>
 void 
-prime(IndexSetT<IndexT>& is, 
+prime(IndexSet& is, 
       int inc = 1);
 
-template<typename IndexT, typename... VArgs>
+template<typename... VArgs>
 void
-primeLevel(IndexSetT<IndexT>& is,
+primeLevel(IndexSet& is,
            VArgs&&... vargs);
 
 //
@@ -222,26 +207,26 @@ primeLevel(IndexSetT<IndexT>& is,
 // be an integer "inc" telling how
 // much to increment by.
 //
-template<typename IndexT, typename... VArgs>
+template<typename... VArgs>
 void 
-prime(IndexSetT<IndexT>& is, 
+prime(IndexSet& is, 
       VArgs&&... vargs);
 
 //// Increment primelevels of the indices
 //// specified by 1, or an optional amount "inc"
 //// For example, to prime indices I and J by 2,
 //// prime(is,I,J,2);
-//template<typename IndexT, typename... Inds>
+//template<typename... Inds>
 //void 
-//prime(IndexSetT<IndexT>& is, 
+//prime(IndexSet& is, 
 //      IndexT const& I1, 
 //      Inds&&... rest);
 
 //// increment primelevel of all indices of
 //// type "type" by an amount "inc"
-//template<typename IndexT, typename... Types>
+//template<typename... Types>
 //void 
-//prime(IndexSetT<IndexT>& is, 
+//prime(IndexSet& is, 
 //      IndexType type,
 //      int inc = 1);
 
@@ -264,33 +249,32 @@ prime(IndexSetT<IndexT>& is,
 //will increment all prime levels by 2 except for
 //those of I1,I3,I4, and I7.
 //
-template<typename IndexT, typename... Inds>
+template<typename... Inds>
 void 
-primeExcept(IndexSetT<IndexT>& is, 
-            IndexT const& I1, 
+primeExcept(IndexSet& is, 
+            Index const& I1, 
             Inds&&... inds);
 
-template<typename IndexT, typename... ITs>
+template<typename... ITs>
 void 
-primeExcept(IndexSetT<IndexT>& is, 
+primeExcept(IndexSet& is, 
             IndexType it,
             ITs&&... etc);
 
-template<typename IndexT>
 void 
-noprime(IndexSetT<IndexT>& is, IndexType type = All);
+noprime(IndexSet& is, IndexType type = All);
 
-template<typename IndexT, typename... ITs>
+template<typename... ITs>
 void 
-noprime(IndexSetT<IndexT>& is,
+noprime(IndexSet& is,
         IndexType it1,
         IndexType it2,
         ITs&&... rest);
 
-template<typename IndexT, typename... Inds>
+template<typename... Inds>
 void 
-noprime(IndexSetT<IndexT>& is, 
-        IndexT const& I1, 
+noprime(IndexSet& is, 
+        Index const& I1, 
         Inds&&... inds);
 
 // This version of mapprime takes
@@ -306,14 +290,13 @@ noprime(IndexSetT<IndexT>& is,
 // and primelevel 1 to have primelevel 0
 // If two or more mappings match for a particular
 // index, only the first mapping is used.
-template<typename IndexT, typename... VArgs>
+template<typename... VArgs>
 void 
-mapprime(IndexSetT<IndexT>& is, 
+mapprime(IndexSet& is, 
          VArgs&&... vargs);
 
-template<typename IndexT>
 void 
-mapprime(IndexSetT<IndexT>& is, 
+mapprime(IndexSet& is, 
          int plevold, 
          int plevnew, 
          IndexType type = All);
@@ -321,17 +304,15 @@ mapprime(IndexSetT<IndexT>& is,
 //Replace all indices of type t by 'similar' indices 
 //with same properties but which don't compare equal 
 //to the indices they replace (using sim(IndexT) function)
-template<typename IndexT>
 void 
-sim(IndexSetT<IndexT> & is, 
+sim(IndexSet & is, 
     IndexType t);
 
 //Replace index I with a 'similar' index having same properties
 //but which does not compare equal to it (using sim(I) function)
-template<typename IndexT>
 void 
-sim(IndexSetT<IndexT> & is, 
-    IndexT const& I);
+sim(IndexSet & is, 
+    Index const& I);
 
 //
 // IndexSetT helper methods
@@ -339,27 +320,23 @@ sim(IndexSetT<IndexT> & is,
 
 
 //
-// Given IndexSetT<IndexT> iset and IndexT I,
+// Given IndexSetT iset and Index I,
 // return int j such that iset[j] == I.
 // If not found, returns -1
 //
-template <class IndexT>
 long
-findindex(IndexSetT<IndexT> const& iset, 
-          IndexT const& I);
+findindex(IndexSet const& iset, 
+          Index const& I);
 
-template <class IndexT>
-IndexT const&
-findtype(IndexSetT<IndexT> const& iset, 
+Index
+findtype(IndexSet const& iset, 
          IndexType t);
 
-template <class IndexT>
-IndexT const&
-finddir(IndexSetT<IndexT> const& iset, Arrow dir);
+Index
+finddir(IndexSet const& iset, Arrow dir);
 
-template<class IndexT>
 Arrow
-dir(IndexSetT<IndexT> const& is, IndexT const& I);
+dir(IndexSet const& is, Index const& I);
 
 
 ////
@@ -372,55 +349,49 @@ dir(IndexSetT<IndexT> const& is, IndexT const& I);
 //        const typename IndexSetT<IndexT>::storage& oset, 
 //        Permutation& P);
 
-template <class IndexT>
 bool
-hasindex(IndexSetT<IndexT> const& iset, 
-         IndexT const& I);
+hasindex(IndexSet const& iset, 
+         Index const& I);
 
-template <class IndexT>
 bool
-hastype(IndexSetT<IndexT> const& iset, 
+hastype(IndexSet const& iset, 
         IndexType t);
 
-template <class IndexT>
 long
-minM(IndexSetT<IndexT> const& iset);
+minM(IndexSet const& iset);
 
-template <class IndexT>
 long
-maxM(IndexSetT<IndexT> const& iset);
+maxM(IndexSet const& iset);
 
-template<class IndexT>
 void
-contractIS(IndexSetT<IndexT> const& Lis,
-           IndexSetT<IndexT> const& Ris,
-           IndexSetT<IndexT> & Nis,
+contractIS(IndexSet const& Lis,
+           IndexSet const& Ris,
+           IndexSet & Nis,
            bool sortResult = false);
 
-template<class IndexT, class LabelT>
+template<class LabelT>
 void
-contractIS(IndexSetT<IndexT> const& Lis,
+contractIS(IndexSet const& Lis,
            LabelT const& Lind,
-           IndexSetT<IndexT> const& Ris,
+           IndexSet const& Ris,
            LabelT const& Rind,
-           IndexSetT<IndexT> & Nis,
+           IndexSet & Nis,
            LabelT & Nind,
            bool sortResult = false);
 
-template<class IndexT, class LabelT>
+template<class LabelT>
 void
-ncprod(IndexSetT<IndexT> const& Lis,
+ncprod(IndexSet const& Lis,
        LabelT const& Lind,
-       IndexSetT<IndexT> const& Ris,
+       IndexSet const& Ris,
        LabelT const& Rind,
-       IndexSetT<IndexT> & Nis,
+       IndexSet & Nis,
        LabelT & Nind);
 
-template <class IndexT>
 std::ostream&
-operator<<(std::ostream& s, IndexSetT<IndexT> const& is);
+operator<<(std::ostream& s, IndexSet const& is);
 
-template<typename index_type_> 
+template<typename index_type_>
 class IndexSetIter
     { 
     public:
@@ -431,8 +402,8 @@ class IndexSetIter
     using pointer = index_type_*;
     using iterator_category = std::random_access_iterator_tag;
     using indexset_type = stdx::conditional_t<std::is_const<index_type_>::value,
-                                             const IndexSetT<index_type>,
-                                             IndexSetT<index_type>>;
+                                             const IndexSet,
+                                             IndexSet>;
     using range_ptr = typename RangeT<index_type>::value_type*;
     using const_range_ptr = const typename RangeT<index_type>::value_type*;
     using data_ptr = stdx::conditional_t<std::is_const<index_type_>::value,

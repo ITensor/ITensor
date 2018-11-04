@@ -16,7 +16,7 @@
 namespace itensor {
 
 QN
-div(IQTensor const& T);
+div(ITensor const& T);
 
 namespace detail {
 
@@ -24,70 +24,55 @@ void
 allocReal(ITensor& T);
 
 void
-allocReal(IQTensor& T);
-
-void
 allocReal(ITensor& T, IntArray const& inds);
-
-void
-allocReal(IQTensor& T, IntArray const& inds);
 
 void
 allocCplx(ITensor& T);
 
-void inline
-allocCplx(IQTensor & T) { Error("allocCplx not defined for IQTensor"); }
-
 } //namespace detail
 
-template<typename IndexT>
 template <typename... index_types>
-ITensorT<IndexT>::
-ITensorT(IndexT  const& i1,
-         index_types const&... i2etc)
+ITensor::
+ITensor(Index  const& i1,
+        index_types const&... i2etc)
   : is_(i1,i2etc...)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(std::vector<index_type> const& inds)
+ITensor::
+ITensor(std::vector<index_type> const& inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-template<typename IndexT>
 template<size_t N> 
-ITensorT<IndexT>::
-ITensorT(std::array<index_type,N> const& inds)
+ITensor::
+ITensor(std::array<index_type,N> const& inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(std::initializer_list<index_type> inds)
+ITensor::
+ITensor(std::initializer_list<index_type> inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(indexset_type const& is)
+ITensor::
+ITensor(indexset_type const& is)
   : is_(is)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(indexset_type iset,
-         storage_ptr&& pdat,
-         LogNum const& scale)
+ITensor::
+ITensor(indexset_type iset,
+        storage_ptr&& pdat,
+        LogNum const& scale)
     :
     is_(std::move(iset)),
     store_(std::move(pdat))
@@ -95,40 +80,32 @@ ITensorT(indexset_type iset,
     IF_USESCALE(scale_ = scale;)
     }
 
-template<typename IndexT>
 template <class DataType>
-ITensorT<IndexT>::
-ITensorT(indexset_type iset,
-         DataType&& dat,
-         LogNum const& scale) :
+ITensor::
+ITensor(indexset_type iset,
+        DataType&& dat,
+        LogNum const& scale) :
     is_(std::move(iset)),
     store_(newITData<stdx::decay_t<DataType>>(std::move(dat)))
     {
     IF_USESCALE(scale_ = scale;)
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
-                  "Error: cannot pass lvalues to ITensorT(...,DataType&& dat,...) constructor");
+                  "Error: cannot pass lvalues to ITensor(...,DataType&& dat,...) constructor");
     }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
+inline ITensor::
+ITensor(Cplx val) { Error("ITensor(Cplx) not implemented"); }
 
-template<typename IndexT>
-ITensorT<IndexT>::
-operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *this; }
-
-template<typename IndexT>
 template<typename IV, typename... IVs>
-auto ITensorT<IndexT>::
+auto ITensor::
 cplx(IV const& iv1, IVs&&... ivs) const
     -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>
     {
-    using indexval_type = typename IndexT::indexval_type;
 
     if(!store()) Error("tensor storage unallocated");
 
     constexpr size_t size = sizeof...(ivs)+1;
-    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(iv1),static_cast<indexval_type>(ivs)...}};
+    auto vals = std::array<IndexVal,size>{{static_cast<IndexVal>(iv1),static_cast<IndexVal>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -142,8 +119,8 @@ cplx(IV const& iv1, IVs&&... ivs) const
 
     auto inds = IntArray(size);
     detail::permute_map(is_,vals,inds,
-                [](indexval_type const& iv) { return iv.val-1; });
-    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+                [](IndexVal const& iv) { return iv.val-1; });
+    auto z = itensor::doTask(GetElt{is_,inds},store_);
 #ifndef USESCALE
     return z;
 #else
@@ -164,9 +141,8 @@ cplx(IV const& iv1, IVs&&... ivs) const
 #endif
     }
 
-template<typename IndexT>
 template<typename Int, typename... Ints>
-auto ITensorT<IndexT>::
+auto ITensor::
 cplx(Int iv1, Ints... ivs) const
     -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
     {
@@ -188,7 +164,7 @@ cplx(Int iv1, Ints... ivs) const
     auto inds = IntArray(size);
     for(auto i : range(size))
         inds[i] = ints[i]-1;
-    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+    auto z = itensor::doTask(GetElt{is_,inds},store_);
 #ifndef USESCALE
     return z;
 #else
@@ -209,8 +185,7 @@ cplx(Int iv1, Ints... ivs) const
 #endif
     }
 
-template<typename IndexT>
-Cplx ITensorT<IndexT>::
+Cplx inline ITensor::
 cplx() const
     {
     if(inds().r() != 0)
@@ -219,7 +194,7 @@ cplx() const
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
-    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+    auto z = itensor::doTask(GetElt{is_,inds},store_);
 #ifndef USESCALE
     return z;
 #else
@@ -240,9 +215,8 @@ cplx() const
 #endif
     }
 
-template<typename IndexT>
 template <typename... IVals>
-Real ITensorT<IndexT>::
+Real ITensor::
 real(IVals&&... ivs) const
     {
     auto z = cplx(std::forward<IVals>(ivs)...);
@@ -365,16 +339,15 @@ getInts(Iter it,
 } //namespace detail
 
 
-template<typename IndexT>
 template<typename IV, typename... VArgs>
-auto ITensorT<IndexT>::
+auto ITensor::
 set(IV const& iv1, VArgs&&... vargs)
     -> stdx::if_compiles_return<void,decltype(iv1.index),decltype(iv1.val)>
     {
     static constexpr auto size = 1+(sizeof...(vargs)-1);
-    std::array<indexval_type,size> vals;
+    std::array<IndexVal,size> vals;
     Cplx z;
-    detail::getVals<indexval_type>(vals.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
+    detail::getVals<IndexVal>(vals.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
     if(size != size_t(inds().r())) 
         {
         println("---------------------------------------------");
@@ -388,24 +361,23 @@ set(IV const& iv1, VArgs&&... vargs)
         }
     auto inds = IntArray(is_.r(),0);
     detail::permute_map(is_,vals,inds,
-                        [](indexval_type const& iv) { return iv.val-1; });
+                        [](IndexVal const& iv) { return iv.val-1; });
     //TODO: if !store_ and !is_real, call allocCplx instead
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(z.imag()==0.0)
         {
-        doTask(SetElt<Real,IndexT>{z.real(),is_,inds},store_);
+        doTask(SetElt<Real>{z.real(),is_,inds},store_);
         }
     else
         {
-        doTask(SetElt<Cplx,IndexT>{z,is_,inds},store_);
+        doTask(SetElt<Cplx>{z,is_,inds},store_);
         }
     }
 
-template<typename IndexT>
 template<typename Int, typename... VArgs>
-auto ITensorT<IndexT>::
+auto ITensor::
 set(Int iv1, VArgs&&... vargs)
     -> stdx::enable_if_t<std::is_integral<Int>::value,void>
     {
@@ -431,16 +403,15 @@ set(Int iv1, VArgs&&... vargs)
     scaleTo(1.);
     if(z.imag()==0.0)
         {
-        doTask(SetElt<Real,IndexT>{z.real(),is_,ints},store_);
+        doTask(SetElt<Real>{z.real(),is_,ints},store_);
         }
     else
         {
-        doTask(SetElt<Cplx,IndexT>{z,is_,ints},store_);
+        doTask(SetElt<Cplx>{z,is_,ints},store_);
         }
     }
 
-template<typename IndexT>
-void ITensorT<IndexT>::
+void inline ITensor::
 set(Cplx val)
     {
     if(0 != size_t(inds().r())) 
@@ -453,17 +424,16 @@ set(Cplx val)
     scaleTo(1.);
     if(val.imag()==0.)
         {
-        doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real>{val.real(),is_,inds},store_);
         }
     else
         {
-        doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
+        doTask(SetElt<Cplx>{val,is_,inds},store_);
         }
     }
 
-template<typename IndexT>
-void ITensorT<IndexT>::
-set(std::vector<typename IndexT::indexval_type> const& ivals,
+void ITensor::
+set(std::vector<IndexVal> const& ivals,
     Cplx val)
     {
     auto size = ivals.size();
@@ -480,21 +450,20 @@ set(std::vector<typename IndexT::indexval_type> const& ivals,
         }
     auto inds = IntArray(is_.r(),0);
     detail::permute_map(is_,ivals,inds,
-                        [](indexval_type const& iv) { return iv.val-1; });
+                        [](IndexVal const& iv) { return iv.val-1; });
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(val.imag()==0.0)
         {
-        doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real>{val.real(),is_,inds},store_);
         }
     else
         {
-        doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
+        doTask(SetElt<Cplx>{val,is_,inds},store_);
         }
     }
 
-template<typename IndexT>
-void ITensorT<IndexT>::
+void inline ITensor::
 set(std::vector<int> const& ints,
     Cplx val)
     {
@@ -515,22 +484,21 @@ set(std::vector<int> const& ints,
         inds[i] = ints[i]-1;
     //TODO: if !store_ and !is_real, call allocCplx instead
     //detail::permute_map(is_,ivals,inds,
-    //                    [](indexval_type const& iv) { return iv.val-1; });
+    //                    [](IndexVal const& iv) { return iv.val-1; });
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(val.imag()==0.0)
         {
-        doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real>{val.real(),is_,inds},store_);
         }
     else
         {
-        doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
+        doTask(SetElt<Cplx>{val,is_,inds},store_);
         }
     }
 
-template<typename IndexT>
 template <typename Func>
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 generate(Func&& f)
     {
     if(not this->store())
@@ -554,9 +522,8 @@ generate(Func&& f)
     return *this;
     }
 
-template<typename IndexT>
 template <typename Func>
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 apply(Func&& f)
     {
     scaleTo(1);
@@ -564,41 +531,36 @@ apply(Func&& f)
     return *this;
     }
 
-template<typename IndexT>
 template <typename Func>
-const ITensorT<IndexT>& ITensorT<IndexT>::
+const ITensor& ITensor::
 visit(Func&& f) const
     {
     doTask(VisitIT<decltype(f)>{std::forward<Func>(f),LogNum{scale().real0()}},store_);
     return *this;
     }
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+inline ITensor& ITensor::
 conj()
     {
     doTask(Conj{},store_);
     return *this;
     }
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+inline ITensor& ITensor::
 dag()
     {
     Error("dag not implemented");
     return *this;
     }
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+inline ITensor& ITensor::
 takeReal()
     {
     doTask(TakeReal{},store_);
     return *this;
     }
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+inline ITensor& ITensor::
 takeImag()
     {
     doTask(TakeImag{},store_);
@@ -606,8 +568,7 @@ takeImag()
     }
 
 #ifdef USESCALE
-template<typename IndexT> 
-void ITensorT<IndexT>::
+void inline ITensor::
 scaleTo(scale_type const& newscale)
     {
     if(scale_ == newscale) return;
@@ -617,14 +578,12 @@ scaleTo(scale_type const& newscale)
     scale_ = newscale;
     }
 
-template<typename IndexT> 
-void ITensorT<IndexT>::
+void inline ITensor::
 scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
 #endif
 
-template<typename IndexT>
-void ITensorT<IndexT>::
-swap(ITensorT & other)
+void inline ITensor::
+swap(ITensor & other)
     {
     is_.swap(other.is_);
     store_.swap(other.store_);
@@ -632,7 +591,7 @@ swap(ITensorT & other)
     }
 
 template <typename IVal, typename... IVals>
-ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
+ITensor
 setElt(IVal const& iv1, 
        IVals const&... rest)
     {
@@ -643,15 +602,14 @@ setElt(IVal const& iv1,
     //TODO: try directly making inds as iv1.index,(rest.index)...
     auto inds = std::array<index_type,size>{};
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    auto D = ITensorT<index_type>{IndexSetT<index_type>(inds)};
+    auto D = ITensor{IndexSet(inds)};
     D.set(iv1,rest...,1.);
     return D;
     }
 
 #ifndef USESCALE
 
-template <typename IndexT>
-ITensorT<IndexT> ITensorT<IndexT>::
+ITensor inline ITensor::
 operator-() const
     { 
     auto res = *this;
@@ -661,8 +619,7 @@ operator-() const
 
 #else
 
-template <typename IndexT>
-ITensorT<IndexT> ITensorT<IndexT>::
+ITensor inline ITensor::
 operator-() const
     { 
     auto res = *this;
@@ -672,149 +629,127 @@ operator-() const
 
 #endif
 
-template<typename I>
-ITensorT<I> 
-operator*(ITensorT<I> A, ITensorT<I> const& B) { A *= B; return A; }
-template<typename I>
-ITensorT<I>
-operator*(ITensorT<I> const& A, ITensorT<I>&& B) { B *= A; return B; }
-template<typename I>
-ITensorT<I> 
-operator*(ITensorT<I> T, Real fac) { T *= fac; return T; }
-template<typename I>
-ITensorT<I> 
-operator*(Real fac, ITensorT<I> T) { T *= fac; return T; }
-template<typename I>
-ITensorT<I> 
-operator*(ITensorT<I> T, Complex fac) { T *= fac; return T; }
-template<typename I>
-ITensorT<I> 
-operator*(Complex fac, ITensorT<I> T) { T *= fac; return T; }
-template<typename I>
-ITensorT<I> 
-operator/(ITensorT<I> T, Real fac) { T /= fac; return T; }
-template<typename I>
-ITensorT<I> 
-operator/(ITensorT<I> T, Complex fac) { T /= fac; return T; }
-
-template<typename I>
-ITensorT<I> 
-operator+(ITensorT<I> A, const ITensorT<I>& B) { A += B; return A; }
-template<typename I>
-ITensorT<I> 
-operator+(ITensorT<I> const& A, ITensorT<I>&& B) { B += A; return B; }
-
-template<typename I>
-ITensorT<I> 
-operator-(ITensorT<I> A, const ITensorT<I>& B) { A -= B; return A; }
-template<typename I>
-ITensorT<I> 
-operator-(ITensorT<I> const& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
-
-template<typename I>
-ITensorT<I> 
-operator/(ITensorT<I> A, ITensorT<I> const& B) { A /= B; return A; }
-template<typename I>
-ITensorT<I>
-operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return B; }
+ITensor inline
+operator*(ITensor A, ITensor const& B) { A *= B; return A; }
+ITensor inline
+operator*(ITensor const& A, ITensor&& B) { B *= A; return B; }
+ITensor inline
+operator*(ITensor T, Real fac) { T *= fac; return T; }
+ITensor inline
+operator*(Real fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator*(ITensor T, Complex fac) { T *= fac; return T; }
+ITensor inline
+operator*(Complex fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator/(ITensor T, Real fac) { T /= fac; return T; }
+ITensor inline
+operator/(ITensor T, Complex fac) { T /= fac; return T; }
+ITensor inline
+operator+(ITensor A, ITensor const& B) { A += B; return A; }
+ITensor inline
+operator+(ITensor const& A, ITensor&& B) { B += A; return B; }
+ITensor inline
+operator-(ITensor A, ITensor const& B) { A -= B; return A; }
+ITensor inline
+operator-(ITensor const& A, ITensor&& B) { B -= A; B *= -1; return B; }
+ITensor inline
+operator/(ITensor A, ITensor const& B) { A /= B; return A; }
+ITensor inline
+operator/(ITensor const& A, ITensor && B) { B /= A; return B; }
 
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-prime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+prime(ITensor A, 
       VarArgs&&... vargs)
     {
     A.prime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-primeLevel(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+primeLevel(ITensor A, 
            VarArgs&&... vargs)
     {
     A.primeLevel(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-primeExcept(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+primeExcept(ITensor A, 
             VarArgs&&... vargs)
     {
     A.primeExcept(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-noprime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+noprime(ITensor A, 
         VarArgs&&... vargs)
     {
     A.noprime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-mapprime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+mapprime(ITensor A, 
          VarArgs&&... vargs)
     {
     A.mapprime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-sim(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+sim(ITensor A, 
     VarArgs&&... vargs)
     {
     A.sim(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<typename IndexT>
-bool
-hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)
+bool inline
+hasindex(ITensor const& T, Index const& I)
     {
     return detail::contains(T.inds(),I);
     }
 
-template<typename IndexT>
-IndexT
-findtype(const ITensorT<IndexT>& T, IndexType type)
+Index inline
+findtype(ITensor const& T, IndexType type)
     {
     for(auto& i : T.inds())
         if(i.type()==type) return i;
-    return IndexT{};
+    return Index{};
     }
 
-template<typename IndexT,
-         typename Cond>
-IndexT
-findindex(ITensorT<IndexT> const& T, 
+template<typename Cond>
+Index
+findindex(ITensor const& T, 
           Cond && cond)
     {
     for(auto& i : T.inds())
         if(cond(i)) return i;
-    return IndexT{};
+    return Index{};
     }
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B
-template<typename IndexT> 
-IndexT
-commonIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+commonIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t);
 
 
 //Find index of tensor A (of optional type t) 
 //which is NOT shared by tensor B
-template<typename IndexT> 
-IndexT
-uniqueIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t);
 
 //
@@ -824,93 +759,81 @@ uniqueIndex(const ITensorT<IndexT>& A,
 //operator) then swapPrime(T,0,1) will have indices i',i 
 //i.e. the transpose of T.
 //
-template <typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
+ITensor
+swapPrime(ITensor T, 
           int plev1, 
           int plev2,
           IndexType type);
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
-template<typename I, typename F>
-ITensorT<I>
-apply(ITensorT<I> T, F&& f)
+template<typename F>
+ITensor
+apply(ITensor T, F&& f)
     {
     T.apply(std::forward<F>(f));
     return T;
     }
 
-template<typename I>
-bool
-isComplex(ITensorT<I> const& T)
+bool inline
+isComplex(ITensor const& T)
     {
     return doTask(CheckComplex{},T.store());
     }
 
-template<typename I>
-bool
-isReal(ITensorT<I> const& T)
+bool inline
+isReal(ITensor const& T)
     {
     return not isComplex(T);
     }
 
-template<typename I>
-long
-rank(ITensorT<I> const& T) { return rank(T.inds()); }
+long inline
+rank(ITensor const& T) { return rank(T.inds()); }
 
 //return number of indices of T
 //(same as rank)
-template<typename I>
-long
-ord(ITensorT<I> const& T) { return rank(T.inds()); }
+long inline
+ord(ITensor const& T) { return rank(T.inds()); }
 
-template<typename I>
 Real
-norm(ITensorT<I> const& T);
+norm(ITensor const& T);
 
-template<typename I>
 void
-randomize(ITensorT<I> & T, Args const& args);
+randomize(ITensor & T, Args const& args);
 
-template<typename I>
-ITensorT<I>
-random(ITensorT<I> T, const Args& args)
+ITensor inline
+random(ITensor T, const Args& args)
     {
     randomize(T,args);
     return T;
     }
 
-template<typename I>
-ITensorT<I>
-conj(ITensorT<I> T)
+ITensor inline
+conj(ITensor T)
     {
     T.conj();
     return T;
     }
 
-template<typename I>
-ITensorT<I>
-dag(ITensorT<I> T)
+ITensor inline
+dag(ITensor T)
     {
     T.dag();
     return T;
     }
 
-template<typename I>
-Real
-sumels(const ITensorT<I>& t)
+Real inline
+sumels(ITensor const& t)
     {
     auto z = sumelsC(t);
     if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
     return z.real();
     }
 
-template<typename I>
-Cplx
-sumelsC(ITensorT<I> const& t)
+Cplx inline
+sumelsC(ITensor const& t)
     {
-    auto z = doTask(SumEls<I>{t.inds()},t.store());
+    auto z = doTask(SumEls{t.inds()},t.store());
 #ifndef USESCALE
     return z;
 #else
@@ -918,14 +841,14 @@ sumelsC(ITensorT<I> const& t)
 #endif
     }
 
-template<typename IndexT, typename... Inds>
-ITensorT<IndexT>
-reindex(ITensorT<IndexT> const& cT, 
-        IndexT o1, IndexT n1, 
+template<typename... Inds>
+ITensor
+reindex(ITensor const& cT, 
+        Index o1, Index n1, 
         Inds... inds) 
     {
     constexpr size_t size = 2+sizeof...(inds);
-    auto ipairs = std::array<IndexT,size>{{o1,n1,static_cast<IndexT>(inds)...}};
+    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(inds)...}};
 
     auto T = cT;
     auto is = T.inds();
@@ -951,7 +874,7 @@ reindex(ITensorT<IndexT> const& cT,
                 }
             }
         }
-    auto nT = ITensorT<IndexT>(is,std::move(T.store()),T.scale());
+    auto nT = ITensor(is,std::move(T.store()),T.scale());
     return nT;
     }
 
@@ -961,8 +884,7 @@ namespace detail {
 
 // TODO: check for incorrect inputs
 
-template<typename IndexT,
-         typename Iter>
+template<typename Iter>
 void
 getDotInds(Iter it,
            std::string const& dots)
@@ -971,21 +893,19 @@ getDotInds(Iter it,
         Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
     }
 
-template<typename IndexT,
-         typename Iter,
+template<typename Iter,
          typename... Rest>
 void
 getDotInds(Iter it,
-           IndexT const& ind,
+           Index const& ind,
            Rest const&... rest)
     {
     *it = ind;
-    getDotInds<IndexT>(++it,std::forward<Rest const&>(rest)...);
+    getDotInds(++it,std::forward<Rest const&>(rest)...);
     }
 
-template <typename IndexT>
-IndexSetT<IndexT>
-moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
+IndexSet
+moveToFront(IndexSet const& isf, IndexSet const& is)
     {
     auto rf = isf.r();
     auto r = is.r();
@@ -1000,7 +920,7 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
         Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
         }
 
-    auto iso = IndexSetT<IndexT>(r);
+    auto iso = IndexSet(r);
 
     auto i = 0;
     for(auto& I : isf) 
@@ -1031,9 +951,8 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
     return iso;
     }
 
-template <typename IndexT>
-IndexSetT<IndexT>
-moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
+IndexSet
+moveToBack(IndexSet const& isb, IndexSet const& is)
     {
     auto rb = isb.r();
     auto r = is.r();
@@ -1048,7 +967,7 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
         Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
         }
 
-    auto iso = IndexSetT<IndexT>(r);
+    auto iso = IndexSet(r);
 
     auto i = r-rb;
     for(auto& I : isb) 
@@ -1082,46 +1001,43 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
 } //namespace detail
 
 //Version of order accepting syntax: T.order(i,j,"...")
-template <typename IndexT>
 template <typename... Indxs>
-auto ITensorT<IndexT>::
-order(IndexT const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<not stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
+auto ITensor::
+order(Index const& ind1, Indxs const&... inds)
+    -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
-    auto isf = IndexSetT<IndexT>(size);
-    detail::getDotInds<IndexT>(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
+    auto isf = IndexSet(size);
+    detail::getDotInds(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
     order(detail::moveToFront(isf,this->inds()));
     return *this;
     }
 
 //Version of order accepting syntax: T.order(i,j,k)
-template <typename IndexT>
 template <typename... Indxs>
-auto ITensorT<IndexT>::
-order(IndexT const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
+auto ITensor::
+order(Index const& ind1, Indxs const&... inds)
+    -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
     {
-    order(IndexSetT<IndexT>(ind1, inds...));
+    order(IndexSet(ind1, inds...));
     return *this;
     }
 
 //Version of order accepting syntax: T.order("...",j,k)
-template <typename IndexT>
 template <typename... Indxs>
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 order(std::string const& dots, Indxs const&... inds)
     {
     if(dots != "...")
         Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
-    order(detail::moveToBack(IndexSetT<IndexT>(inds...),this->inds()));
+    order(detail::moveToBack(IndexSet(inds...),this->inds()));
     return *this;
     }
 
 //order function which returns a new ITensor 
-template <typename IndexT, typename... Indxs>
-ITensorT<IndexT>
-order(ITensorT<IndexT> A, Indxs const&... inds)
+template<typename... Indxs>
+ITensor
+order(ITensor A, Indxs const&... inds)
     {
     A.order(std::forward<Indxs const&>(inds)...);
     return A;
@@ -1136,8 +1052,7 @@ readType(std::istream& s, CtrArgs&&... args)
     return newITData<T>(std::move(t));
     }
 
-template<typename I>
-void ITensorT<I>::
+void inline ITensor::
 read(std::istream& s)
     {
     itensor::read(s,is_);
@@ -1152,13 +1067,13 @@ read(std::istream& s)
     else if(type==StorageType::Combiner) { store_ = readType<Combiner>(s); }
     else if(type==StorageType::DiagReal) { store_ = readType<Diag<Real>>(s); }
     else if(type==StorageType::DiagCplx) { store_ = readType<Diag<Cplx>>(s); }
-    else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
-    else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
-    else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
-    else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
-    else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
-    else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
-    else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
+    //else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
+    //else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
+    //else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
+    //else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
+    //else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
+    //else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
+    //else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");
@@ -1185,7 +1100,7 @@ doTask(Write & W, D const& d)
 
 //template<typename I>
 //void
-//write(std::ostream& s, ITensorT<I> const& T);
+//write(std::ostream& s, ITensor<I> const& T);
 
 
 } // namespace itensor

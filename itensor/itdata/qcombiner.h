@@ -103,7 +103,7 @@ void
 write(std::ostream& s, QCombiner const& dat);
 
 Cplx
-doTask(GetElt<IQIndex> const& g, QCombiner const& c);
+doTask(GetElt const& g, QCombiner const& c);
 
 Real inline
 doTask(NormNoScale, QCombiner const& d) { return 0; }
@@ -113,20 +113,20 @@ doTask(Conj,QCombiner const& d) { }
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
+doTask(Contract & C,
        QDense<T>    const& d,
        QCombiner  const& cmb,
        ManageStore       & m);
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
+doTask(Contract & C,
        QCombiner  const& cmb,
        QDense<T>    const& d,
        ManageStore       & m);
 
 void inline
-doTask(PrintIT<IQIndex> & P, 
+doTask(PrintIT & P, 
        QCombiner const& d) { P.s << "QCombiner "; }
 
 auto inline

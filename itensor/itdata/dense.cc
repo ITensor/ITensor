@@ -4,7 +4,7 @@
 //
 #include "itensor/itdata/dense.h"
 #include "itensor/itdata/itdata.h"
-#include "itensor/itdata/itlazy.h"
+//#include "itensor/itdata/itlazy.h"
 #include "itensor/indexset.h"
 #include "itensor/util/range.h"
 #include "itensor/tensor/sliceten.h"
@@ -20,13 +20,13 @@ const char*
 typeNameOf(DenseCplx const& d) { return "DenseCplx"; }
 
 Cplx 
-doTask(GetElt<Index> const& g, DenseReal const& d)
+doTask(GetElt const& g, DenseReal const& d)
     {
     return Cplx(d[offset(g.is,g.inds)],0.);
     }
 
 Cplx 
-doTask(GetElt<Index> const& g, DenseCplx const& d)
+doTask(GetElt const& g, DenseCplx const& d)
     {
     return d[offset(g.is,g.inds)];
     }
@@ -35,7 +35,7 @@ template<typename E, typename T>
 struct SetEltHelper
     {
     void static
-    set(SetElt<E,Index> const& S, Dense<T> const& D, ManageStore& m)
+    set(SetElt<E> const& S, Dense<T> const& D, ManageStore& m)
         {
         auto& Dnc = *m.modifyData(D);
         Dnc[offset(S.is,S.inds)] = S.elt;
@@ -45,7 +45,7 @@ template<>
 struct SetEltHelper<Cplx,Real>
     {
     void static
-    set(SetElt<Cplx,Index> const& S, DenseReal const& D, ManageStore & m)
+    set(SetElt<Cplx> const& S, DenseReal const& D, ManageStore & m)
         {
         auto& nd = *m.makeNewData<DenseCplx>(D.begin(),D.end());
         nd[offset(S.is,S.inds)] = S.elt;
@@ -54,22 +54,22 @@ struct SetEltHelper<Cplx,Real>
 
 template<typename E, typename T>
 void
-doTask(SetElt<E,Index> const& S, Dense<T> const& D, ManageStore & m)
+doTask(SetElt<E> const& S, Dense<T> const& D, ManageStore & m)
     {
     SetEltHelper<E,T>::set(S,D,m);
     }
 template
 void
-doTask(SetElt<Real,Index> const& S, DenseReal const& D, ManageStore & m);
+doTask(SetElt<Real> const& S, DenseReal const& D, ManageStore & m);
 template
 void
-doTask(SetElt<Real,Index> const& S, DenseCplx const& D, ManageStore & m);
+doTask(SetElt<Real> const& S, DenseCplx const& D, ManageStore & m);
 template
 void
-doTask(SetElt<Cplx,Index> const& S, DenseReal const& D, ManageStore & m);
+doTask(SetElt<Cplx> const& S, DenseReal const& D, ManageStore & m);
 template
 void
-doTask(SetElt<Cplx,Index> const& S, DenseCplx const& D, ManageStore & m);
+doTask(SetElt<Cplx> const& S, DenseCplx const& D, ManageStore & m);
 
 
 void
@@ -182,7 +182,7 @@ doTask(MakeCplx, DenseReal const& d, ManageStore & m)
 
 template<typename T>
 void
-doTask(PrintIT<Index>& P, 
+doTask(PrintIT& P, 
        Dense<T> const& D)
     {
     auto name = std::is_same<T,Real>::value ? "Dense Real"
@@ -220,12 +220,12 @@ doTask(PrintIT<Index>& P,
             }
         }
     }
-template void doTask(PrintIT<Index>& P, DenseReal const& d);
-template void doTask(PrintIT<Index>& P, DenseCplx const& d);
+template void doTask(PrintIT& P, DenseReal const& d);
+template void doTask(PrintIT& P, DenseCplx const& d);
 
 template<typename T>
 Cplx
-doTask(SumEls<Index>, Dense<T> const& D) 
+doTask(SumEls, Dense<T> const& D) 
     { 
     T sum = 0;
     for(auto& elt : D) sum += elt;
@@ -233,14 +233,14 @@ doTask(SumEls<Index>, Dense<T> const& D)
     }
 template
 Cplx
-doTask(SumEls<Index>, DenseReal const& d);
+doTask(SumEls, DenseReal const& d);
 template
 Cplx
-doTask(SumEls<Index>, DenseCplx const& d);
+doTask(SumEls, DenseCplx const& d);
 
 template<typename T1,typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<T1> const& L,
        Dense<T2> const& R,
        ManageStore & m)
@@ -302,14 +302,14 @@ doTask(Contract<Index> & C,
     STOP_TIMER(3)
 #endif
     }
-template void doTask(Contract<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
-template void doTask(Contract<Index>&,DenseCplx const&,DenseReal const&,ManageStore&);
-template void doTask(Contract<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
-template void doTask(Contract<Index>&,DenseCplx const&,DenseCplx const&,ManageStore&);
+template void doTask(Contract&,DenseReal const&,DenseReal const&,ManageStore&);
+template void doTask(Contract&,DenseCplx const&,DenseReal const&,ManageStore&);
+template void doTask(Contract&,DenseReal const&,DenseCplx const&,ManageStore&);
+template void doTask(Contract&,DenseCplx const&,DenseCplx const&,ManageStore&);
 
 template<typename VL, typename VR>
 void
-doTask(NCProd<Index>& P,
+doTask(NCProd& P,
        Dense<VL> const& L,
        Dense<VR> const& R,
        ManageStore& m)
@@ -332,10 +332,10 @@ doTask(NCProd<Index>& P,
     if(rsize > 1) P.scalefac = computeScalefac(*nd);
 #endif
     }
-template void doTask(NCProd<Index>&,DenseReal const&,DenseReal const&,ManageStore&);
-template void doTask(NCProd<Index>&,DenseReal const&,DenseCplx const&,ManageStore&);
-template void doTask(NCProd<Index>&,DenseCplx const&,DenseReal const&,ManageStore&);
-template void doTask(NCProd<Index>&,DenseCplx const&,DenseCplx const&,ManageStore&);
+template void doTask(NCProd&,DenseReal const&,DenseReal const&,ManageStore&);
+template void doTask(NCProd&,DenseReal const&,DenseCplx const&,ManageStore&);
+template void doTask(NCProd&,DenseCplx const&,DenseReal const&,ManageStore&);
+template void doTask(NCProd&,DenseCplx const&,DenseCplx const&,ManageStore&);
 
 struct Adder
     {
@@ -348,7 +348,7 @@ struct Adder
 
 template<typename T1, typename T2>
 void
-add(PlusEQ<Index> const& P,
+add(PlusEQ const& P,
     Dense<T1>          & D1,
     Dense<T2>     const& D2)
     {
@@ -371,7 +371,7 @@ add(PlusEQ<Index> const& P,
 
 template<typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
+doTask(PlusEQ const& P,
        Dense<T1> const& D1,
        Dense<T2> const& D2,
        ManageStore & m)
@@ -387,10 +387,10 @@ doTask(PlusEQ<Index> const& P,
         add(P,*ncD1,D2);
         }
     }
-template void doTask(PlusEQ<Index> const&,Dense<Real> const&,Dense<Real> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Dense<Real> const&,Dense<Cplx> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Dense<Cplx> const&,Dense<Real> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Dense<Cplx> const&,Dense<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ const&,Dense<Real> const&,Dense<Real> const&,ManageStore &);
+template void doTask(PlusEQ const&,Dense<Real> const&,Dense<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ const&,Dense<Cplx> const&,Dense<Real> const&,ManageStore &);
+template void doTask(PlusEQ const&,Dense<Cplx> const&,Dense<Cplx> const&,ManageStore &);
 
 template<typename T>
 void
@@ -407,13 +407,13 @@ permuteDense(Permutation const& P,
 
 template<typename T>
 void
-doTask(Order<Index> const& O,
+doTask(Order const& O,
        Dense<T> & dA)
     {
     auto dB = dA;
     permuteDense(O.perm(),dB,O.is1(),dA,O.is2());
     }
-template void doTask(Order<Index> const&,Dense<Real> &);
-template void doTask(Order<Index> const&,Dense<Cplx> &); 
+template void doTask(Order const&,Dense<Real> &);
+template void doTask(Order const&,Dense<Cplx> &); 
 
 } // namespace itensor

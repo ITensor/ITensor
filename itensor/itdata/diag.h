@@ -179,32 +179,32 @@ doTask(VisitIT<F>& V, Diag<T> const& d)
 
 template <typename T>
 Cplx
-doTask(GetElt<Index> const& g, Diag<T> const& d);
+doTask(GetElt const& g, Diag<T> const& d);
 
 template<typename T1, typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<T1>  const& t,
        Diag<T2>   const& d,
        ManageStore     & m);
 
 template<typename T1, typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Diag<T1>   const& d,
        Dense<T2>  const& t,
        ManageStore     & m);
 
 template<typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
+doTask(PlusEQ const& P,
        Diag<T1> const& D1,
        Diag<T2> const& D2,
        ManageStore & m);
 
 template<typename T>
 void
-doTask(Order<Index> const& P,
+doTask(Order const& P,
        Diag<T> & dA) { }
 
 template<typename N, typename T>
@@ -242,7 +242,7 @@ doTask(TakeImag, DiagCplx const& D, ManageStore& m);
 
 template<typename T>
 void
-doTask(PrintIT<Index> & P, Diag<T> const& d);
+doTask(PrintIT & P, Diag<T> const& d);
 
 template<typename T>
 bool
@@ -250,7 +250,7 @@ doTask(CheckComplex, Diag<T> const& d) { return isCplx<T>(); }
 
 template <class T>
 Cplx
-doTask(SumEls<Index> S, Diag<T> const& d);
+doTask(SumEls S, Diag<T> const& d);
 
 auto inline
 doTask(StorageType const& S, DiagReal const& d) ->StorageType::Type { return StorageType::DiagReal; }

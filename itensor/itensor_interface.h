@@ -12,31 +12,21 @@
 
 namespace itensor {
 
-template<typename index_type> 
-class ITensorT;
-
-class IQIndex;
+class ITensor;
 
 //
-// ITensorT - interface template for ITensor and IQTensor
+// ITensor
 //
-// ITensor  is ITensorT<Index>
-// IQTensor is ITensorT<IQIndex>
-//
-
-using ITensor  = ITensorT<Index>;
-using IQTensor = ITensorT<IQIndex>;
 
 struct ITData;
 
-template<typename index_type_>
-class ITensorT
+class ITensor
     {
     public:
-    using index_type = index_type_;
-    using indexval_type = typename index_type::indexval_type;
-    using indexset_type = IndexSetT<index_type>;
-    using range_type = RangeT<index_type>;
+    using index_type = Index;
+    using indexval_type = IndexVal;
+    using indexset_type = IndexSet;
+    using range_type = RangeT<Index>;
     using size_type = typename range_type::size_type;
     using storage_ptr = PData;
     using const_storage_ptr = CPData;
@@ -52,30 +42,27 @@ class ITensorT
     //
 
     //Default constructed tensor will evaluate to false in boolean context
-    ITensorT() { }
+    ITensor() { }
 
     //Construct rank n tensor, all elements set to zero
     //Usage: ITensor(i1,i2,i3,...)
     template <typename... index_types>
-    ITensorT(index_type  const& i1,
+    ITensor(index_type  const& i1,
              index_types const&... i2etc);
 
     explicit
-    ITensorT(std::vector<index_type> const& inds);
+    ITensor(std::vector<index_type> const& inds);
 
     template<size_t N> 
     explicit
-    ITensorT(std::array<index_type,N> const& inds);
+    ITensor(std::array<index_type,N> const& inds);
 
-    ITensorT(std::initializer_list<index_type> inds);
+    ITensor(std::initializer_list<index_type> inds);
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit
-    ITensorT(Cplx val);
-
-    //Automatic conversion IQTensor -> ITensor
-    operator ITensor() const;
+    ITensor(Cplx val);
 
     //
     // Accessor Methods
@@ -140,37 +127,37 @@ class ITensorT
     //
 
     template<typename... VarArgs>
-    ITensorT& 
+    ITensor& 
     noprime(VarArgs&&... vargs)
         { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
-    ITensorT& 
+    ITensor& 
     prime(VarArgs&&... vargs)
         { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
-    ITensorT& 
+    ITensor& 
     primeLevel(VarArgs&&... vargs)
         { itensor::primeLevel(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
-    ITensorT&
+    ITensor&
     primeExcept(VarArgs&&... vargs)
         { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
-    ITensorT& 
+    ITensor& 
     mapprime(int plevold, int plevnew, IndexType type = All)
         { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
 
     template<typename... VarArgs>
-    ITensorT& 
+    ITensor& 
     mapprime(VarArgs&&... vargs)
         { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
-    ITensorT& 
+    ITensor& 
     sim(VarArgs&&... vargs)
         { itensor::sim(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
@@ -181,25 +168,25 @@ class ITensorT
     //Set all elements to z. If z.imag()==0
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
-    ITensorT&
+    ITensor&
     fill(Complex z);
 
     //Call a function of the form f()->val once
     //for each element, assign result to each element.
     template <typename Func>
-    ITensorT&
+    ITensor&
     generate(Func&& f);
 
     //Apply a function of the form f(x)->y
     //to each element x, replacing it with y
     template <typename Func>
-    ITensorT&
+    ITensor&
     apply(Func&& f);
 
     //Apply a function of the form f(x)->void
     //to each element x.
     template <typename Func>
-    const ITensorT&
+    const ITensor&
     visit(Func&& f) const;
 
     //
@@ -207,18 +194,18 @@ class ITensorT
     //
 
     //Take complex conjugate of all elements
-    ITensorT&
+    ITensor&
     conj();
 
-    ITensorT&
+    ITensor&
     dag();
 
     //Replace data with real part
-    ITensorT&
+    ITensor&
     takeReal();
 
     //Replace data with imaginary part
-    ITensorT&
+    ITensor&
     takeImag();
 
     //
@@ -228,72 +215,72 @@ class ITensorT
     //Contracting product
     //All matching Index pairs automatically contracted
     //Cji = \sum_{k,l} Akjl * Blki
-    ITensorT&
-    operator*=(ITensorT const& other);
+    ITensor&
+    operator*=(ITensor const& other);
 
     //Tensor addition and subtraction
     //Summands must have same Indices, in any order
     //Cijk = Aijk + Bkij
-    ITensorT& 
-    operator+=(ITensorT const& other);
-    ITensorT& 
-    operator-=(ITensorT const& other);
+    ITensor& 
+    operator+=(ITensor const& other);
+    ITensor& 
+    operator-=(ITensor const& other);
 
 #ifdef USESCALE
     //Multiplication by real scalar
-    ITensorT&
+    ITensor&
     operator*=(Real fac) { scale_ *= fac; return *this; }
 
     //Division by real scalar
-    ITensorT&
+    ITensor&
     operator/=(Real fac) { scale_ /= fac; return *this; }
 #else
     //Multiplication by real scalar
-    ITensorT&
+    ITensor&
     operator*=(Real fac);
 
     //Division by real scalar
-    ITensorT&
+    ITensor&
     operator/=(Real fac);
 #endif
 
     //Multiplication by complex scalar
-    ITensorT&
+    ITensor&
     operator*=(Cplx z);
 
     //Division by complex scalar
-    ITensorT&
+    ITensor&
     operator/=(Cplx z) { return operator*=(1./z); }
 
     //Negation
-    ITensorT
+    ITensor
     operator-() const;
 
     //Non-contracting product
     //All matching Index pairs automatically merged
     //Ciik = Aij * Bjk
-    ITensorT&
-    operator/=(ITensorT const& other);
+    ITensor&
+    operator/=(ITensor const& other);
 
     //template<typename... Indxs>
-    //ITensorT&
+    //ITensor&
     //order(index_type const& ind1, Indxs const&... inds);
 
     template<typename... Indxs>
     auto 
     order(index_type const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
+    -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
 
     template <typename... Indxs>
     auto 
     order(index_type const& ind1, Indxs const&... inds)
-        -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
+        -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
 
     template<typename... Indxs>
-    ITensorT&
+    ITensor&
     order(std::string const& dots, Indxs const&... inds);
 
-    ITensorT&
+    ITensor&
     order(indexset_type const& iset);
 
     //
@@ -315,17 +302,17 @@ class ITensorT
     //
 
     template <class StorageType>
-    ITensorT(indexset_type iset,
+    ITensor(indexset_type iset,
              StorageType&& store,
              scale_type const& scale = LogNum{1.});
 
-    ITensorT(indexset_type iset,
+    ITensor(indexset_type iset,
              storage_ptr&& pstore,
              scale_type const& scale = LogNum{1.});
 
     //Provide indices from IndexSet
     explicit
-    ITensorT(indexset_type const& is);
+    ITensor(indexset_type const& is);
 
 
     storage_ptr&
@@ -336,7 +323,7 @@ class ITensorT
 
 
     void
-    swap(ITensorT & other);
+    swap(ITensor & other);
     
     
 #ifdef USESCALE
@@ -369,82 +356,76 @@ class ITensorT
 
 #endif
 
-    }; // class ITensorT
+    }; // class ITensor
 
 //
-// ITensorT special constructor functions
+// ITensor special constructor functions
 //
 
-// Makes a tensor with element specified by IndexVals/IQIndexVals
+// Makes a tensor with element specified by IndexVals
 // set to 1.0, all other elements zero
 template <typename IVal, typename... IVals>
-//ITensorT<typename IVal::index_type>
-ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
+ITensor
 setElt(IVal  const& iv1, 
        IVals const&... rest);
 
 
 //
-// ITensorT prime level functions
+// ITensor prime level functions
 //
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-prime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+prime(ITensor A, 
       VarArgs&&... vargs);
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-primeLevel(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+primeLevel(ITensor A, 
            VarArgs&&... vargs);
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-primeExcept(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+primeExcept(ITensor A, 
             VarArgs&&... vargs);
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-noprime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+noprime(ITensor A, 
         VarArgs&&... vargs);
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-mapprime(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+mapprime(ITensor A, 
          VarArgs&&... vargs);
 
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-sim(ITensorT<IndexT> A, 
+template<typename... VarArgs>
+ITensor
+sim(ITensor A, 
     VarArgs&&... vargs);
 
-template<typename IndexT>
 bool
-hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I);
+hasindex(ITensor const& T, Index const& I);
 
-template<typename IndexT>
-IndexT
-findtype(const ITensorT<IndexT>& T, IndexType type);
+Index
+findtype(ITensor const& T, IndexType type);
 
-template<typename IndexT,
-         typename Cond>
-IndexT
-findindex(ITensorT<IndexT> const& T, Cond && cond);
+template<typename Cond>
+Index
+findindex(ITensor const& T, Cond && cond);
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B
-template<typename IndexT> 
-IndexT
-commonIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+commonIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t = All);
 
 
 //Find index of tensor A (of optional type t) 
 //which is NOT shared by tensor B
-template<typename IndexT> 
-IndexT
-uniqueIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& B, 
             IndexType t);
 
 //
@@ -454,83 +435,69 @@ uniqueIndex(const ITensorT<IndexT>& A,
 //operator) then swapPrime(T,0,1) will have indices i',i 
 //i.e. the transpose of T.
 //
-template <typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
+ITensor
+swapPrime(ITensor T, 
           int plev1, 
           int plev2,
           IndexType type = All);
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
-template<typename I, typename F>
-ITensorT<I>
-apply(ITensorT<I> T, F&& f);
+template<typename F>
+ITensor
+apply(ITensor T, F&& f);
 
-template <class I>
-ITensorT<I>
-realPart(ITensorT<I> T) { T.takeReal(); return T; }
+ITensor inline
+realPart(ITensor T) { T.takeReal(); return T; }
 
-template <class I>
-ITensorT<I>
-imagPart(ITensorT<I> T) { T.takeImag(); return T; }
+ITensor inline
+imagPart(ITensor T) { T.takeImag(); return T; }
 
-template<typename I>
 bool
-isComplex(ITensorT<I> const& T);
+isComplex(ITensor const& T);
 
-template<typename I>
 bool
-isReal(ITensorT<I> const& T);
+isReal(ITensor const& T);
 
 //return number of indices of T
 //(same as order)
-template<typename I>
 long
-rank(ITensorT<I> const& T);
+rank(ITensor const& T);
 
 //return number of indices of T
 //(same as rank)
-template<typename I>
 long
-ord(ITensorT<I> const& T);
+ord(ITensor const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
 //Result is equivalent to sqrt((T*T).real()) 
 //(and similar for complex case) but computed more efficiently
-template<typename I>
 Real
-norm(ITensorT<I> const& T);
+norm(ITensor const& T);
 
-template<typename I>
 void
-randomize(ITensorT<I> & T, Args const& args = Args::global());
+randomize(ITensor & T, Args const& args = Args::global());
 
-template<typename I>
-ITensorT<I>
-random(ITensorT<I> T, Args const& args = Args::global());
+ITensor
+random(ITensor T, Args const& args = Args::global());
 
-template<typename I>
-ITensorT<I>
-conj(ITensorT<I> T);
+ITensor
+conj(ITensor T);
 
-template<typename I>
-ITensorT<I>
-dag(ITensorT<I> T);
+ITensor
+dag(ITensor T);
 
-template<typename I>
 Real
-sumels(ITensorT<I> const& t);
+sumels(ITensor const& t);
 
-template<typename I>
 Cplx
-sumelsC(ITensorT<I> const& t);
+sumelsC(ITensor const& t);
 
-template<typename IndexT, typename... Inds>
-ITensorT<IndexT>
-reindex(ITensorT<IndexT> const& cT, 
-        IndexT o1, IndexT n1, 
+template<typename... Inds>
+ITensor
+reindex(ITensor const& cT, 
+        Index o1, Index n1, 
         Inds... inds);
 
 
@@ -550,15 +517,11 @@ reindex(ITensorT<IndexT> const& cT,
 //
 // (here s and t are indices of type Site)
 //
-template<class I>
-ITensorT<I>
-multSiteOps(ITensorT<I> A, ITensorT<I> const& B);
+ITensor inline
+multSiteOps(ITensor A, ITensor const& B);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
-
-std::ostream& 
-operator<<(std::ostream & s, IQTensor const& T);
 
 } //namespace itensor
 
