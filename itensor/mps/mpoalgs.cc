@@ -50,21 +50,12 @@ nmultMPO(MPOType const& Aorig,
     B.primeall();
 
     res=A;
-    for(auto i : range1(N))
-        {
-        if(i < N)
-            {
-            auto l = linkInd(res,i);
-            res.Aref(i).mapprime(l,0,4);
-            res.Aref(i+1).mapprime(l,0,4);
-            }
-        auto si = noprime(commonIndex(A.A(i),B.A(i)));
-        res.Aref(i).mapprime(si,1,2);
-        }
+    auto siA = uniqueIndex(A.A(1),B.A(1),A.A(2));
+    auto siB = uniqueIndex(B.A(1),A.A(1),B.A(2));
+    res.Aref(1) = Tensor(siA,siB,linkInd(A,1));
 
     //Print(A);
     //Print(B);
-    //Print(res);
 
     Tensor clust,nfork;
     for(int i = 1; i < N; ++i)
@@ -92,12 +83,14 @@ nmultMPO(MPOType const& Aorig,
         //printfln("After denmatDecomp i=%d:",i);
         //Print(res.A(i));
         //Print(nfork);
-        //println("--------------");
 
         auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
-        auto si1 = noprime(commonIndex(A.A(i+1),B.A(i+1)));
-        res.Aref(i+1) = Tensor(mid,dag(si1),prime(si1,2),rightLinkInd(res,i+1));
+        auto siA = uniqueIndex(A.A(i+1),B.A(i+1),B.A(i),B.A(i+2));
+        auto siB = uniqueIndex(B.A(i+1),B.A(i),B.A(i+2),A.A(i+1));
+        res.Aref(i+1) = Tensor(mid,siA,siB,rightLinkInd(res,i+1));
+
+        //println("--------------");
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -111,8 +104,7 @@ nmultMPO(MPOType const& Aorig,
             res.Aref(i).mapprime(l,l.primeLevel(),0);
             res.Aref(i+1).mapprime(l,l.primeLevel(),0);
             }
-        auto si = noprime(commonIndex(A.A(i),B.A(i)));
-        res.Aref(i).mapprime(si,2,1);
+        res.Aref(i).mapprime(2,1);
         }
     res.orthogonalize();
     }
