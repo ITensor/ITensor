@@ -443,9 +443,18 @@ commonIndex(const ITensorT<IndexT>& A,
 //which is NOT shared by tensor B
 template<typename IndexT> 
 IndexT
-uniqueIndex(const ITensorT<IndexT>& A, 
-            const ITensorT<IndexT>& B, 
+uniqueIndex(ITensorT<IndexT> const& A, 
+            ITensorT<IndexT> const& B, 
             IndexType t);
+
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by the tensors "Ts"
+template<typename IndexT, typename... Tensors> 
+IndexT
+uniqueIndex(ITensorT<IndexT> const& A, 
+            ITensorT<IndexT> const& T1,
+            ITensorT<IndexT> const& T2,
+            Tensors const&... Ts);
 
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped

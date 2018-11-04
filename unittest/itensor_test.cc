@@ -2660,6 +2660,30 @@ SECTION("ITensor Negation")
         }
     }
 
+SECTION("uniqueIndex")
+    {
+    auto i = Index("i",2);
+    auto j = Index("j",2);
+    auto k = Index("k",3);
+    auto l = Index("l",3);
+
+    SECTION("Test 1")
+        {
+        auto A = ITensor(i,j,k);
+        auto B = ITensor(k,j);
+        CHECK(uniqueIndex(A,B,Link) == i);
+        }
+
+    SECTION("Test 2")
+        {
+        auto A = ITensor(i,j,k,l);
+        auto B = ITensor(i);
+        auto C = ITensor(j);
+        auto D = ITensor(l);
+        CHECK(uniqueIndex(A,B,C,D) == k);
+        }
+    }
+
 
 } //TEST_CASE("ITensor")
 
