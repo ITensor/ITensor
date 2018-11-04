@@ -215,7 +215,7 @@ class Index
     private:
 
     void
-    makeStorage(qnstorage && iq);
+    makeStorage(qnstorage && qi);
 
     Index::id_type 
     generateID();
