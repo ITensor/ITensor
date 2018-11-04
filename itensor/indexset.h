@@ -7,7 +7,6 @@
 #include <algorithm>
 #include "itensor/util/safe_ptr.h"
 #include "itensor/index.h"
-#include "itensor/iqindex.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/types.h"

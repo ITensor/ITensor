@@ -4,6 +4,7 @@
 //
 #include "itensor/index.h"
 #include "itensor/util/readwrite.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
@@ -243,27 +244,35 @@ operator<(Index const& i1, Index const& i2)
 
 
 std::ostream& 
-operator<<(std::ostream & s, Index const& t)
+operator<<(std::ostream & s, Index const& I)
     {
-    s << "(\"" << t.rawname();
-    s << "\"," << t.m();
-    s << "," << t.type().c_str();
+    s << "(\"" << I.rawname();
+    s << "\"," << I.m();
+    s << "," << I.type().c_str();
     if(Global::showIDs()) 
         {
-        s << "|" << (t.id() % 1000);
-        //s << "," << t.id();
+        s << "|" << (I.id() % 1000);
+        //s << "," << I.id();
         }
     s << ")"; 
-    if(t.primeLevel() > 0) 
+    if(I.primeLevel() > 0) 
         {
-        if(t.primeLevel() > 3)
+        if(I.primeLevel() > 3)
             {
-            s << "'" << t.primeLevel();
+            s << "'" << I.primeLevel();
             }
         else
             {
-            for(int n = 1; n <= t.primeLevel(); ++n)
+            for(int n = 1; n <= I.primeLevel(); ++n)
                 s << "'";
+            }
+        }
+    if(I.nblock() > 0)
+        {
+        s << "\n";
+        for(auto j : range1(I.nblock()))
+            {
+            s << "  " << I.blocksize(j) << " " <<  I.qn(j) << "\n";
             }
         }
     return s;
@@ -359,18 +368,31 @@ getIndexType(const Args& args,
     return IndexType(args.getString(name).c_str());
     }
 
+struct IndSector
+    {
+    long sector = 0l;
+    long sind   = 0l;
+
+    IndSector(long sec, long si) : sector(sec), sind(si) { }
+    };
+
+IndSector
+sectorInfo(IndexVal const& iv)
+    {
+    auto is = IndSector(1,iv.val);
+    while(is.sind > iv.index.blocksize(is.sector))
+        {
+        is.sind -= iv.index.blocksize(is.sector);
+        is.sector += 1;
+        }
+    return is;
+    }
+
 QN const& IndexVal::
 qn() const 
     { 
     auto is = sectorInfo(*this);
     return index.qn(is.sector);
-    }
-
-IndexVal IndexVal::
-blockIndexVal() const 
-    { 
-    auto is = sectorInfo(*this);
-    return IndexVal(index.index(is.sector),is.sind); 
     }
 
 IndexVal&  IndexVal::
@@ -379,7 +401,7 @@ dag() { index.dag(); return *this; }
 class IQIndexDat
     {
     public:
-    using storage = std::vector<IndexQN>;
+    using storage = std::vector<QNInt>;
     using iterator = storage::iterator;
     using const_iterator = storage::const_iterator;
     private:
@@ -387,16 +409,6 @@ class IQIndexDat
     public:
 
     IQIndexDat() { }
-
-    //template<typename... Rest>
-    //IQIndexDat(Index const& i1, 
-    //           QN const& q1,
-    //           Rest const&... args) 
-    //    { 
-    //    constexpr auto size = sizeof...(args)/2+1;
-    //    iq_ = stdx::reserve_vector<IndexQN>(size);
-    //    detail::fill(iq_,i1,q1,args...);
-    //    }
 
     explicit
     IQIndexDat(storage const& ind_qn) 
@@ -423,14 +435,11 @@ class IQIndexDat
     long
     size() const { return iq_.size(); }
 
-    Index const&
-    index(long i) { return iq_[i-1].index; }
-
-    Index const&
-    operator[](long i) { return iq_[i].index; }
+    long
+    blocksize(long i) { return iq_[i-1].second; }
 
     QN const&
-    qn(long i) { return iq_[i-1].qn; }
+    qn(long i) { return iq_[i-1].first; }
 
     iterator
     begin() { return iq_.begin(); }
@@ -448,18 +457,53 @@ class IQIndexDat
     store() const { return iq_; }
     };
 
-void 
-write(std::ostream & s, IQIndexDat const& d) 
-    { 
-    write(s,d.store()); 
+#ifdef DEBUG
+#define IQINDEX_CHECK_NULL if(pd == 0) throw ITError("IQIndex storage unallocated");
+#else
+#define IQINDEX_CHECK_NULL
+#endif
+
+long Index::
+nblock() const 
+    {
+    if(not pd) return 0;
+    return static_cast<long>(pd->size());
     }
 
-void 
-read(std::istream & s, IQIndexDat & d) 
-    { 
-    IQIndexDat::storage store;
-    read(s,store); 
-    d.setStore(std::move(store));
+QN const& Index::
+qn(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("IQIndex::qn arg out of range");
+        }
+#endif
+    return pd->qn(i);
+    }
+
+long Index::
+blocksize(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("IQIndex::qn arg out of range");
+        }
+#endif
+    return pd->blocksize(i);
+    }
+
+void Index::
+makeStorage(qnstorage && qi)
+    {
+    pd = std::make_shared<IQIndexDat>(std::move(qi));
     }
 
 } //namespace itensor

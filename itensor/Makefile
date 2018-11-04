@@ -111,7 +111,7 @@ clean:
 util/input.o: util/input.h
 .debug_objs/util/input.o: util/input.h
 
-GDEPHEADERS=real.h global.h index.h util/readwrite.h
+GDEPHEADERS=real.h global.h index.h index_impl.h util/readwrite.h
 GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten_impl.h \
 tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h util/safe_ptr.h
 tensor/vec.o: $(GDEPHEADERS)

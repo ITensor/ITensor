@@ -7,13 +7,15 @@
 #include "itensor/global.h"
 #include "itensor/indextype.h"
 #include "itensor/indexname.h"
-#include "itensor/arrow.h"
+#include "itensor/qn.h"
 #include <thread>
 
 namespace itensor {
 
 //Forward declarations
 class IndexVal;
+
+using QNInt = std::pair<QN,long>;
 
 namespace detail {
     struct RandomID
@@ -60,10 +62,7 @@ namespace detail {
 // are copies of the same Index instance).
 //
 
-struct IndexQN;
 class IQIndexDat;
-class IQIndexVal;
-class IQIndexIter;
 
 class Index
     {
@@ -74,7 +73,7 @@ class Index
     using prime_type = int;
     using extent_type = int;
 
-    using qnstorage = std::vector<IndexQN>;
+    using qnstorage = std::vector<QNInt>;
     using qn_ptr = std::shared_ptr<IQIndexDat>;
 
     private:
@@ -84,6 +83,7 @@ class Index
     IndexType type_;
     IndexName name_;
     Arrow dir_ = Neither;
+    qn_ptr pd;
     public:
 
     Index();
@@ -95,15 +95,15 @@ class Index
           IndexType it = Link, 
           int primelev = 0);
 
-    template<typename... Rest>
-    IQIndex(std::string const& name, 
-            Index const& i1, QN const& q1, 
-            Rest const&... etc);
+    template<typename... QN_Sizes>
+    Index(std::string const& name, 
+          QN const& q1, long size1,
+          QN_Sizes const&... qnsizes);
 
-    IQIndex(std::string const& name, 
-            storage && ind_qn, 
-            Arrow dir = Out, 
-            int plev = 0);
+    Index(std::string const& name, 
+          qnstorage && qns, 
+          Arrow dir = Out, 
+          int plev = 0);
 
     // Returns the bond dimension
     long 
@@ -169,12 +169,6 @@ class Index
     Index
     operator[](int plev) const;
 
-    // Conjugate this Index.
-    // Currently has no effect; exists for forward compatibility
-    // with Arrows and interface compatibility with class IQIndex.
-    void 
-    dag() { } //for forward compatibility with arrows
-
     //define size()==m() in order to do 
     //for(auto n : range(I)) { ... } for some Index I
     long
@@ -195,6 +189,10 @@ class Index
     //number of quantum number blocks
     long 
     nblock() const;
+
+    //1-indexed
+    long
+    blocksize(long i) const;
       
     //1-indexed
     QN const& 
@@ -205,17 +203,19 @@ class Index
     void
     dir(Arrow ndir) { dir_ = ndir; }
 
-    IQIndex& 
+    Index& 
     dag();
 
-    storage_ptr const&
+    qn_ptr const&
     store() const { return pd; }
 
+    bool
+    hasQNs() const { return nblock()!=0; }
 
     private:
 
     void
-    makeStorage(storage && iq);
+    makeStorage(qnstorage && iq);
 
     Index::id_type 
     generateID();
@@ -227,11 +227,11 @@ class Index
     // Not intended for normal usage.
     //
 
-    // Constructor taking a storage pointer
-    IQIndex(storage_ptr const& p,
-            std::string const& name, 
-            Arrow dir = Out, 
-            int plev = 0);
+    // Constructor taking a QN pointer
+    Index(qn_ptr const& p,
+          std::string const& name, 
+          Arrow dir = Out, 
+          int plev = 0);
 
     }; //class Index
 
@@ -290,12 +290,6 @@ class IndexVal
     QN const&
     qn() const;
 
-    IndexQN
-    indexqn() const;
-
-    IndexVal 
-    blockIndexVal() const;
-
     };
 
 bool
@@ -308,53 +302,6 @@ operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
   
-//
-// IndexQN
-//
-struct IndexQN
-    {
-    Index index;
-    QN qn;
-
-    IndexQN() { }
-
-    IndexQN(Index const& i, 
-            QN const& q) 
-        : index(i), qn(q) 
-        { }
-
-    explicit operator Index() const { return index; }
-
-    void
-    dag() { index.dag(); }
-
-    auto
-    m() const -> decltype(index.m()) { return index.m(); }
-
-    IndexType
-    type() const { return index.type(); }
-
-    void
-    write(std::ostream & s) const;
-
-    void
-    read(std::istream & s);
-
-    };
-
-bool inline
-operator==(IndexQN const& iq, Index const& i) { return iq.index == i; }
-
-bool inline
-operator==(Index const& i, IndexQN const& iq) { return iq.index == i; }
-
-bool inline
-operator!=(IndexQN const& iq, Index const& i) { return iq.index != i; }
-
-bool inline
-operator!=(Index const& i, IndexQN const& iq) { return iq.index != i; }
-
-
 Index inline
 dag(Index res) { res.dag(); return res; }
 
@@ -423,20 +370,8 @@ getIndexType(Args const& args,
              IndexType default_val);
 
 
-//Make a new index with same properties as I,
-//but a different id number (will not compare equal)
-//and primelevel zero (or specified value)
-//For efficiency, internal sector Index objects
-//are the same as I.
-Index
-sim(Index const& I, int plev = 0);
-
-std::string 
-showm(Index const& I);
-
-std::ostream& 
-operator<<(std::ostream &s, IndexQN const& x);
-
 } //namespace itensor
+
+#include "itensor/index_impl.h"
 
 #endif
