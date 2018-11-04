@@ -125,7 +125,7 @@ namespace detail {
                 }
         }
 
-    template<typename IndexT, typename T>
+    template<typename T>
     auto
     doCheck(stdx::choice<1>,
             IndexSet const& is,
@@ -135,7 +135,7 @@ namespace detail {
         for(auto& J : is) if(I == J) return;
         throw ITError(format("Missing index in index set\nindex = \n%s\nindex set = \n%s",I,is));
         }
-    template<typename IndexT, typename T>
+    template<typename T>
     void
     doCheck(stdx::choice<2>,
             IndexSet const& is,
@@ -143,7 +143,7 @@ namespace detail {
         { }
 
 
-    template<typename IndexT, typename T>
+    template<typename T>
     void
     checkHasInds(IndexSet const& is,
                  T const& I,
@@ -756,6 +756,13 @@ operator<<(std::ostream& s, IndexSet const& is)
         if(i < is.r()) s << " ";
         } 
     return s;
+    }
+
+bool inline
+hasQNs(IndexSet const& is)
+    {
+    for(auto& i : is) if(i.hasQNs()) return true;
+    return false;
     }
 
 } //namespace itensor

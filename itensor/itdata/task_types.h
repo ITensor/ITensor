@@ -36,7 +36,7 @@ struct GetElt
            IntArray const& inds_);
     };
 
-const char*
+inline const char*
 typeNameOf(GetElt const&) { return "GetElt"; }
 
 template<typename T>
@@ -98,7 +98,7 @@ struct PrintIT
         }
     };
 
-const char*
+inline const char*
 typeNameOf(PrintIT const&) { return "PrintIT"; }
 
 struct Conj { };
@@ -117,7 +117,7 @@ struct SumEls
     SumEls(IndexSet const& is_) : is(is_) { }
     };
 
-const char*
+inline const char*
 typeNameOf(SumEls const&) { return "SumEls"; }
 
 
@@ -300,7 +300,7 @@ struct PlusEQ
     is2() const { return *is2_; }
     };
 
-const char*
+inline const char*
 typeNameOf(PlusEQ const&) { return "PlusEQ"; }
 
 class Order
@@ -332,7 +332,7 @@ class Order
 
     };
 
-const char*
+inline const char*
 typeNameOf(Order const&) { return "Order"; }
 
 #ifdef USESCALE
@@ -395,7 +395,7 @@ struct Contract
 
     };
 
-const char*
+inline const char*
 typeNameOf(Contract const&) { return "Contract"; }
 
 //Non-contracting product
@@ -422,7 +422,7 @@ struct NCProd
         { }
     };
 
-const char*
+inline const char*
 typeNameOf(NCProd const&) { return "NCProd"; }
 
 struct StorageType

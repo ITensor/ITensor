@@ -98,9 +98,8 @@ randomTensorC(Index const& i1, Inds&&... inds)
     return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
     }
 
-template<typename IndexT>
-ITensorT<IndexT>
-randomTensor(IndexSetT<IndexT> const& inds);
+ITensor
+randomTensor(IndexSet const& inds);
 
 ITensor
 matrixTensor(Matrix && M, Index const& i1, Index const& i2);
@@ -123,10 +122,7 @@ matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
 
-template<> ITensor::
-ITensorT(Cplx val);
-
-template<> inline
+inline 
 ITensor& ITensor::
 dag() { return conj(); }
 

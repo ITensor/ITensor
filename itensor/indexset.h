@@ -169,13 +169,13 @@ read(std::istream& s, IndexSet & is);
 void
 write(std::ostream& s, IndexSet const& is);
 
-auto
+auto inline
 rangeBegin(IndexSet const& is) -> decltype(is.range().begin())
     {
     return is.range().begin();
     }
 
-auto
+auto inline
 rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     {
     return is.range().end();
@@ -521,6 +521,9 @@ operator+(typename IndexSetIter<T>::difference_type d,
     { 
     return x += d;
     } 
+
+bool
+hasQNs(IndexSet const& is);
 
 } //namespace itensor
 

@@ -204,7 +204,7 @@ class Index
     dir(Arrow ndir) { dir_ = ndir; }
 
     Index& 
-    dag();
+    dag() { dir_ = -dir_; return *this; }
 
     qn_ptr const&
     store() const { return pd; }

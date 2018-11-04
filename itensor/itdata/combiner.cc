@@ -8,7 +8,6 @@
 //#include "itensor/itdata/itcplx.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/tensor/sliceten.h"
-#include "itensor/iqindex.h"
 
 using std::vector;
 
@@ -18,7 +17,7 @@ const char*
 typeNameOf(Combiner const& d) { return "Combiner"; }
 
 Cplx
-doTask(GetElt<Index> const& g, Combiner const& c)
+doTask(GetElt const& g, Combiner const& c)
     {
     if(g.inds.size()!=0) Error("GetElt not defined for non-scalar Combiner storage");
     return Cplx(1.,0.);
@@ -146,19 +145,19 @@ combine(Storage  const& d,
 
 template<typename V>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<V>   const& d,
        Combiner const& cmb,
        ManageStore     & m)
     {
     combine(d,C.Lis,C.Ris,C.Nis,m);
     }
-template void doTask(Contract<Index> &,DenseReal const&,Combiner const&,ManageStore&);
-template void doTask(Contract<Index> &,DenseCplx const&,Combiner const&,ManageStore&);
+template void doTask(Contract &,DenseReal const&,Combiner const&,ManageStore&);
+template void doTask(Contract &,DenseCplx const&,Combiner const&,ManageStore&);
 
 template<typename V>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Combiner const& cmb,
        Dense<V>   const& d,
        ManageStore     & m)
@@ -166,22 +165,16 @@ doTask(Contract<Index> & C,
     combine(d,C.Ris,C.Lis,C.Nis,m);
     if(!m.newData()) m.assignPointerRtoL();
     }
-template void doTask(Contract<Index> &,Combiner const&,DenseReal const&,ManageStore&);
-template void doTask(Contract<Index> &,Combiner const&,DenseCplx const&,ManageStore&);
+template void doTask(Contract &,Combiner const&,DenseReal const&,ManageStore&);
+template void doTask(Contract &,Combiner const&,DenseCplx const&,ManageStore&);
 
 bool
 doTask(CheckComplex, Combiner const& d) { return false; }
 
 void
-doTask(PrintIT<Index>& P, Combiner const& d)
+doTask(PrintIT& P, Combiner const& d)
     {
     P.printInfo(d,"Combiner");
-    }
-
-void
-doTask(PrintIT<IQIndex>& P, Combiner const& d)
-    {
-    P.s << "Combiner";
     }
 
 QN 

@@ -20,23 +20,22 @@ namespace itensor {
 //
 
     
-template<>
 ITensor::
-ITensorT(Cplx val) 
+ITensor(Cplx val) 
     { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    if(val.imag() == 0)
-        {
-        store_ = newITData<ScalarReal>(val.real());
-        }
-    else
-        {
-        store_ = newITData<ScalarCplx>(val);
-        }
+    //IF_USESCALE(scale_ = LogNum(1.);)
     //if(val.imag() == 0)
-    //    store_ = newITData<Diag<Real>>(1,val.real());
+    //    {
+    //    store_ = newITData<ScalarReal>(val.real());
+    //    }
     //else
-    //    store_ = newITData<Diag<Cplx>>(1,val);
+    //    {
+    //    store_ = newITData<ScalarCplx>(val);
+    //    }
+    ////if(val.imag() == 0)
+    ////    store_ = newITData<Diag<Real>>(1,val.real());
+    ////else
+    ////    store_ = newITData<Diag<Cplx>>(1,val);
     }
 
 
@@ -87,7 +86,7 @@ operator<<(ostream & s, const ITensor& t)
         //format string %f (or another float-related format string)
         bool ff_set = (std::ios::floatfield & s.flags()) != 0;
         bool print_data = (ff_set || Global::printdat());
-        doTask(PrintIT<Index>{s,t.scale(),t.inds(),print_data},t.store());
+        doTask(PrintIT{s,t.scale(),t.inds(),print_data},t.store());
         }
     return s;
     }
@@ -178,6 +177,19 @@ combinedIndex(ITensor const& C)
         }
 #endif
     return C.inds().front();
+    }
+
+ITensor
+randomTensor(IndexSet const& inds)
+    {
+    return random(ITensor{inds});
+    }
+
+QN
+div(ITensor const& T)
+    {
+    Error("div not yet implemented");
+    return QN();
     }
 
 } //namespace itensor

@@ -93,9 +93,6 @@ ITensor(indexset_type iset,
                   "Error: cannot pass lvalues to ITensor(...,DataType&& dat,...) constructor");
     }
 
-inline ITensor::
-ITensor(Cplx val) { Error("ITensor(Cplx) not implemented"); }
-
 template<typename IV, typename... IVs>
 auto ITensor::
 cplx(IV const& iv1, IVs&&... ivs) const
@@ -185,35 +182,6 @@ cplx(Int iv1, Ints... ivs) const
 #endif
     }
 
-Cplx inline ITensor::
-cplx() const
-    {
-    if(inds().r() != 0)
-        {
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().r()));
-        }
-    constexpr size_t size = 0;
-    auto inds = IntArray(size);
-    auto z = itensor::doTask(GetElt{is_,inds},store_);
-#ifndef USESCALE
-    return z;
-#else
-    try {
-        return z*scale_.real0(); 
-        }
-    catch(TooBigForReal const& e)
-        {
-        println("too big for real in cplx(...), scale = ",scale());
-        throw e;
-        }
-    catch(TooSmallForReal const&)
-        {
-        println("warning: too small for real in cplx(...)");
-        return Cplx(0.,0.);
-        }
-    return Cplx(NAN,NAN);
-#endif
-    }
 
 template <typename... IVals>
 Real ITensor::
@@ -411,26 +379,6 @@ set(Int iv1, VArgs&&... vargs)
         }
     }
 
-void inline ITensor::
-set(Cplx val)
-    {
-    if(0 != size_t(inds().r())) 
-        {
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got 0)",
-                     inds().r()));
-        }
-    auto inds = IntArray(0,1);
-    if(!store_) detail::allocReal(*this,inds); 
-    scaleTo(1.);
-    if(val.imag()==0.)
-        {
-        doTask(SetElt<Real>{val.real(),is_,inds},store_);
-        }
-    else
-        {
-        doTask(SetElt<Cplx>{val,is_,inds},store_);
-        }
-    }
 
 void ITensor::
 set(std::vector<IndexVal> const& ivals,
@@ -451,40 +399,6 @@ set(std::vector<IndexVal> const& ivals,
     auto inds = IntArray(is_.r(),0);
     detail::permute_map(is_,ivals,inds,
                         [](IndexVal const& iv) { return iv.val-1; });
-    if(!store_) detail::allocReal(*this,inds); 
-    scaleTo(1.);
-    if(val.imag()==0.0)
-        {
-        doTask(SetElt<Real>{val.real(),is_,inds},store_);
-        }
-    else
-        {
-        doTask(SetElt<Cplx>{val,is_,inds},store_);
-        }
-    }
-
-void inline ITensor::
-set(std::vector<int> const& ints,
-    Cplx val)
-    {
-    auto size = ints.size();
-    if(size != size_t(inds().r())) 
-        {
-        println("---------------------------------------------");
-        println("Tensor indices = \n",inds(),"\n");
-        println("---------------------------------------------");
-        println("Indices provided = ");
-        for(auto& iv : ints) println(iv);
-        println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
-                     inds().r(),size));
-        }
-    auto inds = IntArray(is_.r(),0);
-    for(auto i : range(size))
-        inds[i] = ints[i]-1;
-    //TODO: if !store_ and !is_real, call allocCplx instead
-    //detail::permute_map(is_,ivals,inds,
-    //                    [](IndexVal const& iv) { return iv.val-1; });
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
     if(val.imag()==0.0)
@@ -539,33 +453,6 @@ visit(Func&& f) const
     return *this;
     }
 
-inline ITensor& ITensor::
-conj()
-    {
-    doTask(Conj{},store_);
-    return *this;
-    }
-
-inline ITensor& ITensor::
-dag()
-    {
-    Error("dag not implemented");
-    return *this;
-    }
-
-inline ITensor& ITensor::
-takeReal()
-    {
-    doTask(TakeReal{},store_);
-    return *this;
-    }
-
-inline ITensor& ITensor::
-takeImag()
-    {
-    doTask(TakeImag{},store_);
-    return *this;
-    }
 
 #ifdef USESCALE
 void inline ITensor::
@@ -581,14 +468,6 @@ scaleTo(scale_type const& newscale)
 void inline ITensor::
 scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
 #endif
-
-void inline ITensor::
-swap(ITensor & other)
-    {
-    is_.swap(other.is_);
-    store_.swap(other.store_);
-    IF_USESCALE(scale_.swap(other.scale_);)
-    }
 
 template <typename IVal, typename... IVals>
 ITensor
@@ -713,19 +592,6 @@ sim(ITensor A,
     return A;
     }
 
-bool inline
-hasindex(ITensor const& T, Index const& I)
-    {
-    return detail::contains(T.inds(),I);
-    }
-
-Index inline
-findtype(ITensor const& T, IndexType type)
-    {
-    for(auto& i : T.inds())
-        if(i.type()==type) return i;
-    return Index{};
-    }
 
 template<typename Cond>
 Index
@@ -775,17 +641,6 @@ apply(ITensor T, F&& f)
     return T;
     }
 
-bool inline
-isComplex(ITensor const& T)
-    {
-    return doTask(CheckComplex{},T.store());
-    }
-
-bool inline
-isReal(ITensor const& T)
-    {
-    return not isComplex(T);
-    }
 
 long inline
 rank(ITensor const& T) { return rank(T.inds()); }
@@ -904,7 +759,7 @@ getDotInds(Iter it,
     getDotInds(++it,std::forward<Rest const&>(rest)...);
     }
 
-IndexSet
+IndexSet inline
 moveToFront(IndexSet const& isf, IndexSet const& is)
     {
     auto rf = isf.r();
@@ -951,7 +806,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
     return iso;
     }
 
-IndexSet
+IndexSet inline
 moveToBack(IndexSet const& isb, IndexSet const& is)
     {
     auto rb = isb.r();
@@ -1052,33 +907,6 @@ readType(std::istream& s, CtrArgs&&... args)
     return newITData<T>(std::move(t));
     }
 
-void inline ITensor::
-read(std::istream& s)
-    {
-    itensor::read(s,is_);
-    LogNum scale;
-    itensor::read(s,scale);
-    IF_USESCALE(scale_ = scale;)
-    auto type = StorageType::Null;
-    itensor::read(s,type);
-    if(type==StorageType::Null) { /*intentionally left blank*/  }
-    else if(type==StorageType::DenseReal) { store_ = readType<DenseReal>(s); }
-    else if(type==StorageType::DenseCplx) { store_ = readType<DenseCplx>(s); }
-    else if(type==StorageType::Combiner) { store_ = readType<Combiner>(s); }
-    else if(type==StorageType::DiagReal) { store_ = readType<Diag<Real>>(s); }
-    else if(type==StorageType::DiagCplx) { store_ = readType<Diag<Cplx>>(s); }
-    //else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
-    //else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
-    //else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
-    //else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
-    //else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
-    //else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
-    //else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
-    else
-        {
-        Error("Unrecognized type when reading tensor from istream");
-        }
-    }
 
 struct Write
     {

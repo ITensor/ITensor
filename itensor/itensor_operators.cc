@@ -7,68 +7,62 @@ namespace detail {
 void
 allocReal(ITensor& T)
     {
+    if(hasQNs(T.inds())) Error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseReal>(area(T.inds()),0);
-    }
-
-void
-allocReal(IQTensor& T)
-    {
-    Error("Can't allocate IQTensor with undefined divergence");
     }
 
 void
 allocReal(ITensor& T, IntArray const& inds)
     {
-    T.store() = newITData<DenseReal>(area(T.inds()),0);
-    }
-
-void
-allocReal(IQTensor& T, IntArray const& inds)
-    {
-    QN div;
-    for(size_t i = 0; i < T.inds().size(); ++i)
+    if(!hasQNs(T.inds()))
         {
-        auto iv = (T.inds()[i])(1+inds[i]);
-        div += iv.qn()*iv.index.dir();
+        T.store() = newITData<DenseReal>(area(T.inds()),0);
         }
-    T.store() = newITData<QDenseReal>(T.inds(),div);
+    else
+        {
+        Error("allocReal not implemented for QN ITensor case");
+        //QN div;
+        //for(size_t i = 0; i < T.inds().size(); ++i)
+        //    {
+        //    auto iv = (T.inds()[i])(1+inds[i]);
+        //    div += iv.qn()*iv.index.dir();
+        //    }
+        //T.store() = newITData<QDenseReal>(T.inds(),div);
+        }
     }
 
 void
 allocCplx(ITensor& T)
     {
+    if(hasQNs(T.inds())) Error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseCplx>(area(T.inds()),0);
     }
 
-void
-checkArrows(IndexSet const& I1,
-            IndexSet const& I2,
-            bool shouldMatch = false)
-    {
-    //This space intentionally left blank
-    }
 
 void
-checkArrows(IQIndexSet const& is1,
-            IQIndexSet const& is2,
+checkArrows(IndexSet const& is1,
+            IndexSet const& is2,
             bool shouldMatch = false)
     {
-    for(auto I1 : is1)
-    for(auto I2 : is2)
+    if(hasQNs(is1) && hasQNs(is2))
         {
-        if(I1 == I2)
+        for(auto I1 : is1)
+        for(auto I2 : is2)
             {
-            auto cond = shouldMatch ^ (I1.dir() == I2.dir());
-            if(cond)
+            if(I1 == I2)
                 {
-                println("----------------------------------------");
-                println("IQIndexSet 1 = \n",is1);
-                println("----------------------------------------");
-                println("IQIndexSet 2 = \n",is2);
-                println("----------------------------------------");
-                printfln("Mismatched IQIndex from set 1 %s",I1);
-                printfln("Mismatched IQIndex from set 2 %s",I2);
-                Error("Mismatched IQIndex arrows");
+                auto cond = shouldMatch ^ (I1.dir() == I2.dir());
+                if(cond)
+                    {
+                    println("----------------------------------------");
+                    println("IQIndexSet 1 = \n",is1);
+                    println("----------------------------------------");
+                    println("IQIndexSet 2 = \n",is2);
+                    println("----------------------------------------");
+                    printfln("Mismatched IQIndex from set 1 %s",I1);
+                    printfln("Mismatched IQIndex from set 2 %s",I2);
+                    Error("Mismatched IQIndex arrows");
+                    }
                 }
             }
         }
@@ -77,24 +71,21 @@ checkArrows(IQIndexSet const& is1,
 void
 checkSameDiv(ITensor const& T1,
              ITensor const& T2)
-    { }
-
-void
-checkSameDiv(IQTensor const& T1,
-             IQTensor const& T2)
     {
-    if(div(T1) != div(T2)) 
+    if(hasQNs(T1.inds()) && hasQNs(T2.inds()))
         {
-        Error(format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+        if(div(T1) != div(T2)) 
+            {
+            Error(format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+            }
         }
     }
 
 } //namespace detail
 
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
-operator*=(ITensorT const& R)
+ITensor& ITensor::
+operator*=(ITensor const& R)
     {
     auto& L = *this;
 
@@ -115,7 +106,7 @@ operator*=(ITensorT const& R)
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 
-    auto C = doTask(Contract<index_type>{L.inds(),R.inds()},
+    auto C = doTask(Contract{L.inds(),R.inds()},
                     L.store(),
                     R.store());
 
@@ -133,12 +124,9 @@ operator*=(ITensorT const& R)
 
     return L;
     }
-template ITensorT<Index>& ITensorT<Index>::operator*=(ITensorT<Index> const& R);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator*=(ITensorT<IQIndex> const& R);
 
-template<typename IndexT>
-ITensorT<IndexT>& ITensorT<IndexT>::
-order(IndexSetT<IndexT> const& iset)
+ITensor& ITensor::
+order(IndexSet const& iset)
     {
     auto& A = *this;
     auto Ais = A.inds();
@@ -163,64 +151,54 @@ order(IndexSetT<IndexT> const& iset)
         }
     // If not trivial, use permutation to get new index set
     // This is necessary to preserve the proper arrow direction of IQIndex
-    auto bind = RangeBuilderT<IndexSetT<IndexT>>(r);
+    auto bind = RangeBuilderT<IndexSet>(r);
     for(auto i : range(r))
         {
         bind.setIndex(P.dest(i),Ais[i]);
         }
     auto Bis = bind.build();
 
-    auto O = Order<IndexT>{P,Ais,Bis};
+    auto O = Order{P,Ais,Bis};
     if(A.store())
+        {
         doTask(O, A.store());
+        }
 
     A.is_.swap(Bis);
 
     return A;
     }
-template ITensorT<Index>& ITensorT<Index>::order(IndexSetT<Index> const& iset);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::order(IndexSetT<IQIndex> const& iset);
 
 #ifndef USESCALE
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 operator*=(Real r)
     {
     doTask(Mult<Real>{r},store_);
     return *this;
     }
-template ITensorT<Index>& ITensorT<Index>::operator*=(Real r);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator*=(Real r);
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 operator/=(Real r)
     {
     auto fac = 1./r;
     doTask(Mult<Real>{fac},store_);
     return *this;
     }
-template ITensorT<Index>& ITensorT<Index>::operator/=(Real r);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator/=(Real r);
 
 #endif
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
+ITensor& ITensor::
 operator*=(Cplx z)
     {
     if(z.imag() == 0) return operator*=(z.real());
     doTask(Mult<Cplx>{z},store_);
     return *this;
     }
-template ITensorT<Index>& ITensorT<Index>::operator*=(Cplx z);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator*=(Cplx z);
 
 //Non-contracting product
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
-operator/=(ITensorT const& R)
+ITensor& ITensor::
+operator/=(ITensor const& R)
     {
     auto& L = *this;
 
@@ -228,7 +206,7 @@ operator/=(ITensorT const& R)
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds(),true);
 
-    auto C = doTask(NCProd<index_type>{L.inds(),R.inds()},
+    auto C = doTask(NCProd{L.inds(),R.inds()},
                     L.store(),
                     R.store());
 
@@ -246,18 +224,15 @@ operator/=(ITensorT const& R)
 
     return L;
     }
-template ITensorT<Index>& ITensorT<Index>::operator/=(ITensorT<Index> const& R);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator/=(ITensorT<IQIndex> const& R);
 
-template<typename IndexT> 
 void
-daxpy(ITensorT<IndexT> & L,
-      ITensorT<IndexT> const& R,
+daxpy(ITensor & L,
+      ITensor const& R,
       Real alpha)
     {
-    if(L.r() != R.r()) Error("ITensorT::operator+=: different number of indices");
+    if(L.r() != R.r()) Error("ITensor::operator+=: different number of indices");
 
-    using permutation = typename PlusEQ<IndexT>::permutation;
+    using permutation = typename PlusEQ::permutation;
 
     auto P = permutation(L.inds().size());
 
@@ -268,7 +243,7 @@ daxpy(ITensorT<IndexT> & L,
         {
         println("L = ",L);
         println("R = ",R);
-        Error("ITensorT::operator+=: different index structure");
+        Error("ITensoITensor::operator+=: different index structure");
         }
 
     if(Global::checkArrows()) 
@@ -294,15 +269,12 @@ daxpy(ITensorT<IndexT> & L,
         }
 #endif
 
-    auto PEq = PlusEQ<IndexT>{P,L.inds(),R.inds(),alpha};
+    auto PEq = PlusEQ{P,L.inds(),R.inds(),alpha};
     doTask(PEq,L.store(),R.store());
     } 
-template void daxpy(ITensorT<Index> & L, ITensorT<Index> const& R, Real alpha);
-template void daxpy(ITensorT<IQIndex> & L, ITensorT<IQIndex> const& R, Real alpha);
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
-operator+=(ITensorT const& R)
+ITensor& ITensor::
+operator+=(ITensor const& R)
     {
     auto& L = *this;
     if(!L || !L.store()) { return (L=R); } //special case when this (L) is not initialized
@@ -313,12 +285,9 @@ operator+=(ITensorT const& R)
     
     return L;
     } 
-template ITensorT<Index>& ITensorT<Index>::operator+=(ITensorT<Index> const& R);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator+=(ITensorT<IQIndex> const& R);
 
-template<typename IndexT> 
-ITensorT<IndexT>& ITensorT<IndexT>::
-operator-=(ITensorT const& R)
+ITensor& ITensor::
+operator-=(ITensor const& R)
     {
     auto& L = *this;
     if(!L || !L.store()) { return (L = -R); } //special case when this (L) is not initialized
@@ -331,8 +300,6 @@ operator-=(ITensorT const& R)
     daxpy(L,R,-1.);
     return L;
     }
-template ITensorT<Index>& ITensorT<Index>::operator-=(const ITensorT& R);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::operator-=(const ITensorT& R);
 
 
 

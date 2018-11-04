@@ -89,12 +89,6 @@ diagTensor(Container const& C,
     }
 
 
-template<typename IndexT>
-ITensorT<IndexT>
-randomTensor(const IndexSetT<IndexT>& inds)
-    {
-    return random(ITensorT<IndexT>{inds});
-    }
 
 } //namespace itensor
 
