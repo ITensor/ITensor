@@ -97,7 +97,7 @@ class QDense
 
     template<typename Indexable>
     value_type *
-    getElt(Index const& is,
+    getElt(IndexSet const& is,
            Indexable const& ind)
         {
         const auto& cthis = *this;
@@ -406,10 +406,10 @@ QN
 calcDiv(IndexSet const& is, 
         Labels const& block_ind);
 
-//code for doTask(ToITensor...) is in iqtensor.cc
-template<typename V>
-ITensor
-doTask(ToITensor & T, QDense<V> const& d);
+////code for doTask(ToITensor...) is in iqtensor.cc
+//template<typename V>
+//ITensor
+//doTask(ToITensor & T, QDense<V> const& d);
 
 template<typename V>
 bool

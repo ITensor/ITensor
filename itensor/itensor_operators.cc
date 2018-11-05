@@ -14,20 +14,19 @@ allocReal(ITensor& T)
 void
 allocReal(ITensor& T, IntArray const& inds)
     {
-    if(!hasQNs(T.inds()))
+    if(not hasQNs(T.inds()))
         {
         T.store() = newITData<DenseReal>(area(T.inds()),0);
         }
     else
         {
-        Error("allocReal not implemented for QN ITensor case");
-        //QN div;
-        //for(size_t i = 0; i < T.inds().size(); ++i)
-        //    {
-        //    auto iv = (T.inds()[i])(1+inds[i]);
-        //    div += iv.qn()*iv.index.dir();
-        //    }
-        //T.store() = newITData<QDenseReal>(T.inds(),div);
+        QN div;
+        for(auto i : range(T.inds()))
+            {
+            auto iv = (T.inds()[i])(1+inds[i]);
+            div += iv.qn()*iv.index.dir();
+            }
+        T.store() = newITData<QDenseReal>(T.inds(),div);
         }
     }
 

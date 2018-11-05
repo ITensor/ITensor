@@ -57,81 +57,6 @@ ITensorT(Complex val);
 //        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
 //    }
 
-inline IQTensor& 
-operator*=(IQTensor& T, IQIndexVal const& iv) 
-    { 
-    return T *= setElt(iv); 
-    } 
-IQTensor inline
-operator*(IQTensor T, IQIndexVal const& iv) 
-    { 
-    T *= iv; 
-    return T; 
-    }
-IQTensor inline
-operator*(IQIndexVal const& iv, IQTensor const& T) 
-    { 
-    return setElt(iv) * T;
-    }
-
-inline ITensor& 
-operator*=(ITensor& T, IQIndexVal const& iv) 
-    { 
-    return T *= setElt(IndexVal(iv)); 
-    } 
-
-ITensor inline
-operator*(ITensor T, IQIndexVal const& iv) 
-    { 
-    return T * IndexVal(iv);
-    }
-
-ITensor inline
-operator*(IQIndexVal const& iv, ITensor const& T) 
-    { 
-    return IndexVal(iv) * T;
-    }
-
-IQTensor inline
-operator+(IQTensor A, ITensor const& B)
-    {
-    A += B;
-    return A;
-    }
-
-ITensor inline
-operator*(IQTensor const& T, ITensor const& t) 
-    { 
-    auto TT = toITensor(T);
-    TT *= t; 
-    return TT; 
-    }
-
-ITensor inline
-operator*(const ITensor& t, const IQTensor& T) 
-    { 
-    return operator*(T,t);
-    }
-
-ITensor inline
-operator*(IQTensor const& T, IndexVal const& iv)
-    { 
-    return toITensor(T)*iv; 
-    }
-
-ITensor inline
-operator*(IndexVal const& iv, IQTensor const& T) 
-    { 
-    return setElt(iv) * toITensor(T); 
-    }
-
-template<typename... Inds>
-IQTensor
-combiner(IQIndex const& i1, 
-         Inds const&... inds)
-    {
-    return combiner(std::vector<IQIndex>{i1,inds...});
-    }
 
 template<typename... Inds>
 IQTensor
@@ -200,18 +125,7 @@ randomTensorC(QN const& q, VArgs&&... vargs)
     return T+1_i*random(T);
     }
 
-template<typename... Inds>
-IQTensor
-mixedIQTensor(IQIndex const& i1, 
-              Inds const&... inds)
-    {
-    auto is = IQIndexSet(i1,inds...);
-    auto size = area(is);
-    return IQTensor(std::move(is),QMixed<Real>(size));
-    }
 
-QN inline
-flux(IQTensor const& T) { return div(T); }
 
 } //namespace itensor
 

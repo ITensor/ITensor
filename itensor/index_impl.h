@@ -43,14 +43,15 @@ Index::
 Index(std::string const& name, 
       QN const& q1, long size1,
       QN_Sizes const&... qnsizes)
-    : type_(Link)
+    : type_(Link),
+      dir_(Out)
     { 
     constexpr auto size = 1+sizeof...(qnsizes)/2;
     auto qi = stdx::reserve_vector<std::pair<QN,long>>(size);
     auto am = detail::fill(qi,q1,size1,qnsizes...);
-    dir_ = am.dir;
     auto I = Index(name,am.m);
     operator=(I);
+    dir(am.dir);
     makeStorage(std::move(qi));
     }
 

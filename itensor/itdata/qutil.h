@@ -17,11 +17,11 @@ namespace itensor {
 template<typename Indexable>
 class IndexDim
     {
-    IQIndexSet const& is_;
+    IndexSet const& is_;
     Indexable const& ind_;
     public:
 
-    IndexDim(IQIndexSet const& is,
+    IndexDim(IndexSet const& is,
              Indexable const& ind)
       : is_(is),
         ind_(ind)
@@ -36,7 +36,7 @@ class IndexDim
 
 template<typename Indexable>
 auto
-make_indexdim(IQIndexSet const& is, Indexable const& ind) 
+make_indexdim(IndexSet const& is, Indexable const& ind) 
     -> IndexDim<Indexable>
     { 
     return IndexDim<Indexable>(is,ind); 
@@ -48,14 +48,14 @@ make_indexdim(IQIndexSet const& is, Indexable const& ind)
 // the given block (e.g. 5 -> {1,0,2})
 // storing the resulting indices in the 
 // container "ind". The jth index of ind
-// can range from 0 to is[j].nindex(), 
+// can range from 0 to is[j].nblock(), 
 // such that these indices correspond to
 // viewing the QDense storage as a 
 // "tensor of tensors"
 template<typename Container>
 void
 computeBlockInd(long block,
-                IQIndexSet const& is,
+                IndexSet const& is,
                 Container & ind)
     {
     using size_type = decltype(ind.size());
@@ -63,7 +63,7 @@ computeBlockInd(long block,
     assert(r == size_type(is.r()));
     for(size_type j = 0; j < r-1; ++j)
         {
-        auto res = std::ldiv(block,is[j].nindex());
+        auto res = std::ldiv(block,is[j].nblock());
         ind[j] = res.rem;
         block = res.quot;
         }
@@ -73,20 +73,20 @@ computeBlockInd(long block,
 template<typename BlockSparse, typename Indexable>
 auto
 getBlock(BlockSparse & d,
-         IQIndexSet const& is,
+         IndexSet const& is,
          Indexable const& block_ind)
     -> stdx::if_compiles_return<decltype(makeDataRange(d.data(),d.size())),decltype(d.offsets)>
     {
     auto r = long(block_ind.size());
     if(r == 0) return makeDataRange(d.data(),d.size());
 #ifdef DEBUG
-    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in getBlock");
+    if(is.r() != r) Error("Mismatched size of IndexSet and block_ind in getBlock");
 #endif
     long ii = 0;
     for(auto i = r-1; i > 0; --i)
         {
         ii += block_ind[i];
-        ii *= is[i-1].nindex();
+        ii *= is[i-1].nblock();
         }
     ii += block_ind[0];
     //Do binary search to see if there
@@ -103,11 +103,11 @@ template<typename BlockSparseA,
          typename Callable>
 void
 loopContractedBlocks(BlockSparseA const& A,
-                     IQIndexSet const& Ais,
+                     IndexSet const& Ais,
                      BlockSparseB const& B,
-                     IQIndexSet const& Bis,
+                     IndexSet const& Bis,
                      BlockSparseC & C,
-                     IQIndexSet const& Cis,
+                     IndexSet const& Cis,
                      Callable & callback)
     {
     auto rA = Ais.r();
@@ -156,7 +156,7 @@ loopContractedBlocks(BlockSparseA const& A,
         couB.reset();
         for(auto iB : range(rB))
             {
-            couB.setRange(iB,0,Bis[iB].nindex()-1);
+            couB.setRange(iB,0,Bis[iB].nblock()-1);
             }
         for(auto iA : range(rA))
             {

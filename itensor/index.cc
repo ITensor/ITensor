@@ -64,7 +64,10 @@ Index()
     { }
 
 Index::
-Index(const std::string& name, long m, IndexType type, int plev) 
+Index(std::string const& name, 
+      long m, 
+      IndexType type, 
+      int plev) 
     : 
     id_(generateID()),
     primelevel_(plev),
@@ -290,7 +293,8 @@ IndexVal()
     { }
 
 IndexVal::
-IndexVal(const Index& index_, long val_) 
+IndexVal(Index const& index_, 
+         long val_) 
     : 
     index(index_),
     val(val_)

@@ -8,67 +8,6 @@
 
 namespace itensor {
 
-//
-// IQTensor related functions
-//
-
-//Specialization of ITensorT::dag()
-template<>
-IQTensor& IQTensor::dag();
-
-// Contract with IndexVal
-// If iv = (J,n), Index J is fixed to it's nth
-// value and rank decreases by 1
-// (similar to summing against a Kronecker
-// delta tensor \delta_{J,n})
-IQTensor& 
-operator*=(IQTensor& T, IQIndexVal const& iv);
-IQTensor
-operator*(IQTensor T, IQIndexVal const& iv);
-IQTensor
-operator*(IQIndexVal const& iv, IQTensor const& T);
-ITensor
-operator*(IndexVal const& iv, IQTensor const& T);
-
-
-// Contract ITensor with IQIndexVal
-ITensor& 
-operator*=(ITensor& T, IQIndexVal const& iv);
-ITensor
-operator*(ITensor T, IQIndexVal const& iv);
-ITensor
-operator*(IQIndexVal const& iv, ITensor const& T);
-
-//Add ITensor to corresponding block of IQTensor
-IQTensor& 
-operator+=(IQTensor& A, ITensor const& B);
-
-IQTensor 
-operator+(IQTensor A, ITensor const& B);
-
-ITensor 
-toITensor(IQTensor const& T);
-
-template<> inline
-IQTensor::
-operator ITensor() const { return toITensor(*this); }
-
-ITensor 
-operator*(IQTensor const& T, ITensor const& t);
-
-ITensor
-operator*(ITensor const& t, IQTensor const& T);
-
-
-//
-// Multiplication by an IndexVal
-// Result is an ITensor
-//
-ITensor
-operator*(IQTensor const& T, IndexVal const& iv);
-ITensor
-operator*(IndexVal const& iv, IQTensor const& T);
-
 //Compute divergence of IQTensor T
 QN
 div(IQTensor const& T);
@@ -142,6 +81,8 @@ struct AddITensor;
 const char*
 typeNameOf(AddITensor const&);
 
+QN inline
+flux(IQTensor const& T) { return div(T); }
 
 } //namespace itensor
 
