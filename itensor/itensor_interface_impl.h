@@ -40,12 +40,6 @@ ITensor(Index  const& i1,
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-ITensor::
-ITensor(std::vector<index_type> const& inds)
-  : is_(inds)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
 
 template<size_t N> 
 ITensor::
@@ -55,30 +49,8 @@ ITensor(std::array<index_type,N> const& inds)
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
-ITensor::
-ITensor(std::initializer_list<index_type> inds)
-  : is_(inds)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
 
-ITensor::
-ITensor(indexset_type const& is)
-  : is_(is)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
 
-ITensor::
-ITensor(indexset_type iset,
-        storage_ptr&& pdat,
-        LogNum const& scale)
-    :
-    is_(std::move(iset)),
-    store_(std::move(pdat))
-    { 
-    IF_USESCALE(scale_ = scale;)
-    }
 
 template <class DataType>
 ITensor::
@@ -380,36 +352,6 @@ set(Int iv1, VArgs&&... vargs)
     }
 
 
-void ITensor::
-set(std::vector<IndexVal> const& ivals,
-    Cplx val)
-    {
-    auto size = ivals.size();
-    if(size != size_t(inds().r())) 
-        {
-        println("---------------------------------------------");
-        println("Tensor indices = \n",inds(),"\n");
-        println("---------------------------------------------");
-        println("Indices provided = ");
-        for(auto& iv : ivals) println(iv.index);
-        println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
-                     inds().r(),size));
-        }
-    auto inds = IntArray(is_.r(),0);
-    detail::permute_map(is_,ivals,inds,
-                        [](IndexVal const& iv) { return iv.val-1; });
-    if(!store_) detail::allocReal(*this,inds); 
-    scaleTo(1.);
-    if(val.imag()==0.0)
-        {
-        doTask(SetElt<Real>{val.real(),is_,inds},store_);
-        }
-    else
-        {
-        doTask(SetElt<Cplx>{val,is_,inds},store_);
-        }
-    }
 
 template <typename Func>
 ITensor& ITensor::
@@ -656,12 +598,6 @@ norm(ITensor const& T);
 void
 randomize(ITensor & T, Args const& args);
 
-ITensor inline
-random(ITensor T, const Args& args)
-    {
-    randomize(T,args);
-    return T;
-    }
 
 ITensor inline
 conj(ITensor T)
@@ -677,24 +613,7 @@ dag(ITensor T)
     return T;
     }
 
-Real inline
-sumels(ITensor const& t)
-    {
-    auto z = sumelsC(t);
-    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
-    return z.real();
-    }
 
-Cplx inline
-sumelsC(ITensor const& t)
-    {
-    auto z = doTask(SumEls{t.inds()},t.store());
-#ifndef USESCALE
-    return z;
-#else
-    return t.scale().real0()*z;
-#endif
-    }
 
 template<typename... Inds>
 ITensor

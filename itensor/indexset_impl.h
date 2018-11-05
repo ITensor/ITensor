@@ -40,7 +40,7 @@ write(std::ostream& s, IndexSet const& is)
     itensor::write(s,pr);
     }
 
-void
+void inline
 read(std::istream& s, IndexSet & is)
     {
     using parent = typename IndexSet::parent;
@@ -112,8 +112,8 @@ namespace detail {
         return findMatch(cmp,I,std::forward<Rest>(rest)...);
         }
 
-    void
-    check(const IndexSet& is)
+    void inline
+    check(IndexSet const& is)
         {
         //Check if any duplicate indices
         for(size_t j = 0; j < is.size(); ++j) 
@@ -163,14 +163,13 @@ namespace detail {
         }
 } //namespace detail
 
-template<typename... Types>
-void 
-prime(IndexSet& is, 
-      IndexType type,
-      int inc)
-    {
-    for(auto& J : is) J.prime(type,inc);
-    }
+//void inline
+//prime(IndexSet& is, 
+//      IndexType type,
+//      int inc)
+//    {
+//    for(auto& J : is) J.prime(type,inc);
+//    }
 
 namespace detail {
 

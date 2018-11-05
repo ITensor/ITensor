@@ -462,7 +462,7 @@ typeNameOf(StorageType const&) { return "StorageType"; }
 
 namespace detail {
 
-void
+void inline
 checkEltInd(IndexSet const& is,
             IntArray const& inds)
     {
