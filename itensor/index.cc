@@ -160,6 +160,11 @@ operator()(long val) const
     {
     return IndexVal(*this,val);
     }
+IndexVal Index::
+operator=(long val) const 
+    { 
+    return operator()(val); 
+    }
 
 Index Index::
 operator[](int plev) const
