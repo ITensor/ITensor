@@ -280,7 +280,8 @@ operator<<(std::ostream & s, Index const& I)
         s << " <" << I.dir() << ">\n";
         for(auto j : range1(I.nblock()))
             {
-            s << "  " << j << ": " << I.blocksize(j) << " " <<  I.qn(j) << "\n";
+            s << "  " << j << ": " << I.blocksize(j) << " " <<  I.qn(j);
+            if(j != I.nblock()) s << "\n";
             }
         }
     return s;

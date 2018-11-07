@@ -734,24 +734,12 @@ ncprod(IndexSet const& Lis,
     Nis = NisBuild.build();
     }
 
-//inline std::ostream&
-//operator<<(std::ostream& s, IndexSet const& is)
-//    {
-//    auto size = is.size();
-//    if(size > 0) s << is[0];
-//    for(decltype(size) j = 1; j < size; ++j)
-//        {
-//        s << "\n" << is[j];
-//        }
-//    return s;
-//    }
-
 inline std::ostream&
 operator<<(std::ostream& s, IndexSet const& is)
     {
     for(auto i : range1(is.r()))
         { 
-        s << is.index(i);
+        s << is.index(i) << " ";
         } 
     return s;
     }
