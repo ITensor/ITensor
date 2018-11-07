@@ -151,7 +151,7 @@ namespace detail {
         {
         doCheck(stdx::select_overload{},is,I);
         }
-    template<typename IndexT, typename T1, typename T2, typename... Rest>
+    template<typename T1, typename T2, typename... Rest>
     void
     checkHasInds(IndexSet const& is,
                  T1 const& I1,
@@ -178,12 +178,12 @@ struct IndexCmp
     bool
     operator()(Index const& i, IndexType t) const
         {
-        return i.type() == t;
+        return (t==All || i.type() == t);
         }
     bool
     operator()(IndexType t, Index const& i) const
         {
-        return i.type() == t;
+        return (t==All || i.type() == t);
         }
     template<typename T1, typename T2>
     auto
