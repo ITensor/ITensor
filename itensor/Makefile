@@ -157,7 +157,7 @@ index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset_impl.h indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itensor_interface.h itensor_interface_impl.h \
+ITDEPHEADERS+= itensor.h itensor_impl.h \
 itensor_impl.h itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
 itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)

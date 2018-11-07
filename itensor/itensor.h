@@ -2,13 +2,14 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITENSOR_INTERFACE_H
-#define __ITENSOR_ITENSOR_INTERFACE_H
+#ifndef __ITENSOR_ITENSOR_H
+#define __ITENSOR_ITENSOR_H
 #include "itensor/detail/algs.h"
 #include "itensor/itdata/applyfunc.h"
 #include "itensor/indexset.h"
 #define REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/storage_types.h"
+#include "itensor/tensor/mat.h"
 
 namespace itensor {
 
@@ -615,7 +616,7 @@ operator<<(std::ostream & s, ITensor const& T);
 
 } //namespace itensor
 
-#include "itensor_interface_impl.h"
+#include "itensor_impl.h"
 
 
 #endif
