@@ -30,8 +30,10 @@ class IndexDim
     size_t
     size() const { return is_.r(); }
 
+    //size_t
+    //operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
     size_t
-    operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
+    operator[](size_t j) const { return (is_[j]).blocksize0(ind_[j]); }
     };
 
 template<typename Indexable>

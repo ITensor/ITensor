@@ -749,10 +749,9 @@ ncprod(IndexSet const& Lis,
 inline std::ostream&
 operator<<(std::ostream& s, IndexSet const& is)
     {
-    for(decltype(is.r()) i = 1; i <= is.r(); ++i) 
+    for(auto i : range1(is.r()))
         { 
         s << is.index(i);
-        if(i < is.r()) s << " ";
         } 
     return s;
     }

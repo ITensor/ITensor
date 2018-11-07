@@ -55,19 +55,15 @@ ITensor(indexset_type iset,
 ITensor::
 ITensor(Cplx val) 
     { 
-    //IF_USESCALE(scale_ = LogNum(1.);)
-    //if(val.imag() == 0)
-    //    {
-    //    store_ = newITData<ScalarReal>(val.real());
-    //    }
-    //else
-    //    {
-    //    store_ = newITData<ScalarCplx>(val);
-    //    }
-    ////if(val.imag() == 0)
-    ////    store_ = newITData<Diag<Real>>(1,val.real());
-    ////else
-    ////    store_ = newITData<Diag<Cplx>>(1,val);
+    IF_USESCALE(scale_ = LogNum(1.);)
+    if(val.imag() == 0)
+        {
+        store_ = newITData<ScalarReal>(val.real());
+        }
+    else
+        {
+        store_ = newITData<ScalarCplx>(val);
+        }
     }
 
 
@@ -404,8 +400,8 @@ read(std::istream& s)
     //else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
     //else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
     //else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
-    //else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
-    //else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
+    else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
+    else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
     else
         {
         Error("Unrecognized type when reading tensor from istream");
@@ -775,8 +771,11 @@ sumelsC(ITensor const& t)
 ostream& 
 operator<<(ostream & s, ITensor const& t)
     {
-    s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
-    if(!t.store()) 
+    s << "ITensor r=" << t.r() << ": "; 
+    if(hasQNs(t.inds())) s << "\n";
+    s << t.inds();
+    if(not hasQNs(t.inds())) s << "\n";
+    if(not t.store()) 
         {
         s << "{Zero / Not yet allocated}\n";
         }

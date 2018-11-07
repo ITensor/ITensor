@@ -40,9 +40,9 @@ class QDense;
 //
 //template<typename T>
 //class QMixed;
-//
-//template<typename T>
-//class Scalar;
+
+template<typename T>
+class Scalar;
 
 //class ITLazy;
 
@@ -57,14 +57,14 @@ Combiner,
 Diag<Real>,
 Diag<Cplx>,
 QDense<Real>,
-QDense<Cplx> //,
+QDense<Cplx>,
 //QCombiner,
 //QDiag<Real>,
 //QDiag<Cplx>,
 //QMixed<Real>,
 //QMixed<Cplx>,
-//Scalar<Real>,
-//Scalar<Cplx>
+Scalar<Real>,
+Scalar<Cplx>
 //ITLazy
 //-----------
 >;
@@ -80,6 +80,6 @@ QDense<Cplx> //,
 //#include "itensor/itdata/qcombiner.h"
 //#include "itensor/itdata/qdiag.h"
 //#include "itensor/itdata/qmixed.h"
-//#include "itensor/itdata/scalar.h"
+#include "itensor/itdata/scalar.h"
 ////#include "itensor/itdata/itlazy.h"
 #endif

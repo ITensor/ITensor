@@ -167,10 +167,6 @@ class Index
     IndexVal
     operator=(long val) const;
 
-    //Return copy of this Index with primelevel plev
-    Index
-    operator[](int plev) const;
-
     //define size()==m() in order to do 
     //for(auto n : range(I)) { ... } for some Index I
     long
@@ -232,6 +228,10 @@ class Index
           std::string const& name, 
           Arrow dir = Out, 
           int plev = 0);
+
+    //0-indexed
+    long
+    blocksize0(long i) const;
 
     }; //class Index
 

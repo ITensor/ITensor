@@ -119,7 +119,7 @@ updateOffsets(IndexSet const& is,
                 auto i_j = I[j];
                 ind += i_j*indstr;
                 indstr *= J.nblock();
-                totm *= J[i_j].m();
+                totm *= J.blocksize0(i_j);
                 }
             offsets.push_back(make_blof(ind,totalsize));
             totalsize += totm;
@@ -285,28 +285,37 @@ template<typename T>
 void
 doTask(PrintIT& P, QDense<T> const& d)
     {
+    auto name = format("QDense %s",typeName<T>());
+    if(not P.print_data)
+        {
+        P.printInfo(d,name,doTask(NormNoScale{},d));
+        return;
+        }
+
     P.s << format("QDense %s {%d blocks; data size %d}\n",
                   typeName<T>(),d.offsets.size(),d.size());
-    Real scalefac = 1.0;
-    if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
-    else P.s << "(omitting too large scale factor)\n";
+    //Real scalefac = 1.0;
+    //if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
+    //else P.s << "(omitting too large scale factor)\n";
 
     auto rank = P.is.r();
     if(rank == 0) 
         {
         P.s << "  ";
-        P.s << formatVal(scalefac*d.store.front()) << "\n";
+        P.s << formatVal(d.store.front()) << "\n";
         return;
         }
         
     Labels block(rank,0);
-    auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
+    //auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
+    auto blockSize = [&block,&P](long i)->long { return (P.is[i]).blocksize0(block[i]); };
 
     Range brange;
     auto C = detail::GCounter(rank);
     for(const auto& io : d.offsets)
         {
-        bool indices_printed = false;
+        bool block_info_printed = false;
+
         //Determine block indices (where in the Index space
         //this non-zero block is located)
         computeBlockInd(io.block,P.is,block);
@@ -315,29 +324,34 @@ doTask(PrintIT& P, QDense<T> const& d)
         for(auto i : range(rank))
             {
             for(auto j : range(block[i]))
-                boff[i] += P.is[i][j].m();
+                boff[i] += P.is[i].blocksize0(j);
             }
 
         //Wire up GCounter with appropriate dims
         C.reset();
-        for(decltype(rank) i = 0; i < rank; ++i)
-            C.setRange(i,0,blockIndex(i).m()-1);
+        for(auto i : range(rank))
+            {
+            C.setRange(i,0,blockSize(i)-1);
+            }
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
-            auto val = scalefac*d.store[os];
+            auto val = d.store[os];
             if(std::norm(val) >= Global::printScale())
                 {
-                if(!indices_printed)
+                if(not block_info_printed)
                     {
-                    indices_printed = true;
+                    block_info_printed = true;
                     //Print Indices of this block
-                    for(auto i : range(rank))
+                    P.s << "Block:";
+                    for(auto bi : block)
                         {
-                        if(i > 0) P.s << " ";
-                        P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
+                        P.s << " " << (1+bi);
+                        //if(i > 0) P.s << " ";
+                        //P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
                         }
                     P.s << "\n";
                     }
+
                 P.s << "(";
                 for(auto ii : range(rank))
                     {

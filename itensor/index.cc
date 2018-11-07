@@ -169,13 +169,13 @@ operator=(long val) const
     return operator()(val); 
     }
 
-Index Index::
-operator[](int plev) const
-    { 
-    auto I = *this;
-    I.primeLevel(plev); 
-    return I; 
-    }
+//Index Index::
+//operator[](int plev) const
+//    { 
+//    auto I = *this;
+//    I.primeLevel(plev); 
+//    return I; 
+//    }
 
 void Index::
 write(std::ostream& s) const 
@@ -280,7 +280,7 @@ operator<<(std::ostream & s, Index const& I)
         s << " <" << I.dir() << ">\n";
         for(auto j : range1(I.nblock()))
             {
-            s << "  " << I.blocksize(j) << " " <<  I.qn(j) << "\n";
+            s << "  " << j << ": " << I.blocksize(j) << " " <<  I.qn(j) << "\n";
             }
         }
     return s;
@@ -447,6 +447,9 @@ class IQIndexDat
     long
     blocksize(long i) { return iq_[i-1].second; }
 
+    long
+    blocksize0(long i) { return iq_[i].second; }
+
     QN const&
     qn(long i) { return iq_[i-1].first; }
 
@@ -503,10 +506,25 @@ blocksize(long i) const
         {
         Print(nblock());
         Print(i);
-        Error("IQIndex::qn arg out of range");
+        Error("Index::blocksize arg out of range");
         }
 #endif
     return pd->blocksize(i);
+    }
+
+long Index::
+blocksize0(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i >= nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("Index::blocksize0 arg out of range");
+        }
+#endif
+    return pd->blocksize0(i);
     }
 
 void Index::

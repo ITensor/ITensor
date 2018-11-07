@@ -8,7 +8,6 @@
 #include "itensor/itdata/task_types.h"
 //#include "itensor/itdata/itdata.h"
 #include "itensor/itdata/dotask.h"
-#include "itensor/iqindex.h"
 #include "itensor/detail/call_rewrite.h"
 
 namespace itensor {
@@ -107,13 +106,13 @@ doTask(VisitIT<F>& V, Scalar<T> const& d)
     detail::call<void>(V.f,V.scale_fac * d.val);
     }
 
-template<typename I, typename T>
+template<typename T>
 Cplx 
-doTask(GetElt<I> const& g, Scalar<T> const& d) { return d.val; }
+doTask(GetElt const& g, Scalar<T> const& d) { return d.val; }
 
-template<typename E, typename I, typename T>
+template<typename E, typename T>
 void
-doTask(SetElt<E,I> const& S, Scalar<T> const& d, ManageStore & m)
+doTask(SetElt<E> const& S, Scalar<T> const& d, ManageStore & m)
     {
     if(not std::is_same<E,T>::value)
         {
@@ -198,9 +197,9 @@ template<typename T>
 bool constexpr
 doTask(CheckComplex, Scalar<T> const& d) { return isCplx(d); }
 
-template<typename I, typename T>
+template<typename T>
 void
-doTask(PrintIT<I>& P, Scalar<T> const& d)
+doTask(PrintIT& P, Scalar<T> const& d)
     {
     auto name = std::is_same<T,Real>::value ? "Scalar Real"
                                             : "Scalar Cplx";
@@ -211,9 +210,9 @@ doTask(PrintIT<I>& P, Scalar<T> const& d)
         }
     }
 
-template<typename I, typename T>
+template<typename T>
 Cplx
-doTask(SumEls<I>, Scalar<T> const& d) { return d.val; }
+doTask(SumEls, Scalar<T> const& d) { return d.val; }
 
 auto constexpr inline
 doTask(StorageType const& S, ScalarReal const& d) ->StorageType::Type { return StorageType::ScalarReal; }
@@ -270,9 +269,9 @@ doTask(StorageType const& S, ScalarCplx const& d) ->StorageType::Type { return S
 //        }
 //    }
 
-template<typename I, typename T1, typename T2>
+template<typename T1, typename T2>
 void
-doTask(PlusEQ<I> const& P,
+doTask(PlusEQ const& P,
        Scalar<T1> const& d1,
        Scalar<T2> const& d2,
        ManageStore & m)

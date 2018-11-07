@@ -354,15 +354,15 @@ getElt(IndexSet const& is,
         auto& I = is[i];
         long block_subind = 0,
              elt_subind = ind[i];
-        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
+        while(elt_subind >= I.blocksize0(block_subind)) //elt_ind 0-indexed
             {
-            elt_subind -= I[block_subind].m();
+            elt_subind -= I.blocksize0(block_subind);
             ++block_subind;
             }
         bind += block_subind*bstr;
         bstr *= I.nblock();
         eoff += elt_subind*estr;
-        estr *= I[block_subind].m();
+        estr *= I.blocksize0(block_subind);
         }
     //Do a binary search (equal_range) to see
     //if there is a block with block index "bind"
