@@ -33,8 +33,8 @@ class Combiner;
 template<typename T>
 class QDense;
 
-//class QCombiner;
-//
+class QCombiner;
+
 //template<typename T>
 //class QDiag;
 //
@@ -58,7 +58,7 @@ Diag<Real>,
 Diag<Cplx>,
 QDense<Real>,
 QDense<Cplx>,
-//QCombiner,
+QCombiner,
 //QDiag<Real>,
 //QDiag<Cplx>,
 //QMixed<Real>,
@@ -77,7 +77,7 @@ Scalar<Cplx>
 #include "itensor/itdata/combiner.h"
 #include "itensor/itdata/diag.h"
 #include "itensor/itdata/qdense.h"
-//#include "itensor/itdata/qcombiner.h"
+#include "itensor/itdata/qcombiner.h"
 //#include "itensor/itdata/qdiag.h"
 //#include "itensor/itdata/qmixed.h"
 #include "itensor/itdata/scalar.h"

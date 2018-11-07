@@ -7,7 +7,6 @@
 #include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/itdata/qutil.h"
-#include "itensor/iqindex.h"
 
 using std::vector;
 using std::tie;
@@ -38,24 +37,24 @@ write(std::ostream& s, QCombiner const& dat)
     }
 
 Cplx
-doTask(GetElt<IQIndex> const& g, QCombiner const& c)
+doTask(GetElt const& g, QCombiner const& c)
     {
     if(g.inds.size()!=0) Error("GetElt not defined for non-scalar QCombiner storage");
     return Cplx(1.,0.);
     }
 
 void
-permuteIQ(const Permutation& P,
-          const IQIndexSet& Ais,
-          const QDenseReal& dA,
-          IQIndexSet& Bis,
-          QDenseReal& dB)
+permuteIQ(Permutation const& P,
+          IndexSet const& Ais,
+          QDenseReal const& dA,
+          IndexSet & Bis,
+          QDenseReal & dB)
     {
 #ifdef DEBUG
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
 #endif
     auto r = Ais.r();
-    auto bind = IQIndexSetBuilder(r);
+    auto bind = IndexSetBuilder(r);
     for(auto i : range(r))
         {
         bind.setIndex(P.dest(i),Ais[i]);
@@ -64,7 +63,7 @@ permuteIQ(const Permutation& P,
     dB = QDenseReal(Bis,doTask(CalcDiv{Ais},dA));
 
     Labels Ablock(r,-1),
-          Bblock(r,-1);
+           Bblock(r,-1);
     Range Arange,
           Brange;
     for(auto aio : dA.offsets)
@@ -72,7 +71,9 @@ permuteIQ(const Permutation& P,
         //Compute bi, new block index of blk
         computeBlockInd(aio.block,Ais,Ablock);
         for(auto j : range(Ablock)) 
+            {
             Bblock.at(P.dest(j)) = Ablock[j];
+            }
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
@@ -85,29 +86,33 @@ permuteIQ(const Permutation& P,
         }
     }
 
-IQIndexSet
-replaceInd(IQIndexSet const& is,
-           long              loc,
-           IQIndex    const& replacement)
+IndexSet
+replaceInd(IndexSet const& is,
+           long            loc,
+           Index    const& replacement)
     {
-    auto newind = IQIndexSetBuilder(is.r());
+    auto newind = IndexSetBuilder(is.r());
     long i = 0;
-    for(long j = 0; j < loc; ++j)
+    for(auto j : range(loc))
+        {
         newind.setIndex(i++,is[j]);
+        }
     newind.setIndex(i++,replacement);
     for(decltype(is.r()) j = loc+1; j < is.r(); ++j)
+        {
         newind.setIndex(i++,is[j]);
+        }
     return newind.build();
     }
 
 template<typename T>
 void
-combine(QDense<T>   const& d,
+combine(QDense<T> const& d,
         QCombiner const& C,
-        IQIndexSet  const& dis,
-        IQIndexSet  const& Cis,
-        IQIndexSet       & Nis,
-        ManageStore      & m)
+        IndexSet  const& dis,
+        IndexSet  const& Cis,
+        IndexSet       & Nis,
+        ManageStore    & m)
     {
 #ifdef DEBUG
     for(auto i : range(1,Cis.r()))
@@ -138,8 +143,8 @@ combine(QDense<T>   const& d,
 
     auto combined = [&dperm,ncomb](size_type i) { return dperm[i] < long(ncomb); };
 
-    //Create new IQIndexSet
-    auto newind = IQIndexSetBuilder(nr);
+    //Create new IndexSet
+    auto newind = IndexSetBuilder(nr);
     newind.nextIndex(Cis[0]);
     for(auto i : range(dr)) if(!combined(i)) newind.nextIndex(dis[i]);
     Nis = newind.build();
@@ -153,7 +158,7 @@ combine(QDense<T>   const& d,
          nblock = Labels(nr), //block index of new storage
          cblock = Labels(ncomb); //corresponding subblock of combiner
     size_t start = 0, //offsets within sector of combined
-           end   = 0; //IQIndex where block will go
+           end   = 0; //Index where block will go
     for(auto io : d.offsets) //loop over non-zero blocks
         {
         //Figure out this block's "block index"
@@ -178,7 +183,7 @@ combine(QDense<T>   const& d,
             else            nblock[nu++] = dblock[i];
             }
 
-        //Use cblock to recover info about structure of combined IQIndex,
+        //Use cblock to recover info about structure of combined Index,
         //which sector to map to, where this subsector starts, and ends
         tie(nblock[0],start,end) = C.getBlockRange(cblock);
 
@@ -197,12 +202,12 @@ combine(QDense<T>   const& d,
 
 template<typename T>
 void
-uncombine(QDense<T>   const& d,
+uncombine(QDense<T> const& d,
           QCombiner const& C,
-          IQIndexSet  const& dis,
-          IQIndexSet  const& Cis,
-          IQIndexSet       & Nis,
-          ManageStore      & m,
+          IndexSet  const& dis,
+          IndexSet  const& Cis,
+          IndexSet       & Nis,
+          ManageStore    & m,
           bool              own_data)
     {
     using size_type = decltype(rank(dis));
@@ -213,7 +218,7 @@ uncombine(QDense<T>   const& d,
     auto nr = dr-1+ncomb;
 
     decltype(dr) jc = 0;
-    auto newind = IQIndexSetBuilder(nr);
+    auto newind = IndexSetBuilder(nr);
     for(auto n : range(dr)) 
         {
         if(dis[n] == cind)
@@ -262,8 +267,8 @@ uncombine(QDense<T>   const& d,
             //similar to computeBlockInd
             for(auto m : range(ncomb-1))
                 {
-                nblock[jc+m] = o % Cis[1+m].nindex();
-                o = (o-nblock[jc+m])/Cis[1+m].nindex();
+                nblock[jc+m] = o % Cis[1+m].nblock();
+                o = (o-nblock[jc+m])/Cis[1+m].nblock();
                 }
             nblock[jc+ncomb-1] = o;
 
@@ -288,10 +293,10 @@ uncombine(QDense<T>   const& d,
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
-       QDense<T>    const& d,
+doTask(Contract & C,
+       QDense<T>  const& d,
        QCombiner  const& cmb,
-       ManageStore       & m)
+       ManageStore     & m)
     {
     if(hasindex(C.Lis,C.Ris[0]))
         {
@@ -302,12 +307,12 @@ doTask(Contract<IQIndex> & C,
         combine(d,cmb,C.Lis,C.Ris,C.Nis,m);
         }
     }
-template void doTask(Contract<IQIndex> &,QDense<Real> const&,QCombiner const&,ManageStore &);
-template void doTask(Contract<IQIndex> &,QDense<Cplx> const&,QCombiner const&,ManageStore &);
+template void doTask(Contract &,QDense<Real> const&,QCombiner const&,ManageStore &);
+template void doTask(Contract &,QDense<Cplx> const&,QCombiner const&,ManageStore &);
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
+doTask(Contract & C,
        QCombiner  const& cmb,
        QDense<T>    const& d,
        ManageStore       & m)
@@ -321,8 +326,8 @@ doTask(Contract<IQIndex> & C,
         combine(d,cmb,C.Ris,C.Lis,C.Nis,m);
         }
     }
-template void doTask(Contract<IQIndex> &,QCombiner const&,QDense<Real> const&,ManageStore &);
-template void doTask(Contract<IQIndex> &,QCombiner const&,QDense<Cplx> const&,ManageStore &);
+template void doTask(Contract &,QCombiner const&,QDense<Real> const&,ManageStore &);
+template void doTask(Contract &,QCombiner const&,QDense<Cplx> const&,ManageStore &);
 
 
 } //namespace itensor

@@ -46,9 +46,9 @@ class QCombiner
 
     QCombiner() { }
     
-    template<typename IQInds>
+    template<typename Inds>
     explicit
-    QCombiner(IQInds const& cinds)
+    QCombiner(Inds const& cinds)
         { 
         //set up range to sum over all possible
         //blocks that can be formed out of combined inds
