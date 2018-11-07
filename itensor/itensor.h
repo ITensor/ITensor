@@ -122,11 +122,6 @@ matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
 
-inline 
-ITensor& ITensor::
-dag() { return conj(); }
-
-
 } //namespace itensor
 
 //See file itensor_impl.h for template/inline method implementations
