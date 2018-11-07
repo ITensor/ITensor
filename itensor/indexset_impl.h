@@ -764,6 +764,13 @@ hasQNs(IndexSet const& is)
     return false;
     }
 
+bool inline
+hasQNs(std::vector<Index> const& inds)
+    {
+    for(auto& I : inds) if(hasQNs(I)) return true;
+    return false;
+    }
+
 } //namespace itensor
 
 #endif

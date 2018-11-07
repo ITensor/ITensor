@@ -228,7 +228,12 @@ conj()
 
 
 ITensor& ITensor::
-dag() { return conj(); }
+dag() 
+    { 
+    if(hasQNs(is_)) is_.dag();
+    doTask(Conj{},store_);
+    return conj(); 
+    }
 
 ITensor& ITensor::
 takeReal()
@@ -836,21 +841,104 @@ matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
 ITensor
 combiner(std::vector<Index> inds, Args const& args)
     {
-    if(inds.empty()) Error("No indices passed to combiner");
-    long rm = 1;
-    for(const auto& i : inds)rm *= i.m();
-    //increase size by 1
-    inds.push_back(Index());
-    //shuffle contents to the end
-    for(size_t j = inds.size()-1; j > 0; --j)
+    if(not hasQNs(inds))
         {
-        inds[j] = inds[j-1];
+        if(inds.empty()) Error("No indices passed to combiner");
+        long rm = 1;
+        for(const auto& i : inds)rm *= i.m();
+        //increase size by 1
+        inds.push_back(Index());
+        //shuffle contents to the end
+        for(size_t j = inds.size()-1; j > 0; --j)
+            {
+            inds[j] = inds[j-1];
+            }
+        //create combined index
+        auto cname = args.getString("IndexName","cmb");
+        auto itype = getIndexType(args,"IndexType",Link);
+        inds.front() = Index(cname,rm,itype);
+        return ITensor(IndexSet(std::move(inds)),Combiner{});
         }
-    //create combined index
-    auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",Link);
-    inds.front() = Index(cname,rm,itype);
-    return ITensor(IndexSet(std::move(inds)),Combiner{});
+    else if(hasQNs(inds))
+        {
+        Error("QN Combiner not yet implemented");
+        //if(inds.empty()) Error("No indices passed to combiner");
+        //auto cname = args.getString("IndexName","cmb");
+        //auto itype = getIndexType(args,"IndexType",Link);
+
+        //auto cdir = Out;
+        //if(args.defined("IndexDir"))
+        //    {
+        //    cdir = toArrow(args.getInt("IndexDir"));
+        //    }
+        //else
+        //    {
+        //    //If not specified by user, make combined IQIndex
+        //    //point Out unless all combined indices have In arrows.
+        //    auto allin = true;
+        //    for(auto& i : inds) 
+        //        if(i.dir() != In)
+        //            {
+        //            allin = false;
+        //            break;
+        //            }
+        //    if(allin) cdir = In;
+        //    }
+
+
+        //auto C = QCombiner{inds};
+
+        ////Build the combined IQIndex,
+        ////saving information about
+        ////how we're doing it in C
+        //struct QNm { QN q; long m = 1; };
+        //auto qms = vector<QNm>{};
+
+        ////Loop over all possible QN sectors that
+        ////can be formed by the combined indices
+        //for(auto I : C.range())
+        //    {
+        //    QNm qm;
+        //    //For this sector, figure out the total QN (qm.q)
+        //    //and combined sector size (qm.m)
+        //    for(auto j : range(inds))
+        //        {
+        //        qm.q += inds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
+        //        qm.m *= inds[j].index(1+I[j]).m();
+        //        }
+
+        //    size_t n = 0;
+        //    for(; n < qms.size(); ++n) if(qms[n].q==qm.q) break;
+
+        //    if(n < qms.size())
+        //        {
+        //        C.setBlockRange(I,n,qms[n].m,qm.m);
+        //        qms[n].m += qm.m;
+        //        }
+        //    else 
+        //        {
+        //        C.setBlockRange(I,n,0,qm.m);
+        //        qms.push_back(qm);
+        //        }
+        //    }
+
+        //auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
+        //for(auto n : range(qms)) 
+        //    {
+        //    cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
+        //    }
+        //auto cind = IQIndex{cname,std::move(cstore),cdir};
+
+        //auto newind = IQIndexSetBuilder(1+inds.size());
+        //newind.nextIndex(std::move(cind));
+        //for(auto& I : inds) 
+        //    {
+        //    I.dag();
+        //    newind.nextIndex(std::move(I));
+        //    }
+        //return ITensor{newind.build(),std::move(C)};
+        }
+    return ITensor{};
     }
 
 struct IsCombiner
@@ -882,10 +970,11 @@ randomTensor(IndexSet const& inds)
     }
 
 QN
-div(ITensor const& T)
-    {
-    Error("div not yet implemented");
-    return QN();
+div(ITensor const& T) 
+    { 
+    if(not hasQNs(T.inds())) Error("div(ITensor) not defined for non QN conserving ITensor");
+    if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
+    return doTask(CalcDiv{T.inds()},T.store());
     }
 
 } //namespace itensor

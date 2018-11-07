@@ -525,6 +525,9 @@ operator+(typename IndexSetIter<T>::difference_type d,
 bool
 hasQNs(IndexSet const& is);
 
+bool
+hasQNs(std::vector<Index> const& inds);
+
 } //namespace itensor
 
 #include "itensor/indexset_impl.h"
