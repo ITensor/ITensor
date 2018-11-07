@@ -25,7 +25,6 @@ SOURCES+= itdata/qdense.cc
 #SOURCES+= itdata/qmixed.cc
 #SOURCES+= itdata/scalar.cc 
 SOURCES+= index.cc 
-SOURCES+= itensor_interface.cc 
 SOURCES+= itensor_operators.cc 
 SOURCES+= itensor.cc 
 SOURCES+= qn.cc 
@@ -160,8 +159,6 @@ indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= itensor_interface.h itensor_interface_impl.h \
 itensor_impl.h itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
-itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
