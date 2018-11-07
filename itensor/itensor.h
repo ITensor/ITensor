@@ -518,7 +518,7 @@ reindex(ITensor const& cT,
 //
 // (here s and t are indices of type Site)
 //
-ITensor inline
+ITensor
 multSiteOps(ITensor A, ITensor const& B);
 
 ITensor
