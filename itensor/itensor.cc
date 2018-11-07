@@ -227,7 +227,6 @@ ITensor& ITensor::
 dag() 
     { 
     if(hasQNs(is_)) is_.dag();
-    doTask(Conj{},store_);
     return conj(); 
     }
 
@@ -772,8 +771,14 @@ ostream&
 operator<<(ostream & s, ITensor const& t)
     {
     s << "ITensor r=" << t.r() << ": "; 
-    if(hasQNs(t.inds())) s << "\n";
-    s << t.inds();
+    if(hasQNs(t.inds())) 
+        {
+        for(auto& I : t.inds()) s << I << "\n";
+        }
+    else
+        {
+        s << t.inds();
+        }
     if(not hasQNs(t.inds())) s << "\n";
     if(not t.store()) 
         {
@@ -963,7 +968,7 @@ combinedIndex(ITensor const& C)
     }
 
 ITensor
-randomTensor(IndexSet const& inds)
+randomITensor(IndexSet const& inds)
     {
     return random(ITensor{inds});
     }
@@ -974,6 +979,12 @@ div(ITensor const& T)
     if(not hasQNs(T.inds())) Error("div(ITensor) not defined for non QN conserving ITensor");
     if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
     return doTask(CalcDiv{T.inds()},T.store());
+    }
+
+QN
+flux(ITensor const& T) 
+    {
+    return div(T);
     }
 
 } //namespace itensor

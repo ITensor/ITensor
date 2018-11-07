@@ -577,21 +577,17 @@ ITensor inline
 operator*(Cplx val, IndexVal const& iv) { return operator*(iv,val); }
 
 
+
 template <typename... Inds>
 ITensor
-randomTensor(Index const& i1, Inds&&... inds)
-    {
-    return random(ITensor(i1,std::forward<Inds>(inds)...));
-    }
+randomITensor(Index const& i1, Inds&&... inds);
+
 template <typename... Inds>
 ITensor
-randomTensorC(Index const& i1, Inds&&... inds)
-    {
-    return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
-    }
+randomITensorC(Index const& i1, Inds&&... inds);
 
 ITensor
-randomTensor(IndexSet const& inds);
+randomITensor(IndexSet const& inds);
 
 ITensor
 matrixTensor(Matrix && M, Index const& i1, Index const& i2);
@@ -602,6 +598,12 @@ matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
 ITensor
 matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
+QN
+div(ITensor const& T);
+
+//flux is an alias for div
+QN
+flux(ITensor const& T);
 
 //template<typename... Indxs>
 //TensorRef1

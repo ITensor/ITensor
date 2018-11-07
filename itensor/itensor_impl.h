@@ -15,8 +15,6 @@
 
 namespace itensor {
 
-QN
-div(ITensor const& T);
 
 namespace detail {
 
@@ -597,6 +595,19 @@ norm(ITensor const& T);
 
 void
 randomize(ITensor & T, Args const& args);
+
+template <typename... Inds>
+ITensor
+randomITensor(Index const& i1, Inds&&... inds)
+    {
+    return random(ITensor(i1,std::forward<Inds>(inds)...));
+    }
+template <typename... Inds>
+ITensor
+randomITensorC(Index const& i1, Inds&&... inds)
+    {
+    return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
+    }
 
 
 ITensor inline
