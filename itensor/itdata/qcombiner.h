@@ -54,7 +54,7 @@ class QCombiner
         //blocks that can be formed out of combined inds
         auto RB = RangeBuilder(cinds.size());
         for(auto j : itensor::range(cinds))
-            RB.nextIndex(cinds[j].nindex());
+            RB.nextIndex(cinds[j].nblock());
         R_ = RB.build();
         store_.resize(area(R_));
         }

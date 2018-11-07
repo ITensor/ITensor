@@ -865,82 +865,81 @@ combiner(std::vector<Index> inds, Args const& args)
         }
     else if(hasQNs(inds))
         {
-        Error("QN Combiner not yet implemented");
-        //if(inds.empty()) Error("No indices passed to combiner");
-        //auto cname = args.getString("IndexName","cmb");
-        //auto itype = getIndexType(args,"IndexType",Link);
+        if(inds.empty()) Error("No indices passed to combiner");
+        auto cname = args.getString("IndexName","cmb");
+        auto itype = getIndexType(args,"IndexType",Link);
 
-        //auto cdir = Out;
-        //if(args.defined("IndexDir"))
-        //    {
-        //    cdir = toArrow(args.getInt("IndexDir"));
-        //    }
-        //else
-        //    {
-        //    //If not specified by user, make combined IQIndex
-        //    //point Out unless all combined indices have In arrows.
-        //    auto allin = true;
-        //    for(auto& i : inds) 
-        //        if(i.dir() != In)
-        //            {
-        //            allin = false;
-        //            break;
-        //            }
-        //    if(allin) cdir = In;
-        //    }
+        auto cdir = Out;
+        if(args.defined("IndexDir"))
+            {
+            cdir = toArrow(args.getInt("IndexDir"));
+            }
+        else
+            {
+            //If not specified by user, make combined Index
+            //point Out unless all combined indices have In arrows.
+            auto allin = true;
+            for(auto& i : inds) 
+                if(i.dir() != In)
+                    {
+                    allin = false;
+                    break;
+                    }
+            if(allin) cdir = In;
+            }
 
 
-        //auto C = QCombiner{inds};
+        auto C = QCombiner{inds};
 
-        ////Build the combined IQIndex,
-        ////saving information about
-        ////how we're doing it in C
-        //struct QNm { QN q; long m = 1; };
-        //auto qms = vector<QNm>{};
+        //Build the combined Index,
+        //saving information about
+        //how we're doing it in C
+        struct QNm { QN q; long m = 1; };
+        auto qms = vector<QNm>{};
 
-        ////Loop over all possible QN sectors that
-        ////can be formed by the combined indices
-        //for(auto I : C.range())
-        //    {
-        //    QNm qm;
-        //    //For this sector, figure out the total QN (qm.q)
-        //    //and combined sector size (qm.m)
-        //    for(auto j : range(inds))
-        //        {
-        //        qm.q += inds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
-        //        qm.m *= inds[j].index(1+I[j]).m();
-        //        }
+        //Loop over all possible QN sectors that
+        //can be formed by the combined indices
+        for(auto I : C.range())
+            {
+            QNm qm;
+            //For this sector, figure out the total QN (qm.q)
+            //and combined sector size (qm.m)
+            for(auto j : range(inds))
+                {
+                qm.q += inds[j].qn(1+I[j]) * inds[j].dir() * cdir;
+                qm.m *= inds[j].blocksize0(I[j]);
+                }
 
-        //    size_t n = 0;
-        //    for(; n < qms.size(); ++n) if(qms[n].q==qm.q) break;
+            size_t n = 0;
+            for(; n < qms.size(); ++n) if(qms[n].q==qm.q) break;
 
-        //    if(n < qms.size())
-        //        {
-        //        C.setBlockRange(I,n,qms[n].m,qm.m);
-        //        qms[n].m += qm.m;
-        //        }
-        //    else 
-        //        {
-        //        C.setBlockRange(I,n,0,qm.m);
-        //        qms.push_back(qm);
-        //        }
-        //    }
+            if(n < qms.size())
+                {
+                C.setBlockRange(I,n,qms[n].m,qm.m);
+                qms[n].m += qm.m;
+                }
+            else 
+                {
+                C.setBlockRange(I,n,0,qm.m);
+                qms.push_back(qm);
+                }
+            }
 
-        //auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
-        //for(auto n : range(qms)) 
-        //    {
-        //    cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
-        //    }
-        //auto cind = IQIndex{cname,std::move(cstore),cdir};
+        auto cstore = stdx::reserve_vector<QNInt>(qms.size());
+        for(auto n : range(qms)) 
+            {
+            cstore.emplace_back(qms[n].q,qms[n].m);
+            }
+        auto cind = Index{cname,std::move(cstore),cdir,itype};
 
-        //auto newind = IQIndexSetBuilder(1+inds.size());
-        //newind.nextIndex(std::move(cind));
-        //for(auto& I : inds) 
-        //    {
-        //    I.dag();
-        //    newind.nextIndex(std::move(I));
-        //    }
-        //return ITensor{newind.build(),std::move(C)};
+        auto newind = IndexSetBuilder(1+inds.size());
+        newind.nextIndex(std::move(cind));
+        for(auto& I : inds) 
+            {
+            I.dag();
+            newind.nextIndex(std::move(I));
+            }
+        return ITensor{newind.build(),std::move(C)};
         }
     return ITensor{};
     }
@@ -971,6 +970,25 @@ ITensor
 randomITensor(IndexSet const& inds)
     {
     return random(ITensor{inds});
+    }
+
+ITensor
+randomITensor(QN q, IndexSet const& is, Args const& args)
+    {
+    ITensor T;
+    if(args.getBool("Complex",false))
+        {
+        auto dat = QDenseCplx{is,q};
+        T = ITensor(std::move(is),std::move(dat));
+        T.generate(detail::quickranCplx);
+        }
+    else
+        {
+        auto dat = QDenseReal{is,q};
+        T = ITensor(std::move(is),std::move(dat));
+        T.generate(detail::quickran);
+        }
+    return T;
     }
 
 QN

@@ -609,6 +609,21 @@ randomITensorC(Index const& i1, Inds&&... inds)
     return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
     }
 
+template <typename... Inds>
+ITensor
+randomITensor(QN q, Index const& i1, Inds&&... inds)
+    {
+    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
+    return randomITensor(q,std::move(is));
+    }
+template <typename... Inds>
+ITensor
+randomITensorC(QN q, Index const& i1, Inds&&... inds)
+    {
+    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
+    return randomITensor(q,std::move(is),{"Complex=",true});
+    }
+
 
 ITensor inline
 conj(ITensor T)

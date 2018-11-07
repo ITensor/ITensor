@@ -153,85 +153,85 @@ SECTION("ITensor SVD")
 
     }
 
-//SECTION("IQTensor SVD")
-//    {
-//
-//    SECTION("Regression Test 1")
-//        {
-//        //Oct 5, 2015: was encountering a 
-//        //bad memory access bug with this code
-//        IQIndex u("u",Index{"u+2",1},QN(+2),
-//                      Index{"u00",1},QN( 0),
-//                      Index{"u-2",1},QN(-2));
-//        IQIndex v("v",Index{"v+2",1},QN(+2),
-//                      Index{"v00",1},QN( 0),
-//                      Index{"v-2",1},QN(-2));
-//
-//        auto S = randomITensor(QN(),u,v);
-//        IQTensor U(u),D,V;
-//        svd(S,U,D,V);
-//
-//        CHECK(norm(S-U*D*V) < 1E-12);
-//        }
-//
-//    SECTION("Regression Test 2")
-//        {
-//        //Feb 10, 2016: code that fixes sign of
-//        //singular values to be positive was broken
-//		auto s1 = IQIndex("s1",Index("s1+",1,Site),QN(+1),Index("s1-",1,Site),QN(-1));
-//		auto s2 = IQIndex("s2",Index("s2+",1,Site),QN(+1),Index("s2-",1,Site),QN(-1));
-//		auto sing = IQTensor(s1,s2);
-//		sing.set(s1(1),s2(2), 1./sqrt(2));
-//		sing.set(s1(2),s2(1),-1./sqrt(2));
-//		auto prod = IQTensor(s1,s2);
-//		prod.set(s1(1),s2(2),1.);
-//		auto psi = sing*sin(0.1)+prod*cos(0.1);
-//		psi /= norm(psi);
-//        psi.scaleTo(-1.);
-//		IQTensor A(s1),D,B;
-//		svd(psi,A,D,B);
-//        CHECK(norm(psi-A*D*B) < 1E-12);
-//        }
-//
-//    }
-//
-//SECTION("IQTensor denmatDecomp")
-//    {
-//    SECTION("Test 1")
-//        {
-//        IQIndex S1("S1",Index("s1+",1,Site),QN(+1),
-//                        Index("s1-",1,Site),QN(-1));
-//        IQIndex S2("S2",Index("s2+",1,Site),QN(+1),
-//                        Index("s2-",1,Site),QN(-1));
-//        IQIndex L1("L1",Index("l1+2",3),QN(+2),
-//                        Index("l1+1",4),QN(+1),
-//                        Index("l1 0",8),QN( 0),
-//                        Index("l1-1",4),QN(-1),
-//                        Index("l1-2",2),QN(-2));
-//        IQIndex L2("L2",Index("l2+2",4),QN(+2),
-//                        Index("l2+1",6),QN(+1),
-//                        Index("l2 0",10),QN( 0),
-//                        Index("l2-1",4),QN(-1),
-//                        Index("l2-2",3),QN(-2));
-//        IQIndex L3("L3",Index("l3+2",2),QN(+2),
-//                        Index("l3 0",4),QN( 0),
-//                        Index("l3-2",2),QN(-2));
-//
-//        auto A1 = randomITensor(QN(),L1,S1,L2),
-//             A2 = randomITensor(QN(),dag(L2),S2,L3);
-//
-//        auto AA = A1*A2;
-//        AA *= -1./norm(AA);
-//        auto spec = denmatDecomp(AA,A1,A2,Fromleft);
-//
-//        CHECK(norm(AA-A1*A2) < 1E-11);
-//
-//        for(auto eig : spec.eigsKept())
-//            {
-//            CHECK(eig >= 0.);
-//            }
-//        }
-//    }
+SECTION("QN ITensor SVD")
+    {
+
+    SECTION("Regression Test 1")
+        {
+        //Oct 5, 2015: was encountering a 
+        //bad memory access bug with this code
+        Index u("u",QN(+2),1,
+                    QN( 0),1,
+                    QN(-2),1);
+        Index v("v",QN(+2),1,
+                    QN( 0),1,
+                    QN(-2),1);
+
+        auto S = randomITensor(QN(),u,v);
+        ITensor U(u),D,V;
+        svd(S,U,D,V);
+
+        CHECK(norm(S-U*D*V) < 1E-12);
+        }
+
+    SECTION("Regression Test 2")
+        {
+        //Feb 10, 2016: code that fixes sign of
+        //singular values to be positive was broken
+		auto s1 = Index("s1",QN(+1),1,QN(-1),1);
+		auto s2 = Index("s2",QN(+1),1,QN(-1),1);
+		auto sing = ITensor(s1,s2);
+		sing.set(s1(1),s2(2), 1./sqrt(2));
+		sing.set(s1(2),s2(1),-1./sqrt(2));
+		auto prod = ITensor(s1,s2);
+		prod.set(s1(1),s2(2),1.);
+		auto psi = sing*sin(0.1)+prod*cos(0.1);
+		psi /= norm(psi);
+        psi.scaleTo(-1.);
+		ITensor A(s1),D,B;
+		svd(psi,A,D,B);
+        CHECK(norm(psi-A*D*B) < 1E-12);
+        }
+
+    }
+
+SECTION("QN ITensor denmatDecomp")
+    {
+    SECTION("Test 1")
+        {
+        Index S1("S1",QN(+1),1,
+                      QN(-1),1);
+        Index S2("S2",QN(+1),1,
+                      QN(-1),1);
+        Index L1("L1",QN(+2),3,
+                      QN(+1),4,
+                      QN( 0),8,
+                      QN(-1),4,
+                      QN(-2),2);
+        Index L2("L2",QN(+2),4,
+                      QN(+1),6,
+                      QN( 0),10,
+                      QN(-1),4,
+                      QN(-2),3);
+        Index L3("L3",QN(+2),2,
+                      QN( 0),4,
+                      QN(-2),2);
+
+        auto A1 = randomITensor(QN(),L1,S1,L2),
+             A2 = randomITensor(QN(),dag(L2),S2,L3);
+
+        auto AA = A1*A2;
+        AA *= -1./norm(AA);
+        auto spec = denmatDecomp(AA,A1,A2,Fromleft);
+
+        CHECK(norm(AA-A1*A2) < 1E-11);
+
+        for(auto eig : spec.eigsKept())
+            {
+            CHECK(eig >= 0.);
+            }
+        }
+    }
 
 SECTION("ITensor diagHermitian")
     {
@@ -296,70 +296,70 @@ SECTION("ITensor diagHermitian")
         CHECK(norm(T-U*D*prime(U,4)) < 1E-12);
         }
     }
-//
-//SECTION("IQTensor diagHermitian")
-//    {
-//    SECTION("Rank 2")
-//        {
-//        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
-//        auto T = randomITensor(QN(),dag(I),prime(I));
-//        T += dag(swapPrime(T,0,1));
-//        IQTensor U,D;
-//        diagHermitian(T,U,D);
-//        CHECK(hasindex(U,I));
-//        CHECK(not hasindex(U,prime(I)));
-//        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
-//        }
-//
-//    SECTION("Complex Rank 2")
-//        {
-//        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
-//        auto T = randomITensorC(QN(),dag(I),prime(I));
-//        CHECK(isComplex(T));
-//        T += dag(swapPrime(T,0,1));
-//        IQTensor U,D;
-//        diagHermitian(T,U,D);
-//        CHECK(hasindex(U,I));
-//        CHECK(not hasindex(U,prime(I)));
-//        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
-//        }
-//
-//    SECTION("Complex Rank 4")
-//        {
-//        detail::seed_quickran(1);
-//        auto I = IQIndex("I",Index("i-",2),QN(-1),
-//                             Index("i+",2),QN(+1));
-//        auto J = IQIndex("J",Index("j-2",2),QN(-2),
-//                             Index("j+2",2),QN(+2));
-//        //auto T = randomITensorC(QN(),dag(I),prime(I),prime(J),dag(J));
-//        auto T = randomITensorC(QN(),dag(I),dag(J),prime(J),prime(I));
-//        CHECK(isComplex(T));
-//        T += dag(swapPrime(T,0,1));
-//        T = swapPrime(T,0,1);
-//        IQTensor U,D;
-//        diagHermitian(T,U,D);
-//        CHECK(hasindex(U,I));
-//        CHECK(hasindex(U,J));
-//        CHECK(not hasindex(U,prime(I)));
-//        CHECK(not hasindex(U,prime(J)));
-//        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
-//        }
-//
-//    SECTION("Rank 2 - Primes 1 and 2")
-//        {
-//        auto I = IQIndex("I",Index("i-",4),QN(-1),Index("i+",4),QN(+1));
-//        auto T = randomITensor(QN(),dag(I),prime(I));
-//        T += dag(swapPrime(T,0,1));
-//        //Raise prime level of T
-//        //and prime level spacing between inds
-//        T.mapprime(1,4);
-//        T.mapprime(0,1);
-//        IQTensor U,D;
-//        diagHermitian(T,U,D);
-//        CHECK(hasindex(U,prime(I)));
-//        CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
-//        }
-//    }
+
+SECTION("IQTensor diagHermitian")
+    {
+    SECTION("Rank 2")
+        {
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensor(QN(),dag(I),prime(I));
+        T += dag(swapPrime(T,0,1));
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Complex Rank 2")
+        {
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensorC(QN(),dag(I),prime(I));
+        CHECK(isComplex(T));
+        T += dag(swapPrime(T,0,1));
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Complex Rank 4")
+        {
+        detail::seed_quickran(1);
+        auto I = Index("I",QN(-1),2,
+                           QN(+1),2);
+        auto J = Index("J",QN(-2),2,
+                           QN(+2),2);
+        //auto T = randomITensorC(QN(),dag(I),prime(I),prime(J),dag(J));
+        auto T = randomITensorC(QN(),dag(I),dag(J),prime(J),prime(I));
+        CHECK(isComplex(T));
+        T += dag(swapPrime(T,0,1));
+        T = swapPrime(T,0,1);
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,I));
+        CHECK(hasindex(U,J));
+        CHECK(not hasindex(U,prime(I)));
+        CHECK(not hasindex(U,prime(J)));
+        CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
+        }
+
+    SECTION("Rank 2 - Primes 1 and 2")
+        {
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensor(QN(),dag(I),prime(I));
+        T += dag(swapPrime(T,0,1));
+        //Raise prime level of T
+        //and prime level spacing between inds
+        T.mapprime(1,4);
+        T.mapprime(0,1);
+        ITensor U,D;
+        diagHermitian(T,U,D);
+        CHECK(hasindex(U,prime(I)));
+        CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
+        }
+    }
 
 SECTION("Exp Hermitian")
     {
@@ -391,34 +391,33 @@ SECTION("Exp Hermitian")
             }
         }
 
-    //SECTION("IQTensor case")
-    //    {
-    //    auto s = IQIndex("S",Index("s-",1),QN(-1),
-    //                         Index("s+",1),QN(+1));
-    //    auto Z = IQTensor(dag(s),prime(s));
-    //    Z.set(s(1),prime(s)(1),1);
-    //    Z.set(s(2),prime(s)(2),-1);
+    SECTION("QN ITensor case")
+        {
+        auto s = Index("S",QN(-1),1,QN(+1),1);
+        auto Z = ITensor(dag(s),prime(s));
+        Z.set(s(1),prime(s)(1),1);
+        Z.set(s(2),prime(s)(2),-1);
 
-    //    auto Id = IQTensor(dag(s),prime(s));
-    //    Id.set(s(1),prime(s)(1),1);
-    //    Id.set(s(2),prime(s)(2),1);
+        auto Id = ITensor(dag(s),prime(s));
+        Id.set(s(1),prime(s)(1),1);
+        Id.set(s(2),prime(s)(2),1);
 
-    //    SECTION("Real tau")
-    //        {
-    //        Real tau = -0.2342;
-    //        auto expZ = expHermitian(Z,tau);
-    //        CHECK(norm(expZ - (cosh(tau)*Id+sinh(tau)*Z)) < 1E-12);
-    //        CHECK(not isComplex(expZ));
-    //        }
+        SECTION("Real tau")
+            {
+            Real tau = -0.2342;
+            auto expZ = expHermitian(Z,tau);
+            CHECK(norm(expZ - (cosh(tau)*Id+sinh(tau)*Z)) < 1E-12);
+            CHECK(not isComplex(expZ));
+            }
 
-    //    SECTION("Imag tau")
-    //        {
-    //        Cplx tau = -0.2342_i;
-    //        auto expZ = expHermitian(Z,tau);
-    //        CHECK(norm(expZ - (cos(tau.imag())*Id+1_i*sin(tau.imag())*Z)) < 1E-12);
-    //        CHECK(isComplex(expZ));
-    //        }
-    //    }
+        SECTION("Imag tau")
+            {
+            Cplx tau = -0.2342_i;
+            auto expZ = expHermitian(Z,tau);
+            CHECK(norm(expZ - (cos(tau.imag())*Id+1_i*sin(tau.imag())*Z)) < 1E-12);
+            CHECK(isComplex(expZ));
+            }
+        }
     }
 
 }

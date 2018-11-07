@@ -589,6 +589,19 @@ randomITensorC(Index const& i1, Inds&&... inds);
 ITensor
 randomITensor(IndexSet const& inds);
 
+
+template <typename... Inds>
+ITensor
+randomITensor(QN q, Index const& i1, Inds&&... inds);
+
+template <typename... Inds>
+ITensor
+randomITensorC(QN q, Index const& i1, Inds&&... inds);
+
+ITensor
+randomITensor(QN q, IndexSet const& inds, Args const& args = Args::global());
+
+
 ITensor
 matrixTensor(Matrix && M, Index const& i1, Index const& i2);
 ITensor
