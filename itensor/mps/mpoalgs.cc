@@ -95,7 +95,7 @@ nmultMPO(MPOType const& Aorig,
 
     nfork = clust * A.A(N) * B.A(N);
 
-    res.svdBond(N-1,nfork,Fromright);
+    res.svdBond(N-1,nfork,Fromright, args);
     for(auto i : range1(N))
         {
         if(i < N)
