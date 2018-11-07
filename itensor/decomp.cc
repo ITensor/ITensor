@@ -81,8 +81,8 @@ doTask(GetBlocks<T> const& G,
         {
         auto& R = res[n++];
         computeBlockInd(dio.block,G.is,dblock);
-        auto nrow = G.is[0][dblock[0]].m();
-        auto ncol = G.is[1][dblock[1]].m();
+        auto nrow = G.is[0].blocksize0(dblock[0]);
+        auto ncol = G.is[1].blocksize0(dblock[1]);
         R.i1 = dblock[0];
         R.i2 = dblock[1];
         R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
@@ -243,15 +243,14 @@ showEigs(Vector const& P,
 
 
 
-template<typename Tensor>
 Spectrum
-factor(Tensor const& T,
-       Tensor      & A,
-       Tensor      & B,
+factor(ITensor const& T,
+       ITensor      & A,
+       ITensor      & B,
        Args const& args)
     {
     auto name = args.getString("IndexName","c");
-    Tensor D;
+    ITensor D;
     auto spec = svd(T,A,D,B,{args,"LeftIndexName=",name});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
@@ -262,10 +261,6 @@ factor(Tensor const& T,
     A *= delta(dl,dr);
     return spec;
     }
-template Spectrum
-factor(ITensor const& T,ITensor& A,ITensor & B,Args const& args);
-template Spectrum
-factor(IQTensor const& T,IQTensor& A,IQTensor & B,Args const& args);
 
 template<typename value_type>
 void 
@@ -275,258 +270,264 @@ eigDecompImpl(ITensor T,
               ITensor & D,
               Args const& args)
     {
-    auto full = args.getBool("FullDecomp",false);
-
-    if(rank(T) != 2)
+    if(not hasQNs(T.inds()))
         {
-        Print(rank(T));
-        Print(T);
-        Error("eig_decomp requires rank 2 tensor as input");
-        }
+        auto full = args.getBool("FullDecomp",false);
 
-    auto lind = noprime(T.inds().front());
-
-    //Do the diagonalization
-    auto MM = toMatRefc<value_type>(T,prime(lind),lind);
-    Vector Dr, Di;
-    Matrix Rr, Ri;
-    Matrix Lr, Li;
-    if(!full) 
-        {
-        eigen(MM,Rr,Ri,Dr,Di);
-        }
-    else
-        {
-        eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
-        }
-
-    auto newmid = Index("C",lind.m(),lind.type());
-
-    //put right eigenvectors into an ITensor
-    if(norm(Ri) > 1E-16*norm(Rr))
-        {
-        //complex eigenvectors
-        auto store = DenseCplx(Rr.size());
-        auto ri = Rr.begin();
-        auto ii = Ri.begin();
-        for(decltype(Rr.size()) n = 0; n < Rr.size(); ++ri, ++ii, ++n)
+        if(rank(T) != 2)
             {
-#ifdef DEBUG
-            if(ri == Rr.end() || ii == Ri.end()) Error("out of range iterator");
-#endif
-            store[n] = Cplx(*ri,*ii);
+            Print(rank(T));
+            Print(T);
+            Error("eig_decomp requires rank 2 tensor as input");
             }
-        R = ITensor({lind,newmid},move(store));
-        }
-    else
-        {
-        //real eigenvectors
-        R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
-        }
 
-    if(norm(Di) > 1E-16*norm(Dr))
-        {
-        //complex eigenvalues
-        auto store = DiagCplx(Dr.size());
-        for(auto n : range(Dr.size()))
+        auto lind = noprime(T.inds().front());
+
+        //Do the diagonalization
+        auto MM = toMatRefc<value_type>(T,prime(lind),lind);
+        Vector Dr, Di;
+        Matrix Rr, Ri;
+        Matrix Lr, Li;
+        if(!full) 
             {
-            store.store.at(n) = Cplx(Dr(n),Di(n));
+            eigen(MM,Rr,Ri,Dr,Di);
             }
-        D = ITensor({prime(newmid),newmid},move(store),T.scale());
-        }
-    else
-        {
-        //real eigenvectors
-        D = ITensor({prime(newmid),newmid},DiagReal{move(Dr.storage())},T.scale());
-        }
+        else
+            {
+            eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
+            }
 
-    if(full)
-        {
+        auto newmid = Index("C",lind.m(),lind.type());
 
-        // If doing full decomp, prime R
-        R.prime();
-
-
-        //put left eigenvectors into an ITensor
-        if(norm(Li) > 1E-16*norm(Lr))
+        //put right eigenvectors into an ITensor
+        if(norm(Ri) > 1E-16*norm(Rr))
             {
             //complex eigenvectors
-            auto store = DenseCplx(Lr.size());
-            auto ri = Lr.begin();
-            auto ii = Li.begin();
-            for(decltype(Lr.size()) n = 0; n < Lr.size(); ++ri, ++ii, ++n)
+            auto store = DenseCplx(Rr.size());
+            auto ri = Rr.begin();
+            auto ii = Ri.begin();
+            for(decltype(Rr.size()) n = 0; n < Rr.size(); ++ri, ++ii, ++n)
                 {
 #ifdef DEBUG
-                if(ri == Lr.end() || ii == Li.end()) Error("out of range iterator");
+                if(ri == Rr.end() || ii == Ri.end()) Error("out of range iterator");
 #endif
                 store[n] = Cplx(*ri,*ii);
                 }
-            L = ITensor({lind,newmid},move(store));
+            R = ITensor({lind,newmid},move(store));
             }
         else
             {
             //real eigenvectors
-            L = ITensor({lind,newmid},DenseReal{move(Lr.storage())});
+            R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
             }
-        }
-    }
 
-template<typename value_type>
-void 
-eigDecompImpl(IQTensor T, 
-              IQTensor & L, 
-              IQTensor & R, 
-              IQTensor & D,
-              Args const& args)
-    {
-    /*
-    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    bool cplx = T.isComplex();
-
-#ifdef DEBUG
-    if(T.r() != 2)
-        {
-        Print(T.r());
-        Print(T);
-        Error("eig_decomp requires rank 2 tensor as input");
-        }
-#endif
-
-    const int nblocks = T.blocks().size();
-
-    vector<Matrix> rmatrix(nblocks),
-                   imatrix(nblocks);
-    vector<Vec> reigs(nblocks),
-                   ieigs(nblocks);
-
-    if(T.empty())
-        throw ResultIsZero("T has no blocks");
-
-    LogNum refNorm(1);
-    if(doRelCutoff)
-        {
-        Real maxLogNum = -200;
-        T.scaleOutNorm();
-        for(const ITensor& t : T.blocks())
+        if(norm(Di) > 1E-16*norm(Dr))
             {
-            maxLogNum = std::max(maxLogNum,t.scale().logNum());
-            }
-        refNorm = LogNumber(maxLogNum,1);
-        }
-    T.scaleTo(refNorm);
-
-    //1. Diagonalize each ITensor within rho.
-    //   Store results in mmatrix and mvector.
-    int itenind = 0;
-    for(const ITensor& t : T.blocks())
-        {
-        Index li = t.indices().front(),
-              ri = t.indices().back();
-
-        if(!hasindex(L,li))
-            swap(li,ri);
-
-        Matrix &Ur = rmatrix.at(itenind),
-               &Ui = imatrix.at(itenind);
-        Vec &dr = reigs.at(itenind),
-               &di = ieigs.at(itenind);
-
-        //Diag ITensors within rho
-        if(!cplx)
-            {
-            Matrix M;
-            t.toMatrix11NoScale(li,ri,M);
-            GenEigenValues(M,dr,di,Ur,Ui);
+            //complex eigenvalues
+            auto store = DiagCplx(Dr.size());
+            for(auto n : range(Dr.size()))
+                {
+                store.store.at(n) = Cplx(Dr(n),Di(n));
+                }
+            D = ITensor({prime(newmid),newmid},move(store),T.scale());
             }
         else
             {
-            ITensor ret = realPart(t),
-                    imt = imagPart(t);
-            ret.scaleTo(refNorm);
-            imt.scaleTo(refNorm);
-            Matrix Mr,Mi;
-            ret.toMatrix11NoScale(li,ri,Mr);
-            imt.toMatrix11NoScale(li,ri,Mi);
-            ComplexEigenvalues(Mr,Mi,dr,di,Ur,Ui);
+            //real eigenvectors
+            D = ITensor({prime(newmid),newmid},DiagReal{move(Dr.storage())},T.scale());
             }
 
-        ++itenind;
-        }
-
-
-    //Build blocks for unitary diagonalizing rho
-    vector<ITensor> Vblocks,
-                    Dblocks;
-
-    //Also form new Link IQIndex with appropriate m's for each block
-    IQIndex::Storage iq;
-    iq.reserve(T.blocks().size());
-
-    itenind = 0;
-    for(const ITensor& t : T.blocks())
-        {
-        Vec &dr = reigs.at(itenind),
-               &di = ieigs.at(itenind);
-        Matrix &Ur = rmatrix.at(itenind),
-               &Ui = imatrix.at(itenind);
-
-        Index nm("d",dr.Length());
-
-        Index act = t.indices().front();
-        if(!hasindex(R,act))
-            act = t.indices().back();
-
-        iq.push_back(IndexQN(nm,qn(R,act)));
-
-        ITensor blk(act,nm,Ur);
-        if(Norm(Ui.TreatAsVector()) > 1E-12)
+        if(full)
             {
-            blk += Complex_i*ITensor(act,nm,Ui);
+
+            // If doing full decomp, prime R
+            R.prime();
+
+
+            //put left eigenvectors into an ITensor
+            if(norm(Li) > 1E-16*norm(Lr))
+                {
+                //complex eigenvectors
+                auto store = DenseCplx(Lr.size());
+                auto ri = Lr.begin();
+                auto ii = Li.begin();
+                for(decltype(Lr.size()) n = 0; n < Lr.size(); ++ri, ++ii, ++n)
+                    {
+#ifdef DEBUG
+                    if(ri == Lr.end() || ii == Li.end()) Error("out of range iterator");
+#endif
+                    store[n] = Cplx(*ri,*ii);
+                    }
+                L = ITensor({lind,newmid},move(store));
+                }
+            else
+                {
+                //real eigenvectors
+                L = ITensor({lind,newmid},DenseReal{move(Lr.storage())});
+                }
             }
-        Vblocks.push_back(blk);
-
-        ITensor Dblk(prime(nm),nm,dr);
-        if(Norm(di) > 1E-12)
-            {
-            Dblk += Complex_i*ITensor(prime(nm),nm,di);
-            }
-        Dblocks.push_back(Dblk);
-
-        ++itenind;
         }
-
-    if(iq.size() == 0)
+    else
         {
-        throw ResultIsZero("iq.size() == 0");
+        Error("eigDecompImpl not implemented for QN ITensor");
         }
-
-    IQIndex newmid("L",iq,-R.dir());
-
-    V = IQTensor(dag(R),dag(newmid));
-    for(const ITensor& t : Vblocks)
-        {
-        V += t;
-        }
-
-    D = IQTensor(prime(newmid),dag(newmid));
-    for(const ITensor& t : Dblocks)
-        {
-        D += t;
-        }
-
-    D *= refNorm;
-
-    */
     }
+//
+//template<typename value_type>
+//void 
+//eigDecompImpl(IQTensor T, 
+//              IQTensor & L, 
+//              IQTensor & R, 
+//              IQTensor & D,
+//              Args const& args)
+//    {
+//    /*
+//    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+//    bool cplx = T.isComplex();
+//
+//#ifdef DEBUG
+//    if(T.r() != 2)
+//        {
+//        Print(T.r());
+//        Print(T);
+//        Error("eig_decomp requires rank 2 tensor as input");
+//        }
+//#endif
+//
+//    const int nblocks = T.blocks().size();
+//
+//    vector<Matrix> rmatrix(nblocks),
+//                   imatrix(nblocks);
+//    vector<Vec> reigs(nblocks),
+//                   ieigs(nblocks);
+//
+//    if(T.empty())
+//        throw ResultIsZero("T has no blocks");
+//
+//    LogNum refNorm(1);
+//    if(doRelCutoff)
+//        {
+//        Real maxLogNum = -200;
+//        T.scaleOutNorm();
+//        for(const ITensor& t : T.blocks())
+//            {
+//            maxLogNum = std::max(maxLogNum,t.scale().logNum());
+//            }
+//        refNorm = LogNumber(maxLogNum,1);
+//        }
+//    T.scaleTo(refNorm);
+//
+//    //1. Diagonalize each ITensor within rho.
+//    //   Store results in mmatrix and mvector.
+//    int itenind = 0;
+//    for(const ITensor& t : T.blocks())
+//        {
+//        Index li = t.indices().front(),
+//              ri = t.indices().back();
+//
+//        if(!hasindex(L,li))
+//            swap(li,ri);
+//
+//        Matrix &Ur = rmatrix.at(itenind),
+//               &Ui = imatrix.at(itenind);
+//        Vec &dr = reigs.at(itenind),
+//               &di = ieigs.at(itenind);
+//
+//        //Diag ITensors within rho
+//        if(!cplx)
+//            {
+//            Matrix M;
+//            t.toMatrix11NoScale(li,ri,M);
+//            GenEigenValues(M,dr,di,Ur,Ui);
+//            }
+//        else
+//            {
+//            ITensor ret = realPart(t),
+//                    imt = imagPart(t);
+//            ret.scaleTo(refNorm);
+//            imt.scaleTo(refNorm);
+//            Matrix Mr,Mi;
+//            ret.toMatrix11NoScale(li,ri,Mr);
+//            imt.toMatrix11NoScale(li,ri,Mi);
+//            ComplexEigenvalues(Mr,Mi,dr,di,Ur,Ui);
+//            }
+//
+//        ++itenind;
+//        }
+//
+//
+//    //Build blocks for unitary diagonalizing rho
+//    vector<ITensor> Vblocks,
+//                    Dblocks;
+//
+//    //Also form new Link IQIndex with appropriate m's for each block
+//    IQIndex::Storage iq;
+//    iq.reserve(T.blocks().size());
+//
+//    itenind = 0;
+//    for(const ITensor& t : T.blocks())
+//        {
+//        Vec &dr = reigs.at(itenind),
+//               &di = ieigs.at(itenind);
+//        Matrix &Ur = rmatrix.at(itenind),
+//               &Ui = imatrix.at(itenind);
+//
+//        Index nm("d",dr.Length());
+//
+//        Index act = t.indices().front();
+//        if(!hasindex(R,act))
+//            act = t.indices().back();
+//
+//        iq.push_back(IndexQN(nm,qn(R,act)));
+//
+//        ITensor blk(act,nm,Ur);
+//        if(Norm(Ui.TreatAsVector()) > 1E-12)
+//            {
+//            blk += Complex_i*ITensor(act,nm,Ui);
+//            }
+//        Vblocks.push_back(blk);
+//
+//        ITensor Dblk(prime(nm),nm,dr);
+//        if(Norm(di) > 1E-12)
+//            {
+//            Dblk += Complex_i*ITensor(prime(nm),nm,di);
+//            }
+//        Dblocks.push_back(Dblk);
+//
+//        ++itenind;
+//        }
+//
+//    if(iq.size() == 0)
+//        {
+//        throw ResultIsZero("iq.size() == 0");
+//        }
+//
+//    IQIndex newmid("L",iq,-R.dir());
+//
+//    V = IQTensor(dag(R),dag(newmid));
+//    for(const ITensor& t : Vblocks)
+//        {
+//        V += t;
+//        }
+//
+//    D = IQTensor(prime(newmid),dag(newmid));
+//    for(const ITensor& t : Dblocks)
+//        {
+//        D += t;
+//        }
+//
+//    D *= refNorm;
+//
+//    */
+//    }
 
-template<typename index_type>
 void 
-eigen(ITensorT<index_type> const& T, 
-      ITensorT<index_type> & V, 
-      ITensorT<index_type> & D,
+eigen(ITensor const& T, 
+      ITensor & V, 
+      ITensor & D,
       Args const& args)
     {
-    auto colinds = std::vector<index_type>{};
+    auto colinds = std::vector<Index>{};
     for(auto& I : T.inds())
         { 
         if(I.primeLevel() == 0) colinds.push_back(I);
@@ -535,7 +536,7 @@ eigen(ITensorT<index_type> const& T,
 
     auto Tc = prime(comb) * T * comb; 
 
-    ITensorT<index_type> L;
+    ITensor L;
     if(isComplex(T))
         {
         eigDecompImpl<Cplx>(Tc,L,V,D,args);
@@ -547,20 +548,15 @@ eigen(ITensorT<index_type> const& T,
 
     V = V * comb;
     }
-template void 
-eigen(ITensor const&, ITensor&, ITensor&, Args const&);
-template void 
-eigen(IQTensor const&, IQTensor&,IQTensor&, Args const&);
 
-template<typename index_type>
 void 
-eigDecomp(ITensorT<index_type> const& T, 
-          ITensorT<index_type> & R,
-          ITensorT<index_type> & D,
-          ITensorT<index_type> & Rinv,
+eigDecomp(ITensor const& T, 
+          ITensor & R,
+          ITensor & D,
+          ITensor & Rinv,
           Args const& args)
     {
-    auto colinds = std::vector<index_type>{};
+    auto colinds = std::vector<Index>{};
     for(auto& I : T.inds())
         { 
         if(I.primeLevel() == 0) colinds.push_back(I);
@@ -581,10 +577,6 @@ eigDecomp(ITensorT<index_type> const& T,
     R = R * prime(comb);
     Rinv = Rinv * comb;
     }
-template void 
-eigDecomp(ITensor const&, ITensor &, ITensor & , ITensor & , Args const& );
-template void 
-eigDecomp(IQTensor const&, IQTensor &,IQTensor & , IQTensor & , Args const& );
 
 
 template<typename T>
@@ -597,11 +589,10 @@ struct Exp
     operator()(Real x) const { return exp(tt*x); }
     };
 
-template<typename I>
-ITensorT<I>
-expHermitian(ITensorT<I> const& T, Cplx t)
+ITensor
+expHermitian(ITensor const& T, Cplx t)
     {
-    ITensorT<I> U,d;
+    ITensor U,d;
     diagHermitian(T,U,d);
 
     if(t.imag()==0.)
@@ -615,7 +606,5 @@ expHermitian(ITensorT<I> const& T, Cplx t)
 
     return prime(U)*d*dag(U);
     }
-template ITensor expHermitian(ITensor const& T, Cplx);
-template IQTensor expHermitian(IQTensor const& T, Cplx);
 
 } //namespace itensor

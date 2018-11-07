@@ -103,6 +103,7 @@ class Index
     Index(std::string const& name, 
           qnstorage && qns, 
           Arrow dir = Out, 
+          IndexType type = Link,
           int plev = 0);
 
     // Returns the bond dimension

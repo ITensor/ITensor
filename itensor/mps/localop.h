@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_LOCAL_OP
 #define __ITENSOR_LOCAL_OP
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 //#include "itensor/util/print_macro.h"
 
 namespace itensor {
@@ -30,17 +30,15 @@ namespace itensor {
 //
 
 
-template <class Tensor>
 class LocalOp
     {
-    Tensor const* Op1_;
-    Tensor const* Op2_;
-    Tensor const* L_;
-    Tensor const* R_;
+    ITensor const* Op1_;
+    ITensor const* Op2_;
+    ITensor const* L_;
+    ITensor const* R_;
     mutable long size_;
     public:
 
-    using IndexT = typename Tensor::index_type;
 
     //
     // Constructors
@@ -48,14 +46,14 @@ class LocalOp
 
     LocalOp();
 
-    LocalOp(Tensor const& Op1, 
-            Tensor const& Op2,
+    LocalOp(ITensor const& Op1, 
+            ITensor const& Op2,
             Args const& args = Global::args());
 
-    LocalOp(Tensor const& Op1, 
-            Tensor const& Op2, 
-            Tensor const& L, 
-            Tensor const& R,
+    LocalOp(ITensor const& Op1, 
+            ITensor const& Op2, 
+            ITensor const& L, 
+            ITensor const& R,
             Args const& args = Global::args());
 
     //
@@ -63,17 +61,17 @@ class LocalOp
     //
 
     void
-    product(Tensor const& phi, Tensor & phip) const;
+    product(ITensor const& phi, ITensor & phip) const;
 
     Real
-    expect(Tensor const& phi) const;
+    expect(ITensor const& phi) const;
 
-    Tensor
-    deltaRho(Tensor const& rho, 
-             Tensor const& combine, 
+    ITensor
+    deltaRho(ITensor const& rho, 
+             ITensor const& combine, 
              Direction dir) const;
 
-    Tensor
+    ITensor
     diag() const;
 
     long
@@ -84,36 +82,36 @@ class LocalOp
     //
 
     void
-    update(Tensor const& Op1, Tensor const& Op2);
+    update(ITensor const& Op1, ITensor const& Op2);
 
     void
-    update(Tensor const& Op1, 
-           Tensor const& Op2, 
-           Tensor const& L, 
-           Tensor const& R);
+    update(ITensor const& Op1, 
+           ITensor const& Op2, 
+           ITensor const& L, 
+           ITensor const& R);
 
-    Tensor const&
+    ITensor const&
     Op1() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *Op1_;
         }
 
-    Tensor const&
+    ITensor const&
     Op2() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *Op2_;
         }
 
-    Tensor const&
+    ITensor const&
     L() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *L_;
         }
 
-    Tensor const&
+    ITensor const&
     R() const 
         { 
         if(!(*this)) Error("LocalOp is default constructed");
@@ -130,8 +128,7 @@ class LocalOp
 
     };
 
-template <class Tensor>
-inline LocalOp<Tensor>::
+inline LocalOp::
 LocalOp()
     :
     Op1_(nullptr),
@@ -142,9 +139,8 @@ LocalOp()
     { 
     }
 
-template <class Tensor>
-inline LocalOp<Tensor>::
-LocalOp(const Tensor& Op1, const Tensor& Op2,
+inline LocalOp::
+LocalOp(const ITensor& Op1, const ITensor& Op2,
         const Args& args)
     : 
     Op1_(nullptr),
@@ -156,10 +152,9 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     update(Op1,Op2);
     }
 
-template <class Tensor>
-inline LocalOp<Tensor>::
-LocalOp(const Tensor& Op1, const Tensor& Op2, 
-        const Tensor& L, const Tensor& R,
+inline LocalOp::
+LocalOp(const ITensor& Op1, const ITensor& Op2, 
+        const ITensor& L, const ITensor& R,
         const Args& args)
     : 
     Op1_(nullptr),
@@ -171,9 +166,8 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     update(Op1,Op2,L,R);
     }
 
-template <class Tensor>
-void inline LocalOp<Tensor>::
-update(const Tensor& Op1, const Tensor& Op2)
+void inline LocalOp::
+update(const ITensor& Op1, const ITensor& Op2)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
@@ -182,36 +176,32 @@ update(const Tensor& Op1, const Tensor& Op2)
     size_ = -1;
     }
 
-template <class Tensor>
-void inline LocalOp<Tensor>::
-update(const Tensor& Op1, const Tensor& Op2, 
-       const Tensor& L, const Tensor& R)
+void inline LocalOp::
+update(const ITensor& Op1, const ITensor& Op2, 
+       const ITensor& L, const ITensor& R)
     {
     update(Op1,Op2);
     L_ = &L;
     R_ = &R;
     }
 
-template <class Tensor>
-bool inline LocalOp<Tensor>::
+bool inline LocalOp::
 LIsNull() const
     {
     if(L_ == nullptr) return true;
     return !bool(*L_);
     }
 
-template <class Tensor>
-bool inline LocalOp<Tensor>::
+bool inline LocalOp::
 RIsNull() const
     {
     if(R_ == nullptr) return true;
     return !bool(*R_);
     }
 
-template <class Tensor>
-void inline LocalOp<Tensor>::
-product(Tensor const& phi, 
-        Tensor      & phip) const
+void inline LocalOp::
+product(ITensor const& phi, 
+        ITensor      & phip) const
     {
     if(!(*this)) Error("LocalOp is null");
 
@@ -242,19 +232,17 @@ product(Tensor const& phi,
     phip.mapprime(1,0);
     }
 
-template <class Tensor>
-Real inline LocalOp<Tensor>::
-expect(const Tensor& phi) const
+Real inline LocalOp::
+expect(const ITensor& phi) const
     {
-    Tensor phip;
+    ITensor phip;
     product(phi,phip);
     return (dag(phip) * phi).real();
     }
 
-template <class Tensor>
-Tensor inline LocalOp<Tensor>::
-deltaRho(Tensor const& AA, 
-         Tensor const& combine, 
+ITensor inline LocalOp::
+deltaRho(ITensor const& AA, 
+         ITensor const& combine, 
          Direction dir) const
     {
     auto drho = AA;
@@ -281,8 +269,7 @@ deltaRho(Tensor const& AA,
     }
 
 
-template <class Tensor>
-Tensor inline LocalOp<Tensor>::
+ITensor inline LocalOp::
 diag() const
     {
     if(!(*this)) Error("LocalOp is null");
@@ -291,7 +278,7 @@ diag() const
     auto& Op2 = *Op2_;
 
     //lambda helper function:
-    auto findIndPair = [](Tensor const& T) {
+    auto findIndPair = [](ITensor const& T) {
         for(auto& s : T.inds())
             {
             if(s.primeLevel() == 0 && hasindex(T,prime(s))) 
@@ -299,7 +286,7 @@ diag() const
                 return s;
                 }
             }
-        return IndexT();
+        return Index();
         };
 
     auto toTie = noprime(findtype(Op1,Site));
@@ -345,8 +332,7 @@ diag() const
     return Diag;
     }
 
-template <class Tensor>
-long inline LocalOp<Tensor>::
+long inline LocalOp::
 size() const
     {
     if(!(*this)) Error("LocalOp is default constructed");

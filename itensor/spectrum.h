@@ -6,7 +6,7 @@
 #define __ITENSOR_SPECTRUM_H
 
 #include "itensor/tensor/vec.h"
-#include "itensor/iqtensor.h"
+#include "itensor/qn.h"
 
 namespace itensor {
 

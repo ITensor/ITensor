@@ -534,5 +534,28 @@ makeStorage(qnstorage && qi)
     pd = std::make_shared<IQIndexDat>(std::move(qi));
     }
 
+long
+totalM(Index::qnstorage const& storage)
+    {
+    long tm = 0;
+    for(auto& iq : storage)
+        {
+        tm += iq.second;
+        }
+    return tm;
+    }
+
+Index::
+Index(std::string const& name, 
+      qnstorage && ind_qn, 
+      Arrow dir, 
+      IndexType type,
+      int plev) 
+  : Index(name,totalM(ind_qn),type,plev)
+    { 
+    dir_ = dir;
+    makeStorage(std::move(ind_qn));
+    }
+
 } //namespace itensor
 

@@ -4,7 +4,6 @@
 //
 #ifndef __ITENSOR_DECOMP_H
 #define __ITENSOR_DECOMP_H
-#include "itensor/iqtensor.h"
 #include "itensor/spectrum.h"
 #include "itensor/mps/localop.h"
 
@@ -18,9 +17,8 @@ namespace itensor {
 // Factors a tensor AA such that AA=U*D*V
 // with D diagonal, real, and non-negative.
 //
-template<class Tensor>
 Spectrum 
-svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
+svd(ITensor AA, ITensor& U, ITensor& D, ITensor& V, 
     Args args = Global::args());
 
 
@@ -39,11 +37,10 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 // which will be the name of the common index 
 // connecting A and B.
 // 
-template<typename Tensor>
 Spectrum
-factor(Tensor const& T,
-       Tensor      & A,
-       Tensor      & B,
+factor(ITensor const& T,
+       ITensor      & A,
+       ITensor      & B,
        Args const& args = Args::global());
 
 //
@@ -63,28 +60,27 @@ factor(Tensor const& T,
 // will end up on B if dir==Fromleft or on A if dir==Fromright.
 //
 
-template<class Tensor>
-Spectrum 
-denmatDecomp(Tensor const& AA, 
-             Tensor & A, 
-             Tensor & B, 
-             Direction dir, 
-             Args const& args = Global::args())
-    {
-    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>{},args);
-    }
-
 //Density matrix decomp with BigMatrixT object supporting the noise term
 //The BigMatrixT argument PH has to provide the deltaRho method
 //to enable the noise term feature (see localop.h for example)
-template<class Tensor, class BigMatrixT>
+template<class BigMatrixT>
 Spectrum 
-denmatDecomp(Tensor const& AA, 
-             Tensor & A, 
-             Tensor & B, 
+denmatDecomp(ITensor const& AA, 
+             ITensor & A, 
+             ITensor & B, 
              Direction dir, 
              BigMatrixT const& PH,
              Args args = Global::args());
+
+Spectrum inline
+denmatDecomp(ITensor const& AA, 
+             ITensor & A, 
+             ITensor & B, 
+             Direction dir, 
+             Args const& args = Global::args())
+    {
+    return denmatDecomp(AA,A,B,dir,LocalOp{},args);
+    }
 
 
 
@@ -98,17 +94,15 @@ denmatDecomp(Tensor const& AA,
 // Result is unitary tensor U and diagonal sparse tensor D
 // such that M == dag(U)*D*prime(U)
 //
-template<class I>
 Spectrum 
-diagHermitian(ITensorT<I> const& M, 
-              ITensorT<I>      & U, 
-              ITensorT<I>      & D,
+diagHermitian(ITensor const& M, 
+              ITensor      & U, 
+              ITensor      & D,
               Args args = Args::global());
 
 
-template<typename I>
-ITensorT<I>
-expHermitian(ITensorT<I> const& T, Cplx t = 1.);
+ITensor
+expHermitian(ITensor const& T, Cplx t = 1.);
 
 //
 //
@@ -130,11 +124,10 @@ expHermitian(ITensorT<I> const& T, Cplx t = 1.);
 // J'-<-|_|-<-J-<-|_|          J'-<-|_|    
 //
 //
-template<class I>
 void 
-eigen(ITensorT<I> const& T, 
-      ITensorT<I> & V, 
-      ITensorT<I> & D,
+eigen(ITensor const& T, 
+      ITensor & V, 
+      ITensor & D,
       Args const& args = Args::global());
 
 //template<class I>
@@ -153,26 +146,22 @@ eigen(ITensorT<I> const& T,
 //////////////////////////
 
 
-template<typename IndexT>
 Spectrum 
-svdRank2(ITensorT<IndexT> const& A, 
-         IndexT const& ui, 
-         IndexT const& vi,
-         ITensorT<IndexT> & U, 
-         ITensorT<IndexT> & D, 
-         ITensorT<IndexT> & V,
+svdRank2(ITensor const& A, 
+         Index const& ui, 
+         Index const& vi,
+         ITensor & U, 
+         ITensor & D, 
+         ITensor & V,
          Args args = Args::global());
 
-template<class Tensor>
-Spectrum 
-svd(Tensor AA, 
-    Tensor & U, 
-    Tensor & D, 
-    Tensor & V, 
+Spectrum inline
+svd(ITensor AA, 
+    ITensor & U, 
+    ITensor & D, 
+    ITensor & V, 
     Args args)
     {
-    using IndexT = typename Tensor::index_type;
-
 #ifdef DEBUG
     if(!U && !V) 
         Error("U and V default-initialized in svd, must indicate at least one index on U or V");
@@ -190,7 +179,7 @@ svd(Tensor AA,
 
     //Combiners which transform AA
     //into a rank 2 tensor
-    std::vector<IndexT> Uinds, 
+    std::vector<Index> Uinds, 
                         Vinds;
     Uinds.reserve(AA.r());
     Vinds.reserve(AA.r());
@@ -204,8 +193,8 @@ svd(Tensor AA,
         if(hasindex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
-    Tensor Ucomb,
-           Vcomb;
+    ITensor Ucomb,
+            Vcomb;
     if(!Uinds.empty())
         {
         Ucomb = combiner(std::move(Uinds),{"IndexName","uc"});
@@ -249,17 +238,21 @@ svd(Tensor AA,
     return spec;
     } //svd
 
-template<class Tensor, class BigMatrixT>
+Spectrum
+diag_hermitian(ITensor  rho, 
+               ITensor  & U, 
+               ITensor  & D,
+               Args const& args);
+
+template<class BigMatrixT>
 Spectrum 
-denmatDecomp(Tensor const& AA, 
-             Tensor & A, 
-             Tensor & B, 
+denmatDecomp(ITensor const& AA, 
+             ITensor & A, 
+             ITensor & B, 
              Direction dir, 
              BigMatrixT const& PH,
              Args args)
     {
-    using IndexT = typename Tensor::index_type;
-
     auto noise = args.getReal("Noise",0.);
 
     auto mid = commonIndex(A,B,Link);
@@ -276,7 +269,7 @@ denmatDecomp(Tensor const& AA,
     
     auto& activeInds = (to_orth ? to_orth : AA).inds();
 
-    auto cinds = stdx::reserve_vector<IndexT>(activeInds.r());
+    auto cinds = stdx::reserve_vector<Index>(activeInds.r());
     for(auto& I : activeInds)
         {
         if(!hasindex(newoc,I)) cinds.push_back(I);
@@ -316,7 +309,7 @@ denmatDecomp(Tensor const& AA,
         rho = realPart(rho);
         }
 
-    Tensor U,D;
+    ITensor U,D;
     args.add("Truncate",true);
     auto spec = diag_hermitian(rho,U,D,args);
 
@@ -330,19 +323,12 @@ denmatDecomp(Tensor const& AA,
     } //denmatDecomp
 
 
-template<typename I>
-Spectrum
-diag_hermitian(ITensorT<I>    rho, 
-               ITensorT<I>  & U, 
-               ITensorT<I>  & D,
-               Args const& args);
 
 
-template<class I>
-Spectrum 
-diagHermitian(ITensorT<I> const& M, 
-              ITensorT<I>      & U, 
-              ITensorT<I>      & D,
+Spectrum inline
+diagHermitian(ITensor const& M, 
+              ITensor      & U, 
+              ITensor      & D,
               Args args)
     {
     if(!args.defined("IndexName")) args.add("IndexName","d");
@@ -368,7 +354,7 @@ diagHermitian(ITensorT<I> const& M,
     //pdiff == spacing between lower and higher prime level index pairs
     auto pdiff = mdiff-idiff;
 
-    auto inds = stdx::reserve_vector<I>(rank(M)/2);
+    auto inds = stdx::reserve_vector<Index>(rank(M)/2);
     for(auto& i : M.inds())
     for(auto& j : M.inds())
         {
@@ -423,12 +409,12 @@ template<typename T>
 struct GetBlocks
     {
     using value_type = T;
-    IQIndexSet const& is;
+    IndexSet const& is;
     bool transpose = false;
 
-    GetBlocks(IQIndexSet const& is_, 
-              IQIndex const& i1_, 
-              IQIndex const& i2_)
+    GetBlocks(IndexSet const& is_, 
+              Index const& i1_, 
+              Index const& i2_)
       : is(is_)
         { 
         if(is.r() != 2) Error("GetBlocks only supports rank 2 currently");

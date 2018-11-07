@@ -288,9 +288,9 @@ diagBlockBounds(IndexSet const& is,
     auto starts = IntArray(rank(is),0);
     for(auto n : range(is))
         {
-        for(auto j : range(block_ind[n])) starts[n] += is[n][j].m();
+        for(auto j : range(block_ind[n])) starts[n] += is[n].blocksize0(j);
         nb = std::max(nb,starts[n]);
-        ne = std::min(ne,starts[n]+is[n][block_ind[n]].m());
+        ne = std::min(ne,starts[n]+is[n].blocksize0(block_ind[n]));
         }
     for(auto n : range(is))
         {
@@ -342,9 +342,9 @@ getBlock(QDiag<V> & D,
     return DataRange<V>{ncd,cdr.size()};
     }
 
-template<typename V>
-ITensor
-doTask(ToITensor & T, QDiag<V> const& d);
+//template<typename V>
+//ITensor
+//doTask(ToITensor & T, QDiag<V> const& d);
 
 template<typename V>
 bool
