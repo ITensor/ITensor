@@ -275,9 +275,9 @@ operator<<(std::ostream & s, Index const& I)
                 s << "'";
             }
         }
-    if(I.nblock() > 0)
+    if(hasQNs(I))
         {
-        s << "\n";
+        s << " <" << I.dir() << ">\n";
         for(auto j : range1(I.nblock()))
             {
             s << "  " << I.blocksize(j) << " " <<  I.qn(j) << "\n";

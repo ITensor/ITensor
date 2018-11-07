@@ -211,8 +211,6 @@ class Index
     qn_ptr const&
     store() const { return pd; }
 
-    bool
-    hasQNs() const { return nblock()!=0; }
 
     private:
 
@@ -303,6 +301,9 @@ bool
 operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
+
+bool inline
+hasQNs(Index const& I) { return I.nblock()!=0; }
   
 Index inline
 dag(Index res) { res.dag(); return res; }

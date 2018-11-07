@@ -760,7 +760,7 @@ operator<<(std::ostream& s, IndexSet const& is)
 bool inline
 hasQNs(IndexSet const& is)
     {
-    for(auto& i : is) if(i.hasQNs()) return true;
+    for(auto& I : is) if(hasQNs(I)) return true;
     return false;
     }
 
