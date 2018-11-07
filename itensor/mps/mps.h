@@ -24,14 +24,12 @@ class InitState;
 // typedefs of MPSt:
 //
 //      MPS for ITensors
-//    IQMPS for IQTensors
 //
 
 template <class Tensor> 
 class MPSt;
 
 using MPS = MPSt<ITensor>;
-using IQMPS = MPSt<IQTensor>;
 
 template<class Tensor>
 class MPSt
@@ -201,20 +199,20 @@ class MPSt
     void 
     random_tensors(std::vector<ITensor>& A_);
 
-    void 
-    random_tensors(std::vector<IQTensor>& A_) { }
+    //void 
+    //random_tensors(std::vector<IQTensor>& A_) { }
 
     void 
     init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 
-    void 
-    init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
+    //void 
+    //init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 
     private:
 
     friend class MPSt<ITensor>;
-    friend class MPSt<IQTensor>;
+    //friend class MPSt<IQTensor>;
 
     public:
 
@@ -303,7 +301,7 @@ class InitState
     {
     public:
 
-    using Storage = std::vector<IQIndexVal>;
+    using Storage = std::vector<IndexVal>;
 
     using String = std::string;
 
@@ -317,7 +315,7 @@ class InitState
     InitState& 
     setAll(const String& state);
 
-    const IQIndexVal&
+    const IndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
 
     SiteSet const&
@@ -337,8 +335,8 @@ class InitState
 // Other Methods Related to MPSt
 //
 
-MPS
-toMPS(IQMPS const& psi);
+//MPS
+//toMPS(IQMPS const& psi);
 
 template<typename T>
 bool
@@ -410,17 +408,14 @@ template <class T>
 bool 
 checkOrtho(MPSt<T> const& psi);
 
-int 
-findCenter(IQMPS const& psi);
-
-bool inline
-checkQNs(MPS const& psi) { return true; }
+//int 
+//findCenter(IQMPS const& psi);
 
 bool 
-checkQNs(IQMPS const& psi);
+checkQNs(MPS const& psi);
 
 QN
-totalQN(IQMPS const& psi);
+totalQN(MPS const& psi);
 
 // Re[<psi|phi>]
 template <class MPSType>

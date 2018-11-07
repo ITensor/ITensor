@@ -39,8 +39,6 @@ MPSt()
     { }
 template MPSt<ITensor>::
 MPSt();
-template MPSt<IQTensor>::
-MPSt();
 
 template <class T>
 MPSt<T>::
@@ -56,8 +54,6 @@ MPSt(int N)
     { 
     }
 template MPSt<ITensor>::
-MPSt(int N);
-template MPSt<IQTensor>::
 MPSt(int N);
 
 template <class T>
@@ -77,8 +73,6 @@ MPSt(SiteSet const& sites)
     }
 template MPSt<ITensor>::
 MPSt(SiteSet const& sites);
-template MPSt<IQTensor>::
-MPSt(SiteSet const& sites);
 
 template <class T>
 MPSt<T>::
@@ -96,8 +90,6 @@ MPSt(InitState const& initState)
     init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
-MPSt(InitState const& initState);
-template MPSt<IQTensor>::
 MPSt(InitState const& initState);
 
 template <class T>
@@ -117,8 +109,6 @@ MPSt(MPSt const& other)
     }
 template MPSt<ITensor>::
 MPSt(MPSt<ITensor> const&);
-template MPSt<IQTensor>::
-MPSt(MPSt<IQTensor> const&);
 
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
@@ -138,8 +128,6 @@ operator=(MPSt const& other)
     }
 template MPSt<ITensor>& MPSt<ITensor>::
 operator=(MPSt<ITensor> const&);
-template MPSt<IQTensor>& MPSt<IQTensor>::
-operator=(MPSt<IQTensor> const&);
 
 template <class T>
 MPSt<T>::
@@ -148,7 +136,6 @@ MPSt<T>::
     cleanupWrite();
     }
 template MPSt<ITensor>::~MPSt();
-template MPSt<IQTensor>::~MPSt();
 
 template <class Tensor>
 Tensor const& MPSt<Tensor>::
@@ -160,8 +147,6 @@ A(int i) const
     }
 template
 const ITensor& MPSt<ITensor>::A(int i) const;
-template
-const IQTensor& MPSt<IQTensor>::A(int i) const;
 
 template <class T>
 T& MPSt<T>::
@@ -175,8 +160,6 @@ Aref(int i)
     }
 template
 ITensor& MPSt<ITensor>::Aref(int i);
-template
-IQTensor& MPSt<IQTensor>::Aref(int i);
 
 template <class T>
 void MPSt<T>::
@@ -195,8 +178,6 @@ doWrite(bool val, Args const& args)
         }
     }
 template void MPSt<ITensor>::
-doWrite(bool val, const Args& args);
-template void MPSt<IQTensor>::
 doWrite(bool val, const Args& args);
 
 
@@ -226,8 +207,6 @@ read(std::istream & s)
     }
 template
 void MPSt<ITensor>::read(std::istream& s);
-template
-void MPSt<IQTensor>::read(std::istream& s);
 
 
 template <class Tensor>
@@ -247,8 +226,6 @@ write(std::ostream& s) const
     }
 template
 void MPSt<ITensor>::write(std::ostream& s) const;
-template
-void MPSt<IQTensor>::write(std::ostream& s) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -268,8 +245,6 @@ read(std::string const& dirname)
     }
 template
 void MPSt<ITensor>::read(std::string const& dirname);
-template
-void MPSt<IQTensor>::read(std::string const& dirname);
 
 
 template <class Tensor>
@@ -287,8 +262,6 @@ AFName(int j, string const& dirname) const
     }
 template
 string MPSt<ITensor>::AFName(int j, string const&) const;
-template
-string MPSt<IQTensor>::AFName(int j, string const&) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -362,8 +335,6 @@ setBond(int b) const
     }
 template
 void MPSt<ITensor>::setBond(int b) const;
-template
-void MPSt<IQTensor>::setBond(int b) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -395,8 +366,6 @@ setSite(int j) const
     }
 template
 void MPSt<ITensor>::setSite(int j) const;
-template
-void MPSt<IQTensor>::setSite(int j) const;
 
 
 template <class Tensor>
@@ -417,8 +386,6 @@ new_tensors(std::vector<ITensor>& A_)
     }
 template
 void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
-template
-void MPSt<IQTensor>::new_tensors(std::vector<ITensor>& A_);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -432,8 +399,6 @@ random_tensors(std::vector<ITensor>& A_)
     }
 template
 void MPSt<ITensor>::random_tensors(std::vector<ITensor>& A_);
-template
-void MPSt<IQTensor>::random_tensors(std::vector<ITensor>& A_);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -454,37 +419,37 @@ void MPSt<ITensor>::
 init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 
 
-template <class Tensor>
-void MPSt<Tensor>::
-init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
-    {
-    auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
-    for(auto i : range1(N_)) qa[0] -= initState(i).qn()*In;
-
-    //Taking OC to be at the leftmost site,
-    //compute the QuantumNumbers of all the Links.
-    for(auto i : range1(N_))
-        {
-        //Taking the divergence to be zero,solve for qa[i]
-        qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
-        }
-
-    auto a = std::vector<IQIndex>(N_+1);
-    for(auto i : range1(N_))
-        { 
-        a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); 
-        }
-
-    A_[1] = setElt(initState(1),a[1](1));
-    for(auto i : range(2,N_))
-        {
-        A_[i] = setElt(dag(a[i-1])(1),initState(i),a[i](1)); 
-        }
-    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
-    }
-template
-void MPSt<IQTensor>::
-init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
+//template <class Tensor>
+//void MPSt<Tensor>::
+//init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
+//    {
+//    auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
+//    for(auto i : range1(N_)) qa[0] -= initState(i).qn()*In;
+//
+//    //Taking OC to be at the leftmost site,
+//    //compute the QuantumNumbers of all the Links.
+//    for(auto i : range1(N_))
+//        {
+//        //Taking the divergence to be zero,solve for qa[i]
+//        qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
+//        }
+//
+//    auto a = std::vector<IQIndex>(N_+1);
+//    for(auto i : range1(N_))
+//        { 
+//        a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); 
+//        }
+//
+//    A_[1] = setElt(initState(1),a[1](1));
+//    for(auto i : range(2,N_))
+//        {
+//        A_[i] = setElt(dag(a[i-1])(1),initState(i),a[i](1)); 
+//        }
+//    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
+//    }
+//template
+//void MPSt<IQTensor>::
+//init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 
 
@@ -598,9 +563,6 @@ plusEq(MPSt<Tensor> const& R,
 template
 MPSt<ITensor>& MPSt<ITensor>::
 plusEq(const MPSt<ITensor>& R, const Args& args);
-template
-MPSt<IQTensor>& MPSt<IQTensor>::
-plusEq(const MPSt<IQTensor>& R, const Args& args);
 
 
 
@@ -619,8 +581,6 @@ mapprime(int oldp, int newp, IndexType type)
     }
 template
 void MPSt<ITensor>::mapprime(int oldp, int newp, IndexType type);
-template
-void MPSt<IQTensor>::mapprime(int oldp, int newp, IndexType type);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -633,8 +593,6 @@ primelinks(int oldp, int newp)
     }
 template
 void MPSt<ITensor>::primelinks(int oldp, int newp);
-template
-void MPSt<IQTensor>::primelinks(int oldp, int newp);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -647,19 +605,15 @@ noprimelink()
     }
 template
 void MPSt<ITensor>::noprimelink();
-template
-void MPSt<IQTensor>::noprimelink();
 
 template<class Tensor> 
 Spectrum MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const Args& args)
     {
-    return svdBond(b,AA,dir,LocalOp<Tensor>(),args);
+    return svdBond(b,AA,dir,LocalOp(),args);
     }
 template Spectrum MPSt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const Args& args);
-template Spectrum MPSt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, const Args& args);
 
 
 struct SqrtInv
@@ -704,8 +658,6 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
     }
 template Spectrum
 orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args);
-template Spectrum
-orthMPS(IQTensor& A1, IQTensor& A2, Direction dir, const Args& args);
 
 
 template<class Tensor> 
@@ -753,8 +705,6 @@ position(int i, Args const& args)
     }
 template void MPSt<ITensor>::
 position(int b, const Args& args);
-template void MPSt<IQTensor>::
-position(int b, const Args& args);
 
 template <class Tensor>
 int MPSt<Tensor>::
@@ -765,8 +715,6 @@ orthoCenter() const
     }
 template
 int MPSt<ITensor>::orthoCenter() const;
-template
-int MPSt<IQTensor>::orthoCenter() const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -821,8 +769,6 @@ orthogonalize(Args const& args)
     }
 template
 void MPSt<ITensor>::orthogonalize(Args const& args);
-template
-void MPSt<IQTensor>::orthogonalize(Args const& args);
 
 //Methods for use internally by checkOrtho
 ITensor
@@ -830,17 +776,17 @@ makeKroneckerDelta(const Index& i, int plev)
     {
     return delta(i,prime(i,plev));
     }
-IQTensor
-makeKroneckerDelta(const IQIndex& I, int plev)
-    {
-    IQTensor D(I,prime(I,plev));
-
-    for(int j = 1; j <= I.nindex(); ++j)
-        {
-        D += makeKroneckerDelta(I.index(j),plev);
-        }
-    return D;
-    }
+//IQTensor
+//makeKroneckerDelta(const IQIndex& I, int plev)
+//    {
+//    IQTensor D(I,prime(I,plev));
+//
+//    for(int j = 1; j <= I.nindex(); ++j)
+//        {
+//        D += makeKroneckerDelta(I.index(j),plev);
+//        }
+//    return D;
+//    }
 
 //template <class Tensor>
 //bool MPSt<Tensor>::
@@ -950,8 +896,6 @@ norm() const
     }
 template Real MPSt<ITensor>::
 norm() const;
-template Real MPSt<IQTensor>::
-norm() const;
 
 template <class Tensor>
 Real MPSt<Tensor>::
@@ -961,9 +905,6 @@ normalize()
     }
 template
 Real MPSt<ITensor>::
-normalize();
-template
-Real MPSt<IQTensor>::
 normalize();
 
 template <class Tensor>
@@ -978,8 +919,6 @@ isComplex() const
     }
 template
 bool MPSt<ITensor>::isComplex() const;
-template
-bool MPSt<IQTensor>::isComplex() const;
 
 template <class T>
 void MPSt<T>::
@@ -1017,8 +956,6 @@ initWrite(const Args& args)
     }
 template
 void MPSt<ITensor>::initWrite(const Args&);
-template
-void MPSt<IQTensor>::initWrite(const Args&);
 
 template <class T>
 void MPSt<T>::
@@ -1037,8 +974,6 @@ copyWriteDir()
     }
 template
 void MPSt<ITensor>::copyWriteDir();
-template
-void MPSt<IQTensor>::copyWriteDir();
 
 
 template <class T>
@@ -1054,8 +989,6 @@ cleanupWrite()
     }
 template
 void MPSt<ITensor>::cleanupWrite();
-template
-void MPSt<IQTensor>::cleanupWrite();
 
 template<class T>
 void MPSt<T>::
@@ -1073,8 +1006,6 @@ swap(MPSt<T>& other)
     }
 template
 void MPSt<ITensor>::swap(MPSt<ITensor>& other);
-template
-void MPSt<IQTensor>::swap(MPSt<IQTensor>& other);
 
 InitState::
 InitState(SiteSet const& sites)
@@ -1126,20 +1057,20 @@ checkRange(int i) const
         }
     }
 
-//Auxilary method for convertToIQ
-long 
-collapseCols(Vector const& Diag, Matrix& M)
-    {
-    long nr = Diag.size(), 
-         nc = long(sumels(Diag));
-    assert(nr != 0);
-    if(nc == 0) return nc;
-    M = Matrix(nr,nc);
-    long c = 0;
-    for(long r = 1; r <= nr; ++r)
-        if(Diag(r) == 1) { M(r,++c) = 1; }
-    return nc;
-    }
+////Auxilary method for convertToIQ
+//long 
+//collapseCols(Vector const& Diag, Matrix& M)
+//    {
+//    long nr = Diag.size(), 
+//         nc = long(sumels(Diag));
+//    assert(nr != 0);
+//    if(nc == 0) return nc;
+//    M = Matrix(nr,nc);
+//    long c = 0;
+//    for(long r = 1; r <= nr; ++r)
+//        if(Diag(r) == 1) { M(r,++c) = 1; }
+//    return nc;
+//    }
 
 int 
 periodicWrap(int j, int N)
@@ -1641,7 +1572,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 */
 
 int 
-findCenter(IQMPS const& psi)
+findCenter(MPS const& psi)
     {
     for(int j = 1; j <= psi.N(); ++j) 
         {
@@ -1678,7 +1609,6 @@ operator<<(std::ostream& s, MPSt<T> const& M)
     return s;
     }
 template std::ostream& operator<<(std::ostream& s, const MPSt<ITensor>& M);
-template std::ostream& operator<<(std::ostream& s, const MPSt<IQTensor>& M);
 
 std::ostream& 
 operator<<(std::ostream& s, InitState const& state)
@@ -1691,20 +1621,20 @@ operator<<(std::ostream& s, InitState const& state)
     return s;
     }
 
-MPS
-toMPS(IQMPS const& psi)
-    {
-    int N = psi.N();
-    MPS res;
-    if(psi.sites()) res = MPS(psi.sites());
-    else            res = MPS(N);
-    for(int j = 0; j <= N+1; ++j)
-        {
-        res.Aref(j) = ITensor(psi.A(j));
-        }
-    res.leftLim(psi.leftLim());
-    res.rightLim(psi.rightLim());
-    return res;
-    }
+//MPS
+//toMPS(IQMPS const& psi)
+//    {
+//    int N = psi.N();
+//    MPS res;
+//    if(psi.sites()) res = MPS(psi.sites());
+//    else            res = MPS(N);
+//    for(int j = 0; j <= N+1; ++j)
+//        {
+//        res.Aref(j) = ITensor(psi.A(j));
+//        }
+//    res.leftLim(psi.leftLim());
+//    res.rightLim(psi.rightLim());
+//    return res;
+//    }
 
 } //namespace itensor
