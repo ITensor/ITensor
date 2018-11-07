@@ -850,6 +850,41 @@ doTask(Write & W, D const& d)
 //write(std::ostream& s, ITensor<I> const& T);
 
 
+template<typename... Inds>
+ITensor
+delta(Index const& i1,
+      Inds const&... inds)
+    { 
+    auto is = IndexSet(i1,inds...);
+    auto len = minM(is);
+    return ITensor(std::move(is),DiagReal(len,1.));
+    }
+
+template<typename Container, typename... Inds, class>
+ITensor
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
+    { 
+    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
+#ifdef DEBUG
+    using size_type = decltype(C.size());
+    //Compute min of all index dimensions
+    auto minm = i1.m();
+    for(const auto& ind : is)
+        if(ind.m() < minm) minm = ind.m();
+    if(C.size() != size_type(minm))
+        {
+        println("minm = ",minm);
+        println("C.size() = ",C.size());
+        Error("Wrong size of data in diagonal ITensor constructor");
+        }
+#endif
+    using value_type = typename Container::value_type;
+    return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+    }
+
+
 } // namespace itensor
 
 
