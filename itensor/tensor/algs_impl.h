@@ -155,7 +155,28 @@ SVDRef(MatRefc<T> const& M,
        MatRef<T>  const& U, 
        VectorRef  const& D, 
        MatRef<T>  const& V,
-       Real thresh);
+       Args const& args);
+
+template<class MatM, 
+         class MatU,
+         class VecD,
+         class MatV,
+         class>
+void
+SVD(MatM && M,
+    MatU && U, 
+    VecD && D, 
+    MatV && V,
+    Args const& args)
+    {
+    auto Mr = nrows(M),
+         Mc = ncols(M);
+    auto nsv = std::min(Mr,Mc);
+    resize(U,Mr,nsv);
+    resize(V,Mc,nsv);
+    resize(D,nsv);
+    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),args);
+    }
 
 template<class MatM, 
          class MatU,
@@ -175,7 +196,7 @@ SVD(MatM && M,
     resize(U,Mr,nsv);
     resize(V,Mc,nsv);
     resize(D,nsv);
-    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
+    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),{"SVDThreshold",thresh});
     }
 
 } //namespace itensor
