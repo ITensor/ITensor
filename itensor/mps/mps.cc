@@ -20,6 +20,10 @@ using std::pair;
 using std::make_pair;
 using std::string;
 
+void
+random_tensors(std::vector<ITensor>& A,
+               SiteSet const& sites);
+
 //
 // class MPS
 //
@@ -62,7 +66,7 @@ MPS(SiteSet const& sites)
     writedir_("./"),
     do_write_(false)
     { 
-    random_tensors(A_);
+    random_tensors(A_,sites);
     }
 
 MPS::
@@ -327,44 +331,61 @@ setSite(int j) const
     }
 
 
-void MPS::
-new_tensors(std::vector<ITensor>& A_)
+void
+new_tensors(std::vector<ITensor>& A,
+            SiteSet const& sites)
     {
-    std::vector<Index> a(N_+1);
-    for(int i = 1; i <= N_; ++i)
-        { 
-        a[i] = Index(nameint("a",i)); 
+    auto N = sites.N();
+    auto a = std::vector<Index>(N+1);
+    if(hasQNs(sites(1)))
+        {
+        for(auto i : range1(N)) a[i] = Index(nameint("a",i),QN(),1);
         }
-    A_[1] = ITensor(sites()(1),a[1]);
-    for(int i = 2; i < N_; i++)
-        { 
-        A_[i] = ITensor(dag(a[i-1]),sites()(i),a[i]); 
+    else
+        {
+        for(auto i : range1(N)) a[i] = Index(nameint("a",i));
         }
-    A_[N_] = ITensor(dag(a[N_-1]),sites()(N_));
+    A[1] = ITensor(sites(1),a[1]);
+    for(int i = 2; i < N; i++)
+        { 
+        A[i] = ITensor(dag(a[i-1]),sites(i),a[i]); 
+        }
+    A[N] = ITensor(dag(a[N-1]),sites(N));
     }
 
-void MPS::
-random_tensors(std::vector<ITensor>& A_)
+void
+random_tensors(std::vector<ITensor>& A,
+               SiteSet const& sites)
     { 
-    new_tensors(A_); 
-    for(int i = 1; i <= N_; ++i)
+    new_tensors(A,sites); 
+    if(not hasQNs(A.at(1)))
         {
-        randomize(A_[i]); 
+        for(auto i : range1(sites.N()))
+            {
+            randomize(A[i]); 
+            }
         }
     }
 
 void MPS::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
-    std::vector<Index> a(N_+1);
-    for(auto i : range1(N_)) a[i] = Index(nameint("a",i));
+    auto a = std::vector<Index>(N_+1);
+    if(hasQNs(initState(1)))
+        {
+        for(auto i : range1(N_)) a[i] = Index(nameint("a",i),QN(),1);
+        }
+    else
+        {
+        for(auto i : range1(N_)) a[i] = Index(nameint("a",i));
+        }
 
-    A_[1] = setElt(IndexVal(initState(1)),a[1](1));
+    A_[1] = setElt(initState(1),a[1](1));
     for(auto i : range(2,N_))
         {
-        A_[i] = setElt(dag(a[i-1])(1),IndexVal(initState(i)),a[i](1));
+        A_[i] = setElt(dag(a[i-1])(1),initState(i),a[i](1));
         }
-    A_[N_] = setElt(dag(a[N_-1])(1),IndexVal(initState(N_)));
+    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
     }
 
 

@@ -173,19 +173,7 @@ class MPS
     //
 
     void 
-    new_tensors(std::vector<ITensor>& A_);
-
-    void 
-    random_tensors(std::vector<ITensor>& A_);
-
-    //void 
-    //random_tensors(std::vector<IQTensor>& A_) { }
-
-    void 
     init_tensors(std::vector<ITensor>& A_, const InitState& initState);
-
-    //void 
-    //init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
     public:
 
