@@ -155,17 +155,16 @@ rewriteFermionic(SiteTermProd & prod,
         }
     }
 
-template<typename Tensor>
-Tensor
+ITensor
 computeProd(SiteSet const& sites, 
             SiteTermProd const& p)
     {
     auto i = p.front().i;
-    Tensor op = sites.op(p.front().op,i);
+    ITensor op = sites.op(p.front().op,i);
     for(auto it = p.begin()+1; it != p.end(); ++it)
         {
         if(it->i != i) Error("Op on wrong site");
-        Tensor t = sites.op(it->op,i);
+        ITensor t = sites.op(it->op,i);
         op = multSiteOps(op,t);
         }
     return op;
@@ -532,25 +531,17 @@ endTerm(const string& op)
     return op;
     }
 
-//Helper for toMPOImpl
-template<typename T>
-T
-convert_tensor(IQTensor && t) { return std::move(t); }
-
-template<>
 ITensor
-convert_tensor(IQTensor && t) { return toITensor(t); }
+convert_tensor(ITensor && t) { return std::move(t); }
 
-template<typename Tensor>
-MPOt<Tensor>
+MPO
 toMPOImpl(AutoMPO const& am,
           Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
     auto checkqn = args.getBool("CheckQN",true);
 
     auto const& sites = am.sites();
-    auto H = MPOt<Tensor>(sites);
+    auto H = MPO(sites);
     auto N = sites.N();
 
     for(auto& t : am.terms())
@@ -619,15 +610,14 @@ toMPOImpl(AutoMPO const& am,
         for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
         }
 
-    auto links = vector<IndexT>(N+1);
-    auto inqn = vector<IndexQN>{};
+    auto links = vector<Index>(N+1);
+    auto inqn = vector<QNInt>{};
     for(int n = 0; n <= N; ++n)
         {
         auto& bn = basis.at(n);
         inqn.clear();
         QN currq = bn.front().q;
         int currm = 0;
-        int count = 0;
         for(auto& sq : bn)
             {
             if(sq.q == currq)
@@ -636,14 +626,14 @@ toMPOImpl(AutoMPO const& am,
                 }
             else
                 {
-                inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
+                inqn.emplace_back(currq,currm);
                 currq = sq.q;
                 currm = 1;
                 }
             }
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
+        inqn.emplace_back(currq,currm);
 
-        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
+        links.at(n) = Index(nameint("Hl",n),move(inqn));
         //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
@@ -679,7 +669,7 @@ toMPOImpl(AutoMPO const& am,
         auto &row = links.at(n-1),
              &col = links.at(n);
 
-        W = Tensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+        W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
         for(auto r : range(row.m()))
         for(auto c : range(col.m()))
@@ -710,7 +700,7 @@ toMPOImpl(AutoMPO const& am,
                 //    PrintData(W);
                 //    EXIT
                 //    }
-                W += convert_tensor<Tensor>(sites.op(op,n)) * rc;
+                W += convert_tensor(sites.op(op,n)) * rc;
 #ifdef SHOW_AUTOMPO
                 ws[r][c] = op;
 #endif
@@ -744,11 +734,11 @@ toMPOImpl(AutoMPO const& am,
 
                 if(isFermionic(cst))
                     {
-                    W += convert_tensor<Tensor>(sites.op("F",n)) * rc;
+                    W += convert_tensor(sites.op("F",n)) * rc;
                     }
                 else
                     {
-                    W += convert_tensor<Tensor>(sites.op("Id",n)) * rc;
+                    W += convert_tensor(sites.op("Id",n)) * rc;
                     }
 #ifdef SHOW_AUTOMPO
                 if(isFermionic(cst)) ws[r][c] = "F";
@@ -769,7 +759,7 @@ toMPOImpl(AutoMPO const& am,
                 if(rst == ht.first() && ht.last().i == n)
                     {
                     auto op = endTerm(ht.last().op);
-                    W += ht.coef * convert_tensor<Tensor>(sites.op(op,n)) * rc;
+                    W += ht.coef * convert_tensor(sites.op(op,n)) * rc;
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = op;
                     auto coef = ht.coef;
@@ -797,7 +787,7 @@ toMPOImpl(AutoMPO const& am,
                     else
                         ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.coef * convert_tensor<Tensor>(sites.op(ht.first().op,n)) * rc;
+                    W += ht.coef * convert_tensor(sites.op(ht.first().op,n)) * rc;
                     }
                 }
 
@@ -943,7 +933,7 @@ struct Block
 template<typename T>
 using QNBlock = map<QN, Block<T>>;
 using IQMatEls = set<IQMPOMatElem>;
-using MPOMatrix = vector<vector<IQTensor>>;
+using MPOMatrix = vector<vector<ITensor>>;
 
 // Returns a 0-based index of the SiteTermProd ops in the vector
 // If ops is not in the vector adds it is added
@@ -1144,236 +1134,241 @@ compressMPO(SiteSet const& sites,
             vector<QNBlock<T>> const& qbs, 
             vector<IQMatEls> const& tempMPO,
             vector<MPOPiece<T>> & finalMPO, 
-            vector<IQIndex> & links, 
+            vector<Index> & links, 
             bool isExpH = false, 
             Complex tau = 0,
             Args const& args = Args::global())
     {
-    const int N = sites.N();
-    Real eps = 1E-14;
+    //TODO: need to implement IQTensor += ITensor
+    //      or equivalent (see part with Index li,ri
+    //      near findByQN below)
+    Error("compressMPO not implemented");
+    //const int N = sites.N();
+    //Real eps = 1E-14;
 
-    int minm = args.getInt("Minm",1);
-    int maxm = args.getInt("Maxm",5000);
-    Real cutoff = args.getReal("Cutoff",1E-13);
-    //printfln("Using cutoff = %.2E",cutoff);
-    //printfln("Using minm = %d",minm);
-    //printfln("Using maxm = %d",maxm);
+    //int minm = args.getInt("Minm",1);
+    //int maxm = args.getInt("Maxm",5000);
+    //Real cutoff = args.getReal("Cutoff",1E-13);
+    ////printfln("Using cutoff = %.2E",cutoff);
+    ////printfln("Using minm = %d",minm);
+    ////printfln("Using maxm = %d",maxm);
 
-    finalMPO.resize(N);
-    links.resize(N+1);
-    
-    auto V_n = map<QN, Mat<T>>();
-    
-    const QN ZeroQN;
-    
-    int d0 = isExpH ? 1 : 2;
-    
-    links.at(0) = IQIndex("Hl0",Index("hl0_0",d0),ZeroQN);
+    //finalMPO.resize(N);
+    //links.resize(N+1);
+    //
+    //auto V_n = map<QN, Mat<T>>();
+    //
+    //const QN ZeroQN;
+    //
+    //int d0 = isExpH ? 1 : 2;
+    //
+    //links.at(0) = Index("Hl0",ZeroQN,d0);
 
-    auto max_d = links.at(0).m();
-    for(int n = 1; n <= N; ++n)
-        {
-        //printfln("=== Making compressed MPO at site %d ===",n);
-        //Put in factor of (-tau) if isExpH==true
-        if(isExpH) Error("Need to put in factor of (-tau)");
+    //auto max_d = links.at(0).m();
+    //for(int n = 1; n <= N; ++n)
+    //    {
+    //    //printfln("=== Making compressed MPO at site %d ===",n);
+    //    //Put in factor of (-tau) if isExpH==true
+    //    if(isExpH) Error("Need to put in factor of (-tau)");
 
-        auto V_npp = map<QN, Mat<T>>();
+    //    auto V_npp = map<QN, Mat<T>>();
 
-        int nsector = 1; //always have ZeroQN sector
+    //    int nsector = 1; //always have ZeroQN sector
 
-        for(auto& qb : qbs.at(n-1) )
-            {
-            auto& qn = qb.first;
-            if(qn != ZeroQN) ++nsector;
+    //    for(auto& qb : qbs.at(n-1) )
+    //        {
+    //        auto& qn = qb.first;
+    //        if(qn != ZeroQN) ++nsector;
 
-            // Convert the block matrix elements to a dense matrix
-            auto M = toMatrix(qb.second.mat);
+    //        // Convert the block matrix elements to a dense matrix
+    //        auto M = toMatrix(qb.second.mat);
 
-            auto& V = V_npp[qn];
+    //        auto& V = V_npp[qn];
 
-            Mat<T> U;
-            Vector D;
-            SVD(M,U,D,V);
+    //        Mat<T> U;
+    //        Vector D;
+    //        SVD(M,U,D,V);
 
-            //square singular vals for call to truncate
-            for(auto& d : D) d = sqr(d);
-            truncate(D,maxm,minm,cutoff);
-            int m = D.size();
+    //        //square singular vals for call to truncate
+    //        for(auto& d : D) d = sqr(d);
+    //        truncate(D,maxm,minm,cutoff);
+    //        int m = D.size();
 
-            int nc = ncols(M);
-            resize(V,nc,m);
-            }
+    //        int nc = ncols(M);
+    //        resize(V,nc,m);
+    //        }
 
-        int count = 0;
-        auto inqn = stdx::reserve_vector<IndexQN>(nsector);
-        // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),d0+ncols(V_npp[ZeroQN])),ZeroQN);        
-        for(auto const& qb : qbs.at(n-1))
-            {
-            QN const& q = qb.first;
-            if(q == ZeroQN) continue; // was already taken care of
-            int m = ncols(V_npp[q]);
-            inqn.emplace_back(Index(format("hl%d_%d",n,count++),m),q);
-            }
-        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
+    //    int count = 0;
+    //    auto inqn = stdx::reserve_vector<QNInt>(nsector);
+    //    // Make sure zero QN is first in the list of indices
+    //    inqn.emplace_back(ZeroQN,d0+ncols(V_npp[ZeroQN]));
+    //    for(auto const& qb : qbs.at(n-1))
+    //        {
+    //        QN const& q = qb.first;
+    //        if(q == ZeroQN) continue; // was already taken care of
+    //        int m = ncols(V_npp[q]);
+    //        inqn.emplace_back(q,m);
+    //        }
+    //    links.at(n) = Index(nameint("Hl",n),move(inqn));
 
-        //
-        // Construct the compressed MPO
-        //
-        auto& fm = finalMPO.at(n-1);
+    //    //
+    //    // Construct the compressed MPO
+    //    //
+    //    auto& fm = finalMPO.at(n-1);
 
-        auto& IdM = fm[QNProd{ZeroQN,SiteTermProd(1,{"Id",n})}];
-        IQIndex& ll = links.at(n-1);
-        IQIndex& rl = links.at(n);
+    //    auto& IdM = fm[QNProd{ZeroQN,SiteTermProd(1,{"Id",n})}];
+    //    auto& ll = links.at(n-1);
+    //    auto& rl = links.at(n);
 
-        Index li = findByQN(ll,ZeroQN);
-        Index ri = findByQN(rl,ZeroQN);
-        IdM = Mat<T>(li.m(),ri.m());
-        IdM(0,0) = 1.;
-        if(!isExpH) IdM(1,1) = 1.;
+    //    Index li = findByQN(ll,ZeroQN);
+    //    Index ri = findByQN(rl,ZeroQN);
+    //    IdM = Mat<T>(li.m(),ri.m());
+    //    IdM(0,0) = 1.;
+    //    if(!isExpH) IdM(1,1) = 1.;
 
-        for(IQMPOMatElem const& elem: tempMPO.at(n-1))
-            {
-            int j = elem.row;
-            int k = elem.col;
-            auto& t = elem.val;
-            
-            if(isZero(t.coef,eps)) continue;
+    //    for(IQMPOMatElem const& elem: tempMPO.at(n-1))
+    //        {
+    //        int j = elem.row;
+    //        int k = elem.col;
+    //        auto& t = elem.val;
+    //        
+    //        if(isZero(t.coef,eps)) continue;
 
-            auto& M = fm[QNProd{elem.rowqn,t.ops}];
+    //        auto& M = fm[QNProd{elem.rowqn,t.ops}];
 
-            if(nrows(M)==0)
-                {
-                auto li = findByQN(ll,elem.rowqn);
-                auto ri = findByQN(rl,elem.colqn);
-                M = Mat<T>(li.m(),ri.m());
-                }
+    //        if(nrows(M)==0)
+    //            {
+    //            auto li = findByQN(ll,elem.rowqn);
+    //            auto ri = findByQN(rl,elem.colqn);
+    //            M = Mat<T>(li.m(),ri.m());
+    //            }
 
-            int rowOffset = isExpH ? 0 : 1;
+    //        int rowOffset = isExpH ? 0 : 1;
 
-            //rowShift & colShift account for special identity
-            //entries in zero QN block of MPO
-            auto rowShift = (elem.rowqn==ZeroQN) ? d0 : 0;
-            auto colShift = (elem.colqn==ZeroQN) ? d0 : 0;
+    //        //rowShift & colShift account for special identity
+    //        //entries in zero QN block of MPO
+    //        auto rowShift = (elem.rowqn==ZeroQN) ? d0 : 0;
+    //        auto colShift = (elem.colqn==ZeroQN) ? d0 : 0;
 
-            auto coef = forceType<T>(t.coef);
+    //        auto coef = forceType<T>(t.coef);
 
-            if(j==-1 && k==-1)	// on-site terms
-                {
-                M(rowOffset,0) += coef;
-                }
-            else if(j==-1)  	// terms starting on site n
-                {
-                auto& V = V_npp[elem.colqn];
-                for(size_t i = 0; i < ncols(V); ++i)
-                    {
-                    auto z = coef*V(k,i);
-                    M(rowOffset,i+colShift) += z;
-                    }
-                }
-            else if(k==-1) 	// terms ending on site n
-                {
-                auto& V = V_n[elem.rowqn];
-                for(size_t r = 0; r < ncols(V); ++r)
-                    {
-                    auto z = coef*conj(V(j,r));
-                    M(r+rowShift,0) += z;
-                    }
-                }
-            else 
-                {
-                auto& Vr = V_n[elem.rowqn];
-                auto& Vc = V_npp[elem.colqn];
-                for(size_t r = 0; r < ncols(Vr); ++r)
-                for(size_t c = 0; c < ncols(Vc); ++c) 
-                    {
-                    auto z = coef*conj(Vr(j,r))*Vc(k,c);
-                    M(r+rowShift,c+colShift) += z;
-                    }
-                }
-            }
+    //        if(j==-1 && k==-1)	// on-site terms
+    //            {
+    //            M(rowOffset,0) += coef;
+    //            }
+    //        else if(j==-1)  	// terms starting on site n
+    //            {
+    //            auto& V = V_npp[elem.colqn];
+    //            for(size_t i = 0; i < ncols(V); ++i)
+    //                {
+    //                auto z = coef*V(k,i);
+    //                M(rowOffset,i+colShift) += z;
+    //                }
+    //            }
+    //        else if(k==-1) 	// terms ending on site n
+    //            {
+    //            auto& V = V_n[elem.rowqn];
+    //            for(size_t r = 0; r < ncols(V); ++r)
+    //                {
+    //                auto z = coef*conj(V(j,r));
+    //                M(r+rowShift,0) += z;
+    //                }
+    //            }
+    //        else 
+    //            {
+    //            auto& Vr = V_n[elem.rowqn];
+    //            auto& Vc = V_npp[elem.colqn];
+    //            for(size_t r = 0; r < ncols(Vr); ++r)
+    //            for(size_t c = 0; c < ncols(Vc); ++c) 
+    //                {
+    //                auto z = coef*conj(Vr(j,r))*Vc(k,c);
+    //                M(r+rowShift,c+colShift) += z;
+    //                }
+    //            }
+    //        }
 
-        // Store SVD computed at this step for next link
-        V_n = move(V_npp);
-        
-        max_d = max(max_d, links.at(n).m());
-        }
-    //println("Maximal dimension of the MPO is ", max_d);
+    //    // Store SVD computed at this step for next link
+    //    V_n = move(V_npp);
+    //    
+    //    max_d = max(max_d, links.at(n).m());
+    //    }
+    ////println("Maximal dimension of the MPO is ", max_d);
     }
 
 QN
 div(ITensor const& t) { return QN{}; }
 
-template<typename Tensor, typename T>
-MPOt<Tensor>
+template<typename T>
+MPO
 constructMPOTensors(SiteSet const& sites,
                     vector<MPOPiece<T>> const& finalMPO, 
-                    vector<IQIndex> const& links, 
+                    vector<Index> const& links, 
                     Args const& args = Args::global())
     {
-    MPOt<Tensor> H(sites);
-    int N = sites.N();
+    auto H = MPO(sites);
+    Error("constructMPOTensors not yet implemented");
+    //TODO: need IQTensor += ITensor equivalent
+    //int N = sites.N();
 
-    auto isExpH = args.getBool("IsExpH",false);
-    auto infinite = args.getBool("Infinite",false);
+    //auto isExpH = args.getBool("IsExpH",false);
+    //auto infinite = args.getBool("Infinite",false);
 
-    for(int n = 1; n <= N; ++n)
-        {
-        auto& row = links.at(n-1);
-        auto& col = links.at(n);
-        auto& W = H.Aref(n);
+    //for(int n = 1; n <= N; ++n)
+    //    {
+    //    auto& row = links.at(n-1);
+    //    auto& col = links.at(n);
+    //    auto& W = H.Aref(n);
 
-        W = Tensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+    //    W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        auto rc = Tensor(dag(row),col);
+    //    auto rc = ITensor(dag(row),col);
 
-        //printfln("n = %d finalMPO size = %d",n,finalMPO.at(n-1).size());
-        for(auto& qp_M : finalMPO.at(n-1))
-            {
-            auto rq = qp_M.first.q;
-            auto& prod = qp_M.first.prod;
-            auto& M = qp_M.second;
+    //    //printfln("n = %d finalMPO size = %d",n,finalMPO.at(n-1).size());
+    //    for(auto& qp_M : finalMPO.at(n-1))
+    //        {
+    //        auto rq = qp_M.first.q;
+    //        auto& prod = qp_M.first.prod;
+    //        auto& M = qp_M.second;
 
-            auto Op = computeProd<Tensor>(sites,prod);
-            if(std::is_same<Tensor,IQTensor>::value)
-                {
-                auto sq = div(Op);
-                auto cq = rq-sq;
-                //-rq + sq + cq == 0
-                //==> cq = rq - sq
-                auto ri = findByQN(row,rq);
-                auto ci = findByQN(col,cq);
-                auto t = matrixTensor(M,ri,ci);
-                W += (rc+t)*Op;
-                }
-            else
-                {
-                auto t = matrixTensor(M,row,col);
-                W += (rc+t)*Op;
-                }
-            W.scaleTo(1.);
-            }
-        }
+    //        auto Op = computeProd(sites,prod);
+    //        if(std::is_same<Tensor,IQTensor>::value)
+    //            {
+    //            auto sq = div(Op);
+    //            auto cq = rq-sq;
+    //            //-rq + sq + cq == 0
+    //            //==> cq = rq - sq
+    //            auto ri = findByQN(row,rq);
+    //            auto ci = findByQN(col,cq);
+    //            auto t = matrixTensor(M,ri,ci);
+    //            W += (rc+t)*Op;
+    //            }
+    //        else
+    //            {
+    //            auto t = matrixTensor(M,row,col);
+    //            W += (rc+t)*Op;
+    //            }
+    //        W.scaleTo(1.);
+    //        }
+    //    }
 
-    int min_n = isExpH ? 1 : 2;
-    if(infinite)
-        {
-        H.Aref(0) = setElt(links.at(0)(min_n));
-        H.Aref(N+1) = setElt(dag(links.at(N))(1));   
-        }
-    else
-        {
-        H.Aref(1) *= setElt(links.at(0)(min_n));
-        H.Aref(N) *= setElt(dag(links.at(N))(1));   
-        }
-    
+    //int min_n = isExpH ? 1 : 2;
+    //if(infinite)
+    //    {
+    //    H.Aref(0) = setElt(links.at(0)(min_n));
+    //    H.Aref(N+1) = setElt(dag(links.at(N))(1));   
+    //    }
+    //else
+    //    {
+    //    H.Aref(1) *= setElt(links.at(0)(min_n));
+    //    H.Aref(N) *= setElt(dag(links.at(N))(1));   
+    //    }
+    //
     return H;
     }
 
-template<typename Tensor>
-MPOt<Tensor>
+MPO
 svdMPO(AutoMPO const& am, 
-         Args const& args)
+       Args const& args)
     {
     bool isExpH = false;
     Cplx tau = 0.;
@@ -1388,7 +1383,7 @@ svdMPO(AutoMPO const& am,
             }
         }
 
-    MPOt<Tensor> H;
+    MPO H;
 
     auto checkqns = args.getBool("CheckQN",true);
 
@@ -1398,9 +1393,9 @@ svdMPO(AutoMPO const& am,
         auto tempMPO = vector<IQMatEls>();
         partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
         auto finalMPO = vector<MPOPiece<Real>>();
-        auto links = vector<IQIndex>();
+        auto links = vector<Index>();
         compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
-        H = constructMPOTensors<Tensor,Real>(am.sites(),finalMPO,links,args);
+        H = constructMPOTensors<Real>(am.sites(),finalMPO,links,args);
         }
     else
         {
@@ -1408,9 +1403,9 @@ svdMPO(AutoMPO const& am,
         auto tempMPO = vector<IQMatEls>();
         partitionHTerms(am.sites(),am.terms(),qbs,tempMPO,checkqns);
         auto finalMPO = vector<MPOPiece<Cplx>>();
-        auto links = vector<IQIndex>();
+        auto links = vector<Index>();
         compressMPO(am.sites(),qbs,tempMPO,finalMPO,links,isExpH,tau,args);
-        H = constructMPOTensors<Tensor,Cplx>(am.sites(),finalMPO,links,args);
+        H = constructMPOTensors<Cplx>(am.sites(),finalMPO,links,args);
         }
 
 #ifdef DEBUG
@@ -1429,8 +1424,7 @@ svdMPO(AutoMPO const& am,
     return H;
     }
 
-template<>
-IQMPO 
+MPO 
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
@@ -1438,48 +1432,21 @@ toMPO(AutoMPO const& am,
     if(args.getBool("Exact",false))
         {
         if(verbose) println("Using exact conversion of AutoMPO->IQMPO");
-        return toMPOImpl<IQTensor>(am,args);
+        return toMPOImpl(am,args);
         }
     if(verbose) println("Using approx/svd conversion of AutoMPO->IQMPO");
-    return svdMPO<IQTensor>(am,args);
+    return svdMPO(am,args);
     }
 
-template<>
-MPO 
-toMPO(AutoMPO const& am, 
-      Args const& args) 
-    { 
-    if(args.getBool("Exact",false))
-        {
-        println("Using exact conversion of AutoMPO->MPO");
-        return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
-        }
-    println("Using approx/svd conversion of AutoMPO->MPO");
-    return svdMPO<ITensor>(am,{args,"CheckQN",false});
-    }
-
-//template<>
-//MPO
-//toMPO<ITensor>(const AutoMPO& a,
-//               const Args& args)
-//    {
-//    auto checkqn = Args("CheckQNs",false);
-//    auto res = toMPO<IQTensor>(a,args+checkqn);
-//    return res.toMPO();
-//    }
-
-
-template<typename Tensor>
-MPOt<Tensor>
-toExpH_ZW1(const AutoMPO& am,
+MPO
+toExpH_ZW1(AutoMPO const& am,
            Complex tau,
-           const Args& args)
+           Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
     auto checkqn = args.getBool("CheckQN",true);
 
     auto const& sites = am.sites();
-    auto H = MPOt<Tensor>(sites);
+    auto H = MPO(sites);
     const int N = sites.N();
 
     const QN Zero;
@@ -1537,15 +1504,14 @@ toExpH_ZW1(const AutoMPO& am,
         for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
         }
 
-    auto links = vector<IndexT>(N+1);
-    vector<IndexQN> inqn;
+    auto links = vector<Index>(N+1);
+    vector<QNInt> qnsize;
     for(int n = 0; n <= N; n++)
         {
         auto& bn = basis.at(n);
-        inqn.clear();
+        qnsize.clear();
         QN currq = bn.front().q;
         int currm = 0;
-        int count = 0;
         for(auto& sq : bn)
             {
             if(sq.q == currq)
@@ -1554,14 +1520,14 @@ toExpH_ZW1(const AutoMPO& am,
                 }
             else
                 {
-                inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
+                qnsize.emplace_back(currq,currm);
                 currq = sq.q;
                 currm = 1;
                 }
             }
-        inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
+        qnsize.emplace_back(currq,currm);
 
-        links.at(n) = IQIndex(nameint("Hl",n),move(inqn));
+        links.at(n) = Index(nameint("Hl",n),move(qnsize));
 
         //if(n <= 2 or n == N)
         //    {
@@ -1592,7 +1558,7 @@ toExpH_ZW1(const AutoMPO& am,
         auto &row = links.at(n-1),
              &col = links.at(n);
 
-        W = Tensor(dag(sites(n)),prime(sites(n)),dag(row),col);
+        W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
         for(int r = 0; r < row.m(); ++r)
         for(int c = 0; c < col.m(); ++c)
@@ -1606,7 +1572,7 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst.i == n && rst == IL)
                 {
                 auto opname = startTerm(cst.op);
-                auto op = convert_tensor<Tensor>(sites.op(opname,n)) * rc;
+                auto op = convert_tensor(sites.op(opname,n)) * rc;
                 op *= (-tau);
                 W += op;
                 }
@@ -1617,11 +1583,11 @@ toExpH_ZW1(const AutoMPO& am,
                 {
                 if(isFermionic(cst))
                     {
-                    W += convert_tensor<Tensor>(sites.op("F",n)) * rc;
+                    W += convert_tensor(sites.op("F",n)) * rc;
                     }
                 else
                     {
-                    W += convert_tensor<Tensor>(sites.op("Id",n)) * rc;
+                    W += convert_tensor(sites.op("Id",n)) * rc;
                     }
                 }
 
@@ -1631,7 +1597,7 @@ toExpH_ZW1(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(rst == ht.first() && ht.last().i == n)
                     {
-                    W += ht.coef * convert_tensor<Tensor>(sites.op(endTerm(ht.last().op),n)) * rc;
+                    W += ht.coef * convert_tensor(sites.op(endTerm(ht.last().op),n)) * rc;
                     }
                 }
 
@@ -1641,7 +1607,7 @@ toExpH_ZW1(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(ht.first().i == ht.last().i)
                     {
-                    auto op = ht.coef * convert_tensor<Tensor>(sites.op(ht.first().op,n)) * rc;
+                    auto op = ht.coef * convert_tensor(sites.op(ht.first().op,n)) * rc;
                     op *= (-tau);
                     W += op;
                     }
@@ -1658,36 +1624,16 @@ toExpH_ZW1(const AutoMPO& am,
     return H;
     }
 
-template<>
-IQMPO
-toExpH<IQTensor>(const AutoMPO& a,
-         Complex tau,
-         const Args& args)
-    {
-    auto approx = args.getString("Approx","ZW1");
-    IQMPO res;
-    if(approx == "ZW1")
-        {
-        res = toExpH_ZW1<IQTensor>(a,tau,args);
-        }
-    else
-        {
-        Error(format("Unknown approximation Approx=\"%s\"",approx));
-        }
-    return res;
-    }
-
-template<>
 MPO
-toExpH<ITensor>(const AutoMPO& a,
-                Complex tau,
-                const Args& args)
+toExpH(AutoMPO const& a,
+       Complex tau,
+       Args const& args)
     {
     auto approx = args.getString("Approx","ZW1");
     MPO res;
     if(approx == "ZW1")
         {
-        res = toExpH_ZW1<ITensor>(a,tau,{args,"CheckQN",false});
+        res = toExpH_ZW1(a,tau,{args,"CheckQN",false});
         }
     else
         {
