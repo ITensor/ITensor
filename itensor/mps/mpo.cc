@@ -358,10 +358,10 @@ operator<<(std::ostream& s, MPO const& M)
 void
 putMPOLinks(MPO& W, Args const& args)
     {
-    if(not hasQNs(W.A(1).inds()))
+    if(not hasQNs(W.A(1)))
         {
-        const string pfix = args.getString("Prefix","l");
-        vector<Index> links(W.N());
+        string pfix = args.getString("Prefix","l");
+        auto links = vector<Index>(W.N());
         for(int b = 1; b < W.N(); ++b)
             {
             links.at(b) = Index(format("%s%d",pfix,b));
