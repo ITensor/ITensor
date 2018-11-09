@@ -305,6 +305,9 @@ operator==(Index const& I, IndexVal const& iv);
 
 bool inline
 hasQNs(Index const& I) { return I.nblock()!=0; }
+
+bool inline
+hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
   
 Index inline
 dag(Index res) { res.dag(); return res; }
