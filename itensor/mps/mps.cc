@@ -135,6 +135,13 @@ Aref(int i)
     return A_.at(i); 
     }
 
+SiteSet const& MPS::
+sites() const 
+    { 
+    if(not sites_) Error("MPS SiteSet is default-initialized");
+    return sites_; 
+    }
+
 void MPS::
 doWrite(bool val, Args const& args) 
     { 
@@ -770,6 +777,54 @@ makeKroneckerDelta(Index const& i, int plev)
 //template
 //bool MPS<IQTensor>::checkOrtho() const;
 
+bool
+checkOrtho(MPS const& psi,
+           int i, 
+           bool left)
+    {
+    Index link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
+    ITensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
+    ITensor Delta = delta(link, prime(link, 4));
+    ITensor Diff = rho - Delta;
+
+    const
+    Real threshold = 1E-13;
+    if(norm(Diff) < threshold) 
+        {
+        return true;
+        }
+
+    //Print any helpful debugging info here:
+    println("checkOrtho: on line ",__LINE__," of mps.h,");
+    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
+    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
+    printfln("checkOrtho: Error threshold set to %E",threshold);
+    //-----------------------------
+
+    return false;
+    }
+
+bool
+checkOrtho(MPS const& psi)
+    {
+    for(int i = 1; i <= psi.leftLim(); ++i)
+    if(!checkOrtho(psi,i,true))
+        {
+        std::cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+        }
+
+    for(int i = psi.N(); i >= psi.rightLim(); --i)
+    if(!checkOrtho(psi,i,false))
+        {
+        std::cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+        }
+    return true;
+    }
+
 
 //template <class Tensor>
 //void MPS::
@@ -800,6 +855,19 @@ makeKroneckerDelta(Index const& i, int plev)
 //void MPS<ITensor>::applygate(const BondGate<ITensor>& gate,const Args& args);
 //template
 //void MPS<IQTensor>::applygate(const BondGate<IQTensor>& gate,const Args& args);
+
+void
+applyGate(ITensor const& gate, 
+          MPS & psi,
+          Args const& args)
+    {
+    auto fromleft = args.getBool("Fromleft",true);
+    const int c = psi.orthoCenter();
+    ITensor AA = psi.A(c) * psi.A(c+1) * gate;
+    AA.noprime();
+    if(fromleft) psi.svdBond(c,AA,Fromleft,args);
+    else         psi.svdBond(c,AA,Fromright,args);
+    }
 
 Real MPS::
 norm() const 
@@ -1524,5 +1592,72 @@ operator<<(std::ostream& s, InitState const& state)
 //    res.rightLim(psi.rightLim());
 //    return res;
 //    }
+
+MPS
+sum(MPS const& L, 
+    MPS const& R, 
+    Args const& args)
+    {
+    auto res = L;
+    res.plusEq(R,args);
+    return res;
+    }
+
+MPS
+sum(std::vector<MPS> const& terms, 
+    Args const& args)
+    {
+    auto Nt = terms.size();
+    if(Nt == 2)
+        { 
+        return sum(terms.at(0),terms.at(1),args);
+        }
+    else 
+    if(Nt == 1) 
+        {
+        return terms.at(0);
+        }
+    else 
+    if(Nt > 2)
+        {
+        //Add all MPS in pairs
+        auto nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
+        std::vector<MPS> newterms(nsize); 
+        for(decltype(Nt) n = 0, np = 0; n < Nt-1; n += 2, ++np)
+            {
+            newterms.at(np) = sum(terms.at(n),terms.at(n+1),args);
+            }
+        if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
+
+        //Recursively call sum again
+        return sum(newterms,args);
+        }
+    return MPS();
+    }
+
+Cplx
+overlapC(MPS const& psi, 
+         MPS const& phi)
+    {
+    auto N = psi.N();
+    if(N != phi.N()) Error("overlap: mismatched N");
+
+    auto l1 = linkInd(psi,1);
+    auto L = phi.A(1);
+    if(l1) L *= dag(prime(psi.A(1),l1)); 
+    else   L *= dag(psi.A(1));
+
+    if(N == 1) return L.cplx();
+
+    for(decltype(N) i = 2; i < N; ++i) 
+        { 
+        L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
+        }
+    L = L * phi.A(N);
+
+    auto lNm = linkInd(psi,N-1);
+    if(lNm) return (dag(prime(psi.A(N),lNm))*L).cplx();
+    return (dag(psi.A(N))*L).cplx();
+    }
 
 } //namespace itensor
