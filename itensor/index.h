@@ -82,7 +82,7 @@ class Index
     extent_type m_;
     IndexType type_;
     IndexName name_;
-    Arrow dir_ = Neither;
+    Arrow dir_ = Out;
     qn_ptr pd;
     public:
 
