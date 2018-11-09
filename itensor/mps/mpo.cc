@@ -171,6 +171,107 @@ MPOt<ITensor>& MPOt<ITensor>::plusEq(const MPOt<ITensor>& other, const Args&);
 template
 MPOt<IQTensor>& MPOt<IQTensor>::plusEq(const MPOt<IQTensor>& other, const Args&);
 
+bool
+isOrtho(MPO const& W)
+    {
+    return W.leftLim()+1 == W.rightLim()-1;
+    }
+
+int
+orthoCenter(MPO const& W)
+    {
+    if(!isOrtho(W)) Error("orthogonality center not well defined.");
+    return (W.leftLim() + 1);
+    }
+
+MPO
+sum(MPO L, 
+    MPO const& R, 
+    Args const& args)
+    {
+    L.plusEq(R,args);
+    return L;
+    }
+
+void 
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        MPS const& phi, 
+        Real& re, 
+        Real& im)
+    {
+    overlap(psi,H,phi,re,im);
+    }
+
+Real 
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        MPS const& phi) //Re[<psi|H|phi>]
+    {
+    return overlap(psi,H,phi);
+    }
+
+Complex 
+psiHphiC(MPS const& psi, 
+         MPO const& H, 
+         MPS const& phi) //Re[<psi|H|phi>]
+    {
+    return overlapC(psi,H,phi);
+    }
+
+void
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        Tensor const& LB, 
+        Tensor const& RB, 
+        MPS const& phi, 
+        Real& re, 
+        Real& im) //<psi|H|phi>
+    {
+    overlap(psi,H,LB,RB,phi,re,im);
+    }
+
+Real
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        Tensor const& LB, 
+        Tensor const& RB, 
+        MPS const& phi) //Re[<psi|H|phi>]
+    {
+    return overlap(psi,H,LB,RB,phi);
+    }
+
+void
+psiHKphi(MPS const& psi, 
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi, 
+         Real& re, 
+         Real& im) //<psi|H K|phi>
+    {
+    overlap(psi,H,K,phi,re,im);
+    }
+
+Real
+psiHKphi(MPS const& psi, 
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi) //<psi|H K|phi>
+    {
+    return overlap(psi,H,K,phi);
+    }
+
+Complex
+psiHKphiC(MPS const& psi, 
+          MPO const& H, 
+          MPO const& K,
+          MPS const& phi) //<psi|H K|phi>
+    {
+    return overlapC(psi,H,K,phi);
+    }
+
+
+
 int 
 findCenter(const IQMPO& psi)
     {
