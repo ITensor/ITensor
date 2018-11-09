@@ -12,15 +12,19 @@ namespace detail {
 struct ArrowM
     {
     Arrow dir = Neither;
+    IndexType type = Link;
     long m = 0l;
-    ArrowM(Arrow d, long m_) : dir(d), m(m_) { }
+    ArrowM(Arrow d, 
+           IndexType t,
+           long m_) : dir(d), type(t), m(m_) { }
     };
 
 ArrowM inline
 fill(std::vector<QNInt> const& v,
-     Arrow dir = Out) 
+     Arrow dir = Out,
+     IndexType type = Link) 
     { 
-    return ArrowM(dir,0l);
+    return ArrowM(dir,type,0l);
     }
 
 template<typename... Rest>
@@ -49,7 +53,7 @@ Index(std::string const& name,
     constexpr auto size = 1+sizeof...(qnsizes)/2;
     auto qi = stdx::reserve_vector<std::pair<QN,long>>(size);
     auto am = detail::fill(qi,q1,size1,qnsizes...);
-    auto I = Index(name,am.m);
+    auto I = Index(name,am.m,am.type);
     operator=(I);
     dir(am.dir);
     makeStorage(std::move(qi));
