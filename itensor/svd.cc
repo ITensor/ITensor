@@ -281,6 +281,8 @@ svdImpl(IQTensor A,
         Riq.emplace_back(Index("r",this_m,ritype),vI.qn(1+B.i2));
         }
     
+    if(Liq.empty() || Riq.empty()) throw std::runtime_error("IQIndex of S after SVD is empty");
+
     auto L = IQIndex(lname,move(Liq),uI.dir());
     auto R = IQIndex(rname,move(Riq),vI.dir());
 
