@@ -758,6 +758,24 @@ hasQNs(std::vector<Index> const& inds)
     return false;
     }
 
+void inline
+checkQNConsistent(IndexSet const& is)
+    {
+#ifdef DEBUG
+    if(is.r() > 0 && hasQNs(is.front()))
+        {
+        for(long n = 1; n < is.r(); n += 1)
+            {
+            if(not hasQNs(is[n]))
+                {
+                println("Non-QN index = ",is[n]);
+                Error("IndexSet: cannot mix QN and non-QN Indices");
+                }
+            }
+        }
+#endif
+    }
+
 } //namespace itensor
 
 #endif

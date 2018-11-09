@@ -32,6 +32,9 @@ class IndexSetIter;
 // keeps the indices in the order given.
 //
 
+void
+checkQNConsistent(IndexSet const&);
+
 class IndexSet : public RangeT<Index>
     {
     public:
@@ -54,29 +57,32 @@ class IndexSet : public RangeT<Index>
     template <typename... Inds>
     explicit
     IndexSet(index_type const& i1, 
-              Inds&&... rest)
+             Inds&&... rest)
       : parent(i1,std::forward<Inds>(rest)...)
-        { }
+        { 
+        checkQNConsistent(*this);
+        }
 
     template<typename IndxContainer>
     explicit
     IndexSet(IndxContainer && ii) 
-      : parent(std::forward<IndxContainer>(ii)) { }
+      : parent(std::forward<IndxContainer>(ii)) 
+        { 
+        checkQNConsistent(*this);
+        }
 
-    IndexSet(std::initializer_list<index_type> ii) : parent(ii) { }
+    IndexSet(std::initializer_list<index_type> ii) : parent(ii) 
+        { 
+        checkQNConsistent(*this);
+        }
 
     explicit
     IndexSet(storage_type && store) 
       : parent(std::move(store)) 
-        { }
+        { 
+        checkQNConsistent(*this);
+        }
 
-    //IndexSet&
-    //operator=(storage_type&& store)
-    //    {
-    //    parent::operator=(std::move(store));
-    //    return *this;
-    //    }
-    
     explicit operator bool() const { return !parent::empty(); }
 
     long
@@ -212,33 +218,6 @@ void
 prime(IndexSet& is, 
       VArgs&&... vargs);
 
-//// Increment primelevels of the indices
-//// specified by 1, or an optional amount "inc"
-//// For example, to prime indices I and J by 2,
-//// prime(is,I,J,2);
-//template<typename... Inds>
-//void 
-//prime(IndexSet& is, 
-//      IndexT const& I1, 
-//      Inds&&... rest);
-
-//// increment primelevel of all indices of
-//// type "type" by an amount "inc"
-//template<typename... Types>
-//void 
-//prime(IndexSet& is, 
-//      IndexType type,
-//      int inc = 1);
-
-//// same as above but for multiple types
-//// optionally, last argument can be 
-//// an increment amount
-//template<typename IndexT, typename... Types>
-//void 
-//prime(IndexSetT<IndexT>& is, 
-//      IndexType type1,
-//      Types&&... rest);
-
 //
 //Given a list of indices and an increment (an int)
 //as the optional last argument (default is inc=1)
@@ -338,16 +317,6 @@ finddir(IndexSet const& iset, Arrow dir);
 Arrow
 dir(IndexSet const& is, Index const& I);
 
-
-////
-//// Compute the permutation P taking an IndexSetT iset
-//// to oset (of type IndexSetT or array<IndexT,NMAX>)
-////
-//template <class IndexT>
-//void
-//getperm(const IndexSetT<IndexT>& iset, 
-//        const typename IndexSetT<IndexT>::storage& oset, 
-//        Permutation& P);
 
 bool
 hasindex(IndexSet const& iset, 
