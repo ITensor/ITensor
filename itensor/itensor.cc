@@ -773,6 +773,7 @@ operator<<(ostream & s, ITensor const& t)
     s << "ITensor r=" << t.r() << ": "; 
     if(hasQNs(t)) 
         {
+        if(t.r() > 0) s << "\n";
         for(auto& I : t.inds()) s << I << "\n";
         }
     else
