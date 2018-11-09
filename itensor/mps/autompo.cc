@@ -1013,6 +1013,7 @@ partitionHTerms(SiteSet const& sites,
         for(auto& st : prod)
             {
             auto Op = sites.op(st.op,st.i);
+            //if(not hasQNs(Op)) return QN();
             auto OpQN = -div(Op);
             qn += OpQN;
             }
@@ -1149,6 +1150,8 @@ compressMPO(SiteSet const& sites,
     //printfln("Using minm = %d",minm);
     //printfln("Using maxm = %d",maxm);
 
+    auto hasqn = hasQNs(sites(1));
+
     finalMPO.resize(N);
     links.resize(N+1);
     
@@ -1158,7 +1161,8 @@ compressMPO(SiteSet const& sites,
     
     int d0 = isExpH ? 1 : 2;
     
-    links.at(0) = Index("Hl0",ZeroQN,d0);
+    if(hasqn) links.at(0) = Index("Hl0",ZeroQN,d0);
+    else      links.at(0) = Index("Hl0",d0);
 
     auto max_d = links.at(0).m();
     for(int n = 1; n <= N; ++n)
@@ -1194,17 +1198,31 @@ compressMPO(SiteSet const& sites,
             resize(V,nc,m);
             }
 
-        auto inqn = stdx::reserve_vector<QNInt>(nsector);
-        // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(ZeroQN,d0+ncols(V_npp[ZeroQN]));
-        for(auto const& qb : qbs.at(n-1))
+        if(hasqn)
             {
-            QN const& q = qb.first;
-            if(q == ZeroQN) continue; // was already taken care of
-            int m = ncols(V_npp[q]);
-            inqn.emplace_back(q,m);
+            auto inqn = stdx::reserve_vector<QNInt>(nsector);
+            // Make sure zero QN is first in the list of indices
+            inqn.emplace_back(ZeroQN,d0+ncols(V_npp[ZeroQN]));
+            for(auto const& qb : qbs.at(n-1))
+                {
+                QN const& q = qb.first;
+                if(q == ZeroQN) continue; // was already taken care of
+                int m = ncols(V_npp[q]);
+                inqn.emplace_back(q,m);
+                }
+            links.at(n) = Index(nameint("Hl",n),move(inqn));
             }
-        links.at(n) = Index(nameint("Hl",n),move(inqn));
+        else
+            {
+            long m = d0+ncols(V_npp[ZeroQN]);
+            for(auto const& qb : qbs.at(n-1))
+                {
+                QN const& q = qb.first;
+                if(q == ZeroQN) continue; // was already taken care of
+                m += ncols(V_npp[q]);
+                }
+            links.at(n) = Index(nameint("Hl",n),m);
+            }
 
         //
         // Construct the compressed MPO
@@ -1215,10 +1233,18 @@ compressMPO(SiteSet const& sites,
         auto& ll = links.at(n-1);
         auto& rl = links.at(n);
 
-        auto lm = QNblockSize(ll,ZeroQN);
-        //Index li = findByQN(ll,ZeroQN);
-        auto rm = QNblockSize(rl,ZeroQN);
-        //Index ri = findByQN(rl,ZeroQN);
+        long lm=0,rm=0;
+        if(hasqn)
+            {
+            lm = QNblockSize(ll,ZeroQN);
+            rm = QNblockSize(rl,ZeroQN);
+            IdM = Mat<T>(lm,rm);
+            }
+        else
+            {
+            lm = ll.m();
+            rm = rl.m();
+            }
         IdM = Mat<T>(lm,rm);
         IdM(0,0) = 1.;
         if(!isExpH) IdM(1,1) = 1.;
@@ -1235,8 +1261,17 @@ compressMPO(SiteSet const& sites,
 
             if(nrows(M)==0)
                 {
-                auto rowm = QNblockSize(ll,elem.rowqn);
-                auto colm = QNblockSize(rl,elem.colqn);
+                long rowm=0,colm=0;
+                if(hasqn)
+                    {
+                    rowm = QNblockSize(ll,elem.rowqn);
+                    colm = QNblockSize(rl,elem.colqn);
+                    }
+                else
+                    {
+                    rowm = ll.m();
+                    colm = rl.m();
+                    }
                 M = Mat<T>(rowm,colm);
                 }
 
@@ -1291,9 +1326,6 @@ compressMPO(SiteSet const& sites,
         }
     //println("Maximal dimension of the MPO is ", max_d);
     }
-
-QN
-div(ITensor const& t) { return QN{}; }
 
 template<typename T>
 MPO
@@ -1383,6 +1415,7 @@ svdMPO(AutoMPO const& am,
     MPO H;
 
     auto checkqns = args.getBool("CheckQN",true);
+    if(not hasQNs(am.sites()(1))) checkqns = false;
 
     if(is_real)
         {
