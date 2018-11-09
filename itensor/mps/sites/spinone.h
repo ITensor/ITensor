@@ -18,7 +18,7 @@ class SpinOne : public SiteSet
     SpinOne(int N, 
             Args const& args = Args::global());
 
-    SpinOne(std::vector<IQIndex> const& inds);
+    SpinOne(std::vector<Index> const& inds);
 
     void
     read(std::istream& s);
@@ -28,25 +28,34 @@ class SpinOne : public SiteSet
 
 class SpinOneSite
     {
-    IQIndex s;
+    Index s;
     public:
 
     SpinOneSite() { }
 
-    SpinOneSite(IQIndex I) : s(I) { }
+    SpinOneSite(Index I) : s(I) { }
 
     SpinOneSite(int n, Args const& args = Args::global())
         {
-        s = IQIndex{nameint("S=1 site=",n),
-            Index(nameint("Up:site",n),1,Site),QN("Sz=",+2),
-            Index(nameint("Z0:site",n),1,Site),QN("Sz=", 0),
-            Index(nameint("Dn:site",n),1,Site),QN("Sz=",-2)};
+        auto conserveqn = args.getBool("ConserveQNs",false);
+        auto conserveSz = args.getBool("ConserveSz",false);
+        if(conserveqn || conserveSz)
+            {
+            s = Index{nameint("S=1 site=",n),
+                              QN("Sz=",+2),1,
+                              QN("Sz=", 0),1,
+                              QN("Sz=",-2),1,Out,Site};
+            }
+        else
+            {
+            s = Index{nameint("S=1 site=",n),3,Site};
+            }
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "Up" || state == "+") 
@@ -67,10 +76,10 @@ class SpinOneSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
@@ -83,7 +92,7 @@ class SpinOneSite
         auto Dn  = s(s.m());
         auto DnP = sP(s.m());
 
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if(opname == "Sz")
             {
@@ -93,10 +102,6 @@ class SpinOneSite
         else
         if(opname == "Sx")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,ISqrt2); 
             Op.set(Z0,UpP,ISqrt2);
             Op.set(Z0,DnP,ISqrt2); 
@@ -105,10 +110,6 @@ class SpinOneSite
         else
         if(opname == "ISy")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,-ISqrt2); 
             Op.set(Z0,UpP,+ISqrt2);
             Op.set(Z0,DnP,-ISqrt2); 
@@ -117,10 +118,6 @@ class SpinOneSite
         else
         if(opname == "Sy")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,Z0P,+ISqrt2*1_i); 
             Op.set(Z0,UpP,-ISqrt2*1_i);
             Op.set(Z0,DnP,+ISqrt2*1_i); 
@@ -147,7 +144,6 @@ class SpinOneSite
         else
         if(opname == "Sx2")
             {
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,UpP,0.5); 
             Op.set(Up,DnP,0.5);
             Op.set(Z0,Z0P,1.0);
@@ -157,7 +153,6 @@ class SpinOneSite
         else
         if(opname == "Sy2")
             {
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,UpP,+0.5); 
             Op.set(Up,DnP,-0.5);
             Op.set(Z0,Z0P,1);
@@ -183,8 +178,7 @@ class SpinOneSite
         if(opname == "XUp")
             {
             //m = +1 state along x axis
-            Op = mixedIQTensor(dag(s),sP);
-            Op = IQTensor(s);
+            Op = ITensor(s);
             Op.set(Up,0.5);
             Op.set(Z0,ISqrt2);
             Op.set(Dn,0.5);
@@ -193,8 +187,7 @@ class SpinOneSite
         if(opname == "XZ0")
             {
             //m = 0 state along x axis
-            Op = mixedIQTensor(dag(s),sP);
-            Op = IQTensor(s);
+            Op = ITensor(s);
             Op.set(Up,+ISqrt2);
             Op.set(Dn,-ISqrt2);
             }
@@ -202,8 +195,7 @@ class SpinOneSite
         if(opname == "XDn")
             {
             //m = -1 state along x axis
-            Op = mixedIQTensor(dag(s),sP);
-            Op = IQTensor(s);
+            Op = ITensor(s);
             Op.set(Up,0.5);
             Op.set(Z0,-ISqrt2);
             Op.set(Dn,0.5);
@@ -227,7 +219,7 @@ class SpinOneSite
     };
 
 inline SpinOne::
-SpinOne(std::vector<IQIndex> const& inds)
+SpinOne(std::vector<Index> const& inds)
     {
     int N = inds.size();
     auto sites = SiteStore(N);
@@ -236,8 +228,8 @@ SpinOne(std::vector<IQIndex> const& inds)
         auto& Ii = inds.at(i);
         if(Ii.m() != 3)
             {
-            printfln("IQIndex at entry %d = %s",i,Ii);
-            Error("Only S=1 IQIndices allowed in SpinOne(vector<IQIndex>) constructor");
+            printfln("Index at entry %d = %s",i,Ii);
+            Error("Only S=1 IQIndices allowed in SpinOne(vector<Index>) constructor");
             }
         sites.set(j,SpinOneSite(Ii));
         }
@@ -288,7 +280,7 @@ read(std::istream& s)
         auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
-            auto I = IQIndex{};
+            auto I = Index{};
             I.read(s);
             if(I.m() == 3) store.set(j,SpinOneSite(I));
             else if(I.m() == 2) store.set(j,SpinHalfSite(I));
