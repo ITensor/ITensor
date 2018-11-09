@@ -618,6 +618,9 @@ div(ITensor const& T);
 QN
 flux(ITensor const& T);
 
+bool
+hasQNs(ITensor const& T);
+
 //template<typename... Indxs>
 //TensorRef1
 //ordered(ITensor & T, Indxs&&... inds);

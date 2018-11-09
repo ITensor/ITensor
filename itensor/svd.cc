@@ -36,7 +36,7 @@ svdImpl(ITensor const& A,
         ITensor & V,
         Args const& args)
     {
-    if(not hasQNs(A.inds()))
+    if(not hasQNs(A))
         {
         SCOPED_TIMER(7);
         auto do_truncate = args.getBool("Truncate");

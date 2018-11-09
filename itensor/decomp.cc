@@ -270,7 +270,7 @@ eigDecompImpl(ITensor T,
               ITensor & D,
               Args const& args)
     {
-    if(not hasQNs(T.inds()))
+    if(not hasQNs(T))
         {
         auto full = args.getBool("FullDecomp",false);
 

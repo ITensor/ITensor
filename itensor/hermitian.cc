@@ -33,7 +33,7 @@ diagHImpl(ITensor H,
           ITensor& D,
           Args const& args)
     {
-    if(not hasQNs(H.inds()))
+    if(not hasQNs(H))
         {
         auto cutoff = args.getReal("Cutoff",0.);
         auto maxm = args.getInt("Maxm",H.inds().front().m());

@@ -412,14 +412,14 @@ namespace detail {
 void
 allocReal(ITensor& T)
     {
-    if(hasQNs(T.inds())) Error("Can't allocate quantum ITensor with undefined divergence");
+    if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseReal>(area(T.inds()),0);
     }
 
 void
 allocReal(ITensor& T, IntArray const& inds)
     {
-    if(not hasQNs(T.inds()))
+    if(not hasQNs(T))
         {
         T.store() = newITData<DenseReal>(area(T.inds()),0);
         }
@@ -438,7 +438,7 @@ allocReal(ITensor& T, IntArray const& inds)
 void
 allocCplx(ITensor& T)
     {
-    if(hasQNs(T.inds())) Error("Can't allocate quantum ITensor with undefined divergence");
+    if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseCplx>(area(T.inds()),0);
     }
 
@@ -476,7 +476,7 @@ void
 checkSameDiv(ITensor const& T1,
              ITensor const& T2)
     {
-    if(hasQNs(T1.inds()) && hasQNs(T2.inds()))
+    if(hasQNs(T1) && hasQNs(T2))
         {
         if(div(T1) != div(T2)) 
             {
@@ -771,7 +771,7 @@ ostream&
 operator<<(ostream & s, ITensor const& t)
     {
     s << "ITensor r=" << t.r() << ": "; 
-    if(hasQNs(t.inds())) 
+    if(hasQNs(t)) 
         {
         for(auto& I : t.inds()) s << I << "\n";
         }
@@ -779,7 +779,7 @@ operator<<(ostream & s, ITensor const& t)
         {
         s << t.inds();
         }
-    if(not hasQNs(t.inds())) s << "\n";
+    if(not hasQNs(t)) s << "\n";
     if(not t.store()) 
         {
         s << "{Zero / Not yet allocated}\n";
@@ -994,7 +994,7 @@ randomITensor(QN q, IndexSet const& is, Args const& args)
 QN
 div(ITensor const& T) 
     { 
-    if(not hasQNs(T.inds())) Error("div(ITensor) not defined for non QN conserving ITensor");
+    if(not hasQNs(T)) Error("div(ITensor) not defined for non QN conserving ITensor");
     if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
     return doTask(CalcDiv{T.inds()},T.store());
     }

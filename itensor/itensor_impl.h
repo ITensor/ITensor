@@ -910,6 +910,8 @@ diagTensor(Container const& C,
     return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
     }
 
+bool inline
+hasQNs(ITensor const& T) { return hasQNs(T.inds()); }
 
 } // namespace itensor
 
