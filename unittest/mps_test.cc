@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinless.h"
+//#include "itensor/mps/sites/spinless.h"
 #include "itensor/util/print_macro.h"
 
 using namespace itensor;
@@ -90,12 +90,12 @@ SECTION("Orthogonalize")
         {
         links.at(n) = Index(nameint("l",n),m);
         }
-    psi.Aref(1) = randomTensor(links.at(1),sites(1));
+    psi.Aref(1) = randomITensor(links.at(1),sites(1));
     for(auto n : range1(2,N-1))
         {
-        psi.Aref(n) = randomTensor(links.at(n-1),sites(n),links.at(n));
+        psi.Aref(n) = randomITensor(links.at(n-1),sites(n),links.at(n));
         }
-    psi.Aref(N) = randomTensor(links.at(N-1),sites(N));
+    psi.Aref(N) = randomITensor(links.at(N-1),sites(N));
 
     //Normalize psi
     auto n2 = overlap(psi,psi);
@@ -140,7 +140,7 @@ SECTION("Overlap - 1 site")
     {
     auto psi = MPS(1);
     auto s = Index("s",2);
-    psi.Aref(1) = randomTensor(s);
+    psi.Aref(1) = randomITensor(s);
     CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).real());
     }
 
