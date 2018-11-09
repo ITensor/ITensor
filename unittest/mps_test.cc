@@ -25,18 +25,18 @@ SECTION("Constructors")
     {
     }
 
-SECTION("QNCheck")
-    {
-    IQMPS psiNeel(shNeel);
-    CHECK(checkQNs(psiNeel));
-
-    CHECK_EQUAL(totalQN(psiNeel),QN(0));
-
-    IQMPS psiFerro(shFerro);
-    CHECK(checkQNs(psiFerro));
-
-    CHECK_EQUAL(totalQN(psiFerro),QN(10));
-    }
+//SECTION("QNCheck")
+//    {
+//    IQMPS psiNeel(shNeel);
+//    CHECK(checkQNs(psiNeel));
+//
+//    CHECK_EQUAL(totalQN(psiNeel),QN(0));
+//
+//    IQMPS psiFerro(shFerro);
+//    CHECK(checkQNs(psiFerro));
+//
+//    CHECK_EQUAL(totalQN(psiFerro),QN(10));
+//    }
 
 //SECTION("MPSAddition")
 //    {
@@ -58,24 +58,24 @@ SECTION("QNCheck")
 //    CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
 //    }
 
-SECTION("PositionTest")
-    {
-    Spinless sites(10);
-
-    InitState init(sites,"Emp");
-    init.set(2,"Occ");
-    init.set(4,"Occ");
-    init.set(6,"Occ");
-
-    IQMPS psi(init);
-    psi.Anc(1) *= Complex_i;
-
-    psi.position(1,"Cutoff=1E-8");
-    CHECK_EQUAL(findCenter(psi),1);
-
-    psi.position(4,"Cutoff=1E-8");
-    CHECK_EQUAL(findCenter(psi),4);
-    }
+//SECTION("PositionTest")
+//    {
+//    Spinless sites(10);
+//
+//    InitState init(sites,"Emp");
+//    init.set(2,"Occ");
+//    init.set(4,"Occ");
+//    init.set(6,"Occ");
+//
+//    IQMPS psi(init);
+//    psi.Anc(1) *= Complex_i;
+//
+//    psi.position(1,"Cutoff=1E-8");
+//    CHECK_EQUAL(findCenter(psi),1);
+//
+//    psi.position(4,"Cutoff=1E-8");
+//    CHECK_EQUAL(findCenter(psi),4);
+//    }
 
 SECTION("Orthogonalize")
     {

@@ -14,30 +14,12 @@ class MPOt;
 
 class InitState;
 
-//
-// class MPSt
-// (the lowercase t stands for "template")
-// 
-// Unless there is a need to use MPSt
-// specifically as a templated class,
-// it is recommended to use one of the 
-// typedefs of MPSt:
-//
-//      MPS for ITensors
-//
-
-template <class Tensor> 
-class MPSt;
-
-using MPS = MPSt<ITensor>;
-
-template<class Tensor>
-class MPSt
+class MPS
     {
     protected:
     int N_;
     mutable
-    std::vector<Tensor> A_;
+    std::vector<ITensor> A_;
     int l_orth_lim_,
         r_orth_lim_;
     SiteSet sites_;
@@ -46,32 +28,29 @@ class MPSt
     std::string writedir_;
     bool do_write_;
     public:
-    using TensorT = Tensor;
-    using IndexT = typename Tensor::index_type;
-    using IndexValT = typename Tensor::indexval_type;
     using MPOType = MPOt<Tensor>;
 
     //
-    // MPSt Constructors
+    // MPS Constructors
     //
 
-    MPSt();
+    MPS();
 
-    MPSt(int N);
+    MPS(int N);
 
-    MPSt(SiteSet const& sites);
+    MPS(SiteSet const& sites);
 
-    MPSt(InitState const& initState);
+    MPS(InitState const& initState);
 
-    MPSt(MPSt const& other);
+    MPS(MPS const& other);
 
-    MPSt&
-    operator=(MPSt const& other);
+    MPS&
+    operator=(MPS const& other);
 
-    ~MPSt();
+    ~MPS();
 
     //
-    // MPSt Accessor Methods
+    // MPS Accessor Methods
     //
 
     int 
@@ -89,24 +68,24 @@ class MPSt
     leftLim() const { return l_orth_lim_; }
 
     //Read-only access to i'th MPS tensor
-    Tensor const& 
+    ITensor const& 
     A(int i) const;
 
     void
-    setA(int i, Tensor const& nA) { Aref(i) = nA; }
+    setA(int i, ITensor const& nA) { Aref(i) = nA; }
 
     void
-    setA(int i, Tensor && nA) { Aref(i) = std::move(nA); }
+    setA(int i, ITensor && nA) { Aref(i) = std::move(nA); }
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
-    Tensor& 
+    ITensor& 
     Aref(int i);
-    Tensor& 
+    ITensor& 
     Anc(int i) { return Aref(i); }
 
-    MPSt&
-    plusEq(MPSt const& R, 
+    MPS&
+    plusEq(MPS const& R, 
            Args const& args = Args::global());
 
     void 
@@ -120,14 +99,14 @@ class MPSt
 
     Spectrum 
     svdBond(int b, 
-            Tensor const& AA, 
+            ITensor const& AA, 
             Direction dir, 
             Args const& args = Args::global());
 
     template<class LocalOpT>
     Spectrum 
     svdBond(int b, 
-            Tensor const& AA, 
+            ITensor const& AA, 
             Direction dir, 
             LocalOpT const& PH, 
             Args const& args = Args::global());
@@ -141,7 +120,7 @@ class MPSt
     orthogonalize(Args const& args = Args::global());
 
     void
-    swap(MPSt& other);
+    swap(MPS& other);
 
     bool
     doWrite() const { return do_write_; }
@@ -166,7 +145,7 @@ class MPSt
     protected:
 
     //
-    //MPSt methods for writing to disk
+    //MPS methods for writing to disk
     //
 
     //if doWrite(true) is called
@@ -208,12 +187,6 @@ class MPSt
     //void 
     //init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
-
-    private:
-
-    friend class MPSt<ITensor>;
-    //friend class MPSt<IQTensor>;
-
     public:
 
     //
@@ -253,69 +226,58 @@ class MPSt
     bool 
     isComplex() const;
 
-    }; //class MPSt<Tensor>
+    }; //class MPS
 
-template <class MPSType>
-MPSType&
-addAssumeOrth(MPSType      & L,
-              MPSType const& R, 
+MPS&
+addAssumeOrth(MPS      & L,
+              MPS const& R, 
               Args const& args = Args::global());
 
 //void 
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
 //            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
-template<class T>
-MPSt<T>& 
-operator*=(MPSt<T> & psi, Real a) { psi.Aref(psi.leftLim()+1) *= a; return psi; }
+inline MPS& 
+operator*=(MPS & psi, Real a) { psi.Aref(psi.leftLim()+1) *= a; return psi; }
 
-template<class T>
-MPSt<T>& 
-operator/=(MPSt<T> & psi, Real a) { psi.Aref(psi.leftLim()+1) /= a; return psi; }
+inline MPS& 
+operator/=(MPS & psi, Real a) { psi.Aref(psi.leftLim()+1) /= a; return psi; }
 
-template<class T>
-MPSt<T>
-operator*(MPSt<T> psi, Real r) { psi *= r; return psi; }
+MPS inline
+operator*(MPS psi, Real r) { psi *= r; return psi; }
 
-template <class T>
-MPSt<T>
-operator*(Real r, MPSt<T> psi) { psi *= r; return psi; }
+MPS inline
+operator*(Real r, MPS psi) { psi *= r; return psi; }
 
-template<class T>
-MPSt<T>& 
-operator*=(MPSt<T> & psi, Cplx z) { psi.Aref(psi.leftLim()+1) *= z; return psi; }
+inline MPS& 
+operator*=(MPS & psi, Cplx z) { psi.Aref(psi.leftLim()+1) *= z; return psi; }
 
-template<class T>
-MPSt<T>& 
-operator/=(MPSt<T> & psi, Cplx z) { psi.Aref(psi.leftLim()+1) /= z; return psi; }
+inline MPS& 
+operator/=(MPS & psi, Cplx z) { psi.Aref(psi.leftLim()+1) /= z; return psi; }
 
-template <class T>
-MPSt<T>
-operator*(MPSt<T> psi, Cplx z) { psi *= z; return psi; }
+MPS inline
+operator*(MPS psi, Cplx z) { psi *= z; return psi; }
 
-template <class T>
-MPSt<T>
-operator*(Cplx z, MPSt<T> psi) { psi *= z; return psi; }
+MPS inline
+operator*(Cplx z, MPS psi) { psi *= z; return psi; }
 
 class InitState
     {
     public:
-
     using Storage = std::vector<IndexVal>;
-
     using String = std::string;
 
-    InitState(const SiteSet& sites);
+    InitState(SiteSet const& sites);
 
-    InitState(const SiteSet& sites, const String& state);
-
-    InitState& 
-    set(int i, const String& state);
+    InitState(SiteSet const& sites, String const& state);
 
     InitState& 
-    setAll(const String& state);
+    set(int i, String const& state);
 
-    const IndexVal&
+    InitState& 
+    setAll(String const& state);
+
+    IndexVal const&
     operator()(int i) const { checkRange(i); return state_.at(i); }
 
     SiteSet const&
@@ -332,51 +294,41 @@ class InitState
 
 
 //
-// Other Methods Related to MPSt
+// Other Methods Related to MPS
 //
 
 //MPS
 //toMPS(IQMPS const& psi);
 
-template<typename T>
 bool
-isComplex(MPSt<T> const& psi);
+isComplex(MPS const& psi);
 
-template<typename T>
 bool
-isOrtho(MPSt<T> const& psi);
+isOrtho(MPS const& psi);
 
-template<typename T>
 int
-orthoCenter(MPSt<T> const& psi);
+orthoCenter(MPS const& psi);
 
-template<typename T>
 Real
-norm(MPSt<T> const& psi);
+norm(MPS const& psi);
 
-template<typename T>
 Real
-normalize(MPSt<T> & psi);
+normalize(MPS & psi);
 
-template <typename MPST>
-typename MPST::IndexT 
-linkInd(MPST const& psi, int b);
+Index
+linkInd(MPS const& psi, int b);
 
-template <typename MPST>
-typename MPST::IndexT 
-rightLinkInd(MPST const& psi, int i);
+Index
+rightLinkInd(MPS const& psi, int i);
 
-template <typename MPST>
-typename MPST::IndexT 
-leftLinkInd(MPST const& psi, int i);
+Index
+leftLinkInd(MPS const& psi, int i);
 
-template <typename MPST>
 Real
-averageM(MPST const& psi);
+averageM(MPS const& psi);
 
-template <typename MPST>
 int
-maxM(MPST const& psi);
+maxM(MPS const& psi);
 
 //
 // Applies a bond gate to the bond that is currently
@@ -390,26 +342,23 @@ maxM(MPST const& psi);
 //
 // Does not normalize the resulting wavefunction unless 
 // Args("DoNormalize",true) is included in args.
-template <class Tensor>
 void 
-applyGate(const Tensor& gate, 
-          MPSt<Tensor>& psi,
-          const Args& args = Args::global());
+applyGate(ITensor const& gate, 
+          MPS & psi,
+          Args const& args = Args::global());
 
 //Checks if A_[i] is left (left == true) 
 //or right (left == false) orthogonalized
-template <class Tensor>
 bool 
-checkOrtho(const MPSt<Tensor>& psi,
+checkOrtho(MPS const& psi,
            int i, 
            bool left);
 
-template <class T>
 bool 
-checkOrtho(MPSt<T> const& psi);
+checkOrtho(MPS const& psi);
 
-//int 
-//findCenter(IQMPS const& psi);
+int 
+findCenter(MPS const& psi);
 
 bool 
 checkQNs(MPS const& psi);
@@ -418,34 +367,29 @@ QN
 totalQN(MPS const& psi);
 
 // Re[<psi|phi>]
-template <class MPSType>
 Real 
-overlap(MPSType const& psi, MPSType const& phi);
+overlap(MPS const& psi, MPS const& phi);
 
 // <psi|phi>
-template <class MPSType>
 Cplx 
-overlapC(MPSType const& psi, 
-         MPSType const& phi);
+overlapC(MPS const& psi, 
+         MPS const& phi);
 
 // <psi|phi>
-template <class MPSType>
 void 
-overlap(MPSType const& psi,
-        MPSType const& phi, 
+overlap(MPS const& psi,
+        MPS const& phi, 
         Real& re, Real& im);
 
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
 //but which differs from psi_basis only on the first site, and has same index
 //structure as psi_basis. Result is stored to psi_to_fit on return.
-template <class Tensor>
 void 
-fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit);
+fitWF(MPS const& psi_basis, MPS & psi_to_fit);
 
-template <class Tensor>
-MPSt<Tensor>
-sum(MPSt<Tensor> const& L, 
-    MPSt<Tensor> const& R, 
+MPS
+sum(MPS const& L, 
+    MPS const& R, 
     Args const& args = Args::global());
 
 
@@ -457,17 +401,15 @@ sum(MPSt<Tensor> const& L,
 //
 // Assumes terms are zero-indexed
 //
-template<typename MPSType>
-MPSType 
-sum(std::vector<MPSType> const& terms, 
+MPS
+sum(std::vector<MPS> const& terms, 
     Args const& args = Args::global());
 
-template<class Tensor>
 std::ostream& 
-operator<<(std::ostream& s, const MPSt<Tensor>& M);
+operator<<(std::ostream& s, MPS const& M);
 
 std::ostream& 
-operator<<(std::ostream& s, const InitState& state);
+operator<<(std::ostream& s, InitState const& state);
 
 } //namespace itensor
 

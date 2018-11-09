@@ -21,28 +21,24 @@ using std::make_pair;
 using std::string;
 
 //
-// class MPSt
+// class MPS
 //
 
 //
 // Constructors
 //
 
-template <class T>
-MPSt<T>::
-MPSt() 
+MPS::
+MPS() 
     : 
     N_(0), 
     atb_(1),
     writedir_("./"),
     do_write_(false)
     { }
-template MPSt<ITensor>::
-MPSt();
 
-template <class T>
-MPSt<T>::
-MPSt(int N)
+MPS::
+MPS(int N)
     : 
     N_(N), 
     A_(N+2), //idmrg may use A_[0] and A[N+1]
@@ -53,12 +49,9 @@ MPSt(int N)
     do_write_(false)
     { 
     }
-template MPSt<ITensor>::
-MPSt(int N);
 
-template <class T>
-MPSt<T>::
-MPSt(SiteSet const& sites)
+MPS::
+MPS(SiteSet const& sites)
     : 
     N_(sites.N()), 
     A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
@@ -71,12 +64,9 @@ MPSt(SiteSet const& sites)
     { 
     random_tensors(A_);
     }
-template MPSt<ITensor>::
-MPSt(SiteSet const& sites);
 
-template <class T>
-MPSt<T>::
-MPSt(InitState const& initState)
+MPS::
+MPS(InitState const& initState)
     : 
     N_(initState.sites().N()),
     A_(initState.sites().N()+2), //idmrg may use A_[0] and A[N+1]
@@ -89,12 +79,9 @@ MPSt(InitState const& initState)
     { 
     init_tensors(A_,initState);
     }
-template MPSt<ITensor>::
-MPSt(InitState const& initState);
 
-template <class T>
-MPSt<T>::
-MPSt(MPSt const& other)
+MPS::
+MPS(MPS const& other)
     : 
     N_(other.N_),
     A_(other.A_),
@@ -107,12 +94,9 @@ MPSt(MPSt const& other)
     { 
     copyWriteDir();
     }
-template MPSt<ITensor>::
-MPSt(MPSt<ITensor> const&);
 
-template <class Tensor>
-MPSt<Tensor>& MPSt<Tensor>::
-operator=(MPSt const& other)
+MPS& MPS::
+operator=(MPS const& other)
     { 
     N_ = other.N_;
     A_ = other.A_;
@@ -126,30 +110,22 @@ operator=(MPSt const& other)
     copyWriteDir();
     return *this;
     }
-template MPSt<ITensor>& MPSt<ITensor>::
-operator=(MPSt<ITensor> const&);
 
-template <class T>
-MPSt<T>::
-~MPSt()
+MPS::
+~MPS()
     {
     cleanupWrite();
     }
-template MPSt<ITensor>::~MPSt();
 
-template <class Tensor>
-Tensor const& MPSt<Tensor>::
+ITensor const& MPS::
 A(int i) const
     { 
     if(i < 0) i = N_+i+1;
     setSite(i);
     return A_.at(i); 
     }
-template
-const ITensor& MPSt<ITensor>::A(int i) const;
 
-template <class T>
-T& MPSt<T>::
+ITensor& MPS::
 Aref(int i)
     { 
     if(i < 0) i = N_+i+1;
@@ -158,11 +134,8 @@ Aref(int i)
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
     return A_.at(i); 
     }
-template
-ITensor& MPSt<ITensor>::Aref(int i);
 
-template <class T>
-void MPSt<T>::
+void MPS::
 doWrite(bool val, Args const& args) 
     { 
     if(val == do_write_) return;
@@ -177,12 +150,9 @@ doWrite(bool val, Args const& args)
         cleanupWrite();
         }
     }
-template void MPSt<ITensor>::
-doWrite(bool val, const Args& args);
 
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 read(std::istream & s)
     {
     itensor::read(s,N_);
@@ -195,26 +165,22 @@ read(std::istream & s)
     //using the same sites
     auto s1 = findtype(A_.at(1),Site);
     s1.noprime();
-    if(sites_ && s1 != IndexT(sites_(1)))
+    if(sites_ && s1 != Index(sites_(1)))
         {
         Print(A_.at(1).inds());
         Print(s1);
-        Print(IndexT(sites_(1)));
+        Print(Index(sites_(1)));
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
         }
     itensor::read(s,l_orth_lim_);
     itensor::read(s,r_orth_lim_);
     }
-template
-void MPSt<ITensor>::read(std::istream& s);
 
-
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 write(std::ostream& s) const
     {
     if(do_write_)
-        Error("MPSt::write not yet supported if doWrite(true)");
+        Error("MPS::write not yet supported if doWrite(true)");
 
     itensor::write(s,N());
     for(auto j : range(A_.size()))
@@ -224,11 +190,8 @@ write(std::ostream& s) const
     itensor::write(s,leftLim());
     itensor::write(s,rightLim());
     }
-template
-void MPSt<ITensor>::write(std::ostream& s) const;
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 read(std::string const& dirname)
     {
     l_orth_lim_ = 0;
@@ -243,12 +206,9 @@ read(std::string const& dirname)
     	readFromFile(AFName(j,dirname),A_.at(j));
         }
     }
-template
-void MPSt<ITensor>::read(std::string const& dirname);
 
 
-template <class Tensor>
-string MPSt<Tensor>::
+string MPS::
 AFName(int j, string const& dirname) const
     { 
     if(dirname == "")
@@ -260,11 +220,8 @@ AFName(int j, string const& dirname) const
         return format("%s/A_%03d",dirname,j);
         }
     }
-template
-string MPSt<ITensor>::AFName(int j, string const&) const;
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 setBond(int b) const
     {
     if(b == atb_) return;
@@ -285,12 +242,12 @@ setBond(int b) const
         if(A_.at(atb_))
             {
             writeToFile(AFName(atb_),A_.at(atb_));
-            A_.at(atb_) = Tensor();
+            A_.at(atb_) = ITensor();
             }
         if(A_.at(atb_+1))
             {
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
-            if(atb_+1 != b) A_.at(atb_+1) = Tensor();
+            if(atb_+1 != b) A_.at(atb_+1) = ITensor();
             }
         ++atb_;
         }
@@ -299,12 +256,12 @@ setBond(int b) const
         if(A_.at(atb_))
             {
             writeToFile(AFName(atb_),A_.at(atb_));
-            if(atb_ != b+1) A_.at(atb_) = Tensor();
+            if(atb_ != b+1) A_.at(atb_) = ITensor();
             }
         if(A_.at(atb_+1))
             {
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
-            A_.at(atb_+1) = Tensor();
+            A_.at(atb_+1) = ITensor();
             }
         --atb_;
         }
@@ -333,11 +290,8 @@ setBond(int b) const
         //inf.close();
         //}
     }
-template
-void MPSt<ITensor>::setBond(int b) const;
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 setSite(int j) const
     {
     if(!do_write_)
@@ -364,12 +318,9 @@ setSite(int j) const
     //otherwise the set bond already
     //contains this site
     }
-template
-void MPSt<ITensor>::setSite(int j) const;
 
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 new_tensors(std::vector<ITensor>& A_)
     {
     std::vector<Index> a(N_+1);
@@ -384,11 +335,8 @@ new_tensors(std::vector<ITensor>& A_)
         }
     A_[N_] = ITensor(dag(a[N_-1]),sites()(N_));
     }
-template
-void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 random_tensors(std::vector<ITensor>& A_)
     { 
     new_tensors(A_); 
@@ -397,11 +345,8 @@ random_tensors(std::vector<ITensor>& A_)
         randomize(A_[i]); 
         }
     }
-template
-void MPSt<ITensor>::random_tensors(std::vector<ITensor>& A_);
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
     std::vector<Index> a(N_+1);
@@ -414,13 +359,10 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
         }
     A_[N_] = setElt(dag(a[N_-1])(1),IndexVal(initState(N_)));
     }
-template
-void MPSt<ITensor>::
-init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 
 
 //template <class Tensor>
-//void MPSt<Tensor>::
+//void MPS::
 //init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
 //    {
 //    auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
@@ -448,13 +390,13 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 //    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
 //    }
 //template
-//void MPSt<IQTensor>::
+//void MPS<IQTensor>::
 //init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 
 
 //template <>
-//MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
+//MPS<IQTensor>& MPS<IQTensor>::operator+=(const MPS<IQTensor>& other)
 //    {
 //    if(do_write_)
 //        Error("operator+= not supported if doWrite(true)");
@@ -494,7 +436,7 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 //    }
 //
 //template <class Tensor>
-//MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
+//MPS& MPS::operator+=(const MPS& other)
 //    {
 //    if(do_write_)
 //        Error("operator+= not supported if doWrite(true)");
@@ -504,9 +446,9 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 //    vector<Tensor> first(N), second(N);
 //    for(int i = 1; i < N_; ++i)
 //        {
-//        IndexT l1 = rightLinkInd(*this,i);
-//        IndexT l2 = rightLinkInd(other,i);
-//        IndexT r(l1);
+//        Index l1 = rightLinkInd(*this,i);
+//        Index l2 = rightLinkInd(other,i);
+//        Index r(l1);
 //        plussers(l1,l2,r,first[i],second[i]);
 //        }
 //
@@ -525,11 +467,10 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 //    return *this;
 //    }
 //template
-//MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+//MPS<ITensor>& MPS<ITensor>::operator+=(const MPS<ITensor>& other);
 
-template <class Tensor>
-MPSt<Tensor>& MPSt<Tensor>::
-plusEq(MPSt<Tensor> const& R,
+MPS& MPS::
+plusEq(MPS const& R,
        Args const& args)
     {
     //cout << "calling new orthog in sum" << endl;
@@ -547,7 +488,7 @@ plusEq(MPSt<Tensor> const& R,
 
     if(!itensor::isOrtho(R))
         {
-        MPSt<Tensor> oR(R);
+        MPS oR(R);
         try { 
             oR.orthogonalize(); 
             }
@@ -560,18 +501,14 @@ plusEq(MPSt<Tensor> const& R,
 
     return addAssumeOrth(*this,R,args);
     }
-template
-MPSt<ITensor>& MPSt<ITensor>::
-plusEq(const MPSt<ITensor>& R, const Args& args);
 
 
 
 //
-//MPSt Index Methods
+//MPS Index Methods
 //
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 mapprime(int oldp, int newp, IndexType type)
     { 
     if(do_write_)
@@ -579,11 +516,8 @@ mapprime(int oldp, int newp, IndexType type)
     for(int i = 1; i <= N_; ++i) 
         A_[i].mapprime(oldp,newp,type); 
     }
-template
-void MPSt<ITensor>::mapprime(int oldp, int newp, IndexType type);
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 primelinks(int oldp, int newp)
     { 
     if(do_write_)
@@ -591,11 +525,8 @@ primelinks(int oldp, int newp)
     for(int i = 1; i <= N_; ++i) 
         A_[i].mapprime(oldp,newp,Link); 
     }
-template
-void MPSt<ITensor>::primelinks(int oldp, int newp);
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 noprimelink()
     { 
     if(do_write_)
@@ -603,18 +534,12 @@ noprimelink()
     for(int i = 1; i <= N_; ++i) 
         A_[i].noprime(Link); 
     }
-template
-void MPSt<ITensor>::noprimelink();
 
-template<class Tensor> 
-Spectrum MPSt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, const Args& args)
+Spectrum MPS::
+svdBond(int b, ITensor const& AA, Direction dir, Args const& args)
     {
     return svdBond(b,AA,dir,LocalOp(),args);
     }
-template Spectrum MPSt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, const Args& args);
-
 
 struct SqrtInv
     {
@@ -632,12 +557,11 @@ struct Sqrt
     operator()(Real val) const { return std::sqrt(std::fabs(val)); }
     };
 
-template<class Tensor>
 Spectrum
-orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
     {
-    Tensor& L = (dir == Fromleft ? A1 : A2);
-    Tensor& R = (dir == Fromleft ? A2 : A1);
+    ITensor& L = (dir == Fromleft ? A1 : A2);
+    ITensor& R = (dir == Fromleft ? A2 : A1);
 
     auto bnd = commonIndex(L,R,Link);
     if(!bnd) return Spectrum();
@@ -647,8 +571,8 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
         Print(L.inds());
         }
 
-    Tensor A,B(bnd);
-    Tensor D;
+    ITensor A,B(bnd);
+    ITensor D;
     auto spec = svd(L,A,D,B,args);
 
     L = A;
@@ -656,12 +580,9 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
 
     return spec;
     }
-template Spectrum
-orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args);
 
 
-template<class Tensor> 
-void MPSt<Tensor>::
+void MPS::
 position(int i, Args const& args)
     {
     if(not *this) Error("position: MPS is default constructed");
@@ -703,21 +624,15 @@ position(int i, Args const& args)
             }
         }
     }
-template void MPSt<ITensor>::
-position(int b, const Args& args);
 
-template <class Tensor>
-int MPSt<Tensor>::
+int MPS::
 orthoCenter() const 
     { 
     if(!itensor::isOrtho(*this)) Error("orthogonality center not well defined.");
     return (leftLim() + 1);
     }
-template
-int MPSt<ITensor>::orthoCenter() const;
 
-template <class Tensor>
-void MPSt<Tensor>::
+void MPS::
 orthogonalize(Args const& args)
     {
     if(doWrite()) Error("Cannot call orthogonalize when doWrite()==true");
@@ -730,7 +645,7 @@ orthogonalize(Args const& args)
     int plev = 14741;
 
     //Build environment tensors from the left
-    auto E = vector<Tensor>(N_+1);
+    auto E = vector<ITensor>(N_+1);
     auto ci = commonIndex(A_.at(1),A_.at(2),Link);
     E.at(1) = A_.at(1)*dag(prime(A_.at(1),ci,plev));
     for(int j = 2; j < N_; ++j)
@@ -739,7 +654,7 @@ orthogonalize(Args const& args)
         }
 
     auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),plev));
-    Tensor U,D;
+    ITensor U,D;
     diagHermitian(rho,U,D,{dargs,"IndexType=",Link});
 
     //O is partial overlap of previous and new MPS
@@ -767,12 +682,10 @@ orthogonalize(Args const& args)
     l_orth_lim_ = 0;
     r_orth_lim_ = 2;
     }
-template
-void MPSt<ITensor>::orthogonalize(Args const& args);
 
 //Methods for use internally by checkOrtho
 ITensor
-makeKroneckerDelta(const Index& i, int plev)
+makeKroneckerDelta(Index const& i, int plev)
     {
     return delta(i,prime(i,plev));
     }
@@ -789,7 +702,7 @@ makeKroneckerDelta(const Index& i, int plev)
 //    }
 
 //template <class Tensor>
-//bool MPSt<Tensor>::
+//bool MPS::
 //checkOrtho(int i, bool left) const
 //    {
 //    setSite(i);
@@ -827,12 +740,12 @@ makeKroneckerDelta(const Index& i, int plev)
 //    return false;
 //    }
 //template
-//bool MPSt<ITensor>::checkOrtho(int i, bool left) const;
+//bool MPS<ITensor>::checkOrtho(int i, bool left) const;
 //template
-//bool MPSt<IQTensor>::checkOrtho(int i, bool left) const;
+//bool MPS<IQTensor>::checkOrtho(int i, bool left) const;
 
 //template <class Tensor>
-//bool MPSt<Tensor>::
+//bool MPS::
 //checkOrtho() const
 //    {
 //    for(int i = 1; i <= l_orth_lim_; ++i)
@@ -853,13 +766,13 @@ makeKroneckerDelta(const Index& i, int plev)
 //    return true;
 //    }
 //template
-//bool MPSt<ITensor>::checkOrtho() const;
+//bool MPS<ITensor>::checkOrtho() const;
 //template
-//bool MPSt<IQTensor>::checkOrtho() const;
+//bool MPS<IQTensor>::checkOrtho() const;
 
 
 //template <class Tensor>
-//void MPSt<Tensor>::
+//void MPS::
 //applygate(const Tensor& gate, const Args& args)
 //    {
 //    setBond(l_orth_lim_+1);
@@ -868,12 +781,12 @@ makeKroneckerDelta(const Index& i, int plev)
 //    svdBond(l_orth_lim_+1,AA,Fromleft,args);
 //    }
 //template
-//void MPSt<ITensor>::applygate(const ITensor& gate,const Args& args);
+//void MPS<ITensor>::applygate(const ITensor& gate,const Args& args);
 //template
-//void MPSt<IQTensor>::applygate(const IQTensor& gate,const Args& args);
+//void MPS<IQTensor>::applygate(const IQTensor& gate,const Args& args);
 
 //template <class Tensor>
-//void MPSt<Tensor>::
+//void MPS::
 //applygate(const BondGate<Tensor>& gate, 
 //          const Args& args)
 //    {
@@ -884,31 +797,23 @@ makeKroneckerDelta(const Index& i, int plev)
 //    svdBond(gate_b,AA,Fromleft,args);
 //    }
 //template
-//void MPSt<ITensor>::applygate(const BondGate<ITensor>& gate,const Args& args);
+//void MPS<ITensor>::applygate(const BondGate<ITensor>& gate,const Args& args);
 //template
-//void MPSt<IQTensor>::applygate(const BondGate<IQTensor>& gate,const Args& args);
+//void MPS<IQTensor>::applygate(const BondGate<IQTensor>& gate,const Args& args);
 
-template <class Tensor>
-Real MPSt<Tensor>::
+Real MPS::
 norm() const 
     { 
     return itensor::norm(*this);
     }
-template Real MPSt<ITensor>::
-norm() const;
 
-template <class Tensor>
-Real MPSt<Tensor>::
+Real MPS::
 normalize()
     {
     return itensor::normalize(*this);
     }
-template
-Real MPSt<ITensor>::
-normalize();
 
-template <class Tensor>
-bool MPSt<Tensor>::
+bool MPS::
 isComplex() const
     { 
     for(auto j : range1(N_))
@@ -917,12 +822,9 @@ isComplex() const
         }
     return false;
     }
-template
-bool MPSt<ITensor>::isComplex() const;
 
-template <class T>
-void MPSt<T>::
-initWrite(const Args& args)
+void MPS::
+initWrite(Args const& args)
     {
     if(!do_write_)
         {
@@ -944,7 +846,7 @@ initWrite(const Args& args)
                 writeToFile(AFName(j),A_.at(j));
                 if(j < atb_ || j > atb_+1)
                     {
-                    A_[j] = T{};
+                    A_[j] = ITensor{};
                     }
                 }
             }
@@ -954,11 +856,8 @@ initWrite(const Args& args)
         do_write_ = true;
         }
     }
-template
-void MPSt<ITensor>::initWrite(const Args&);
 
-template <class T>
-void MPSt<T>::
+void MPS::
 copyWriteDir()
     {
     if(do_write_)
@@ -972,12 +871,8 @@ copyWriteDir()
         system(cmdstr.c_str());
         }
     }
-template
-void MPSt<ITensor>::copyWriteDir();
 
-
-template <class T>
-void MPSt<T>::
+void MPS::
 cleanupWrite()
     {
     if(do_write_)
@@ -987,12 +882,9 @@ cleanupWrite()
         do_write_ = false;
         }   
     }
-template
-void MPSt<ITensor>::cleanupWrite();
 
-template<class T>
-void MPSt<T>::
-swap(MPSt<T>& other)
+void MPS::
+swap(MPS& other)
     {
     if(N_ != other.N_)
         Error("Require same system size to swap MPS");
@@ -1004,8 +896,6 @@ swap(MPSt<T>& other)
     std::swap(writedir_,other.writedir_);
     std::swap(do_write_,other.do_write_);
     }
-template
-void MPSt<ITensor>::swap(MPSt<ITensor>& other);
 
 InitState::
 InitState(SiteSet const& sites)
@@ -1356,7 +1246,7 @@ periodicWrap(int j, int N)
 /*
 template <class Tensor> 
 template <class IQMPSType> 
-void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
+void MPS::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 {
     assert(sites_ != 0);
     const SiteSet& sst = *sites_;
@@ -1597,9 +1487,8 @@ findCenter(MPS const& psi)
     }
 
 
-template <class T>
 std::ostream& 
-operator<<(std::ostream& s, MPSt<T> const& M)
+operator<<(std::ostream& s, MPS const& M)
     {
     s << "\n";
     for(int i = 1; i <= M.N(); ++i) 
@@ -1608,7 +1497,6 @@ operator<<(std::ostream& s, MPSt<T> const& M)
         }
     return s;
     }
-template std::ostream& operator<<(std::ostream& s, const MPSt<ITensor>& M);
 
 std::ostream& 
 operator<<(std::ostream& s, InitState const& state)

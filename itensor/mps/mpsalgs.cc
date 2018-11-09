@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/mps/mps.h"
-#include "itensor/mps/mpo.h"
+//#include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/tensor/slicemat.h"
@@ -28,60 +28,62 @@ plussers(Index const& l1,
          ITensor    & first, 
          ITensor    & second)
     {
-    auto m = l1.m()+l2.m();
-    if(m <= 0) m = 1;
-    sumind = Index(sumind.rawname(),m);
+    if(not hasQNs(l1) && not hasQNs(l2))
+        {
+        auto m = l1.m()+l2.m();
+        if(m <= 0) m = 1;
+        sumind = Index(sumind.rawname(),m);
 
-    first = delta(l1,sumind);
-    auto S = Matrix(l2.m(),sumind.m());
-    for(auto i : range(l2.m()))
-        {
-        S(i,l1.m()+i) = 1;
+        first = delta(l1,sumind);
+        auto S = Matrix(l2.m(),sumind.m());
+        for(auto i : range(l2.m()))
+            {
+            S(i,l1.m()+i) = 1;
+            }
+        second = matrixTensor(std::move(S),l2,sumind);
         }
-    second = matrixTensor(std::move(S),l2,sumind);
-    }
-
-void 
-plussers(IQIndex const& l1, 
-         IQIndex const& l2, 
-         IQIndex& sumind, 
-         IQTensor& first, IQTensor& second)
-    {
-    auto siq = stdx::reserve_vector<IndexQN>(l1.nindex()+l2.nindex());
-    for(auto iq1 : l1)
+    else
         {
-        auto s1 = Index(iq1.index.rawname(),iq1.m(),iq1.type());
-        siq.emplace_back(s1,iq1.qn);
-        }
-    for(auto iq2 : l2)
-        {
-        auto s2 = Index(iq2.index.rawname(),iq2.m(),iq2.type());
-        siq.emplace_back(s2,iq2.qn);
-        }
+        Error("plussers not yet implemented for QN case");
+        
+        auto siq = stdx::reserve_vector<QNInt>(l1.nblock()+l2.nblock());
+        for(auto n : range1(l1.nblock()))
+            {
+            siq.emplace_back(l1.qn(n),l1.blocksize(n));
+            }
+        for(auto n : range1(l2.nblock()))
+            {
+            siq.emplace_back(l2.qn(n),l2.blocksize(n));
+            }
 #ifdef DEBUG
-    if(siq.empty()) Error("siq is empty in plussers");
+        if(siq.empty()) Error("siq is empty in plussers");
 #endif
-    sumind = IQIndex(sumind.rawname(),std::move(siq),sumind.dir(),sumind.primeLevel());
-    first = IQTensor(dag(l1),sumind);
-    int n = 1;
-    for(auto iq1 : l1)
-        {
-        auto s1 = sumind.index(n);
-        auto D = Matrix(iq1.index.m(),s1.m());
-        auto minsize = std::min(iq1.index.m(),s1.m());
-        for(auto i : range(minsize)) D(i,i) = 1.0;
-        first += matrixTensor(move(D),iq1.index,s1);
-        ++n;
-        }
-    second = IQTensor(dag(l2),sumind);
-    for(auto iq2 : l2)
-        {
-        auto s2 = sumind.index(n);
-        auto D = Matrix(iq2.index.m(),s2.m());
-        auto minsize = std::min(iq2.index.m(),s2.m());
-        for(auto i : range(minsize)) D(i,i) = 1.0;
-        second += matrixTensor(move(D),iq2.index,s2);
-        ++n;
+        sumind = Index(sumind.rawname(),
+                       std::move(siq),
+                       sumind.dir(),
+                       sumind.type(),
+                       sumind.primeLevel());
+        //first = ITensor(dag(l1),sumind);
+        int n = 1;
+        for(auto j : range1(l1.nblock()))
+            {
+            auto D = Matrix(l1.blocksize(j),sumind.blocksize(n));
+            auto minsize = std::min(ncols(D),nrows(D));
+            for(auto i : range(minsize)) D(i,i) = 1.0;
+            //first += matrixTensor(move(D),iq1.index,s1);
+            //TODO: need the ability to add to a certain block of a QN ITensor
+            //      form may be that of QDiag...
+            ++n;
+            }
+        //second = ITensor(dag(l2),sumind);
+        for(auto j : range1(l2.nblock()))
+            {
+            auto D = Matrix(l2.blocksize(j),sumind.blocksize(n));
+            auto minsize = std::min(ncols(D),nrows(D));
+            for(auto i : range(minsize)) D(i,i) = 1.0;
+            //second += matrixTensor(move(D),iq2.index,s2);
+            ++n;
+            }
         }
     }
 
@@ -89,21 +91,18 @@ plussers(IQIndex const& l1,
 // Adds two MPSs but doesn't attempt to
 // orthogonalize them first
 //
-template <class MPSType>
-MPSType&
-addAssumeOrth(MPSType      & L,
-              MPSType const& R, 
+MPS&
+addAssumeOrth(MPS      & L,
+              MPS const& R, 
               Args const& args)
     {
-    using Tensor = typename MPSType::TensorT;
-
     auto N = L.N();
     if(R.N() != N) Error("Mismatched MPS sizes");
 
     L.primelinks(0,4);
 
-    auto first = vector<Tensor>(N);
-    auto second = vector<Tensor>(N);
+    auto first = vector<ITensor>(N);
+    auto second = vector<ITensor>(N);
 
     for(auto i : range1(N-1))
         {
@@ -127,14 +126,9 @@ addAssumeOrth(MPSType      & L,
 
     return L;
     }
-template MPS& addAssumeOrth(MPS & L,MPS const& R, Args const& args);
-template IQMPS& addAssumeOrth(IQMPS & L,IQMPS const& R, Args const& args);
-template MPO& addAssumeOrth(MPO & L,MPO const& R, Args const& args);
-template IQMPO& addAssumeOrth(IQMPO & L,IQMPO const& R, Args const& args);
 
-template <class Tensor>
 void 
-fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
+fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     {
     if(!itensor::isOrtho(psi_basis)) 
         Error("psi_basis must be orthogonolized.");
@@ -161,11 +155,9 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     psi_to_fit = psi_basis;
     psi_to_fit.Anc(1) = A;
     }
-template void fitWF(const MPSt<ITensor>& psi_basis, MPSt<ITensor>& psi_to_fit);
-template void fitWF(const MPSt<IQTensor>& psi_basis, MPSt<IQTensor>& psi_to_fit);
 
 bool 
-checkQNs(const IQMPS& psi)
+checkQNs(MPS const& psi)
     {
     const int N = psi.N();
 
@@ -236,7 +228,7 @@ checkQNs(const IQMPS& psi)
     }
 
 QN
-totalQN(const IQMPS& psi)
+totalQN(MPS const& psi)
     {
     const int center = findCenter(psi);
     if(center == -1)
