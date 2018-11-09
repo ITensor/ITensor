@@ -8,73 +8,71 @@
 
 namespace itensor {
 
-template <class Tensor>
 class LocalMPOSet
     {
-    std::vector<MPOt<Tensor>> const* Op_ = nullptr;
-    std::vector<LocalMPO<Tensor>> lmpo_;
+    std::vector<MPO> const* Op_ = nullptr;
+    std::vector<LocalMPO> lmpo_;
     public:
 
     LocalMPOSet() { }
 
-    LocalMPOSet(std::vector<MPOt<Tensor>> const& Op,
+    LocalMPOSet(std::vector<MPO> const& Op,
                 Args const& args = Args::global());
 
-    LocalMPOSet(std::vector<MPOt<Tensor>> const& H, 
-                std::vector<Tensor> const& LH, 
+    LocalMPOSet(std::vector<MPO> const& H, 
+                std::vector<ITensor> const& LH, 
                 int LHlim,
-                std::vector<Tensor> const& RH,
+                std::vector<ITensor> const& RH,
                 int RHlim,
                 Args const& args = Args::global());
 
     void
-    product(Tensor const& phi, 
-            Tensor & phip) const;
+    product(ITensor const& phi, 
+            ITensor & phip) const;
 
     Real
-    expect(Tensor const& phi) const;
+    expect(ITensor const& phi) const;
 
-    Tensor
-    deltaRho(Tensor const& AA, 
-             Tensor const& comb, 
+    ITensor
+    deltaRho(ITensor const& AA, 
+             ITensor const& comb, 
              Direction dir) const;
 
-    Tensor
+    ITensor
     diag() const;
 
-    template <class MPSType>
     void
     position(int b, 
-             MPSType const& psi);
+             MPS const& psi);
 
-    std::vector<Tensor>
+    std::vector<ITensor>
     L() const 
         { 
-        auto L = std::vector<Tensor>(lmpo_.size());
+        auto L = std::vector<ITensor>(lmpo_.size());
         for(auto n : range(lmpo_)) L.at(n) = lmpo_.at(n).L();
         return L;
         }
-    std::vector<Tensor>
+    std::vector<ITensor>
     R() const 
         { 
-        auto R = std::vector<Tensor>(lmpo_.size());
+        auto R = std::vector<ITensor>(lmpo_.size());
         for(auto n : range(lmpo_)) R.at(n) = lmpo_.at(n).R();
         return R;
         }
 
     void
-    L(std::vector<Tensor> const& nL)
+    L(std::vector<ITensor> const& nL)
         { 
         for(auto n : range(lmpo_)) lmpo_.at(n).L(nL.at(n));
         }
     void
-    R(std::vector<Tensor> const& nR)
+    R(std::vector<ITensor> const& nR)
         { 
         for(auto n : range(lmpo_)) lmpo_.at(n).R(nR.at(n));
         }
 
     void
-    shift(int j, Direction dir, Tensor const& A)
+    shift(int j, Direction dir, ITensor const& A)
         {
         for(auto n : range(lmpo_)) lmpo_[n].shift(j,dir,A);
         }
@@ -100,46 +98,41 @@ class LocalMPOSet
 
     };
 
-template <class Tensor>
-inline LocalMPOSet<Tensor>::
-LocalMPOSet(std::vector<MPOt<Tensor>> const& Op,
+inline LocalMPOSet::
+LocalMPOSet(std::vector<MPO> const& Op,
             Args const& args)
   : Op_(&Op),
     lmpo_(Op.size())
     { 
-    using LocalMPOT = LocalMPO<Tensor>;
     for(auto n : range(lmpo_.size()))
         {
-        lmpo_[n] = LocalMPOT(Op.at(n));
+        lmpo_[n] = LocalMPO(Op.at(n));
         }
     }
 
-template <class Tensor>
-inline LocalMPOSet<Tensor>::
-LocalMPOSet(std::vector<MPOt<Tensor>> const& H, 
-            std::vector<Tensor> const& LH, 
+inline LocalMPOSet::
+LocalMPOSet(std::vector<MPO> const& H, 
+            std::vector<ITensor> const& LH, 
             int LHlim,
-            std::vector<Tensor> const& RH,
+            std::vector<ITensor> const& RH,
             int RHlim,
             Args const& args)
   : Op_(&H),
     lmpo_(H.size())
     { 
-    using LocalMPOT = LocalMPO<Tensor>;
     for(auto n : range(lmpo_.size()))
         {
-        lmpo_[n] = LocalMPOT(H.at(n),LH.at(n),LHlim,RH.at(n),RHlim,args);
+        lmpo_[n] = LocalMPO(H.at(n),LH.at(n),LHlim,RH.at(n),RHlim,args);
         }
     }
 
-template <class Tensor>
-void inline LocalMPOSet<Tensor>::
-product(Tensor const& phi, 
-        Tensor & phip) const
+void inline LocalMPOSet::
+product(ITensor const& phi, 
+        ITensor & phip) const
     {
     lmpo_.front().product(phi,phip);
 
-    Tensor phi_n;
+    ITensor phi_n;
     for(auto n : range(1,lmpo_.size()))
         {
         lmpo_[n].product(phi,phi_n);
@@ -147,9 +140,8 @@ product(Tensor const& phi,
         }
     }
 
-template <class Tensor>
-Real inline LocalMPOSet<Tensor>::
-expect(Tensor const& phi) const
+Real inline LocalMPOSet::
+expect(ITensor const& phi) const
     {
     Real ex_ = 0;
     for(size_t n = 0; n < lmpo_.size(); ++n)
@@ -160,13 +152,12 @@ expect(Tensor const& phi) const
     return ex_;
     }
 
-template <class Tensor>
-Tensor inline LocalMPOSet<Tensor>::
-deltaRho(Tensor const& AA,
-         Tensor const& comb, 
+ITensor inline LocalMPOSet::
+deltaRho(ITensor const& AA,
+         ITensor const& comb, 
          Direction dir) const
     {
-    Tensor delta = lmpo_.front().deltaRho(AA,comb,dir);
+    ITensor delta = lmpo_.front().deltaRho(AA,comb,dir);
     for(auto n : range(1,lmpo_.size()))
         {
         delta += lmpo_[n].deltaRho(AA,comb,dir);
@@ -174,11 +165,10 @@ deltaRho(Tensor const& AA,
     return delta;
     }
 
-template <class Tensor>
-Tensor inline LocalMPOSet<Tensor>::
+ITensor inline LocalMPOSet::
 diag() const
     {
-    Tensor D = lmpo_.front().diag();
+    ITensor D = lmpo_.front().diag();
     for(auto n : range(1,lmpo_.size()))
         {
         D += lmpo_[n].diag();
@@ -186,11 +176,9 @@ diag() const
     return D;
     }
 
-template <class Tensor>
-template <class MPSType> 
-void inline LocalMPOSet<Tensor>::
+void inline LocalMPOSet::
 position(int b, 
-         MPSType const& psi)
+         MPS const& psi)
     {
     for(auto n : range(lmpo_.size()))
         {
@@ -198,8 +186,7 @@ position(int b,
         }
     }
 
-template <class Tensor>
-void inline LocalMPOSet<Tensor>::
+void inline LocalMPOSet::
 numCenter(int val)
     {
     for(auto n : range(lmpo_.size()))

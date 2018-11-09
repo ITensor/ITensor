@@ -17,12 +17,11 @@ namespace itensor {
 // derived class.
 //
 
-template<class Tensor>
 class DMRGObserver : public Observer
     {
     public:
     
-    DMRGObserver(MPSt<Tensor> const& psi, 
+    DMRGObserver(MPS const& psi, 
                  Args const& args = Args::global());
 
     virtual ~DMRGObserver() { }
@@ -36,7 +35,7 @@ class DMRGObserver : public Observer
     void virtual
     lastSpectrum(Spectrum const& spec) { last_spec_ = spec; }
 
-    MPSt<Tensor> const& 
+    MPS const& 
     psi() const { return psi_; }
     
     Spectrum const&
@@ -46,7 +45,7 @@ class DMRGObserver : public Observer
 
     /////////////
 
-    MPSt<Tensor> const& psi_;
+    MPS const& psi_;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
     int max_eigs;
@@ -59,9 +58,8 @@ class DMRGObserver : public Observer
 
     }; // class DMRGObserver
 
-template<class Tensor>
-inline DMRGObserver<Tensor>::
-DMRGObserver(MPSt<Tensor> const& psi, Args const& args) 
+inline DMRGObserver::
+DMRGObserver(MPS const& psi, Args const& args) 
     : 
     psi_(psi),
     energy_errgoal(args.getReal("EnergyErrgoal",-1)), 
@@ -74,8 +72,7 @@ DMRGObserver(MPSt<Tensor> const& psi, Args const& args)
     { 
     }
 
-template<class Tensor>
-void inline DMRGObserver<Tensor>::
+void inline DMRGObserver::
 measure(Args const& args)
     {
     auto N = psi_.N();
@@ -145,8 +142,7 @@ measure(Args const& args)
     }
 
 
-template<class Tensor>
-bool inline DMRGObserver<Tensor>::
+bool inline DMRGObserver::
 checkDone(Args const& args)
     {
     const int sw = args.getInt("Sweep",0);

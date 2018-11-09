@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITERATIVESOLVERS_H
 #define __ITENSOR_ITERATIVESOLVERS_H
 #include "itensor/util/range.h"
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 #include "itensor/tensor/algs.h"
 
 

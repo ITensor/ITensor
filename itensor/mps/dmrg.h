@@ -15,6 +15,21 @@
 
 namespace itensor {
 
+template<class LocalOpT>
+Real
+DMRGWorker(MPS & psi,
+           LocalOpT & PH,
+           Sweeps const& sweeps,
+           Args const& args = Args::global());
+
+template<class LocalOpT>
+Real
+DMRGWorker(MPS & psi,
+           LocalOpT & PH,
+           Sweeps const& sweeps,
+           DMRGObserver & obs,
+           Args args = Args::global());
+
 //
 // Available DMRG methods:
 //
@@ -22,14 +37,13 @@ namespace itensor {
 //
 //DMRG with an MPO
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const Sweeps& sweeps,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS & psi, 
+     MPO const& H, 
+     Sweeps const& sweeps,
+     Args const& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,args);
+    LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
@@ -37,15 +51,14 @@ dmrg(MPSt<Tensor>& psi,
 //
 //DMRG with an MPO and custom DMRGObserver
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const Sweeps& sweeps, 
-     DMRGObserver<Tensor>& obs,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     MPO const& H, 
+     Sweeps const& sweeps, 
+     DMRGObserver & obs,
+     Args const& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,args);
+    LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
@@ -55,15 +68,15 @@ dmrg(MPSt<Tensor>& psi,
 // LH - H1 - H2 - ... - HN - RH
 //(ok if one or both of LH, RH default constructed)
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const Tensor& LH, const Tensor& RH,
-     const Sweeps& sweeps,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     MPO const& H, 
+     ITensor const& LH, 
+     ITensor const& RH,
+     Sweeps const& sweeps,
+     Args const& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,LH,RH,args);
+    LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
@@ -72,16 +85,16 @@ dmrg(MPSt<Tensor>& psi,
 //DMRG with an MPO and boundary tensors LH, RH
 //and a custom observer
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const Tensor& LH, const Tensor& RH,
-     const Sweeps& sweeps, 
-     DMRGObserver<Tensor>& obs,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     MPO const& H, 
+     ITensor const& LH, 
+     ITensor const& RH,
+     Sweeps const& sweeps, 
+     DMRGObserver& obs,
+     Args const& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,LH,RH,args);
+    LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
@@ -90,14 +103,13 @@ dmrg(MPSt<Tensor>& psi,
 //DMRG with a set of MPOs (lazily summed)
 //(H vector is 0-indexed)
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const std::vector<MPOt<Tensor> >& Hset, 
-     const Sweeps& sweeps,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     std::vector<MPO> const& Hset, 
+     Sweeps const& sweeps,
+     Args const& args = Global::args())
     {
-    LocalMPOSet<Tensor> PH(Hset,args);
+    LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
@@ -106,15 +118,14 @@ dmrg(MPSt<Tensor>& psi,
 //DMRG with a set of MPOs and a custom DMRGObserver
 //(H vector is 0-indexed)
 //
-template <class Tensor>
-Real 
-dmrg(MPSt<Tensor>& psi, 
-     const std::vector<MPOt<Tensor> >& Hset, 
-     const Sweeps& sweeps, 
-     DMRGObserver<Tensor>& obs,
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     std::vector<MPO> const& Hset, 
+     Sweeps const& sweeps, 
+     DMRGObserver& obs,
+     Args const& args = Global::args())
     {
-    LocalMPOSet<Tensor> PH(Hset,args);
+    LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
@@ -129,15 +140,14 @@ dmrg(MPSt<Tensor>& psi,
 //          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
 //          etc.
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const std::vector<MPSt<Tensor> >& psis, 
-     const Sweeps& sweeps, 
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS& psi, 
+     MPO const& H, 
+     std::vector<MPS> const& psis, 
+     Sweeps const& sweeps, 
+     Args const& args = Global::args())
     {
-    LocalMPO_MPS<Tensor> PH(H,psis,args);
+    LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
@@ -153,16 +163,15 @@ dmrg(MPSt<Tensor>& psi,
 //          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
 //          etc.
 //
-template <class Tensor>
-Real
-dmrg(MPSt<Tensor>& psi, 
-     const MPOt<Tensor>& H, 
-     const std::vector<MPSt<Tensor> >& psis, 
-     const Sweeps& sweeps, 
-     DMRGObserver<Tensor>& obs, 
-     const Args& args = Global::args())
+Real inline
+dmrg(MPS & psi, 
+     MPO const& H, 
+     std::vector<MPS> const& psis, 
+     Sweeps const& sweeps, 
+     DMRGObserver& obs, 
+     Args const& args = Global::args())
     {
-    LocalMPO_MPS<Tensor> PH(H,psis,args);
+    LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
@@ -173,25 +182,25 @@ dmrg(MPSt<Tensor>& psi,
 // DMRGWorker
 //
 
-template <class Tensor, class LocalOpT>
-Real inline
-DMRGWorker(MPSt<Tensor>& psi,
-           LocalOpT& PH,
-           const Sweeps& sweeps,
-           const Args& args = Global::args())
+template<class LocalOpT>
+Real
+DMRGWorker(MPS & psi,
+           LocalOpT & PH,
+           Sweeps const& sweeps,
+           Args const& args)
     {
-    DMRGObserver<Tensor> obs(psi,args);
+    DMRGObserver obs(psi,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
-template <class Tensor, class LocalOpT>
+template<class LocalOpT>
 Real
-DMRGWorker(MPSt<Tensor>& psi,
-           LocalOpT& PH,
-           const Sweeps& sweeps,
-           DMRGObserver<Tensor>& obs,
-           Args args = Global::args())
+DMRGWorker(MPS & psi,
+           LocalOpT & PH,
+           Sweeps const& sweeps,
+           DMRGObserver & obs,
+           Args args)
     {
     const bool quiet = args.getBool("Quiet",false);
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
