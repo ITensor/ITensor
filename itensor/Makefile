@@ -33,8 +33,8 @@ SOURCES+= svd.cc
 SOURCES+= global.cc
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpsalgs.cc 
-#SOURCES+= mps/mpo.cc 
-#SOURCES+= mps/mpoalgs.cc 
+SOURCES+= mps/mpo.cc 
+SOURCES+= mps/mpoalgs.cc 
 #SOURCES+= mps/autompo.cc
 
 ####################################

@@ -315,14 +315,17 @@ norm(MPS const& psi);
 Real
 normalize(MPS & psi);
 
+template<typename MPSType>
 Index
-linkInd(MPS const& psi, int b);
+linkInd(MPSType const& psi, int b);
 
+template<typename MPSType>
 Index
-rightLinkInd(MPS const& psi, int i);
+rightLinkInd(MPSType const& psi, int i);
 
+template<typename MPSType>
 Index
-leftLinkInd(MPS const& psi, int i);
+leftLinkInd(MPSType const& psi, int i);
 
 Real
 averageM(MPS const& psi);

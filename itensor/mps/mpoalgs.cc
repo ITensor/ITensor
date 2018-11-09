@@ -19,24 +19,22 @@ using std::pair;
 using std::make_pair;
 using std::string;
 
-template<class MPOType>
 void 
-nmultMPO(MPOType const& Aorig, 
-         MPOType const& Borig, 
-         MPOType& res,
+nmultMPO(MPO const& Aorig, 
+         MPO const& Borig, 
+         MPO& res,
          Args args)
     {
-    using Tensor = typename MPOType::TensorT;
 
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
 
-    if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
+    if(Aorig.N() != Borig.N()) Error("nmultMPO(MPO): Mismatched N");
     const int N = Borig.N();
 
     auto A = Aorig;
     A.position(1);
 
-    MPOType B;
+    MPO B;
     if(&Borig == &Aorig)
         {
         B = A;
@@ -53,7 +51,7 @@ nmultMPO(MPOType const& Aorig,
     res.primelinks(0,4);
     res.mapprime(1,2,Site);
 
-    Tensor clust,nfork;
+    ITensor clust,nfork;
     for(int i = 1; i < N; ++i)
         {
         if(i == 1) 
@@ -67,13 +65,13 @@ nmultMPO(MPOType const& Aorig,
 
         if(i == N-1) break;
 
-        nfork = Tensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
+        nfork = ITensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
 
         denmatDecomp(clust,res.Anc(i),nfork,Fromleft,args);
 
         auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
-        res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
+        res.Anc(i+1) = ITensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -83,16 +81,12 @@ nmultMPO(MPOType const& Aorig,
     res.mapprime(2,1,Site);
     res.orthogonalize();
 
-    }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
-template
-void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, Args);
-template
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Args);
+    }//void nmultMPO(const MPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 
-template<class Tensor>
-MPSt<Tensor>
-applyMPO(MPOt<Tensor> const& K,
-         MPSt<Tensor> const& x,
+
+MPS
+applyMPO(MPO const& K,
+         MPS const& x,
          Args const& args)
     {
     auto method = args.getString("Method","DensityMatrix");
@@ -103,7 +97,7 @@ applyMPO(MPOt<Tensor> const& K,
     auto argsp = args;
     argsp.add("Normalize=",normalize);
 
-    MPSt<Tensor> res;
+    MPS res;
     if(method == "DensityMatrix")
         res = exactApplyMPO(K,x,argsp);
     else if(method == "Fit")
@@ -113,18 +107,12 @@ applyMPO(MPOt<Tensor> const& K,
 
     return res;
     }
-template
-MPS
-applyMPO(MPO const& K, MPS const& x, Args const&);
-template
-IQMPS
-applyMPO(IQMPO const& K, IQMPS const& x, Args const&);
 
-template<class Tensor>
-MPSt<Tensor>
-applyMPO(MPOt<Tensor> const& K,
-         MPSt<Tensor> const& x,
-         MPSt<Tensor> const& x0,
+
+MPS
+applyMPO(MPO const& K,
+         MPS const& x,
+         MPS const& x0,
          Args const& args)
     {
     auto method = args.getString("Method","Fit");
@@ -135,7 +123,7 @@ applyMPO(MPOt<Tensor> const& K,
     auto argsp = args;
     argsp.add("Normalize=",normalize);
 
-    MPSt<Tensor> res = x0;
+    MPS res = x0;
     if(method == "DensityMatrix")
         Error("applyMPO method 'DensityMatrix' does not accept an input MPS");
     else if(method == "Fit")
@@ -145,17 +133,11 @@ applyMPO(MPOt<Tensor> const& K,
 
     return res;
     }
-template
-MPS
-applyMPO(MPO const& K, MPS const& x, MPS const& x0, Args const&);
-template
-IQMPS
-applyMPO(IQMPO const& K, IQMPS const& x, IQMPS const& x0, Args const&);
 
-template<class Tensor>
-MPSt<Tensor>
-exactApplyMPO(MPOt<Tensor> const& K,
-              MPSt<Tensor> const& psi,
+
+MPS
+exactApplyMPO(MPO const& K,
+              MPS const& psi,
               Args const& args)
     {
     auto cutoff = args.getReal("Cutoff",1E-13);
@@ -200,7 +182,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
-    auto E = std::vector<Tensor>(N+1);
+    auto E = std::vector<ITensor>(N+1);
     E.at(1) = psi.A(1)*K.A(1)*Kc.A(1)*psic.A(1);
     for(int j = 2; j < N; ++j)
         {
@@ -214,7 +196,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     O.noprime(siteType);
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
-    Tensor U,D;
+    ITensor U,D;
     dargs.add("IndexName=",nameint("a",N));
     auto spec = diagHermitian(rho,U,D,dargs);
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
@@ -253,79 +235,53 @@ exactApplyMPO(MPOt<Tensor> const& K,
 
     return res;
     }
-template
-MPS
-exactApplyMPO(MPO const& K, MPS const& x, Args const&);
-template
-IQMPS
-exactApplyMPO(IQMPO const& K, IQMPS const& x, Args const&);
 
-template<class Tensor>
-MPSt<Tensor>
-exactApplyMPO(MPSt<Tensor> const& x,
-              MPOt<Tensor> const& K,
+
+MPS
+exactApplyMPO(MPS const& x,
+              MPO const& K,
               Args const& args)
     {
     return exactApplyMPO(K,x,args);
     }
-template
-MPS
-exactApplyMPO(MPS const& x, MPO const& K, Args const&);
-template
-IQMPS
-exactApplyMPO(IQMPS const& x, IQMPO const& K, Args const&);
 
-template<class Tensor>
+
 void 
-exactApplyMPO(MPSt<Tensor> const& x, 
-              MPOt<Tensor> const& K, 
-              MPSt<Tensor>      & res,
+exactApplyMPO(MPS const& x, 
+              MPO const& K, 
+              MPS      & res,
               Args const& args)
     {
     res = exactApplyMPO(K,x);
     }
-template
-void 
-exactApplyMPO(MPS const& x, MPO const& K, MPS& res, Args const&);
-template
-void 
-exactApplyMPO(IQMPS const& x, IQMPO const& K, IQMPS& res, Args const&);
 
-template<class Tensor>
-MPSt<Tensor>
-fitApplyMPO(MPSt<Tensor> const& psi,
-            MPOt<Tensor> const& K,
+
+MPS
+fitApplyMPO(MPS const& psi,
+            MPO const& K,
             Args const& args)
     {
-    MPSt<Tensor> res;
+    MPS res;
     fitApplyMPO(1.,psi,K,res,args);
     return res;
     }
-template
-MPSt<ITensor> fitApplyMPO(MPSt<ITensor> const& psi, MPOt<ITensor> const& K, Args const& args);
-template
-MPSt<IQTensor> fitApplyMPO(MPSt<IQTensor> const& psi, MPOt<IQTensor> const& K, Args const& args);
 
-template<class Tensor>
+
 void
-fitApplyMPO(MPSt<Tensor> const& psi,
-            MPOt<Tensor> const& K,
-            MPSt<Tensor>& res,
+fitApplyMPO(MPS const& psi,
+            MPO const& K,
+            MPS& res,
             Args const& args)
     {
     fitApplyMPO(1.,psi,K,res,args);
     }
-template
-void fitApplyMPO(const MPSt<ITensor>& psi, const MPOt<ITensor>& K, MPSt<ITensor>& res, const Args& args);
-template
-void fitApplyMPO(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& K, MPSt<IQTensor>& res, const Args& args);
 
-template<class Tensor>
+
 void
 fitApplyMPO(Real fac,
-            MPSt<Tensor> const& psi,
-            MPOt<Tensor> const& K,
-            MPSt<Tensor>& res,
+            MPS const& psi,
+            MPO const& K,
+            MPS& res,
             Args const& args)
     {
     auto nsweep = args.getInt("Nsweep",1);
@@ -336,27 +292,12 @@ fitApplyMPO(Real fac,
     if(maxm >= 1) sweeps.maxm() = maxm;
     fitApplyMPO(fac,psi,K,res,sweeps,args);
     }
-template
-void
-fitApplyMPO(Real fac,
-            MPSt<ITensor> const& psi,
-            MPOt<ITensor> const& K,
-            MPSt<ITensor>& res,
-            Args const& args);
-template
-void
-fitApplyMPO(Real fac,
-            MPSt<IQTensor> const& psi,
-            MPOt<IQTensor> const& K,
-            MPSt<IQTensor>& res,
-            Args const& args);
 
-template<class Tensor>
 void
 fitApplyMPO(Real fac,
-            MPSt<Tensor> const& psi,
-            MPOt<Tensor> const& K,
-            MPSt<Tensor>& res,
+            MPS const& psi,
+            MPO const& K,
+            MPS& res,
             Sweeps const& sweeps,
             Args args)
     {
@@ -369,7 +310,7 @@ fitApplyMPO(Real fac,
     if(not res) res = origPsi;
     res.position(1);
 
-    auto BK = vector<Tensor>(N+2);
+    auto BK = vector<ITensor>(N+2);
     BK.at(N) = origPsi.A(N)*K.A(N)*dag(prime(res.A(N)));
     for(auto n = N-1; n > 2; --n)
         {
@@ -401,7 +342,7 @@ fitApplyMPO(Real fac,
             wfK *= fac;
 
             if(normalize) wfK /= norm(wfK);
-            auto PH = LocalOp<Tensor>(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
+            auto PH = LocalOp(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
             auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
 
             if(verbose)
@@ -422,59 +363,27 @@ fitApplyMPO(Real fac,
             }
         }
     }
-template
-void
-fitApplyMPO(Real fac,
-            MPSt<ITensor> const& psi,
-            MPOt<ITensor> const& K,
-            MPSt<ITensor>& res, 
-            Sweeps const&, 
-            Args args);
-template
-void
-fitApplyMPO(Real fac,
-            MPSt<IQTensor> const& psi,
-            MPOt<IQTensor> const& K,
-            MPSt<IQTensor>& res, 
-            Sweeps const&, 
-            Args args);
 
-template<class Tensor>
+
 Real
-fitApplyMPO(MPSt<Tensor> const& psiA, 
+fitApplyMPO(MPS const& psiA, 
             Real mpofac,
-            MPSt<Tensor> const& psiB,
-            MPOt<Tensor> const& K,
-            MPSt<Tensor>& res,
+            MPS const& psiB,
+            MPO const& K,
+            MPS& res,
             Args const& args)
     {
     return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,args);
     }
-template
-Real
-fitApplyMPO(MPSt<ITensor> const& psiA, 
-            Real mpofac,
-            MPSt<ITensor> const& psiB,
-            MPOt<ITensor> const& K,
-            MPSt<ITensor> & res,
-            Args const& args);
-template
-Real
-fitApplyMPO(MPSt<IQTensor> const& psiA, 
-            Real mpofac,
-            MPSt<IQTensor> const& psiB,
-            MPOt<IQTensor> const& K,
-            MPSt<IQTensor> & res,
-            Args const& args);
 
-template<class Tensor>
+
 Real
 fitApplyMPO(Real mpsfac,
-            MPSt<Tensor> const& psiA, 
+            MPS const& psiA, 
             Real mpofac,
-            MPSt<Tensor> const& psiB,
-            MPOt<Tensor> const& K,
-            MPSt<Tensor>& res,
+            MPS const& psiB,
+            MPO const& K,
+            MPS& res,
             Args const& args)
     {
     if(&psiA == &res || &psiB == &res)
@@ -486,7 +395,7 @@ fitApplyMPO(Real mpsfac,
 
     res.position(1);
 
-    vector<Tensor> B(N+2),
+    vector<ITensor> B(N+2),
                    BK(N+2);
 
     B.at(N) = psiA.A(N)*dag(prime(res.A(N),Link));
@@ -502,15 +411,15 @@ fitApplyMPO(Real mpsfac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor lwf = (B.at(b-1) ? B.at(b-1)*psiA.A(b) : psiA.A(b));
-            Tensor rwf = (B.at(b+2) ? psiA.A(b+1)*B.at(b+2) : psiA.A(b+1));
+            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA.A(b) : psiA.A(b));
+            ITensor rwf = (B.at(b+2) ? psiA.A(b+1)*B.at(b+2) : psiA.A(b+1));
 
-            Tensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB.A(b) : psiB.A(b));
+            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB.A(b) : psiB.A(b));
             lwfK *= K.A(b);
-            Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
+            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
             rwfK *= K.A(b+1);
 
-            Tensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
+            ITensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
             wf.noprime();
 
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
@@ -536,134 +445,99 @@ fitApplyMPO(Real mpsfac,
 
     return olp.real();
     }
-template
-Real
-fitApplyMPO(Real mpsfac,
-            MPSt<ITensor> const& psiA, 
-            Real mpofac,
-            MPSt<ITensor> const& psiB,
-            MPOt<ITensor> const& K,
-            MPSt<ITensor>& res,
-            Args const& args);
-template
-Real
-fitApplyMPO(Real mpsfac,
-            MPSt<IQTensor> const& psiA, 
-            Real mpofac,
-            MPSt<IQTensor> const& psiB,
-            MPOt<IQTensor> const& K,
-            MPSt<IQTensor> & res,
-            Args const& args);
 
-template<class Tensor>
-void 
-expsmallH(MPOt<Tensor> const& H, 
-          MPOt<Tensor> & K, 
-          Real tau, 
-          Real Etot, 
-          Real Kcutoff,
-          Args args)
-    {
-    int ord = args.getInt("ExpHOrder",50);
-    bool verbose = args.getBool("Verbose",false);
-    args.add("Cutoff",MIN_CUT);
-    args.add("Maxm",MAX_M);
+///void 
+///expsmallH(MPO const& H, 
+///          MPO & K, 
+///          Real tau, 
+///          Real Etot, 
+///          Real Kcutoff,
+///          Args args)
+///    {
+///    int ord = args.getInt("ExpHOrder",50);
+///    bool verbose = args.getBool("Verbose",false);
+///    args.add("Cutoff",MIN_CUT);
+///    args.add("Maxm",MAX_M);
+///
+///    MPO Hshift(H.sites());
+///    Hshift.Anc(1) *= -Etot;
+///    Hshift.plusEq(H,args);
+///    Hshift.Anc(1) *= -tau;
+///
+///    vector<MPO > xx(2);
+///    xx.at(0) = MPO(H.sites());
+///    xx.at(1) = Hshift;
+///
+///    //
+///    // Exponentiate by building up a Taylor series in reverse:
+///    //      o=1    o=2      o=3      o=4  
+///    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
+///    //
+///    if(verbose) cout << "Exponentiating H, order: " << endl;
+///    for(int o = ord; o >= 1; --o)
+///        {
+///        if(verbose) 
+///            {
+///            cout << o << " "; 
+///            cout.flush();
+///            }
+///        if(o > 1) xx[1].Anc(1) *= 1.0 / o;
+///
+///        K = sum(xx,args);
+///        if(o > 1)
+///            nmultMPO(K,Hshift,xx[1],args);
+///        }
+///    if(verbose) cout << endl;
+///    }
 
-    MPOt<Tensor> Hshift(H.sites());
-    Hshift.Anc(1) *= -Etot;
-    Hshift.plusEq(H,args);
-    Hshift.Anc(1) *= -tau;
 
-    vector<MPOt<Tensor> > xx(2);
-    xx.at(0) = MPOt<Tensor>(H.sites());
-    xx.at(1) = Hshift;
+//void 
+//expH(MPO const& H, 
+//     MPO& K, 
+//     Real tau, 
+//     Real Etot,
+//     Real Kcutoff, 
+//     int ndoub, 
+//     Args args)
+//    {
+//    const bool verbose = args.getBool("Verbose",false);
+//    Real ttau = tau / pow(2.0,ndoub);
+//    //cout << "ttau in expH is " << ttau << endl;
+//
+//    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
+//    expsmallH(H, K, ttau,Etot,smallcut,args);
+//
+//    if(verbose) cout << "Starting doubling in expH" << endl;
+//    for(int doub = 1; doub <= ndoub; ++doub)
+//        {
+//        //cout << " Double step " << doub << endl;
+//        if(doub == ndoub) 
+//            args.add("Cutoff",Kcutoff);
+//        else
+//            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
+//        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
+//        MPO KK;
+//        nmultMPO(K,K,KK,args);
+//        K = KK;
+//        /*
+//        if(doub == ndoub)
+//            {
+//            cout << "step " << doub << ", K is " << endl;
+//            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
+//            for(int i = 1; i <= N; i++)
+//                cout << i SP K.A[i];
+//            }
+//        */
+//        }
+//    }
 
-    //
-    // Exponentiate by building up a Taylor series in reverse:
-    //      o=1    o=2      o=3      o=4  
-    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
-    //
-    if(verbose) cout << "Exponentiating H, order: " << endl;
-    for(int o = ord; o >= 1; --o)
-        {
-        if(verbose) 
-            {
-            cout << o << " "; 
-            cout.flush();
-            }
-        if(o > 1) xx[1].Anc(1) *= 1.0 / o;
-
-        K = sum(xx,args);
-        if(o > 1)
-            nmultMPO(K,Hshift,xx[1],args);
-        }
-    if(verbose) cout << endl;
-    }
-template
-void 
-expsmallH(MPO const& H, MPO & K, Real tau, Real Etot, Real Kcutoff, Args args);
-template
-void 
-expsmallH(IQMPO const& H, IQMPO & K, Real tau, Real Etot, Real Kcutoff, Args args);
-
-template<class Tensor>
-void 
-expH(MPOt<Tensor> const& H, 
-     MPOt<Tensor>& K, 
-     Real tau, 
-     Real Etot,
-     Real Kcutoff, 
-     int ndoub, 
-     Args args)
-    {
-    const bool verbose = args.getBool("Verbose",false);
-    Real ttau = tau / pow(2.0,ndoub);
-    //cout << "ttau in expH is " << ttau << endl;
-
-    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
-    expsmallH(H, K, ttau,Etot,smallcut,args);
-
-    if(verbose) cout << "Starting doubling in expH" << endl;
-    for(int doub = 1; doub <= ndoub; ++doub)
-        {
-        //cout << " Double step " << doub << endl;
-        if(doub == ndoub) 
-            args.add("Cutoff",Kcutoff);
-        else
-            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
-        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
-        MPOt<Tensor> KK;
-        nmultMPO(K,K,KK,args);
-        K = KK;
-        /*
-        if(doub == ndoub)
-            {
-            cout << "step " << doub << ", K is " << endl;
-            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
-            for(int i = 1; i <= N; i++)
-                cout << i SP K.A[i];
-            }
-        */
-        }
-    }
-template
-void 
-expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, Args);
-template
-void 
-expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, Args);
-
-template<class Tensor>
 void
-applyExpH(MPSt<Tensor> const& psi, 
-          MPOt<Tensor> const& H, 
+applyExpH(MPS const& psi, 
+          MPO const& H, 
           Real tau, 
-          MPSt<Tensor>& res, 
+          MPS& res, 
           Args const& args)
     {
-    //using IndexT = typename Tensor::index_type;
-    using MPST = MPSt<Tensor>;
-
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
 
     const int order = args.getInt("Order",10);
@@ -673,7 +547,7 @@ applyExpH(MPSt<Tensor> const& psi,
 
     res.position(1);
 
-    vector<Tensor> lastB(N+2),
+    vector<ITensor> lastB(N+2),
                    B(N+2),
                    BH(N+2);
 
@@ -687,7 +561,7 @@ applyExpH(MPSt<Tensor> const& psi,
 
     lastB = B;
 
-    MPST last(psi);
+    MPS last(psi);
 
     bool up = true;
 
@@ -701,7 +575,7 @@ applyExpH(MPSt<Tensor> const& psi,
             {
             for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
                 {
-                Tensor lwf,rwf,
+                ITensor lwf,rwf,
                        lwfH,rwfH;
 
                 if(up)
@@ -766,26 +640,16 @@ applyExpH(MPSt<Tensor> const& psi,
         } // for ord
 
     }
-template
-void
-applyExpH(const MPSt<ITensor>& psi, const MPOt<ITensor>& H, Real tau, MPSt<ITensor>& res, const Args& args);
-template
-void
-applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const Args& args);
-
 
 //
 // For now this is unsupported
 //
-template<class Tensor>
 void 
-zipUpApplyMPO(MPSt<Tensor> const& psi, 
-              MPOt<Tensor> const& K, 
-              MPSt<Tensor>& res, 
+zipUpApplyMPO(MPS const& psi, 
+              MPO const& K, 
+              MPS& res, 
               Args const& args)
     {
-    using IndexT = typename Tensor::index_type;
-
     const
     bool allow_arb_position = args.getBool("AllowArbPosition",false);
 
@@ -822,7 +686,7 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
     res.primelinks(0,4);
     res.mapprime(0,1,Site);
 
-    Tensor clust,nfork;
+    ITensor clust,nfork;
     vector<int> midsize(N);
     int maxdim = 1;
     for(int i = 1; i < N; i++)
@@ -831,18 +695,18 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
         else { clust = nfork * (psi.A(i) * K.A(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
-        IndexT oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
-        nfork = Tensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
+        Index oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
+        nfork = ITensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
-        IndexT mid = commonIndex(res.A(i),nfork,Link);
+        Index mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.dag();
         midsize[i] = mid.m();
         maxdim = std::max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
-        res.Anc(i+1) = Tensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
+        res.Anc(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
@@ -853,12 +717,6 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
     res.mapprime(1,0,Site);
     res.position(1);
     } //void zipUpApplyMPO
-template
-void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args& args);
-template
-void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
 
 
 } //namespace itensor

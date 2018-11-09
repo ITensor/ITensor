@@ -39,7 +39,7 @@ class MPO : private MPS
     using Parent::leftLim;
 
     using Parent::A;
-    using Parent::Aref;
+    using Parent::Anc;
     using Parent::Aref;
     using Parent::setA;
 
@@ -53,9 +53,9 @@ class MPO : private MPS
     void
     logRefNorm(Real lrn) { logrefNorm_ = lrn; }
 
-    MPO&
-    plusEq(MPO const& R,
-           Args const& args = Args::global());
+    //MPO&
+    //plusEq(MPO const& R,
+    //       Args const& args = Args::global());
 
     using Parent::mapprime;
     using Parent::primelinks;
@@ -163,10 +163,10 @@ findCenter(MPO const& psi);
 void
 checkQNs(MPO const& psi);
 
-MPO
-sum(MPO L, 
-    MPO const& R, 
-    Args const& args = Args::global());
+//MPO
+//sum(MPO L, 
+//    MPO const& R, 
+//    Args const& args = Args::global());
 
 //<psi|H|phi>
 void 
@@ -418,7 +418,5 @@ exactApplyMPO(MPS const& x,
               Args const& args = Args::global());
 
 } //namespace itensor
-
-#include "mpo_impl.h"
 
 #endif

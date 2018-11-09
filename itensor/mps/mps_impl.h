@@ -126,20 +126,23 @@ normalize(MPS & psi)
     return nrm;
     }
 
-Index inline
-linkInd(MPS const& psi, int b)
+template<typename MPSType>
+Index 
+linkInd(MPSType const& psi, int b)
     { 
     return commonIndex(psi.A(b),psi.A(b+1),Link); 
     }
 
-Index inline
-rightLinkInd(MPS const& psi, int i)
+template<typename MPSType>
+Index
+rightLinkInd(MPSType const& psi, int i)
     { 
     return commonIndex(psi.A(i),psi.A(i+1),Link); 
     }
 
-Index inline
-leftLinkInd(MPS const& psi, int i)
+template<typename MPSType>
+Index
+leftLinkInd(MPSType const& psi, int i)
     { 
     return commonIndex(psi.A(i),psi.A(i-1),Link); 
     }
