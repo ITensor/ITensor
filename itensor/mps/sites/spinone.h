@@ -37,14 +37,14 @@ class SpinOneSite
 
     SpinOneSite(int n, Args const& args = Args::global())
         {
-        auto conserveqn = args.getBool("ConserveQNs",false);
-        auto conserveSz = args.getBool("ConserveSz",false);
-        if(conserveqn || conserveSz)
+        auto conserveqns = args.getBool("ConserveQNs",false);
+        auto conserveSz = args.getBool("ConserveSz",conserveqns);
+        if(conserveSz)
             {
             s = Index{nameint("S=1 site=",n),
                               QN("Sz=",+2),1,
                               QN("Sz=", 0),1,
-                              QN("Sz=",-2),1,Out,Site};
+                              QN("Sz=",-2),1,Site};
             }
         else
             {

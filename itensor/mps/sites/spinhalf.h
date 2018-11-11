@@ -23,13 +23,13 @@ class SpinHalfSite
 
     SpinHalfSite(int n, Args const& args = Args::global())
         {
-        auto conserveqn = args.getBool("ConserveQNs",false);
-        auto conserveSz = args.getBool("ConserveSz",false);
-        if(conserveqn || conserveSz)
+        auto conserveqns = args.getBool("ConserveQNs",false);
+        auto conserveSz = args.getBool("ConserveSz",conserveqns);
+        if(conserveSz)
             {
             s = Index{nameint("S=1/2 ",n),
                       QN("Sz=",+1),1,
-                      QN("Sz=",-1),1,Out,Site};
+                      QN("Sz=",-1),1,Site};
             }
         else
             {

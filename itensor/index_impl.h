@@ -21,8 +21,8 @@ struct ArrowM
 
 ArrowM inline
 fill(std::vector<QNInt> const& v,
-     Arrow dir = Out,
-     IndexType type = Link) 
+     IndexType type = Link,
+     Arrow dir = Out)
     { 
     return ArrowM(dir,type,0l);
     }

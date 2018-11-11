@@ -14,43 +14,43 @@ using Hubbard = BasicSiteSet<HubbardSite>;
 
 class HubbardSite
     {
-    IQIndex s;
+    Index s;
     public:
 
     HubbardSite() { }
 
-    HubbardSite(IQIndex I) : s(I) { }
+    HubbardSite(Index I) : s(I) { }
 
     HubbardSite(int n, Args const& args = Args::global())
         {
-        auto conserveNf = args.getBool("ConserveNf",true);
-        auto conserveSz = args.getBool("ConserveSz",true);
+        auto conserveQNs = args.getBool("ConserveQNs",true);
+        auto conserveNf = args.getBool("ConserveNf",conserveQNs);
+        auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
         if(conserveNf)
             {
-            s = IQIndex{nameint("site=",n),
-                    Index(nameint("Emp ",n),1,Site), QN("Sz=", 0,"Nf=",0),
-                    Index(nameint("Up ",n),1,Site),  QN("Sz=",Up,"Nf=",1),
-                    Index(nameint("Dn ",n),1,Site),  QN("Sz=",Dn,"Nf=",1),
-                    Index(nameint("UpDn ",n),1,Site),QN("Sz=", 0,"Nf=",2)};
+            s = Index{nameint("site=",n),
+                      QN("Sz=", 0,"Nf=",0),1,
+                      QN("Sz=",Up,"Nf=",1),1,
+                      QN("Sz=",Dn,"Nf=",1),1,
+                      QN("Sz=", 0,"Nf=",2),1,Site};
             }
         else //don't conserve Nf, only fermion parity
             {
             if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
-
-             s = IQIndex{nameint("site=",n),
-                    Index(nameint("Emp ",n),1,Site), QN("Sz=", 0,"Pf=",0),
-                    Index(nameint("Up ",n),1,Site),  QN("Sz=",+1,"Pf=",1),
-                    Index(nameint("Dn ",n),1,Site),  QN("Sz=",-1,"Pf=",1),
-                    Index(nameint("UpDn ",n),1,Site),QN("Sz=", 0,"Pf=",0)};
+            s = Index{nameint("site=",n),
+                      QN("Sz=", 0,"Pf=",0),1,
+                      QN("Sz=",+1,"Pf=",1),1,
+                      QN("Sz=",-1,"Pf=",1),1,
+                      QN("Sz=", 0,"Pf=",0),1,Site};
             }
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "0" || state == "Emp") 
@@ -79,22 +79,22 @@ class HubbardSite
         return IQIndexVal{};
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
         auto sP = prime(s);
 
-        IQIndexVal Em(s(1)),
-                   EmP(sP(1)),
-                   Up(s(2)),
-                   UpP(sP(2)),
-                   Dn(s(3)),
-                   DnP(sP(3)),
-                   UD(s(4)),
-                   UDP(sP(4));
+        IndexVal Em(s(1)),
+                 EmP(sP(1)),
+                 Up(s(2)),
+                 UpP(sP(2)),
+                 Dn(s(3)),
+                 DnP(sP(3)),
+                 UD(s(4)),
+                 UDP(sP(4));
 
-        IQTensor Op(dag(s),sP);
+        ITensor Op(dag(s),sP);
 
         if(opname == "Nup")
             {
