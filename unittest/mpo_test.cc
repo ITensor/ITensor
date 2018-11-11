@@ -25,12 +25,12 @@ SECTION("Orthogonalize")
         {
         links.at(n) = Index(nameint("l",n),m);
         }
-    W.Aref(1) = randomTensor(links.at(1),sites(1),prime(sites(1)));
+    W.Aref(1) = randomITensor(links.at(1),sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
         {
-        W.Aref(n) = randomTensor(links.at(n-1),sites(n),prime(sites(n)),links.at(n));
+        W.Aref(n) = randomITensor(links.at(n-1),sites(n),prime(sites(n)),links.at(n));
         }
-    W.Aref(N) = randomTensor(links.at(N-1),sites(N),prime(sites(N)));
+    W.Aref(N) = randomITensor(links.at(N-1),sites(N),prime(sites(N)));
 
     //Normalize W
     auto n2 = overlap(W,W);
@@ -61,18 +61,18 @@ SECTION("Add MPOs")
     auto sites = Hubbard(N);
 
 
-    auto makeInds = [N](std::string name) -> vector<IQIndex>
+    auto makeInds = [N](std::string name) -> vector<Index>
         {
-        auto ll = vector<IQIndex>(N);
+        auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            ll.at(n) = IQIndex(nameint(name,n),
-                               Index("a",2),QN("Sz=",-1,"Nf=",-1),
-                               Index("a",2),QN("Sz=",-1,"Nf=",+1),
-                               Index("b",2),QN("Sz=",-1,"Nf=",0),
-                               Index("c",2),QN("Sz=",+1,"Nf=",0),
-                               Index("d",2),QN("Sz=",+1,"Nf=",-1),
-                               Index("d",2),QN("Sz=",+1,"Nf=",+1));
+            ll.at(n) = Index(nameint(name,n),
+                             QN("Sz=",-1,"Nf=",-1),2,
+                             QN("Sz=",-1,"Nf=",+1),2,
+                             QN("Sz=",-1,"Nf=",0),2,
+                             QN("Sz=",+1,"Nf=",0),2,
+                             QN("Sz=",+1,"Nf=",-1),2,
+                             QN("Sz=",+1,"Nf=",+1),2);
             }
         return ll;
         };
@@ -82,17 +82,17 @@ SECTION("Add MPOs")
 
     auto Z = QN("Sz=",0,"Nf=",0);
 
-    auto A = IQMPO(sites);
-    auto B = IQMPO(sites);
-    A.Aref(1) = randomTensor(Z,sites(1),l1.at(1));
-    B.Aref(1) = randomTensor(Z,sites(1),l2.at(1));
+    auto A = MPO(sites);
+    auto B = MPO(sites);
+    A.Aref(1) = randomITensor(Z,sites(1),l1.at(1));
+    B.Aref(1) = randomITensor(Z,sites(1),l2.at(1));
     for(int n = 2; n < N; ++n)
         {
-        A.Aref(n) = randomTensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
-        B.Aref(n) = randomTensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
+        A.Aref(n) = randomITensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
+        B.Aref(n) = randomITensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
         }
-    A.Aref(N) = randomTensor(Z,sites(N),dag(l1.at(N-1)));
-    B.Aref(N) = randomTensor(Z,sites(N),dag(l2.at(N-1)));
+    A.Aref(N) = randomITensor(Z,sites(N),dag(l1.at(N-1)));
+    B.Aref(N) = randomITensor(Z,sites(N),dag(l2.at(N-1)));
 
     auto C = sum(A,B);
 
@@ -113,17 +113,17 @@ SECTION("Regression Test")
     {
     auto sites = Hubbard(2);
 
-    auto A = IQMPO(sites);
-    auto Ia = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
-                          Index("1",1),QN("Sz",-1,"Nf",-1));
-    A.Aref(1) = randomTensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
-    A.Aref(2) = randomTensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
+    auto A = MPO(sites);
+    auto Ia = Index("I",QN("Sz",1,"Nf",-1),2,
+                        QN("Sz",-1,"Nf",-1),1);
+    A.Aref(1) = randomITensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
+    A.Aref(2) = randomITensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
 
-    auto B = IQMPO(sites);
-    auto Ib = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
-                          Index("1",1),QN("Sz",-1,"Nf",-1));
-    B.Aref(1) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
-    B.Aref(2) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
+    auto B = MPO(sites);
+    auto Ib = Index("I",QN("Sz",1,"Nf",-1),2,
+                        QN("Sz",-1,"Nf",-1),1);
+    B.Aref(1) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
+    B.Aref(2) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
 
     REQUIRE_NOTHROW(A.plusEq(B));
     }
@@ -259,18 +259,18 @@ SECTION("toMPO function")
     auto N = 50;
     auto sites = Hubbard(N);
 
-    auto makeInds = [N](std::string name) -> vector<IQIndex>
+    auto makeInds = [N](std::string name) -> vector<Index>
         {
-        auto ll = vector<IQIndex>(N);
+        auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            ll.at(n) = IQIndex(nameint(name,n),
-                               Index("a",2),QN("Sz=",-1,"Nf=",-1),
-                               Index("a",2),QN("Sz=",-1,"Nf=",+1),
-                               Index("b",2),QN("Sz=",-1,"Nf=",0),
-                               Index("c",2),QN("Sz=",+1,"Nf=",0),
-                               Index("d",2),QN("Sz=",+1,"Nf=",-1),
-                               Index("d",2),QN("Sz=",+1,"Nf=",+1));
+            ll.at(n) = Index(nameint(name,n),
+                               QN("Sz=",-1,"Nf=",-1),2,
+                               QN("Sz=",-1,"Nf=",+1),2,
+                               QN("Sz=",-1,"Nf=",0),2,
+                               QN("Sz=",+1,"Nf=",0),2,
+                               QN("Sz=",+1,"Nf=",-1),2,
+                               QN("Sz=",+1,"Nf=",+1),2);
             }
         return ll;
         };
@@ -279,13 +279,13 @@ SECTION("toMPO function")
 
     auto Z = QN("Sz=",0,"Nf=",0);
 
-    auto A = IQMPO(sites);
+    auto A = MPO(sites);
     A.Aref(1) = randomTensor(Z,sites(1),ll.at(1));
     for(int n = 2; n < N; ++n)
         {
-        A.Aref(n) = randomTensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
+        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
         }
-    A.Aref(N) = randomTensor(Z,sites(N),dag(ll.at(N-1)));
+    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
 
     auto a = toMPO(A);
 
