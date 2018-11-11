@@ -76,7 +76,7 @@ class HubbardSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
         }
 
 	ITensor
