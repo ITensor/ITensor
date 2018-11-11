@@ -38,7 +38,9 @@ class SpinOneSite
     SpinOneSite(int n, Args const& args = Args::global())
         {
         auto conserveqns = args.getBool("ConserveQNs",false);
+        Print(conserveqns);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
+        Print(conserveSz);
         if(conserveSz)
             {
             s = Index{nameint("S=1 site=",n),
@@ -249,23 +251,23 @@ SpinOne(int N,
     if(shedge || Lshedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
-        sites.set(1,SpinHalfSite(1));
+        sites.set(1,SpinHalfSite(1,args));
         start = 2;
         }
 
     for(int j = start; j < N; ++j)
         {
-        sites.set(j,SpinOneSite(j));
+        sites.set(j,SpinOneSite(j,args));
         }
 
     if(shedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
-        sites.set(N,SpinHalfSite(N));
+        sites.set(N,SpinHalfSite(N,args));
         }
     else
         {
-        sites.set(N,SpinOneSite(N));
+        sites.set(N,SpinOneSite(N,args));
         }
 
     SiteSet::init(std::move(sites));
