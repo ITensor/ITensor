@@ -14,25 +14,25 @@ using tJ  = BasicSiteSet<tJSite>;
 
 class tJSite
     {
-    IQIndex s;
+    Index s;
     public:
 
     tJSite() { }
 
-    tJSite(IQIndex I) : s(I) { }
+    tJSite(Index I) : s(I) { }
 
     tJSite(int n, Args const& args = Args::global())
         {
-        s = IQIndex{nameint("tJ site=",n),
-            Index(nameint("Emp ",n),1,Site), QN("Sz=", 0,"Nf=",0),
-            Index(nameint("Up ",n),1,Site),  QN("Sz=",+1,"Nf=",1),
-            Index(nameint("Dn ",n),1,Site),  QN("Sz=",-1,"Nf=",1)};
+        s = Index{nameint("tJ site=",n),
+                  QN("Sz=", 0,"Nf=",0),1,
+                  QN("Sz=",+1,"Nf=",1),1,
+                  QN("Sz=",-1,"Nf=",1),1,Site};
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "0" || state == "Emp") 
@@ -53,23 +53,23 @@ class tJSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal();
+        return IndexVal();
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
         auto sP = prime(s);
 
-        IQIndexVal Em(s(1)),
+        IndexVal Em(s(1)),
                    EmP(sP(1)),
                    Up(s(2)),
                    UpP(sP(2)),
                    Dn(s(3)),
                    DnP(sP(3));
 
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if(opname == "Nup")
             {

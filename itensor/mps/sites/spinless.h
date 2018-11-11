@@ -14,41 +14,42 @@ using Spinless = BasicSiteSet<SpinlessSite>;
 
 class SpinlessSite
     {
-    IQIndex s;
+    Index s;
     public:
 
     SpinlessSite() { }
 
-    SpinlessSite(IQIndex I) : s(I) { }
+    SpinlessSite(Index I) : s(I) { }
 
     SpinlessSite(int n, Args const& args = Args::global())
         {
-        auto conserve_Nf = args.getBool("ConserveNf",true);
+        auto conserveQNs = args.getBool("ConserveQNs",true);
+        auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
         auto oddevenupdown = args.getBool("OddEvenUpDown",false);
 
-        if(!oddevenupdown) //usual case
+        if(not oddevenupdown) //usual case
             {
             auto q_occ = QN("Nf=",1);
             if(not conserve_Nf) q_occ = QN("Pf=",1);
-            s = IQIndex{nameint("Spinless ",n),
-                Index(nameint("Emp ",n),1,Site),QN(),
-                Index(nameint("Occ ",n),1,Site),q_occ};
+            s = Index{nameint("Spinless ",n),
+                      QN(),1,
+                      q_occ,1,Site};
             }
         else
             {
             QN q_occ;
             if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
             else       q_occ = QN("Sz",-1,"Nf=",1);
-            s = IQIndex{nameint("Spinless ",n),
-                Index(nameint("Emp ",n),1,Site),QN(),
-                Index(nameint("Occ ",n),1,Site),q_occ};
+            s = Index{nameint("Spinless ",n),
+                      QN(),1,
+                      q_occ,1,Site};
             }
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "Emp" || state == "0") 
@@ -64,10 +65,10 @@ class SpinlessSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
@@ -78,7 +79,7 @@ class SpinlessSite
         auto Occ  = s(2);
         auto OccP = sP(2);
          
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if(opname == "N" || opname == "n")
             {
