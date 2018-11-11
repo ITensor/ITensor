@@ -241,7 +241,7 @@ SiteSet(int N, int d)
     auto sites = SiteStore(N);
     for(int j = 1; j <= N; ++j)
         {
-        auto I = Index(format("Site %d",j),d);
+        auto I = Index(format("Site %d",j),d,Site);
         sites.set(j,GenericSite(I));
         }
     SiteSet::init(std::move(sites));
