@@ -9,9 +9,6 @@
 
 namespace itensor {
 
-template <class Tensor>
-class MPOt;
-
 class InitState;
 
 class MPS
@@ -28,7 +25,6 @@ class MPS
     std::string writedir_;
     bool do_write_;
     public:
-    using MPOType = MPOt<Tensor>;
 
     //
     // MPS Constructors
@@ -187,32 +183,6 @@ class MPS
 
     void 
     leftLim(int val) { l_orth_lim_ = val; }
-
-
-    //
-    // Deprecated methods
-    // 
-
-    //prefer function norm(psi) instead
-    Real 
-    norm() const;
-
-    //prefer function normalize(psi) instead
-    Real 
-    normalize();
-
-
-    //prefer isOrtho(psi) instead
-    bool 
-    isOrtho() const { return leftLim()+1 == rightLim()-1; }
-
-    //prefer orthoCenter(psi) instead
-    int 
-    orthoCenter() const;
-
-    //prefer isComplex(psi) instead
-    bool 
-    isComplex() const;
 
     }; //class MPS
 

@@ -96,19 +96,6 @@ class MPO : private MPS
         Parent::orthogonalize(args + Args("UseSVD")); 
         }
 
-
-    public:
-
-    //
-    // Deprecated methods
-    //
-    //use isOrtho(W) instead
-    using Parent::isOrtho;
-    //use orthoCenter(W) instead
-    using Parent::orthoCenter;
-    //use isComplex(W) instead
-    using Parent::isComplex;
-
     }; //class MPO<Tensor>
 
 //template<typename T>

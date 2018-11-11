@@ -2,14 +2,12 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include <map>
 #include "itensor/mps/mps.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 
 namespace itensor {
 
-using std::map;
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -653,12 +651,6 @@ position(int i, Args const& args)
         }
     }
 
-int MPS::
-orthoCenter() const 
-    { 
-    if(!itensor::isOrtho(*this)) Error("orthogonality center not well defined.");
-    return (leftLim() + 1);
-    }
 
 void MPS::
 orthogonalize(Args const& args)
@@ -846,70 +838,17 @@ checkOrtho(MPS const& psi)
     return true;
     }
 
-
-//template <class Tensor>
-//void MPS::
-//applygate(const Tensor& gate, const Args& args)
-//    {
-//    setBond(l_orth_lim_+1);
-//    Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
-//    AA.noprime();
-//    svdBond(l_orth_lim_+1,AA,Fromleft,args);
-//    }
-//template
-//void MPS<ITensor>::applygate(const ITensor& gate,const Args& args);
-//template
-//void MPS<IQTensor>::applygate(const IQTensor& gate,const Args& args);
-
-//template <class Tensor>
-//void MPS::
-//applygate(const BondGate<Tensor>& gate, 
-//          const Args& args)
-//    {
-//    const int gate_b = std::min(gate.i(),gate.j());
-//    setBond(gate_b);
-//    Tensor AA = A_.at(gate_b) * A_.at(gate_b+1) * Tensor(gate);
-//    AA.noprime();
-//    svdBond(gate_b,AA,Fromleft,args);
-//    }
-//template
-//void MPS<ITensor>::applygate(const BondGate<ITensor>& gate,const Args& args);
-//template
-//void MPS<IQTensor>::applygate(const BondGate<IQTensor>& gate,const Args& args);
-
 void
 applyGate(ITensor const& gate, 
           MPS & psi,
           Args const& args)
     {
     auto fromleft = args.getBool("Fromleft",true);
-    const int c = psi.orthoCenter();
+    const int c = orthoCenter(psi);
     ITensor AA = psi.A(c) * psi.A(c+1) * gate;
     AA.noprime();
     if(fromleft) psi.svdBond(c,AA,Fromleft,args);
     else         psi.svdBond(c,AA,Fromright,args);
-    }
-
-Real MPS::
-norm() const 
-    { 
-    return itensor::norm(*this);
-    }
-
-Real MPS::
-normalize()
-    {
-    return itensor::normalize(*this);
-    }
-
-bool MPS::
-isComplex() const
-    { 
-    for(auto j : range1(N_))
-        {
-        if(itensor::isComplex(A_[j])) return true;
-        }
-    return false;
     }
 
 void MPS::
