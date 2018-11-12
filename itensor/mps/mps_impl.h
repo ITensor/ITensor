@@ -99,10 +99,10 @@ svdBond3(int b, const Tensor& AA, Direction dir,
         printfln("b=%d, l_orth_lim_=%d",b,leftLim());
         Error("b-1 > l_orth_lim_");
         }
-    if(dir == Fromright && b+3 < rightLim())
+    if(dir == Fromright && b+2 < rightLim())
         {
         printfln("b=%d, r_orth_lim_=%d",b,rightLim());
-        Error("b+3 < r_orth_lim_");
+        Error("b+2 < r_orth_lim_");
         }
 
     auto noise = args.getReal("Noise",0.);
