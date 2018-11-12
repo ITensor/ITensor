@@ -177,10 +177,10 @@ class LocalMPO
         { 
         if(val < 1) Error("numCenter must be set >= 1");
         if(val != nc_)
-		    {
-		    nc_ = val;
-			lop_.numCenter(val);
-			}
+            {
+            nc_ = val;
+            lop_.numCenter(val);
+            }
         }
 
     long
@@ -384,21 +384,21 @@ product(const Tensor& phi, Tensor& phip) const
         int b = position();
         auto othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
 
-		if(nc_ == 2)
+        if(nc_ == 2)
             {
             auto othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
             othr *= othrR;
-			}
+            }
         else//if nc_==3
             {
             auto othrR = (!R() ? dag(prime(Psi_->A(b+2),Link)) : R()*dag(prime(Psi_->A(b+2),Link)));	
             othr *= dag(prime(Psi_->A(b+1),Link));
-			othr *= othrR;
+            othr *= othrR;
             }
 
-		auto z = (othr*phi).cplx();
-		phip = dag(othr);
-		phip *= z;
+        auto z = (othr*phi).cplx();
+        phip = dag(othr);
+        phip *= z;
         }
     else
         {
