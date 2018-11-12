@@ -315,17 +315,14 @@ class ITensor
     explicit
     ITensor(indexset_type const& is);
 
-
     storage_ptr&
     store() { return store_; }
 
     const_storage_ptr
     store() const { return const_storage_ptr(store_); }
 
-
     void
     swap(ITensor & other);
-    
     
 #ifdef USESCALE
 
