@@ -43,11 +43,11 @@ class LocalOp
     {
     Tensor const* Op1_;
     Tensor const* Op2_;
-	Tensor const* Op3_;
+    Tensor const* Op3_;
     Tensor const* L_;
     Tensor const* R_;
     mutable long size_;
-	int nc_;
+    int nc_;
     public:
 
     using IndexT = typename Tensor::index_type;
@@ -198,7 +198,7 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
-	Op3_(nullptr),
+    Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
     size_(-1),
@@ -214,7 +214,7 @@ LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
-	Op3_(nullptr),
+    Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
     size_(-1),
@@ -231,7 +231,7 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
-	Op3_(nullptr),
+    Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
     size_(-1),
@@ -248,7 +248,7 @@ LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
-	Op3_(nullptr),
+    Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
     size_(-1),
@@ -275,7 +275,7 @@ update(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
-	Op3_ = &Op3;
+    Op3_ = &Op3;
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
@@ -340,7 +340,7 @@ product(Tensor const& phi,
         if(nc_ == 3)
             {
             auto& Op3 = *Op3_;
-			phip *= Op3;
+            phip *= Op3;
             }
         phip *= Op2; //m^2 k^2
         phip *= Op1; //m^2 k^2
@@ -503,7 +503,7 @@ size() const
 
         size_ *= findtype(*Op1_,Site).m();
         size_ *= findtype(*Op2_,Site).m();
-		if(nc_ == 3) size_ *= findtype(*Op3_,Site).m();
+        if(nc_ == 3) size_ *= findtype(*Op3_,Site).m();
         }
     return size_;
     }
