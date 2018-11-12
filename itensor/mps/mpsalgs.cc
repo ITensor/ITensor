@@ -44,8 +44,6 @@ plussers(Index const& l1,
         }
     else
         {
-        Error("plussers not yet implemented for QN case");
-        
         auto siq = stdx::reserve_vector<QNInt>(l1.nblock()+l2.nblock());
         for(auto n : range1(l1.nblock()))
             {
@@ -63,25 +61,23 @@ plussers(Index const& l1,
                        sumind.dir(),
                        sumind.type(),
                        sumind.primeLevel());
-        //first = ITensor(dag(l1),sumind);
+        first = ITensor(dag(l1),sumind);
         int n = 1;
         for(auto j : range1(l1.nblock()))
             {
-            auto D = Matrix(l1.blocksize(j),sumind.blocksize(n));
-            auto minsize = std::min(ncols(D),nrows(D));
+            auto D = Tensor(l1.blocksize(j),sumind.blocksize(n));
+            auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
-            //first += matrixTensor(move(D),iq1.index,s1);
-            //TODO: need the ability to add to a certain block of a QN ITensor
-            //      form may be that of QDiag...
+            getBlock<Real>(first,{j,n}) = D;
             ++n;
             }
-        //second = ITensor(dag(l2),sumind);
+        second = ITensor(dag(l2),sumind);
         for(auto j : range1(l2.nblock()))
             {
-            auto D = Matrix(l2.blocksize(j),sumind.blocksize(n));
-            auto minsize = std::min(ncols(D),nrows(D));
+            auto D = Tensor(l2.blocksize(j),sumind.blocksize(n));
+            auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
-            //second += matrixTensor(move(D),iq2.index,s2);
+            getBlock<Real>(second,{j,n}) = D;
             ++n;
             }
         }
