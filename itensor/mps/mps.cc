@@ -433,7 +433,7 @@ setBond3(int b) const
     if(!A_.at(b+1))
         {
         readFromFile(AFName(b+1),A_.at(b+1));
-		}
+	}
 
 	if(!A_.at(b+2))
         {
