@@ -704,99 +704,12 @@ getDotInds(Iter it,
     getDotInds(++it,std::forward<Rest const&>(rest)...);
     }
 
-IndexSet inline
-moveToFront(IndexSet const& isf, IndexSet const& is)
-    {
-    auto rf = isf.r();
-    auto r = is.r();
+IndexSet
+moveToFront(IndexSet const& isf, IndexSet const& is);
 
-    if(rf >= r)
-        {
-        println("---------------------------------------------");
-        println("Tensor indices = \n",is,"\n");
-        println("---------------------------------------------");
-        println("Indices provided = \n",isf," '...'\n");
-        println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
-        }
+IndexSet 
+moveToBack(IndexSet const& isb, IndexSet const& is);
 
-    auto iso = IndexSet(r);
-
-    auto i = 0;
-    for(auto& I : isf) 
-        {
-        if(!hasindex(is,I))
-            {
-            println("---------------------------------------------");
-            println("Tensor indices = \n",is,"\n");
-            println("---------------------------------------------");
-            println("Indices provided = \n",isf," '...'\n");
-            println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
-            }
-        iso[i] = I;
-        i++;
-        }
-
-    auto j = rf;
-    for(auto& J : is)
-        {
-        if(!hasindex(isf,J))
-            {
-            iso[j] = J;
-            j++;
-            }
-        }
-
-    return iso;
-    }
-
-IndexSet inline
-moveToBack(IndexSet const& isb, IndexSet const& is)
-    {
-    auto rb = isb.r();
-    auto r = is.r();
-
-    if(rb >= r)
-        {
-        println("---------------------------------------------");
-        println("Tensor indices = \n",is,"\n");
-        println("---------------------------------------------");
-        println("Indices provided = \n'...' ",isb,"\n");
-        println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
-        }
-
-    auto iso = IndexSet(r);
-
-    auto i = r-rb;
-    for(auto& I : isb) 
-        {
-        if(!hasindex(is,I))
-            {
-            println("---------------------------------------------");
-            println("Tensor indices = \n",is,"\n");
-            println("---------------------------------------------");
-            println("Indices provided = \n'...' ",isb,"\n");
-            println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
-            }
-        iso[i] = I;
-        i++;
-        }
-
-    auto j = 0;
-    for(auto& J : is)
-        {
-        if(!hasindex(isb,J))
-            {
-            iso[j] = J;
-            j++;
-            }
-        }
-
-    return iso;
-    }
 
 } //namespace detail
 
@@ -859,7 +772,6 @@ struct Write
 
     Write(std::ostream& s_) : s(s_) { }
     };
-
 inline const char*
 typeNameOf(Write const&) { return "Write"; }
 

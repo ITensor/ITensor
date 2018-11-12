@@ -13,13 +13,6 @@
 
 namespace itensor {
 
-class ITensor;
-
-//
-// ITensor
-//
-
-struct ITData;
 
 class ITensor
     {
@@ -49,7 +42,7 @@ class ITensor
     //Usage: ITensor(i1,i2,i3,...)
     template <typename... index_types>
     ITensor(index_type  const& i1,
-             index_types const&... i2etc);
+            index_types const&... i2etc);
 
     explicit
     ITensor(std::vector<index_type> const& inds);
