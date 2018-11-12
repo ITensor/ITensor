@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/sites/spinhalf.h"
-//#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/spinless.h"
 #include "itensor/util/print_macro.h"
 
 using namespace itensor;
@@ -38,25 +38,22 @@ SECTION("Constructors")
 //    CHECK_EQUAL(totalQN(psiFerro),QN(10));
 //    }
 
-//SECTION("MPSAddition")
-//    {
-//    Spinless sites(10);
-//
-//    InitState i1(sites,"Emp"),
-//              i2(sites,"Emp");
-//
-//    i1.set(1,"Occ");
-//    i2.set(2,"Occ");
-//
-//    //"Valence bond" between sites 1 and 2
-//    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
-//
-//    CHECK_CLOSE(norm(psi),1);
-//
-//    IQMPS iqpsi = ISqrt2*sum(IQMPS(i1),IQMPS(i2));
-//
-//    CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
-//    }
+SECTION("MPSAddition")
+    {
+    Spinless sites(10);
+
+    InitState i1(sites,"Emp"),
+              i2(sites,"Emp");
+
+    i1.set(1,"Occ");
+    i2.set(2,"Occ");
+
+    //"Valence bond" between sites 1 and 2
+    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
+
+    CHECK_CLOSE(norm(psi),1);
+    CHECK_EQUAL(totalQN(psi),QN("Nf=",1));
+    }
 
 //SECTION("PositionTest")
 //    {
