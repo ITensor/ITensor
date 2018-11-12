@@ -46,7 +46,7 @@ class LocalOp
     Tensor const* Op3_;
     Tensor const* L_;
     Tensor const* R_;
-    mutable long size_;
+    mutable size_t size_;
     int nc_;
     public:
 
@@ -473,7 +473,7 @@ long inline LocalOp<Tensor>::
 size() const
     {
     if(!(*this)) Error("LocalOp is default constructed");
-    if(size_ == -1)
+    if(size_ == size_t(-1))
         {
         //Calculate linear size of this 
         //op as a square matrix
