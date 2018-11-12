@@ -68,7 +68,7 @@ plussers(Index const& l1,
             auto D = Tensor(l1.blocksize(j),sumind.blocksize(n));
             auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
-            getBlock<Real>(first,{j,n}) = D;
+            getBlock<Real>(first,{j,n}) &= D;
             ++n;
             }
         second = ITensor(dag(l2),sumind);
@@ -77,7 +77,7 @@ plussers(Index const& l1,
             auto D = Tensor(l2.blocksize(j),sumind.blocksize(n));
             auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
-            getBlock<Real>(second,{j,n}) = D;
+            getBlock<Real>(second,{j,n}) &= D;
             ++n;
             }
         }
