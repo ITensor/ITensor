@@ -913,6 +913,17 @@ diagTensor(Container const& C,
 bool inline
 hasQNs(ITensor const& T) { return hasQNs(T.inds()); }
 
+template<typename V>
+TenRef<Range,V>
+getBlock(ITensor & T,
+         IntArray block_ind)
+    {
+    //Interface is 1-indexed; switch to 0-indexed
+    for(auto& i : block_ind) { i -= 1; }
+    auto G = GetBlock<V>(T.inds(),block_ind);
+    return doTask(G,T.store());
+    }
+
 } // namespace itensor
 
 

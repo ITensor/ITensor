@@ -555,28 +555,6 @@ diagTensor(Container const& C,
            Index const& i1,
            Inds&&... inds);
 
-//
-// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
-// (I1, I2 are Index objects; n1,n2 are type int)
-// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
-//
-// Useful for creating MPOs
-//
-ITensor
-operator*(IndexVal const& iv1, IndexVal const& iv2);
-
-//
-// Define product of IndexVal iv1 = (I1,n1) 
-// with a scalar "fac" to be an ITensor T such that T(I1(n1)) == val
-//
-// Useful for creating MPOs
-//
-ITensor
-operator*(IndexVal const& iv1, Cplx val);
-ITensor inline
-operator*(Cplx val, IndexVal const& iv) { return operator*(iv,val); }
-
-
 
 template <typename... Inds>
 ITensor
@@ -611,6 +589,10 @@ matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
 ITensor
 matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
+//
+// QN ITensor related functions
+//
+
 QN
 div(ITensor const& T);
 
@@ -621,13 +603,9 @@ flux(ITensor const& T);
 bool
 hasQNs(ITensor const& T);
 
-//template<typename... Indxs>
-//TensorRef1
-//ordered(ITensor & T, Indxs&&... inds);
-
-//template<typename... Indxs>
-//CTensorRef1
-//orderedC(ITensor & T, Indxs&&... inds);
+template<typename V>
+TenRef<Range,V>
+getBlock(ITensor & T, IntArray block_ind);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);

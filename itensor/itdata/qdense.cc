@@ -670,5 +670,21 @@ doTask(Order const& O,
 template void doTask(Order const&,QDense<Real> &);
 template void doTask(Order const&,QDense<Cplx> &);
 
+template<typename V>
+TenRef<Range,V>
+doTask(GetBlock<V> const& G,
+       QDense<V> & d)
+    {
+    auto block = getBlock(d,G.is,G.block_ind);
+    auto RB = RangeBuilder(G.is.r());
+    for(auto j : range(G.is.r()))
+        {
+        RB.nextIndex(G.is[j].blocksize0(G.block_ind[j]));
+        }
+    return makeRef(block,RB.build());
+    }
+template TenRef<Range,Real> doTask(GetBlock<Real> const& G,QDense<Real> & d);
+template TenRef<Range,Cplx> doTask(GetBlock<Cplx> const& G,QDense<Cplx> & d);
+
 } //namespace itensor
 

@@ -415,6 +415,11 @@ template<typename V>
 bool
 doTask(IsEmpty, QDense<V> const& d) { return d.offsets.empty(); }
 
+template<typename V>
+TenRef<Range,V>
+doTask(GetBlock<V> const& G, QDense<V> & d);
+
+
 } //namespace itensor
 
 #endif

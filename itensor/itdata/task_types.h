@@ -520,24 +520,24 @@ struct CalcDiv
 inline const char*
 typeNameOf(CalcDiv const&) { return "CalcDiv"; }
 
-struct ToITensor
-    {
-    IndexSet const& is;
-    LogNum const& scale;
-
-    ToITensor(IndexSet const& is_,
-              LogNum const& scale_)
-      : is(is_),
-        scale(scale_)
-        { }
-    };
-
-inline const char*
-typeNameOf(ToITensor const&) { return "ToITensor"; }
-
 struct IsEmpty { };
 inline const char*
 typeNameOf(IsEmpty const&) { return "IsEmpty"; }
+
+template<typename V>
+struct GetBlock
+    {
+    IndexSet const& is;
+    IntArray const& block_ind;
+    GetBlock(IndexSet const& is_,
+             IntArray const& bi)
+        : is(is_), block_ind(bi) { }
+    };
+inline const char*
+typeNameOf(GetBlock<Real>) { return "GetBlock<Real>";}
+inline const char*
+typeNameOf(GetBlock<Cplx>) { return "GetBlock<Cplx>";}
+
 
 } //namespace itensor 
 
