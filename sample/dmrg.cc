@@ -55,13 +55,13 @@ main()
     sweeps.maxm() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
-    sweeps.noise() = 1E-7,1E-8,0.0;
+    sweeps.noise() = 0.0;
     println(sweeps);
 
     //
     // Begin the DMRG calculation
     //
-    auto energy = dmrg(psi,H,sweeps,"Quiet");
+    auto energy = dmrg(psi,H,sweeps,{"Quiet",true,"NumCenter",3});
 
     //
     // Print the final energy reported by DMRG

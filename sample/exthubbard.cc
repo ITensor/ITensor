@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
+    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet,"NumCenter",3});
 
     //
     // Measure spin densities
