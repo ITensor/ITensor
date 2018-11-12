@@ -882,6 +882,10 @@ delta(Index const& i1,
       Inds const&... inds)
     { 
     auto is = IndexSet(i1,inds...);
+    if(hasQNs(is))
+        {
+        return ITensor(std::move(is),QDiagReal(is,1.));
+        }
     auto len = minM(is);
     return ITensor(std::move(is),DiagReal(len,1.));
     }
