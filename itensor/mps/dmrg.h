@@ -284,7 +284,7 @@ DMRGWorker(MPS & psi,
     
         } //for loop over sw
     
-    psi.normalize();
+    normalize(psi);
 
     return energy;
     }

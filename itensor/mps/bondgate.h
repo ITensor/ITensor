@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_BONDGATE_H
 #define __ITENSOR_BONDGATE_H
 
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 #include "itensor/mps/siteset.h"
 
 namespace itensor {
@@ -28,12 +28,12 @@ class BondGate
              int i2, 
              Type type, 
              Real tau, 
-             Tensor bondH);
+             ITensor bondH);
 
     BondGate(SiteSet const& sites, 
              int i1, 
              int i2,
-             Tensor gate);
+             ITensor gate);
 
     int i1() const { return i1_; }
 
@@ -88,7 +88,7 @@ BondGate(SiteSet const& sites,
          int i2, 
          Type type, 
          Real tau, 
-         Tensor bondH)
+         ITensor bondH)
   : type_(type)
     {
     if(i1 < i2)

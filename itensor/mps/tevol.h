@@ -19,20 +19,20 @@ namespace itensor {
 // Arguments recognized:
 //    "Verbose": if true, print useful information to stdout
 //
-template <class Iterable, class Tensor>
+template <class Iterable>
 Real
 gateTEvol(const Iterable& gatelist, 
           Real ttotal, 
           Real tstep, 
-          MPSt<Tensor>& psi, 
+          MPS & psi, 
           const Args& args = Global::args());
 
-template <class Iterable, class Tensor>
+template <class Iterable>
 Real
 gateTEvol(const Iterable& gatelist, 
           Real ttotal, 
           Real tstep, 
-          MPSt<Tensor>& psi, 
+          MPS & psi, 
           Observer& obs,
           Args args = Global::args());
 
@@ -41,17 +41,17 @@ gateTEvol(const Iterable& gatelist,
 // Implementations
 //
 
-template <class Iterable, class Tensor>
+template <class Iterable>
 Real
 gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
-          MPSt<Tensor>& psi, 
+          MPS & psi, 
           Observer& obs,
           Args args)
     {
     const bool verbose = args.getBool("Verbose",false);
-    const bool normalize = args.getBool("Normalize",true);
+    const bool do_normalize = args.getBool("Normalize",true);
 
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
@@ -104,9 +104,9 @@ gateTEvol(Iterable const& gatelist,
                 }
             }
 
-        if(normalize)
+        if(do_normalize)
             {
-            tot_norm *= psi.normalize();
+            tot_norm *= normalize(psi);
             }
 
         tsofar += tstep;
@@ -125,12 +125,12 @@ gateTEvol(Iterable const& gatelist,
 
     } // gateTEvol
 
-template <class Iterable, class Tensor>
+template <class Iterable>
 Real
 gateTEvol(const Iterable& gatelist, 
           Real ttotal, 
           Real tstep, 
-          MPSt<Tensor>& psi, 
+          MPS & psi, 
           const Args& args)
     {
     TEvolObserver obs(args);
