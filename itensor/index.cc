@@ -558,18 +558,26 @@ Index(std::string const& name,
     }
 
 long
-QNblockSize(Index const& I, 
-            QN const& Q)
-    { 
+QNblock(Index const& I,
+        QN const& Q)
+    {
     for(auto n : range1(I.nblock()))
         { 
-        if(I.qn(n) == Q) return I.blocksize(n);
+        if(I.qn(n) == Q) return n;
         }
     if(not hasQNs(I)) Error("Index does not contain any QN blocks");
     println("I = ",I);
     println("Q = ",Q);
     Error("Index does not contain given QN block.");
-    return 0;
+    return 0l;
+    }
+
+
+long
+QNblockSize(Index const& I, 
+            QN const& Q)
+    { 
+    return I.blocksize(QNblock(I,Q));
     }
 
 } //namespace itensor

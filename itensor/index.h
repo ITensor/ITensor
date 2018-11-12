@@ -377,8 +377,13 @@ getIndexType(Args const& args,
              IndexType default_val);
 
 long
+QNblock(Index const& I, 
+        QN const& Q);
+
+long
 QNblockSize(Index const& I, 
             QN const& Q);
+
 
 } //namespace itensor
 

@@ -1359,21 +1359,20 @@ constructMPOTensors(SiteSet const& sites,
             auto Op = computeProd(sites,prod);
             if(hasQNs(sites(1)))
                 {
-                Error("QN version of constructMPOTensors not yet implemented");
-                //TODO QQ: need IQTensor += ITensor equivalent
-                //auto rq = qp_M.first.q;
-                //auto sq = div(Op);
-                //auto cq = rq-sq;
-                //  //-rq + sq + cq == 0
-                //  //==> cq = rq - sq
-                //auto ri = findByQN(row,rq);
-                //auto ci = findByQN(col,cq);
-                //auto t = matrixTensor(M,ri,ci);
-                //W += (rc+t)*Op;
+                auto rq = qp_M.first.q;
+                auto sq = div(Op);
+                auto cq = rq-sq;
+                  //-rq + sq + cq == 0
+                  //==> cq = rq - sq
+                auto rn = QNblock(row,rq);
+                auto cn = QNblock(col,cq);
+                auto rcM = rc;
+                getBlock<T>(rcM,{rn,cn}) &= M;
+                W += rcM*Op;
                 }
             else
                 {
-                auto t = matrixTensor(M,row,col);
+                auto t = matrixTensor(M,dag(row),col);
                 W += (rc+t)*Op;
                 }
             W.scaleTo(1.);
