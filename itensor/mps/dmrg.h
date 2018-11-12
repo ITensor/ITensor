@@ -319,18 +319,18 @@ DMRGWorker(MPSt<Tensor>& psi,
                     
                     Tensor phi;
                     if(ha == 1)
-        				{
+		        {
                         if(b == 1)  
-        					phi = psi.A(b)*psi.A(b+1)*psi.A(b+2);
+        		    phi = psi.A(b)*psi.A(b+1)*psi.A(b+2);
                         else        
-        					phi = temp*psi.A(b+2);
+        		    phi = temp*psi.A(b+2);
                     	}
                     else
-        				{
+        		{
                         if(b == N-2)    
-        					phi = psi.A(b)*psi.A(b+1)*psi.A(b+2);
+        		    phi = psi.A(b)*psi.A(b+1)*psi.A(b+2);
                         else            
-        					phi = psi.A(b)*temp;
+        		    phi = psi.A(b)*temp;
                     	}
         				
                     energy = davidson(PH,phi,args);
@@ -341,7 +341,7 @@ DMRGWorker(MPSt<Tensor>& psi,
                     //and forget about the donormalize args. --> now deal with the donormalize args.
         	    //Through setbond to move OC in MPS (not in MPO, which was done before by PH.position) and write and read from disk
         	    ////////////however,l_orth_lim_ etc. setting by Aref is behind the actual position during the sweep,though it's correct in the end. Will this cause problem?
-        			auto spec = psi.svdBond3(b,phi,(ha==1?Fromleft:Fromright),PH,temp,args);
+        	    auto spec = psi.svdBond3(b,phi,(ha==1?Fromleft:Fromright),PH,temp,args);
         
                     if(!quiet)
                     	{
