@@ -918,6 +918,17 @@ TenRef<Range,V>
 getBlock(ITensor & T,
          IntArray block_ind)
     {
+    if(block_ind.size() != T.r()) Error("Mismatched number of indices and ITensor rank");
+    if(not T.store())
+        {
+        QN q;
+        for(auto n : range(block_ind))
+            {
+            auto& I = T.inds()[n];
+            q += I.qn(block_ind[n])*I.dir();
+            }
+        T = ITensor(T.inds(),QDense<V>(T.inds(),q));
+        }
     //Interface is 1-indexed; switch to 0-indexed
     for(auto& i : block_ind) { i -= 1; }
     auto G = GetBlock<V>(T.inds(),block_ind);
