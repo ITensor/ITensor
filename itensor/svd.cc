@@ -271,8 +271,6 @@ svdImpl(IQTensor A,
             d.clear();
             B.M.clear();
             assert(not B.M);//to check if B.M has been cleared.
-			printfln("this_m=%f",this_m);
-			printfln("not B.M=%f", not B.M);
             continue; 
             }
 
