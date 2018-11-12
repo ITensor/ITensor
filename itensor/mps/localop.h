@@ -22,7 +22,15 @@ namespace itensor {
 //   |    |      |    |
 //   '-              -'
 //
-// (Note that L, Op1, Op2 and R
+// and three sites of an MPS.
+//
+//   .-                     -.
+//   |    |      |      |    |
+//   L - Op1 -- Op2 -- Op3 - R
+//   |    |      |      |    |
+//   '-                     -'
+//
+// (Note that L, Op1, Op2, (Op3) and R
 //  are not required to have this
 //  precise structure. L and R
 //  can even be null in which case
@@ -35,9 +43,11 @@ class LocalOp
     {
     Tensor const* Op1_;
     Tensor const* Op2_;
+	Tensor const* Op3_;
     Tensor const* L_;
     Tensor const* R_;
     mutable long size_;
+	int nc_;
     public:
 
     using IndexT = typename Tensor::index_type;
@@ -52,9 +62,21 @@ class LocalOp
             Tensor const& Op2,
             Args const& args = Global::args());
 
+    LocalOp(Tensor const& Op1,
+            Tensor const& Op2,
+            Tensor const& Op3,
+            Args const& args = Global::args());
+
     LocalOp(Tensor const& Op1, 
             Tensor const& Op2, 
             Tensor const& L, 
+            Tensor const& R,
+            Args const& args = Global::args());
+
+    LocalOp(Tensor const& Op1,
+            Tensor const& Op2,
+            Tensor const& Op3,
+            Tensor const& L,
             Tensor const& R,
             Args const& args = Global::args());
 
@@ -79,17 +101,35 @@ class LocalOp
     long
     size() const;
 
+    int
+    numCenter() const { return nc_; }
+    void
+    numCenter(int val)
+        {
+        if(val < 1 || val > 3) Error("numCenter must be set >=1 and <=3.");
+        if(val != nc_) nc_ = val;
+        }
     //
     // Accessor Methods
     //
 
     void
     update(Tensor const& Op1, Tensor const& Op2);
+    
+    void
+    update(Tensor const& Op1, Tensor const& Op2, Tensor const& Op3);
 
     void
     update(Tensor const& Op1, 
            Tensor const& Op2, 
            Tensor const& L, 
+           Tensor const& R);
+
+    void
+    update(Tensor const& Op1,
+           Tensor const& Op2,
+           Tensor const& Op3,
+           Tensor const& L,
            Tensor const& R);
 
     Tensor const&
@@ -104,6 +144,13 @@ class LocalOp
         { 
         if(!(*this)) Error("LocalOp is default constructed");
         return *Op2_;
+        }
+    
+    Tensor const&
+    Op3() const
+        {
+        if(!(*this)) Error("LocalOp is default constructed");
+        return *Op3_;
         }
 
     Tensor const&
@@ -136,9 +183,11 @@ LocalOp()
     :
     Op1_(nullptr),
     Op2_(nullptr),
+    Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1)
+    size_(-1),
+    nc_(2)
     { 
     }
 
@@ -149,11 +198,29 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
+	Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1)
+    size_(-1),
+    nc_(2)
     {
     update(Op1,Op2);
+    }
+
+template <class Tensor>
+inline LocalOp<Tensor>::
+LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3,
+        const Args& args)
+    : 
+    Op1_(nullptr),
+    Op2_(nullptr),
+	Op3_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
+    size_(-1),
+    nc_(3)
+    {
+    update(Op1,Op2,Op3);
     }
 
 template <class Tensor>
@@ -164,11 +231,30 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     : 
     Op1_(nullptr),
     Op2_(nullptr),
+	Op3_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1)
+    size_(-1),
+    nc_(2)
     {
     update(Op1,Op2,L,R);
+    }
+
+template <class Tensor>
+inline LocalOp<Tensor>::
+LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3,
+        const Tensor& L, const Tensor& R,
+        const Args& args)
+    : 
+    Op1_(nullptr),
+    Op2_(nullptr),
+	Op3_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
+    size_(-1),
+    nc_(3)
+    {
+    update(Op1,Op2,Op3,L,R);
     }
 
 template <class Tensor>
@@ -180,6 +266,20 @@ update(const Tensor& Op1, const Tensor& Op2)
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
+    nc_=2;
+    }
+
+template <class Tensor>
+void inline LocalOp<Tensor>::
+update(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3)
+    {
+    Op1_ = &Op1;
+    Op2_ = &Op2;
+	Op3_ = &Op3;
+    L_ = nullptr;
+    R_ = nullptr;
+    size_ = -1;
+    nc_=3;
     }
 
 template <class Tensor>
@@ -190,6 +290,18 @@ update(const Tensor& Op1, const Tensor& Op2,
     update(Op1,Op2);
     L_ = &L;
     R_ = &R;
+    nc_=2;
+    }
+
+template <class Tensor>
+void inline LocalOp<Tensor>::
+update(const Tensor& Op1, const Tensor& Op2, const Tensor& Op3, 
+       const Tensor& L, const Tensor& R)
+    {
+    update(Op1,Op2,Op3);
+    L_ = &L;
+    R_ = &R;
+    nc_=3;
     }
 
 template <class Tensor>
@@ -224,7 +336,12 @@ product(Tensor const& phi,
 
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
-
+        
+        if(nc_ == 3)
+            {
+            auto& Op3 = *Op3_;
+			phip *= Op3;
+            }
         phip *= Op2; //m^2 k^2
         phip *= Op1; //m^2 k^2
         }
@@ -234,6 +351,11 @@ product(Tensor const& phi,
 
         phip *= Op1; //m^2 k^2
         phip *= Op2; //m^2 k^2
+        if(nc_ == 3)
+            {
+            auto& Op3 = *Op3_;
+            phip *= Op3;
+            }
 
         if(!RIsNull()) 
             phip *= R();
@@ -251,6 +373,7 @@ expect(const Tensor& phi) const
     return (dag(phip) * phi).real();
     }
 
+// Noise term only support for two-site algorithm.
 template <class Tensor>
 Tensor inline LocalOp<Tensor>::
 deltaRho(Tensor const& AA, 
@@ -380,6 +503,7 @@ size() const
 
         size_ *= findtype(*Op1_,Site).m();
         size_ *= findtype(*Op2_,Site).m();
+		if(nc_ == 3) size_ *= findtype(*Op3_,Site).m();
         }
     return size_;
     }

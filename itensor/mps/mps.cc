@@ -367,6 +367,96 @@ void MPSt<IQTensor>::setBond(int b) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
+setBond3(int b) const
+    {
+    if(b == atb_) return;
+    if(!do_write_)
+        {
+        atb_ = b;
+        return;
+        }
+    if(b < 1 || b >= N_-1) return;
+
+    //
+    //Shift atb_ (location of bond that is loaded into RAM)
+    //to requested value b, writing any non-Null tensors to
+    //disk along the way
+    //
+    while(b-1 > atb_)
+        {
+        if(A_.at(atb_))
+            {
+            writeToFile(AFName(atb_),A_.at(atb_));
+            A_.at(atb_) = Tensor();
+            }
+        if(A_.at(atb_+1))
+            {
+            writeToFile(AFName(atb_+1),A_.at(atb_+1));
+            A_.at(atb_+1) = Tensor();
+            }
+        if(A_.at(atb_+2))
+            {
+            writeToFile(AFName(atb_+2),A_.at(atb_+2));
+            if(atb_+2 != b) A_.at(atb_+2) = Tensor();
+            }
+        ++atb_;
+        }
+    while(b < atb_)
+        {
+        if(A_.at(atb_))
+            {
+            writeToFile(AFName(atb_),A_.at(atb_));
+            if(atb_ != b+1) A_.at(atb_) = Tensor();
+            }
+        if(A_.at(atb_+1))
+            {
+            writeToFile(AFName(atb_+1),A_.at(atb_+1));
+            A_.at(atb_+1) = Tensor();
+            }
+        if(A_.at(atb_+2))
+            {
+            writeToFile(AFName(atb_+2),A_.at(atb_+2));
+            A_.at(atb_+2) = Tensor();
+            }
+        --atb_;
+        }
+    assert(atb_ == b);
+    //
+    //Load tensors at bond b into RAM if
+    //they aren't loaded already
+    //
+    if(!A_.at(b))
+        {
+        readFromFile(AFName(b),A_.at(b));
+        }
+
+    if(!A_.at(b+1))
+        {
+        readFromFile(AFName(b+1),A_.at(b+1));
+		}
+
+	if(!A_.at(b+2))
+        {
+        readFromFile(AFName(b+1),A_.at(b+1));
+        }
+
+    //if(b == 1)
+        //{
+        //writeToFile(writedir_+"/sites",*sites_);
+        //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
+        //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
+        //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
+        //    svd_.write(inf);
+        //inf.close();
+        //}
+    }
+template
+void MPSt<ITensor>::setBond3(int b) const;
+template
+void MPSt<IQTensor>::setBond3(int b) const;
+
+template <class Tensor>
+void MPSt<Tensor>::
 setSite(int j) const
     {
     if(!do_write_)
@@ -660,6 +750,17 @@ template Spectrum MPSt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const Args& args);
 template Spectrum MPSt<IQTensor>::
 svdBond(int b, const IQTensor& AA, Direction dir, const Args& args);
+
+template<class Tensor> 
+Spectrum MPSt<Tensor>::
+svdBond3(int b, const Tensor& AA, Direction dir, Tensor & temp, const Args& args)
+    {
+    return svdBond3(b,AA,dir,LocalOp<Tensor>(),temp,args);
+    }
+template Spectrum MPSt<ITensor>::
+svdBond3(int b, const ITensor& AA, Direction dir, ITensor & temp, const Args& args);
+template Spectrum MPSt<IQTensor>::
+svdBond3(int b, const IQTensor& AA, Direction dir, IQTensor & temp, const Args& args);
 
 
 struct SqrtInv

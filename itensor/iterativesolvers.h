@@ -104,12 +104,12 @@ davidson(BigMatrixT const& A,
                  (maxsize-1), maxiter_, actual_maxiter);
         }
 
-    if(area(phi.front().inds()) != size_t(maxsize))
-        {
-        println("area(phi.front().inds()) = ",area(phi.front().inds()));
-        println("A.size() = ",A.size());
-        Error("davidson: size of initial vector should match linear matrix size");
-        }
+    //if(area(phi.front().inds()) != size_t(maxsize))
+    //    {
+    //    println("area(phi.front().inds()) = ",area(phi.front().inds()));
+    //    println("A.size() = ",A.size());
+    //    Error("davidson: size of initial vector should match linear matrix size");
+    //    }
 
     auto V = std::vector<Tensor>(actual_maxiter+2);
     auto AV = std::vector<Tensor>(actual_maxiter+2);

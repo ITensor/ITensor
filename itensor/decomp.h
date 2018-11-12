@@ -183,7 +183,6 @@ svd(Tensor AA,
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
-    
     //if(isZero(AA,Args("Fast"))) 
     //    throw ResultIsZero("svd: AA is zero");
 
@@ -240,7 +239,7 @@ svd(Tensor AA,
 
     auto ui = commonIndex(AA,Ucomb);
     auto vi = commonIndex(AA,Vcomb);
-
+    
     auto spec = svdRank2(AA,ui,vi,U,D,V,args);
 
     U = dag(Ucomb) * U;

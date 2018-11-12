@@ -134,6 +134,22 @@ class MPSt
             LocalOpT const& PH, 
             Args const& args = Args::global());
 
+	Spectrum 
+    svdBond3(int b, 
+            Tensor const& AA, 
+            Direction dir,
+            Tensor & temp,	
+            Args const& args = Args::global());
+
+    template<class LocalOpT>
+    Spectrum 
+    svdBond3(int b, 
+            Tensor const& AA, 
+            Direction dir, 
+            LocalOpT const& PH, 
+            Tensor & temp,
+            Args const& args = Args::global());
+
     //Move the orthogonality center to site i 
     //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)
     void 
@@ -177,6 +193,8 @@ class MPSt
     //tensors written to disk
     void
     setBond(int b) const;
+    void
+    setBond3(int b) const;
 
     void
     setSite(int j) const;

@@ -189,9 +189,8 @@ svdImpl(IQTensor A,
         auto& UU = Umats.at(b);
         auto& VV = Vmats.at(b);
         auto& d =  dvecs.at(b);
-
         SVD(M,UU,d,VV,thresh);
-
+	
         //conjugate VV so later we can just do
         //U*D*V to reconstruct ITensor A:
         conjugate(VV);
@@ -266,12 +265,14 @@ svdImpl(IQTensor A,
             m = 1; 
             docut = 1; 
             }
-
+	
         if(this_m == 0) 
             { 
             d.clear();
             B.M.clear();
-            assert(not B.M);
+            assert(not B.M);//to check if B.M has been cleared.
+			printfln("this_m=%f",this_m);
+			printfln("not B.M=%f", not B.M);
             continue; 
             }
 
@@ -280,7 +281,11 @@ svdImpl(IQTensor A,
         Liq.emplace_back(Index("l",this_m,litype),uI.qn(1+B.i1));
         Riq.emplace_back(Index("r",this_m,ritype),vI.qn(1+B.i2));
         }
-    
+
+#ifdef DEBUG
+    if(Liq.empty() || Riq.empty()) throw std::runtime_error("IQIndex of S after SVD is empty");
+#endif
+
     auto L = IQIndex(lname,move(Liq),uI.dir());
     auto R = IQIndex(rname,move(Riq),vI.dir());
 
@@ -335,7 +340,7 @@ svdImpl(IQTensor A,
         //Print(VV.range());
         Vref &= VV;
 
-        /////////DEBUG
+        ////DEBUG
         //Matrix D(d.size(),d.size());
         //for(decltype(d.size()) n = 0; n < d.size(); ++n)
         //    {
@@ -348,18 +353,19 @@ svdImpl(IQTensor A,
         //Print(Vref);
         //printfln("Check %d = \n%s",b,AA);
         //printfln("Diff %d = %.10f",b,norm(AA-B.M));
-        /////////DEBUG
+        ////DEBUG
 
         ++n;
         }
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1. : +1.;
+
     U = IQTensor(Uis,move(Ustore));
     D = IQTensor(Dis,move(Dstore),A.scale()*signfix);
     V = IQTensor(Vis,move(Vstore),LogNum{signfix});
-    
-    //Originally eigs were found without including scale
+
+	//Originally eigs were found without including scale
     //so put the scale back in
     if(A.scale().isFiniteReal())
         {

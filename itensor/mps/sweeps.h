@@ -469,6 +469,19 @@ sweepnext1(int &b, int &ha, int N, int min_b = 1)
         }
     }
 
+//three-site version of sweepnext
+void inline
+sweepnext3(int &b, int &ha, int N, int min_b = 1)
+    {
+    const int inc = (ha==1 ? +1 : -1);
+    b += inc;
+    if(b == (ha==1 ? N-1 : min_b-1))
+        {
+        b -= inc;
+        ++ha;
+        }
+    }
+
 } //namespace itensor
 
 

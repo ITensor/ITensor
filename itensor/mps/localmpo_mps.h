@@ -80,6 +80,10 @@ class LocalMPO_MPS
     void
     doWrite(bool val, Args const& args = Args::global()) { lmpo_.doWrite(val,args); }
 
+    int
+    numCenter() const { return lmpo_.numCenter(); }
+	void
+    numCenter(int val);
     };
 
 template <class Tensor>
@@ -92,11 +96,11 @@ LocalMPO_MPS(MPOt<Tensor> const& Op,
     lmps_(psis.size()),
     weight_(args.getReal("Weight",1))
     { 
-    lmpo_ = LocalMPOType(Op);
+    lmpo_ = LocalMPOType(Op,args);
 
     for(auto j : range(lmps_.size()))
         {
-        lmps_[j] = LocalMPOType(psis[j]);
+        lmps_[j] = LocalMPOType(psis[j],args);
         }
     }
 
@@ -114,7 +118,7 @@ LocalMPO_MPS(MPOt<Tensor> const& Op,
     lmps_(psis.size()),
     weight_(args.getReal("Weight",1))
     { 
-    lmpo_ = LocalMPOType(Op,LOp,ROp);
+    lmpo_ = LocalMPOType(Op,LOp,ROp,args);
 #ifdef DEBUG
     if(Lpsi.size() != psis.size()) Error("Lpsi must have same number of elements as psis");
     if(Rpsi.size() != psis.size()) Error("Rpsi must have same number of elements as psis");
@@ -122,7 +126,7 @@ LocalMPO_MPS(MPOt<Tensor> const& Op,
 
     for(auto j : range(lmps_.size()))
         {
-        lmps_[j] = LocalMPOType(psis[j],Lpsi[j],Rpsi[j]);
+        lmps_[j] = LocalMPOType(psis[j],Lpsi[j],Rpsi[j],args);
         }
     }
 
@@ -154,6 +158,16 @@ position(int b, const MPSType& psi)
         }
     }
 
+template <class Tensor>
+void inline LocalMPO_MPS<Tensor>::
+numCenter(int val)
+    {
+    lmpo_.numCenter(val);
+    for(auto& M : lmps_)
+        {
+        M.numCenter(val);
+        }
+    }
 } //namespace itensor
 
 #endif

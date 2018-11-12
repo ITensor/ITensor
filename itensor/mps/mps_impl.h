@@ -87,6 +87,150 @@ svdBond(int b, const Tensor& AA, Direction dir,
     return res;
     }
 
+template <class Tensor>
+template <class BigMatrixT>
+Spectrum MPSt<Tensor>::
+svdBond3(int b, const Tensor& AA, Direction dir, 
+        const BigMatrixT& PH, Tensor & temp, const Args& args)
+    {
+    setBond3(b);
+    if(dir == Fromleft && b-1 > leftLim())
+        {
+        printfln("b=%d, l_orth_lim_=%d",b,leftLim());
+        Error("b-1 > l_orth_lim_");
+        }
+    if(dir == Fromright && b+3 < rightLim())
+        {
+        printfln("b=%d, r_orth_lim_=%d",b,rightLim());
+        Error("b+3 < r_orth_lim_");
+        }
+
+    auto noise = args.getReal("Noise",0.);
+
+    Spectrum res;
+
+    if(noise != 0)
+        {
+        Error("Noise term not implemented for 3-site algorithm.");
+        }
+    else
+        {
+        if(dir == Fromleft)
+            { 
+            Tensor D, V;
+            if(b == 1) 
+                {
+                res = svd(AA,A_[b],D,V,args);
+        
+                //Normalize the ortho center if requested
+                if(args.getBool("DoNormalize",false))
+                    {
+                    D *= 1./itensor::norm(D);
+                    }
+               
+                temp = D*V;
+                }
+            else
+                {
+                Tensor U(commonIndex(AA,A_[b-1],Link),findtype(A_[b],Site));
+                if(b == N_-2)
+                    {
+                    res = svd(AA,U,D,V,args);
+                    A_[b] = U;
+
+                    //Normalize the ortho center if requested
+                    if(args.getBool("DoNormalize",false))
+                        {
+                        D *= 1./itensor::norm(D);
+                        }
+
+                    temp = D*V;
+                    Tensor U2;
+                    svd(temp,U2,D,A_[b+2],args);
+                    A_[b+1] = U2;
+                    A_[b+2] *= D;
+                    }
+            	else
+                    {
+                    res = svd(AA,U,D,V,args);
+                    A_[b] = U;
+					
+                    //Normalize the ortho center if requested
+                    if(args.getBool("DoNormalize",false))
+                        {
+                        D *= 1./itensor::norm(D);
+                        }
+					
+                    temp = D*V;
+                    }
+                }
+            }
+        else//Fromright
+            {
+            Tensor U, D;
+            if(b == N_-2)
+                {
+                res = svd(AA,U,D,A_[b+2],args);
+
+                //Normalize the ortho center if requested
+                if(args.getBool("DoNormalize",false))
+                    {
+                    D *= 1./itensor::norm(D);
+                    }
+
+                temp = U*D; 
+                }
+            else
+                {
+                Tensor V(findtype(A_[b+2],Site),commonIndex(AA,A_[b+3],Link));
+                if(b == 1)
+                    {
+                    res = svd(AA,U,D,V,args);
+                    A_[b+2] = V;
+                    
+                    //Normalize the ortho center if requested
+                    if(args.getBool("DoNormalize",false))
+                        {
+                        D *= 1./itensor::norm(D);
+                        }
+
+		    		temp = U*D;
+                    Tensor V2;
+                    svd(temp,A_[b],D,V2,args);
+                    A_[b+1] = V2;
+                    A_[b] *= D;
+                    }
+                else
+                    {
+                    res = svd(AA,U,D,V,args);
+                    A_[b+2] = V;
+
+                    //Normalize the ortho center if requested
+                    if(args.getBool("DoNormalize",false))
+                        {
+                        D *= 1./itensor::norm(D);
+                        }
+
+                    temp = U*D;
+                    }
+                }    
+            }       
+        }
+
+    if(dir == Fromleft)
+        {
+        l_orth_lim_ = b;
+        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+        }
+    else //dir == Fromright
+        {
+        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+        r_orth_lim_ = b+1;
+        }
+
+    return res;
+    }
+
 template<typename T>
 bool
 isComplex(MPSt<T> const& psi)

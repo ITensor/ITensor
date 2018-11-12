@@ -22,6 +22,13 @@ namespace itensor {
 //   |  |     |      |      |     |      | 
 //   '----...---                ----...--'
 //
+// (Three site variation: modify nc_ and the relevant.)
+//
+//   .----...---                      ----...--.
+//   |  |     |      |     |     |      |      |
+//   W1-W2-..Wj-1 - Wj - Wj+1 - Wj+2 -- Wj+3..-WN
+//   |  |     |      |     |     |      |      |
+//   '----...---                      ----...--'
 // 
 //  Here the W's are the site tensors
 //  of the MPO "Op" and the method position(j,psi)
@@ -169,7 +176,11 @@ class LocalMPO
     numCenter(int val) 
         { 
         if(val < 1) Error("numCenter must be set >= 1");
-        nc_ = val; 
+        if(val != nc_)
+		    {
+		    nc_ = val;
+			lop_.numCenter(val);
+			}
         }
 
     long
@@ -303,8 +314,13 @@ LocalMPO(const MPOt<Tensor>& H,
     PH_[H.N()+1] = RH;
     if(H.N()==2)
         lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    else//if H.N()==3
+        lop_.update(Op_->A(1),Op_->A(2),Op_->A(3),L(),R());
     if(args.defined("NumCenter"))
-        numCenter(args.getInt("NumCenter"));
+        {
+        if(H.N()==args.getInt("NumCenter")) numCenter(args.getInt("NumCenter"));
+        else Error("NumCenter is not equal to H.N()");
+        }
     }
 
 template <class Tensor>
@@ -343,8 +359,15 @@ LocalMPO(MPOt<Tensor> const& H,
     { 
     PH_.at(LHlim) = LH;
     PH_.at(RHlim) = RH;
-    if(H.N()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
-    if(args.defined("NumCenter")) numCenter(args.getInt("NumCenter"));
+    if(H.N()==2) 
+        lop_.update(Op_->A(1),Op_->A(2),L(),R());
+	else//if H.N()==3
+        lop_.update(Op_->A(1),Op_->A(2),Op_->A(3),L(),R());
+    if(args.defined("NumCenter")) 
+        {
+        if(H.N()==args.getInt("NumCenter")) numCenter(args.getInt("NumCenter"));
+        else Error("NumCenter is not equal to H.N()");
+        }
     }
 
 template <class Tensor> inline
@@ -360,12 +383,22 @@ product(const Tensor& phi, Tensor& phip) const
         {
         int b = position();
         auto othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
-        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
-        othr *= othrR;
-        auto z = (othr*phi).cplx();
 
-        phip = dag(othr);
-        phip *= z;
+		if(nc_ == 2)
+            {
+            auto othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
+            othr *= othrR;
+			}
+        else//if nc_==3
+            {
+            auto othrR = (!R() ? dag(prime(Psi_->A(b+2),Link)) : R()*dag(prime(Psi_->A(b+2),Link)));	
+            othr *= dag(prime(Psi_->A(b+1),Link));
+			othr *= othrR;
+            }
+
+		auto z = (othr*phi).cplx();
+		phip = dag(othr);
+		phip *= z;
         }
     else
         {
@@ -403,15 +436,18 @@ position(int b, const MPSType& psi)
     setRHlim(b+nc_); //not redundant since RHlim_ could be < b+nc_
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 2 && nc_ != 3)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 2 and 3 center sites currently");
         }
 #endif
 
     if(Op_ != 0) //normal MPO case
         {
-        lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+        else//if nc_==3
+            lop_.update(Op_->A(b),Op_->A(b+1),Op_->A(b+2),L(),R());
         }
     }
 
@@ -433,9 +469,9 @@ shift(int j, Direction dir, const Tensor& A)
     if(!(*this)) Error("LocalMPO is null");
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 2 && nc_ != 3)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 2 and 3 center sites currently");
         }
 #endif
 
@@ -454,7 +490,10 @@ shift(int j, Direction dir, const Tensor& A)
         setLHlim(j);
         setRHlim(j+nc_+1);
 
-        lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
+        else//if nc_==3
+            lop_.update(Op_->A(j+1),Op_->A(j+2),Op_->A(j+3),L(),R());
         }
     else //dir == Fromright
         {
@@ -471,7 +510,10 @@ shift(int j, Direction dir, const Tensor& A)
         setLHlim(j-nc_-1);
         setRHlim(j);
 
-        lop_.update(Op_->A(j-1),Op_->A(j),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(j-1),Op_->A(j),L(),R());
+        else//if nc_==3
+            lop_.update(Op_->A(j-1),Op_->A(j),Op_->A(j+1),L(),R());
         }
     }
 

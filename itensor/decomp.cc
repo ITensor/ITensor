@@ -184,12 +184,12 @@ truncate(Vector & P,
 
     if(n+1 < origm) 
         {
-        docut = (P(n+1) + P(n))/2.;
+        docut = (P(n+1) + P(n))/2.-1E-5*P(m);
         //Check for a degeneracy:
-        if(std::fabs(P(n+1)-P(n)) < 1E-3*P(n)) 
-            {
-            docut += 1E-3*P(n);
-            }
+        //if(std::fabs(P(n+1)-P(n)) < 1E-3*P(n)) 
+        //    {
+        //    docut += 1E-3*P(n);
+        //    }
         }
 
     resize(P,m); 

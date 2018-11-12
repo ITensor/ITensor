@@ -110,7 +110,7 @@ LocalMPOSet(std::vector<MPOt<Tensor>> const& Op,
     using LocalMPOT = LocalMPO<Tensor>;
     for(auto n : range(lmpo_.size()))
         {
-        lmpo_[n] = LocalMPOT(Op.at(n));
+        lmpo_[n] = LocalMPOT(Op.at(n),args);
         }
     }
 
