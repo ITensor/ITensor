@@ -280,7 +280,7 @@ SECTION("toMPO function")
     auto Z = QN("Sz=",0,"Nf=",0);
 
     auto A = MPO(sites);
-    A.Aref(1) = randomTensor(Z,sites(1),ll.at(1));
+    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
     for(int n = 2; n < N; ++n)
         {
         A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
