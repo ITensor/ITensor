@@ -84,7 +84,7 @@ class LocalMPOSet
     void
     numCenter(int val);
 
-    int
+    long
     size() const { return lmpo_.front().size(); }
 
     explicit
