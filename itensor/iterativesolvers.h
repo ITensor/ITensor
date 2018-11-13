@@ -76,10 +76,10 @@ davidson(BigMatrixT const& A,
          std::vector<Tensor>& phi,
          Args const& args)
     {
-    auto maxiter_ = args.getInt("MaxIter",2);
+    size_t maxiter_ = args.getInt("MaxIter",2);
     auto errgoal_ = args.getReal("ErrGoal",1E-14);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-    auto miniter_ = args.getInt("MinIter",1);
+    size_t miniter_ = args.getInt("MinIter",1);
 
     Real Approx0 = 1E-12;
 
@@ -97,14 +97,15 @@ davidson(BigMatrixT const& A,
         }
 
     auto maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,static_cast<decltype(maxiter_)>(maxsize)-1);
+    //auto actual_maxiter = std::min(maxiter_,static_cast<decltype(maxiter_)>(maxsize)-1);
+    auto actual_maxiter = std::min(size_t(maxiter_),maxsize-1);
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
                  (maxsize-1), maxiter_, actual_maxiter);
         }
 
-    if(area(phi.front().inds()) != size_t(maxsize))
+    if(area(phi.front().inds()) != maxsize)
         {
         println("area(phi.front().inds()) = ",area(phi.front().inds()));
         println("A.size() = ",A.size());
@@ -146,7 +147,7 @@ davidson(BigMatrixT const& A,
     size_t t = 0; //which eigenvector we are currently targeting
 
     int iter = 0;
-    for(int ii = 0; ii <= actual_maxiter; ++ii)
+    for(size_t ii = 0; ii <= actual_maxiter; ++ii)
         {
         //Diagonalize dag(V)*A*V
         //and compute the residual q
@@ -178,7 +179,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-            for(int k = 1; k <= ii; ++k)
+            for(size_t k = 1; k <= ii; ++k)
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
@@ -357,7 +358,7 @@ davidson(BigMatrixT const& A,
         //Add new row and column to M
         Mref = subMatrix(M,0,ni+1,0,ni+1);
         auto newCol = subVector(NC,0,1+ni);
-        for(int k = 0; k <= ni; ++k)
+        for(size_t k = 0; k <= ni; ++k)
             {
             newCol(k) = (dag(V.at(k))*AV.at(ni)).cplx();
             }

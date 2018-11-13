@@ -76,7 +76,7 @@ class LocalOp
     Tensor
     diag() const;
 
-    long
+    size_t
     size() const;
 
     //
@@ -346,7 +346,7 @@ diag() const
     }
 
 template <class Tensor>
-long inline LocalOp<Tensor>::
+size_t inline LocalOp<Tensor>::
 size() const
     {
     if(!(*this)) Error("LocalOp is default constructed");
