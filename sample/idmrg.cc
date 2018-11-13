@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
     auto sites = SpinOne(N);
 
-    IQMPO H = Heisenberg(sites,{"Infinite=",true});
+    MPO H = Heisenberg(sites,{"Infinite=",true});
 
     auto sweeps = Sweeps(20);
     sweeps.maxm() = 20,80,140,200;
@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
         else
             state.set(i,"Dn");
         }
-    auto psi = IQMPS(state);
+    auto psi = MPS(state);
 
     //idmrg returns a struct holding various useful
     //things such as the energy and the "edge tensors"
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
     //Multiply in psi.A(0) which holds singular values
     auto wf1 = psi.A(0)*psi.A(1); 
-    //oi is the outer IQIndex "sticking out" of the left edge of psi.A(0)
+    //oi is the outer Index "sticking out" of the left edge of psi.A(0)
     auto oi = uniqueIndex(psi.A(0),psi.A(1),Link);
     //lcorr is the left side of the correlation function tensor
     //which grows site by site below
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     for(int j = 2; j <= xrange; ++j)
         {
         int n = (j-1)%N+1; //translate from j to unit cell site number
-        //ui is the IQIndex "sticking out" of the right edge of psi.A(n)
+        //ui is the Index "sticking out" of the right edge of psi.A(n)
         auto ui = uniqueIndex(psi.A(n),lcorr,Link);
         //prime ui so it contracts with the "bra" tensor on top = dag(prime(psi.A(n)))
         Real val = (dag(prime(psi.A(n)))*lcorr*prime(psi.A(n),ui)*sites.op("Sz",n)).real();
