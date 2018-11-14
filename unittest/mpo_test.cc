@@ -213,6 +213,49 @@ SECTION("applyMPO (Fit)")
 
     }
 
+SECTION("checkMPOProd Scaling")
+    {
+
+    auto method = "DensityMatrix";
+
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto psi = MPS(sites);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto K = MPO(ampo);
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 10.0;
+        K.Aref(j) *= 10.0;
+        }
+
+    // Apply K to psi to entangle psi
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
+    psi /= norm(psi);
+
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+    Real HpsiNorm = norm(Hpsi);
+
+    //<Hpsi|Hpsi> is ~ 1E20, so checkMPOProd lies to us
+    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi,true),0.);
+    //should be the same as dividing by the new norm
+    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi,false)/(HpsiNorm*HpsiNorm),0.);
+
+    }
 
 SECTION("Overlap <psi|HK|phi>")
     {

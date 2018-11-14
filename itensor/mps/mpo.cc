@@ -557,10 +557,12 @@ template<class Tensor>
 Real
 checkMPOProd(MPSt<Tensor> const& psi2,
              MPOt<Tensor> const& K, 
-             MPSt<Tensor> const& psi1)
+             MPSt<Tensor> const& psi1,
+             bool rescale)
     {
     //||p2> - K|p1>|^2 = (<p2|-<p1|Kd)(|p2>-K|p1>) = <p2|p2>+<p1|Kd*K|p1>-2*Re[<p2|K|p1>]
     Real res = overlap(psi2,psi2);
+    Real scale = res;
     res += -2.*overlapC(psi2,K,psi1).real();
     //Compute Kd, Hermitian conjugate of K
     auto Kd = K;
@@ -569,11 +571,12 @@ checkMPOProd(MPSt<Tensor> const& psi2,
         Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,Site));
         }
     res += overlap(psi1,Kd,K,psi1);
+    if (rescale) res/=scale;
     return res;
     }
 template
-Real checkMPOProd(MPSt<ITensor> const& psi2, MPOt<ITensor> const& K, MPSt<ITensor> const& psi1);
+Real checkMPOProd(MPSt<ITensor> const& psi2, MPOt<ITensor> const& K, MPSt<ITensor> const& psi1, bool rescale);
 template
-Real checkMPOProd(MPSt<IQTensor> const& psi2, MPOt<IQTensor> const& K, MPSt<IQTensor> const& psi1);
+Real checkMPOProd(MPSt<IQTensor> const& psi2, MPOt<IQTensor> const& K, MPSt<IQTensor> const& psi1, bool rescale);
 
 } //namespace itensor

@@ -466,7 +466,8 @@ template<class Tensor>
 Real
 checkMPOProd(MPSt<Tensor> const& psi2,
              MPOt<Tensor> const& K, 
-             MPSt<Tensor> const& psi1);
+             MPSt<Tensor> const& psi1,
+             bool rescale=false);
 
 //
 // Deprecated interfaces - kept for backwards compatibility
