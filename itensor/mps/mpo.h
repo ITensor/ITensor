@@ -464,10 +464,22 @@ operator<<(std::ostream& s, MPOt<Tensor> const& M);
 
 template<class Tensor>
 Real
+errorMPOProd(MPSt<Tensor> const& psi2,
+             MPOt<Tensor> const& K, 
+             MPSt<Tensor> const& psi1);
+
+template<class Tensor>
+Real
 checkMPOProd(MPSt<Tensor> const& psi2,
              MPOt<Tensor> const& K, 
              MPSt<Tensor> const& psi1);
 
+template<class Tensor>
+bool
+checkMPOProd(MPSt<Tensor> const& psi2,
+             MPOt<Tensor> const& K, 
+             MPSt<Tensor> const& psi1,
+             Real threshold);
 //
 // Deprecated interfaces - kept for backwards compatibility
 //
