@@ -250,9 +250,11 @@ factor(Tensor const& T,
        Tensor      & B,
        Args const& args)
     {
-    auto name = args.getString("IndexName","c");
+    //TODO: make a standard TagSet for factor()
+    //auto name = args.getString("IndexName","c");
+    auto itagset = getTagSet(args,"Tags","Link,FAC");
     Tensor D;
-    auto spec = svd(T,A,D,B,{args,"LeftIndexName=",name});
+    auto spec = svd(T,A,D,B,{args,"LeftTags=",itagset.c_str()});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
     D.apply([](Real x){ return std::sqrt(std::fabs(x)); });
@@ -267,6 +269,7 @@ factor(ITensor const& T,ITensor& A,ITensor & B,Args const& args);
 template Spectrum
 factor(IQTensor const& T,IQTensor& A,IQTensor & B,Args const& args);
 
+//TODO: create a tag convention
 template<typename value_type>
 void 
 eigDecompImpl(ITensor T, 
@@ -284,7 +287,7 @@ eigDecompImpl(ITensor T,
         Error("eig_decomp requires rank 2 tensor as input");
         }
 
-    auto lind = noprime(T.inds().front());
+    auto lind = noPrime(T.inds().front());
 
     //Do the diagonalization
     auto MM = toMatRefc<value_type>(T,prime(lind),lind);
@@ -300,7 +303,7 @@ eigDecompImpl(ITensor T,
         eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
         }
 
-    auto newmid = Index("C",lind.m(),lind.type());
+    auto newmid = Index(lind.m(),lind.tags());
 
     //put right eigenvectors into an ITensor
     if(norm(Ri) > 1E-16*norm(Rr))
@@ -423,7 +426,7 @@ eigDecompImpl(IQTensor T,
         Index li = t.indices().front(),
               ri = t.indices().back();
 
-        if(!hasindex(L,li))
+        if(!hasIndex(L,li))
             swap(li,ri);
 
         Matrix &Ur = rmatrix.at(itenind),
@@ -473,7 +476,7 @@ eigDecompImpl(IQTensor T,
         Index nm("d",dr.Length());
 
         Index act = t.indices().front();
-        if(!hasindex(R,act))
+        if(!hasIndex(R,act))
             act = t.indices().back();
 
         iq.push_back(IndexQN(nm,qn(R,act)));
@@ -515,7 +518,6 @@ eigDecompImpl(IQTensor T,
         }
 
     D *= refNorm;
-
     */
     }
 

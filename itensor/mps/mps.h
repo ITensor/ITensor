@@ -112,7 +112,7 @@ class MPSt
            Args const& args = Args::global());
 
     void 
-    mapprime(int oldp, int newp, IndexType type = All);
+    mapPrime(int oldp, int newp, TagSet const& ts = TagSet("All"));
 
     void 
     primelinks(int oldp, int newp);
@@ -137,7 +137,7 @@ class MPSt
     //Move the orthogonality center to site i 
     //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)
     void 
-    position(int i, Args const& args = Args::global());
+    position(int i, Args args = Args::global());
 
     void 
     orthogonalize(Args const& args = Args::global());

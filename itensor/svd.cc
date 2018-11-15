@@ -44,11 +44,27 @@ svdImpl(ITensor const& A,
     auto minm = args.getInt("Minm",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    auto lname = args.getString("LeftIndexName","ul");
-    auto rname = args.getString("RightIndexName","vl");
-    auto itype = getIndexType(args,"IndexType",Link);
-    auto litype = getIndexType(args,"LeftIndexType",itype);
-    auto ritype = getIndexType(args,"RightIndexType",itype);
+    //auto lname = args.getString("LeftIndexName","ul");
+    //auto rname = args.getString("RightIndexName","vl");
+    // TODO: Create a tag convention for SVD
+    //auto itype = getIndexType(args,"IndexType",Link);
+    //auto litype = getIndexType(args,"LeftIndexType",itype);
+    //auto ritype = getIndexType(args,"RightIndexType",itype);
+    //auto itagset = getTagSet(args,"Tags","SVD");
+    //auto litagset = getTagSet(args,"LeftTags","SVD,u");
+    //auto ritagset = getTagSet(args,"RightTags","SVD,v");
+    auto litagset = TagSet();
+    auto ritagset = TagSet();
+    if(!args.defined("Tags"))  // If "Tags" is not in Args, fall back to "LeftTags" and "RightTags"
+        {
+        litagset = getTagSet(args,"LeftTags","Link,SVD,u");
+        ritagset = getTagSet(args,"RightTags","Link,SVD,v");
+        }
+    else  // If "Tags" is in Args, use it for the tags of the new indices
+        {
+        litagset = getTagSet(args,"Tags");
+        ritagset = litagset;
+        }
     auto show_eigs = args.getBool("ShowEigs",false);
 
     auto M = toMatRefc<T>(A,ui,vi);
@@ -100,8 +116,13 @@ svdImpl(ITensor const& A,
         showEigs(probs,truncerr,A.scale(),showargs);
         }
     
-    Index uL(lname,m,litype),
-          vL(rname,m,ritype);
+    //Index uL(lname,m,litype),
+    //      vL(rname,m,ritype);
+
+    // TODO: create a tag convention for SVD
+    // TODO: make vL = prime(uL)
+    Index uL(m,litagset),
+          vL(m,ritagset);
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
@@ -150,11 +171,24 @@ svdImpl(IQTensor A,
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
-    auto lname = args.getString("LeftIndexName","ul");
-    auto rname = args.getString("RightIndexName","vl");
-    auto itype = getIndexType(args,"IndexType",Link);
-    auto litype = getIndexType(args,"LeftIndexType",itype);
-    auto ritype = getIndexType(args,"RightIndexType",itype);
+    //auto lname = args.getString("LeftIndexName","ul");
+    //auto rname = args.getString("RightIndexName","vl");
+    // TODO: create a tag convention for SVD
+    //auto itype = getIndexType(args,"IndexType",Link);
+    //auto litype = getIndexType(args,"LeftIndexType",itype);
+    //auto ritype = getIndexType(args,"RightIndexType",itype);
+    auto litagset = TagSet();
+    auto ritagset = TagSet();
+    if(!args.defined("Tags"))  // If "Tags" is not in Args, fall back to "LeftTags" and "RightTags"
+        {
+        litagset = getTagSet(args,"LeftTags","Link,SVD,u");
+        ritagset = getTagSet(args,"RightTags","Link,SVD,v");
+        }
+    else  // If "Tags" is in Args, use it for the tags of the new indices
+        {
+        litagset = getTagSet(args,"Tags");
+        ritagset = litagset;
+        }
     auto compute_qn = args.getBool("ComputeQNs",false);
 
     auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
@@ -277,12 +311,21 @@ svdImpl(IQTensor A,
 
         resize(d,this_m);
 
-        Liq.emplace_back(Index("l",this_m,litype),uI.qn(1+B.i1));
-        Riq.emplace_back(Index("r",this_m,ritype),vI.qn(1+B.i2));
+        // TODO: create a tag convention for SVD
+        // TODO: make Riq = prime(Liq)
+        //Liq.emplace_back(Index("l",this_m,litype),uI.qn(1+B.i1));
+        //Riq.emplace_back(Index("r",this_m,ritype),vI.qn(1+B.i2));
+        Liq.emplace_back(Index(this_m),uI.qn(1+B.i1));
+        Riq.emplace_back(Index(this_m),vI.qn(1+B.i2));
         }
     
-    auto L = IQIndex(lname,move(Liq),uI.dir());
-    auto R = IQIndex(rname,move(Riq),vI.dir());
+    // TODO: create a tag convention for SVD
+    // TODO: make R = prime(L)
+    //auto L = IQIndex(lname,move(Liq),uI.dir());
+    //auto R = IQIndex(rname,move(Riq),vI.dir());
+    auto L = IQIndex(move(Liq),uI.dir(),litagset);
+    auto R = IQIndex(move(Riq),vI.dir(),ritagset);
+
 
     auto Uis = IQIndexSet(uI,dag(L));
     auto Dis = IQIndexSet(L,R);

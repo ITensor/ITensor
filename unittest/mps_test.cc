@@ -28,6 +28,7 @@ SECTION("Constructors")
 SECTION("QNCheck")
     {
     IQMPS psiNeel(shNeel);
+
     CHECK(checkQNs(psiNeel));
 
     CHECK_EQUAL(totalQN(psiNeel),QN(0));
@@ -88,7 +89,7 @@ SECTION("Orthogonalize")
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(nameint("l",n),m);
+        links.at(n) = Index(m,nameint("Link,l",n).c_str());
         }
     psi.Aref(1) = randomTensor(links.at(1),sites(1));
     for(auto n : range1(2,N-1))
@@ -118,7 +119,7 @@ SECTION("Orthogonalize")
 
     for(int n = N; n > 1; --n)
         {
-        auto li = commonIndex(psi.A(n),psi.A(n-1),Link);
+        auto li = commonIndex(psi.A(n),psi.A(n-1),"Link");
         auto rho = psi.A(n) * dag(prime(psi.A(n),li));
         auto id = ITensor(li,prime(li));
         for(auto l : range1(li.m()))
@@ -139,7 +140,7 @@ SECTION("Orthogonalize")
 SECTION("Overlap - 1 site")
     {
     auto psi = MPS(1);
-    auto s = Index("s",2);
+    auto s = Index(2,"s");
     psi.Aref(1) = randomTensor(s);
     CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).real());
     }

@@ -23,14 +23,14 @@ totalM(IQIndex::storage const& storage)
     for(auto& iq : storage)
         {
         tm += iq.index.m();
-#ifdef DEBUG
-        if(iq.index.type() != storage.front().type())
-            {
-            Print(iq.index.type());
-            Print(storage.front().type());
-            Error("Indices must have the same type");
-            }
-#endif
+//#ifdef DEBUG
+//        if(iq.index.type() != storage.front().type())
+//            {
+//            Print(iq.index.type());
+//            Print(storage.front().type());
+//            Error("Indices must have the same type");
+//            }
+//#endif
         }
     return tm;
     }
@@ -132,11 +132,11 @@ read(std::istream & s, IQIndexDat & d)
 #endif
 
 IQIndex::
-IQIndex(std::string const& name, 
-        storage && ind_qn, 
+IQIndex(storage && ind_qn, 
         Arrow dir, 
+        TagSet const& ts,
         int plev) 
-  : Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
+  : Index(totalM(ind_qn),ts,plev),
     dir_(dir)
     { 
     makeStorage(std::move(ind_qn));
@@ -145,10 +145,10 @@ IQIndex(std::string const& name,
 // Constructor taking a storage pointer
 IQIndex::
 IQIndex(storage_ptr const& p,
-        std::string const& name, 
         Arrow dir,
+        TagSet const& ts,
         int plev)
-  : Index(name,totalM(p->store()),p->store().front().index.type(),plev),
+  : Index(totalM(p->store()),ts,plev),
     pd(p),
     dir_(dir)
     {
@@ -256,9 +256,9 @@ read(istream& s)
     }
 
 IQIndex
-sim(IQIndex const& I, int plev)
+sim(IQIndex const& I, TagSet const& ts, int plev)
     {
-    return IQIndex(I.store(),"~"+I.rawname(),I.dir(),plev);
+    return IQIndex(I.store(),I.dir(),ts,plev);
     }
 
 string
@@ -424,26 +424,26 @@ prime(int inc)
     return *this;
     }
 
-IQIndexVal&  IQIndexVal::
-prime(IndexType type, int inc)
-    {
-    index.prime(type,inc);
-    return *this;
-    }
+//IQIndexVal&  IQIndexVal::
+//prime(IndexType type, int inc)
+//    {
+//    index.prime(type,inc);
+//    return *this;
+//    }
 
-IQIndexVal&  IQIndexVal::
-noprime(IndexType type)
-    {
-    index.noprime(type);
-    return *this;
-    }
+//IQIndexVal&  IQIndexVal::
+//noprime(IndexType type)
+//    {
+//    index.noprime(type);
+//    return *this;
+//    }
 
-IQIndexVal&  IQIndexVal::
-mapprime(int plevold, int plevnew, IndexType type)
-    {
-    index.mapprime(plevold,plevnew,type);
-    return *this;
-    }
+//IQIndexVal&  IQIndexVal::
+//mapprime(int plevold, int plevnew, IndexType type)
+//    {
+//    index.mapprime(plevold,plevnew,type);
+//    return *this;
+//    }
 
 IQIndexVal&  IQIndexVal::
 dag() { index.dag(); return *this; }
@@ -476,7 +476,7 @@ makeStorage(storage && iq)
     }
 
 bool
-hasindex(IQIndex const& J, Index const& i)
+hasIndex(IQIndex const& J, Index const& i)
     { 
     for(auto n : range(J.nindex()))
         {
@@ -486,7 +486,7 @@ hasindex(IQIndex const& J, Index const& i)
     }
 
 long
-findindex(IQIndex const& J, Index const& i)
+findIndex(IQIndex const& J, Index const& i)
     { 
     for(auto j : range1(J.nindex()))
         {

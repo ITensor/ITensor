@@ -152,9 +152,11 @@ combiner(std::vector<Index> inds, Args const& args)
         inds[j] = inds[j-1];
         }
     //create combined index
-    auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",Link);
-    inds.front() = Index(cname,rm,itype);
+    //TODO: create a tag convention for combined index
+    //auto cname = args.getString("IndexName","cmb");
+    //auto itype = getIndexType(args,"IndexType",Link);
+    auto itagset = getTagSet(args,"Tags","Link,CMB");
+    inds.front() = Index(rm,itagset);
     return ITensor(IndexSet(std::move(inds)),Combiner{});
     }
 

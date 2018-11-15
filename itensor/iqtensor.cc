@@ -208,7 +208,7 @@ operator+=(IQTensor & T,
     for(auto i : range(rank))
     for(auto I : range(rank))
         {
-        auto j = findindex(T.inds()[I],t.inds()[i]);
+        auto j = findIndex(T.inds()[I],t.inds()[i]);
         if(j > 0)
             {
             block_ind[I] = (j-1);
@@ -355,8 +355,10 @@ combiner(std::vector<IQIndex> cinds,
          Args const& args)
     {
     if(cinds.empty()) Error("No indices passed to combiner");
-    auto cname = args.getString("IndexName","cmb");
-    auto itype = getIndexType(args,"IndexType",Link);
+    // TODO: Make combined index get a default or argument chosen TagSet("cmb")
+    //auto cname = args.getString("IndexName","cmb");
+    //auto itype = getIndexType(args,"IndexType",Link);
+    auto itagset = getTagSet(args,"Tags","Link,CMB");
 
     auto cdir = Out;
     if(args.defined("IndexDir"))
@@ -417,9 +419,10 @@ combiner(std::vector<IQIndex> cinds,
     auto cstore = stdx::reserve_vector<IndexQN>(qms.size());
     for(auto n : range(qms)) 
         {
-        cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
+        cstore.emplace_back(Index{qms[n].m},qms[n].q);
         }
-    auto cind = IQIndex{cname,std::move(cstore),cdir};
+    //auto cind = IQIndex{cname,std::move(cstore),cdir};
+    auto cind = IQIndex{std::move(cstore),cdir,itagset};
 
     auto newind = IQIndexSetBuilder(1+cinds.size());
     newind.nextIndex(std::move(cind));
@@ -459,7 +462,7 @@ findIQInd(IQTensor const& T,
           Index    const& i)
     {
     for(auto& J : T.inds())
-        if(hasindex(J,i)) return J;
+        if(hasIndex(J,i)) return J;
     return IQIndex{};
     }
 

@@ -182,7 +182,7 @@ findCenter(const IQMPO& psi)
         for(const IQIndex& I : A.inds())
             {
             //Only look at Link IQIndices
-            if(I.type() != Link) continue;
+            if(!hasTags(I,"Link")) continue;
 
             if(I.dir() != Out)
                 {
@@ -286,7 +286,7 @@ putMPOLinks(MPO& W, Args const& args)
     vector<Index> links(W.N());
     for(int b = 1; b < W.N(); ++b)
         {
-        links.at(b) = Index(format("%s%d",pfix,b));
+        links.at(b) = Index(1,format("Link,%s%d",pfix,b).c_str());
         }
     W.Aref(1) *= links.at(1)(1);
     for(int b = 2; b < W.N(); ++b)
@@ -307,10 +307,10 @@ putMPOLinks(IQMPO& W, Args const& args)
     vector<IQIndex> links(N);
     for(int b = 1; b < N; ++b)
         {
-        string nm = format("%s%d",pfix,b);
+        string nm = format("Link,%s%d",pfix,b);
                
         q += div(W.A(b));
-        links.at(b) = IQIndex(nm,Index(nm),q);
+        links.at(b) = IQIndex(Index(1,nm.c_str()),q);
         }
 
     W.Aref(1) *= links.at(1)(1);
@@ -495,8 +495,8 @@ overlap(MPSt<Tensor> const& psi,
         psidag.Aref(i) = dag(prime(psi.A(i),2));
         }
     auto Hp = H;
-    Hp.mapprime(1,2);
-    Hp.mapprime(0,1);
+    Hp.mapPrime(1,2);
+    Hp.mapPrime(0,1);
 
     //scales as m^2 k^2 d
     auto L = phi.A(1) * K.A(1) * Hp.A(1) * psidag.A(1);
@@ -566,7 +566,7 @@ checkMPOProd(MPSt<Tensor> const& psi2,
     auto Kd = K;
     for(auto j : range1(K.N()))
         {
-        Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,Site));
+        Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
         }
     res += overlap(psi1,Kd,K,psi1);
     return res;

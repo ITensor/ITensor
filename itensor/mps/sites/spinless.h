@@ -30,18 +30,20 @@ class SpinlessSite
             {
             auto q_occ = QN("Nf=",1);
             if(not conserve_Nf) q_occ = QN("Pf=",1);
-            s = IQIndex{nameint("Spinless ",n),
-                Index(nameint("Emp ",n),1,Site),QN(),
-                Index(nameint("Occ ",n),1,Site),q_occ};
+            // TODO: should this have Tag("Spinless")?
+            // Note: Tag("Spinless") is too long
+            s = IQIndex{Index(1,nameint("Site,S=0,",n).c_str()),QN(),
+                        Index(1,nameint("Site,S=0,",n).c_str()),q_occ};
             }
         else
             {
             QN q_occ;
             if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
             else       q_occ = QN("Sz",-1,"Nf=",1);
-            s = IQIndex{nameint("Spinless ",n),
-                Index(nameint("Emp ",n),1,Site),QN(),
-                Index(nameint("Occ ",n),1,Site),q_occ};
+            // TODO: should this have Tag("Spinless")?
+            // Note: Tag("Spinless") is too long
+            s = IQIndex{Index(1,nameint("Site,S=0,",n).c_str()),QN(),
+                        Index(1,nameint("Site,S=0,",n).c_str()),q_occ};
             }
         }
 

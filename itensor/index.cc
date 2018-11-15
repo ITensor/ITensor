@@ -28,11 +28,11 @@ putprimes(string s, int plev)
     return str.str();
     }
 
-string 
-nameindex(const IndexType& it, int plev)
-    { 
-    return putprimes(it.c_str(),plev); 
-    }
+//string 
+//nameindex(const IndexType& it, int plev)
+//    { 
+//    return putprimes(it.c_str(),plev); 
+//    }
 
 string 
 nameint(string const& f, int n)
@@ -57,26 +57,31 @@ Index::
 Index() 
     : 
     id_(0),
-    primelevel_(0),
     m_(1),
-    type_(NullInd)
-    { }
-
-Index::
-Index(const std::string& name, long m, IndexType type, int plev) 
-    : 
-    id_(generateID()),
-    primelevel_(plev),
-    m_(m),
-    type_(type),
-    name_(name.c_str())
-    { 
-#ifdef DEBUG
-    if(type_ == All) Error("Constructing Index with type All disallowed");
-    if(type_ == NullInd) Error("Constructing Index with type NullInd disallowed");
-#endif
+    primelevel_(0),
+    tags_(TagSet())
+    {
     }
 
+Index::
+Index(long m, const TagSet& t, int plev)
+    :
+    id_(generateID()),
+    m_(m),
+    primelevel_(plev),
+    tags_(t)
+    { 
+    } 
+
+Index::
+Index(long m, int plev)
+    :
+    id_(generateID()),
+    m_(m),
+    primelevel_(plev),
+    tags_(TagSet())
+    { 
+    } 
 
 Index& Index::
 primeLevel(int plev) 
@@ -104,48 +109,8 @@ prime(int inc)
     }
 
 
-string Index::
-name() const  { return putprimes(name_.c_str(),primelevel_); }
-
 Index::
 operator bool() const { return (id_!=0); }
-
-
-Index& Index::
-mapprime(int plevold, int plevnew, IndexType type)
-    {
-    if(primelevel_ == plevold)
-        {
-        if(type == All || type == this->type())
-            {
-            primelevel_ = plevnew;
-#ifdef DEBUG
-            if(primelevel_ < 0)
-                {
-                Error("Negative primeLevel");
-                }
-#endif
-            }
-        }
-    return *this;
-    }
-
-
-Index& Index::
-prime(IndexType type, int inc)
-    {
-    if(type == this->type() || type == All)
-        {
-        primelevel_ += inc;
-#ifdef DEBUG
-        if(primelevel_ < 0)
-            {
-            Error("Increment led to negative primeLevel");
-            }
-#endif
-        }
-    return *this;
-    }
 
 
 bool Index::
@@ -168,22 +133,23 @@ operator[](int plev) const
     return I; 
     }
 
+//TODO: read and write for TagSet
 void Index::
 write(std::ostream& s) const 
     { 
     if(!bool(*this)) Error("Index::write: Index is default initialized");
     itensor::write(s,primelevel_);
-    itensor::write(s,type_);
+    //itensor::write(s,tags_);
     itensor::write(s,id_);
     itensor::write(s,m_);
-    itensor::write(s,name_);
     }
 
+//TODO: read and write for TagSet
 Index& Index::
 read(std::istream& s)
     {
     itensor::read(s,primelevel_);
-    itensor::read(s,type_);
+    //itensor::read(s,tags_);
     if(Global::read32BitIDs())
         {
         using ID32 = std::mt19937::result_type;
@@ -196,7 +162,6 @@ read(std::istream& s)
         itensor::read(s,id_);
         }
     itensor::read(s,m_);
-    itensor::read(s,name_);
 
 #ifdef DEBUG
     if(primelevel_ < 0) Error("Negative primeLevel");
@@ -208,7 +173,7 @@ read(std::istream& s)
 bool 
 operator==(Index const& i1, Index const& i2)
     { 
-    return (i1.id() == i2.id()) && (i1.primeLevel() == i2.primeLevel()); 
+    return (i1.id() == i2.id()) && (tags(i1) == tags(i2)) && (i1.primeLevel() == i2.primeLevel()); 
     }
 
 bool 
@@ -245,9 +210,9 @@ operator<(Index const& i1, Index const& i2)
 std::ostream& 
 operator<<(std::ostream & s, Index const& t)
     {
-    s << "(\"" << t.rawname();
-    s << "\"," << t.m();
-    s << "," << t.type().c_str();
+    s << "(" << t.m();
+    if(size(tags(t)) > 0) s << "," << tags(t);
+    //s << "," << t.type().c_str();
     if(Global::showIDs()) 
         {
         s << "|" << (t.id() % 1000);
@@ -320,12 +285,11 @@ operator==(IndexVal const& iv, Index const& I)
 Index
 sim(Index const& I, int plev)
     {
-    return Index("~"+I.rawname(),I.m(),I.type(),plev);
+    return Index(I.m(),I.tags(),plev);
     }
 
 string
 showm(Index const& I) { return nameint("m=",I.m()); }
-
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)
@@ -337,27 +301,52 @@ operator<<(std::ostream& s, IndexVal const& iv)
 void
 add(Args            & args, 
     Args::Name const& name, 
-    IndexType         it) 
+    TagSet            ts) 
     { 
-    args.add(name,it.c_str()); 
+    args.add(name,ts.c_str()); 
     }
 
-IndexType
-getIndexType(Args       const& args, 
-             Args::Name const& name)
+TagSet
+getTagSet(Args       const& args, 
+          Args::Name const& name)
     {
     if(!args.defined(name)) Error(format("Name %s not found in Args",name));
-    return IndexType(args.getString(name).c_str());
+    return TagSet(args.getString(name).c_str());
     }
 
-IndexType
-getIndexType(const Args& args, 
-             const Args::Name& name, 
-             IndexType default_val)
+TagSet
+getTagSet(const Args& args, 
+          const Args::Name& name, 
+          TagSet default_val)
     {
     if(!args.defined(name)) return default_val; 
-    return IndexType(args.getString(name).c_str());
+    return TagSet(args.getString(name).c_str());
     }
+
+//void
+//add(Args            & args, 
+//    Args::Name const& name, 
+//    TagSet            it) 
+//    { 
+//    args.add(name,it.c_str()); 
+//    }
+
+//IndexType
+//getIndexType(Args       const& args, 
+//             Args::Name const& name)
+//    {
+//    if(!args.defined(name)) Error(format("Name %s not found in Args",name));
+//    return IndexType(args.getString(name).c_str());
+//    }
+
+//IndexType
+//getIndexType(const Args& args, 
+//             const Args::Name& name, 
+//             IndexType default_val)
+//    {
+//    if(!args.defined(name)) return default_val; 
+//    return IndexType(args.getString(name).c_str());
+//    }
 
 } //namespace itensor
 

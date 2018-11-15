@@ -51,7 +51,7 @@ nmultMPO(MPOType const& Aorig,
 
     res=A;
     res.primelinks(0,4);
-    res.mapprime(1,2,Site);
+    res.mapPrime(1,2,"Site");
 
     Tensor clust,nfork;
     for(int i = 1; i < N; ++i)
@@ -71,7 +71,7 @@ nmultMPO(MPOType const& Aorig,
 
         denmatDecomp(clust,res.Anc(i),nfork,Fromleft,args);
 
-        auto mid = commonIndex(res.A(i),nfork,Link);
+        auto mid = commonIndex(res.A(i),nfork,"Link");
         mid.dag();
         res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
@@ -80,7 +80,7 @@ nmultMPO(MPOType const& Aorig,
 
     res.svdBond(N-1,nfork,Fromright);
     res.noprimelink();
-    res.mapprime(2,1,Site);
+    res.mapPrime(2,1,"Site");
     res.orthogonalize();
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
@@ -164,10 +164,15 @@ exactApplyMPO(MPOt<Tensor> const& K,
     if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
-    auto siteType = getIndexType(args,"SiteType",Site);
-    auto linkType = getIndexType(args,"LinkType",Link);
+    //auto siteType = getIndexType(args,"SiteType",Site);
+    //auto linkType = getIndexType(args,"LinkType",Link);
+    auto siteTags = getTagSet(args,"SiteTags","Site");
+    auto linkTags = getTagSet(args,"LinkTags","Link");
 
-    if(noprime(findtype(K.A(1),Site)) != findtype(psi.A(1),Site))
+    // TODO: this might need to be index(K.A(1),"Site,1") since index()
+    // matches the exact pattern, otherwise make a findIndex() function that
+    // outputs the first index found
+    if(noPrime(findIndexWithTags(K.A(1),"Site")) != findIndexWithTags(psi.A(1),"Site"))
         {
         Error("MPS and MPO have different site indices in exactApplyMPO");
         }
@@ -186,15 +191,21 @@ exactApplyMPO(MPOt<Tensor> const& K,
         //Modify prime levels of psic and Kc
         if(j == 1)
             {
-            auto ci = commonIndex(psi.A(1),psi.A(2),linkType);
-            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,ci,0,plev));
-            ci = commonIndex(Kc.A(1),Kc.A(2),linkType);
-            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,ci,0,plev));
+            auto ci = commonIndex(psi.A(1),psi.A(2),linkTags);
+            //psic.Aref(j) = dag(mapPrime(psi.A(j),siteTags,0,2,ci,0,plev));
+            //TODO: check this does the same thing
+            psic.Aref(j) = dag(prime(mapPrime(psi.A(j),0,2,siteTags),plev,ci));
+            ci = commonIndex(Kc.A(1),Kc.A(2),linkTags);
+            //TODO: check this does the same thing as before
+            Kc.Aref(j) = dag(prime(mapPrime(K.A(j),0,2,siteTags),plev,ci));
             }
         else
             {
-            psic.Aref(j) = dag(mapprime(psi.A(j),siteType,0,2,linkType,0,plev));
-            Kc.Aref(j) = dag(mapprime(K.A(j),siteType,0,2,linkType,0,plev));
+            //psic.Aref(j) = dag(mapPrime(psi.A(j),siteTags,0,2,linkTags,0,plev));
+            //Kc.Aref(j) = dag(mapPrime(K.A(j),siteTags,0,2,linkTags,0,plev));
+            //TODO: check this does the same thing as before
+            psic.Aref(j) = dag(mapPrime(mapPrime(psi.A(j),0,2,siteTags),0,plev,linkTags));
+            Kc.Aref(j) = dag(mapPrime(mapPrime(K.A(j),0,2,siteTags),0,plev,linkTags));
             }
         }
 
@@ -211,18 +222,20 @@ exactApplyMPO(MPOt<Tensor> const& K,
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi.A(N)*K.A(N);
-    O.noprime(siteType);
+    O.noPrime(siteTags);
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
     Tensor U,D;
-    dargs.add("IndexName=",nameint("a",N));
+    //TODO: make sure this tag convention is working
+    //dargs.add("IndexName=",nameint("a",N));
+    dargs.add("Tags=",nameint("Link,a",N));
     auto spec = diagHermitian(rho,U,D,dargs);
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
 
     res.Aref(N) = dag(U);
 
     O = O*U*psi.A(N-1)*K.A(N-1);
-    O.noprime(siteType);
+    O.noPrime(siteTags);
 
     for(int j = N-1; j > 1; --j)
         {
@@ -238,10 +251,12 @@ exactApplyMPO(MPOt<Tensor> const& K,
             dargs.add("Maxm",maxm);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
-        dargs.add("IndexName=",nameint("a",j));
+        //TODO: make sure this tag convention is working
+        //dargs.add("IndexName=",nameint("a",j));
+        dargs.add("Tags=",nameint("Link,a",j));
         auto spec = diagHermitian(rho,U,D,dargs);
         O = O*U*psi.A(j-1)*K.A(j-1);
-        O.noprime(siteType);
+        O.noPrime(siteTags);
         res.Aref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),commonIndex(U,D).m());
         }
@@ -391,13 +406,16 @@ fitApplyMPO(Real fac,
                 printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
                 }
 
+            //TODO: does this tag the correct bond, independent of the sweep direction?
+            args.add("Tags",nameint("Link,MPS,",b));
+
             auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);
             auto rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
             rwfK *= K.A(b+1);
 
             auto wfK = lwfK*rwfK;
-            wfK.noprime();
+            wfK.noPrime();
             wfK *= fac;
 
             if(normalize) wfK /= norm(wfK);
@@ -489,11 +507,11 @@ fitApplyMPO(Real mpsfac,
     vector<Tensor> B(N+2),
                    BK(N+2);
 
-    B.at(N) = psiA.A(N)*dag(prime(res.A(N),Link));
+    B.at(N) = psiA.A(N)*dag(prime(res.A(N),"Link"));
     BK.at(N) = psiB.A(N)*K.A(N)*dag(prime(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psiA.A(n)*dag(prime(res.A(n),Link));
+        B.at(n) = B.at(n+1)*psiA.A(n)*dag(prime(res.A(n),"Link"));
         BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
 
@@ -510,19 +528,19 @@ fitApplyMPO(Real mpsfac,
             Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
             rwfK *= K.A(b+1);
 
-            Tensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
-            wf.noprime();
+            Tensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
+            wf.noPrime();
 
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
 
             if(ha == 1)
                 {
-                B.at(b) = lwf * dag(prime(res.A(b),Link));
+                B.at(b) = lwf * dag(prime(res.A(b),"Link"));
                 BK.at(b) = lwfK * dag(prime(res.A(b)));
                 }
             else
                 {
-                B.at(b+1) = rwf * dag(prime(res.A(b+1),Link));
+                B.at(b+1) = rwf * dag(prime(res.A(b+1),"Link"));
                 BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
                 }
             }
@@ -530,9 +548,9 @@ fitApplyMPO(Real mpsfac,
 
     auto olp = B.at(3);
     olp *= psiA.A(2);
-    olp *= dag(prime(res.A(2),Link));
+    olp *= dag(prime(res.A(2),"Link"));
     olp *= psiA.A(1);
-    olp *= dag(prime(res.A(1),Link));
+    olp *= dag(prime(res.A(1),"Link"));
 
     return olp.real();
     }
@@ -677,11 +695,11 @@ applyExpH(MPSt<Tensor> const& psi,
                    B(N+2),
                    BH(N+2);
 
-    B.at(N) = psi.A(N)*dag(prime(psi.A(N),Link));
+    B.at(N) = psi.A(N)*dag(prime(psi.A(N),"Link"));
     BH.at(N) = psi.A(N)*H.A(N)*dag(prime(psi.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psi.A(n)*dag(prime(psi.A(n),Link));
+        B.at(n) = B.at(n+1)*psi.A(n)*dag(prime(psi.A(n),"Link"));
         BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*dag(prime(psi.A(n)));
         }
 
@@ -716,8 +734,8 @@ applyExpH(MPSt<Tensor> const& psi,
                     }
                 else //dn
                     {
-                    lwf = (B.at(b-1) ? B.at(b-1)*dag(prime(psi.A(b),Link)) : dag(prime(psi.A(b),Link)));
-                    rwf = (B.at(b+2) ? B.at(b+2)*dag(prime(psi.A(b+1),Link)) : dag(prime(psi.A(b+1),Link)));
+                    lwf = (B.at(b-1) ? B.at(b-1)*dag(prime(psi.A(b),"Link")) : dag(prime(psi.A(b),"Link")));
+                    rwf = (B.at(b+2) ? B.at(b+2)*dag(prime(psi.A(b+1),"Link")) : dag(prime(psi.A(b+1),"Link")));
 
                     lwfH = (BH.at(b-1) ? BH.at(b-1)*dag(prime(last.A(b))) : dag(prime(last.A(b))));
                     lwfH *= H.A(b);
@@ -725,7 +743,7 @@ applyExpH(MPSt<Tensor> const& psi,
                     rwfH *= H.A(b+1);
                     }
 
-                auto wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
+                auto wf = noPrime(lwf*rwf) + mpofac*noPrime(lwfH*rwfH);
                 if(!up) wf.dag();
 
                 res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
@@ -734,12 +752,12 @@ applyExpH(MPSt<Tensor> const& psi,
                     {
                     if(ha == 1)
                         {
-                        B.at(b) = lwf * dag(prime(res.A(b),Link));
+                        B.at(b) = lwf * dag(prime(res.A(b),"Link"));
                         BH.at(b) = lwfH * dag(prime(res.A(b)));
                         }
                     else
                         {
-                        B.at(b+1) = rwf * dag(prime(res.A(b+1),Link));
+                        B.at(b+1) = rwf * dag(prime(res.A(b+1),"Link"));
                         BH.at(b+1) = rwfH * dag(prime(res.A(b+1)));
                         }
                     }
@@ -777,6 +795,8 @@ applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQT
 //
 // For now this is unsupported
 //
+//TODO: once it is supported again, make sure the tags are being set properly for
+//the indices
 template<class Tensor>
 void 
 zipUpApplyMPO(MPSt<Tensor> const& psi, 
@@ -820,7 +840,7 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
 
     res = psi; 
     res.primelinks(0,4);
-    res.mapprime(0,1,Site);
+    res.mapPrime(0,1,"Site");
 
     Tensor clust,nfork;
     vector<int> midsize(N);
@@ -836,7 +856,7 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
-        IndexT mid = commonIndex(res.A(i),nfork,Link);
+        IndexT mid = commonIndex(res.A(i),nfork,"Link");
         //assert(mid.dir() == In);
         mid.dag();
         midsize[i] = mid.m();
@@ -850,7 +870,7 @@ zipUpApplyMPO(MPSt<Tensor> const& psi,
 
     res.svdBond(N-1,nfork,Fromright,args);
     res.noprimelink();
-    res.mapprime(1,0,Site);
+    res.mapPrime(1,0,"Site");
     res.position(1);
     } //void zipUpApplyMPO
 template

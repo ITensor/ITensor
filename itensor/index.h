@@ -5,7 +5,8 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
-#include "itensor/indextype.h"
+#include "itensor/smallstring.h"
+#include "itensor/tagset.h"
 #include "itensor/indexname.h"
 #include "itensor/arrow.h"
 #include <thread>
@@ -71,20 +72,23 @@ class Index
     using extent_type = int;
     private:
     id_type id_;
-    prime_type primelevel_; 
     extent_type m_;
-    IndexType type_;
-    IndexName name_;
+    prime_type primelevel_; 
+    TagSet tags_;
+    //IndexType type_;
+    //IndexName name_;
     public:
 
     Index();
 
-    // Name of Index is used for printing purposes
     explicit
-    Index(std::string const& name, 
-          long m = 1, 
-          IndexType it = Link, 
+    Index(long m, 
+          const TagSet& t = "",
           int primelev = 0);
+
+    explicit
+    Index(long m, 
+          int primelev);
 
     // Returns the bond dimension
     long 
@@ -97,17 +101,21 @@ class Index
     Index& 
     primeLevel(int plev);
 
+    // Returns the TagSet
+    TagSet
+    tags() const { return tags_; }
+
     // Returns the IndexType
-    IndexType
-    type() const { return type_; }
+    //IndexType
+    //type() const { return type_; }
 
     // Returns the name of this Index
-    std::string 
-    name() const;
+    //std::string 
+    //name() const;
 
     // Returns the name of this Index with primes removed
-    std::string
-    rawname() const { return std::string(name_.c_str()); }
+    //std::string
+    //rawname() const { return std::string(name_.c_str()); }
 
     id_type
     id() const { return id_; }
@@ -126,27 +134,49 @@ class Index
     void 
     dir(Arrow ndir) const {  }
 
+    Index& 
+    setPrime(int p) { primelevel_ = p; return *this; };
+
+    Index& 
+    noPrime() { primelevel_ = 0; return *this; };
+
     // Increase primelevel by 1 (or by optional amount inc)
     Index& 
     prime(int inc = 1);
 
     // Increase primelevel by 1 (or optional amount inc)
     // if type matches this Index or type==All
-    Index& 
-    prime(IndexType type, int inc = 1);
+    //Index& 
+    //prime(IndexType type, int inc = 1);
 
     // Set primelevel to zero (optionally only if type matches)
-    Index& 
-    noprime(IndexType type = All) { prime(type,-primelevel_); return *this; }
+    //Index& 
+    //noprime(IndexType type = All) { prime(type,-primelevel_); return *this; }
 
     // Switch primelevel from plevold to plevnew
     // Has no effect if plevold doesn't match current primelevel
-    Index& 
-    mapprime(int plevold, int plevnew, IndexType type = All);
+    //Index& 
+    //mapprime(int plevold, int plevnew, IndexType type = All);
 
     // Check if other Index is a copy of this, ignoring primeLevel
     bool 
     noprimeEquals(Index const& other) const;
+
+    // Add tags
+    Index&
+    addTags(const TagSet& t) { tags_.addTags(t); return *this; }
+
+    // Remove tags
+    Index&
+    removeTags(const TagSet& t) { tags_.removeTags(t); return *this; }
+
+    // Set tags
+    Index&
+    setTags(const TagSet& t) { tags_ = t; return *this; }
+
+    // Return a copy of this Index with new tags
+    Index
+    operator()(const TagSet& t) const { auto I = *this; I.setTags(t); return I; }
 
     //Return an IndexVal with specified value
     IndexVal
@@ -221,15 +251,15 @@ class IndexVal
     IndexVal& 
     prime(int inc = 1) { index.prime(inc); return *this; }
 
-    IndexVal& 
-    prime(IndexType type, int inc = 1) { index.prime(type,inc); return *this; }
+    //IndexVal& 
+    //prime(IndexType type, int inc = 1) { index.prime(type,inc); return *this; }
 
     IndexVal& 
-    noprime(IndexType type = All) { index.noprime(type); return *this; }
+    noPrime() { index.noPrime(); return *this; }
 
-    IndexVal& 
-    mapprime(int plevold, int plevnew, IndexType type = All) 
-        { index.mapprime(plevold,plevnew,type); return *this; }
+    //IndexVal& 
+    //mapprime(int plevold, int plevnew, IndexType type = All) 
+    //    { index.mapprime(plevold,plevnew,type); return *this; }
 
     void
     dag() { }
@@ -246,6 +276,32 @@ operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
 
+TagSet inline
+tags(const Index& I) { return I.tags(); }
+
+Index inline
+addTags(Index I, const TagSet& t) { I.addTags(t); return I; }
+
+Index inline
+removeTags(Index I, const TagSet& t) { I.removeTags(t); return I; }
+
+Index inline
+setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
+
+//
+// Check if Index I contains the tags tsmatch.
+// If tsmatch==TagSet(All), return true
+//
+bool inline
+hasTags(Index I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags(I.tags(),tsmatch); }
+
+//
+// Return true if Index I has tags tsmatch and prime level plmatch
+// If tsmatch==TagSet(All), Index I can have any tags
+// If plmatch < 0, Index I can have any prime level
+//
+bool inline
+matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==I.primeLevel()); }
 
 Index inline
 dag(Index res) { res.dag(); return res; }
@@ -259,13 +315,13 @@ prime(Index I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); r
 
 template<typename... VarArgs>
 Index
-noprime(Index I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
+noPrime(Index I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-Index inline
-mapprime(Index I, int plevold, int plevnew, IndexType type = All)
-    { I.mapprime(plevold,plevnew,type); return I; }
+//Index inline
+//mapprime(Index I, int plevold, int plevnew, IndexType type = All)
+//    { I.mapprime(plevold,plevnew,type); return I; }
 
 template<typename... VarArgs>
 IndexVal
@@ -273,13 +329,13 @@ prime(IndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...)
 
 template<typename... VarArgs>
 IndexVal
-noprime(IndexVal I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
+noPrime(IndexVal I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-IndexVal inline
-mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
-    { I.mapprime(plevold,plevnew,type); return I; }
+//IndexVal inline
+//mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
+//    { I.mapprime(plevold,plevnew,type); return I; }
 
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)
@@ -300,19 +356,34 @@ operator<<(std::ostream & s, Index const& t);
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv);
 
+// TODO: args for tagset
 void
 add(Args& args, 
     Args::Name const& name, 
-    IndexType it);
+    TagSet it);
 
-IndexType
-getIndexType(Args const& args, 
-             Args::Name const& name);
+TagSet
+getTagSet(Args const& args, 
+          Args::Name const& name);
 
-IndexType
-getIndexType(Args const& args, 
-             Args::Name const& name, 
-             IndexType default_val);
+TagSet
+getTagSet(Args const& args, 
+          Args::Name const& name, 
+          TagSet default_val);
+
+//void
+//add(Args& args, 
+//    Args::Name const& name, 
+//    IndexType it);
+
+//IndexType
+//getIndexType(Args const& args, 
+//             Args::Name const& name);
+
+//IndexType
+//getIndexType(Args const& args, 
+//             Args::Name const& name, 
+//             IndexType default_val);
 
 
 } //namespace itensor

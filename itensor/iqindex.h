@@ -47,15 +47,14 @@ class IQIndex : public Index
     // IQIndex("name",i1,q1,i2,q2,In);
     //
     template<typename... Rest>
-    IQIndex(std::string const& name, 
-            Index const& i1, QN const& q1, 
+    IQIndex(Index const& i1, QN const& q1, 
             Rest const&... etc);
 
     // Constructor taking a container
     // of IndexQN's
-    IQIndex(std::string const& name, 
-            storage && ind_qn, 
+    IQIndex(storage && ind_qn, 
             Arrow dir = Out, 
+            TagSet const& ts = TagSet(),
             int plev = 0);
 
 
@@ -85,6 +84,10 @@ class IQIndex : public Index
 
     IQIndexVal 
     operator()(long n) const;
+
+    // Return a copy of this Index with new tags
+    Index
+    operator()(TagSet const& t) const { auto I = *this; I.setTags(t); return I; }
 
     IQIndex& 
     dag();
@@ -118,8 +121,8 @@ class IQIndex : public Index
 
     // Constructor taking a storage pointer
     IQIndex(storage_ptr const& p,
-            std::string const& name, 
-            Arrow dir = Out, 
+            Arrow dir = Out,
+            TagSet const& ts = TagSet(),
             int plev = 0);
 
     }; //class IQIndex
@@ -148,8 +151,8 @@ struct IndexQN
     auto
     m() const -> decltype(index.m()) { return index.m(); }
 
-    IndexType
-    type() const { return index.type(); }
+    //IndexType
+    //type() const { return index.type(); }
 
     void
     write(std::ostream & s) const;
@@ -207,14 +210,14 @@ class IQIndexVal
     IQIndexVal& 
     prime(int inc = 1);
 
-    IQIndexVal& 
-    prime(IndexType type, int inc = 1);
+    //IQIndexVal& 
+    //prime(IndexType type, int inc = 1);
 
-    IQIndexVal& 
-    noprime(IndexType type = All);
+    //IQIndexVal& 
+    //noprime(IndexType type = All);
 
-    IQIndexVal& 
-    mapprime(int plevold, int plevnew, IndexType type = All);
+    //IQIndexVal& 
+    //mapPrime(int plevold, int plevnew, IndexType type = All);
     };
 
 ITensor
@@ -248,10 +251,10 @@ IQIndexVal inline
 dag(IQIndexVal res) { res.dag(); return res; }
 
 bool
-hasindex(IQIndex const& I, Index const& i);
+hasIndex(IQIndex const& I, Index const& i);
 
 long
-findindex(IQIndex const& I, Index const& i);
+findIndex(IQIndex const& I, Index const& i);
 
 long 
 offset(IQIndex const& I, Index const& i);
@@ -268,7 +271,7 @@ findByQN(IQIndex const& I, QN const& qn);
 //For efficiency, internal sector Index objects
 //are the same as I.
 IQIndex
-sim(IQIndex const& I, int plev = 0);
+sim(IQIndex const& I, TagSet const& ts = TagSet(), int plev = 0);
 
 std::string 
 showm(IQIndex const& I);
@@ -282,33 +285,63 @@ operator<<(std::ostream &s, IndexQN const& x);
 std::ostream& 
 operator<<(std::ostream& s, IQIndexVal const& iv);
 
-template<typename... VArgs>
-IQIndex
-prime(IQIndex I, VArgs&&... vargs) 
-    { 
-    I.prime(std::forward<VArgs>(vargs)...); 
-    return I; 
-    }
+//
+// Tag methods
+//
+TagSet inline
+tags(const IQIndex& I) { return I.tags(); }
 
-template<typename... VArgs>
+IQIndex inline
+addTags(IQIndex I, const TagSet& t) { I.addTags(t); return I; }
+
+IQIndex inline
+removeTags(IQIndex I, const TagSet& t) { I.removeTags(t); return I; }
+
+IQIndex inline
+setTags(IQIndex I, const TagSet& t) { I.setTags(t); return I; }
+
+//
+// Check if IQIndex I contains the tags tsmatch.
+// If tsmatch==TagSet(All), return true
+//
+bool inline
+hasTags(IQIndex I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags(I.tags(),tsmatch); }
+
+//
+// Return true if IQIndex I has tags tsmatch and prime level plmatch
+// If tsmatch==TagSet(All), Index I can have any tags
+// If plmatch < 0, Index I can have any prime level
+//
+bool inline
+matchTagsPrime(IQIndex I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==I.primeLevel()); }
+
+template<typename... VarArgs>
 IQIndex
-noprime(IQIndex I, VArgs&&... vargs) 
-    { 
-    I.noprime(std::forward<VArgs>(vargs)...); 
-    return I; 
-    }
+prime(IQIndex I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+IQIndex
+noPrime(IQIndex I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
+
+//template<typename... VArgs>
+//IQIndex
+//noprime(IQIndex I, VArgs&&... vargs) 
+//    { 
+//    I.noprime(std::forward<VArgs>(vargs)...); 
+//    return I; 
+//    }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-IQIndex inline
-mapprime(IQIndex I, 
-         int plevold, 
-         int plevnew, 
-         IndexType type = All)
-    { 
-    I.mapprime(plevold,plevnew,type); 
-    return I; 
-    }
+//IQIndex inline
+//mapPrime(IQIndex I, 
+//         int plevold, 
+//         int plevnew, 
+//         IndexType type = All)
+//    { 
+//    I.mapPrime(plevold,plevnew,type); 
+//    return I; 
+//    }
 
 template<typename... VArgs>
 IQIndexVal
@@ -318,22 +351,22 @@ prime(IQIndexVal I, VArgs&&... vargs)
     return I; 
     }
 
-template<typename... VArgs>
-IQIndexVal
-noprime(IQIndexVal I, VArgs&&... vargs) 
-    { 
-    I.noprime(std::forward<VArgs>(vargs)...); 
-    return I; 
-    }
+//template<typename... VArgs>
+//IQIndexVal
+//noprime(IQIndexVal I, VArgs&&... vargs) 
+//    { 
+//    I.noprime(std::forward<VArgs>(vargs)...); 
+//    return I; 
+//    }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-IQIndexVal inline
-mapprime(IQIndexVal I, int plevold, int plevnew, IndexType type = All)
-    { 
-    I.mapprime(plevold,plevnew,type); 
-    return I; 
-    }
+//IQIndexVal inline
+//mapPrime(IQIndexVal I, int plevold, int plevnew, IndexType type = All)
+//    { 
+//    I.mapPrime(plevold,plevnew,type); 
+//    return I; 
+//    }
 
 namespace detail {
 
@@ -366,11 +399,10 @@ fill(std::vector<IndexQN> & v,
 
 } //namespace detail
 
-
+// TODO: make this constructor accept a TagSet
 template<typename... Rest>
 IQIndex::
-IQIndex(std::string const& name, 
-        Index const& i1, 
+IQIndex(Index const& i1, 
         QN const& q1, 
         Rest const&... rest)
     { 
@@ -378,7 +410,8 @@ IQIndex(std::string const& name,
     auto iq = stdx::reserve_vector<IndexQN>(size);
     auto am = detail::fill(iq,i1,q1,rest...);
     dir_ = am.dir;
-    auto I = Index(name,am.m,i1.type(),i1.primeLevel());
+    //auto I = Index(name,am.m,i1.type(),i1.primeLevel());
+    auto I = Index(am.m,i1.tags(),i1.primeLevel());
     parent::operator=(I);
     makeStorage(std::move(iq));
     }

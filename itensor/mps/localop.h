@@ -239,7 +239,7 @@ product(Tensor const& phi,
             phip *= R();
         }
 
-    phip.mapprime(1,0);
+    phip.mapPrime(1,0);
     }
 
 template <class Tensor>
@@ -268,7 +268,7 @@ deltaRho(Tensor const& AA,
         if(!RIsNull()) drho *= R();
         drho *= (*Op2_);
         }
-    drho.noprime();
+    drho.noPrime();
     drho = combine * drho;
     auto ci = commonIndex(combine,drho);
     drho *= dag(prime(drho,ci));
@@ -294,7 +294,7 @@ diag() const
     auto findIndPair = [](Tensor const& T) {
         for(auto& s : T.inds())
             {
-            if(s.primeLevel() == 0 && hasindex(T,prime(s))) 
+            if(s.primeLevel() == 0 && hasIndex(T,prime(s))) 
                 {
                 return s;
                 }
@@ -302,13 +302,13 @@ diag() const
         return IndexT();
         };
 
-    auto toTie = noprime(findtype(Op1,Site));
+    auto toTie = noPrime(findIndexWithTags(Op1,"Site"));
     auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
-    Diag.noprime();
+    Diag.noPrime();
 
-    toTie = noprime(findtype(Op2,Site));
+    toTie = noPrime(findIndexWithTags(Op2,"Site"));
     auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
-    Diag *= noprime(Diag2);
+    Diag *= noPrime(Diag2);
 
     if(!LIsNull())
         {
@@ -316,7 +316,7 @@ diag() const
         if(toTie)
             {
             auto DiagL = L() * delta(toTie,prime(toTie),prime(toTie,2));
-            Diag *= noprime(DiagL);
+            Diag *= noPrime(DiagL);
             }
         else
             {
@@ -330,7 +330,7 @@ diag() const
         if(toTie)
             {
             auto DiagR = R() * delta(toTie,prime(toTie),prime(toTie,2));
-            Diag *= noprime(DiagR);
+            Diag *= noPrime(DiagR);
             }
         else
             {
@@ -378,8 +378,8 @@ size() const
                 }
             }
 
-        size_ *= findtype(*Op1_,Site).m();
-        size_ *= findtype(*Op2_,Site).m();
+        size_ *= findIndexWithTags(*Op1_,"Site").m();
+        size_ *= findIndexWithTags(*Op2_,"Site").m();
         }
     return size_;
     }

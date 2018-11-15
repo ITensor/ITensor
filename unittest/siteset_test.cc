@@ -19,7 +19,7 @@ SECTION("Generic SiteSet")
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 3);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
     }
 
@@ -29,7 +29,7 @@ SECTION("SpinHalf")
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 2);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
 
     sites.op("Sz",2); 
@@ -48,7 +48,7 @@ SECTION("SpinOne")
     for(auto i : range1(N)) 
         {
         CHECK(sites(i).m() == 3);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
 
     sites.op("Sz",2); 
@@ -67,7 +67,7 @@ SECTION("Hubbard")
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 4);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
 
     sites.op("Nup",2); 
@@ -88,7 +88,7 @@ SECTION("Spinless")
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 2);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
 
     sites.op("N",2); 
@@ -103,7 +103,7 @@ SECTION("tJ")
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 3);
-        CHECK(sites(i).type() == Site);
+        CHECK(hasTags(sites(i),"Site"));
         }
 
     sites.op("Nup",2); 

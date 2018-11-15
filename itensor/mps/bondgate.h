@@ -124,8 +124,8 @@ BondGate(SiteSet const& sites,
         bondH *= Complex_i;
         }
     auto term = bondH;
-    bondH.mapprime(1,2);
-    bondH.mapprime(0,1);
+    bondH.mapPrime(1,2);
+    bondH.mapPrime(0,1);
 
     // exp(x) = 1 + x +  x^2/2! + x^3/3! ..
     // = 1 + x * (1 + x/2 *(1 + x/3 * (...
@@ -135,7 +135,7 @@ BondGate(SiteSet const& sites,
         term /= ord;
         gate_ = unit + term;
         term = gate_ * bondH;
-        term.mapprime(2,1);
+        term.mapPrime(2,1);
         }
     }
 

@@ -15,7 +15,7 @@ SOURCES+= real_test.cc
 SOURCES+= args_test.cc
 SOURCES+= matrix_test.cc
 SOURCES+= tensor_test.cc
-#SOURCES+= contract_test.cc
+##SOURCES+= contract_test.cc
 SOURCES+= sparse_contract_test.cc
 SOURCES+= index_test.cc
 SOURCES+= indexset_test.cc
@@ -29,11 +29,11 @@ SOURCES+= mpo_test.cc
 SOURCES+= autompo_test.cc
 SOURCES+= iterativesolvers_test.cc
 SOURCES+= regression_test.cc
-#SOURCES+= spectrum_test.cc
-#SOURCES+= webpage_test.cc
+##SOURCES+= spectrum_test.cc
+##SOURCES+= webpage_test.cc
 SOURCES+= localop_test.cc
 SOURCES+= siteset_test.cc
-#SOURCES+= bondgate_test.cc
+##SOURCES+= bondgate_test.cc
 endif
 
 ##################################################################

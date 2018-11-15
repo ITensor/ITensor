@@ -359,8 +359,8 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        auto othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
-        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
+        auto othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
+        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
         othr *= othrR;
         auto z = (othr*phi).cplx();
 
@@ -488,7 +488,7 @@ makeL(const MPSType& psi, int k)
                 {
                 const int ll = LHlim_;
                 PH_.at(ll+1) = (!PH_.at(ll) ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
-                PH_[ll+1] *= dag(prime(Psi_->A(ll+1),Link));
+                PH_[ll+1] *= dag(prime(Psi_->A(ll+1),"Link"));
                 setLHlim(ll+1);
                 }
             }
@@ -526,7 +526,7 @@ makeR(const MPSType& psi, int k)
                 {
                 const int rl = RHlim_;
                 PH_.at(rl-1) = (!PH_.at(rl) ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
-                PH_[rl-1] *= dag(prime(Psi_->A(rl-1),Link));
+                PH_[rl-1] *= dag(prime(Psi_->A(rl-1),"Link"));
                 setRHlim(rl-1);
                 }
             }

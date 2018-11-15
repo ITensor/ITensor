@@ -719,10 +719,61 @@ template<typename I>
 ITensorT<I>
 operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return B; }
 
+template<typename IndexT>
+IndexSetT<IndexT>
+inds(ITensorT<IndexT> const& A)
+    {
+    return A.inds();
+    }
+
+template<typename IndexT>
+IndexT
+index(ITensorT<IndexT> const& A, TagSet const& ts, int plev)
+    {
+    return index(inds(A),ts,plev);
+    }
+
+template<typename IndexT>
+IndexT
+findIndexWithTags(ITensorT<IndexT> const& A, TagSet const& ts)
+    {
+    return findIndexWithTags(inds(A),ts);
+    }
+
+//
+// Index Prime Level Methods
+//
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-prime(ITensorT<IndexT> A, 
+setPrime(ITensorT<IndexT> A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+noPrime(ITensorT<IndexT> A,
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+mapPrime(ITensorT<IndexT> A,
+         VarArgs&&... vargs)
+    {
+    A.mapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A,
       VarArgs&&... vargs)
     {
     A.prime(std::forward<VarArgs>(vargs)...);
@@ -731,37 +782,55 @@ prime(ITensorT<IndexT> A,
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-primeLevel(ITensorT<IndexT> A, 
-           VarArgs&&... vargs)
+swapPrime(ITensorT<IndexT> A,
+          VarArgs&&... vargs)
     {
-    A.primeLevel(std::forward<VarArgs>(vargs)...);
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-primeExcept(ITensorT<IndexT> A, 
+replaceTags(ITensorT<IndexT> A,
             VarArgs&&... vargs)
     {
-    A.primeExcept(std::forward<VarArgs>(vargs)...);
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-noprime(ITensorT<IndexT> A, 
-        VarArgs&&... vargs)
-    {
-    A.noprime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-mapprime(ITensorT<IndexT> A, 
+swapTags(ITensorT<IndexT> A,
          VarArgs&&... vargs)
     {
-    A.mapprime(std::forward<VarArgs>(vargs)...);
+    A.swapTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+setTags(ITensorT<IndexT> A,
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+addTags(ITensorT<IndexT> A,
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+removeTags(ITensorT<IndexT> A,
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
@@ -776,24 +845,15 @@ sim(ITensorT<IndexT> A,
 
 template<typename IndexT>
 bool
-hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)
+hasIndex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)
     {
     return detail::contains(T.inds(),I);
-    }
-
-template<typename IndexT>
-IndexT
-findtype(const ITensorT<IndexT>& T, IndexType type)
-    {
-    for(auto& i : T.inds())
-        if(i.type()==type) return i;
-    return IndexT{};
     }
 
 template<typename IndexT,
          typename Cond>
 IndexT
-findindex(ITensorT<IndexT> const& T, 
+findIndex(ITensorT<IndexT> const& T, 
           Cond && cond)
     {
     for(auto& i : T.inds())
@@ -801,36 +861,22 @@ findindex(ITensorT<IndexT> const& T,
     return IndexT{};
     }
 
-//Find index of tensor A (of optional type t) 
+//Find index of tensor A (of optional tagset ts) 
 //which is shared with tensor B
 template<typename IndexT> 
 IndexT
 commonIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t);
+            TagSet const& ts);
 
 
-//Find index of tensor A (of optional type t) 
+//Find index of tensor A (of optional tagset ts) 
 //which is NOT shared by tensor B
 template<typename IndexT> 
 IndexT
 uniqueIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t);
-
-//
-//Return copy of a tensor with primeLevels plev1 and plev2 swapped
-//
-//For example, if T has indices i,i' (like a matrix or a site
-//operator) then swapPrime(T,0,1) will have indices i',i 
-//i.e. the transpose of T.
-//
-template <typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
-          int plev1, 
-          int plev2,
-          IndexType type);
+            TagSet const& ts);
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
@@ -864,7 +910,7 @@ rank(ITensorT<I> const& T) { return rank(T.inds()); }
 //(same as rank)
 template<typename I>
 long
-ord(ITensorT<I> const& T) { return rank(T.inds()); }
+order(ITensorT<I> const& T) { return rank(T.inds()); }
 
 template<typename I>
 Real
@@ -919,6 +965,8 @@ sumelsC(ITensorT<I> const& t)
 #endif
     }
 
+// TODO: make version that doesn't ignore primes, uses delta functions to replace the
+// indices
 template<typename IndexT, typename... Inds>
 ITensorT<IndexT>
 reindex(ITensorT<IndexT> const& cT, 
@@ -945,7 +993,7 @@ reindex(ITensorT<IndexT> const& cT,
                     }
                 auto plev = is[j].primeLevel();
                 auto arrow_dir = is[j].dir();
-                is[j] = noprime(ipairs[ni]);
+                is[j] = noPrime(ipairs[ni]);
                 is[j].primeLevel(plev);
                 is[j].dir(arrow_dir);
                 break;
@@ -969,7 +1017,7 @@ getDotInds(Iter it,
            std::string const& dots)
     {
     if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
+        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
     }
 
 template<typename IndexT,
@@ -998,7 +1046,7 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
         println("---------------------------------------------");
         println("Indices provided = \n",isf," '...'\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
+        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
         }
 
     auto iso = IndexSetT<IndexT>(r);
@@ -1006,14 +1054,14 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
     auto i = 0;
     for(auto& I : isf) 
         {
-        if(!hasindex(is,I))
+        if(!hasIndex(is,I))
             {
             println("---------------------------------------------");
             println("Tensor indices = \n",is,"\n");
             println("---------------------------------------------");
             println("Indices provided = \n",isf," '...'\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
+            Error(format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1022,7 +1070,7 @@ moveToFront(IndexSetT<IndexT> const& isf, IndexSetT<IndexT> const& is)
     auto j = rf;
     for(auto& J : is)
         {
-        if(!hasindex(isf,J))
+        if(!hasIndex(isf,J))
             {
             iso[j] = J;
             j++;
@@ -1046,7 +1094,7 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
         println("---------------------------------------------");
         println("Indices provided = \n'...' ",isb,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
+        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
         }
 
     auto iso = IndexSetT<IndexT>(r);
@@ -1054,14 +1102,14 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
     auto i = r-rb;
     for(auto& I : isb) 
         {
-        if(!hasindex(is,I))
+        if(!hasIndex(is,I))
             {
             println("---------------------------------------------");
             println("Tensor indices = \n",is,"\n");
             println("---------------------------------------------");
             println("Indices provided = \n'...' ",isb,"\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
+            Error(format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1070,7 +1118,7 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
     auto j = 0;
     for(auto& J : is)
         {
-        if(!hasindex(isb,J))
+        if(!hasIndex(isb,J))
             {
             iso[j] = J;
             j++;
@@ -1082,49 +1130,49 @@ moveToBack(IndexSetT<IndexT> const& isb, IndexSetT<IndexT> const& is)
 
 } //namespace detail
 
-//Version of order accepting syntax: T.order(i,j,"...")
+//Version of permute accepting syntax: T.permute(i,j,"...")
 template <typename IndexT>
 template <typename... Indxs>
 auto ITensorT<IndexT>::
-order(IndexT const& ind1, Indxs const&... inds)
+permute(IndexT const& ind1, Indxs const&... inds)
     -> stdx::enable_if_t<not stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
     auto isf = IndexSetT<IndexT>(size);
     detail::getDotInds<IndexT>(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
-    order(detail::moveToFront(isf,this->inds()));
+    permute(detail::moveToFront(isf,this->inds()));
     return *this;
     }
 
-//Version of order accepting syntax: T.order(i,j,k)
+//Version of permute accepting syntax: T.permute(i,j,k)
 template <typename IndexT>
 template <typename... Indxs>
 auto ITensorT<IndexT>::
-order(IndexT const& ind1, Indxs const&... inds)
+permute(IndexT const& ind1, Indxs const&... inds)
     -> stdx::enable_if_t<stdx::and_<std::is_same<IndexT, Indxs>...>::value,ITensorT<IndexT>&>
     {
-    order(IndexSetT<IndexT>(ind1, inds...));
+    permute(IndexSetT<IndexT>(ind1, inds...));
     return *this;
     }
 
-//Version of order accepting syntax: T.order("...",j,k)
+//Version of permute accepting syntax: T.permute("...",j,k)
 template <typename IndexT>
 template <typename... Indxs>
 ITensorT<IndexT>& ITensorT<IndexT>::
-order(std::string const& dots, Indxs const&... inds)
+permute(std::string const& dots, Indxs const&... inds)
     {
     if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
-    order(detail::moveToBack(IndexSetT<IndexT>(inds...),this->inds()));
+        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
+    permute(detail::moveToBack(IndexSetT<IndexT>(inds...),this->inds()));
     return *this;
     }
 
-//order function which returns a new ITensor 
+//permute function which returns a new ITensor 
 template <typename IndexT, typename... Indxs>
 ITensorT<IndexT>
-order(ITensorT<IndexT> A, Indxs const&... inds)
+permute(ITensorT<IndexT> A, Indxs const&... inds)
     {
-    A.order(std::forward<Indxs const&>(inds)...);
+    A.permute(std::forward<Indxs const&>(inds)...);
     return A;
     }
 

@@ -70,12 +70,13 @@ init_()
 
     for(int l = 0; l <= N_; ++l) 
         {
-        q0.at(l) = Index(nameint("q0_",l),3);
-        qP.at(l) = Index(nameint("qP_",l),1);
-        qM.at(l) = Index(nameint("qM_",l),1);
+        // TODO: better constructor for IQIndex
+        auto ts = nameint("Link,hl",l).c_str();
+        q0.at(l) = Index(3,ts);
+        qP.at(l) = Index(1,ts);
+        qM.at(l) = Index(1,ts);
 
-        links.at(l) = IQIndex(nameint("hl",l),
-                              q0[l],QN( 0),
+        links.at(l) = IQIndex(q0[l],QN( 0),
                               qP[l],QN(-2),
                               qM[l],QN(+2),
                               Out);

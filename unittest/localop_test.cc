@@ -8,33 +8,33 @@ using namespace itensor;
 
 TEST_CASE("LocalOp")
 {
-auto s1 = Index("s1",2,Site);
-auto s2 = Index("s2",2,Site);
-auto h0 = Index("h0",4);
-auto h1 = Index("h1",4);
-auto h2 = Index("h2",4);
-auto l0 = Index("l0",10);
-auto l2 = Index("l2",10);
+auto s1 = Index(1,"Site");
+auto s2 = Index(2,"Site");
+auto h0 = Index(4,"Link");
+auto h1 = Index(4,"Link");
+auto h2 = Index(4,"Link");
+auto l0 = Index(10,"Link");
+auto l2 = Index(10,"Link");
 
-auto S1 = IQIndex("S1",Index("s1-",1,Site),QN(-1),
-                       Index("s1+",1,Site),QN(+1));
-auto S2 = IQIndex("S2",Index("s2-",1,Site),QN(-1),
-                       Index("s2+",1,Site),QN(+1));
-auto H0 = IQIndex("H0",Index("h0-2",4),QN(-2),
-                       Index("h0+0",8),QN(+0),
-                       Index("h0+2",4),QN(+2));
-auto H1 = IQIndex("H1",Index("h1-2",4),QN(-2),
-                       Index("h1+0",8),QN(+0),
-                       Index("h1+2",4),QN(+2));
-auto H2 = IQIndex("H2",Index("h2-2",4),QN(-2),
-                       Index("h2+0",8),QN(+0),
-                       Index("h2+2",4),QN(+2));
-auto L0 = IQIndex("L0",Index("l0-2",4),QN(-2),
-                       Index("l0+0",8),QN(+0),
-                       Index("l0+2",4),QN(+2));
-auto L2 = IQIndex("L2",Index("l2-2",4),QN(-2),
-                       Index("l2+0",8),QN(+0),
-                       Index("l2+2",4),QN(+2));
+auto S1 = IQIndex(Index(1,"Site"),QN(-1),
+                  Index(1,"Site"),QN(+1));
+auto S2 = IQIndex(Index(1,"Site"),QN(-1),
+                  Index(1,"Site"),QN(+1));
+auto H0 = IQIndex(Index(4,"Link"),QN(-2),
+                  Index(8,"Link"),QN(+0),
+                  Index(4,"Link"),QN(+2));
+auto H1 = IQIndex(Index(4,"Link"),QN(-2),
+                  Index(8,"Link"),QN(+0),
+                  Index(4,"Link"),QN(+2));
+auto H2 = IQIndex(Index(4,"Link"),QN(-2),
+                  Index(8,"Link"),QN(+0),
+                  Index(4,"Link"),QN(+2));
+auto L0 = IQIndex(Index(4,"Link"),QN(-2),
+                  Index(8,"Link"),QN(+0),
+                  Index(4,"Link"),QN(+2));
+auto L2 = IQIndex(Index(4,"Link"),QN(-2),
+                  Index(8,"Link"),QN(+0),
+                  Index(4,"Link"),QN(+2));
 
 
 SECTION("Product")
@@ -49,10 +49,10 @@ SECTION("Product")
         auto psi = randomTensor(l0,s1,s2,l2);
         auto Hpsi = ITensor();
         lop.product(psi,Hpsi);
-        CHECK(hasindex(Hpsi,s1));
-        CHECK(hasindex(Hpsi,s2));
-        CHECK(hasindex(Hpsi,l0));
-        CHECK(hasindex(Hpsi,l2));
+        CHECK(hasIndex(Hpsi,s1));
+        CHECK(hasIndex(Hpsi,s2));
+        CHECK(hasIndex(Hpsi,l0));
+        CHECK(hasIndex(Hpsi,l2));
         }
     }
 
@@ -66,10 +66,10 @@ SECTION("Diag")
         auto R = randomTensor(l2,prime(l2),h2);
         auto lop = LocalOp<ITensor>(Op1,Op2,L,R);
         auto diag = lop.diag();
-        CHECK(hasindex(diag,s1));
-        CHECK(hasindex(diag,s2));
-        CHECK(hasindex(diag,l0));
-        CHECK(hasindex(diag,l2));
+        CHECK(hasIndex(diag,s1));
+        CHECK(hasIndex(diag,s2));
+        CHECK(hasIndex(diag,l0));
+        CHECK(hasIndex(diag,l2));
         }
 
     //SECTION("Bulk Case - IQTensor")
@@ -80,10 +80,10 @@ SECTION("Diag")
     //    auto R = randomTensor(QN(),L2,prime(L2),H2);
     //    auto lop = LocalOp<IQTensor>(Op1,Op2,L,R);
     //    auto diag = lop.diag();
-    //    CHECK(hasindex(diag,S1));
-    //    CHECK(hasindex(diag,S2));
-    //    CHECK(hasindex(diag,L0));
-    //    CHECK(hasindex(diag,L2));
+    //    CHECK(hasIndex(diag,S1));
+    //    CHECK(hasIndex(diag,S2));
+    //    CHECK(hasIndex(diag,L0));
+    //    CHECK(hasIndex(diag,L2));
     //    }
     }
 }

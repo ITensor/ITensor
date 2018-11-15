@@ -135,44 +135,50 @@ class ITensorT
     void
     set(std::vector<int> const& ivs, Cplx val);
 
-    //
-    // Index Prime Level Methods
-    //
 
     template<typename... VarArgs>
     ITensorT& 
-    noprime(VarArgs&&... vargs)
-        { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+    setPrime(VarArgs&&... vargs) { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT& 
-    prime(VarArgs&&... vargs)
-        { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+    noPrime(VarArgs&&... vargs) { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT& 
-    primeLevel(VarArgs&&... vargs)
-        { itensor::primeLevel(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-    template<typename... VarArgs>
-    ITensorT&
-    primeExcept(VarArgs&&... vargs)
-        { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-    //Change all Indices having primeLevel plevold to have primeLevel plevnew
-    ITensorT& 
-    mapprime(int plevold, int plevnew, IndexType type = All)
-        { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
+    mapPrime(VarArgs&&... vargs) { is_.mapPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT& 
-    mapprime(VarArgs&&... vargs)
-        { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+    prime(VarArgs&&... vargs) { is_.prime(std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT& 
-    sim(VarArgs&&... vargs)
-        { itensor::sim(is_,std::forward<VarArgs>(vargs)...); return *this; }
+    swapPrime(VarArgs&&... vargs) { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    replaceTags(VarArgs&&... vargs) { is_.replaceTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    swapTags(VarArgs&&... vargs) { is_.swapTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    setTags(VarArgs&&... vargs) { is_.setTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    addTags(VarArgs&&... vargs) { is_.addTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    removeTags(VarArgs&&... vargs) { is_.removeTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    sim(VarArgs&&... vargs) { itensor::sim(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     //
     // Element Transformation Methods
@@ -275,26 +281,26 @@ class ITensorT
     ITensorT&
     operator/=(ITensorT const& other);
 
-    //template<typename... Indxs>
-    //ITensorT&
-    //order(index_type const& ind1, Indxs const&... inds);
-
+    //
+    //Permute the data of an ITensor according to the ordering
+    // of the specified Indices
+    //
     template<typename... Indxs>
     auto 
-    order(index_type const& ind1, Indxs const&... inds)
+    permute(index_type const& ind1, Indxs const&... inds)
     -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
 
     template <typename... Indxs>
     auto 
-    order(index_type const& ind1, Indxs const&... inds)
+    permute(index_type const& ind1, Indxs const&... inds)
         -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensorT&>;
 
     template<typename... Indxs>
     ITensorT&
-    order(std::string const& dots, Indxs const&... inds);
+    permute(std::string const& dots, Indxs const&... inds);
 
     ITensorT&
-    order(indexset_type const& iset);
+    permute(indexset_type const& iset);
 
     //
     // Read from and write to streams
@@ -369,6 +375,46 @@ class ITensorT
 
 #endif
 
+    /*
+    template<typename... VarArgs>
+    ITensorT& 
+    noprime(VarArgs&&... vargs)
+        { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensorT& 
+    prime(IndexType it)
+        { itensor::prime(is_,it); return *this; }
+
+    ITensorT& 
+    prime()
+        { itensor::prime(is_); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    prime(VarArgs&&... vargs)
+        { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    primeLevel(VarArgs&&... vargs)
+        { itensor::primeLevel(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT&
+    primeExcept(VarArgs&&... vargs)
+        { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+    //Change all Indices having primeLevel plevold to have primeLevel plevnew
+    ITensorT& 
+    mapprime(int plevold, int plevnew, IndexType type = All)
+        { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
+
+    template<typename... VarArgs>
+    ITensorT& 
+    mapprime(VarArgs&&... vargs)
+        { itensor::mapprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+    */
+
     }; // class ITensorT
 
 //
@@ -377,6 +423,7 @@ class ITensorT
 
 // Makes a tensor with element specified by IndexVals/IQIndexVals
 // set to 1.0, all other elements zero
+// TODO: turn into a constructor?
 template <typename IVal, typename... IVals>
 //ITensorT<typename IVal::index_type>
 ITensorT<typename std::common_type<IVal,IVals...>::type::index_type>
@@ -384,33 +431,122 @@ setElt(IVal  const& iv1,
        IVals const&... rest);
 
 
+// Output the Indices of an ITensor
+// TODO: make a function that outputs some subset of Indices
+// based on tags and/or prime levels
+template<typename IndexT>
+IndexSetT<IndexT>
+inds(ITensorT<IndexT> const& A);
+
+// Find the Index with a certain TagSet and prime level
+// If multiple indices or no index is found, throw an error
+template<typename IndexT>
+IndexT
+index(ITensorT<IndexT> const& A, TagSet const& ts, int plev = 0);
+
+template<typename IndexT>
+IndexT
+findIndexWithTags(ITensorT<IndexT> const& A, TagSet const& ts);
+
 //
-// ITensorT prime level functions
+// Index Prime Level Methods
 //
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-prime(ITensorT<IndexT> A, 
-      VarArgs&&... vargs);
 
+// Set the prime level of matching Indices to plnew
+// If tsmatch==TagSet(All), apply to Indices with any tags. If plmatch < 0, apply to Indices with any prime level.
+// TODO: make noPrime(A,tsmatch,plmatch) = setPrime(A,0,tsmatch,plmatch)?
+// TODO: make a version accepting Indices to match.
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-primeLevel(ITensorT<IndexT> A, 
-           VarArgs&&... vargs);
+setPrime(ITensorT<IndexT> A,
+         VarArgs&&... vargs);
 
+// Sets indices with tags in tsmatch to 0
+// Same as setPrime(A,0,tsmatch)
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-primeExcept(ITensorT<IndexT> A, 
-            VarArgs&&... vargs);
-
-template<typename IndexT, typename... VarArgs>
-ITensorT<IndexT>
-noprime(ITensorT<IndexT> A, 
+noPrime(ITensorT<IndexT> A,
         VarArgs&&... vargs);
 
+// Sets indices with tags in tsmatch from plold to plnew
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
-mapprime(ITensorT<IndexT> A, 
+mapPrime(ITensorT<IndexT> A,
          VarArgs&&... vargs);
+
+// Increase the prime level of matching Indices by plinc
+// TODO: make prime(A,tsmatch,plmatch) = prime(A,1,tsmatch,plmatch)?
+// TODO: make a version accepting Indices to match
+// If plinc not specified,
+// increase the prime level of matching Indices by 1
+// Same as prime(A,1,tsmatch)
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A,
+      VarArgs&&... vargs);
+
+/*
+template<typename IndexT>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A, int plinc, TagSet const& tsmatch = TagSet(All));
+
+template<typename IndexT>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A, TagSet const& tsmatch = TagSet(All));
+*/
+
+//
+//Return copy of a tensor with primeLevels pl1 and pl2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+swapPrime(ITensorT<IndexT> A,
+          VarArgs&&... vargs);
+
+//
+// Index tag methods
+//
+
+// Replace tags tsold with tsnew of matching Indices (removes tags tsold and adds tags tsnew)
+// TODO: make a version accepting Indices to match
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+replaceTags(ITensorT<IndexT> A,
+            VarArgs&&... vargs);
+
+// Swap tags ts1 with ts2 of matching Indices
+// Same as: replaceTags(A,ts1,tstemp,tsmatch,plmatch); replaceTags(A,ts2,ts1,tsmatch,plmatch); replaceTags(A,tstemp,ts2,tsmatch,plmatch);
+// TODO: make a version accepting Indices to match
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+swapTags(ITensorT<IndexT> A,
+         VarArgs&&... vargs);
+
+// Remove all tags and replace with tsnew of matching Indices
+// TODO: make a version accepting Indices to match
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+setTags(ITensorT<IndexT> A,
+        VarArgs&&... vargs);
+
+// Add tags tsadd to matching Indices
+// TODO: make a version accepting Indices to match
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+addTags(ITensorT<IndexT> A,
+        VarArgs&&... vargs);
+
+// Remove tags tsremove from matching Indices
+// Same as: replaceTags(A,tsremove,TagSet(),tsmatch,plmatch);
+// TODO: make a version accepting Indices to match
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+removeTags(ITensorT<IndexT> A,
+           VarArgs&&... vargs);
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
@@ -419,16 +555,12 @@ sim(ITensorT<IndexT> A,
 
 template<typename IndexT>
 bool
-hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I);
-
-template<typename IndexT>
-IndexT
-findtype(const ITensorT<IndexT>& T, IndexType type);
+hasIndex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I);
 
 template<typename IndexT,
          typename Cond>
 IndexT
-findindex(ITensorT<IndexT> const& T, Cond && cond);
+findIndex(ITensorT<IndexT> const& T, Cond && cond);
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B
@@ -436,7 +568,7 @@ template<typename IndexT>
 IndexT
 commonIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t = All);
+            TagSet const& t = TagSet(All));
 
 
 //Find index of tensor A (of optional type t) 
@@ -445,21 +577,7 @@ template<typename IndexT>
 IndexT
 uniqueIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t);
-
-//
-//Return copy of a tensor with primeLevels plev1 and plev2 swapped
-//
-//For example, if T has indices i,i' (like a matrix or a site
-//operator) then swapPrime(T,0,1) will have indices i',i 
-//i.e. the transpose of T.
-//
-template <typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
-          int plev1, 
-          int plev2,
-          IndexType type = All);
+            TagSet const& t);
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
@@ -493,7 +611,7 @@ rank(ITensorT<I> const& T);
 //(same as rank)
 template<typename I>
 long
-ord(ITensorT<I> const& T);
+order(ITensorT<I> const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).

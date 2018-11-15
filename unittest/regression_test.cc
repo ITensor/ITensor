@@ -15,16 +15,16 @@ using namespace std;
 
 TEST_CASE("ITensor Times IQIndexVal")
     {
-    IQIndex s("S",Index("up",1,Site),QN(+1),
-                  Index("dn",1,Site),QN(-1));
+    IQIndex s(Index(1),QN(+1),
+              Index(1),QN(-1));
 
-    Index l("l",4);
+    Index l(4);
     ITensor T(l);
     randomize(T);
 
     ITensor R = T * s(2);
 
-    REQUIRE(hasindex(R,s));
+    REQUIRE(hasIndex(R,s));
     CHECK(R.real(l(1),s(1)) == 0);
     CHECK(R.real(l(2),s(1)) == 0);
     CHECK(R.real(l(3),s(1)) == 0);
@@ -33,8 +33,8 @@ TEST_CASE("ITensor Times IQIndexVal")
 
 TEST_CASE("ITensor from IQIndexVal")
     {
-    IQIndex s("S",Index("up",1,Site),QN(+1),
-                  Index("dn",1,Site),QN(-1));
+    IQIndex s(Index(1),QN(+1),
+              Index(1),QN(-1));
 
     auto T1 = setElt(s(1));
     CHECK(T1.real(s(1)) == 1);
@@ -47,7 +47,7 @@ TEST_CASE("ITensor from IQIndexVal")
 
 TEST_CASE("CombinerOrder")
     {
-    Index a("a",2),c("c",2);
+    Index a(2),c(2);
 
     ITensor U(a,c);
     U.set(a(1),c(2),1);
@@ -71,7 +71,7 @@ TEST_CASE("CombinerOrder")
 
 TEST_CASE("SVDIndexOrder")
     {
-    Index a("a",2),b("b",1),c("c",2);
+    Index a(2),b(1),c(2);
 
     ITensor z(c,a,b);
     z.set(c(1),a(2),b(1),1);
@@ -104,8 +104,8 @@ TEST_CASE("SVDIndexOrder")
 
 TEST_CASE("SVDArrows")
     {
-    Index l("l",2),r("r",2);
-    IQIndex L("L",l,QN(1,1),In),R("R",r,QN(1,1),Out);
+    Index l(2),r(2);
+    IQIndex L(l,QN(1,1),In),R(r,QN(1,1),Out);
 
     IQTensor AA(L,R);
 
@@ -156,11 +156,11 @@ TEST_CASE("SVDArrows")
 
 TEST_CASE("ConvertToITensor")
     {
-    IQIndex L("L",Index("l"),QN(),Out);
-    Index emp("emp"),occ("occ");
-    IQIndex S("S",emp,QN(0,0),
-                  occ,QN(1,0),
-                  Out);
+    IQIndex L(Index(1),QN(),Out);
+    Index emp(1),occ(1);
+    IQIndex S(emp,QN(0,0),
+              occ,QN(1,0),
+              Out);
 
     auto T = IQTensor(L,dag(S),prime(S));
     T.set(L(1),S(1),prime(S)(1),1);
@@ -223,8 +223,8 @@ TEST_CASE("ComplexAddition")
     //Bug was happening because a below has different
     //Index order from b but complex addition code 
     //did not account for this!
-    Index L1("L1",6),
-          S1("S1",2);
+    Index L1(6),
+          S1(2);
 
     ITensor a(L1,S1);
     a.set(L1(1),S1(2),21);

@@ -81,7 +81,7 @@ class MPOt : private MPSt<Tensor>
 
     //MPOt: index methods --------------------------------------------------
 
-    using Parent::mapprime;
+    using Parent::mapPrime;
     using Parent::primelinks;
     using Parent::noprimelink;
 
@@ -90,9 +90,9 @@ class MPOt : private MPSt<Tensor>
         {
         for(int i = 1; i <= this->N(); i++)
             {
-            Anc(i).mapprime(0,1,Link);
-            Anc(i).mapprime(1,2,Site);
-            Anc(i).mapprime(0,1,Site);
+            Anc(i).mapPrime(0,1,"Link");
+            Anc(i).mapPrime(1,2,"Site");
+            Anc(i).mapPrime(0,1,"Site");
             }
         }
 

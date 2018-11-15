@@ -112,7 +112,7 @@ combine(QDense<T>   const& d,
 #ifdef DEBUG
     for(auto i : range(1,Cis.r()))
         {
-        auto jc = findindex(dis,Cis[i]);
+        auto jc = findIndex(dis,Cis[i]);
         if(jc == -1)
             {
             printfln("Indices of tensor = \n%s\n------",dis);
@@ -131,7 +131,7 @@ combine(QDense<T>   const& d,
     auto uncomb_dest = ncomb;
     for(auto i : range(dr)) 
         {
-        auto jc = findindex(Cis,dis[i]);
+        auto jc = findIndex(Cis,dis[i]);
         if(jc >= 0) dperm[i] = jc-1;
         else        dperm[i] = uncomb_dest++;
         }
@@ -293,7 +293,7 @@ doTask(Contract<IQIndex> & C,
        QCombiner  const& cmb,
        ManageStore       & m)
     {
-    if(hasindex(C.Lis,C.Ris[0]))
+    if(hasIndex(C.Lis,C.Ris[0]))
         {
         uncombine(d,cmb,C.Lis,C.Ris,C.Nis,m,true);
         }
@@ -312,7 +312,7 @@ doTask(Contract<IQIndex> & C,
        QDense<T>    const& d,
        ManageStore       & m)
     { 
-    if(hasindex(C.Ris,C.Lis[0]))
+    if(hasIndex(C.Ris,C.Lis[0]))
         {
         uncombine(d,cmb,C.Ris,C.Lis,C.Nis,m,false);
         }

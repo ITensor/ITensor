@@ -23,7 +23,7 @@ SECTION("Orthogonalize")
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(nameint("l",n),m);
+        links.at(n) = Index(m,nameint("Link,l",n).c_str());
         }
     W.Aref(1) = randomTensor(links.at(1),sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
@@ -44,7 +44,7 @@ SECTION("Orthogonalize")
 
     for(int n = N; n > 1; --n)
         {
-        auto li = commonIndex(W.A(n),W.A(n-1),Link);
+        auto li = commonIndex(W.A(n),W.A(n-1),"Link");
         auto rho = W.A(n) * dag(prime(W.A(n),li));
         auto id = ITensor(li,prime(li));
         for(auto l : range1(li.m()))
@@ -66,19 +66,19 @@ SECTION("Add MPOs")
         auto ll = vector<IQIndex>(N);
         for(auto n : range1(N-1))
             {
-            ll.at(n) = IQIndex(nameint(name,n),
-                               Index("a",2),QN("Sz=",-1,"Nf=",-1),
-                               Index("a",2),QN("Sz=",-1,"Nf=",+1),
-                               Index("b",2),QN("Sz=",-1,"Nf=",0),
-                               Index("c",2),QN("Sz=",+1,"Nf=",0),
-                               Index("d",2),QN("Sz=",+1,"Nf=",-1),
-                               Index("d",2),QN("Sz=",+1,"Nf=",+1));
+            auto ts = nameint(name,n).c_str();
+            ll.at(n) = IQIndex(Index(2,ts),QN("Sz=",-1,"Nf=",-1),
+                               Index(2,ts),QN("Sz=",-1,"Nf=",+1),
+                               Index(2,ts),QN("Sz=",-1,"Nf=",0),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",0),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",-1),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",+1));
             }
         return ll;
         };
 
-    auto l1 = makeInds("I1_");
-    auto l2 = makeInds("I2_");
+    auto l1 = makeInds("Link,I1_");
+    auto l2 = makeInds("Link,I2_");
 
     auto Z = QN("Sz=",0,"Nf=",0);
 
@@ -114,14 +114,14 @@ SECTION("Regression Test")
     auto sites = Hubbard(2);
 
     auto A = IQMPO(sites);
-    auto Ia = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
-                          Index("1",1),QN("Sz",-1,"Nf",-1));
+    auto Ia = IQIndex(Index(2,"Link,I"),QN("Sz",1,"Nf",-1),
+                      Index(1,"Link,I"),QN("Sz",-1,"Nf",-1));
     A.Aref(1) = randomTensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
     A.Aref(2) = randomTensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
 
     auto B = IQMPO(sites);
-    auto Ib = IQIndex("I",Index("1",2),QN("Sz",1,"Nf",-1),
-                          Index("1",1),QN("Sz",-1,"Nf",-1));
+    auto Ib = IQIndex(Index(2,"Link,I"),QN("Sz",1,"Nf",-1),
+                      Index(1,"Link,I"),QN("Sz",-1,"Nf",-1));
     B.Aref(1) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
     B.Aref(2) = randomTensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
 
@@ -149,6 +149,7 @@ SECTION("applyMPO (DensityMatrix)")
         }
     auto H = MPO(ampo);
     auto K = MPO(ampo);
+
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
@@ -213,7 +214,7 @@ SECTION("applyMPO (Fit)")
 
     }
 
-
+//TODO: test this without using applyMPO()?
 SECTION("Overlap <psi|HK|phi>")
     {
     detail::seed_quickran(1);
@@ -243,7 +244,7 @@ SECTION("Overlap <psi|HK|phi>")
         randomize(K.Aref(j));
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.3;
-        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,Site));
+        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,"Site"));
         }
 
     auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
@@ -264,18 +265,18 @@ SECTION("toMPO function")
         auto ll = vector<IQIndex>(N);
         for(auto n : range1(N-1))
             {
-            ll.at(n) = IQIndex(nameint(name,n),
-                               Index("a",2),QN("Sz=",-1,"Nf=",-1),
-                               Index("a",2),QN("Sz=",-1,"Nf=",+1),
-                               Index("b",2),QN("Sz=",-1,"Nf=",0),
-                               Index("c",2),QN("Sz=",+1,"Nf=",0),
-                               Index("d",2),QN("Sz=",+1,"Nf=",-1),
-                               Index("d",2),QN("Sz=",+1,"Nf=",+1));
+            auto ts = nameint(name,n).c_str();
+            ll.at(n) = IQIndex(Index(2,ts),QN("Sz=",-1,"Nf=",-1),
+                               Index(2,ts),QN("Sz=",-1,"Nf=",+1),
+                               Index(2,ts),QN("Sz=",-1,"Nf=",0),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",0),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",-1),
+                               Index(2,ts),QN("Sz=",+1,"Nf=",+1));
             }
         return ll;
         };
 
-    auto ll = makeInds("I_");
+    auto ll = makeInds("Link,I_");
 
     auto Z = QN("Sz=",0,"Nf=",0);
 

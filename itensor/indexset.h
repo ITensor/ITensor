@@ -172,6 +172,105 @@ class IndexSetT : public RangeT<index_type_>
     const_iterator
     cend() const { return end(); }
 
+    //
+    // Prime methods
+    //
+    void
+    setPrime(int plnew, TagSet const& tsmatch = TagSet(All)) { for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); };
+
+    void
+    setPrime(int plnew, Index const& imatch) { for(auto& J : *this) if(J==imatch) J.setPrime(plnew); };
+
+    void
+    noPrime(TagSet const& tsmatch = TagSet(All)) { for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(0); };
+
+    void
+    noPrime(Index const& imatch) { for(auto& J : *this) if(J==imatch) J.setPrime(0); };
+
+    void
+    mapPrime(int plold, int plnew, TagSet const& tsmatch = TagSet(All)) { for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); };
+
+    //void
+    //mapPrime(int plold, int plnew, Index const& imatch) { for(auto& J : *this) if(J==imatch && J.primeLevel()==plold) J.setPrime(plnew); };
+
+    void
+    prime(int plinc = 1, TagSet const& tsmatch = TagSet(All)) { for(auto& J : *this) if(hasTags(J,tsmatch)) J.prime(plinc); };
+
+    void
+    prime(TagSet const& tsmatch) { this->prime(1,tsmatch); };
+
+    void
+    prime(int plinc, Index const& imatch) { for(auto& J : *this) if(J==imatch) J.prime(plinc); };
+
+    void
+    prime(Index const& imatch) { this->prime(1,imatch); };
+
+    // TODO
+    void
+    swapPrime(int pl1, int pl2, TagSet const& tsmatch = TagSet())
+        {
+        int tempLevel = 99999;
+#ifdef DEBUG
+        for(auto& I : *this)
+            {
+            if(I.primeLevel() == tempLevel)
+                {
+                println("tempLevel = ",tempLevel);
+                Error("swapPrime fails if an index has primeLevel==tempLevel");
+                }
+            }
+#endif
+        this->mapPrime(pl1,tempLevel,tsmatch);
+        this->mapPrime(pl2,pl1,tsmatch);
+        this->mapPrime(tempLevel,pl2,tsmatch);
+        };
+
+    //
+    // Tag methods
+    //
+    void
+    replaceTags(TagSet const& tsold, TagSet const& tsnew, TagSet const& tsmatch = TagSet(All), int plmatch = -1)
+        {
+        for(auto& J : *this)
+            {
+            if(matchTagsPrime(J,tsmatch,plmatch) && hasTags(J,tsold))
+                {
+                J.removeTags(tsold);
+                J.addTags(tsnew);
+                }
+            }
+        };
+
+    void
+    swapTags(TagSet const& ts1, TagSet const& ts2, TagSet const& tsmatch = TagSet(All), int plmatch = -1)
+        {
+        auto tmp = TagSet("df4sd321");  // Some random temporary tag. TODO: Debug level check that ts1!=tmp && ts2!=tmp
+        this->replaceTags(ts1,tmp,tsmatch,plmatch);
+        this->replaceTags(ts2,ts1,tsmatch,plmatch);
+        this->replaceTags(tmp,ts2,tsmatch,plmatch);
+        };
+
+    void
+    setTags(TagSet const& tsnew, TagSet const& tsmatch = TagSet(All), int plmatch = -1) { for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.setTags(tsnew); };
+
+    void
+    addTags(TagSet const& tsadd, TagSet const& tsmatch = TagSet(All), int plmatch = -1) { for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); };
+
+    void
+    addTags(TagSet const& tsadd, int plmatch) { for(auto& J : *this) if(J.primeLevel()==plmatch) J.addTags(tsadd); };
+
+    void
+    addTags(TagSet const& tsadd, Index const& imatch) { for(auto& J : *this) if(J==imatch) J.addTags(tsadd); };
+
+    void
+    removeTags(TagSet const& tsremove, TagSet const& tsmatch = TagSet(All), int plmatch = -1) { for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.removeTags(tsremove); };
+
+    void
+    removeTags(TagSet const& tsremove, int plmatch) { for(auto& J : *this) if(J.primeLevel()==plmatch) J.removeTags(tsremove); };
+
+    void
+    removeTags(TagSet const& tsremove, Index const& imatch) { for(auto& J : *this) if(J==imatch) J.removeTags(tsremove); };
+
     };
 
 template<typename index_type>
@@ -196,17 +295,61 @@ rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
     return is.range().end();
     }
 
+// Find the Index with a certain TagSet and prime level
+// If multiple indices or no index is found, throw an error
+// TODO: should this be named findIndex?
+// Maybe this should be more like findIndexWithTags(), where
+// the input TagSet only has to be contained in the found index?
+template<typename IndexT>
+IndexT
+index(const IndexSetT<IndexT>& is,
+      TagSet const& t, int plev = 0)
+    {
+    IndexT j;
+    for(auto& J : is)
+        {
+        if(tags(J) == t && J.primeLevel() == plev)
+            {
+            if(j) Error("Multiple indices with those tags and prime level found");
+            else j = J;
+            }
+        }
+    if(!j) Error("No index with those tags and prime level found");
+    return j;
+    }
+
+// Return the first index found with the specified tags
+// TODO: better name
+// Maybe allow for optional prime level matching?
+// This is useful if we know there is only one index
+// that contains Tags ts, but don't know the other tags
+template<typename IndexT>
+IndexT
+findIndexWithTags(const IndexSetT<IndexT>& is,
+                  TagSet const& ts)
+    {
+    for(auto& J : is)
+        if(hasTags(J,ts)) return J;
+    //TODO: make this a debug error
+    Error("No index with those tags and prime level found");
+    return IndexT();
+    }
+
+//
 //
 // IndexSetT Primelevel Methods
 //
 
 // increment primelevel of all
 // indices by an amount "inc"
+/*
 template<typename IndexT>
 void 
 prime(IndexSetT<IndexT>& is, 
       int inc = 1);
 
+// Given an index ordering, set the prime levels
+// of the IndexSet to the ones listed
 template<typename IndexT, typename... VArgs>
 void
 primeLevel(IndexSetT<IndexT>& is,
@@ -223,10 +366,10 @@ primeLevel(IndexSetT<IndexT>& is,
 // be an integer "inc" telling how
 // much to increment by.
 //
-template<typename IndexT, typename... VArgs>
-void 
-prime(IndexSetT<IndexT>& is, 
-      VArgs&&... vargs);
+//template<typename IndexT, typename... VArgs>
+//void 
+//prime(IndexSetT<IndexT>& is, 
+//      VArgs&&... vargs);
 
 //// Increment primelevels of the indices
 //// specified by 1, or an optional amount "inc"
@@ -318,6 +461,7 @@ mapprime(IndexSetT<IndexT>& is,
          int plevold, 
          int plevnew, 
          IndexType type = All);
+*/
 
 //Replace all indices of type t by 'similar' indices 
 //with same properties but which don't compare equal 
@@ -325,7 +469,7 @@ mapprime(IndexSetT<IndexT>& is,
 template<typename IndexT>
 void 
 sim(IndexSetT<IndexT> & is, 
-    IndexType t);
+    TagSet const& t);
 
 //Replace index I with a 'similar' index having same properties
 //but which does not compare equal to it (using sim(I) function)
@@ -346,13 +490,13 @@ sim(IndexSetT<IndexT> & is,
 //
 template <class IndexT>
 long
-findindex(IndexSetT<IndexT> const& iset, 
+findIndex(IndexSetT<IndexT> const& iset, 
           IndexT const& I);
 
-template <class IndexT>
-IndexT const&
-findtype(IndexSetT<IndexT> const& iset, 
-         IndexType t);
+//template <class IndexT>
+//IndexT const&
+//findtype(IndexSetT<IndexT> const& iset, 
+//         IndexType t);
 
 template <class IndexT>
 IndexT const&
@@ -375,13 +519,8 @@ dir(IndexSetT<IndexT> const& is, IndexT const& I);
 
 template <class IndexT>
 bool
-hasindex(IndexSetT<IndexT> const& iset, 
+hasIndex(IndexSetT<IndexT> const& iset, 
          IndexT const& I);
-
-template <class IndexT>
-bool
-hastype(IndexSetT<IndexT> const& iset, 
-        IndexType t);
 
 template <class IndexT>
 long

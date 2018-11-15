@@ -212,8 +212,8 @@ read(std::istream & s)
         }
     //Check that tensors read from disk were constructed
     //using the same sites
-    auto s1 = findtype(A_.at(1),Site);
-    s1.noprime();
+    auto s1 = index(A_.at(1),"Site");
+    s1.noPrime();
     if(sites_ && s1 != IndexT(sites_(1)))
         {
         Print(A_.at(1).inds());
@@ -406,7 +406,7 @@ new_tensors(std::vector<ITensor>& A_)
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
         { 
-        a[i] = Index(nameint("a",i)); 
+        a[i] = Index(1,nameint("Link,a",i).c_str()); 
         }
     A_[1] = ITensor(sites()(1),a[1]);
     for(int i = 2; i < N_; i++)
@@ -440,7 +440,7 @@ void MPSt<Tensor>::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
     std::vector<Index> a(N_+1);
-    for(auto i : range1(N_)) a[i] = Index(nameint("a",i));
+    for(auto i : range1(N_)) a[i] = Index(1,nameint("Link,a",i).c_str());
 
     A_[1] = setElt(IndexVal(initState(1)),a[1](1));
     for(auto i : range(2,N_))
@@ -472,7 +472,7 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     auto a = std::vector<IQIndex>(N_+1);
     for(auto i : range1(N_))
         { 
-        a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); 
+        a[i] = IQIndex(Index(1,nameint("Link,L",i).c_str()),qa[i]); 
         }
 
     A_[1] = setElt(initState(1),a[1](1));
@@ -610,17 +610,17 @@ plusEq(const MPSt<IQTensor>& R, const Args& args);
 
 template <class Tensor>
 void MPSt<Tensor>::
-mapprime(int oldp, int newp, IndexType type)
+mapPrime(int oldp, int newp, TagSet const& ts)
     { 
     if(do_write_)
-        Error("mapprime not supported if doWrite(true)");
+        Error("mapPrime not supported if doWrite(true)");
     for(int i = 1; i <= N_; ++i) 
-        A_[i].mapprime(oldp,newp,type); 
+        A_[i].mapPrime(oldp,newp,ts); 
     }
 template
-void MPSt<ITensor>::mapprime(int oldp, int newp, IndexType type);
+void MPSt<ITensor>::mapPrime(int oldp, int newp, TagSet const& ts);
 template
-void MPSt<IQTensor>::mapprime(int oldp, int newp, IndexType type);
+void MPSt<IQTensor>::mapPrime(int oldp, int newp, TagSet const& ts);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -629,7 +629,7 @@ primelinks(int oldp, int newp)
     if(do_write_)
         Error("primelinks not supported if doWrite(true)");
     for(int i = 1; i <= N_; ++i) 
-        A_[i].mapprime(oldp,newp,Link); 
+        A_[i].mapPrime(oldp,newp,"Link"); 
     }
 template
 void MPSt<ITensor>::primelinks(int oldp, int newp);
@@ -643,7 +643,7 @@ noprimelink()
     if(do_write_)
         Error("noprimelink not supported if doWrite(true)");
     for(int i = 1; i <= N_; ++i) 
-        A_[i].noprime(Link); 
+        A_[i].noPrime("Link"); 
     }
 template
 void MPSt<ITensor>::noprimelink();
@@ -685,7 +685,7 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
     Tensor& L = (dir == Fromleft ? A1 : A2);
     Tensor& R = (dir == Fromleft ? A2 : A1);
 
-    auto bnd = commonIndex(L,R,Link);
+    auto bnd = commonIndex(L,R,"Link");
     if(!bnd) return Spectrum();
 
     if(args.getBool("Verbose",false))
@@ -710,9 +710,15 @@ orthMPS(IQTensor& A1, IQTensor& A2, Direction dir, const Args& args);
 
 template<class Tensor> 
 void MPSt<Tensor>::
-position(int i, Args const& args)
+position(int i, Args args)
     {
     if(not *this) Error("position: MPS is default constructed");
+
+    //TODO: make sure this sets the tags correctly
+    //Consider adding a tag denoting the position of the link?
+    if(!args.defined("Tags")) args.add("Tags","MPS,Link");
+    //if(!args.defined("LeftTags")) args.add("LeftTags","MPS,Link");
+    //if(!args.defined("RightTags")) args.add("RightTags","MPS,Link");
 
     if(args.getBool("DoSVDBond",false))
         {
@@ -752,9 +758,9 @@ position(int i, Args const& args)
         }
     }
 template void MPSt<ITensor>::
-position(int b, const Args& args);
+position(int b, Args args);
 template void MPSt<IQTensor>::
-position(int b, const Args& args);
+position(int b, Args args);
 
 template <class Tensor>
 int MPSt<Tensor>::
@@ -783,16 +789,16 @@ orthogonalize(Args const& args)
 
     //Build environment tensors from the left
     auto E = vector<Tensor>(N_+1);
-    auto ci = commonIndex(A_.at(1),A_.at(2),Link);
-    E.at(1) = A_.at(1)*dag(prime(A_.at(1),ci,plev));
+    auto ci = commonIndex(A_.at(1),A_.at(2),"Link");
+    E.at(1) = A_.at(1)*dag(prime(A_.at(1),plev,ci));
     for(int j = 2; j < N_; ++j)
         {
-        E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),Link,plev));
+        E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),plev,"Link"));
         }
 
     auto rho = E.at(N_-1) * A_.at(N_) * dag(prime(A_.at(N_),plev));
     Tensor U,D;
-    diagHermitian(rho,U,D,{dargs,"IndexType=",Link});
+    diagHermitian(rho,U,D,{dargs,"Tags=","Link"});
 
     //O is partial overlap of previous and new MPS
     auto O = U * A_.at(N_) * A_.at(N_-1);
@@ -809,7 +815,7 @@ orthogonalize(Args const& args)
             dargs.add("Maxm",maxm);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
-        auto spec = diagHermitian(rho,U,D,{dargs,"IndexType=",Link});
+        auto spec = diagHermitian(rho,U,D,{dargs,"Tags=","Link"});
         O *= U;
         O *= A_.at(j-1);
         A_.at(j) = dag(U);
@@ -1158,7 +1164,7 @@ periodicWrap(int j, int N)
 //    {
 //    const int N = sites.N();
 //    qA.resize(A.size());
-//    const bool is_mpo = hasindex(A[1],sites.siP(1));
+//    const bool is_mpo = hasIndex(A[1],sites.siP(1));
 //    const int Dim = sites.si(1).m();
 //    if(sites.si(2).m() != Dim)
 //        Error("convertToIQ assumes uniform site dimension");
@@ -1432,8 +1438,8 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
     iqpsi = IQMPSType(sst,maxm,cutoff);
 
-    if(!A_[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
-    bool is_mpo = A_[1].hasindex(prime(si(1)));
+    if(!A_[1].hasIndex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
+    bool is_mpo = A_[1].hasIndex(prime(si(1)));
     const int Dim = si(1).m();
     const int PDim = (is_mpo ? Dim : 1);
 

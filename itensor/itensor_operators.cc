@@ -138,7 +138,7 @@ template ITensorT<IQIndex>& ITensorT<IQIndex>::operator*=(ITensorT<IQIndex> cons
 
 template<typename IndexT>
 ITensorT<IndexT>& ITensorT<IndexT>::
-order(IndexSetT<IndexT> const& iset)
+permute(IndexSetT<IndexT> const& iset)
     {
     auto& A = *this;
     auto Ais = A.inds();
@@ -151,7 +151,7 @@ order(IndexSetT<IndexT> const& iset)
         println("---------------------------------------------");
         println("Indices provided = \n",iset,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of Indexes passed to order (expected %d, got %d)",r,iset.r()));
+        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.r()));
         }
 
     // Get permutation
@@ -178,8 +178,8 @@ order(IndexSetT<IndexT> const& iset)
 
     return A;
     }
-template ITensorT<Index>& ITensorT<Index>::order(IndexSetT<Index> const& iset);
-template ITensorT<IQIndex>& ITensorT<IQIndex>::order(IndexSetT<IQIndex> const& iset);
+template ITensorT<Index>& ITensorT<Index>::permute(IndexSetT<Index> const& iset);
+template ITensorT<IQIndex>& ITensorT<IQIndex>::permute(IndexSetT<IQIndex> const& iset);
 
 #ifndef USESCALE
 

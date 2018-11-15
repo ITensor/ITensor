@@ -6,7 +6,7 @@
 #define __ITENSOR_DECOMP_H
 #include "itensor/iqtensor.h"
 #include "itensor/spectrum.h"
-#include "itensor/mps/localop.h"
+#include "itensor/mps/localop.h"  // TODO: Can we remove this dependency?
 
 
 namespace itensor {
@@ -201,19 +201,21 @@ svd(Tensor AA,
          &Rinds = (U ? Vinds : Uinds);
     for(const auto& I : AA.inds())
         { 
-        if(hasindex(L,I)) Linds.push_back(I);
+        if(hasIndex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
     Tensor Ucomb,
            Vcomb;
     if(!Uinds.empty())
         {
-        Ucomb = combiner(std::move(Uinds),{"IndexName","uc"});
+        //TODO: Add some tags here?
+        Ucomb = combiner(std::move(Uinds)); //,{"IndexName","uc"});
         AA *= Ucomb;
         }
     if(!Vinds.empty())
         {
-        Vcomb = combiner(std::move(Vinds),{"IndexName","vc"});
+        //TODO: Add some tags here?
+        Vcomb = combiner(std::move(Vinds)); //,{"IndexName","vc"});
         AA *= Vcomb;
         }
 
@@ -226,7 +228,9 @@ svd(Tensor AA,
              maxm = MAX_M;
         if(D.r() == 0)
             {
-            auto mid = commonIndex(U,V,Link);
+            //auto mid = commonIndex(U,V,Link);
+            //TODO: check this does the same thing
+            auto mid = commonIndex(U,V,"Link");
             if(mid) minm = maxm = mid.m();
             else    minm = maxm = 1;
             }
@@ -249,6 +253,8 @@ svd(Tensor AA,
     return spec;
     } //svd
 
+//TODO: we should consider moving this out of "decomp.h", since it
+//is not a standard linear algebra decomposition
 template<class Tensor, class BigMatrixT>
 Spectrum 
 denmatDecomp(Tensor const& AA, 
@@ -262,7 +268,9 @@ denmatDecomp(Tensor const& AA,
 
     auto noise = args.getReal("Noise",0.);
 
-    auto mid = commonIndex(A,B,Link);
+    //TODO: what is this for?
+    //auto mid = commonIndex(A,B,Link);
+    auto mid = commonIndex(A,B,"Link");
 
     //If dir==NoDir, put the O.C. on the side
     //that keeps mid's arrow the same
@@ -279,13 +287,18 @@ denmatDecomp(Tensor const& AA,
     auto cinds = stdx::reserve_vector<IndexT>(activeInds.r());
     for(auto& I : activeInds)
         {
-        if(!hasindex(newoc,I)) cinds.push_back(I);
+        if(!hasIndex(newoc,I)) cinds.push_back(I);
         }
 
     //Apply combiner
     START_TIMER(8)
-    auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
-    auto cmb = combiner(std::move(cinds),iname);
+    //TODO: decide on a tag convention for denmatDecomp
+    //TODO: trying to get the tags() from mid.tags() was causing the error:
+    //itensor/smallstring.h:45: const char* itensor::SmallString::c_str() const: Assertion `name_[size()]=='\0'' failed.
+    //auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
+    //auto itagset = getTagSet(args,"Tags",mid ? mid.tags().c_str() : "MID");
+    auto itagset = getTagSet(args,"Tags","Link,MID");
+    auto cmb = combiner(std::move(cinds),{"Tags",itagset.c_str()});
     auto ci = cmb.inds().front();
 
     auto AAc = cmb * AA;
@@ -345,7 +358,9 @@ diagHermitian(ITensorT<I> const& M,
               ITensorT<I>      & D,
               Args args)
     {
-    if(!args.defined("IndexName")) args.add("IndexName","d");
+    //if(!args.defined("IndexName")) args.add("IndexName","d");
+    //TODO: create tag convention
+    if(!args.defined("Tags")) args.add("Tags","Link,DIAG");
 
     //
     // Pick an arbitrary index and do some analysis

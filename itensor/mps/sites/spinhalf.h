@@ -23,9 +23,11 @@ class SpinHalfSite
 
     SpinHalfSite(int n, Args const& args = Args::global())
         {
-        s = IQIndex{nameint("S=1/2 ",n),
-               Index(nameint("Up ",n),1,Site),QN("Sz=",+1),
-               Index(nameint("Dn ",n),1,Site),QN("Sz=",-1)};
+        // TODO: make a nicer constructor for TagSet that accepts an integer
+        // i.e. TagSet("Site,S=1/2,%d",n)
+        // Also allow conversion from std::string to TagSet?
+        s = IQIndex{Index(1,nameint("Site,S=1/2,",n).c_str()),QN("Sz=",+1),
+                    Index(1,nameint("Site,S=1/2,",n).c_str()),QN("Sz=",-1)};
         }
 
     IQIndex

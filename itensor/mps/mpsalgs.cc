@@ -30,7 +30,7 @@ plussers(Index const& l1,
     {
     auto m = l1.m()+l2.m();
     if(m <= 0) m = 1;
-    sumind = Index(sumind.rawname(),m);
+    sumind = Index(m,sumind.tags());
 
     first = delta(l1,sumind);
     auto S = Matrix(l2.m(),sumind.m());
@@ -50,18 +50,18 @@ plussers(IQIndex const& l1,
     auto siq = stdx::reserve_vector<IndexQN>(l1.nindex()+l2.nindex());
     for(auto iq1 : l1)
         {
-        auto s1 = Index(iq1.index.rawname(),iq1.m(),iq1.type());
+        auto s1 = Index(iq1.m(),iq1.index.tags());
         siq.emplace_back(s1,iq1.qn);
         }
     for(auto iq2 : l2)
         {
-        auto s2 = Index(iq2.index.rawname(),iq2.m(),iq2.type());
+        auto s2 = Index(iq2.m(),iq2.index.tags());
         siq.emplace_back(s2,iq2.qn);
         }
 #ifdef DEBUG
     if(siq.empty()) Error("siq is empty in plussers");
 #endif
-    sumind = IQIndex(sumind.rawname(),std::move(siq),sumind.dir(),sumind.primeLevel());
+    sumind = IQIndex(std::move(siq),sumind.dir(),sumind.tags(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
     int n = 1;
     for(auto iq1 : l1)
@@ -145,14 +145,14 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    auto A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),Link));
+    auto A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),"Link"));
     for(int n = N-1; n > 1; --n)
         {
-        A *= dag(prime(psi_basis.A(n),Link));
+        A *= dag(prime(psi_basis.A(n),"Link"));
         A *= psi_to_fit.A(n);
         }
     A = psi_to_fit.A(1) * A;
-    A.noprime();
+    A.noPrime();
 
     auto nrm = norm(A);
     if(nrm == 0) Error("Zero overlap of psi_to_fit and psi_basis");

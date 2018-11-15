@@ -137,21 +137,21 @@ template <typename MPST>
 typename MPST::IndexT 
 linkInd(MPST const& psi, int b)
     { 
-    return commonIndex(psi.A(b),psi.A(b+1),Link); 
+    return commonIndex(psi.A(b),psi.A(b+1),"Link"); 
     }
 
 template <typename MPST>
 typename MPST::IndexT 
 rightLinkInd(MPST const& psi, int i)
     { 
-    return commonIndex(psi.A(i),psi.A(i+1),Link); 
+    return commonIndex(psi.A(i),psi.A(i+1),"Link"); 
     }
 
 template <typename MPST>
 typename MPST::IndexT 
 leftLinkInd(MPST const& psi, int i)
     { 
-    return commonIndex(psi.A(i),psi.A(i-1),Link); 
+    return commonIndex(psi.A(i),psi.A(i-1),"Link"); 
     }
 
 template <typename MPST>
@@ -263,7 +263,7 @@ overlapC(MPSType const& psi,
 
     for(decltype(N) i = 2; i < N; ++i) 
         { 
-        L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
+        L = L * phi.A(i) * dag(prime(psi.A(i),"Link")); 
         }
     L = L * phi.A(N);
 

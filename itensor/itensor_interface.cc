@@ -22,65 +22,43 @@ fill(Cplx z)
 template ITensorT<Index>& ITensorT<Index>::fill(Cplx z);
 template ITensorT<IQIndex>& ITensorT<IQIndex>::fill(Cplx z);
 
+//TODO: make a version where the tags all have to match?
 template<typename IndexT> 
 IndexT
 commonIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t)
+            TagSet const& t)
     {
     for(auto& I : A.inds())
-        if( (t == All || I.type() == t)
-         && hasindex(B.inds(),I) ) 
+        {
+        if( (t == TagSet(All) || hasTags(I,t)) && hasIndex(B.inds(),I) ) 
             {
             return I;
             }
+        }
     return IndexT{};
     }
-template Index commonIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, IndexType t);
-template IQIndex commonIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, IndexType t);
+template Index commonIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, TagSet const& t);
+template IQIndex commonIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, TagSet const& t);
 
+//TODO: make a version where the tags all have to match?
 template<typename IndexT> 
 IndexT
 uniqueIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t)
+            TagSet const& t)
     {
     for(auto& I : A.inds())
-        if( (t == All || I.type() == t)
-         && !hasindex(B.inds(),I) ) 
+        {
+        if( (t == TagSet(All) || hasTags(I,t)) && !hasIndex(B.inds(),I) ) 
             {
             return I;
             }
+        }
     return IndexT{};
     }
-template Index uniqueIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, IndexType t);
-template IQIndex uniqueIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, IndexType t);
-
-template<typename IndexT>
-ITensorT<IndexT>
-swapPrime(ITensorT<IndexT> T, 
-          int plev1, 
-          int plev2,
-          IndexType type)
-    { 
-    int tempLevel = 99999;
-#ifdef DEBUG
-    for(auto& I : T.inds())
-        {
-        if(I.primeLevel() == tempLevel) 
-            {
-            println("tempLevel = ",tempLevel);
-            Error("swapPrime fails if an index has primeLevel==tempLevel");
-            }
-        }
-#endif
-    T.mapprime(plev1,tempLevel,type);
-    T.mapprime(plev2,plev1,type);
-    T.mapprime(tempLevel,plev2,type);
-    return T; 
-    }
-template ITensorT<Index> swapPrime(ITensorT<Index>, int, int, IndexType);
-template ITensorT<IQIndex> swapPrime(ITensorT<IQIndex>, int, int, IndexType);
+template Index uniqueIndex(const ITensorT<Index>& A, const ITensorT<Index>& B, TagSet const& t);
+template IQIndex uniqueIndex(const ITensorT<IQIndex>& A, const ITensorT<IQIndex>& B, TagSet const& t);
 
 template<typename I>
 Real
@@ -136,13 +114,17 @@ write(std::ostream& s) const
 template void ITensorT<Index>::write(std::ostream& s) const;
 template void ITensorT<IQIndex>::write(std::ostream& s) const;
 
+//
+// TODO: should this be here?
+// Maybe this is better for an example TEBD code?
+//
 template<class I>
 ITensorT<I>
 multSiteOps(ITensorT<I> A, ITensorT<I> const& B) 
     {
-    A.prime(Site);
+    A.prime("Site");
     A *= B;
-    A.mapprime(2,1,Site);
+    A.mapPrime(2,1,"Site");
     return A;
     }
 template ITensorT<Index> multSiteOps(ITensorT<Index> A, ITensorT<Index> const& B);
