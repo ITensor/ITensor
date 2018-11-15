@@ -64,7 +64,7 @@ class LocalMPO_MPS
     void
     position(int b, MPSType const& psi);
 
-    int
+    size_t
     size() const { return lmpo_.size(); }
 
     explicit
