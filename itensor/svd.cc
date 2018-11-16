@@ -319,6 +319,10 @@ svdImpl(IQTensor A,
         Riq.emplace_back(Index(this_m),vI.qn(1+B.i2));
         }
     
+#ifdef DEBUG
+    if(Liq.empty() || Riq.empty()) throw std::runtime_error("IQIndex of S after SVD is empty");
+#endif
+
     // TODO: create a tag convention for SVD
     // TODO: make R = prime(L)
     //auto L = IQIndex(lname,move(Liq),uI.dir());

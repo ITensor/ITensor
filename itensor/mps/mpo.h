@@ -90,9 +90,7 @@ class MPOt : private MPSt<Tensor>
         {
         for(int i = 1; i <= this->N(); i++)
             {
-            Anc(i).mapPrime(0,1,"Link");
-            Anc(i).mapPrime(1,2,"Site");
-            Anc(i).mapPrime(0,1,"Site");
+            Aref(i).prime();
             }
         }
 

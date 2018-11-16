@@ -50,8 +50,12 @@ nmultMPO(MPOType const& Aorig,
     B.primeall();
 
     res=A;
-    res.primelinks(0,4);
-    res.mapPrime(1,2,"Site");
+    auto siA = uniqueIndex(A.A(1),B.A(1),A.A(2));
+    auto siB = uniqueIndex(B.A(1),A.A(1),B.A(2));
+    res.Aref(1) = Tensor(siA,siB,linkInd(A,1));
+
+    //Print(A);
+    //Print(B);
 
     Tensor clust,nfork;
     for(int i = 1; i < N; ++i)
@@ -78,9 +82,17 @@ nmultMPO(MPOType const& Aorig,
 
     nfork = clust * A.A(N) * B.A(N);
 
-    res.svdBond(N-1,nfork,Fromright);
-    res.noprimelink();
-    res.mapPrime(2,1,"Site");
+    res.svdBond(N-1,nfork,Fromright, args);
+    for(auto i : range1(N))
+        {
+        if(i < N)
+            {
+            auto l = linkInd(res,i);
+            res.Aref(i).noPrime(l);
+            res.Aref(i+1).noPrime(l);
+            }
+        res.Aref(i).mapPrime(2,1);
+        }
     res.orthogonalize();
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)

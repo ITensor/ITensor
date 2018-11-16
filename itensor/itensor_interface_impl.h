@@ -878,6 +878,27 @@ uniqueIndex(const ITensorT<IndexT>& A,
             const ITensorT<IndexT>& B, 
             TagSet const& ts);
 
+template<typename IndexT, typename... Tensors> 
+IndexT
+uniqueIndex(ITensorT<IndexT> const& A, 
+            ITensorT<IndexT> const& T1,
+            ITensorT<IndexT> const& T2,
+            Tensors const&... Tens)
+    {
+    auto Ts = stdx::make_array(T1,T2,Tens...);
+    for(auto& I : A.inds())
+        {
+        bool found = false;
+        for(auto& T : Ts) if(hasIndex(T,I))
+            {
+            found = true;
+            break;
+            }
+        if(!found) return I;
+        }
+    return IndexT();
+    }
+
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
 template<typename I, typename F>

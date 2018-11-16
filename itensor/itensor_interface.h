@@ -579,6 +579,15 @@ uniqueIndex(const ITensorT<IndexT>& A,
             const ITensorT<IndexT>& B, 
             TagSet const& t);
 
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by the tensors "Ts"
+template<typename IndexT, typename... Tensors> 
+IndexT
+uniqueIndex(ITensorT<IndexT> const& A, 
+            ITensorT<IndexT> const& T1,
+            ITensorT<IndexT> const& T2,
+            Tensors const&... Ts);
+
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
 template<typename I, typename F>
