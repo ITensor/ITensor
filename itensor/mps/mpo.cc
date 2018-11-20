@@ -282,11 +282,11 @@ operator<<(std::ostream& s, MPOt<IQTensor> const& M);
 void
 putMPOLinks(MPO& W, Args const& args)
     {
-    const string pfix = args.getString("Prefix","l");
+    const string pfix = args.getString("Prefix","MPO");
     vector<Index> links(W.N());
     for(int b = 1; b < W.N(); ++b)
         {
-        links.at(b) = Index(1,format("Link,%s%d",pfix,b).c_str());
+        links.at(b) = Index(1,format("Link,%s,%d",pfix,b));
         }
     W.Aref(1) *= links.at(1)(1);
     for(int b = 2; b < W.N(); ++b)
@@ -302,15 +302,15 @@ putMPOLinks(IQMPO& W, Args const& args)
     {
     QN q;
     const int N = W.N();
-    const string pfix = args.getString("Prefix","l");
+    const string pfix = args.getString("Prefix","MPO");
 
     vector<IQIndex> links(N);
     for(int b = 1; b < N; ++b)
         {
-        string nm = format("Link,%s%d",pfix,b);
+        string nm = format("Link,%s,%d",pfix,b);
                
         q += div(W.A(b));
-        links.at(b) = IQIndex(Index(1,nm.c_str()),q);
+        links.at(b) = IQIndex(Index(1,nm),q);
         }
 
     W.Aref(1) *= links.at(1)(1);

@@ -268,8 +268,7 @@ denmatDecomp(Tensor const& AA,
 
     auto noise = args.getReal("Noise",0.);
 
-    //TODO: what is this for?
-    //auto mid = commonIndex(A,B,Link);
+    //TODO: try to avoid using "Link" here
     auto mid = commonIndex(A,B,"Link");
 
     //If dir==NoDir, put the O.C. on the side
@@ -293,12 +292,8 @@ denmatDecomp(Tensor const& AA,
     //Apply combiner
     START_TIMER(8)
     //TODO: decide on a tag convention for denmatDecomp
-    //TODO: trying to get the tags() from mid.tags() was causing the error:
-    //itensor/smallstring.h:45: const char* itensor::SmallString::c_str() const: Assertion `name_[size()]=='\0'' failed.
-    //auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
-    //auto itagset = getTagSet(args,"Tags",mid ? mid.tags().c_str() : "MID");
     auto itagset = getTagSet(args,"Tags","Link,MID");
-    auto cmb = combiner(std::move(cinds),{"Tags",itagset.c_str()});
+    auto cmb = combiner(std::move(cinds),{"Tags",toString(itagset)});
     auto ci = cmb.inds().front();
 
     auto AAc = cmb * AA;

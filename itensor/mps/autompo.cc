@@ -636,15 +636,15 @@ toMPOImpl(AutoMPO const& am,
                 }
             else
                 {
-                inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++).c_str()),currq);
+                inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++)),currq);
                 currq = sq.q;
                 currm = 1;
                 }
             }
-        inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++).c_str()),currq);
+        inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++)),currq);
 
         // TODO: change this constructor
-        links.at(n) = IQIndex(move(inqn),Out,nameint("Link,Hl",n).c_str());
+        links.at(n) = IQIndex(move(inqn),Out,format("Link,MPO,%d",n));
         //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
@@ -1208,16 +1208,16 @@ compressMPO(SiteSet const& sites,
         int count = 0;
         auto inqn = stdx::reserve_vector<IndexQN>(nsector);
         // Make sure zero QN is first in the list of indices
-        inqn.emplace_back(Index(d0+ncols(V_npp[ZeroQN]),format("hl%d_%d",n,count++).c_str()),ZeroQN);        
+        inqn.emplace_back(Index(d0+ncols(V_npp[ZeroQN]),format("hl%d_%d",n,count++)),ZeroQN);        
         for(auto const& qb : qbs.at(n-1))
             {
             QN const& q = qb.first;
             if(q == ZeroQN) continue; // was already taken care of
             int m = ncols(V_npp[q]);
-            inqn.emplace_back(Index(m,format("Link,hl%d_%d",n,count++).c_str()),q);
+            inqn.emplace_back(Index(m,format("Link,hl%d_%d",n,count++)),q);
             }
         // TODO: change this constructor
-        links.at(n) = IQIndex(move(inqn),Out,nameint("Link,Hl",n).c_str());
+        links.at(n) = IQIndex(move(inqn),Out,format("Link,MPO,%d",n));
 
         //
         // Construct the compressed MPO
@@ -1556,15 +1556,15 @@ toExpH_ZW1(const AutoMPO& am,
                 }
             else
                 {
-                inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++).c_str()),currq);
+                inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++)),currq);
                 currq = sq.q;
                 currm = 1;
                 }
             }
-        inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++).c_str()),currq);
+        inqn.emplace_back(Index(currm,format("hl%d_%d",n,count++)),currq);
 
         // TODO: change this constructor
-        links.at(n) = IQIndex(move(inqn),Out,nameint("Link,Hl",n).c_str());
+        links.at(n) = IQIndex(move(inqn),Out,format("Link,MPO,%d",n));
 
         //if(n <= 2 or n == N)
         //    {

@@ -23,79 +23,97 @@ class TagSet
     size_t size_ = 0;
     public:
 
-    TagSet() {};
+    TagSet() {}
 
     //
     // Convert a character array to a TagSet.
     // Parses the array for ',' and splits up into tags, for example:
     // "a,b,c" -> Tag("a"),Tag("b"),Tag("c")
-    TagSet(const char* t);
+    TagSet(const char* s);
 
-    std::string
-    to_string()
-        {
-        std::string str = "";
-        for(size_t i = 0; i<size_-1; i++)
-            str = str+std::string(tags_[i])+",";
-        str = str+std::string(tags_[size_-1]);
-        return str;
-        }
-
-    const char*
-    c_str()
-        {
-        return this->to_string().c_str();
-        }
+    TagSet(std::string const& s) : TagSet(s.c_str()) {}
 
     // 0-indexed access
     Tag const&
-    operator[](int i) const
-        {
-        return tags_[i];
-        }
+    operator[](int i) const { return tags_[i]; }
 
     size_t
     size() const {return size_;}
 
+    // Get a comma seperated string of the tags
+    std::string
+    toString() const;
+
+    // Get a comma seperated character array of the tags
+    const char*
+    c_str() { return this->toString().c_str(); }
+
     int
-    hasTag(const Tag& t) const;
+    hasTag(Tag const& t) const;
 
     void
-    addTag(const Tag& t);
+    addTag(Tag const& t);
 
     void
-    addTags(const TagSet& ts);
+    addTags(TagSet const& ts);
 
     void
-    removeTag(const Tag& t);
+    removeTag(Tag const& t);
 
     void
-    removeTags(const TagSet& ts);
+    removeTags(TagSet const& ts);
 
     };
 
+// Get the number of tags in the TagSet
 inline size_t
-size(TagSet const& t)
+size(TagSet const& ts)
     {
-    return t.size();
+    return ts.size();
     }
 
+inline std::string TagSet::
+toString() const
+    {
+    std::string str = "";
+    for(auto i : range(size_-1))
+        str = str+std::string(tags_[i])+",";
+    str = str+std::string(tags_[size_-1]);
+    return str;
+    }
+
+// Get a comma seperated string of the tags
+inline std::string
+toString(TagSet const& ts)
+    {
+    return ts.toString();
+    }
+
+/*
+    {
+    auto N = size(ts);
+    std::string str = "";
+    for(auto i : range(N-1))
+        str = str+std::string(ts[i])+",";
+    str = str+std::string(ts[N-1]);
+    return str;
+    }
+*/
+
+// Two TagSet are equal if all of the Tags they
+// contain are the same. TagSet have an internal ordering,
+// so they are just compared elementwise
 inline bool
 operator==(TagSet const& t1, TagSet const& t2)
     {
     if(size(t1) != size(t2))
-        {
         return false;
-        }
-    else
+    for(auto i : range(size(t1)))
         {
-        for(size_t i = 0; i<size(t1); ++i)
-            {
-            if(t1[i] != t2[i])
-                return false;
-            }
-        return true;
+        if(t1[i] != t2[i])
+            return false;
         }
+    return true;
     }
 
 inline bool
@@ -110,7 +128,7 @@ TagSet(const char* ts)
     auto t = Tag();
     auto j = 0;
     auto len = std::strlen(ts);
-    for(size_t i = 0; i<len; ++i)
+    for(auto i : range(len))
         {
         if(ts[i] == ',') // If we hit a ',', add the tag and start with a new tag
             {
@@ -130,9 +148,9 @@ TagSet(const char* ts)
 // Returns -1 if Tag is not found,
 // otherwise return the Tag's location
 inline int TagSet::
-hasTag(const Tag& t) const
+hasTag(Tag const& t) const
     {
-    for(size_t i = 0; i<size_; ++i)
+    for(auto i : range(size_))
         {
         if(t == tags_[i])
             return i;
@@ -141,9 +159,9 @@ hasTag(const Tag& t) const
     }
 
 inline bool
-hasTags(const TagSet& T, const TagSet& ts)
+hasTags(TagSet const& T, TagSet const& ts)
     {
-    for(size_t i = 0; i<size(ts); ++i)
+    for(auto i : range(size(ts)))
         if(T.hasTag(ts[i]) == -1) return false;
     return true;
     }
@@ -151,13 +169,13 @@ hasTags(const TagSet& T, const TagSet& ts)
 // Adds a Tag to a TagSet. Does nothing if the tag already exists,
 // otherwise places the tag in a specified ordering
 inline void TagSet::
-addTag(const Tag& t)
+addTag(Tag const& t)
     {
     if(size_ == MAX_TAGS) error("Too many tags already, cannot add more. If you want more, consider raising MAX_TAGS.");
     if(this->hasTag(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
         {
-        size_t i;
-        for(i = size_; i>0; --i)
+        auto i = size_;
+        for(; i>0; --i)
             {
             if(t > tags_[i-1])  // Tag comparison uses a cast to a long int
                 break;
@@ -170,14 +188,14 @@ addTag(const Tag& t)
     }
 
 inline void TagSet::
-addTags(const TagSet& ts)
+addTags(TagSet const& ts)
     {
-    for(size_t i = 0; i<ts.size(); ++i)
+    for(auto i : range(ts.size()))
         this->addTag(ts[i]);
     }
 
 inline TagSet
-addTags(TagSet T, const TagSet& ts)
+addTags(TagSet T, TagSet const& ts)
     {
     T.addTags(ts);
     return T;
@@ -185,7 +203,7 @@ addTags(TagSet T, const TagSet& ts)
 
 // Remove a tag. If the tag is not found, ignore it.
 inline void TagSet::
-removeTag(const Tag& t)
+removeTag(Tag const& t)
     {
     auto loc = this->hasTag(t);
     if(loc > -1)
@@ -197,27 +215,27 @@ removeTag(const Tag& t)
     }
 
 inline void TagSet::
-removeTags(const TagSet& ts)
+removeTags(TagSet const& ts)
     {
-    for(size_t i = 0; i<ts.size(); ++i)
+    for(auto i : range(ts.size()))
         this->removeTag(ts[i]);
     }
 
 inline TagSet
-removeTags(TagSet T, const TagSet& ts)
+removeTags(TagSet T, TagSet const& ts)
     {
     T.removeTags(ts);
     return T;
     }
     
 inline std::ostream&
-operator<<(std::ostream & s, TagSet const& t)
+operator<<(std::ostream & s, TagSet const& ts)
     {
     s << "\"";
-    for(size_t i = 0; i<t.size(); i++)
+    for(auto i : range(size(ts)))
         {
-        s << t[i];
-        if(i<t.size()-1) s << ",";
+        s << ts[i];
+        if(i<size(ts)-1) s << ",";
         }
     s << "\"";
     return s;

@@ -52,7 +52,7 @@ init_()
     auto links = std::vector<IQIndex>(N_+1);
     for(int l = 0; l <= N_; ++l) 
         {
-        auto ts = nameint("Link,hl,",l).c_str();
+        auto ts = format("Link,MPO,%d",l);
         links.at(l) = IQIndex(Index(2,ts),QN("Sz=",0),
                               Index(1,ts),QN("Sz=",-2),
                               Index(1,ts),QN("Sz=",+2));

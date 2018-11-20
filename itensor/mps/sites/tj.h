@@ -23,10 +23,10 @@ class tJSite
 
     tJSite(int n, Args const& args = Args::global())
         {
-        auto ts = nameint("Site,tJ,",n).c_str();
-        s = IQIndex{Index(1,ts),QN("Sz=", 0,"Nf=",0),
+        auto ts = format("Site,tJ,%d",n);
+        s = IQIndex(Index(1,ts),QN("Sz=", 0,"Nf=",0),
                     Index(1,ts),QN("Sz=",+1,"Nf=",1),
-                    Index(1,ts),QN("Sz=",-1,"Nf=",1)};
+                    Index(1,ts),QN("Sz=",-1,"Nf=",1));
         }
 
     IQIndex

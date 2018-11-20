@@ -239,8 +239,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
     Tensor U,D;
     //TODO: make sure this tag convention is working
-    //dargs.add("IndexName=",nameint("a",N));
-    dargs.add("Tags=",nameint("Link,a",N));
+    dargs.add("Tags=",format("Link,MPO,%d",N));
     auto spec = diagHermitian(rho,U,D,dargs);
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
 
@@ -264,8 +263,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
         //TODO: make sure this tag convention is working
-        //dargs.add("IndexName=",nameint("a",j));
-        dargs.add("Tags=",nameint("Link,a",j));
+        dargs.add("Tags=",format("Link,MPO,%d",j));
         auto spec = diagHermitian(rho,U,D,dargs);
         O = O*U*psi.A(j-1)*K.A(j-1);
         O.noPrime(siteTags);
@@ -419,7 +417,7 @@ fitApplyMPO(Real fac,
                 }
 
             //TODO: does this tag the correct bond, independent of the sweep direction?
-            args.add("Tags",nameint("Link,MPS,",b));
+            args.add("Tags",format("Link,MPS,%d",b));
 
             auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);

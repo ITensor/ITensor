@@ -23,7 +23,7 @@ SECTION("Orthogonalize")
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(m,nameint("Link,l",n).c_str());
+        links.at(n) = Index(m,format("Link,MPS,%d",n));
         }
     W.Aref(1) = randomTensor(links.at(1),sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
@@ -66,7 +66,7 @@ SECTION("Add MPOs")
         auto ll = vector<IQIndex>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = nameint(name,n).c_str();
+            auto ts = format("%s,%d",name,n);
             ll.at(n) = IQIndex(Index(2,ts),QN("Sz=",-1,"Nf=",-1),
                                Index(2,ts),QN("Sz=",-1,"Nf=",+1),
                                Index(2,ts),QN("Sz=",-1,"Nf=",0),
@@ -77,8 +77,8 @@ SECTION("Add MPOs")
         return ll;
         };
 
-    auto l1 = makeInds("Link,I1_");
-    auto l2 = makeInds("Link,I2_");
+    auto l1 = makeInds("Link,I1");
+    auto l2 = makeInds("Link,I2");
 
     auto Z = QN("Sz=",0,"Nf=",0);
 
@@ -265,7 +265,7 @@ SECTION("toMPO function")
         auto ll = vector<IQIndex>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = nameint(name,n).c_str();
+            auto ts = format("%s,%d",name,n);
             ll.at(n) = IQIndex(Index(2,ts),QN("Sz=",-1,"Nf=",-1),
                                Index(2,ts),QN("Sz=",-1,"Nf=",+1),
                                Index(2,ts),QN("Sz=",-1,"Nf=",0),
@@ -276,7 +276,7 @@ SECTION("toMPO function")
         return ll;
         };
 
-    auto ll = makeInds("Link,I_");
+    auto ll = makeInds("Link,I");
 
     auto Z = QN("Sz=",0,"Nf=",0);
 

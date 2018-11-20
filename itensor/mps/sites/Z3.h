@@ -23,10 +23,10 @@ class Z3Site
 
     Z3Site(int n, Args const& args = Args::global())
         {
-        auto ts = nameint("Site,Z3,",n).c_str();
-        s = IQIndex{Index(1,ts),QN({0,3}),
+        auto ts = format("Site,Z3,%d",n);
+        s = IQIndex(Index(1,ts),QN({0,3}),
                     Index(1,ts),QN({1,3}),
-                    Index(1,ts),QN({2,3})};
+                    Index(1,ts),QN({2,3}));
         }
 
     IQIndex

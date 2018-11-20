@@ -27,22 +27,22 @@ class HubbardSite
         auto conserveSz = args.getBool("ConserveSz",true);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
-        auto ts = nameint("Site,Hubbard,",n).c_str();
+        auto ts = format("Site,Hubbard,%d",n);
         if(conserveNf)
             {
-            s = IQIndex{Index(1,ts),QN("Sz=", 0,"Nf=",0),
+            s = IQIndex(Index(1,ts),QN("Sz=", 0,"Nf=",0),
                         Index(1,ts),QN("Sz=",Up,"Nf=",1),
                         Index(1,ts),QN("Sz=",Dn,"Nf=",1),
-                        Index(1,ts),QN("Sz=", 0,"Nf=",2)};
+                        Index(1,ts),QN("Sz=", 0,"Nf=",2));
             }
         else //don't conserve Nf, only fermion parity
             {
             if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
 
-             s = IQIndex{Index(1,ts),QN("Sz=", 0,"Pf=",0),
+             s = IQIndex(Index(1,ts),QN("Sz=", 0,"Pf=",0),
                          Index(1,ts),QN("Sz=",+1,"Pf=",1),
                          Index(1,ts),QN("Sz=",-1,"Pf=",1),
-                         Index(1,ts),QN("Sz=", 0,"Pf=",0)};
+                         Index(1,ts),QN("Sz=", 0,"Pf=",0));
             }
         }
 

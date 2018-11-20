@@ -28,17 +28,12 @@ putprimes(string s, int plev)
     return str.str();
     }
 
+// nameint() is a weird name without Index names, depecrate
 //string 
-//nameindex(const IndexType& it, int plev)
+//nameint(string const& f, int n)
 //    { 
-//    return putprimes(it.c_str(),plev); 
+//    return format("%s%d",f,n);
 //    }
-
-string 
-nameint(string const& f, int n)
-    { 
-    return format("%s%d",f,n);
-    }
 
 //
 // class Index
@@ -212,7 +207,6 @@ operator<<(std::ostream & s, Index const& t)
     {
     s << "(" << t.m();
     if(size(tags(t)) > 0) s << "," << tags(t);
-    //s << "," << t.type().c_str();
     if(Global::showIDs()) 
         {
         s << "|" << (t.id() % 1000);
@@ -289,7 +283,7 @@ sim(Index const& I, int plev)
     }
 
 string
-showm(Index const& I) { return nameint("m=",I.m()); }
+showm(Index const& I) { return format("m=%d",I.m()); }
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)
@@ -301,9 +295,9 @@ operator<<(std::ostream& s, IndexVal const& iv)
 void
 add(Args            & args, 
     Args::Name const& name, 
-    TagSet            ts) 
+    TagSet     const& ts) 
     { 
-    args.add(name,ts.c_str()); 
+    args.add(name,toString(ts)); 
     }
 
 TagSet
@@ -311,42 +305,17 @@ getTagSet(Args       const& args,
           Args::Name const& name)
     {
     if(!args.defined(name)) Error(format("Name %s not found in Args",name));
-    return TagSet(args.getString(name).c_str());
+    return TagSet(args.getString(name));
     }
 
 TagSet
 getTagSet(const Args& args, 
           const Args::Name& name, 
-          TagSet default_val)
+          TagSet const& default_val)
     {
     if(!args.defined(name)) return default_val; 
-    return TagSet(args.getString(name).c_str());
+    return TagSet(args.getString(name));
     }
-
-//void
-//add(Args            & args, 
-//    Args::Name const& name, 
-//    TagSet            it) 
-//    { 
-//    args.add(name,it.c_str()); 
-//    }
-
-//IndexType
-//getIndexType(Args       const& args, 
-//             Args::Name const& name)
-//    {
-//    if(!args.defined(name)) Error(format("Name %s not found in Args",name));
-//    return IndexType(args.getString(name).c_str());
-//    }
-
-//IndexType
-//getIndexType(const Args& args, 
-//             const Args::Name& name, 
-//             IndexType default_val)
-//    {
-//    if(!args.defined(name)) return default_val; 
-//    return IndexType(args.getString(name).c_str());
-//    }
 
 } //namespace itensor
 

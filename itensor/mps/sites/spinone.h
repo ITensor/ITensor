@@ -37,10 +37,10 @@ class SpinOneSite
 
     SpinOneSite(int n, Args const& args = Args::global())
         {
-        auto ts = nameint("Site,S=1,",n).c_str();
-        s = IQIndex{Index(1,ts),QN("Sz=",+2),
+        auto ts = format("Site,S=1,%d",n);
+        s = IQIndex(Index(1,ts),QN("Sz=",+2),
                     Index(1,ts),QN("Sz=", 0),
-                    Index(1,ts),QN("Sz=",-2)};
+                    Index(1,ts),QN("Sz=",-2));
         }
 
     IQIndex

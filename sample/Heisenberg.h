@@ -71,7 +71,7 @@ init_()
     for(int l = 0; l <= N_; ++l) 
         {
         // TODO: better constructor for IQIndex
-        auto ts = nameint("Link,hl",l).c_str();
+        auto ts = format("Link,MPO,%d",l);
         q0.at(l) = Index(3,ts);
         qP.at(l) = Index(1,ts);
         qM.at(l) = Index(1,ts);

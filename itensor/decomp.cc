@@ -254,7 +254,7 @@ factor(Tensor const& T,
     //auto name = args.getString("IndexName","c");
     auto itagset = getTagSet(args,"Tags","Link,FAC");
     Tensor D;
-    auto spec = svd(T,A,D,B,{args,"LeftTags=",itagset.c_str()});
+    auto spec = svd(T,A,D,B,{args,"LeftTags=",toString(itagset)});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
     D.apply([](Real x){ return std::sqrt(std::fabs(x)); });

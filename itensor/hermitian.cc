@@ -42,7 +42,6 @@ diagHImpl(ITensor H,
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto showeigs = args.getBool("ShowEigs",false);
     // TODO: create tag convention?
-    //auto iname = args.getString("IndexName","d");
     auto itagset = getTagSet(args,"Tags","Link,DIAG");
 
     if(H.r() != 2)
@@ -111,7 +110,6 @@ diagHImpl(ITensor H,
         }
 
     // TODO: create tag convention
-    //auto newmid = Index(iname,m,active.type());
     auto newmid = Index(m,itagset);
 
     U = ITensor({active,newmid},Dense<T>{move(UU.storage())}); 
@@ -147,7 +145,6 @@ diagHImpl(IQTensor    H,
     auto showeigs = args.getBool("ShowEigs",false);
     auto compute_qns = args.getBool("ComputeQNs",false);
     // TODO: create tag convention
-    //auto iname = args.getString("IndexName","d");
     auto itagset = getTagSet(args,"Tags","Link,EIG");
 
     if(H.r() != 2)
@@ -298,8 +295,7 @@ diagHImpl(IQTensor    H,
         UU = columns(UU,0,this_m);
 
         // TODO: create tag convention
-        //iq.emplace_back(Index(iname+nameint("_",b),this_m),ai.qn(1+B.i1));
-        iq.emplace_back(Index(this_m),ai.qn(1+B.i1));
+        iq.emplace_back(Index(this_m,itagset),ai.qn(1+B.i1));
         }
 
     if(iq.empty())
@@ -307,12 +303,10 @@ diagHImpl(IQTensor    H,
         if(blocks.empty()) Error("No blocks in IQTensor svd");
         auto& B = blocks.front();
         // TODO: create tag convention
-        //iq.emplace_back(Index(iname+nameint("_",0),1),ai.qn(1+B.i1));
-        iq.emplace_back(Index(1),ai.qn(1+B.i1));
+        iq.emplace_back(Index(1,itagset),ai.qn(1+B.i1));
         }
 
     // TODO: create tag convention
-    //auto d = IQIndex(iname,move(iq),-ai.dir());
     auto d = IQIndex(move(iq),-ai.dir(),itagset);
 
     auto Uis = IQIndexSet(dag(ai),dag(d));

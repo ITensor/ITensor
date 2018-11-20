@@ -406,7 +406,7 @@ new_tensors(std::vector<ITensor>& A_)
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
         { 
-        a[i] = Index(1,nameint("Link,a",i).c_str()); 
+        a[i] = Index(1,format("Link,MPS,%d",i)); 
         }
     A_[1] = ITensor(sites()(1),a[1]);
     for(int i = 2; i < N_; i++)
@@ -440,7 +440,7 @@ void MPSt<Tensor>::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
     std::vector<Index> a(N_+1);
-    for(auto i : range1(N_)) a[i] = Index(1,nameint("Link,a",i).c_str());
+    for(auto i : range1(N_)) a[i] = Index(1,format("Link,MPS,%d",i));
 
     A_[1] = setElt(IndexVal(initState(1)),a[1](1));
     for(auto i : range(2,N_))
@@ -472,7 +472,7 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     auto a = std::vector<IQIndex>(N_+1);
     for(auto i : range1(N_))
         { 
-        a[i] = IQIndex(Index(1,nameint("Link,L",i).c_str()),qa[i]); 
+        a[i] = IQIndex(Index(1,format("Link,MPS,%d",i)),qa[i]); 
         }
 
     A_[1] = setElt(initState(1),a[1](1));
@@ -1395,7 +1395,7 @@ periodicWrap(int j, int N)
 //                cout << "At site " << s << "\n";
 //                Error("convertToIQ: no compatible QNs to put into Link.");
 //                }
-//            linkind[s] = IQIndex(nameint("qL",s),std::move(iq)); 
+//            linkind[s] = IQIndex(format("qL%d",s),std::move(iq)); 
 //            }
 //        if(S == start)
 //            {
@@ -1607,7 +1607,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                 cout << "At site " << s << "\n";
                 Error("convertToIQ: no compatible QNs to put into Link.");
             }
-            linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
+            linkind[s] = IQIndex(format("qL%d",s),iq); iq.clear(); 
         }
         if(s == 1)
         {

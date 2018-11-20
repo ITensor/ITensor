@@ -89,7 +89,7 @@ SECTION("Orthogonalize")
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(m,nameint("Link,l",n).c_str());
+        links.at(n) = Index(m,format("Link,MPS,%d",n));
         }
     psi.Aref(1) = randomTensor(links.at(1),sites(1));
     for(auto n : range1(2,N-1))

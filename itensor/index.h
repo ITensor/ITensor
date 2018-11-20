@@ -75,8 +75,6 @@ class Index
     extent_type m_;
     prime_type primelevel_; 
     TagSet tags_;
-    //IndexType type_;
-    //IndexName name_;
     public:
 
     Index();
@@ -104,18 +102,6 @@ class Index
     // Returns the TagSet
     TagSet
     tags() const { return tags_; }
-
-    // Returns the IndexType
-    //IndexType
-    //type() const { return type_; }
-
-    // Returns the name of this Index
-    //std::string 
-    //name() const;
-
-    // Returns the name of this Index with primes removed
-    //std::string
-    //rawname() const { return std::string(name_.c_str()); }
 
     id_type
     id() const { return id_; }
@@ -347,8 +333,10 @@ sim(Index const& I, int plev = 0);
 std::string
 showm(Index const& I);
 
-std::string 
-nameint(std::string const& f, int n);
+//Depecreate, nameint is a strange name when Indices don't
+//have names anymore, easy enough to write format("%s%d",f,d)
+//std::string 
+//nameint(std::string const& f, int n);
 
 std::ostream& 
 operator<<(std::ostream & s, Index const& t);
@@ -356,11 +344,10 @@ operator<<(std::ostream & s, Index const& t);
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv);
 
-// TODO: args for tagset
 void
 add(Args& args, 
     Args::Name const& name, 
-    TagSet it);
+    TagSet const& ts);
 
 TagSet
 getTagSet(Args const& args, 
@@ -369,22 +356,7 @@ getTagSet(Args const& args,
 TagSet
 getTagSet(Args const& args, 
           Args::Name const& name, 
-          TagSet default_val);
-
-//void
-//add(Args& args, 
-//    Args::Name const& name, 
-//    IndexType it);
-
-//IndexType
-//getIndexType(Args const& args, 
-//             Args::Name const& name);
-
-//IndexType
-//getIndexType(Args const& args, 
-//             Args::Name const& name, 
-//             IndexType default_val);
-
+          TagSet const& default_val);
 
 } //namespace itensor
 

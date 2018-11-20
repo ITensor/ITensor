@@ -32,8 +32,8 @@ class SpinlessSite
             if(not conserve_Nf) q_occ = QN("Pf=",1);
             // TODO: should this have Tag("Spinless")?
             // Note: Tag("Spinless") is too long
-            s = IQIndex{Index(1,nameint("Site,S=0,",n).c_str()),QN(),
-                        Index(1,nameint("Site,S=0,",n).c_str()),q_occ};
+            s = IQIndex(Index(1,format("Site,S=0,%d",n)),QN(),
+                        Index(1,format("Site,S=0,%d",n)),q_occ);
             }
         else
             {
@@ -42,8 +42,8 @@ class SpinlessSite
             else       q_occ = QN("Sz",-1,"Nf=",1);
             // TODO: should this have Tag("Spinless")?
             // Note: Tag("Spinless") is too long
-            s = IQIndex{Index(1,nameint("Site,S=0,",n).c_str()),QN(),
-                        Index(1,nameint("Site,S=0,",n).c_str()),q_occ};
+            s = IQIndex(Index(1,format("Site,S=0,%d",n)),QN(),
+                        Index(1,format("Site,S=0,%d",n)),q_occ);
             }
         }
 

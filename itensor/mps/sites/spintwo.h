@@ -37,12 +37,12 @@ class SpinTwoSite
 
     SpinTwoSite(int n, Args const& args = Args::global())
 		{
-        s = IQIndex{nameint("S=2 site=",n),
-            Index(nameint("Up:site",n),1,Site),QN("Sz=",+4),
-            Index(nameint("Upi:site",n),1,Site),QN("Sz=",+2),
-            Index(nameint("Z0:site",n),1,Site),QN("Sz=",0),
-            Index(nameint("Dni:site",n),1,Site),QN("Sz=",-2),
-            Index(nameint("Dn:site",n),1,Site),QN("Sz=",-4)};
+        auto ts = format("Site,S=2,%d",n);
+        s = IQIndex(Index(1,ts),QN("Sz=",+4),
+                    Index(1,ts),QN("Sz=",+2),
+                    Index(1,ts),QN("Sz=",0),
+                    Index(1,ts),QN("Sz=",-2),
+                    Index(1,ts),QN("Sz=",-4));
 		}
 
     IQIndex

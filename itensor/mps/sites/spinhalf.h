@@ -26,8 +26,9 @@ class SpinHalfSite
         // TODO: make a nicer constructor for TagSet that accepts an integer
         // i.e. TagSet("Site,S=1/2,%d",n)
         // Also allow conversion from std::string to TagSet?
-        s = IQIndex{Index(1,nameint("Site,S=1/2,",n).c_str()),QN("Sz=",+1),
-                    Index(1,nameint("Site,S=1/2,",n).c_str()),QN("Sz=",-1)};
+        auto ts = format("Site,S=1/2,%d",n);
+        s = IQIndex(Index(1,ts),QN("Sz=",+1),
+                    Index(1,ts),QN("Sz=",-1));
         }
 
     IQIndex

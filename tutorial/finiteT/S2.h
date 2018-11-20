@@ -17,10 +17,10 @@ makeS2(SiteSet const& sites,
     auto links = std::vector<IQIndex>(N+1);
     for(auto n : range(N+1))
         {
-        links.at(n) = IQIndex(nameint("L",n),
-                              Index("0",3),QN("Sz=",0),
-                              Index("+",1),QN("Sz=",-2),
-                              Index("-",1),QN("Sz=",+2));
+        auto ts = format("Link,MPO,%d",n);
+        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0),
+                              Index(1,ts),QN("Sz=",-2),
+                              Index(1,ts),QN("Sz=",+2));
         }
 
     for(auto n : range1(N))
@@ -83,8 +83,8 @@ makeTotSz2(SiteSet const& sites,
     auto links = std::vector<IQIndex>(N+1);
     for(auto n : range(N+1))
         {
-        links.at(n) = IQIndex(nameint("L",n),
-                              Index("0",3),QN("Sz=",0));
+        auto ts = format("Link,MPO,%d",n);
+        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0));
         }
 
     for(auto n : range1(N))
@@ -133,10 +133,10 @@ makeSxy2(SiteSet const& sites,
     auto links = std::vector<IQIndex>(N+1);
     for(auto n : range(N+1))
         {
-        links.at(n) = IQIndex(nameint("L",n),
-                              Index("0",3),QN("Sz=",0),
-                              Index("+",1),QN("Sz=",-2),
-                              Index("-",1),QN("Sz=",+2));
+        auto ts = format("Link,MPO,%d",n);
+        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0),
+                              Index(1,ts),QN("Sz=",-2),
+                              Index(1,ts),QN("Sz=",+2));
         }
 
     for(auto n : range1(N))
