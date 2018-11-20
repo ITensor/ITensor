@@ -438,15 +438,15 @@ template<typename IndexT>
 IndexSetT<IndexT>
 inds(ITensorT<IndexT> const& A);
 
+template<typename IndexT>
+IndexT
+findIndex(ITensorT<IndexT> const& A, TagSet const& tsmatch, int plmatch = -1);
+
 // Find the Index with a certain TagSet and prime level
 // If multiple indices or no index is found, throw an error
 template<typename IndexT>
 IndexT
-index(ITensorT<IndexT> const& A, TagSet const& ts, int plev = 0);
-
-template<typename IndexT>
-IndexT
-findIndexWithTags(ITensorT<IndexT> const& A, TagSet const& ts);
+findIndexExact(ITensorT<IndexT> const& A, TagSet const& tsmatch, int plmatch = -1);
 
 //
 // Index Prime Level Methods
@@ -557,10 +557,11 @@ template<typename IndexT>
 bool
 hasIndex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I);
 
-template<typename IndexT,
-         typename Cond>
-IndexT
-findIndex(ITensorT<IndexT> const& T, Cond && cond);
+//TODO: this clashes with other definition of findIndex()
+//template<typename IndexT,
+//         typename Cond>
+//IndexT
+//findIndex(ITensorT<IndexT> const& T, Cond && cond);
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B

@@ -302,11 +302,11 @@ diag() const
         return IndexT();
         };
 
-    auto toTie = noPrime(findIndexWithTags(Op1,"Site"));
+    auto toTie = noPrime(findIndex(Op1,"Site"));
     auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag.noPrime();
 
-    toTie = noPrime(findIndexWithTags(Op2,"Site"));
+    toTie = noPrime(findIndex(Op2,"Site"));
     auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag *= noPrime(Diag2);
 
@@ -378,8 +378,8 @@ size() const
                 }
             }
 
-        size_ *= findIndexWithTags(*Op1_,"Site").m();
-        size_ *= findIndexWithTags(*Op2_,"Site").m();
+        size_ *= findIndex(*Op1_,"Site").m();
+        size_ *= findIndex(*Op2_,"Site").m();
         }
     return size_;
     }

@@ -187,6 +187,7 @@ class IndexSetT : public RangeT<index_type_>
     void
     noPrime(Index const& imatch) { for(auto& J : *this) if(J==imatch) J.setPrime(0); };
 
+    // TODO: should this just be replaced by setPrime()?
     void
     mapPrime(int plold, int plnew, TagSet const& tsmatch = TagSet(All)) { for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); };
 
@@ -295,20 +296,32 @@ rangeEnd(IndexSetT<index_type> const& is) -> decltype(is.range().end())
     return is.range().end();
     }
 
-// Find the Index with a certain TagSet and prime level
-// If multiple indices or no index is found, throw an error
-// TODO: should this be named findIndex?
-// Maybe this should be more like findIndexWithTags(), where
-// the input TagSet only has to be contained in the found index?
+// Return the first index found with the specified tags
+// This is useful if we know there is only one index
+// that contains Tags ts, but don't know the other tags
 template<typename IndexT>
 IndexT
-index(const IndexSetT<IndexT>& is,
-      TagSet const& t, int plev = 0)
+findIndex(const IndexSetT<IndexT>& is,
+          TagSet const& tsmatch, int plmatch = -1)
     {
-    IndexT j;
+    for(auto& J : is)
+        if(matchTagsPrime(J,tsmatch,plmatch)) return J;
+    //TODO: make this a debug error
+    Error("No index with those tags and prime level found");
+    return IndexT();
+    }
+
+// Find the Index with a certain TagSet and prime level
+// If multiple indices or no index is found, throw an error
+template<typename IndexT>
+IndexT
+findIndexExact(const IndexSetT<IndexT>& is,
+               TagSet const& tsmatch, int plmatch = -1)
+    {
+    auto j = IndexT();
     for(auto& J : is)
         {
-        if(tags(J) == t && J.primeLevel() == plev)
+        if(matchTagsPrimeExact(J,tsmatch,plmatch))
             {
             if(j) Error("Multiple indices with those tags and prime level found");
             else j = J;
@@ -316,23 +329,6 @@ index(const IndexSetT<IndexT>& is,
         }
     if(!j) Error("No index with those tags and prime level found");
     return j;
-    }
-
-// Return the first index found with the specified tags
-// TODO: better name
-// Maybe allow for optional prime level matching?
-// This is useful if we know there is only one index
-// that contains Tags ts, but don't know the other tags
-template<typename IndexT>
-IndexT
-findIndexWithTags(const IndexSetT<IndexT>& is,
-                  TagSet const& ts)
-    {
-    for(auto& J : is)
-        if(hasTags(J,ts)) return J;
-    //TODO: make this a debug error
-    Error("No index with those tags and prime level found");
-    return IndexT();
     }
 
 //

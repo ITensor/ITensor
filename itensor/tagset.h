@@ -89,17 +89,6 @@ toString(TagSet const& ts)
     return ts.toString();
     }
 
-/*
-    {
-    auto N = size(ts);
-    std::string str = "";
-    for(auto i : range(N-1))
-        str = str+std::string(ts[i])+",";
-    str = str+std::string(ts[N-1]);
-    return str;
-    }
-*/
-
 // Two TagSet are equal if all of the Tags they
 // contain are the same. TagSet have an internal ordering,
 // so they are just compared elementwise

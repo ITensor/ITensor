@@ -184,7 +184,7 @@ exactApplyMPO(MPOt<Tensor> const& K,
     // TODO: this might need to be index(K.A(1),"Site,1") since index()
     // matches the exact pattern, otherwise make a findIndex() function that
     // outputs the first index found
-    if(noPrime(findIndexWithTags(K.A(1),"Site")) != findIndexWithTags(psi.A(1),"Site"))
+    if(findIndex(K.A(1),"Site",0) != findIndex(psi.A(1),"Site",0))
         {
         Error("MPS and MPO have different site indices in exactApplyMPO");
         }

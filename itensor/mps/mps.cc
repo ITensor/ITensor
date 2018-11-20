@@ -212,7 +212,7 @@ read(std::istream & s)
         }
     //Check that tensors read from disk were constructed
     //using the same sites
-    auto s1 = index(A_.at(1),"Site");
+    auto s1 = findIndex(A_.at(1),"Site");
     s1.noPrime();
     if(sites_ && s1 != IndexT(sites_(1)))
         {

@@ -7,7 +7,6 @@
 #include "itensor/global.h"
 #include "itensor/smallstring.h"
 #include "itensor/tagset.h"
-#include "itensor/indexname.h"
 #include "itensor/arrow.h"
 #include <thread>
 
@@ -130,6 +129,7 @@ class Index
     Index& 
     prime(int inc = 1);
 
+    //TODO: clean up
     // Increase primelevel by 1 (or optional amount inc)
     // if type matches this Index or type==All
     //Index& 
@@ -237,12 +237,14 @@ class IndexVal
     IndexVal& 
     prime(int inc = 1) { index.prime(inc); return *this; }
 
+    //TODO: clean up
     //IndexVal& 
     //prime(IndexType type, int inc = 1) { index.prime(type,inc); return *this; }
 
     IndexVal& 
     noPrime() { index.noPrime(); return *this; }
 
+    //TODO: clean up
     //IndexVal& 
     //mapprime(int plevold, int plevnew, IndexType type = All) 
     //    { index.mapprime(plevold,plevnew,type); return *this; }
@@ -279,15 +281,23 @@ setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
 // If tsmatch==TagSet(All), return true
 //
 bool inline
-hasTags(Index I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags(I.tags(),tsmatch); }
+hasTags(Index I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags(tags(I),tsmatch); }
 
 //
-// Return true if Index I has tags tsmatch and prime level plmatch
+// Return true if Index I contains tags tsmatch and has prime level plmatch
 // If tsmatch==TagSet(All), Index I can have any tags
 // If plmatch < 0, Index I can have any prime level
 //
 bool inline
 matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==I.primeLevel()); }
+
+//
+// Return true if Index I has tags tsmatch and has prime level plmatch
+// If tsmatch==TagSet(All), Index I can have any tags
+// If plmatch < 0, Index I can have any prime level
+//
+bool inline
+matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I)==tsmatch && (plmatch<0 || plmatch==I.primeLevel()); }
 
 Index inline
 dag(Index res) { res.dag(); return res; }
@@ -303,6 +313,7 @@ template<typename... VarArgs>
 Index
 noPrime(Index I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
+//TODO: clean up
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
 //Index inline
@@ -317,6 +328,7 @@ template<typename... VarArgs>
 IndexVal
 noPrime(IndexVal I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
+//TODO: clean up
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
 //IndexVal inline
@@ -333,6 +345,7 @@ sim(Index const& I, int plev = 0);
 std::string
 showm(Index const& I);
 
+//TODO: clean up
 //Depecreate, nameint is a strange name when Indices don't
 //have names anymore, easy enough to write format("%s%d",f,d)
 //std::string 

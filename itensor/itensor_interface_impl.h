@@ -728,16 +728,16 @@ inds(ITensorT<IndexT> const& A)
 
 template<typename IndexT>
 IndexT
-index(ITensorT<IndexT> const& A, TagSet const& ts, int plev)
+findIndex(ITensorT<IndexT> const& A, TagSet const& tsmatch, int plmatch)
     {
-    return index(inds(A),ts,plev);
+    return findIndex(inds(A),tsmatch,plmatch);
     }
 
 template<typename IndexT>
 IndexT
-findIndexWithTags(ITensorT<IndexT> const& A, TagSet const& ts)
+findIndexExact(ITensorT<IndexT> const& A, TagSet const& tsmatch, int plmatch)
     {
-    return findIndexWithTags(inds(A),ts);
+    return findIndexExact(inds(A),tsmatch,plmatch);
     }
 
 //
@@ -850,16 +850,18 @@ hasIndex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type&
     return detail::contains(T.inds(),I);
     }
 
-template<typename IndexT,
-         typename Cond>
-IndexT
-findIndex(ITensorT<IndexT> const& T, 
-          Cond && cond)
-    {
-    for(auto& i : T.inds())
-        if(cond(i)) return i;
-    return IndexT{};
-    }
+//TODO: this clashes with the other definition of findIndex()
+//Try to revive it?
+//template<typename IndexT,
+//         typename Cond>
+//IndexT
+//findIndex(ITensorT<IndexT> const& T, 
+//          Cond && cond)
+//    {
+//    for(auto& i : T.inds())
+//        if(cond(i)) return i;
+//    return IndexT{};
+//    }
 
 //Find index of tensor A (of optional tagset ts) 
 //which is shared with tensor B
