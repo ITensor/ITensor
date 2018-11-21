@@ -178,7 +178,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-            for(auto k : range(ii+1))
+            for(auto k : range1(ii))
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
