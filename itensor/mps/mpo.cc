@@ -585,7 +585,7 @@ checkMPOProd(MPSt<Tensor> const& psi2,
              MPOt<Tensor> const& K, 
              MPSt<Tensor> const& psi1)
     {
-    Global::warnDeprecated("checkMPOProd is depreciated in favor of errorMPOProd");
+    Global::warnDeprecated("checkMPOProd is deprecated in favor of errorMPOProd");
     //||p2> - K|p1>|^2 = (<p2|-<p1|Kd)(|p2>-K|p1>) = <p2|p2>+<p1|Kd*K|p1>-2*Re[<p2|K|p1>]
     Real res = overlap(psi2,psi2);
     res += -2.*overlapC(psi2,K,psi1).real();
