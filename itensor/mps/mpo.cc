@@ -555,10 +555,37 @@ Cplx overlapC(MPSt<IQTensor> const& psi, MPOt<IQTensor> const& H, MPOt<IQTensor>
 
 template<class Tensor>
 Real
+errorMPOProd(MPSt<Tensor> const& psi2,
+             MPOt<Tensor> const& K, 
+             MPSt<Tensor> const& psi1)
+    {
+    //||p2> - K|p1>| / || K|p1> || = sqrt{|(<p2|-<p1|Kd)(|p2>-K|p1>) / <p1|KdK|p1> |}
+    //                             = sqrt{|1+ (<p2|p2>-2*Re[<p2|K|p1>]) / <p1|KdK|p1>|}
+    Real err = overlap(psi2,psi2);
+    err += -2.*overlapC(psi2,K,psi1).real();
+    //Compute Kd, Hermitian conjugate of K
+    auto Kd = K;
+    for(auto j : range1(K.N()))
+        {
+        Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,Site));
+        }
+    err /= overlap(psi1,Kd,K,psi1);
+    err = std::sqrt(std::abs(1.0+err));
+    return err;
+    }
+template
+Real errorMPOProd(MPSt<ITensor> const& psi2, MPOt<ITensor> const& K, MPSt<ITensor> const& psi1);
+template
+Real errorMPOProd(MPSt<IQTensor> const& psi2, MPOt<IQTensor> const& K, MPSt<IQTensor> const& psi1);
+
+
+template<class Tensor>
+Real
 checkMPOProd(MPSt<Tensor> const& psi2,
              MPOt<Tensor> const& K, 
              MPSt<Tensor> const& psi1)
     {
+    Global::warnDeprecated("checkMPOProd is deprecated in favor of errorMPOProd");
     //||p2> - K|p1>|^2 = (<p2|-<p1|Kd)(|p2>-K|p1>) = <p2|p2>+<p1|Kd*K|p1>-2*Re[<p2|K|p1>]
     Real res = overlap(psi2,psi2);
     res += -2.*overlapC(psi2,K,psi1).real();
@@ -576,4 +603,19 @@ Real checkMPOProd(MPSt<ITensor> const& psi2, MPOt<ITensor> const& K, MPSt<ITenso
 template
 Real checkMPOProd(MPSt<IQTensor> const& psi2, MPOt<IQTensor> const& K, MPSt<IQTensor> const& psi1);
 
+template<class Tensor>
+bool
+checkMPOProd(MPSt<Tensor> const& psi2,
+             MPOt<Tensor> const& K, 
+             MPSt<Tensor> const& psi1,
+             Real threshold)
+    {
+      Real err = errorMPOProd(psi2,K,psi1);
+
+      return (std::norm(err) < threshold);
+    }
+template
+bool checkMPOProd(MPSt<ITensor> const& psi2, MPOt<ITensor> const& K, MPSt<ITensor> const& psi1, Real threshold);
+template
+bool checkMPOProd(MPSt<IQTensor> const& psi2, MPOt<IQTensor> const& K, MPSt<IQTensor> const& psi1, Real threshold);
 } //namespace itensor
