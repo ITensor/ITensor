@@ -45,6 +45,14 @@ class MPOt : private MPSt<Tensor>
     MPOt(SiteSet const& sites, 
          Real _refNorm = DefaultLogRefScale);
 
+    MPOt(SiteSet const& sites, 
+         std::vector<int> const& bondList,
+         const Args& args = Args::global());
+
+    MPOt(SiteSet const& sites, 
+         int k,
+         const Args& args = Args::global());
+
     explicit operator bool() const { return Parent::operator bool(); }
 
     using Parent::N;
@@ -457,6 +465,18 @@ void
 putMPOLinks(MPO& W, Args const& args = Args::global());
 void
 putMPOLinks(IQMPO& W, Args const& args = Args::global());
+
+//fill an MPO with random tensors with dimensions specified in bondList
+void 
+fillRandomMPO(MPO& W, 
+              const SiteSet& sites,
+              std::vector<int> const& bondList, 
+              Args const& args = Args::global());
+/*void 
+fillRandomMPO(IQMPO& W, 
+              const SiteSet& sites,
+              std::vector<int>& bondList, 
+              Args const& args = Args::global());*/
 
 template <class Tensor>
 std::ostream& 

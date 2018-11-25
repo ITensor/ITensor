@@ -408,5 +408,34 @@ SECTION("nmultMPO")
         CHECK_DIFF(oR,oKH,1E-5);
         }
     }
+SECTION("Random MPOs")
+      {
+      auto sites = SpinHalf(6);
+      /* create an MPO with a random tensor on every site with dimension k on every bond
+       * optional argument "Orthogonalize":true in order to 
+       * automatically orthogonalize after creation
+       */
+      int k = 2;
+      auto H1 = MPO(sites,k);
 
+      auto OrthoH1 = MPO(sites,k,{"Orthogonalize",true}); 
+
+      /* create an MPO with a random tensor on every site 
+       * with each bond dimension specified by a vector
+       */
+      std::vector<int> bondList = {2,3,5,3,2};
+      auto H2 = MPO(sites,bondList);
+      //bonds directly from initializer list
+      auto H3 = MPO(sites,{3,3,3,3,3},{"Orthogonalize",true,"Scale",0.2});
+      
+      CHECK_EQUAL(maxM(H1),2);
+      CHECK_EQUAL(maxM(H2),5);
+      CHECK_EQUAL(maxM(H3),3);
+      CHECK_CLOSE(averageM(H1),2);
+      CHECK_CLOSE(averageM(H2),3);
+      CHECK_CLOSE(averageM(H3),3);
+      REQUIRE_NOTHROW(overlap(OrthoH1,OrthoH1));
+      REQUIRE_NOTHROW(overlap(H2,H2));
+      REQUIRE_NOTHROW(overlap(H3,H3));
+      }
 }

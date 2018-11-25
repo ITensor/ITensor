@@ -64,6 +64,50 @@ template
 MPOt<IQTensor>::
 MPOt(const SiteSet& sites, Real _logrefNorm);
 
+template<class Tensor>
+MPOt<Tensor>::
+MPOt(const SiteSet& sites, 
+     std::vector<int> const& bondList,
+     const Args& args) 
+    : 
+    Parent(sites)
+    { 
+    bool doOrthogonalize = args.getBool("Orthogonalize",false);
+    fillRandomMPO(*this,sites,bondList,args);
+
+    if (doOrthogonalize) orthogonalize(args);
+    }
+template
+MPOt<ITensor>::
+MPOt(const SiteSet& sites, 
+     std::vector<int> const& bondList,
+     const Args& args);
+
+template<class Tensor>
+MPOt<Tensor>::
+MPOt(const SiteSet& sites, 
+     int k,
+     const Args& args) 
+    : 
+    Parent(sites)
+    { 
+    bool doOrthogonalize = args.getBool("Orthogonalize",false);
+    std::vector<int> bondList(N()-1);
+    std::fill(bondList.begin(),bondList.end(),k);
+    fillRandomMPO(*this,sites,bondList,args);
+
+    if (doOrthogonalize) orthogonalize(args);
+    }
+template
+MPOt<ITensor>::
+MPOt(const SiteSet& sites, 
+     int k,
+     const Args& args);
+/*template
+MPOt<IQTensor>::
+MPOt(const SiteSet& sites, 
+     std::vector<int>& bondList,
+     const Args& args);*/
 /*
 template<class Tensor> 
 void MPOt<Tensor>::
@@ -321,6 +365,69 @@ putMPOLinks(IQMPO& W, Args const& args)
         }
     W.Aref(N) *= dag(links.at(N-1)(1));
     }
+
+void 
+fillRandomMPO(MPO& W,
+              const SiteSet& sites,
+              std::vector<int> const& bondList, 
+              Args const& args)
+    {
+    Real scale  = args.getReal("Scale",1.0);
+    const int N = W.N();
+    if(bondList.size() != (N-1)) Error("list of MPO bonds must be sites.N()-1");
+
+
+    std::vector<Index> links(N);
+    //create virtual indices of pre specified bond dimension
+    for(auto l : range(1,N))
+        {
+        links.at(l) = Index(nameint("hl",l),bondList[l-1]);
+        }
+
+    //Set all tensors to identity ops
+    for(auto j : range(2,N))
+        {
+        auto left  = links.at(j-1);
+        auto right = links.at(j);
+        W.Aref(j)  = randomTensor(left,right,sites(j),prime(sites(j)))*scale;
+        }
+    W.Aref(1) = randomTensor(links.at(1),  sites(1),prime(sites(1)))*scale;
+    W.Aref(N) = randomTensor(links.at(N-1),sites(N),prime(sites(N)))*scale;
+
+    }
+
+/*void 
+void 
+fillRandomMPO(IQMPO& W,
+              const SiteSet& sites,
+              std::vector<int> const& bondList, 
+              Args const& args)
+    {
+    Real scale  = args.getReal("Scale",1.0);
+    const int N = W.N();
+    if(bondList.size() != (N-1)) Error("list of MPO bonds must be sites.N()-1");
+
+    QN q;
+    std::vector<Index> links(N);
+    //create virtual indices of pre specified bond dimension
+    for(auto l : range(1,N))
+        {
+        q += div(W.A(b));
+        auto nm = nameint("hl",l);
+        links.at(l) = IQIndex(nm,Index(nm,bondList[l-1]),q);
+        }
+
+    //Set all tensors to identity ops
+    for(auto j : range(2,N))
+        {
+        auto left  = dag(links.at(j-1));
+        auto right = links.at(j);
+        W.Aref(j)  = randomTensor(left,right,sites(j),dag(prime(sites(j))))*scale;
+        }
+    W.Aref(1) = randomTensor(links.at(1),       sites(1),dag(prime(sites(1))))*scale;
+    W.Aref(N) = randomTensor(dag(links.at(N-1)),sites(N),dag(prime(sites(N))))*scale;
+
+    }*/
 
 MPO
 toMPO(IQMPO const& K)
