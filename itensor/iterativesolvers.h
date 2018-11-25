@@ -76,17 +76,10 @@ davidson(BigMatrixT const& A,
          std::vector<Tensor>& phi,
          Args const& args)
     {
-<<<<<<< HEAD
-    size_t maxiter_ = args.getInt("MaxIter",2);
-    auto errgoal_ = args.getReal("ErrGoal",1E-14);
-    auto debug_level_ = args.getInt("DebugLevel",-1);
-    size_t miniter_ = args.getInt("MinIter",1);
-=======
     auto maxiter_ = args.getSizeT("MaxIter",2);
     auto errgoal_ = args.getReal("ErrGoal",1E-14);
     auto debug_level_ = args.getInt("DebugLevel",-1);
     auto miniter_ = args.getSizeT("MinIter",1);
->>>>>>> 7a6d1c1e48f76b8a8ec0ba8bf3fc8137ffd614be
 
     Real Approx0 = 1E-12;
 
@@ -152,13 +145,8 @@ davidson(BigMatrixT const& A,
 
     auto t = size_t(0); //which eigenvector we are currently targeting
 
-<<<<<<< HEAD
-    int iter = 0;
-    for(size_t ii = 0; ii <= actual_maxiter; ++ii)
-=======
     auto iter = size_t(0);
     for(auto ii : range(actual_maxiter+1))
->>>>>>> 7a6d1c1e48f76b8a8ec0ba8bf3fc8137ffd614be
         {
         //Diagonalize dag(V)*A*V
         //and compute the residual q
@@ -190,11 +178,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-<<<<<<< HEAD
-            for(size_t k = 1; k <= ii; ++k)
-=======
             for(auto k : range1(ii))
->>>>>>> 7a6d1c1e48f76b8a8ec0ba8bf3fc8137ffd614be
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
@@ -373,11 +357,7 @@ davidson(BigMatrixT const& A,
         //Add new row and column to M
         Mref = subMatrix(M,0,ni+1,0,ni+1);
         auto newCol = subVector(NC,0,1+ni);
-<<<<<<< HEAD
-        for(size_t k = 0; k <= ni; ++k)
-=======
         for(auto k : range(ni+1))
->>>>>>> 7a6d1c1e48f76b8a8ec0ba8bf3fc8137ffd614be
             {
             newCol(k) = (dag(V.at(k))*AV.at(ni)).cplx();
             }
