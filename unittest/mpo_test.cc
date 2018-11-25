@@ -164,7 +164,7 @@ SECTION("applyMPO (DensityMatrix)")
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
 
-    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi),0.);
+    CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
 
     }
 
@@ -204,15 +204,55 @@ SECTION("applyMPO (Fit)")
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
 
-    CHECK_CLOSE(checkMPOProd(Hpsi,H,psi),0.);
+    CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
 
     // Now with a trial starting state
     auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
 
-    CHECK_CLOSE(checkMPOProd(Hpsi_2,H,psi),0.);
+    CHECK_EQUAL(checkMPOProd(Hpsi_2,H,psi,1E-10),true);
 
     }
 
+SECTION("errorMPOProd Scaling")
+    {
+
+    auto method = "DensityMatrix";
+
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto psi = MPS(sites);
+
+    //Use AutoMPO as a trick to get
+    //an MPO with bond dimension > 1
+    auto ampo = AutoMPO(sites);
+    for(auto j : range1(N-1))
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        }
+    auto H = MPO(ampo);
+    auto K = MPO(ampo);
+    //Randomize the MPOs to make sure they are non-Hermitian
+    for(auto j : range1(N))
+        {
+        randomize(H.Aref(j));
+        randomize(K.Aref(j));
+        H.Aref(j) *= 10.0; //crazy large tensor
+        K.Aref(j) *= 10.0;
+        }
+
+    // Apply K to psi to entangle psi
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
+    psi /= norm(psi);
+
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+
+    //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.);
+
+    }
 
 SECTION("Overlap <psi|HK|phi>")
     {

@@ -133,6 +133,13 @@ class Args
     long
     getInt(Name const& name, long default_val) const;
 
+    // Get value of int-type argument, throws if not defined
+    size_t
+    getSizeT(Name const& name) const;
+    // Get value of int-type argument, returns default_val if not defined
+    size_t
+    getSizeT(Name const& name, long default_val) const;
+
     // Get value of Real-type argument, throws if not defined
     Real
     getReal(Name const& name) const;
@@ -251,6 +258,9 @@ class Args
 
         long
         intVal() const { assertType(Numeric); return long(rval_); }
+
+        size_t
+        size_tVal() const { assertType(Numeric); return size_t(rval_); }
 
         Real
         realVal() const { assertType(Numeric); return rval_; }

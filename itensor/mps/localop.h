@@ -48,6 +48,7 @@ class LocalOp
     Tensor const* R_;
     mutable size_t size_;
     int nc_;
+
     public:
 
     using IndexT = typename Tensor::index_type;
