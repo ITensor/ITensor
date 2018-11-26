@@ -329,9 +329,9 @@ swapPrime(ITensor T,
             }
         }
 #endif
-    T.mapprime(plev1,tempLevel,ts);
-    T.mapprime(plev2,plev1,ts);
-    T.mapprime(tempLevel,plev2,ts);
+    T.mapPrime(plev1,tempLevel,ts);
+    T.mapPrime(plev2,plev1,ts);
+    T.mapPrime(tempLevel,plev2,ts);
     return T; 
     }
 
@@ -710,7 +710,7 @@ multSiteOps(ITensor A, ITensor const& B)
     {
     A.prime(Site);
     A *= B;
-    A.mapprime(2,1,Site);
+    A.mapPrime(2,1,Site);
     return A;
     }
 
