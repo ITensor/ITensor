@@ -810,6 +810,27 @@ getBlock(ITensor & T,
     return doTask(G,T.store());
     }
 
+template<typename... Tensors> 
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& T1,
+            ITensor const& T2,
+            Tensors const&... Tens)
+    {
+    auto Ts = stdx::make_array(T1,T2,Tens...);
+    for(auto& I : A.inds())
+        {
+        bool found = false;
+        for(auto& T : Ts) if(hasIndex(T,I))
+            {
+            found = true;
+            break;
+            }
+        if(!found) return I;
+        }
+    return Index();
+    }
+
 } // namespace itensor
 
 

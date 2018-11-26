@@ -50,7 +50,7 @@ nmultMPO(MPO const& Aorig,
     res=A;
     auto siA = uniqueIndex(A.A(1),B.A(1),A.A(2));
     auto siB = uniqueIndex(B.A(1),A.A(1),B.A(2));
-    res.Aref(1) = Tensor(siA,siB,linkInd(A,1));
+    res.Aref(1) = ITensor(siA,siB,linkInd(A,1));
 
     //Print(A);
     //Print(B);

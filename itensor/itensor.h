@@ -400,6 +400,13 @@ uniqueIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& ts = TagSet(All));
 
+template<typename... Tensors> 
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& T1,
+            ITensor const& T2,
+            Tensors const&... Tens);
+
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped
 //
