@@ -1,5 +1,6 @@
 o Add read/write for TagSet
 o Fix read/write for Index and test for rest of library
+o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 o Update website:
   o Detailed documentation
   o ITensor book
