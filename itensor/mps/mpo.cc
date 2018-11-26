@@ -385,7 +385,7 @@ putMPOLinks(MPO& W, Args const& args)
             {
             string ts = format("%s,%d",pfix,b);
             q += div(W.A(b));
-            links.at(b) = Index(q,1,ts);
+            links.at(b) = Index(q,1,Out,ts);
             }
 
         W.Aref(1) *= setElt(links.at(1)(1));

@@ -446,7 +446,7 @@ fitApplyMPO(Real mpsfac,
             ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
             rwfK *= K.A(b+1);
 
-            ITensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
+            ITensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
             wf.noPrime();
 
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
