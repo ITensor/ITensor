@@ -544,7 +544,7 @@ plusEq(MPS const& R,
 //
 
 void MPS::
-mapprime(int oldp, int newp, IndexType type)
+mapPrime(int oldp, int newp, TagSet const& ts)
     { 
     if(do_write_)
         Error("mapPrime not supported if doWrite(true)");
@@ -618,7 +618,7 @@ orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
 
 
 void MPS::
-position(int i, Args const& args)
+position(int i, Args args)
     {
     if(not *this) Error("position: MPS is default constructed");
 
@@ -682,7 +682,7 @@ orthogonalize(Args const& args)
     //Build environment tensors from the left
     auto E = vector<ITensor>(N_+1);
     auto ci = commonIndex(A_.at(1),A_.at(2));
-    E.at(1) = A_.at(1)*dag(prime(A_.at(1),ci,plev));
+    E.at(1) = A_.at(1)*dag(prime(A_.at(1),plev,ci));
     for(int j = 2; j < N_; ++j)
         {
         E.at(j) = E.at(j-1) * A_.at(j) * dag(prime(A_.at(j),plev,"Link"));
@@ -811,8 +811,8 @@ checkOrtho(MPS const& psi,
            bool left)
     {
     Index link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
-    ITensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
-    ITensor Delta = delta(link, prime(link, 4));
+    ITensor rho = psi.A(i) * dag(prime(psi.A(i),4,link));
+    ITensor Delta = delta(link, prime(link,4));
     ITensor Diff = rho - Delta;
 
     const
@@ -861,7 +861,7 @@ applyGate(ITensor const& gate,
     auto fromleft = args.getBool("Fromleft",true);
     const int c = orthoCenter(psi);
     ITensor AA = psi.A(c) * psi.A(c+1) * gate;
-    AA.noprime();
+    AA.noPrime();
     if(fromleft) psi.svdBond(c,AA,Fromleft,args);
     else         psi.svdBond(c,AA,Fromright,args);
     }
@@ -1626,7 +1626,7 @@ overlapC(MPS const& psi,
 
     for(decltype(N) i = 2; i < N; ++i) 
         { 
-        L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
+        L = L * phi.A(i) * dag(prime(psi.A(i),"Link")); 
         }
     L = L * phi.A(N);
 
