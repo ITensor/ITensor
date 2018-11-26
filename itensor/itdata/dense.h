@@ -199,13 +199,13 @@ doTask(GenerateIT<F,Cplx>& G, Dense<Cplx> & D)
 
 
 Cplx 
-doTask(GetElt<Index> const& g, DenseReal const& d);
+doTask(GetElt const& g, DenseReal const& d);
 Cplx 
-doTask(GetElt<Index> const& g, DenseCplx const& d);
+doTask(GetElt const& g, DenseCplx const& d);
 
 template<typename E, typename T>
 void
-doTask(SetElt<E,Index> const& S, Dense<T> const& d, ManageStore & m);
+doTask(SetElt<E> const& S, Dense<T> const& d, ManageStore & m);
 
 void
 doTask(Fill<Real> const& f, DenseReal & d);
@@ -263,11 +263,11 @@ doTask(CheckComplex, Dense<T> const& d) { return isCplx(d); }
 
 template<typename T>
 void
-doTask(PrintIT<Index>& P, Dense<T> const& d);
+doTask(PrintIT& P, Dense<T> const& d);
 
 template<typename T>
 Cplx
-doTask(SumEls<Index>, Dense<T> const& d);
+doTask(SumEls, Dense<T> const& d);
 
 auto constexpr inline
 doTask(StorageType const& S, DenseReal const& d) ->StorageType::Type { return StorageType::DenseReal; }
@@ -277,28 +277,28 @@ doTask(StorageType const& S, DenseCplx const& d) ->StorageType::Type { return St
 
 template<typename T1,typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<T1> const& L,
        Dense<T2> const& R,
        ManageStore & m);
 
 template<typename T1, typename T2>
 void
-doTask(NCProd<Index>& NCP,
+doTask(NCProd& NCP,
        Dense<T1> const& D1,
        Dense<T2> const& D2,
        ManageStore& m);
 
 template<typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
+doTask(PlusEQ const& P,
        Dense<T1> const& D1,
        Dense<T2> const& D2,
        ManageStore & m);
 
 template<typename T>
 void
-doTask(Order<Index> const& P,
+doTask(Order const& P,
        Dense<T> & dA);
 
 template<typename T>

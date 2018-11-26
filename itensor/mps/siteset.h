@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_SITESET_H
 #define __ITENSOR_SITESET_H
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 
 namespace itensor {
 
@@ -14,9 +14,9 @@ namespace itensor {
 // system as a set of Site indices.
 //
 // The convention for operators is
-// that they are 2-index IQTensors
-// with the Site IQIndex pointing
-// In and the Site' IQIndex pointing
+// that they are 2-index ITensors
+// with the Site Index pointing
+// In and the Site' Index pointing
 // Out. This is so we can compute expectation
 // values by doing dag(prime(A,Site)) * Op * A.
 // (assuming the tensor A is an ortho center 
@@ -38,8 +38,8 @@ class SiteSet
     //Create generic SiteSet of N sites with local dimension d
     SiteSet(int N, int d);
 
-    //Create SiteSet from vector of provided IQIndices (0-indexed)
-    SiteSet(std::vector<IQIndex> const& inds);
+    //Create SiteSet from vector of provided Indices (0-indexed)
+    SiteSet(std::vector<Index> const& inds);
 
     explicit operator bool() const { return bool(sites_); }
 
@@ -47,20 +47,20 @@ class SiteSet
     N() const;
 
     //Index at Site i
-    IQIndex
+    Index
     operator()(int i) const;
 
     //Index at site i set to a certain state
     //indicated by the string "state"
-    //e.g. sites(5,"Up") returns the IQIndexVal
+    //e.g. sites(5,"Up") returns the IndexVal
     //representing the spin up state on site 5
     //(assuming a spin SiteSet such as SpinHalf)
-    IQIndexVal
+    IndexVal
     operator()(int i, String const& state) const;
 
     //Get the operator indicated by
     //"opname" located at site i
-    IQTensor
+    ITensor
     op(String const& opname, int i,
        Args const& args = Args::global()) const;
 
@@ -75,19 +75,19 @@ class SiteSet
     //
 
     //Index at Site i, alternate name
-    IQIndex
+    Index
     si(int i) const { return operator()(i); }
 
     //Primed Index at Site i
-    IQIndex 
+    Index 
     siP(int i) const { return prime(operator()(i)); }
 
     //Alternate name for operator()(i,state)
-    IQIndexVal
+    IndexVal
     st(int i, String const& state) const
         { return operator()(i,state); }
 
-    IQIndexVal
+    IndexVal
     stP(int i, String const& state) const
         { return prime(operator()(i,state)); }
 
@@ -114,14 +114,14 @@ class SiteBase
 
     virtual ~SiteBase() { }
 
-    IQIndex virtual
+    Index virtual
     index() const = 0;
 
-    IQTensor virtual
+    ITensor virtual
     op(std::string const& opname,
        Args const& args) const = 0;
 
-    IQIndexVal virtual
+    IndexVal virtual
     state(std::string const& state) = 0;
     };
 
@@ -141,17 +141,17 @@ class SiteHolder : public SiteBase
 
     virtual ~SiteHolder() { }
 
-    IQIndex virtual
+    Index virtual
     index() const { return s.index(); }
 
-    IQTensor virtual
+    ITensor virtual
     op(std::string const& opname,
        Args const& args) const
         {
         return s.op(opname,args);
         }
 
-    IQIndexVal virtual
+    IndexVal virtual
     state(std::string const& state)
         {
         return s.state(state);
@@ -160,29 +160,29 @@ class SiteHolder : public SiteBase
 
 class GenericSite
     { 
-    IQIndex i;
+    Index i;
     public:
 
     GenericSite() { }
 
-    GenericSite(IQIndex i_) : i(i_) { }
+    GenericSite(Index i_) : i(i_) { }
 
-    IQIndex
+    Index
     index() const { return i; }
 
-    IQTensor
+    ITensor
     op(std::string const& opname,
        Args const& args) const
         {
         Error("\'op\' method not defined for generic site");
-        return IQTensor{};
+        return ITensor{};
         }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         Error("\'state\' method not defined for generic site");
-        return IQIndexVal{};
+        return IndexVal{};
         }
     };
 
@@ -209,14 +209,14 @@ struct SiteStore
     int
     N() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
 
-    IQIndex
+    Index
     si(int j) const 
         { 
         if(not sites_.at(j)) Error("Unassigned site in SiteStore");
         return sites_[j]->index();
         }
 
-    IQIndexVal
+    IndexVal
     state(int j,
           std::string const& state)
         {
@@ -224,7 +224,7 @@ struct SiteStore
         return sites_[j]->state(state);
         }
 
-    IQTensor
+    ITensor
     op(int j,
        std::string const& opname,
        Args const& args) const
@@ -241,14 +241,14 @@ SiteSet(int N, int d)
     auto sites = SiteStore(N);
     for(int j = 1; j <= N; ++j)
         {
-        auto I = IQIndex(Index(d,format("Site,%d",j)),QN());
+        auto I = Index(d,format("Site, %d",j));
         sites.set(j,GenericSite(I));
         }
     SiteSet::init(std::move(sites));
     }
 
 inline SiteSet::
-SiteSet(std::vector<IQIndex> const& inds)
+SiteSet(std::vector<Index> const& inds)
     {
     auto sites = SiteStore(inds.size());
     for(auto j : range(inds))
@@ -262,21 +262,21 @@ SiteSet(std::vector<IQIndex> const& inds)
 int inline SiteSet::
 N() const { return sites_ ? sites_->N() : 0; }
 
-inline IQIndex SiteSet::
+inline Index SiteSet::
 operator()(int i) const
     {
     if(not *this) Error("Cannot retrieve site from default-initialized SiteSet");
     return sites_->si(i);
     }
 
-IQIndexVal inline SiteSet::
+IndexVal inline SiteSet::
 operator()(int i, String const& state) const
     {
     if(not *this) Error("Cannot retrieve state from default-initialized SiteSet");
     return sites_->state(i,state);
     }
 
-inline IQTensor SiteSet::
+inline ITensor SiteSet::
 op(String const& opname, 
    int i, 
    Args const& args) const
@@ -284,9 +284,9 @@ op(String const& opname,
     if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
     if(opname == "Id")
         {
-        IQIndex s = dag(si(i));
-        IQIndex sP = siP(i);
-        auto id_ = IQTensor(s,sP);
+        Index s = dag(si(i));
+        Index sP = siP(i);
+        auto id_ = ITensor(s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
             id_.set(s(j),sP(j),1);
@@ -339,7 +339,7 @@ readType(std::istream & s)
         auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
-            auto I = IQIndex{};
+            auto I = Index{};
             I.read(s);
             store.set(j,SiteType(I));
             }
@@ -389,7 +389,7 @@ class BasicSiteSet : public SiteSet
         SiteSet::init(std::move(sites));
         }
 
-    BasicSiteSet(std::vector<IQIndex> const& inds)
+    BasicSiteSet(std::vector<Index> const& inds)
         {
         int N = inds.size();
         auto sites = SiteStore(N);
@@ -435,7 +435,7 @@ merge(SiteSetT const& sites1,
         Error("end2 must be greater than start2");
         }
     auto nsize = (end1-start1+1)+(end2-start2+1);
-    auto inds = std::vector<IQIndex>(nsize);
+    auto inds = std::vector<Index>(nsize);
     auto i = 0;
     for(auto j1 : range1(start1,end1))
         {

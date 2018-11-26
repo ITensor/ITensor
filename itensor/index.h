@@ -8,12 +8,15 @@
 #include "itensor/smallstring.h"
 #include "itensor/tagset.h"
 #include "itensor/arrow.h"
+#include "itensor/qn.h"
 #include <thread>
 
 namespace itensor {
 
 //Forward declarations
 class IndexVal;
+
+using QNInt = std::pair<QN,long>;
 
 namespace detail {
     struct RandomID
@@ -59,8 +62,9 @@ namespace detail {
 // Can be compared with == operator (returns true if both
 // are copies of the same Index instance).
 //
-// To make an Index distinct from other copies, increase its primeLevel.
-//
+
+class IQIndexDat;
+
 class Index
     {
     public:
@@ -69,10 +73,16 @@ class Index
     using indexval_type = IndexVal;
     using prime_type = int;
     using extent_type = int;
+
+    using qnstorage = std::vector<QNInt>;
+    using qn_ptr = std::shared_ptr<IQIndexDat>;
+
     private:
     id_type id_;
     extent_type m_;
     prime_type primelevel_; 
+    Arrow dir_ = Out;
+    qn_ptr pd;
     TagSet tags_;
     public:
 
@@ -80,12 +90,17 @@ class Index
 
     explicit
     Index(long m, 
-          const TagSet& t = "",
+          TagSet const& ts = TagSet(),
           int primelev = 0);
 
-    explicit
-    Index(long m, 
-          int primelev);
+    template<typename... QN_Sizes>
+    Index(QN const& q1, long size1,
+          QN_Sizes const&... qnsizes);
+
+    Index(qnstorage && qns, 
+          Arrow dir = Out, 
+          TagSet const& ts = TagSet(),
+          int plev = 0);
 
     // Returns the bond dimension
     long 
@@ -113,12 +128,6 @@ class Index
     explicit operator long() const { return m(); }
     explicit operator size_t() const { return m(); }
 
-    // Returns the Arrow direction of this Index
-    Arrow 
-    dir() const { return Out; }
-    void 
-    dir(Arrow ndir) const {  }
-
     Index& 
     setPrime(int p) { primelevel_ = p; return *this; };
 
@@ -128,21 +137,6 @@ class Index
     // Increase primelevel by 1 (or by optional amount inc)
     Index& 
     prime(int inc = 1);
-
-    //TODO: clean up
-    // Increase primelevel by 1 (or optional amount inc)
-    // if type matches this Index or type==All
-    //Index& 
-    //prime(IndexType type, int inc = 1);
-
-    // Set primelevel to zero (optionally only if type matches)
-    //Index& 
-    //noprime(IndexType type = All) { prime(type,-primelevel_); return *this; }
-
-    // Switch primelevel from plevold to plevnew
-    // Has no effect if plevold doesn't match current primelevel
-    //Index& 
-    //mapprime(int plevold, int plevnew, IndexType type = All);
 
     // Check if other Index is a copy of this, ignoring primeLevel
     bool 
@@ -167,16 +161,8 @@ class Index
     //Return an IndexVal with specified value
     IndexVal
     operator()(long val) const;
-
-    //Return copy of this Index with primelevel plev
-    Index
-    operator[](int plev) const;
-
-    // Conjugate this Index.
-    // Currently has no effect; exists for forward compatibility
-    // with Arrows and interface compatibility with class IQIndex.
-    void 
-    dag() { } //for forward compatibility with arrows
+    IndexVal
+    operator=(long val) const;
 
     //define size()==m() in order to do 
     //for(auto n : range(I)) { ... } for some Index I
@@ -191,10 +177,57 @@ class Index
     Index& 
     read(std::istream& s);
 
+    //
+    // QN related functions
+    // 
+    
+    //number of quantum number blocks
+    long 
+    nblock() const;
+
+    //1-indexed
+    long
+    blocksize(long i) const;
+      
+    //1-indexed
+    QN const& 
+    qn(long i) const;
+
+    Arrow 
+    dir() const { return dir_; }
+    void
+    dir(Arrow ndir) { dir_ = ndir; }
+
+    Index& 
+    dag() { dir_ = -dir_; return *this; }
+
+    qn_ptr const&
+    store() const { return pd; }
+
     private:
+
+    void
+    makeStorage(qnstorage && qi);
 
     Index::id_type 
     generateID();
+
+    public:
+
+    //
+    // Advanced / developer methods.
+    // Not intended for normal usage.
+    //
+
+    // Constructor taking a QN pointer
+    Index(qn_ptr const& p,
+          Arrow dir = Out, 
+          TagSet const& tags = TagSet(),
+          int plev = 0);
+
+    //0-indexed
+    long
+    blocksize0(long i) const;
 
     }; //class Index
 
@@ -249,8 +282,11 @@ class IndexVal
     //mapprime(int plevold, int plevnew, IndexType type = All) 
     //    { index.mapprime(plevold,plevnew,type); return *this; }
 
-    void
-    dag() { }
+    IndexVal& 
+    dag();
+
+    QN const&
+    qn() const;
 
     };
 
@@ -299,6 +335,12 @@ matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,t
 bool inline
 matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I)==tsmatch && (plmatch<0 || plmatch==I.primeLevel()); }
 
+bool inline
+hasQNs(Index const& I) { return I.nblock()!=0; }
+
+bool inline
+hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
+  
 Index inline
 dag(Index res) { res.dag(); return res; }
 
@@ -371,6 +413,17 @@ getTagSet(Args const& args,
           Args::Name const& name, 
           TagSet const& default_val);
 
+long
+QNblock(Index const& I, 
+        QN const& Q);
+
+long
+QNblockSize(Index const& I, 
+            QN const& Q);
+
+
 } //namespace itensor
+
+#include "itensor/index_impl.h"
 
 #endif

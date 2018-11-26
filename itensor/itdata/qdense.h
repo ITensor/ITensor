@@ -7,7 +7,6 @@
 
 #include <vector>
 #include "itensor/itdata/task_types.h"
-#include "itensor/iqindex.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/tensor/types.h"
 #include "itensor/detail/gcounter.h"
@@ -51,7 +50,7 @@ class QDense
 
     QDense() { }
 
-    QDense(IQIndexSet const& is, 
+    QDense(IndexSet const& is, 
            QN const& div_);
 
     //template<typename InputIter>
@@ -93,12 +92,12 @@ class QDense
 
     template<typename Indexable>
     value_type const*
-    getElt(IndexSetT<IQIndex> const& is,
+    getElt(IndexSet const& is,
            Indexable const& ind) const;
 
     template<typename Indexable>
     value_type *
-    getElt(IndexSetT<IQIndex> const& is,
+    getElt(IndexSet const& is,
            Indexable const& ind)
         {
         const auto& cthis = *this;
@@ -106,7 +105,7 @@ class QDense
         }
 
     long
-    updateOffsets(IndexSetT<IQIndex> const& is,
+    updateOffsets(IndexSet const& is,
                   QN const& div);
 
     };
@@ -226,23 +225,23 @@ doTask(GenerateIT<F,Cplx>& G, QDenseCplx & D)
 
 
 Cplx
-doTask(GetElt<IQIndex>& G, QDenseReal const& d);
+doTask(GetElt& G, QDenseReal const& d);
 Cplx
-doTask(GetElt<IQIndex>& G, QDenseCplx const& d);
+doTask(GetElt& G, QDenseCplx const& d);
 
 template<typename T>
 void
-doTask(SetElt<Real,IQIndex>& S, QDense<T>& d);
+doTask(SetElt<Real>& S, QDense<T>& d);
 
 void
-doTask(SetElt<Cplx,IQIndex>& S, QDenseReal const& d, ManageStore & m);
+doTask(SetElt<Cplx>& S, QDenseReal const& d, ManageStore & m);
 
 void
-doTask(SetElt<Cplx,IQIndex>& S, QDenseCplx & d);
+doTask(SetElt<Cplx>& S, QDenseCplx & d);
 
 template<typename T>
 Cplx
-doTask(SumEls<IQIndex>, QDense<T> const& d);
+doTask(SumEls, QDense<T> const& d);
 
 template<typename T>
 void
@@ -292,7 +291,7 @@ doTask(NormNoScale, QDense<T> const& D);
 
 template<typename T>
 void
-doTask(PrintIT<IQIndex>& P, QDense<T> const& d);
+doTask(PrintIT& P, QDense<T> const& d);
 
 auto inline constexpr
 doTask(StorageType const& S, QDenseReal const& d) ->StorageType::Type { return StorageType::QDenseReal; }
@@ -302,21 +301,21 @@ doTask(StorageType const& S, QDenseCplx const& d) ->StorageType::Type { return S
 
 template<typename TA, typename TB>
 void
-doTask(PlusEQ<IQIndex> const& P,
+doTask(PlusEQ const& P,
        QDense<TA>      const& A,
        QDense<TB>      const& B,
        ManageStore          & m);
 
 template<typename VA, typename VB>
 void
-doTask(Contract<IQIndex>& Con,
+doTask(Contract& Con,
        QDense<VA> const& A,
        QDense<VB> const& B,
        ManageStore& m);
 
 template<typename VA, typename VB>
 void
-doTask(NCProd<IQIndex>& P,
+doTask(NCProd& P,
        QDense<VA> const& A,
        QDense<VB> const& B,
        ManageStore& m);
@@ -334,7 +333,7 @@ offsetOf(std::vector<BlOf> const& offsets,
 template<typename T>
 template<typename Indexable>
 T const* QDense<T>::
-getElt(IQIndexSet const& is,
+getElt(IndexSet const& is,
        Indexable const& ind) const
     {
     auto r = long(ind.size());
@@ -343,7 +342,7 @@ getElt(IQIndexSet const& is,
     if(is.r() != r) 
         {
         printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
-        Error("Mismatched size of IQIndexSet and elt_ind in get_block");
+        Error("Mismatched size of IndexSet and elt_ind in get_block");
         }
 #endif
     long bind = 0, //block index (total)
@@ -355,15 +354,15 @@ getElt(IQIndexSet const& is,
         auto& I = is[i];
         long block_subind = 0,
              elt_subind = ind[i];
-        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
+        while(elt_subind >= I.blocksize0(block_subind)) //elt_ind 0-indexed
             {
-            elt_subind -= I[block_subind].m();
+            elt_subind -= I.blocksize0(block_subind);
             ++block_subind;
             }
         bind += block_subind*bstr;
-        bstr *= I.nindex();
+        bstr *= I.nblock();
         eoff += elt_subind*estr;
-        estr *= I[block_subind].m();
+        estr *= I.blocksize0(block_subind);
         }
     //Do a binary search (equal_range) to see
     //if there is a block with block index "bind"
@@ -380,21 +379,21 @@ getElt(IQIndexSet const& is,
 
 template<typename T>
 void
-doTask(Order<IQIndex> const& P,
+doTask(Order const& P,
        QDense<T>           & dA);
 
 template<typename T>
 void
 permuteQDense(Permutation const& P,
              QDense<T>    const& dA,
-             IQIndexSet   const& Ais,
+             IndexSet   const& Ais,
              QDense<T>         & dB,
-             IQIndexSet   const& Bis);
+             IndexSet   const& Bis);
 
 //template<typename BlockSparseStore, typename Indexable>
 //auto
 //getBlock(BlockSparseStore & d,
-//         IQIndexSet const& is,
+//         IndexSet const& is,
 //         Indexable const& block_ind)
 //    -> decltype(getBlock(std::declval<const BlockSparseStore>(),is,block_ind).cast_away_const())
 //    {
@@ -404,17 +403,22 @@ permuteQDense(Permutation const& P,
 //    }
 
 QN
-calcDiv(IQIndexSet const& is, 
+calcDiv(IndexSet const& is, 
         Labels const& block_ind);
 
-//code for doTask(ToITensor...) is in iqtensor.cc
-template<typename V>
-ITensor
-doTask(ToITensor & T, QDense<V> const& d);
+////code for doTask(ToITensor...) is in iqtensor.cc
+//template<typename V>
+//ITensor
+//doTask(ToITensor & T, QDense<V> const& d);
 
 template<typename V>
 bool
 doTask(IsEmpty, QDense<V> const& d) { return d.offsets.empty(); }
+
+template<typename V>
+TenRef<Range,V>
+doTask(GetBlock<V> const& G, QDense<V> & d);
+
 
 } //namespace itensor
 

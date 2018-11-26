@@ -25,58 +25,55 @@ SECTION("Constructors")
     {
     }
 
-SECTION("QNCheck")
-    {
-    IQMPS psiNeel(shNeel);
 
-    CHECK(checkQNs(psiNeel));
-
-    CHECK_EQUAL(totalQN(psiNeel),QN(0));
-
-    IQMPS psiFerro(shFerro);
-    CHECK(checkQNs(psiFerro));
-
-    CHECK_EQUAL(totalQN(psiFerro),QN(10));
-    }
-
-//SECTION("MPSAddition")
+//SECTION("QNCheck")
 //    {
-//    Spinless sites(10);
+//    IQMPS psiNeel(shNeel);
+//    CHECK(checkQNs(psiNeel));
 //
-//    InitState i1(sites,"Emp"),
-//              i2(sites,"Emp");
+//    CHECK_EQUAL(totalQN(psiNeel),QN(0));
 //
-//    i1.set(1,"Occ");
-//    i2.set(2,"Occ");
+//    IQMPS psiFerro(shFerro);
+//    CHECK(checkQNs(psiFerro));
 //
-//    //"Valence bond" between sites 1 and 2
-//    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
-//
-//    CHECK_CLOSE(norm(psi),1);
-//
-//    IQMPS iqpsi = ISqrt2*sum(IQMPS(i1),IQMPS(i2));
-//
-//    CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
+//    CHECK_EQUAL(totalQN(psiFerro),QN(10));
 //    }
 
-SECTION("PositionTest")
+SECTION("MPSAddition")
     {
     Spinless sites(10);
 
-    InitState init(sites,"Emp");
-    init.set(2,"Occ");
-    init.set(4,"Occ");
-    init.set(6,"Occ");
+    InitState i1(sites,"Emp"),
+              i2(sites,"Emp");
 
-    IQMPS psi(init);
-    psi.Anc(1) *= Complex_i;
+    i1.set(1,"Occ");
+    i2.set(2,"Occ");
 
-    psi.position(1,"Cutoff=1E-8");
-    CHECK_EQUAL(findCenter(psi),1);
+    //"Valence bond" between sites 1 and 2
+    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
 
-    psi.position(4,"Cutoff=1E-8");
-    CHECK_EQUAL(findCenter(psi),4);
+    CHECK_CLOSE(norm(psi),1);
+    CHECK_EQUAL(totalQN(psi),QN("Nf=",1));
     }
+
+//SECTION("PositionTest")
+//    {
+//    Spinless sites(10);
+//
+//    InitState init(sites,"Emp");
+//    init.set(2,"Occ");
+//    init.set(4,"Occ");
+//    init.set(6,"Occ");
+//
+//    IQMPS psi(init);
+//    psi.Anc(1) *= Complex_i;
+//
+//    psi.position(1,"Cutoff=1E-8");
+//    CHECK_EQUAL(findCenter(psi),1);
+//
+//    psi.position(4,"Cutoff=1E-8");
+//    CHECK_EQUAL(findCenter(psi),4);
+//    }
 
 SECTION("Orthogonalize")
     {
@@ -91,12 +88,12 @@ SECTION("Orthogonalize")
         {
         links.at(n) = Index(m,format("Link,MPS,%d",n));
         }
-    psi.Aref(1) = randomTensor(links.at(1),sites(1));
+    psi.Aref(1) = randomITensor(links.at(1),sites(1));
     for(auto n : range1(2,N-1))
         {
-        psi.Aref(n) = randomTensor(links.at(n-1),sites(n),links.at(n));
+        psi.Aref(n) = randomITensor(links.at(n-1),sites(n),links.at(n));
         }
-    psi.Aref(N) = randomTensor(links.at(N-1),sites(N));
+    psi.Aref(N) = randomITensor(links.at(N-1),sites(N));
 
     //Normalize psi
     auto n2 = overlap(psi,psi);
@@ -141,7 +138,7 @@ SECTION("Overlap - 1 site")
     {
     auto psi = MPS(1);
     auto s = Index(2,"s");
-    psi.Aref(1) = randomTensor(s);
+    psi.Aref(1) = randomITensor(s);
     CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).real());
     }
 

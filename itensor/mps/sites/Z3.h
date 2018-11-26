@@ -14,25 +14,25 @@ using Z3 = BasicSiteSet<Z3Site>;
 
 class Z3Site
     {
-    IQIndex s;
+    Index s;
     public:
 
     Z3Site() { }
 
-    Z3Site(IQIndex I) : s(I) { }
+    Z3Site(Index I) : s(I) { }
 
     Z3Site(int n, Args const& args = Args::global())
         {
         auto ts = format("Site,Z3,%d",n);
-        s = IQIndex(Index(1,ts),QN({0,3}),
-                    Index(1,ts),QN({1,3}),
-                    Index(1,ts),QN({2,3}));
+        s = Index{QN({0,3}),1,
+                  QN({1,3}),1,
+                  QN({2,3}),1,ts};
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "0") { return s(1); }
@@ -44,10 +44,10 @@ class Z3Site
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
@@ -60,7 +60,7 @@ class Z3Site
         auto Two = s(3);
         auto TwoP = sP(3);
 
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if(opname == "N")
             {

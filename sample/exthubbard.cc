@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         ampo += -t2,"Cdagdn",b,"Cdn",b+2;
         ampo += -t2,"Cdagdn",b+2,"Cdn",b;
         }
-    auto H = IQMPO(ampo);
+    auto H = MPO(ampo);
 
     //
     // Set the initial wavefunction matrix product state
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
             }
         }
 
-    auto psi = IQMPS(state);
+    auto psi = MPS(state);
 
     Print(totalQN(psi));
 

@@ -4,6 +4,7 @@
 //
 #include "itensor/index.h"
 #include "itensor/util/readwrite.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
@@ -59,24 +60,16 @@ Index()
     }
 
 Index::
-Index(long m, const TagSet& t, int plev)
-    :
-    id_(generateID()),
+Index(long m, 
+      TagSet const& t, 
+      int plev)
+  : id_(generateID()),
     m_(m),
     primelevel_(plev),
     tags_(t)
     { 
     } 
 
-Index::
-Index(long m, int plev)
-    :
-    id_(generateID()),
-    m_(m),
-    primelevel_(plev),
-    tags_(TagSet())
-    { 
-    } 
 
 Index& Index::
 primeLevel(int plev) 
@@ -119,16 +112,12 @@ operator()(long val) const
     {
     return IndexVal(*this,val);
     }
-
-Index Index::
-operator[](int plev) const
+IndexVal Index::
+operator=(long val) const 
     { 
-    auto I = *this;
-    I.primeLevel(plev); 
-    return I; 
+    return operator()(val); 
     }
 
-//TODO: read and write for TagSet
 void Index::
 write(std::ostream& s) const 
     { 
@@ -203,26 +192,35 @@ operator<(Index const& i1, Index const& i2)
 
 
 std::ostream& 
-operator<<(std::ostream & s, Index const& t)
+operator<<(std::ostream & s, Index const& I)
     {
-    s << "(" << t.m();
-    if(size(tags(t)) > 0) s << "," << tags(t);
+    s << "(" << I.m();
+    if(size(tags(I)) > 0) s << "," << tags(I);
     if(Global::showIDs()) 
         {
-        s << "|" << (t.id() % 1000);
-        //s << "," << t.id();
+        s << "|" << (I.id() % 1000);
+        //s << "," << I.id();
         }
     s << ")"; 
-    if(t.primeLevel() > 0) 
+    if(I.primeLevel() > 0) 
         {
-        if(t.primeLevel() > 3)
+        if(I.primeLevel() > 3)
             {
-            s << "'" << t.primeLevel();
+            s << "'" << I.primeLevel();
             }
         else
             {
-            for(int n = 1; n <= t.primeLevel(); ++n)
+            for(int n = 1; n <= I.primeLevel(); ++n)
                 s << "'";
+            }
+        }
+    if(hasQNs(I))
+        {
+        s << " <" << I.dir() << ">\n";
+        for(auto j : range1(I.nblock()))
+            {
+            s << "  " << j << ": " << I.blocksize(j) << " " <<  I.qn(j);
+            if(j != I.nblock()) s << "\n";
             }
         }
     return s;
@@ -235,7 +233,8 @@ IndexVal()
     { }
 
 IndexVal::
-IndexVal(const Index& index_, long val_) 
+IndexVal(Index const& index_, 
+         long val_) 
     : 
     index(index_),
     val(val_)
@@ -315,6 +314,207 @@ getTagSet(const Args& args,
     {
     if(!args.defined(name)) return default_val; 
     return TagSet(args.getString(name));
+    }
+
+struct IndSector
+    {
+    long sector = 0l;
+    long sind   = 0l;
+
+    IndSector(long sec, long si) : sector(sec), sind(si) { }
+    };
+
+IndSector
+sectorInfo(IndexVal const& iv)
+    {
+    auto is = IndSector(1,iv.val);
+    while(is.sind > iv.index.blocksize(is.sector))
+        {
+        is.sind -= iv.index.blocksize(is.sector);
+        is.sector += 1;
+        }
+    return is;
+    }
+
+QN const& IndexVal::
+qn() const 
+    { 
+    auto is = sectorInfo(*this);
+    return index.qn(is.sector);
+    }
+
+IndexVal&  IndexVal::
+dag() { index.dag(); return *this; }
+
+class IQIndexDat
+    {
+    public:
+    using storage = std::vector<QNInt>;
+    using iterator = storage::iterator;
+    using const_iterator = storage::const_iterator;
+    private:
+    storage iq_;
+    public:
+
+    IQIndexDat() { }
+
+    explicit
+    IQIndexDat(storage const& ind_qn) 
+      : iq_(ind_qn)
+        { }
+
+    explicit
+    IQIndexDat(storage&& ind_qn) 
+      : iq_(std::move(ind_qn))
+        { }
+
+    //Disallow copying
+    IQIndexDat(IQIndexDat const&) = delete;
+
+    void 
+    operator=(IQIndexDat const&) = delete;
+
+    void
+    setStore(storage && iq) { iq_ = std::move(iq); }
+
+    storage const&
+    inds() const { return iq_; }
+
+    long
+    size() const { return iq_.size(); }
+
+    long
+    blocksize(long i) { return iq_[i-1].second; }
+
+    long
+    blocksize0(long i) { return iq_[i].second; }
+
+    QN const&
+    qn(long i) { return iq_[i-1].first; }
+
+    iterator
+    begin() { return iq_.begin(); }
+
+    iterator
+    end() { return iq_.end(); }
+
+    const_iterator
+    begin() const { return iq_.begin(); }
+
+    const_iterator
+    end()   const { return iq_.end(); }
+
+    storage const&
+    store() const { return iq_; }
+    };
+
+#ifdef DEBUG
+#define IQINDEX_CHECK_NULL if(pd == 0) throw ITError("IQIndex storage unallocated");
+#else
+#define IQINDEX_CHECK_NULL
+#endif
+
+long Index::
+nblock() const 
+    {
+    if(not pd) return 0;
+    return static_cast<long>(pd->size());
+    }
+
+QN const& Index::
+qn(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("IQIndex::qn arg out of range");
+        }
+#endif
+    return pd->qn(i);
+    }
+
+long Index::
+blocksize(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("Index::blocksize arg out of range");
+        }
+#endif
+    return pd->blocksize(i);
+    }
+
+long Index::
+blocksize0(long i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i >= nblock())
+        {
+        Print(nblock());
+        Print(i);
+        Error("Index::blocksize0 arg out of range");
+        }
+#endif
+    return pd->blocksize0(i);
+    }
+
+void Index::
+makeStorage(qnstorage && qi)
+    {
+    pd = std::make_shared<IQIndexDat>(std::move(qi));
+    }
+
+long
+totalM(Index::qnstorage const& storage)
+    {
+    long tm = 0;
+    for(auto& iq : storage)
+        {
+        tm += iq.second;
+        }
+    return tm;
+    }
+
+Index::
+Index(qnstorage && ind_qn, 
+      Arrow dir, 
+      TagSet const& ts,
+      int plev) 
+  : Index(totalM(ind_qn),ts,plev)
+    { 
+    dir_ = dir;
+    makeStorage(std::move(ind_qn));
+    }
+
+long
+QNblock(Index const& I,
+        QN const& Q)
+    {
+    for(auto n : range1(I.nblock()))
+        { 
+        if(I.qn(n) == Q) return n;
+        }
+    if(not hasQNs(I)) Error("Index does not contain any QN blocks");
+    println("I = ",I);
+    println("Q = ",Q);
+    Error("Index does not contain given QN block.");
+    return 0l;
+    }
+
+
+long
+QNblockSize(Index const& I, 
+            QN const& Q)
+    { 
+    return I.blocksize(QNblock(I,Q));
     }
 
 } //namespace itensor

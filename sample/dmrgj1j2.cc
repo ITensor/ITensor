@@ -13,11 +13,11 @@ int main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",true});
 
     //
     // Create the Hamiltonian matrix product operator.
-    // Here we use the IQMPO class which is an MPO of 
+    // Here we use the MPO class which is an MPO of 
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
         ampo += 0.5*J2,"S-",j,"S+",j+2;
         ampo +=     J2,"Sz",j,"Sz",j+2;
         }
-    auto H = IQMPO(ampo);
+    auto H = MPO(ampo);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     for(int i = 1; i <= N; ++i) 
         state.set(i,(i%2==1 ? "Up" : "Dn"));
 
-    auto psi = IQMPS(state);
+    auto psi = MPS(state);
 
     //
     // overlap calculates matrix elements of MPO's with respect to MPS's

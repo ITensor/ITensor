@@ -22,20 +22,14 @@ SOURCES+= itdata/diag.cc
 SOURCES+= itdata/qdense.cc
 SOURCES+= itdata/qcombiner.cc 
 SOURCES+= itdata/qdiag.cc
-SOURCES+= itdata/qmixed.cc
 SOURCES+= itdata/scalar.cc 
-##SOURCES+= itdata/itlazy.cc
 SOURCES+= index.cc 
-SOURCES+= itensor_interface.cc 
-SOURCES+= itensor_operators.cc 
 SOURCES+= itensor.cc 
 SOURCES+= qn.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= decomp.cc 
-SOURCES+= svd.cc 
 SOURCES+= hermitian.cc 
+SOURCES+= svd.cc 
 SOURCES+= global.cc
 SOURCES+= mps/mps.cc 
 SOURCES+= mps/mpsalgs.cc 
@@ -113,7 +107,7 @@ clean:
 util/input.o: util/input.h
 .debug_objs/util/input.o: util/input.h
 
-GDEPHEADERS=real.h global.h index.h util/readwrite.h
+GDEPHEADERS=real.h global.h index.h index_impl.h util/readwrite.h
 GDEPHEADERS+= tensor/types.h tensor/vecrange.h tensor/ten.h tensor/ten_impl.h \
 tensor/teniter.h tensor/range.h tensor/lapack_wrap.h tensor/vec.h util/safe_ptr.h
 tensor/vec.o: $(GDEPHEADERS)
@@ -148,9 +142,6 @@ itdata/qcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/qdiag.h
 itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/qmixed.h
-itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/qmixed.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/scalar.h
 itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
@@ -160,23 +151,14 @@ index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset_impl.h indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itensor_interface.h itensor_interface_impl.h \
+ITDEPHEADERS+= itensor.h itensor_impl.h \
 itensor_impl.h itensor.h itdata/itdata.h itdata/dense.h itdata/diag.h
-itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itensor_interface.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itensor_operators.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= qn.h
 qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/qn.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= iqindex.h
-iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= iqtensor_impl.h iqtensor.h detail/skip_iterator.h
-iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= detail/skip_iterator.h
 GDEPHEADERS+= spectrum.h
 spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)

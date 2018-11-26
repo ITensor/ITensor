@@ -117,7 +117,7 @@ SECTION("ITensor SVD")
 
     SECTION("Case 1")
         {
-        auto T = randomTensor(i,j,k);
+        auto T = randomITensor(i,j,k);
 
         ITensor U(i,j),D,V;
         svd(T,U,D,V);
@@ -129,7 +129,7 @@ SECTION("ITensor SVD")
 
     SECTION("Case 2")
         {
-        auto T = randomTensor(i,j,k);
+        auto T = randomITensor(i,j,k);
 
         ITensor U(i,k),D,V;
         svd(T,U,D,V);
@@ -141,7 +141,7 @@ SECTION("ITensor SVD")
 
     SECTION("Case 3")
         {
-        auto T = randomTensor(i,k,prime(i));
+        auto T = randomITensor(i,k,prime(i));
 
         ITensor U(i,prime(i)),D,V;
         svd(T,U,D,V);
@@ -153,22 +153,22 @@ SECTION("ITensor SVD")
 
     }
 
-SECTION("IQTensor SVD")
+SECTION("QN ITensor SVD")
     {
 
     SECTION("Regression Test 1")
         {
         //Oct 5, 2015: was encountering a 
         //bad memory access bug with this code
-        IQIndex u(Index{1},QN(+2),
-                  Index{1},QN( 0),
-                  Index{1},QN(-2));
-        IQIndex v(Index{1},QN(+2),
-                  Index{1},QN( 0),
-                  Index{1},QN(-2));
+        Index u("u",QN(+2),1,
+                    QN( 0),1,
+                    QN(-2),1);
+        Index v("v",QN(+2),1,
+                    QN( 0),1,
+                    QN(-2),1);
 
-        auto S = randomTensor(QN(),u,v);
-        IQTensor U(u),D,V;
+        auto S = randomITensor(QN(),u,v);
+        ITensor U(u),D,V;
         svd(S,U,D,V);
 
         CHECK(norm(S-U*D*V) < 1E-12);
@@ -178,47 +178,47 @@ SECTION("IQTensor SVD")
         {
         //Feb 10, 2016: code that fixes sign of
         //singular values to be positive was broken
-		auto s1 = IQIndex(Index(1),QN(+1),Index(1),QN(-1));
-		auto s2 = IQIndex(Index(1),QN(+1),Index(1),QN(-1));
-		auto sing = IQTensor(s1,s2);
+		auto s1 = Index("s1",QN(+1),1,QN(-1),1);
+		auto s2 = Index("s2",QN(+1),1,QN(-1),1);
+		auto sing = ITensor(s1,s2);
 		sing.set(s1(1),s2(2), 1./sqrt(2));
 		sing.set(s1(2),s2(1),-1./sqrt(2));
-		auto prod = IQTensor(s1,s2);
+		auto prod = ITensor(s1,s2);
 		prod.set(s1(1),s2(2),1.);
 		auto psi = sing*sin(0.1)+prod*cos(0.1);
 		psi /= norm(psi);
         psi.scaleTo(-1.);
-		IQTensor A(s1),D,B;
+		ITensor A(s1),D,B;
 		svd(psi,A,D,B);
         CHECK(norm(psi-A*D*B) < 1E-12);
         }
 
     }
 
-SECTION("IQTensor denmatDecomp")
+SECTION("QN ITensor denmatDecomp")
     {
     SECTION("Test 1")
         {
-        IQIndex S1(Index(1),QN(+1),
-                   Index(1),QN(-1));
-        IQIndex S2(Index(1),QN(+1),
-                   Index(1),QN(-1));
-        IQIndex L1(Index(3),QN(+2),
-                   Index(4),QN(+1),
-                   Index(8),QN( 0),
-                   Index(4),QN(-1),
-                   Index(2),QN(-2));
-        IQIndex L2(Index(4),QN(+2),
-                   Index(6),QN(+1),
-                   Index(10),QN( 0),
-                   Index(4),QN(-1),
-                   Index(3),QN(-2));
-        IQIndex L3(Index(2),QN(+2),
-                   Index(4),QN( 0),
-                   Index(2),QN(-2));
+        Index S1("S1",QN(+1),1,
+                      QN(-1),1);
+        Index S2("S2",QN(+1),1,
+                      QN(-1),1);
+        Index L1("L1",QN(+2),3,
+                      QN(+1),4,
+                      QN( 0),8,
+                      QN(-1),4,
+                      QN(-2),2);
+        Index L2("L2",QN(+2),4,
+                      QN(+1),6,
+                      QN( 0),10,
+                      QN(-1),4,
+                      QN(-2),3);
+        Index L3("L3",QN(+2),2,
+                      QN( 0),4,
+                      QN(-2),2);
 
-        auto A1 = randomTensor(QN(),L1,S1,L2),
-             A2 = randomTensor(QN(),dag(L2),S2,L3);
+        auto A1 = randomITensor(QN(),L1,S1,L2),
+             A2 = randomITensor(QN(),dag(L2),S2,L3);
 
         auto AA = A1*A2;
         AA *= -1./norm(AA);
@@ -238,7 +238,7 @@ SECTION("ITensor diagHermitian")
     SECTION("Rank 2")
         {
         auto i = Index(10);
-        auto T = randomTensor(i,prime(i));
+        auto T = randomITensor(i,prime(i));
         T += swapPrime(T,0,1);
         ITensor U,D;
         diagHermitian(T,U,D);
@@ -251,7 +251,7 @@ SECTION("ITensor diagHermitian")
         {
         auto i = Index(10);
         auto j = Index(4);
-        auto T = randomTensor(i,prime(i),prime(j),j);
+        auto T = randomITensor(i,prime(i),prime(j),j);
         T += swapPrime(T,0,1);
         ITensor U,D;
         diagHermitian(T,U,D);
@@ -265,7 +265,7 @@ SECTION("ITensor diagHermitian")
     SECTION("Complex Rank 2")
         {
         auto i = Index(10);
-        auto T = randomTensorC(i,prime(i));
+        auto T = randomITensorC(i,prime(i));
         T += conj(swapPrime(T,0,1));
         ITensor U,D;
         diagHermitian(T,U,D);
@@ -275,7 +275,7 @@ SECTION("ITensor diagHermitian")
     SECTION("Rank 2 - Primes 1 and 2")
         {
         auto i = Index(10);
-        auto T = randomTensor(i,prime(i));
+        auto T = randomITensor(i,prime(i));
         T += swapPrime(T,0,1);
         //Raise prime level of T
         T.prime();
@@ -289,7 +289,7 @@ SECTION("ITensor diagHermitian")
         {
         auto i = Index(3);
 
-        auto T = randomTensor(prime(i),prime(i,2),prime(i,5),prime(i,6));
+        auto T = randomITensor(prime(i),prime(i,2),prime(i,5),prime(i,6));
         T += swapPrime(swapPrime(T,1,5),2,6);
         ITensor U,D;
         diagHermitian(T,U,D);
@@ -301,10 +301,10 @@ SECTION("IQTensor diagHermitian")
     {
     SECTION("Rank 2")
         {
-        auto I = IQIndex(Index(4),QN(-1),Index(4),QN(+1));
-        auto T = randomTensor(QN(),dag(I),prime(I));
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensor(QN(),dag(I),prime(I));
         T += dag(swapPrime(T,0,1));
-        IQTensor U,D;
+        ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
         CHECK(not hasIndex(U,prime(I)));
@@ -313,11 +313,11 @@ SECTION("IQTensor diagHermitian")
 
     SECTION("Complex Rank 2")
         {
-        auto I = IQIndex(Index(4),QN(-1),Index(4),QN(+1));
-        auto T = randomTensorC(QN(),dag(I),prime(I));
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensorC(QN(),dag(I),prime(I));
         CHECK(isComplex(T));
         T += dag(swapPrime(T,0,1));
-        IQTensor U,D;
+        ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
         CHECK(not hasIndex(U,prime(I)));
@@ -327,16 +327,16 @@ SECTION("IQTensor diagHermitian")
     SECTION("Complex Rank 4")
         {
         detail::seed_quickran(1);
-        auto I = IQIndex(Index(2),QN(-1),
-                         Index(2),QN(+1));
-        auto J = IQIndex(Index(2),QN(-2),
-                         Index(2),QN(+2));
-        //auto T = randomTensorC(QN(),dag(I),prime(I),prime(J),dag(J));
-        auto T = randomTensorC(QN(),dag(I),dag(J),prime(J),prime(I));
+        auto I = Index("I",QN(-1),2,
+                           QN(+1),2);
+        auto J = Index("J",QN(-2),2,
+                           QN(+2),2);
+        //auto T = randomITensorC(QN(),dag(I),prime(I),prime(J),dag(J));
+        auto T = randomITensorC(QN(),dag(I),dag(J),prime(J),prime(I));
         CHECK(isComplex(T));
         T += dag(swapPrime(T,0,1));
         T = swapPrime(T,0,1);
-        IQTensor U,D;
+        ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
         CHECK(hasIndex(U,J));
@@ -347,14 +347,14 @@ SECTION("IQTensor diagHermitian")
 
     SECTION("Rank 2 - Primes 1 and 2")
         {
-        auto I = IQIndex(Index(4),QN(-1),Index(4),QN(+1));
-        auto T = randomTensor(QN(),dag(I),prime(I));
+        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto T = randomITensor(QN(),dag(I),prime(I));
         T += dag(swapPrime(T,0,1));
         //Raise prime level of T
         //and prime level spacing between inds
-        T.mapPrime(1,4);
-        T.mapPrime(0,1);
-        IQTensor U,D;
+        T.mapprime(1,4);
+        T.mapprime(0,1);
+        ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,prime(I)));
         CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
@@ -391,15 +391,14 @@ SECTION("Exp Hermitian")
             }
         }
 
-    SECTION("IQTensor case")
+    SECTION("QN ITensor case")
         {
-        auto s = IQIndex(Index(1),QN(-1),
-                         Index(1),QN(+1));
-        auto Z = IQTensor(dag(s),prime(s));
+        auto s = Index("S",QN(-1),1,QN(+1),1);
+        auto Z = ITensor(dag(s),prime(s));
         Z.set(s(1),prime(s)(1),1);
         Z.set(s(2),prime(s)(2),-1);
 
-        auto Id = IQTensor(dag(s),prime(s));
+        auto Id = ITensor(dag(s),prime(s));
         Id.set(s(1),prime(s)(1),1);
         Id.set(s(2),prime(s)(2),1);
 

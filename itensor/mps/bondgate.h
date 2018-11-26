@@ -5,18 +5,11 @@
 #ifndef __ITENSOR_BONDGATE_H
 #define __ITENSOR_BONDGATE_H
 
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 #include "itensor/mps/siteset.h"
 
 namespace itensor {
 
-template <class Tensor>
-class BondGate;
-
-using Gate = BondGate<ITensor>;
-using IQGate = BondGate<IQTensor>;
-
-template <class Tensor>
 class BondGate
     {
     public:
@@ -35,20 +28,20 @@ class BondGate
              int i2, 
              Type type, 
              Real tau, 
-             Tensor bondH);
+             ITensor bondH);
 
     BondGate(SiteSet const& sites, 
              int i1, 
              int i2,
-             Tensor gate);
+             ITensor gate);
 
     int i1() const { return i1_; }
 
     int i2() const { return i2_; }
 
-    operator const Tensor&() const { return gate_; }
+    operator const ITensor&() const { return gate_; }
 
-    Tensor const&
+    ITensor const&
     gate() const { return gate_; }
 
     Type
@@ -58,22 +51,19 @@ class BondGate
 
     Type type_;
     int i1_,i2_; // The left, right indices of bond
-    Tensor gate_;
+    ITensor gate_;
 
     void
     makeSwapGate(SiteSet const& sites);
     };
 
-template<class Tensor>
-Tensor
-operator*(BondGate<Tensor> const& G, Tensor T) { T *= G.gate(); return T; }
+ITensor inline
+operator*(BondGate const& G, ITensor T) { T *= G.gate(); return T; }
 
-template<class Tensor>
-Tensor
-operator*(Tensor T, BondGate<Tensor> const& G) { T *= G.gate(); return T; }
+ITensor inline
+operator*(ITensor T, BondGate const& G) { T *= G.gate(); return T; }
 
-template <class Tensor>
-BondGate<Tensor>::
+inline BondGate::
 BondGate(SiteSet const& sites, 
          int i1, 
          int i2)
@@ -92,14 +82,13 @@ BondGate(SiteSet const& sites,
     makeSwapGate(sites);
     }
 
-template <class Tensor>
-BondGate<Tensor>::
+inline BondGate::
 BondGate(SiteSet const& sites, 
          int i1, 
          int i2, 
          Type type, 
          Real tau, 
-         Tensor bondH)
+         ITensor bondH)
   : type_(type)
     {
     if(i1 < i2)
@@ -118,7 +107,7 @@ BondGate(SiteSet const& sites,
         Error("When providing bondH, type must be tReal or tImag");
         }
     bondH *= -tau;
-    Tensor unit = sites.op("Id",i1_)*sites.op("Id",i2_);
+    ITensor unit = sites.op("Id",i1_)*sites.op("Id",i2_);
     if(type_ == tReal)
         {
         bondH *= Complex_i;
@@ -139,12 +128,11 @@ BondGate(SiteSet const& sites,
         }
     }
 
-template <class Tensor>
-BondGate<Tensor>::
+inline BondGate::
 BondGate(SiteSet const& sites, 
          int i1, 
          int i2,
-         Tensor gate)
+         ITensor gate)
   : type_(Custom)
     {
     i1_ = i1;
@@ -152,14 +140,13 @@ BondGate(SiteSet const& sites,
     gate_ = gate;
     }
 
-template <class Tensor>
-void BondGate<Tensor>::
+void inline BondGate::
 makeSwapGate(SiteSet const& sites)
     {
     auto s1 = sites(i1_);
     auto s2 = sites(i2_);
-    auto a = Tensor(dag(s1),prime(s2));
-    auto b = Tensor(dag(s2),prime(s1));
+    auto a = ITensor(dag(s1),prime(s2));
+    auto b = ITensor(dag(s2),prime(s1));
     for(auto j : range1(s1))
         {
         a.set(dag(s1)(j),prime(s2)(j),1.);

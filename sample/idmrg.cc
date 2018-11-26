@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
     auto sites = SpinOne(N);
 
-    IQMPO H = Heisenberg(sites,{"Infinite=",true});
+    MPO H = Heisenberg(sites,{"Infinite=",true});
 
     auto sweeps = Sweeps(20);
     sweeps.maxm() = 20,80,140,200;
@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
         else
             state.set(i,"Dn");
         }
-    auto psi = IQMPS(state);
+    auto psi = MPS(state);
 
     //idmrg returns a struct holding various useful
     //things such as the energy and the "edge tensors"

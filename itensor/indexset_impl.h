@@ -7,32 +7,211 @@
 
 namespace itensor {
 
+void inline IndexSet::
+dag() { for(auto& J : *this) J.dag(); }
+
+IndexSet::iterator inline IndexSet::
+begin() { return iterator{*this}; }
+
+IndexSet::iterator inline IndexSet::
+end() { return iterator::makeEnd(*this); }
+
+IndexSet::const_iterator inline IndexSet::
+begin() const { return const_iterator{*this}; }
+
+IndexSet::const_iterator inline IndexSet::
+end() const { return const_iterator::makeEnd(*this); }
+
+IndexSet::const_iterator inline IndexSet::
+cbegin() const { return begin(); }
+
+IndexSet::const_iterator inline IndexSet::
+cend() const { return end(); }
+
+
+void inline IndexSet::
+setPrime(int plnew, TagSet const& tsmatch) 
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+setPrime(int plnew, Index const& imatch) 
+    { 
+    for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+noPrime(TagSet const& tsmatch) 
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(0); 
+    }
+
+void inline IndexSet::
+noPrime(Index const& imatch) 
+    { 
+    for(auto& J : *this) if(J==imatch) J.setPrime(0); 
+    }
+
+// TODO: should this just be replaced by setPrime()?
+void inline IndexSet::
+mapPrime(int plold, 
+         int plnew, 
+         TagSet const& tsmatch) 
+    { 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+prime(int plinc, 
+      TagSet const& tsmatch) 
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.prime(plinc);
+    }
+
+void inline IndexSet::
+prime(TagSet const& tsmatch) 
+    { 
+    this->prime(1,tsmatch);
+    }
+
+void inline IndexSet::
+prime(int plinc, 
+      Index const& imatch) 
+    { 
+    for(auto& J : *this) if(J==imatch) J.prime(plinc);
+    }
+
+void inline IndexSet::
+prime(Index const& imatch) 
+    { 
+    this->prime(1,imatch);
+    }
+
+void inline IndexSet::
+swapPrime(int pl1, 
+          int pl2, 
+          TagSet const& tsmatch)
+    {
+    int tempLevel = 99999;
+#ifdef DEBUG
+    for(auto& I : *this)
+        {
+        if(I.primeLevel() == tempLevel)
+            {
+            println("tempLevel = ",tempLevel);
+            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            }
+        }
+#endif
+    this->mapPrime(pl1,tempLevel,tsmatch);
+    this->mapPrime(pl2,pl1,tsmatch);
+    this->mapPrime(tempLevel,pl2,tsmatch);
+    }
+
+void inline IndexSet::
+replaceTags(TagSet const& tsold, 
+            TagSet const& tsnew, 
+            TagSet const& tsmatch, 
+            int plmatch)
+    {
+    for(auto& J : *this)
+        {
+        if(matchTagsPrime(J,tsmatch,plmatch) && hasTags(J,tsold))
+            {
+            J.removeTags(tsold);
+            J.addTags(tsnew);
+            }
+        }
+    }
+
+void inline IndexSet::
+swapTags(TagSet const& ts1, 
+         TagSet const& ts2, 
+         TagSet const& tsmatch, 
+         int plmatch)
+    {
+    auto tmp = TagSet("df4sd321");  // Some random temporary tag. TODO: Debug level check that ts1!=tmp && ts2!=tmp
+    this->replaceTags(ts1,tmp,tsmatch,plmatch);
+    this->replaceTags(ts2,ts1,tsmatch,plmatch);
+    this->replaceTags(tmp,ts2,tsmatch,plmatch);
+    }
+
+void inline IndexSet::
+setTags(TagSet const& tsnew, 
+        TagSet const& tsmatch, 
+        int plmatch) 
+    { 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.setTags(tsnew); 
+    }
+
+void inline IndexSet::
+addTags(TagSet const& tsadd, 
+        TagSet const& tsmatch, int plmatch) 
+    { 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); 
+    }
+
+void inline IndexSet::
+addTags(TagSet const& tsadd, 
+        int plmatch) 
+    { 
+    for(auto& J : *this) if(J.primeLevel()==plmatch) J.addTags(tsadd); 
+    }
+
+
+void inline IndexSet::
+addTags(TagSet const& tsadd, 
+        Index const& imatch) 
+    { 
+    for(auto& J : *this) if(J==imatch) J.addTags(tsadd);
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove, 
+           TagSet const& tsmatch,
+           int plmatch) 
+    { 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.removeTags(tsremove); 
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove, 
+           int plmatch) 
+    { 
+    for(auto& J : *this) if(J.primeLevel()==plmatch) J.removeTags(tsremove);
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove, 
+           Index const& imatch) 
+    { 
+    for(auto& J : *this) if(J==imatch) J.removeTags(tsremove); 
+    }
+
 //
 // Methods for Manipulating IndexSetT
 //
 
-template<typename I>
-void
-write(std::ostream& s, IndexSetT<I> const& is)
+void inline
+write(std::ostream& s, IndexSet const& is)
     {
-    using parent = typename IndexSetT<I>::parent;
+    using parent = typename IndexSet::parent;
     parent const& pr = is;
     itensor::write(s,pr);
     }
 
-template<typename I>
-void
-read(std::istream& s, IndexSetT<I> & is)
+void inline
+read(std::istream& s, IndexSet & is)
     {
-    using parent = typename IndexSetT<I>::parent;
+    using parent = typename IndexSet::parent;
     parent & pr = is;
     itensor::read(s,pr);
     }
 
 namespace detail {
-    template<class IndexT>
-    void
-    check(const IndexSetT<IndexT>& is)
+    void inline
+    check(IndexSet const& is)
         {
         //Check if any duplicate indices
         for(size_t j = 0; j < is.size(); ++j) 
@@ -46,28 +225,9 @@ namespace detail {
 
 } //namespace detail
 
-//
-// IndexSetT Primelevel Methods
-//
-
-template<typename IndexT>
-void 
-sim(IndexSetT<IndexT> & is, 
-    TagSet const& t)
-    {
-    for(auto n : range(is))
-        {
-        if(is[n].tags() == t)
-            {
-            is[n] = sim(is[n]);
-            }
-        }
-    }
-
-template<typename IndexT>
-void 
-sim(IndexSetT<IndexT> & is, 
-    IndexT const& I)
+void inline
+sim(IndexSet & is, 
+    Index const& I)
     {
     for(auto n : range(is))
         {
@@ -78,16 +238,8 @@ sim(IndexSetT<IndexT> & is,
         }
     }
 
-//
-//
-// IndexSetT helper methods
-//
-//
-
-
-template<class IndexT>
-Arrow
-dir(const IndexSetT<IndexT>& is, const IndexT& I)
+Arrow inline
+dir(const IndexSet& is, const Index& I)
     {
     for(const auto& J : is)
         {
@@ -98,27 +250,25 @@ dir(const IndexSetT<IndexT>& is, const IndexT& I)
     }
 
 
-template <class IndexT>
-IndexT
-finddir(const IndexSetT<IndexT>& iset, Arrow dir)
+Index inline
+finddir(IndexSet const& iset, Arrow dir)
     {
     for(const auto& J : iset)
         {
         if(J.dir() == dir) return J;
         }
     Error("Couldn't find index with specified dir");
-    return IndexT();
+    return Index();
     }
 
 //
-// Given IndexSetT<IndexT> iset and IndexT I,
+// Given IndexSet iset and Index I,
 // return int j such that iset[j] == I.
 // If not found, returns -1
 //
-template <class IndexT>
-long
-findIndex(const IndexSetT<IndexT>& iset, 
-          const IndexT& I)
+long inline
+findIndex(const IndexSet& iset, 
+          const Index& I)
     {
     for(long j = 0; j < iset.r(); ++j)
         {
@@ -127,619 +277,15 @@ findIndex(const IndexSetT<IndexT>& iset,
     return -1;
     }
 
-template <class IndexT>
-bool
-hasIndex(const IndexSetT<IndexT>& iset, 
-         const IndexT& I)
-	{
-    for(long j = 0; j < iset.r(); ++j)
-        {
-        if(iset[j] == I) return true;
-        }
-    return false;
-	}
-
-template <class IndexT>
-long
-minM(const IndexSetT<IndexT>& iset)
-    {
-    if(iset.empty()) return 1l;
-    auto mm = iset[0].m();
-    for(long j = 1; j < iset.r(); ++j)
-        mm = std::min(mm,iset[j].m());
-
-    return mm;
-    }
-
-template <class IndexT>
-long
-maxM(const IndexSetT<IndexT>& iset)
-    {
-    if(iset.empty()) return 1l;
-
-    auto mm = iset[0].m();
-    for(long j = 1; j < iset.r(); ++j)
-        mm = std::max(mm,iset[j].m());
-
-    return mm;
-    }
-
-template<class IndexT, class LabelT>
-void
-contractIS(IndexSetT<IndexT> const& Lis,
-           LabelT const& Lind,
-           IndexSetT<IndexT> const& Ris,
-           LabelT const& Rind,
-           IndexSetT<IndexT> & Nis,
-           LabelT & Nind,
-           bool sortResult)
-    {
-    long ncont = 0;
-    for(auto& i : Lind) if(i < 0) ++ncont;
-    auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    auto newind = RangeBuilderT<IndexSetT<IndexT>>(nuniq);
-    //Below we are "cheating" and using the .str
-    //field of each member of newind to hold the 
-    //labels which will go into Nind so they will
-    //be sorted along with the .ext members (the indices of Nis)
-    //Later we will set them back to zero
-    //IndexSetT constructor anyway
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] > 0) //uncontracted
-            newind.nextIndStr(Lis[j],Lind[j]);
-        }
-    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
-        {
-        if(Rind[j] > 0) //uncontracted
-            newind.nextIndStr(Ris[j],Rind[j]);
-        }
-    if(sortResult) newind.sortByIndex();
-    Nind.resize(newind.size());
-    for(decltype(newind.size()) j = 0; j < newind.size(); ++j)
-        {
-        Nind[j] = newind.stride(j);
-        }
-    Nis = newind.build();
-    Nis.computeStrides();
-    }
-
-template<class IndexT>
-void
-contractIS(IndexSetT<IndexT> const& Lis,
-           IndexSetT<IndexT> const& Ris,
-           IndexSetT<IndexT> & Nis,
-           bool sortResult)
-    {
-    Labels Lind,
-           Rind,
-           Nind;
-    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-    contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
-    }
-
-template<class IndexT, class LabelT>
-void
-ncprod(IndexSetT<IndexT> const& Lis,
-       LabelT const& Lind,
-       IndexSetT<IndexT> const& Ris,
-       LabelT const& Rind,
-       IndexSetT<IndexT> & Nis,
-       LabelT & Nind)
-    {
-    long nmerge = 0;
-    for(auto& i : Lind) if(i < 0) ++nmerge;
-    auto nuniq = Lis.r()+Ris.r()-2*nmerge;
-    auto NisBuild = RangeBuilderT<IndexSetT<IndexT>>(nmerge+nuniq);
-    Nind.resize(nmerge+nuniq);
-    long n = 0;
-
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] < 0) //merged
-            {
-            NisBuild.nextIndex(Lis[j]);
-            Nind[n++] = Lind[j];
-            }
-        }
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] > 0) //unmerged/unique
-            {
-            NisBuild.nextIndex(Lis[j]);
-            Nind[n++] = Lind[j];
-            }
-        }
-    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
-        {
-        if(Rind[j] > 0) //unmerged/unique
-            {
-            NisBuild.nextIndex(Ris[j]);
-            Nind[n++] = Rind[j];
-            }
-        }
-    Nis = NisBuild.build();
-    }
-
-template <class IndexT>
-std::ostream&
-operator<<(std::ostream& s, IndexSetT<IndexT> const& is)
-    {
-    auto size = is.size();
-    if(size > 0) s << is[0];
-    for(decltype(size) j = 1; j < size; ++j)
-        {
-        s << "\n" << is[j];
-        }
-    return s;
-    }
-
-template <> inline
-std::ostream&
-operator<<(std::ostream& s, IndexSetT<Index> const& is)
-    {
-    for(decltype(is.r()) i = 1; i <= is.r(); ++i) 
-        { 
-        s << is.index(i);
-        if(i < is.r()) s << " ";
-        } 
-    return s;
-    }
-
-/*
-namespace detail {
-    struct MatchInc
-        {
-        bool match = false;
-        int inc = 0;
-        MatchInc(bool m, int i) : match(m), inc(i) { }
-        explicit operator bool() const { return match; };
-        };
-    int inline
-    computeIncLast(int inc = 1) { return inc; }
-    template<typename T>
-    int 
-    computeIncLast(const T& t, int inc) { return inc; }
-    template<typename T, typename... Rest>
-    int 
-    computeIncLast(const T& t, Rest&&... rest) { return computeIncLast(std::forward<Rest>(rest)...); }
-
-    template<typename Comp, typename IndexT, typename OtherT>
-    MatchInc 
-    computeMatchInc(const Comp& cmp,
-                    const IndexT& I,
-                    const OtherT& J,
-                    int inc = 1)
-        {
-        return MatchInc(cmp(I,J),inc);
-        }
-    template<typename Comp, typename IndexT, typename OtherT, typename... Rest>
-    MatchInc 
-    computeMatchInc(const Comp& cmp,
-                    const IndexT& I,
-                    const OtherT& J,
-                    Rest&&... rest)
-        {
-        if(cmp(I,J))
-            {
-            auto inc = computeIncLast(std::forward<Rest>(rest)...);
-            return MatchInc(true,inc);
-            }
-        return computeMatchInc(cmp,I,std::forward<Rest>(rest)...);
-        }
-
-    template<typename Comp, typename IndexT, typename OtherT>
-    bool 
-    findMatch(Comp const& cmp,
-              IndexT const& I,
-              OtherT const& J)
-        {
-        return cmp(I,J);
-        }
-    template<typename Comp, typename IndexT, typename OtherT, typename... Rest>
-    bool 
-    findMatch(Comp const& cmp,
-              IndexT const& I,
-              OtherT const& J,
-              Rest&&... rest)
-        {
-        if(cmp(I,J)) return true;
-        return findMatch(cmp,I,std::forward<Rest>(rest)...);
-        }
-
-    template<class IndexT>
-    void
-    check(const IndexSetT<IndexT>& is)
-        {
-        //Check if any duplicate indices
-        for(size_t j = 0; j < is.size(); ++j) 
-        for(size_t k = 0; k < is.size(); ++k)
-            if(k != j && is[j] == is[k])
-                {
-                println("index set = \n",is);
-                throw ITError("Duplicate indices in index set");
-                }
-        }
-
-    template<typename IndexT, typename T>
-    auto
-    doCheck(stdx::choice<1>,
-            IndexSetT<IndexT> const& is,
-            T const& I)
-        -> stdx::if_compiles_return<void,decltype(is.front()==I)>
-        {
-        for(auto& J : is) if(I == J) return;
-        throw ITError(format("Missing index in index set\nindex = \n%s\nindex set = \n%s",I,is));
-        }
-    template<typename IndexT, typename T>
-    void
-    doCheck(stdx::choice<2>,
-            IndexSetT<IndexT> const& is,
-            T const& I)
-        { }
-
-
-    template<typename IndexT, typename T>
-    void
-    checkHasInds(IndexSetT<IndexT> const& is,
-                 T const& I,
-                 int inc = 1)
-        {
-        doCheck(stdx::select_overload{},is,I);
-        }
-    template<typename IndexT, typename T1, typename T2, typename... Rest>
-    void
-    checkHasInds(IndexSetT<IndexT> const& is,
-                 T1 const& I1,
-                 T2 const& I2,
-                 Rest&&... rest)
-        {
-        doCheck(stdx::select_overload{},is,I1);
-        checkHasInds(is,I2,std::forward<Rest>(rest)...);
-        }
-} //namespace detail
-
-namespace detail {
-
-template<typename IndexT>
-struct IndexCmp
-    {
-    bool
-    operator()(IndexT const& i, IndexType t) const
-        {
-        return i.type() == t;
-        }
-    bool
-    operator()(IndexType t, IndexT const& i) const
-        {
-        return i.type() == t;
-        }
-    template<typename T1, typename T2>
-    auto
-    operator()(T1 const& i1, T2 const& i2) const
-        -> stdx::if_compiles_return<bool,decltype(i1==i2)>
-        {
-        return i1 == i2;
-        }
-    };
-
-} //namespace detail
-
-template<typename IndexT, typename... VArgs>
-void 
-prime(IndexSetT<IndexT>& is, 
-      VArgs&&... vargs)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,std::forward<VArgs>(vargs)...);
-#endif
-    for(auto& J : is)
-        {
-        auto match = 
-            detail::computeMatchInc(detail::IndexCmp<IndexT>(),J,
-                                    std::forward<VArgs>(vargs)...);
-        if(match) J.prime(match.inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-template<typename IndexT>
-void 
-prime(IndexSetT<IndexT>& is, 
-      int inc = 1)
-    { 
-    for(auto& J : is) J.prime(inc);
-    }
-
-template<typename IndexT>
-void 
-prime(IndexSetT<IndexT>& is, 
-      TagSet ts,
-      int inc = 1)
-    {
-    for(auto& J : is)
-        if(hasTags(J,ts)) J.prime(inc);
-    }
-
-template<typename IndexT, typename... VArgs>
-void
-primeLevel(IndexSetT<IndexT>& is,
-           VArgs&&... vargs)
-    {
-    constexpr size_t size = sizeof...(vargs);
-    auto ints = std::array<int,size>{{static_cast<int>(vargs)...}};
-
-    if(size != size_t(is.r()))
-        {
-        println("---------------------------------------------");
-        println("IndexSet indices = \n",is,"\n");
-        println("---------------------------------------------");
-        println("Prime levels provided = ");
-        for(auto& i : ints) println(i);
-        println("---------------------------------------------");
-        Error(format("Wrong number of prime levels passed to primeLevel (expected %d, got %d)",is.r(),size));
-        }
-
-    int i = 0;
-    for(auto& J : is)
-        {
-        J.primeLevel(ints[i]);
-        i++;
-        }
-    }
-
-template<typename IndexT, typename... Inds>
-void 
-prime(IndexSetT<IndexT>& is, 
-      IndexT const& I1, 
-      Inds&&... rest)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,I1,std::forward<Inds>(rest)...);
-#endif
-    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
-    for(auto& J : is)
-        {
-        auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(rest)...);
-        if(match) J.prime(match.inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-//// Experimental prime function that
-//// takes IndexVals, where the value
-//// is interpreted as an increment
-//template<typename IndexT, typename... IVals>
-//void 
-//prime(IndexSetT<IndexT>& is,
-//      const typename IndexT::indexval_type& iv1,
-//      IVals&&... rest)
-//    {
-//#ifdef DEBUG
-//    detail::checkHasInds(is,iv1,std::forward<IVals>(rest)...);
-//#endif
-//    int inc = 0;
-//    auto cmp = [&inc](const IndexT& J, 
-//                      const typename IndexT::indexval_type& iv) 
-//               { 
-//               inc = iv.val; 
-//               return J==iv.index; 
-//               };
-//    for(auto& J : is)
-//        {
-//        auto found = detail::findMatch(cmp,J,iv1,std::forward<IVals>(rest)...);
-//        if(found) J.prime(inc);
-//        }
-//#ifdef DEBUG
-//    detail::check(is);
-//#endif
-//    }
-
-template<typename IndexT, typename... Inds>
-void 
-primeExcept(IndexSetT<IndexT>& is, 
-            IndexT const& I1, 
-            Inds&&... rest)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,I1,std::forward<Inds>(rest)...);
-#endif
-    auto cmp = [](const IndexT& J, const IndexT& I) { return J==I; };
-    for(auto& J : is)
-        {
-        auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(rest)...);
-        if(!match) J.prime(match.inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-template<typename IndexT, typename... ITs>
-void 
-primeExcept(IndexSetT<IndexT>& is, 
-            IndexType it1,
-            ITs&&... rest)
-    {
-    auto cmp = [](const IndexT& J, IndexType t) { return J.type()==t; };
-    for(auto& J : is)
-        {
-        auto match = detail::computeMatchInc(cmp,J,it1,std::forward<ITs>(rest)...);
-        if(!match) J.prime(match.inc);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-template<typename IndexT>
-void 
-noprime(IndexSetT<IndexT>& is, 
-        IndexType type)
-    {
-    for(auto& J : is) J.noprime(type);
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-template<typename IndexT>
-void 
-noprime(IndexSetT<IndexT>& is, 
-        const TagSet& ts)
-    {
-    for(auto& J : is)
-        if(hasTags(J,ts)) J.noprime();
-    }
-
-template<typename IndexT, typename... ITs>
-void 
-noprime(IndexSetT<IndexT>& is,
-        IndexType it1,
-        IndexType it2,
-        ITs&&... rest)
-    {
-    auto cmp = [](const IndexT& J, IndexType t) { return J.type()==t; };
-    for(auto& J : is)
-        {
-        auto found = detail::findMatch(cmp,J,it1,it2,std::forward<ITs>(rest)...);
-        if(found) J.noprime();
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-	}
-
-template<typename IndexT, typename... Inds>
-void 
-noprime(IndexSetT<IndexT>& is, 
-        IndexT const& I1, 
-        Inds&&... inds)
-    {
-#ifdef DEBUG
-    detail::checkHasInds(is,I1,std::forward<Inds>(inds)...);
-#endif
-    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
-    for(auto& J : is)
-        {
-        auto found = detail::findMatch(cmp,J,I1,std::forward<Inds>(inds)...);
-        if(found) J.noprime();
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-    }
-
-template<typename IndexT>
-void 
-mapprime(IndexSetT<IndexT>& is, 
-         int plevold, 
-         int plevnew, 
-         IndexType type)
-	{
-    for(auto& J : is) 
-        {
-        J.mapprime(plevold,plevnew,type);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-	}
-
-template<typename IndexT>
-void 
-mapprime(IndexSetT<IndexT>& is, 
-         const TagSet& ts,
-         int plevold,
-         int plevnew)
-    {
-    for(auto& J : is)
-        if(hasTags(J,ts)) J.mapprime(plevold,plevnew);
-    }
-
-namespace detail {
-
-    template<typename IndexT>
-    bool
-    mp_matches(IndexT const& I1,
-               IndexT const& I2)
-        {
-        return I1.noprimeEquals(I2);
-        }
-
-    template<typename IndexT>
-    bool
-    mp_matches(IndexT const& I1,
-               IndexType const& T)
-        {
-        return I1.type() == T;
-        }
-
-    template<typename IndexT,
-             typename IndexOrIndexType,
-             typename... VArgs>
-    void
-    mapprime_impl(IndexT & I,
-                  IndexOrIndexType const& J,
-                  int plev1,
-                  int plev2)
-        {
-        if(mp_matches(I,J) && I.primeLevel()==plev1)
-            {
-            I.primeLevel(plev2);
-            return;
-            }
-        }
-
-    template<typename IndexT,
-             typename IndexOrIndexType,
-             typename... VArgs>
-    void
-    mapprime_impl(IndexT & I,
-                  IndexOrIndexType const& J,
-                  int plev1,
-                  int plev2,
-                  VArgs&&... vargs)
-        {
-        if(mp_matches(I,J) && I.primeLevel()==plev1)
-            {
-            I.primeLevel(plev2);
-            return;
-            }
-        mapprime_impl(I,vargs...);
-        }
-
-} //namespace detail
-
-template<typename IndexT, typename... VArgs>
-void 
-mapprime(IndexSetT<IndexT>& is, 
-         VArgs&&... vargs)
-	{
-    static_assert(sizeof...(vargs)%3==0,
-                  "Wrong number of arguments to mapprime");
-    for(auto& I : is)
-        {
-        detail::mapprime_impl(I,vargs...);
-        }
-#ifdef DEBUG
-    detail::check(is);
-#endif
-	}
-*/
 
 ////
 //// Compute the permutation P taking an IndexSetT iset
-//// to oset (of type IndexSetT or array<IndexT,NMAX>)
+//// to oset (of type IndexSetT or array<Index,NMAX>)
 ////
 //template <class IndexT>
 //void
-//getperm(const IndexSetT<IndexT>& iset, 
-//        const typename IndexSetT<IndexT>::storage& oset, 
+//getperm(const IndexSet& iset, 
+//        const typename IndexSet::storage& oset, 
 //        Permutation& P)
 //	{
 //	for(int j = 0; j < iset.r(); ++j)
@@ -776,6 +322,208 @@ mapprime(IndexSetT<IndexT>& is,
 //            }
 //	    }
 //	}
+
+bool inline
+hasIndex(const IndexSet& iset, 
+         const Index& I)
+	{
+    for(long j = 0; j < iset.r(); ++j)
+        {
+        if(iset[j] == I) return true;
+        }
+    return false;
+	}
+
+long inline
+minM(const IndexSet& iset)
+    {
+    if(iset.empty()) return 1l;
+    auto mm = iset[0].m();
+    for(long j = 1; j < iset.r(); ++j)
+        mm = std::min(mm,iset[j].m());
+
+    return mm;
+    }
+
+long inline
+maxM(const IndexSet& iset)
+    {
+    if(iset.empty()) return 1l;
+
+    auto mm = iset[0].m();
+    for(long j = 1; j < iset.r(); ++j)
+        mm = std::max(mm,iset[j].m());
+
+    return mm;
+    }
+
+template<class LabelT>
+void
+contractIS(IndexSet const& Lis,
+           LabelT const& Lind,
+           IndexSet const& Ris,
+           LabelT const& Rind,
+           IndexSet & Nis,
+           LabelT & Nind,
+           bool sortResult)
+    {
+    long ncont = 0;
+    for(auto& i : Lind) if(i < 0) ++ncont;
+    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    auto newind = RangeBuilderT<IndexSet>(nuniq);
+    //Below we are "cheating" and using the .str
+    //field of each member of newind to hold the 
+    //labels which will go into Nind so they will
+    //be sorted along with the .ext members (the indices of Nis)
+    //Later we will set them back to zero
+    //IndexSetT constructor anyway
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] > 0) //uncontracted
+            newind.nextIndStr(Lis[j],Lind[j]);
+        }
+    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
+        {
+        if(Rind[j] > 0) //uncontracted
+            newind.nextIndStr(Ris[j],Rind[j]);
+        }
+    if(sortResult) newind.sortByIndex();
+    Nind.resize(newind.size());
+    for(decltype(newind.size()) j = 0; j < newind.size(); ++j)
+        {
+        Nind[j] = newind.stride(j);
+        }
+    Nis = newind.build();
+    Nis.computeStrides();
+    }
+
+void inline
+contractIS(IndexSet const& Lis,
+           IndexSet const& Ris,
+           IndexSet & Nis,
+           bool sortResult)
+    {
+    Labels Lind,
+           Rind,
+           Nind;
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+    contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
+    }
+
+template<class LabelT>
+void
+ncprod(IndexSet const& Lis,
+       LabelT const& Lind,
+       IndexSet const& Ris,
+       LabelT const& Rind,
+       IndexSet & Nis,
+       LabelT & Nind)
+    {
+    long nmerge = 0;
+    for(auto& i : Lind) if(i < 0) ++nmerge;
+    auto nuniq = Lis.r()+Ris.r()-2*nmerge;
+    auto NisBuild = RangeBuilderT<IndexSet>(nmerge+nuniq);
+    Nind.resize(nmerge+nuniq);
+    long n = 0;
+
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] < 0) //merged
+            {
+            NisBuild.nextIndex(Lis[j]);
+            Nind[n++] = Lind[j];
+            }
+        }
+    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] > 0) //unmerged/unique
+            {
+            NisBuild.nextIndex(Lis[j]);
+            Nind[n++] = Lind[j];
+            }
+        }
+    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
+        {
+        if(Rind[j] > 0) //unmerged/unique
+            {
+            NisBuild.nextIndex(Ris[j]);
+            Nind[n++] = Rind[j];
+            }
+        }
+    Nis = NisBuild.build();
+    }
+
+inline std::ostream&
+operator<<(std::ostream& s, IndexSet const& is)
+    {
+    for(auto i : range1(is.r()))
+        { 
+        s << is.index(i) << " ";
+        } 
+    return s;
+    }
+
+bool inline
+hasQNs(IndexSet const& is)
+    {
+    for(auto& I : is) if(hasQNs(I)) return true;
+    return false;
+    }
+
+bool inline
+hasQNs(std::vector<Index> const& inds)
+    {
+    for(auto& I : inds) if(hasQNs(I)) return true;
+    return false;
+    }
+
+void inline
+checkQNConsistent(IndexSet const& is)
+    {
+#ifdef DEBUG
+    if(is.r() > 0 && hasQNs(is.front()))
+        {
+        for(long n = 1; n < is.r(); n += 1)
+            {
+            if(not hasQNs(is[n]))
+                {
+                println("Non-QN index = ",is[n]);
+                Error("IndexSet: cannot mix QN and non-QN Indices");
+                }
+            }
+        }
+#endif
+    }
+
+Index inline
+findIndex(IndexSet const& is,
+          TagSet const& tsmatch, 
+          int plmatch)
+    {
+    for(auto& J : is) if(matchTagsPrime(J,tsmatch,plmatch)) return J;
+    //TODO: make this a debug error
+    Error("No index with those tags and prime level found");
+    return Index();
+    }
+
+Index inline
+findIndexExact(IndexSet const& is,
+               TagSet const& tsmatch, 
+               int plmatch)
+    {
+    auto j = Index();
+    for(auto& J : is)
+        {
+        if(matchTagsPrimeExact(J,tsmatch,plmatch))
+            {
+            if(j) Error("Multiple indices with those tags and prime level found");
+            else j = J;
+            }
+        }
+    if(!j) Error("No index with those tags and prime level found");
+    return j;
+    }
+
 
 } //namespace itensor
 

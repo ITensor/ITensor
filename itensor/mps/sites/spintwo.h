@@ -28,27 +28,36 @@ class SpinTwo : public SiteSet
 
 class SpinTwoSite
 	{
-    IQIndex s;
+    Index s;
 	public:
 
     SpinTwoSite() { }
 
-    SpinTwoSite(IQIndex I) : s(I) { }
+    SpinTwoSite(Index I) : s(I) { }
 
     SpinTwoSite(int n, Args const& args = Args::global())
 		{
         auto ts = format("Site,S=2,%d",n);
-        s = IQIndex(Index(1,ts),QN("Sz=",+4),
-                    Index(1,ts),QN("Sz=",+2),
-                    Index(1,ts),QN("Sz=",0),
-                    Index(1,ts),QN("Sz=",-2),
-                    Index(1,ts),QN("Sz=",-4));
+        auto conserveQNs = args.getBool("ConserveQNs",false);
+        auto conserveSz = args.getBool("ConserveSz",conserveQNs);
+        if(conserveSz)
+            {
+            s = Index{QN("Sz=",+4),1,
+                      QN("Sz=",+2),1,
+                      QN("Sz=",0),1,
+                      QN("Sz=",-2),1,
+                      QN("Sz=",-4),1,ts};
+            }
+        else
+            {
+            s = Index{5,ts};
+            }
 		}
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
 		{
         if (state == "Up" || state == "4") 
@@ -75,10 +84,10 @@ class SpinTwoSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
 		}
 
-    IQTensor
+    ITensor
     op(std::string const& opname,
        Args const& args) const
 		{
@@ -98,7 +107,7 @@ class SpinTwoSite
         auto Dn  = s(5);
         auto DnP = sP(5);
 
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if (opname == "Sz")
             {
@@ -109,10 +118,6 @@ class SpinTwoSite
             }
         else if (opname == "Sx")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
             Op.set(Up,UpiP,1.0);
             Op.set(Upi,UpP,1.0);
             Op.set(Upi,Z0P,val1); // val1 = sqrt(6)/2 = = 1.2247...
@@ -124,10 +129,6 @@ class SpinTwoSite
             }
         else if (opname == "ISy") // defined as i*Sy
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
             Op.set(Up,UpiP,-1.0);
             Op.set(Upi,UpP,1.0);
             Op.set(Upi,Z0P,-val1);
@@ -139,10 +140,6 @@ class SpinTwoSite
             }
         else if (opname == "Sy")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(s,sP);
             Op.set(Up,UpiP,1.0*Cplx_i);
             Op.set(Upi,UpP,-1.0*Cplx_i);
             Op.set(Upi,Z0P,val1*Cplx_i);
@@ -282,7 +279,7 @@ read(std::istream& s)
         auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
-            auto I = IQIndex{};
+            auto I = Index{};
             I.read(s);
             if(I.m() == 3) store.set(j,SpinTwoSite(I));
             else if(I.m() == 2) store.set(j,SpinHalfSite(I));

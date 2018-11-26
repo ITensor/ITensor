@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITERATIVESOLVERS_H
 #define __ITENSOR_ITERATIVESOLVERS_H
 #include "itensor/util/range.h"
-#include "itensor/iqtensor.h"
+#include "itensor/itensor.h"
 #include "itensor/tensor/algs.h"
 
 
@@ -18,10 +18,10 @@ namespace itensor {
 // Returns the minimal eigenvalue lambda such that
 // A phi = lambda phi.
 //
-template <class BigMatrixT, class Tensor> 
+template <class BigMatrixT>
 Real 
 davidson(BigMatrixT const& A, 
-         Tensor& phi,
+         ITensor& phi,
          Args const& args = Args::global());
 
 //
@@ -32,10 +32,10 @@ davidson(BigMatrixT const& A,
 // Returns a vector of the N smallest eigenvalues corresponding
 // to the set of eigenvectors phi.
 //
-template <class BigMatrixT, class Tensor> 
+template <class BigMatrixT>
 std::vector<Real>
 davidson(BigMatrixT const& A, 
-         std::vector<Tensor>& phi,
+         std::vector<ITensor>& phi,
          Args const& args = Args::global());
 
 //
@@ -43,11 +43,11 @@ davidson(BigMatrixT const& A,
 // (BigMatrixT objects must implement the methods product and size.)
 // Initial guess x is overwritten with the output.
 //
-template<typename BigMatrixT, typename Tensor>
+template<typename BigMatrixT>
 void
 gmres(BigMatrixT const& A,
-      Tensor const& b,
-      Tensor& x,
+      ITensor const& b,
+      ITensor& x,
       Args const& args = Args::global());
 
 //
@@ -57,23 +57,23 @@ gmres(BigMatrixT const& A,
 //
 
 
-template <class BigMatrixT, class Tensor> 
+template <class BigMatrixT>
 Real
 davidson(BigMatrixT const& A, 
-         Tensor& phi,
+         ITensor& phi,
          Args const& args)
     {
-    auto v = std::vector<Tensor>(1);
+    auto v = std::vector<ITensor>(1);
     v.front() = phi;
     auto eigs = davidson(A,v,args);
     phi = v.front();
     return eigs.front();
     }
 
-template <class BigMatrixT, class Tensor> 
+template <class BigMatrixT>
 std::vector<Real>
 davidson(BigMatrixT const& A, 
-         std::vector<Tensor>& phi,
+         std::vector<ITensor>& phi,
          Args const& args)
     {
     auto maxiter_ = args.getInt("MaxIter",2);
@@ -111,8 +111,8 @@ davidson(BigMatrixT const& A,
         Error("davidson: size of initial vector should match linear matrix size");
         }
 
-    auto V = std::vector<Tensor>(actual_maxiter+2);
-    auto AV = std::vector<Tensor>(actual_maxiter+2);
+    auto V = std::vector<ITensor>(actual_maxiter+2);
+    auto AV = std::vector<ITensor>(actual_maxiter+2);
 
     //Storage for Matrix that gets diagonalized 
     //set to NAN to ensure failure if we use uninitialized elements
@@ -420,9 +420,9 @@ davidson(BigMatrixT const& A,
 
 namespace gmres_details {
 
-template<class Matrix, class Tensor, class T>
+template<class Matrix, class T>
 void
-update(Tensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<Tensor> const& v)
+update(ITensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<ITensor> const& v)
     {
     std::vector<T> y(s);
 
@@ -477,28 +477,26 @@ applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
     dx = temp;
     }
 
-template<typename Tensor>
-void
-dot(Tensor const& A, Tensor const& B, Real& res)
+void inline
+dot(ITensor const& A, ITensor const& B, Real& res)
     {
     res = (dag(A)*B).real();
     }
 
-template<typename Tensor>
 void
-dot(Tensor const& A, Tensor const& B, Cplx& res)
+dot(ITensor const& A, ITensor const& B, Cplx& res)
     {
     res = (dag(A)*B).cplx();
     }
 
 }//namespace gmres_details
 
-template<typename T, typename BigMatrixT, typename Tensor>
+template<typename T, typename BigMatrixT>
 void
 gmresImpl(BigMatrixT const& A,
-          Tensor const& b,
-          Tensor& x,
-          Tensor& Ax,
+          ITensor const& b,
+          ITensor& x,
+          ITensor& Ax,
           Args const& args)
     {
     auto n = A.size();
@@ -516,7 +514,7 @@ gmresImpl(BigMatrixT const& A,
     std::vector<T> s(m+1);
     std::vector<T> cs(m+1);
     std::vector<T> sn(m+1);
-    Tensor w;
+    ITensor w;
 
     auto normb = norm(b);
 
@@ -533,7 +531,7 @@ gmresImpl(BigMatrixT const& A,
         max_iter = 0;
         }
 
-    std::vector<Tensor> v(m+1);
+    std::vector<ITensor> v(m+1);
 
     while(j <= max_iter)
         {
@@ -546,7 +544,7 @@ gmresImpl(BigMatrixT const& A,
 
         for(i = 0; i < m && j <= max_iter; i++, j++)
             {
-            Tensor w;
+            ITensor w;
             A.product(v[i],w);
 
             // Begin Arnoldi iteration
@@ -605,11 +603,11 @@ gmresImpl(BigMatrixT const& A,
     }
 
 
-template<typename BigMatrixT, typename Tensor>
+template<typename BigMatrixT>
 void
 gmres(BigMatrixT const& A,
-      Tensor const& b,
-      Tensor& x,
+      ITensor const& b,
+      ITensor& x,
       Args const& args)
     {
     auto debug_level_ = args.getInt("DebugLevel",-1);
@@ -619,7 +617,7 @@ gmres(BigMatrixT const& A,
     // to avoid this?
     // Otherwise we would need to require that BigMatrixT
     // has a function isComplex()
-    Tensor Ax;
+    ITensor Ax;
     A.product(x, Ax); 
     if(isComplex(b) || isComplex(Ax))
         {

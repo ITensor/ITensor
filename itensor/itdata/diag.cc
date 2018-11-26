@@ -14,7 +14,7 @@ typeNameOf(DiagCplx const& d) { return "DiagCplx"; }
 
 template <typename T>
 Cplx
-doTask(GetElt<Index> const& g, Diag<T> const& d)
+doTask(GetElt const& g, Diag<T> const& d)
     {
     auto first_i = (g.inds.empty() ? 0 : g.inds.front());
     //Check if inds_ reference an
@@ -24,8 +24,8 @@ doTask(GetElt<Index> const& g, Diag<T> const& d)
     if(d.allSame()) return d.val;
     return d.store.at(first_i);
     }
-template Cplx doTask(GetElt<Index> const&, DiagReal const&);
-template Cplx doTask(GetElt<Index> const&, DiagCplx const&);
+template Cplx doTask(GetElt const&, DiagReal const&);
+template Cplx doTask(GetElt const&, DiagCplx const&);
 
 template<typename T>
 class UnifVecWrapper
@@ -127,7 +127,7 @@ contractDiagDense(Diag<T1>  const& d,
 
 template<typename T1, typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Dense<T1>  const& t,
        Diag<T2>   const& d,
        ManageStore     & m)
@@ -140,14 +140,14 @@ doTask(Contract<Index> & C,
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
     }
-template void doTask(Contract<Index>&, Dense<Real> const&, Diag<Real> const&, ManageStore&);
-template void doTask(Contract<Index>&, Dense<Real> const&, Diag<Cplx> const&, ManageStore&);
-template void doTask(Contract<Index>&, Dense<Cplx> const&, Diag<Real> const&, ManageStore&);
-template void doTask(Contract<Index>&, Dense<Cplx> const&, Diag<Cplx> const&, ManageStore&);
+template void doTask(Contract&, Dense<Real> const&, Diag<Real> const&, ManageStore&);
+template void doTask(Contract&, Dense<Real> const&, Diag<Cplx> const&, ManageStore&);
+template void doTask(Contract&, Dense<Cplx> const&, Diag<Real> const&, ManageStore&);
+template void doTask(Contract&, Dense<Cplx> const&, Diag<Cplx> const&, ManageStore&);
 
 template<typename T1, typename T2>
 void
-doTask(Contract<Index> & C,
+doTask(Contract & C,
        Diag<T1>   const& d,
        Dense<T2>  const& t,
        ManageStore     & m)
@@ -160,10 +160,10 @@ doTask(Contract<Index> & C,
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
     }
-template void doTask(Contract<Index>&, Diag<Real> const&, Dense<Real> const&, ManageStore&);
-template void doTask(Contract<Index>&, Diag<Real> const&, Dense<Cplx> const&, ManageStore&);
-template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Real> const&, ManageStore&);
-template void doTask(Contract<Index>&, Diag<Cplx> const&, Dense<Cplx> const&, ManageStore&);
+template void doTask(Contract&, Diag<Real> const&, Dense<Real> const&, ManageStore&);
+template void doTask(Contract&, Diag<Real> const&, Dense<Cplx> const&, ManageStore&);
+template void doTask(Contract&, Diag<Cplx> const&, Dense<Real> const&, ManageStore&);
+template void doTask(Contract&, Diag<Cplx> const&, Dense<Cplx> const&, ManageStore&);
 
 struct Adder
     {
@@ -176,7 +176,7 @@ struct Adder
 
 template<typename T1, typename T2>
 void
-add(PlusEQ<Index> const& P,
+add(PlusEQ const& P,
     Diag<T1>          & D1,
     Diag<T2>     const& D2)
     {
@@ -201,7 +201,7 @@ add(PlusEQ<Index> const& P,
 
 template<typename T1, typename T2>
 void
-doTask(PlusEQ<Index> const& P,
+doTask(PlusEQ const& P,
        Diag<T1> const& D1,
        Diag<T2> const& D2,
        ManageStore & m)
@@ -217,10 +217,10 @@ doTask(PlusEQ<Index> const& P,
         add(P,*ncD1,D2);
         }
     }
-template void doTask(PlusEQ<Index> const&,Diag<Real> const&,Diag<Real> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Diag<Real> const&,Diag<Cplx> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Diag<Cplx> const&,Diag<Real> const&,ManageStore &);
-template void doTask(PlusEQ<Index> const&,Diag<Cplx> const&,Diag<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ const&,Diag<Real> const&,Diag<Real> const&,ManageStore &);
+template void doTask(PlusEQ const&,Diag<Real> const&,Diag<Cplx> const&,ManageStore &);
+template void doTask(PlusEQ const&,Diag<Cplx> const&,Diag<Real> const&,ManageStore &);
+template void doTask(PlusEQ const&,Diag<Cplx> const&,Diag<Cplx> const&,ManageStore &);
 
 template<typename N, typename T>
 void
@@ -329,7 +329,7 @@ doTask(TakeImag, DiagCplx const& D, ManageStore& m)
 
 template<typename T>
 void
-doTask(PrintIT<Index>& P, Diag<T> const& d)
+doTask(PrintIT& P, Diag<T> const& d)
     {
     auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
@@ -361,12 +361,12 @@ doTask(PrintIT<Index>& P, Diag<T> const& d)
             }
         }
     }
-template void doTask(PrintIT<Index>& P, DiagReal const& d);
-template void doTask(PrintIT<Index>& P, DiagCplx const& d);
+template void doTask(PrintIT& P, DiagReal const& d);
+template void doTask(PrintIT& P, DiagCplx const& d);
 
 template <class T>
 Cplx
-doTask(SumEls<Index> S, Diag<T> const& d) 
+doTask(SumEls S, Diag<T> const& d) 
     { 
     if(d.allSame()) return Real(minM(S.is))*d.val;
     T sum = 0;
@@ -374,7 +374,7 @@ doTask(SumEls<Index> S, Diag<T> const& d)
         sum += elt;
     return sum;
     }
-template Cplx doTask(SumEls<Index> S, DiagReal const& d);
-template Cplx doTask(SumEls<Index> S, DiagCplx const& d);
+template Cplx doTask(SumEls S, DiagReal const& d);
+template Cplx doTask(SumEls S, DiagCplx const& d);
 
 } //namespace itensor

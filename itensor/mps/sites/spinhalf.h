@@ -14,12 +14,12 @@ using SpinHalf = BasicSiteSet<SpinHalfSite>;
 
 class SpinHalfSite
     {
-    IQIndex s;
+    Index s;
     public:
 
     SpinHalfSite() { }
 
-    SpinHalfSite(IQIndex I) : s(I) { }
+    SpinHalfSite(Index const& I) : s(I) { }
 
     SpinHalfSite(int n, Args const& args = Args::global())
         {
@@ -27,14 +27,23 @@ class SpinHalfSite
         // i.e. TagSet("Site,S=1/2,%d",n)
         // Also allow conversion from std::string to TagSet?
         auto ts = format("Site,S=1/2,%d",n);
-        s = IQIndex(Index(1,ts),QN("Sz=",+1),
-                    Index(1,ts),QN("Sz=",-1));
+        auto conserveqns = args.getBool("ConserveQNs",false);
+        auto conserveSz = args.getBool("ConserveSz",conserveqns);
+        if(conserveSz)
+            {
+            s = Index{QN("Sz=",+1),1,
+                      QN("Sz=",-1),1,ts};
+            }
+        else
+            {
+            s = Index{2,ts};
+            }
         }
 
-    IQIndex
+    Index
     index() const { return s; }
 
-    IQIndexVal
+    IndexVal
     state(std::string const& state)
         {
         if(state == "Up") 
@@ -50,10 +59,10 @@ class SpinHalfSite
             {
             Error("State " + state + " not recognized");
             }
-        return IQIndexVal{};
+        return IndexVal{};
         }
 
-	IQTensor
+	ITensor
 	op(std::string const& opname,
 	   Args const& args) const
         {
@@ -64,7 +73,7 @@ class SpinHalfSite
         auto Dn = s(2);
         auto DnP = sP(2);
 
-        auto Op = IQTensor(dag(s),sP);
+        auto Op = ITensor(dag(s),sP);
 
         if(opname == "Sz")
             {
@@ -74,30 +83,18 @@ class SpinHalfSite
         else
         if(opname == "Sx")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,+0.5);
             Op.set(Dn,UpP,+0.5);
             }
         else
         if(opname == "ISy")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,-0.5);
             Op.set(Dn,UpP,+0.5);
             }
         else
         if(opname == "Sy")
             {
-            //mixedIQTensor call needed here
-            //because as an IQTensor, Op would
-            //not have a well defined QN flux
-            Op = mixedIQTensor(dag(s),sP);
             Op.set(Up,DnP,+0.5*Cplx_i);
             Op.set(Dn,UpP,-0.5*Cplx_i);
             }

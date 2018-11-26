@@ -8,7 +8,7 @@
 #include <cmath>
 #include "itensor/util/stdx.h"
 #include "itensor/util/print.h"
-#include "itensor/itensor_interface.h"
+#include "itensor/itensor.h"
 
 //#define COLLECT_TSTATS
 

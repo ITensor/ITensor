@@ -9,56 +9,49 @@
 
 namespace itensor {
 
-template <class Tensor>
 struct idmrgRVal
     {
     Real energy;
-    Tensor HL;
-    Tensor HR;
-    Tensor IL;
-    Tensor V;
+    ITensor HL;
+    ITensor HR;
+    ITensor IL;
+    ITensor V;
     };
 
-template<typename Tensor>
 void
-read(std::istream & s, idmrgRVal<Tensor> & rval);
+read(std::istream & s, idmrgRVal & rval);
 
-template<typename Tensor>
 void
-write(std::ostream & s, idmrgRVal<Tensor> const& rval);
+write(std::ostream & s, idmrgRVal const& rval);
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H, 
+idmrgRVal
+idmrg(MPS      & psi, 
+      MPO const& H, 
       Sweeps       const& sweeps, 
       Args         const& args = Global::args());
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H,
+idmrgRVal
+idmrg(MPS      & psi, 
+      MPO const& H,
       Sweeps       const& sweeps,
-      DMRGObserver<Tensor> & obs,
+      DMRGObserver & obs,
       Args         const& args = Global::args());
 
 //For restarting idmrg calculations
 //from a previous run (creates a new DMRGObserver automatically)
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H, 
-      idmrgRVal<Tensor> const& last_res,
+idmrgRVal
+idmrg(MPS      & psi, 
+      MPO const& H, 
+      idmrgRVal const& last_res,
       Sweeps       const& sweeps, 
       Args         const& args);
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor> & psi, 
-      MPOt<Tensor> H,
-      idmrgRVal<Tensor> last_rval,
+idmrgRVal
+idmrg(MPS & psi, 
+      MPO H,
+      idmrgRVal last_rval,
       Sweeps const& sweeps,
-      DMRGObserver<Tensor> & obs,
+      DMRGObserver & obs,
       Args args = Global::args());
 
 
@@ -100,13 +93,12 @@ struct PseudoInvert
 } //namespace detail
 
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor> & psi, 
-      MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
-      idmrgRVal<Tensor> last_rval,
+idmrgRVal inline
+idmrg(MPS & psi, 
+      MPO H,        //Copies H since algorithm swaps tensors in-place
+      idmrgRVal last_rval,
       Sweeps const& sweeps,
-      DMRGObserver<Tensor> & obs,
+      DMRGObserver & obs,
       Args args)
     {
     auto olevel = args.getInt("OutputLevel",0);
@@ -128,7 +120,7 @@ idmrg(MPSt<Tensor> & psi,
     Real energy = NAN;
 
     auto lastV = last_rval.V;
-    Tensor D;
+    ITensor D;
 
     if(psi.A(0))
         {
@@ -137,8 +129,8 @@ idmrg(MPSt<Tensor> & psi,
         lastV.apply(detail::PseudoInvert(0));
         }
 
-    Tensor HL(last_rval.HL),
-           HR(last_rval.HR);
+    ITensor HL(last_rval.HL),
+            HR(last_rval.HR);
 
     auto IL = last_rval.IL;
 
@@ -176,7 +168,7 @@ idmrg(MPSt<Tensor> & psi,
                 {
                 randomize(psi.Aref(j));
                 }
-            psi.normalize();
+            normalize(psi);
             }
 
         printfln("\n    Energy per site = %.14f\n",energy/N0);
@@ -242,7 +234,7 @@ idmrg(MPSt<Tensor> & psi,
 
         auto initPsi = psi;
 
-        auto PH = LocalMPO<Tensor>(H,HL,HR,args);
+        auto PH = LocalMPO(H,HL,HR,args);
 
         if(olevel >= 1)
             {
@@ -279,7 +271,7 @@ idmrg(MPSt<Tensor> & psi,
         args.add("Energy",energy);
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
-        D = Tensor();
+        D = ITensor();
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Aref(Nuc),D,psi.Aref(Nuc+1),args);
         D /= norm(D);
 
@@ -313,7 +305,7 @@ idmrg(MPSt<Tensor> & psi,
             //through until last V*A_j*D == B_j
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
-                Tensor d;
+                ITensor d;
                 svd(psi.A(b)*psi.A(b+1),psi.Aref(b),d,psi.Aref(b+1));
                 psi.Aref(b) *= d;
                 }
@@ -331,7 +323,7 @@ idmrg(MPSt<Tensor> & psi,
             auto wpsi = psi;
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
-                Tensor d;
+                ITensor d;
                 svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Aref(b),d,wpsi.Aref(b+1));
                 wpsi.Aref(b) *= d;
                 }
@@ -345,11 +337,11 @@ idmrg(MPSt<Tensor> & psi,
         psi.Aref(1) *= D;
 
         psi.orthogonalize();
-        psi.normalize();
+        normalize(psi);
 
         } //for loop over sw
     
-    auto res = idmrgRVal<Tensor>();
+    auto res = idmrgRVal();
     res.energy = energy;
     res.HL = HL;
     res.HR = HR;
@@ -359,48 +351,44 @@ idmrg(MPSt<Tensor> & psi,
     return res;
     }
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H,
+idmrgRVal inline
+idmrg(MPS      & psi, 
+      MPO const& H,
       Sweeps       const& sweeps,
-      DMRGObserver<Tensor> & obs,
+      DMRGObserver & obs,
       Args         const& args)
     {
     //Assumes H.A(N+1) contains vector
     //picking out ending state of MPO
     //automaton:
-    auto lval = idmrgRVal<Tensor>();
-    lval.IL = Tensor(dag(H.A(H.N()+1)));
+    auto lval = idmrgRVal();
+    lval.IL = ITensor(dag(H.A(H.N()+1)));
     return idmrg(psi,H,lval,sweeps,obs,args);
     }
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H, 
+idmrgRVal inline
+idmrg(MPS      & psi, 
+      MPO const& H, 
       Sweeps       const& sweeps, 
       Args         const& args)
     {
-    auto obs = DMRGObserver<Tensor>(psi);
+    auto obs = DMRGObserver(psi);
     return idmrg(psi,H,sweeps,obs,args);
     }
 
-template <class Tensor>
-idmrgRVal<Tensor>
-idmrg(MPSt<Tensor>      & psi, 
-      MPOt<Tensor> const& H, 
-      idmrgRVal<Tensor> const& last_res,
+idmrgRVal inline
+idmrg(MPS      & psi, 
+      MPO const& H, 
+      idmrgRVal const& last_res,
       Sweeps       const& sweeps, 
       Args         const& args)
     {
-    auto obs = DMRGObserver<Tensor>(psi);
+    auto obs = DMRGObserver(psi);
     return idmrg(psi,H,last_res,sweeps,obs,args);
     }
 
-template<typename Tensor>
-void
-read(std::istream & s, idmrgRVal<Tensor> & R)
+void inline
+read(std::istream & s, idmrgRVal & R)
     {
     itensor::read(s,R.energy);
     itensor::read(s,R.HL);
@@ -409,9 +397,8 @@ read(std::istream & s, idmrgRVal<Tensor> & R)
     itensor::read(s,R.V);
     }
 
-template<typename Tensor>
-void
-write(std::ostream & s, idmrgRVal<Tensor> const& R)
+void inline
+write(std::ostream & s, idmrgRVal const& R)
     {
     itensor::write(s,R.energy);
     itensor::write(s,R.HL);

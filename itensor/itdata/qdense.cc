@@ -48,7 +48,7 @@ struct compBlock
     };
 
 QN
-calcDiv(IQIndexSet const& is, 
+calcDiv(IndexSet const& is, 
         Labels const& block_ind)
     {
     QN div;
@@ -72,18 +72,18 @@ template QN doTask(CalcDiv const&,QDense<Cplx> const&);
 
 template<typename T>
 QDense<T>::
-QDense(IQIndexSet const& is, 
+QDense(IndexSet const& is, 
        QN         const& div)
     {
     auto totalsize = updateOffsets(is,div);
     store.assign(totalsize,0.);
     }
-template QDense<Real>::QDense(IQIndexSet const&, QN const&);
-template QDense<Cplx>::QDense(IQIndexSet const&, QN const&);
+template QDense<Real>::QDense(IndexSet const&, QN const&);
+template QDense<Cplx>::QDense(IndexSet const&, QN const&);
 
 template<typename T>
 long QDense<T>::
-updateOffsets(IQIndexSet const& is,
+updateOffsets(IndexSet const& is,
               QN         const& div)
     {
     offsets.clear();
@@ -97,7 +97,7 @@ updateOffsets(IQIndexSet const& is,
     //Set up a Range to iterate over all blocks
     auto RB = RangeBuilder(is.r());
     for(auto j : range(is.r()))
-        RB.nextIndex(is[j].nindex());
+        RB.nextIndex(is[j].nblock());
 
     long totalsize = 0;
     for(auto I : RB.build())
@@ -118,8 +118,8 @@ updateOffsets(IQIndexSet const& is,
                 auto& J = is[j];
                 auto i_j = I[j];
                 ind += i_j*indstr;
-                indstr *= J.nindex();
-                totm *= J[i_j].m();
+                indstr *= J.nblock();
+                totm *= J.blocksize0(i_j);
                 }
             offsets.push_back(make_blof(ind,totalsize));
             totalsize += totm;
@@ -138,14 +138,14 @@ offsetOf(std::vector<BlOf> const& offsets,
     }
 
 Cplx
-doTask(GetElt<IQIndex>& G, QDenseReal const& d)
+doTask(GetElt& G, QDenseReal const& d)
     {
     auto* pelt = d.getElt(G.is,G.inds);
     if(pelt) return Cplx(*pelt,0.);
     return Cplx(0.,0.);
     }
 Cplx
-doTask(GetElt<IQIndex>& G, QDenseCplx const& d)
+doTask(GetElt& G, QDenseCplx const& d)
     {
     auto* pelt = d.getElt(G.is,G.inds);
     if(pelt) return *pelt;
@@ -154,30 +154,30 @@ doTask(GetElt<IQIndex>& G, QDenseCplx const& d)
 
 template<typename E, typename T>
 void
-setEltImpl(SetElt<E,IQIndex> & S, QDense<T> & d)
+setEltImpl(SetElt<E> & S, QDense<T> & d)
     {
     auto* pelt = d.getElt(S.is,S.inds);
     if(pelt) *pelt = S.elt;
-    else     Error("Setting IQTensor element non-zero would violate its symmetry.");
+    else     Error("Setting Tensor element non-zero would violate its symmetry.");
     }
 
 template<typename T>
 void
-doTask(SetElt<Real,IQIndex>& S, QDense<T>& d)
+doTask(SetElt<Real>& S, QDense<T>& d)
     {
     setEltImpl<Real,T>(S,d);
     }
-template void doTask(SetElt<Real,IQIndex>&, QDense<Real>&);
-template void doTask(SetElt<Real,IQIndex>&, QDense<Cplx>&);
+template void doTask(SetElt<Real>&, QDense<Real>&);
+template void doTask(SetElt<Real>&, QDense<Cplx>&);
 
 void
-doTask(SetElt<Cplx,IQIndex>& S, QDenseCplx & d)
+doTask(SetElt<Cplx>& S, QDenseCplx & d)
     {
     setEltImpl<Cplx,Cplx>(S,d);
     }
 
 void
-doTask(SetElt<Cplx,IQIndex>& S, QDenseReal const& d, ManageStore & m)
+doTask(SetElt<Cplx>& S, QDenseReal const& d, ManageStore & m)
     {
     auto *nd = m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
     setEltImpl<Cplx,Cplx>(S,*nd);
@@ -185,14 +185,14 @@ doTask(SetElt<Cplx,IQIndex>& S, QDenseReal const& d, ManageStore & m)
 
 template<typename T>
 Cplx
-doTask(SumEls<IQIndex>, QDense<T> const& d)
+doTask(SumEls, QDense<T> const& d)
     {
     Cplx s = 0.;
     for(auto& el : d.store) s += el;
     return s;
     }
-template Cplx doTask(SumEls<IQIndex>, QDense<Real> const&);
-template Cplx doTask(SumEls<IQIndex>, QDense<Cplx> const&);
+template Cplx doTask(SumEls, QDense<Real> const&);
+template Cplx doTask(SumEls, QDense<Cplx> const&);
 
 template<typename T>
 void
@@ -283,31 +283,40 @@ template Real doTask(NormNoScale, QDense<Cplx> const& D);
 
 template<typename T>
 void
-doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
+doTask(PrintIT& P, QDense<T> const& d)
     {
+    auto name = format("QDense %s",typeName<T>());
+    if(not P.print_data)
+        {
+        P.printInfo(d,name,doTask(NormNoScale{},d));
+        return;
+        }
+
     P.s << format("QDense %s {%d blocks; data size %d}\n",
                   typeName<T>(),d.offsets.size(),d.size());
-    Real scalefac = 1.0;
-    if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
-    else P.s << "(omitting too large scale factor)\n";
+    //Real scalefac = 1.0;
+    //if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
+    //else P.s << "(omitting too large scale factor)\n";
 
     auto rank = P.is.r();
     if(rank == 0) 
         {
         P.s << "  ";
-        P.s << formatVal(scalefac*d.store.front()) << "\n";
+        P.s << formatVal(d.store.front()) << "\n";
         return;
         }
         
     Labels block(rank,0);
-    auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
+    //auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
+    auto blockSize = [&block,&P](long i)->long { return (P.is[i]).blocksize0(block[i]); };
 
     Range brange;
     auto C = detail::GCounter(rank);
     for(const auto& io : d.offsets)
         {
-        bool indices_printed = false;
-        //Determine block indices (where in the IQIndex space
+        bool block_info_printed = false;
+
+        //Determine block indices (where in the Index space
         //this non-zero block is located)
         computeBlockInd(io.block,P.is,block);
 
@@ -315,29 +324,34 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
         for(auto i : range(rank))
             {
             for(auto j : range(block[i]))
-                boff[i] += P.is[i][j].m();
+                boff[i] += P.is[i].blocksize0(j);
             }
 
         //Wire up GCounter with appropriate dims
         C.reset();
-        for(decltype(rank) i = 0; i < rank; ++i)
-            C.setRange(i,0,blockIndex(i).m()-1);
+        for(auto i : range(rank))
+            {
+            C.setRange(i,0,blockSize(i)-1);
+            }
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
-            auto val = scalefac*d.store[os];
+            auto val = d.store[os];
             if(std::norm(val) >= Global::printScale())
                 {
-                if(!indices_printed)
+                if(not block_info_printed)
                     {
-                    indices_printed = true;
+                    block_info_printed = true;
                     //Print Indices of this block
-                    for(auto i : range(rank))
+                    P.s << "Block:";
+                    for(auto bi : block)
                         {
-                        if(i > 0) P.s << " ";
-                        P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
+                        P.s << " " << (1+bi);
+                        //if(i > 0) P.s << " ";
+                        //P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
                         }
                     P.s << "\n";
                     }
+
                 P.s << "(";
                 for(auto ii : range(rank))
                     {
@@ -359,8 +373,8 @@ doTask(PrintIT<IQIndex>& P, QDense<T> const& d)
             }
         }
     }
-template void doTask(PrintIT<IQIndex>& P, QDense<Real> const& d);
-template void doTask(PrintIT<IQIndex>& P, QDense<Cplx> const& d);
+template void doTask(PrintIT& P, QDense<Real> const& d);
+template void doTask(PrintIT& P, QDense<Cplx> const& d);
 
 struct Adder
     {
@@ -373,7 +387,7 @@ struct Adder
 
 template<typename T1, typename T2>
 void
-add(PlusEQ<IQIndex> const& P,
+add(PlusEQ const& P,
     QDense<T1>            & A,
     QDense<T2>       const& B)
     {
@@ -411,7 +425,7 @@ add(PlusEQ<IQIndex> const& P,
 
 template<typename TA, typename TB>
 void
-doTask(PlusEQ<IQIndex> const& P,
+doTask(PlusEQ const& P,
        QDense<TA>      const& A,
        QDense<TB>      const& B,
        ManageStore          & m)
@@ -429,15 +443,15 @@ doTask(PlusEQ<IQIndex> const& P,
         add(P,*mA,B);
         }
     }
-template void doTask(PlusEQ<IQIndex> const&, QDense<Real> const&, QDense<Real> const&, ManageStore&);
-template void doTask(PlusEQ<IQIndex> const&, QDense<Real> const&, QDense<Cplx> const&, ManageStore&);
-template void doTask(PlusEQ<IQIndex> const&, QDense<Cplx> const&, QDense<Real> const&, ManageStore&);
-template void doTask(PlusEQ<IQIndex> const&, QDense<Cplx> const&, QDense<Cplx> const&, ManageStore&);
+template void doTask(PlusEQ const&, QDense<Real> const&, QDense<Real> const&, ManageStore&);
+template void doTask(PlusEQ const&, QDense<Real> const&, QDense<Cplx> const&, ManageStore&);
+template void doTask(PlusEQ const&, QDense<Cplx> const&, QDense<Real> const&, ManageStore&);
+template void doTask(PlusEQ const&, QDense<Cplx> const&, QDense<Cplx> const&, ManageStore&);
 
 
 template<typename VA, typename VB>
 void
-doTask(Contract<IQIndex>& Con,
+doTask(Contract& Con,
        QDense<VA> const& A,
        QDense<VB> const& B,
        ManageStore& m)
@@ -501,14 +515,14 @@ doTask(Contract<IQIndex>& Con,
     STOP_TIMER(21)
 #endif
     }
-template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Real> const&,ManageStore&);
-template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
-template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
-template void doTask(Contract<IQIndex>& Con,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
+template void doTask(Contract& Con,QDense<Real> const&,QDense<Real> const&,ManageStore&);
+template void doTask(Contract& Con,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
+template void doTask(Contract& Con,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
+template void doTask(Contract& Con,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
 
 template<typename VA, typename VB>
 void
-doTask(NCProd<IQIndex>& P,
+doTask(NCProd& P,
        QDense<VA> const& A,
        QDense<VB> const& B,
        ManageStore& m)
@@ -599,23 +613,23 @@ doTask(NCProd<IQIndex>& P,
     P.scalefac = computeScalefac(C);
 #endif
     }
-template void doTask(NCProd<IQIndex>&,QDense<Real> const&,QDense<Real> const&,ManageStore&);
-template void doTask(NCProd<IQIndex>&,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
-template void doTask(NCProd<IQIndex>&,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
-template void doTask(NCProd<IQIndex>&,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
+template void doTask(NCProd&,QDense<Real> const&,QDense<Real> const&,ManageStore&);
+template void doTask(NCProd&,QDense<Cplx> const&,QDense<Real> const&,ManageStore&);
+template void doTask(NCProd&,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
+template void doTask(NCProd&,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
 
 template<typename T>
 void
 permuteQDense(Permutation  const& P,
               QDense<T>    const& dA,
-              IQIndexSet   const& Ais,
+              IndexSet   const& Ais,
               QDense<T>         & dB,
-              IQIndexSet        & Bis)
+              IndexSet        & Bis)
     {
     // Recalculate new indexset by permuting
     // original indexset (otherwise it segfaults)
     auto r = Ais.r();
-    auto bind = IQIndexSetBuilder(r);
+    auto bind = IndexSetBuilder(r);
     for(auto i : range(r))
         {
         bind.setIndex(P.dest(i),Ais[i]);
@@ -646,15 +660,31 @@ permuteQDense(Permutation  const& P,
 
 template<typename T>
 void
-doTask(Order<IQIndex> const& O,
+doTask(Order const& O,
        QDense<T> & dB)
     {
     auto const dA = dB;
     auto Bis = O.is2();
     permuteQDense(O.perm(),dA,O.is1(),dB,Bis);
     }
-template void doTask(Order<IQIndex> const&,QDense<Real> &);
-template void doTask(Order<IQIndex> const&,QDense<Cplx> &);
+template void doTask(Order const&,QDense<Real> &);
+template void doTask(Order const&,QDense<Cplx> &);
+
+template<typename V>
+TenRef<Range,V>
+doTask(GetBlock<V> const& G,
+       QDense<V> & d)
+    {
+    auto block = getBlock(d,G.is,G.block_ind);
+    auto RB = RangeBuilder(G.is.r());
+    for(auto j : range(G.is.r()))
+        {
+        RB.nextIndex(G.is[j].blocksize0(G.block_ind[j]));
+        }
+    return makeRef(block,RB.build());
+    }
+template TenRef<Range,Real> doTask(GetBlock<Real> const& G,QDense<Real> & d);
+template TenRef<Range,Cplx> doTask(GetBlock<Cplx> const& G,QDense<Cplx> & d);
 
 } //namespace itensor
 

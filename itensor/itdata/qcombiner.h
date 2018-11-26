@@ -46,15 +46,15 @@ class QCombiner
 
     QCombiner() { }
     
-    template<typename IQInds>
+    template<typename Inds>
     explicit
-    QCombiner(IQInds const& cinds)
+    QCombiner(Inds const& cinds)
         { 
         //set up range to sum over all possible
         //blocks that can be formed out of combined inds
         auto RB = RangeBuilder(cinds.size());
         for(auto j : itensor::range(cinds))
-            RB.nextIndex(cinds[j].nindex());
+            RB.nextIndex(cinds[j].nblock());
         R_ = RB.build();
         store_.resize(area(R_));
         }
@@ -103,7 +103,7 @@ void
 write(std::ostream& s, QCombiner const& dat);
 
 Cplx
-doTask(GetElt<IQIndex> const& g, QCombiner const& c);
+doTask(GetElt const& g, QCombiner const& c);
 
 Real inline
 doTask(NormNoScale, QCombiner const& d) { return 0; }
@@ -113,20 +113,20 @@ doTask(Conj,QCombiner const& d) { }
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
+doTask(Contract & C,
        QDense<T>    const& d,
        QCombiner  const& cmb,
        ManageStore       & m);
 
 template<typename T>
 void
-doTask(Contract<IQIndex> & C,
+doTask(Contract & C,
        QCombiner  const& cmb,
        QDense<T>    const& d,
        ManageStore       & m);
 
 void inline
-doTask(PrintIT<IQIndex> & P, 
+doTask(PrintIT & P, 
        QCombiner const& d) { P.s << "QCombiner "; }
 
 auto inline

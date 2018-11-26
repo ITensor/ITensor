@@ -15,17 +15,16 @@ class AutoMPO;
 
 //
 // Given an AutoMPO representing a Hamiltonian H,
-// returns an exact IQMPO form of H.
+// returns an exact MPO form of H.
 //
-template <typename Tensor>
-MPOt<Tensor>
+MPO
 toMPO(AutoMPO const& a,
       Args const& args = Args::global());
 
 
 //
 // Given an AutoMPO representing a Hamiltonian H,
-// returns an IQMPO which approximates exp(-tau*H)
+// returns an MPO which approximates exp(-tau*H)
 //
 // Although the tau argument is of Complex type, passing a Real
 // tau (Real is auto convertible to Complex) will 
@@ -35,20 +34,11 @@ toMPO(AutoMPO const& a,
 // o "Approx":
 //   - (Default) "ZW1" - Zaletel et al. "W1" approximation
 //
-template <typename Tensor>
-MPOt<Tensor>
+MPO
 toExpH(AutoMPO const& a,
        Cplx tau,
        Args const& args = Args::global());
 
-
-
-//Instantiations of templates to allow us to define them
-//later in autompo.cc
-template<> MPO toMPO<ITensor>(AutoMPO const& a, Args const& args);
-template<> IQMPO toMPO<IQTensor>(AutoMPO const& a, Args const& args);
-template<> MPO toExpH<ITensor>(AutoMPO const& a, Cplx tau, Args const& args);
-template<> IQMPO toExpH<IQTensor>(AutoMPO const& a, Cplx tau, Args const& args);
 
 
 struct SiteTerm
@@ -205,9 +195,7 @@ class AutoMPO
     int
     size() const { return terms_.size(); }
 
-    operator MPO() const { return toMPO<ITensor>(*this); }
-
-    operator IQMPO() const { return toMPO<IQTensor>(*this); }
+    operator MPO() const { return toMPO(*this); }
 
     template <typename T>
     Accumulator

@@ -1,4 +1,7 @@
-#include "itensor/all.h"
+#include "itensor/mps/dmrg.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/sites/spinone.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 
@@ -11,7 +14,7 @@ main()
     // Initialize the site degrees of freedom.
     //
     //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
-    auto sites = SpinOne(N); //make a chain of N spin 1's
+    auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
