@@ -322,7 +322,7 @@ dir(IndexSet const& is, Index const& I);
 
 
 bool
-hasindex(IndexSet const& iset, 
+hasIndex(IndexSet const& iset, 
          Index const& I);
 
 long

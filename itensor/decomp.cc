@@ -428,7 +428,7 @@ eigDecompImpl(ITensor T,
 //        Index li = t.indices().front(),
 //              ri = t.indices().back();
 //
-//        if(!hasindex(L,li))
+//        if(!hasIndex(L,li))
 //            swap(li,ri);
 //
 //        Matrix &Ur = rmatrix.at(itenind),
@@ -478,7 +478,7 @@ eigDecompImpl(ITensor T,
 //        Index nm("d",dr.Length());
 //
 //        Index act = t.indices().front();
-//        if(!hasindex(R,act))
+//        if(!hasIndex(R,act))
 //            act = t.indices().back();
 //
 //        iq.push_back(IndexQN(nm,qn(R,act)));

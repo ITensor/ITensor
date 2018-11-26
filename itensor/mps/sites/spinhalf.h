@@ -32,7 +32,7 @@ class SpinHalfSite
         if(conserveSz)
             {
             s = Index{QN("Sz=",+1),1,
-                      QN("Sz=",-1),1,ts};
+                      QN("Sz=",-1),1,Out,ts};
             }
         else
             {

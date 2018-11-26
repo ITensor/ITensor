@@ -291,7 +291,7 @@ commonIndex(ITensor const& A,
     {
     for(auto& I : A.inds())
         if( (ts.hasTag(All) || hasTags(I,ts))
-         && hasindex(B.inds(),I) ) 
+         && hasIndex(B.inds(),I) ) 
             {
             return I;
             }
@@ -305,7 +305,7 @@ uniqueIndex(ITensor const& A,
     {
     for(auto& I : A.inds())
         if( (ts.hasTag(All) || hasTags(I,ts))
-         && !hasindex(B.inds(),I) ) 
+         && !hasIndex(B.inds(),I) ) 
             {
             return I;
             }
@@ -1019,7 +1019,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
     auto i = 0;
     for(auto& I : isf) 
         {
-        if(!hasindex(is,I))
+        if(!hasIndex(is,I))
             {
             println("---------------------------------------------");
             println("Tensor indices = \n",is,"\n");
@@ -1035,7 +1035,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
     auto j = rf;
     for(auto& J : is)
         {
-        if(!hasindex(isf,J))
+        if(!hasIndex(isf,J))
             {
             iso[j] = J;
             j++;
@@ -1066,7 +1066,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
     auto i = r-rb;
     for(auto& I : isb) 
         {
-        if(!hasindex(is,I))
+        if(!hasIndex(is,I))
             {
             println("---------------------------------------------");
             println("Tensor indices = \n",is,"\n");
@@ -1082,7 +1082,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
     auto j = 0;
     for(auto& J : is)
         {
-        if(!hasindex(isb,J))
+        if(!hasIndex(isb,J))
             {
             iso[j] = J;
             j++;

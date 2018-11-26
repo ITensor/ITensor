@@ -44,7 +44,7 @@ class SpinOneSite
             {
             s = Index{QN("Sz=",+2),1,
                       QN("Sz=", 0),1,
-                      QN("Sz=",-2),1,ts};
+                      QN("Sz=",-2),1,Out,ts};
             }
         else
             {
