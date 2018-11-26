@@ -13,7 +13,7 @@ main()
     //
     // Initialize the site degrees of freedom.
     //
-    //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+    //auto sites = SpinHalf(N,{"ConserveQNs=",true}); //make a chain of N spin 1/2's
     auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
 
     //
