@@ -26,7 +26,7 @@ class tJSite
         auto ts = format("Site,tJ,%d",n);
         s = Index{QN("Sz=", 0,"Nf=",0),1,
                   QN("Sz=",+1,"Nf=",1),1,
-                  QN("Sz=",-1,"Nf=",1),1,ts};
+                  QN("Sz=",-1,"Nf=",1),1,Out,ts};
         }
 
     Index

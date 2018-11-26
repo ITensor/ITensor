@@ -46,7 +46,7 @@ class SpinTwoSite
                       QN("Sz=",+2),1,
                       QN("Sz=",0),1,
                       QN("Sz=",-2),1,
-                      QN("Sz=",-4),1,ts};
+                      QN("Sz=",-4),1,Out,ts};
             }
         else
             {

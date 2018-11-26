@@ -26,7 +26,7 @@ class Z3Site
         auto ts = format("Site,Z3,%d",n);
         s = Index{QN({0,3}),1,
                   QN({1,3}),1,
-                  QN({2,3}),1,ts};
+                  QN({2,3}),1,Out,ts};
         }
 
     Index

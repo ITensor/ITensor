@@ -34,7 +34,7 @@ class SpinlessSite
             if(not conserve_Nf) q_occ = QN("Pf=",1);
             // TODO: should this have Tag("Spinless")?
             s = Index{QN(),1,
-                      q_occ,1,ts};
+                      q_occ,1,Out,ts};
             }
         else
             {
@@ -42,7 +42,7 @@ class SpinlessSite
             if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
             else       q_occ = QN("Sz",-1,"Nf=",1);
             s = Index{QN(),1,
-                      q_occ,1,ts};
+                      q_occ,1,Out,ts};
             }
         }
 
