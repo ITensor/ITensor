@@ -132,7 +132,9 @@ class ITensor
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     ITensor& 
-    mapPrime(int plevold, int plevnew, TagSet const& tags = TagSet(All))
+    mapPrime(int plevold, 
+             int plevnew, 
+             TagSet const& tags = TagSet(All))
         { is_.mapPrime(plevold,plevnew,tags); return *this; }
 
     template<typename... VarArgs>
@@ -368,9 +370,20 @@ mapPrime(ITensor A,
 bool
 hasIndex(ITensor const& T, Index const& I);
 
-template<typename Cond>
+//template<typename Cond>
+//Index
+//findIndex(ITensor const& T, 
+//          Cond && cond);
+
 Index
-findIndex(ITensor const& T, Cond && cond);
+findIndex(ITensor const& T,
+          TagSet const& tsmatch, 
+          int plmatch = -1);
+
+Index
+findIndexExact(ITensor const& T,
+               TagSet const& tsmatch, 
+               int plmatch = -1);
 
 //Find index of tensor A (of optional type t) 
 //which is shared with tensor B

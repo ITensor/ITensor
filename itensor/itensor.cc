@@ -708,9 +708,9 @@ operator-=(ITensor const& R)
 ITensor
 multSiteOps(ITensor A, ITensor const& B) 
     {
-    A.prime(Site);
+    A.prime("Site");
     A *= B;
-    A.mapPrime(2,1,Site);
+    A.mapPrime(2,1,"Site");
     return A;
     }
 

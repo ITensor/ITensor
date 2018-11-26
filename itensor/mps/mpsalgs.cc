@@ -57,8 +57,8 @@ plussers(Index const& l1,
         if(siq.empty()) Error("siq is empty in plussers");
 #endif
         sumind = Index(std::move(siq),
-                       sumind.tags(),
                        sumind.dir(),
+                       sumind.tags(),
                        sumind.primeLevel());
         first = ITensor(dag(l1),sumind);
         int n = 1;

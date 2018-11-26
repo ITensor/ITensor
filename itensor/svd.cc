@@ -12,7 +12,7 @@
 
 namespace itensor {
 
-const auto MAX_INT = std::numeric_limits<int>::max();
+//const auto MAX_INT = std::numeric_limits<int>::max();
 
 using std::swap;
 using std::istream;
@@ -273,8 +273,8 @@ svdImpl(ITensor const& A,
             Riq.emplace_back(vI.qn(1+B.i2),this_m);
             }
         
-        auto L = Index(lname,move(Liq),uI.dir(),litagset);
-        auto R = Index(rname,move(Riq),vI.dir(),ritagset);
+        auto L = Index(move(Liq),uI.dir(),litagset);
+        auto R = Index(move(Riq),vI.dir(),ritagset);
 
         auto Uis = IndexSet(uI,dag(L));
         auto Dis = IndexSet(L,R);

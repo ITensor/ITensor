@@ -505,16 +505,30 @@ mapPrime(ITensor A,
     return A;
     }
 
-template<typename Cond>
-Index
-findIndex(ITensor const& T, 
-          Cond && cond)
+//template<typename Cond>
+//Index
+//findIndex(ITensor const& T, 
+//          Cond && cond)
+//    {
+//    for(auto& i : T.inds()) if(cond(i)) return i;
+//    return Index{};
+//    }
+
+Index inline
+findIndex(ITensor const& T,
+          TagSet const& tsmatch, 
+          int plmatch)
     {
-    for(auto& i : T.inds())
-        if(cond(i)) return i;
-    return Index{};
+    return findIndex(T.inds(),tsmatch,plmatch);
     }
 
+Index inline
+findIndexExact(ITensor const& T,
+               TagSet const& tsmatch, 
+               int plmatch)
+    {
+    return findIndex(T.inds(),tsmatch,plmatch);
+    }
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor

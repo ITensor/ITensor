@@ -298,7 +298,7 @@ diagHImpl(ITensor H,
             iq.emplace_back(ai.qn(1+B.i1),1l);
             }
 
-        auto d = Index(move(iq),itagset,-ai.dir());
+        auto d = Index(move(iq),-ai.dir(),itagset);
 
         auto Uis = IndexSet(dag(ai),dag(d));
         auto Dis = IndexSet(prime(d,pdiff),dag(d));
