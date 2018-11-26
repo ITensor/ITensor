@@ -1,2 +1,13 @@
-+ Add read/write for TagSet
-+ Fix read/write for Index and test for rest of library
+o Add read/write for TagSet
+o Fix read/write for Index and test for rest of library
+o Update website:
+  o Detailed documentation
+  o ITensor book
+  o Tutorials
+  o Code formulas
+
+# Final Release Checks
+  o Fresh install with new options.mk file compiles
+  o Jenkins is passing
+  o All sample codes compile and run
+  o All unit tests pass
