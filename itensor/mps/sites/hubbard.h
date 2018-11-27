@@ -34,7 +34,7 @@ class HubbardSite
             s = Index{QN("Sz=", 0,"Nf=",0),1,
                       QN("Sz=",Up,"Nf=",1),1,
                       QN("Sz=",Dn,"Nf=",1),1,
-                      QN("Sz=", 0,"Nf=",2),1,ts};
+                      QN("Sz=", 0,"Nf=",2),1,Out,ts};
             }
         else //don't conserve Nf, only fermion parity
             {
@@ -42,7 +42,7 @@ class HubbardSite
             s = Index{QN("Sz=", 0,"Pf=",0),1,
                       QN("Sz=",+1,"Pf=",1),1,
                       QN("Sz=",-1,"Pf=",1),1,
-                      QN("Sz=", 0,"Pf=",0),1,ts};
+                      QN("Sz=", 0,"Pf=",0),1,Out,ts};
             }
         }
 
