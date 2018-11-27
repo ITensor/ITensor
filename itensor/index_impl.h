@@ -21,10 +21,30 @@ struct ArrowM
 
 ArrowM inline
 fill(std::vector<QNInt> const& v,
-     Arrow dir = Out,
-     TagSet tags = TagSet())
+     Arrow dir,
+     TagSet tags)
     { 
     return ArrowM(dir,tags,0l);
+    }
+
+ArrowM inline
+fill(std::vector<QNInt> const& v,
+     Arrow dir)
+    { 
+    return ArrowM(dir,TagSet(),0l);
+    }
+
+ArrowM inline
+fill(std::vector<QNInt> const& v,
+     TagSet tags)
+    { 
+    return ArrowM(Out,tags,0l);
+    }
+
+ArrowM inline
+fill(std::vector<QNInt> const& v)
+    { 
+    return ArrowM(Out,TagSet(),0l);
     }
 
 template<typename... Rest>

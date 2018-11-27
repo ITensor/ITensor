@@ -311,7 +311,7 @@ sim(IndexSet & is,
 // If not found, returns -1
 //
 long
-findindex(IndexSet const& iset, 
+findIndex(IndexSet const& iset, 
           Index const& I);
 
 Index
@@ -322,7 +322,7 @@ dir(IndexSet const& is, Index const& I);
 
 
 bool
-hasindex(IndexSet const& iset, 
+hasIndex(IndexSet const& iset, 
          Index const& I);
 
 long

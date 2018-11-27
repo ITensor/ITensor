@@ -245,24 +245,24 @@ class ITensor
 
     //template<typename... Indxs>
     //ITensor&
-    //order(index_type const& ind1, Indxs const&... inds);
+    //permute(index_type const& ind1, Indxs const&... inds);
 
     template<typename... Indxs>
     auto 
-    order(index_type const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
+    permute(index_type const& ind1, Indxs const&... inds)
+            -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
 
     template <typename... Indxs>
     auto 
-    order(index_type const& ind1, Indxs const&... inds)
-        -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
+    permute(index_type const& ind1, Indxs const&... inds)
+            -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
 
     template<typename... Indxs>
     ITensor&
-    order(std::string const& dots, Indxs const&... inds);
+    permute(std::string const& dots, Indxs const&... inds);
 
     ITensor&
-    order(indexset_type const& iset);
+    permute(indexset_type const& iset);
 
     //
     // Read from and write to streams

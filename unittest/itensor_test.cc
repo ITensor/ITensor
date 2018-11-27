@@ -1936,7 +1936,6 @@ CHECK(N.index(3) == i);
 
 auto IT = randomITensor(i,j,jp,k);
 
-//TODO: should this be named permute() or order()?
 auto O1 = permute(IT,jp,k,j,i);
 CHECK(IT.inds().index(1)==O1.inds().index(4));
 CHECK(IT.inds().index(2)==O1.inds().index(3));

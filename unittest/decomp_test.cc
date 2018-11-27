@@ -160,12 +160,12 @@ SECTION("QN ITensor SVD")
         {
         //Oct 5, 2015: was encountering a 
         //bad memory access bug with this code
-        Index u("u",QN(+2),1,
-                    QN( 0),1,
-                    QN(-2),1);
-        Index v("v",QN(+2),1,
-                    QN( 0),1,
-                    QN(-2),1);
+        Index u(QN(+2),1,
+                QN( 0),1,
+                QN(-2),1);
+        Index v(QN(+2),1,
+                QN( 0),1,
+                QN(-2),1);
 
         auto S = randomITensor(QN(),u,v);
         ITensor U(u),D,V;
@@ -178,8 +178,8 @@ SECTION("QN ITensor SVD")
         {
         //Feb 10, 2016: code that fixes sign of
         //singular values to be positive was broken
-		auto s1 = Index("s1",QN(+1),1,QN(-1),1);
-		auto s2 = Index("s2",QN(+1),1,QN(-1),1);
+		auto s1 = Index(QN(+1),1,QN(-1),1,"s1");
+		auto s2 = Index(QN(+1),1,QN(-1),1,"s2");
 		auto sing = ITensor(s1,s2);
 		sing.set(s1(1),s2(2), 1./sqrt(2));
 		sing.set(s1(2),s2(1),-1./sqrt(2));
@@ -199,23 +199,23 @@ SECTION("QN ITensor denmatDecomp")
     {
     SECTION("Test 1")
         {
-        Index S1("S1",QN(+1),1,
-                      QN(-1),1);
-        Index S2("S2",QN(+1),1,
-                      QN(-1),1);
-        Index L1("L1",QN(+2),3,
-                      QN(+1),4,
-                      QN( 0),8,
-                      QN(-1),4,
-                      QN(-2),2);
-        Index L2("L2",QN(+2),4,
-                      QN(+1),6,
-                      QN( 0),10,
-                      QN(-1),4,
-                      QN(-2),3);
-        Index L3("L3",QN(+2),2,
-                      QN( 0),4,
-                      QN(-2),2);
+        Index S1(QN(+1),1,
+                 QN(-1),1);
+        Index S2(QN(+1),1,
+                 QN(-1),1);
+        Index L1(QN(+2),3,
+                 QN(+1),4,
+                 QN( 0),8,
+                 QN(-1),4,
+                 QN(-2),2);
+        Index L2(QN(+2),4,
+                 QN(+1),6,
+                 QN( 0),10,
+                 QN(-1),4,
+                 QN(-2),3);
+        Index L3(QN(+2),2,
+                 QN( 0),4,
+                 QN(-2),2);
 
         auto A1 = randomITensor(QN(),L1,S1,L2),
              A2 = randomITensor(QN(),dag(L2),S2,L3);
@@ -301,7 +301,7 @@ SECTION("IQTensor diagHermitian")
     {
     SECTION("Rank 2")
         {
-        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
         T += dag(swapPrime(T,0,1));
         ITensor U,D;
@@ -313,7 +313,7 @@ SECTION("IQTensor diagHermitian")
 
     SECTION("Complex Rank 2")
         {
-        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensorC(QN(),dag(I),prime(I));
         CHECK(isComplex(T));
         T += dag(swapPrime(T,0,1));
@@ -327,10 +327,10 @@ SECTION("IQTensor diagHermitian")
     SECTION("Complex Rank 4")
         {
         detail::seed_quickran(1);
-        auto I = Index("I",QN(-1),2,
-                           QN(+1),2);
-        auto J = Index("J",QN(-2),2,
-                           QN(+2),2);
+        auto I = Index(QN(-1),2,
+                       QN(+1),2,"I");
+        auto J = Index(QN(-2),2,
+                       QN(+2),2,"J");
         //auto T = randomITensorC(QN(),dag(I),prime(I),prime(J),dag(J));
         auto T = randomITensorC(QN(),dag(I),dag(J),prime(J),prime(I));
         CHECK(isComplex(T));
@@ -347,13 +347,13 @@ SECTION("IQTensor diagHermitian")
 
     SECTION("Rank 2 - Primes 1 and 2")
         {
-        auto I = Index("I",QN(-1),4,QN(+1),4);
+        auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
         T += dag(swapPrime(T,0,1));
         //Raise prime level of T
         //and prime level spacing between inds
-        T.mapprime(1,4);
-        T.mapprime(0,1);
+        T.mapPrime(1,4);
+        T.mapPrime(0,1);
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,prime(I)));
@@ -393,7 +393,7 @@ SECTION("Exp Hermitian")
 
     SECTION("QN ITensor case")
         {
-        auto s = Index("S",QN(-1),1,QN(+1),1);
+        auto s = Index(QN(-1),1,QN(+1),1);
         auto Z = ITensor(dag(s),prime(s));
         Z.set(s(1),prime(s)(1),1);
         Z.set(s(2),prime(s)(2),-1);

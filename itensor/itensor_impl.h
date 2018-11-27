@@ -672,46 +672,46 @@ moveToBack(IndexSet const& isb, IndexSet const& is);
 
 } //namespace detail
 
-//Version of order accepting syntax: T.order(i,j,"...")
+//Version of order accepting syntax: T.permute(i,j,"...")
 template <typename... Indxs>
 auto ITensor::
-order(Index const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
+permute(Index const& ind1, Indxs const&... inds)
+        -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
     {
     static constexpr auto size = 1+(sizeof...(inds)-1);
     auto isf = IndexSet(size);
     detail::getDotInds(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
-    order(detail::moveToFront(isf,this->inds()));
+    permute(detail::moveToFront(isf,this->inds()));
     return *this;
     }
 
-//Version of order accepting syntax: T.order(i,j,k)
+//Version of order accepting syntax: T.permute(i,j,k)
 template <typename... Indxs>
 auto ITensor::
-order(Index const& ind1, Indxs const&... inds)
-    -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
+permute(Index const& ind1, Indxs const&... inds)
+        -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
     {
-    order(IndexSet(ind1, inds...));
+    permute(IndexSet(ind1, inds...));
     return *this;
     }
 
-//Version of order accepting syntax: T.order("...",j,k)
+//Version of order accepting syntax: T.permute("...",j,k)
 template <typename... Indxs>
 ITensor& ITensor::
-order(std::string const& dots, Indxs const&... inds)
+permute(std::string const& dots, Indxs const&... inds)
     {
     if(dots != "...")
         Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
-    order(detail::moveToBack(IndexSet(inds...),this->inds()));
+    permute(detail::moveToBack(IndexSet(inds...),this->inds()));
     return *this;
     }
 
 //order function which returns a new ITensor 
 template<typename... Indxs>
 ITensor
-order(ITensor A, Indxs const&... inds)
+permute(ITensor A, Indxs const&... inds)
     {
-    A.order(std::forward<Indxs const&>(inds)...);
+    A.permute(std::forward<Indxs const&>(inds)...);
     return A;
     }
 

@@ -380,11 +380,11 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
             //Taking the divergence to be zero,solve for qa[i]
             qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
             }
-        for(auto i : range1(N_)) a[i] = Index(qa[i],1);
+        for(auto i : range1(N_)) a[i] = Index(qa[i],1,format("Link,MPS,%d",i));
         }
     else
         {
-        for(auto i : range1(N_)) a[i] = Index(1);
+        for(auto i : range1(N_)) a[i] = Index(1,format("Link,MPS,%d",i));
         }
 
     A_[1] = setElt(initState(1),a[1](1));
