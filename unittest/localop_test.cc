@@ -16,37 +16,37 @@ auto h2 = Index(4,"Link");
 auto l0 = Index(10,"Link");
 auto l2 = Index(10,"Link");
 
-auto S1 = IQIndex(Index(1,"Site"),QN(-1),
-                  Index(1,"Site"),QN(+1));
-auto S2 = IQIndex(Index(1,"Site"),QN(-1),
-                  Index(1,"Site"),QN(+1));
-auto H0 = IQIndex(Index(4,"Link"),QN(-2),
-                  Index(8,"Link"),QN(+0),
-                  Index(4,"Link"),QN(+2));
-auto H1 = IQIndex(Index(4,"Link"),QN(-2),
-                  Index(8,"Link"),QN(+0),
-                  Index(4,"Link"),QN(+2));
-auto H2 = IQIndex(Index(4,"Link"),QN(-2),
-                  Index(8,"Link"),QN(+0),
-                  Index(4,"Link"),QN(+2));
-auto L0 = IQIndex(Index(4,"Link"),QN(-2),
-                  Index(8,"Link"),QN(+0),
-                  Index(4,"Link"),QN(+2));
-auto L2 = IQIndex(Index(4,"Link"),QN(-2),
-                  Index(8,"Link"),QN(+0),
-                  Index(4,"Link"),QN(+2));
+auto S1 = Index(QN(-1),1,
+                QN(+1),1,"Site");
+auto S2 = Index(QN(-1),1,
+                QN(+1),1,"Site");
+auto H0 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4);
+auto H1 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4);
+auto H2 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4);
+auto L0 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4);
+auto L2 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4);
 
 
 SECTION("Product")
     {
     SECTION("Bulk Case")
         {
-        auto Op1 = randomTensor(s1,prime(s1),h0,h1);
-        auto Op2 = randomTensor(s2,prime(s2),h1,h2);
-        auto L = randomTensor(l0,prime(l0),h0);
-        auto R = randomTensor(l2,prime(l2),h2);
-        auto lop = LocalOp<ITensor>(Op1,Op2,L,R);
-        auto psi = randomTensor(l0,s1,s2,l2);
+        auto Op1 = randomITensor(s1,prime(s1),h0,h1);
+        auto Op2 = randomITensor(s2,prime(s2),h1,h2);
+        auto L = randomITensor(l0,prime(l0),h0);
+        auto R = randomITensor(l2,prime(l2),h2);
+        auto lop = LocalOp(Op1,Op2,L,R);
+        auto psi = randomITensor(l0,s1,s2,l2);
         auto Hpsi = ITensor();
         lop.product(psi,Hpsi);
         CHECK(hasIndex(Hpsi,s1));
@@ -60,11 +60,11 @@ SECTION("Diag")
     {
     SECTION("Bulk Case - ITensor")
         {
-        auto Op1 = randomTensor(s1,prime(s1),h0,h1);
-        auto Op2 = randomTensor(s2,prime(s2),h1,h2);
-        auto L = randomTensor(l0,prime(l0),h0);
-        auto R = randomTensor(l2,prime(l2),h2);
-        auto lop = LocalOp<ITensor>(Op1,Op2,L,R);
+        auto Op1 = randomITensor(s1,prime(s1),h0,h1);
+        auto Op2 = randomITensor(s2,prime(s2),h1,h2);
+        auto L = randomITensor(l0,prime(l0),h0);
+        auto R = randomITensor(l2,prime(l2),h2);
+        auto lop = LocalOp(Op1,Op2,L,R);
         auto diag = lop.diag();
         CHECK(hasIndex(diag,s1));
         CHECK(hasIndex(diag,s2));
@@ -74,11 +74,11 @@ SECTION("Diag")
 
     //SECTION("Bulk Case - IQTensor")
     //    {
-    //    auto Op1 = randomTensor(QN(),S1,prime(S1),H0,H1);
-    //    auto Op2 = randomTensor(QN(),S2,prime(S2),H1,H2);
-    //    auto L = randomTensor(QN(),L0,prime(L0),H0);
-    //    auto R = randomTensor(QN(),L2,prime(L2),H2);
-    //    auto lop = LocalOp<IQTensor>(Op1,Op2,L,R);
+    //    auto Op1 = randomITensor(QN(),S1,prime(S1),H0,H1);
+    //    auto Op2 = randomITensor(QN(),S2,prime(S2),H1,H2);
+    //    auto L = randomITensor(QN(),L0,prime(L0),H0);
+    //    auto R = randomITensor(QN(),L2,prime(L2),H2);
+    //    auto lop = LocalOp(Op1,Op2,L,R);
     //    auto diag = lop.diag();
     //    CHECK(hasIndex(diag,S1));
     //    CHECK(hasIndex(diag,S2));
@@ -94,7 +94,7 @@ TEST_CASE("LocalMPO")
 SECTION("LocalMPO As MPS")
     {
     auto N = 10;
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",true});
 
     auto ferro = InitState(sites,"Up");
     auto neel = InitState(sites);
@@ -103,10 +103,10 @@ SECTION("LocalMPO As MPS")
         neel.set(j,j%2==1 ? "Up" : "Dn");
         }
 
-    auto psiF = IQMPS(ferro);
-    auto psiN = IQMPS(neel);
+    auto psiF = MPS(ferro);
+    auto psiN = MPS(neel);
 
-    auto lmps = LocalMPO<IQTensor>(psiN);
+    auto lmps = LocalMPO(psiN);
     lmps.position(3,psiF);
     }
 }
