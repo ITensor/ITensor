@@ -145,7 +145,7 @@ itdata/qdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/scalar.h
 itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/scalar.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= index.h
+ITDEPHEADERS+= smallstring.h tagset.h index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset_impl.h indexset.h

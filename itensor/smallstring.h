@@ -134,29 +134,6 @@ SmallString(const char* name)
     assert(name_[size()]=='\0');
     }
 
-using Tag = SmallString;
-
-//
-// Pre-defined Tags
-//
-const auto All = Tag("All");
-
-/*
-using IndexType = SmallString;
-const auto NullInd = IndexType("NullInd");
-const auto Link    = IndexType("Link"); 
-const auto Site    = IndexType("Site");
-const auto Atype   = IndexType("Atype");
-const auto Btype   = IndexType("Btype");
-const auto Ctype   = IndexType("Ctype");
-const auto Dtype   = IndexType("Dtype");
-const auto Vtype   = IndexType("Vtype");
-const auto Wtype   = IndexType("Wtype");
-const auto Xtype   = IndexType("Xtype");
-const auto Ytype   = IndexType("Ytype");
-const auto Ztype   = IndexType("Ztype");
-*/
-
 } // namespace itensor
 
 #undef CHECK_IND
