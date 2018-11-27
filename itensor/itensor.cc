@@ -966,6 +966,10 @@ randomITensor(IndexSet const& inds)
 ITensor
 randomITensor(QN q, IndexSet const& is, Args const& args)
     {
+#ifdef DEBUG
+    if(not hasQNs(is)) 
+        Error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
+#endif
     ITensor T;
     if(args.getBool("Complex",false))
         {
