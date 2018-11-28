@@ -1,5 +1,7 @@
 o Add conversion from QN ITensor to dense ITensor
 o Define QDense * Dense contraction directly?
+o Fix toExpH(AutoMPO) and toMPO(AutoMPO)
+o Add back unit tests in autompo_test.cc that failed because ITensor{QDense}*ITensor{Dense} isn't defined
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
@@ -7,9 +9,12 @@ o Define QDense * Dense contraction directly?
 o Change default behavior of MPS(sites) constructor
 o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
 
+? Add back some removed prime functions, like prime(ITensor,Index,Index,...)
+
 o Add read/write for TagSet
 o Fix read/write for Index and test for rest of library
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
+o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 o Update website:
   o Detailed documentation
   o ITensor book
@@ -20,4 +25,5 @@ o Update website:
   o Fresh install with new options.mk file compiles
   o Jenkins is passing
   o All sample codes compile and run
+  ? Incorporate sample codes into Jenkins/testing (I found the DMRG codes were useful for catching bugs, and TRG is a good test case for Tags)
   o All unit tests pass
