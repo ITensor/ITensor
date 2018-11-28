@@ -117,41 +117,41 @@ void MPO<IQTensor>::orthogonalize(const Args& args);
 */
 
 
-//MPO& MPO::
-//plusEq(MPO const& other_,
-//       Args const& args)
-//    {
-//    if(doWrite())
-//        Error("operator+= not supported if doWrite(true)");
-//
-//    //cout << "calling new orthog in sum" << endl;
-//    if(!itensor::isOrtho(*this))
-//        {
-//        try { 
-//            orthogonalize(); 
-//            }
-//        catch(const ResultIsZero& rz) 
-//            { 
-//            *this = other_;
-//            return *this;
-//            }
-//        }
-//
-//    if(!itensor::isOrtho(other_))
-//        {
-//        auto other = other_;
-//        try { 
-//            other.orthogonalize(); 
-//            }
-//        catch(const ResultIsZero& rz) 
-//            { 
-//            return *this;
-//            }
-//        return addAssumeOrth(*this,other,args);
-//        }
-//
-//    return addAssumeOrth(*this,other_,args);
-//    }
+MPO& MPO::
+plusEq(MPO const& other_,
+       Args const& args)
+    {
+    if(doWrite())
+        Error("operator+= not supported if doWrite(true)");
+
+    //cout << "calling new orthog in sum" << endl;
+    if(!itensor::isOrtho(*this))
+        {
+        try { 
+            orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            *this = other_;
+            return *this;
+            }
+        }
+
+    if(!itensor::isOrtho(other_))
+        {
+        auto other = other_;
+        try { 
+            other.orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            return *this;
+            }
+        return addAssumeOrth(*this,other,args);
+        }
+
+    return addAssumeOrth(*this,other_,args);
+    }
 
 bool
 isOrtho(MPO const& W)

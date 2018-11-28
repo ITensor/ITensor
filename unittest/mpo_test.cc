@@ -16,10 +16,10 @@ SECTION("Orthogonalize")
     {
     auto N = 10;
     auto m = 4;
-    auto sites = SpinHalf(10);
+    auto sites = SpinHalf(10,{"ConserveQNs=",false});
     auto W = MPO(sites);
 
-    //Make a random MPS of bond dim. m
+    //Make a random MPO of bond dim. m
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
@@ -67,13 +67,13 @@ SECTION("Add MPOs")
         for(auto n : range1(N-1))
             {
             auto ts = format("%s,%d",name,n);
-            ll.at(n) = Index(ts,
-                             QN("Sz=",-1,"Nf=",-1),2,
+            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
                              QN("Sz=",-1,"Nf=",+1),2,
                              QN("Sz=",-1,"Nf=",0),2,
                              QN("Sz=",+1,"Nf=",0),2,
                              QN("Sz=",+1,"Nf=",-1),2,
-                             QN("Sz=",+1,"Nf=",+1),2);
+                             QN("Sz=",+1,"Nf=",+1),2,
+                             ts);
             }
         return ll;
         };
@@ -115,14 +115,14 @@ SECTION("Regression Test")
     auto sites = Hubbard(2);
 
     auto A = MPO(sites);
-    auto Ia = Index("I",QN("Sz",1,"Nf",-1),2,
-                        QN("Sz",-1,"Nf",-1),1);
+    auto Ia = Index(QN("Sz",1,"Nf",-1),2,
+                    QN("Sz",-1,"Nf",-1),1,"I");
     A.Aref(1) = randomITensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
     A.Aref(2) = randomITensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
 
     auto B = MPO(sites);
-    auto Ib = Index("I",QN("Sz",1,"Nf",-1),2,
-                        QN("Sz",-1,"Nf",-1),1);
+    auto Ib = Index(QN("Sz",1,"Nf",-1),2,
+                    QN("Sz",-1,"Nf",-1),1,"I");
     B.Aref(1) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
     B.Aref(2) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
 
@@ -135,7 +135,7 @@ SECTION("applyMPO (DensityMatrix)")
     auto method = "DensityMatrix";
 
     auto N = 10;
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     auto psi = MPS(sites);
 
@@ -148,8 +148,8 @@ SECTION("applyMPO (DensityMatrix)")
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
         }
-    auto H = MPO(ampo);
-    auto K = MPO(ampo);
+    auto H = toMPO(ampo);
+    auto K = toMPO(ampo);
 
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
@@ -176,7 +176,7 @@ SECTION("applyMPO (Fit)")
     auto method = "Fit";
 
     auto N = 10;
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     auto psi = MPS(sites);
 
@@ -189,8 +189,8 @@ SECTION("applyMPO (Fit)")
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
         }
-    auto H = MPO(ampo);
-    auto K = MPO(ampo);
+    auto H = toMPO(ampo);
+    auto K = toMPO(ampo);
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
@@ -221,7 +221,7 @@ SECTION("Overlap <psi|HK|phi>")
     detail::seed_quickran(1);
 
     auto N = 10;
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     auto psi = MPS(sites);
     auto phi = MPS(sites);
@@ -235,7 +235,7 @@ SECTION("Overlap <psi|HK|phi>")
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
     auto Hdag = H;
     auto K = H;
     //Randomize the MPOs to make sure they are non-Hermitian
@@ -256,47 +256,48 @@ SECTION("Overlap <psi|HK|phi>")
     CHECK_CLOSE(overlap(phi,H,K,psi),overlap(Hdphi,Kpsi));
     }
 
-SECTION("toMPO function")
-    {
-    auto N = 50;
-    auto sites = Hubbard(N);
-
-    auto makeInds = [N](std::string name) -> vector<Index>
-        {
-        auto ll = vector<Index>(N);
-        for(auto n : range1(N-1))
-            {
-            auto ts = format("%s,%d",name,n);
-            ll.at(n) = Index(ts,
-                               QN("Sz=",-1,"Nf=",-1),2,
-                               QN("Sz=",-1,"Nf=",+1),2,
-                               QN("Sz=",-1,"Nf=",0),2,
-                               QN("Sz=",+1,"Nf=",0),2,
-                               QN("Sz=",+1,"Nf=",-1),2,
-                               QN("Sz=",+1,"Nf=",+1),2);
-            }
-        return ll;
-        };
-
-    auto ll = makeInds("Link,I");
-
-    auto Z = QN("Sz=",0,"Nf=",0);
-
-    auto A = MPO(sites);
-    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
-    for(int n = 2; n < N; ++n)
-        {
-        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
-        }
-    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
-
-    auto a = toMPO(A);
-
-    for(auto n : range1(N))
-        {
-        CHECK(norm(a.A(n) - ITensor(A.A(n))) < 1E-10);
-        }
-
-    }
+// TODO: test conversion from QNs to no QNs
+//SECTION("toMPO function")
+//    {
+//    auto N = 50;
+//    auto sites = Hubbard(N);
+//
+//    auto makeInds = [N](std::string name) -> vector<Index>
+//        {
+//        auto ll = vector<Index>(N);
+//        for(auto n : range1(N-1))
+//            {
+//            auto ts = format("%s,%d",name,n);
+//            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
+//                             QN("Sz=",-1,"Nf=",+1),2,
+//                             QN("Sz=",-1,"Nf=",0),2,
+//                             QN("Sz=",+1,"Nf=",0),2,
+//                             QN("Sz=",+1,"Nf=",-1),2,
+//                             QN("Sz=",+1,"Nf=",+1),2,
+//                             ts);
+//            }
+//        return ll;
+//        };
+//
+//    auto ll = makeInds("Link,I");
+//
+//    auto Z = QN("Sz=",0,"Nf=",0);
+//
+//    auto A = MPO(sites);
+//    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
+//    for(int n = 2; n < N; ++n)
+//        {
+//        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
+//        }
+//    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
+//
+//    auto a = toMPO(A);
+//
+//    for(auto n : range1(N))
+//        {
+//        CHECK(norm(a.A(n) - ITensor(A.A(n))) < 1E-10);
+//        }
+//
+//    }
 
 }

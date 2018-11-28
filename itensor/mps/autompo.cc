@@ -547,7 +547,7 @@ toMPOImpl(AutoMPO const& am,
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
         {
-        Error("Only at most 2-operator terms allowed for exact AutoMPO conversion to MPO/IQMPO");
+        Error("Only at most 2-operator terms allowed for exact AutoMPO conversion to MPO");
         }
 
     //Special SiteTerm objects indicating either
@@ -633,7 +633,7 @@ toMPOImpl(AutoMPO const& am,
             }
         inqn.emplace_back(currq,currm);
 
-        links.at(n) = Index(move(inqn));
+        links.at(n) = Index(move(inqn),format("Link,MPO,%d",n));
         //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
@@ -1161,8 +1161,9 @@ compressMPO(SiteSet const& sites,
     
     int d0 = isExpH ? 1 : 2;
     
-    if(hasqn) links.at(0) = Index(ZeroQN,d0);
-    else      links.at(0) = Index(d0);
+    //TODO: check these are the correct tags
+    if(hasqn) links.at(0) = Index(ZeroQN,d0,format("Link,MPO,%d",0));
+    else      links.at(0) = Index(d0,format("Link,MPO,%d",0));
 
     auto max_d = links.at(0).m();
     for(int n = 1; n <= N; ++n)
@@ -1210,7 +1211,7 @@ compressMPO(SiteSet const& sites,
                 int m = ncols(V_npp[q]);
                 inqn.emplace_back(q,m);
                 }
-            links.at(n) = Index(move(inqn));
+            links.at(n) = Index(move(inqn),format("Link,MPO,%d",n));
             }
         else
             {
@@ -1221,7 +1222,7 @@ compressMPO(SiteSet const& sites,
                 if(q == ZeroQN) continue; // was already taken care of
                 m += ncols(V_npp[q]);
                 }
-            links.at(n) = Index(m);
+            links.at(n) = Index(m,format("Link,MPO,%d",n));
             }
 
         //
@@ -1460,10 +1461,10 @@ toMPO(AutoMPO const& am,
     auto verbose = args.getBool("Verbose",false);
     if(args.getBool("Exact",false))
         {
-        if(verbose) println("Using exact conversion of AutoMPO->IQMPO");
+        if(verbose) println("Using exact conversion of AutoMPO->MPO");
         return toMPOImpl(am,args);
         }
-    if(verbose) println("Using approx/svd conversion of AutoMPO->IQMPO");
+    if(verbose) println("Using approx/svd conversion of AutoMPO->MPO");
     return svdMPO(am,args);
     }
 
@@ -1556,7 +1557,7 @@ toExpH_ZW1(AutoMPO const& am,
             }
         qnsize.emplace_back(currq,currm);
 
-        links.at(n) = Index(move(qnsize));
+        links.at(n) = Index(move(qnsize),format("Link,MPO,%d",n));
 
         //if(n <= 2 or n == N)
         //    {

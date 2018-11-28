@@ -163,16 +163,18 @@ maxM(MPS const& psi)
     return maxM_;
     }
 
-void inline
-overlap(MPS const& psi, MPS const& phi, Real& re, Real& im)
+template <typename MPSType>
+void
+overlap(MPSType const& psi, MPSType const& phi, Real& re, Real& im)
     {
     auto z = overlapC(psi,phi);
     re = z.real();
     im = z.imag();
     }
 
-Real inline
-overlap(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
+template <typename MPSType>
+Real
+overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
     {
     Real re, im;
     overlap(psi,phi,re,im);

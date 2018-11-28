@@ -15,14 +15,14 @@ class ExpHeisenberg
     int N_ = 0;
     Cplx tau_ = 0;
     bool initted_ = false;
-    IQMPO H_;
+    MPO H_;
     public:
 
     ExpHeisenberg(SiteSet const& sites, 
              Cplx tau,
              Args const& args = Global::args());
 
-    operator IQMPO() { init_(); return H_; }
+    operator MPO() { init_(); return H_; }
 
     private:
 
@@ -47,15 +47,16 @@ init_()
     {
     if(initted_) return;
 
-    H_ = IQMPO(sites_);
+    H_ = MPO(sites_);
 
-    auto links = std::vector<IQIndex>(N_+1);
+    auto links = std::vector<Index>(N_+1);
     for(int l = 0; l <= N_; ++l) 
         {
         auto ts = format("Link,MPO,%d",l);
-        links.at(l) = IQIndex(Index(2,ts),QN("Sz=",0),
-                              Index(1,ts),QN("Sz=",-2),
-                              Index(1,ts),QN("Sz=",+2));
+        links.at(l) = Index(QN("Sz=",0),2,
+                            QN("Sz=",-2),1,
+                            QN("Sz=",+2),1,
+                            ts);
         }
 
     for(int n = 1; n <= N_; ++n)
@@ -64,18 +65,18 @@ init_()
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
 
-        W = IQTensor(dag(sites_(n)),prime(sites_(n)),row,col);
+        W = ITensor(dag(sites_(n)),prime(sites_(n)),row,col);
 
-        W += sites_.op("Id",n) * row(1) * col(1);
+        W += sites_.op("Id",n) * setElt(row(1)) * setElt(col(1));
 
-        W += -tau_ * sites_.op("Sz",n) * row(1) * col(2);
-        W += sites_.op("Sz",n) * row(2) * col(1);
+        W += -tau_ * sites_.op("Sz",n) * setElt(row(1)) * setElt(col(2));
+        W += sites_.op("Sz",n) * setElt(row(2)) * setElt(col(1));
 
-        W += -(tau_/2.) * sites_.op("S+",n) * row(1) * col(3);
-        W += sites_.op("S-",n) * row(3) * col(1);
+        W += -(tau_/2.) * sites_.op("S+",n) * setElt(row(1)) * setElt(col(3));
+        W += sites_.op("S-",n) * setElt(row(3)) * setElt(col(1));
 
-        W += -(tau_/2.) * sites_.op("S-",n) * row(1) * col(4);
-        W += sites_.op("S+",n) * row(4) * col(1);
+        W += -(tau_/2.) * sites_.op("S-",n) * setElt(row(1)) * setElt(col(4));
+        W += sites_.op("S+",n) * setElt(row(4)) * setElt(col(1));
         }
 
     H_.Aref(1)  *= setElt(links.at(0)(1));

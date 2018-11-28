@@ -53,9 +53,9 @@ class MPO : private MPS
     void
     logRefNorm(Real lrn) { logrefNorm_ = lrn; }
 
-    //MPO&
-    //plusEq(MPO const& R,
-    //       Args const& args = Args::global());
+    MPO&
+    plusEq(MPO const& R,
+           Args const& args = Args::global());
 
     using Parent::mapPrime;
     using Parent::primelinks;

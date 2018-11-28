@@ -575,6 +575,14 @@ permute(IndexSet const& iset)
 
 #ifndef USESCALE
 
+//TODO: add toDense function and ToDense task
+//ITensor
+//toDense(ITensor T)
+//    {
+//    if(not hasQNs(T)) return T;
+//    T.store() = newITData<DenseReal>(area(T.inds()),0);
+//    }
+
 ITensor& ITensor::
 operator*=(Real r)
     {

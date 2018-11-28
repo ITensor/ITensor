@@ -195,7 +195,10 @@ class AutoMPO
     int
     size() const { return terms_.size(); }
 
-    operator MPO() const { return toMPO(*this); }
+    //Type conversion AutoMPO -> MPO
+    //TODO: how do we add args?
+    //operator MPO() const { return toMPO(*this,args); }
+    //operator MPO(Args const& args = Args::global()) const { return toMPO(*this,args); }
 
     template <typename T>
     Accumulator

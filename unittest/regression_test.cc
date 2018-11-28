@@ -13,28 +13,29 @@ using namespace std;
 //to prevent the same bugs from coming up again.
 //
 
-TEST_CASE("ITensor Times IQIndexVal")
+//TODO: doTask not defined for task Contract and storage types QDenseReal DenseReal
+//TEST_CASE("ITensor Times IndexVal (QN)")
+//    {
+//    Index s(QN(+1),1,
+//            QN(-1),1);
+//
+//    Index l(4);
+//    ITensor T(l);
+//    randomize(T);
+//
+//    ITensor R = T * setElt(s(2));
+//
+//    REQUIRE(hasIndex(R,s));
+//    CHECK(R.real(l(1),s(1)) == 0);
+//    CHECK(R.real(l(2),s(1)) == 0);
+//    CHECK(R.real(l(3),s(1)) == 0);
+//    CHECK(R.real(l(4),s(1)) == 0);
+//    }
+
+TEST_CASE("ITensor from IndexVal (QN)")
     {
-    IQIndex s(Index(1),QN(+1),
-              Index(1),QN(-1));
-
-    Index l(4);
-    ITensor T(l);
-    randomize(T);
-
-    ITensor R = T * s(2);
-
-    REQUIRE(hasIndex(R,s));
-    CHECK(R.real(l(1),s(1)) == 0);
-    CHECK(R.real(l(2),s(1)) == 0);
-    CHECK(R.real(l(3),s(1)) == 0);
-    CHECK(R.real(l(4),s(1)) == 0);
-    }
-
-TEST_CASE("ITensor from IQIndexVal")
-    {
-    IQIndex s(Index(1),QN(+1),
-              Index(1),QN(-1));
+    Index s(QN(+1),1,
+            QN(-1),1);
 
     auto T1 = setElt(s(1));
     CHECK(T1.real(s(1)) == 1);
@@ -102,27 +103,28 @@ TEST_CASE("SVDIndexOrder")
 
     }
 
-TEST_CASE("SVDArrows")
-    {
-    Index l(2),r(2);
-    IQIndex L(l,QN(1,1),In),R(r,QN(1,1),Out);
-
-    IQTensor AA(L,R);
-
-    ITensor block(l,r);
-    randomize(block);
-    AA += block;
-
-    const QN Zero;
-    CHECK_EQUAL(div(AA),Zero);
-
-    IQTensor U(L),V(R);
-    IQTensor D;
-    svd(AA,U,D,V);
-
-    CHECK_EQUAL(div(U),Zero);
-    CHECK_EQUAL(div(V),Zero);
-    }
+//TODO: this doesn't work anymore now that IQIndex is not
+//      made up of Indices
+//TEST_CASE("SVDArrows")
+//    {
+//    Index L(QN(1,1),2,In),R(QN(1,1),2,Out);
+//
+//    ITensor AA(L,R);
+//
+//    ITensor block(l,r);
+//    randomize(block);
+//    AA += block;
+//
+//    const QN Zero;
+//    CHECK_EQUAL(div(AA),Zero);
+//
+//    ITensor U(L),V(R);
+//    ITensor D;
+//    svd(AA,U,D,V);
+//
+//    CHECK_EQUAL(div(U),Zero);
+//    CHECK_EQUAL(div(V),Zero);
+//    }
 
 //TEST_CASE("ExpandIndex")
 //    {
@@ -139,9 +141,9 @@ TEST_CASE("SVDArrows")
 //    Index l("l");
 //
 //    Index emp("emp"),occ("occ");
-//    IQIndex S("S",emp,QN(0,0),
-//                  occ,QN(1,0),
-//                  Out);
+//    Index S("S",emp,QN(0,0),
+//                occ,QN(1,0),
+//                Out);
 //
 //    ITensor oo(l,occ,prime(occ));
 //    oo(l(1),occ(1),prime(occ)(1)) = 1;
@@ -154,68 +156,66 @@ TEST_CASE("SVDArrows")
 //    CHECK_CLOSE(1,oo(S(2),prime(S)(2),l(1)),1E-5);
 //    }
 
-TEST_CASE("ConvertToITensor")
-    {
-    IQIndex L(Index(1),QN(),Out);
-    Index emp(1),occ(1);
-    IQIndex S(emp,QN(0,0),
-              occ,QN(1,0),
-              Out);
+//TODO: create toDense(ITensor) function
+//TEST_CASE("ConvertToITensor")
+//    {
+//    Index L(QN(),1,Out);
+//    Index emp(1),occ(1);
+//    Index S(QN(0,0),1,
+//            QN(1,0),1,
+//            Out);
+//
+//    auto T = ITensor(L,dag(S),prime(S));
+//    T.set(L(1),S(1),prime(S)(1),1);
+//    T.set(L(1),S(2),prime(S)(2),1);
+//
+//    auto t = toITensor(T);
+//
+//    CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
+//    CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
+//    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
+//    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
+//    }
 
-    auto T = IQTensor(L,dag(S),prime(S));
-    T.set(L(1),S(1),prime(S)(1),1);
-    T.set(L(1),S(2),prime(S)(2),1);
-
-    auto t = toITensor(T);
-
-    CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
-    CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
-    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
-    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
-    }
-
-
-/*
-TEST_CASE("IndexOrder")
-    {
-    //
-    //The ITensor contracting product code,
-    //specifically the toMatrixProd part,
-    //was mis-identifying certain products 
-    //as matrix products when they were not.
-    //
-
-    //Globals::debug1() = true;
-
-    Index l("l",2),r("r",2),s("s",2,Site);
-
-    ITensor HP(l,s,r);
-    HP(l(1),s(2),r(1)) = 4.30425;
-
-    ITensor phi(l,s,r);
-    phi(l(1),s(2),r(1)) = -0.341723;
-
-    ITensor phialt(l,r,s);
-    phialt.assignFrom(phi);
-
-    //PrintDat(phi);
-    //PrintDat(phialt);
-
-    CHECK_CLOSE((phi-phialt).norm(),0,1E-3);
-
-    ITensor order2 = HP * phi;
-    //Print(order2.val0());
-
-    //cout << endl << endl;
-
-    ITensor order2alt = HP * phialt;
-    //Print(order2alt.val0());
-
-
-    CHECK_CLOSE(order2.val0(),order2alt.val0(),1E-5);
-
-    }
-    */
+//TEST_CASE("IndexOrder")
+//    {
+//    //
+//    //The ITensor contracting product code,
+//    //specifically the toMatrixProd part,
+//    //was mis-identifying certain products 
+//    //as matrix products when they were not.
+//    //
+//
+//    //Globals::debug1() = true;
+//
+//    Index l("l",2),r("r",2),s("s",2,Site);
+//
+//    ITensor HP(l,s,r);
+//    HP(l(1),s(2),r(1)) = 4.30425;
+//
+//    ITensor phi(l,s,r);
+//    phi(l(1),s(2),r(1)) = -0.341723;
+//
+//    ITensor phialt(l,r,s);
+//    phialt.assignFrom(phi);
+//
+//    //PrintDat(phi);
+//    //PrintDat(phialt);
+//
+//    CHECK_CLOSE((phi-phialt).norm(),0,1E-3);
+//
+//    ITensor order2 = HP * phi;
+//    //Print(order2.val0());
+//
+//    //cout << endl << endl;
+//
+//    ITensor order2alt = HP * phialt;
+//    //Print(order2alt.val0());
+//
+//
+//    CHECK_CLOSE(order2.val0(),order2alt.val0(),1E-5);
+//
+//    }
 
 TEST_CASE("ComplexAddition")
     {

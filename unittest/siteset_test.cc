@@ -23,9 +23,29 @@ SECTION("Generic SiteSet")
         }
     }
 
-SECTION("SpinHalf")
+SECTION("SpinHalf (QNs)")
     {
     auto sites = SpinHalf(N);
+    for(auto i : range1(N))
+        {
+        CHECK(sites(i).m() == 2);
+        CHECK(hasTags(sites(i),"Site"));
+        }
+
+    sites.op("Sz",2); 
+    sites.op("S+",2); 
+    sites.op("S-",2); 
+    sites.op("Sp",2); 
+    sites.op("Sm",2); 
+    //TODO: test these throw the correct error
+    //sites.op("Sx",2); 
+    //sites.op("Sy",2); 
+    //sites.op("ISy",2); 
+    }
+
+SECTION("SpinHalf (no QNs)")
+    {
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 2);
@@ -57,7 +77,7 @@ SECTION("SpinOne")
     sites.op("Sp",2); 
     sites.op("Sm",2); 
     sites.op("Sx",2); 
-    //sites.op("Sy",2); 
+    sites.op("Sy",2); 
     sites.op("ISy",2); 
     }
 

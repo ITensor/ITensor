@@ -27,7 +27,7 @@ class SpinHalfSite
         // i.e. TagSet("Site,S=1/2,%d",n)
         // Also allow conversion from std::string to TagSet?
         auto ts = format("Site,S=1/2,%d",n);
-        auto conserveqns = args.getBool("ConserveQNs",false);
+        auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
@@ -83,20 +83,41 @@ class SpinHalfSite
         else
         if(opname == "Sx")
             {
-            Op.set(Up,DnP,+0.5);
-            Op.set(Dn,UpP,+0.5);
+            if(not hasQNs(s))
+                {
+                Op.set(Up,DnP,+0.5);
+                Op.set(Dn,UpP,+0.5);
+                }
+            else
+                {
+                Error("Operator " + opname + " does not have a well defined QN flux");
+                }
             }
         else
         if(opname == "ISy")
             {
-            Op.set(Up,DnP,-0.5);
-            Op.set(Dn,UpP,+0.5);
+            if(not hasQNs(s))
+                {
+                Op.set(Up,DnP,-0.5);
+                Op.set(Dn,UpP,+0.5);
+                }
+            else
+                {
+                Error("Operator " + opname + " does not have a well defined QN flux");
+                }
             }
         else
         if(opname == "Sy")
             {
-            Op.set(Up,DnP,+0.5*Cplx_i);
-            Op.set(Dn,UpP,-0.5*Cplx_i);
+            if(not hasQNs(s))
+                {
+                Op.set(Up,DnP,+0.5*Cplx_i);
+                Op.set(Dn,UpP,-0.5*Cplx_i);
+                }
+            else
+                {
+                Error("Operator " + opname + " does not have a well defined QN flux");
+                }
             }
         else
         if(opname == "Sp" || opname == "S+")

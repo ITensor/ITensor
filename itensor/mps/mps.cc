@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/mps/mps.h"
+#include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 
@@ -337,11 +338,11 @@ new_tensors(std::vector<ITensor>& A,
     auto a = std::vector<Index>(N+1);
     if(hasQNs(sites(1)))
         {
-        for(auto i : range1(N)) a[i] = Index(QN(),1);
+        for(auto i : range1(N)) a[i] = Index(QN(),1,format("Link,MPS,%d",i));
         }
     else
         {
-        for(auto i : range1(N)) a[i] = Index(1);
+        for(auto i : range1(N)) a[i] = Index(1,format("Link,MPS,%d",i));
         }
     A[1] = ITensor(sites(1),a[1]);
     for(int i = 2; i < N; i++)
@@ -1568,18 +1569,22 @@ operator<<(std::ostream& s, InitState const& state)
 //    return res;
 //    }
 
-MPS
-sum(MPS const& L, 
-    MPS const& R, 
+template <class MPSType>
+MPSType
+sum(MPSType const& L, 
+    MPSType const& R, 
     Args const& args)
     {
     auto res = L;
     res.plusEq(R,args);
     return res;
     }
+template MPS sum<MPS>(MPS const& L, MPS const& R, Args const& args);
+template MPO sum<MPO>(MPO const& L, MPO const& R, Args const& args);
 
-MPS
-sum(std::vector<MPS> const& terms, 
+template <class MPSType>
+MPSType
+sum(std::vector<MPSType> const& terms, 
     Args const& args)
     {
     auto Nt = terms.size();
@@ -1597,7 +1602,7 @@ sum(std::vector<MPS> const& terms,
         {
         //Add all MPS in pairs
         auto nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
-        std::vector<MPS> newterms(nsize); 
+        std::vector<MPSType> newterms(nsize); 
         for(decltype(Nt) n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
             newterms.at(np) = sum(terms.at(n),terms.at(n+1),args);
@@ -1607,12 +1612,15 @@ sum(std::vector<MPS> const& terms,
         //Recursively call sum again
         return sum(newterms,args);
         }
-    return MPS();
+    return MPSType();
     }
+template MPS sum<MPS>(std::vector<MPS> const& terms, Args const& args);
+template MPO sum<MPO>(std::vector<MPO> const& terms, Args const& args);
 
+template <class MPSType>
 Cplx
-overlapC(MPS const& psi, 
-         MPS const& phi)
+overlapC(MPSType const& psi, 
+         MPSType const& phi)
     {
     auto N = psi.N();
     if(N != phi.N()) Error("overlap: mismatched N");
@@ -1626,6 +1634,7 @@ overlapC(MPS const& psi,
 
     for(decltype(N) i = 2; i < N; ++i) 
         { 
+        // TODO: remove use of "Link" tag here
         L = L * phi.A(i) * dag(prime(psi.A(i),"Link")); 
         }
     L = L * phi.A(N);
@@ -1634,5 +1643,8 @@ overlapC(MPS const& psi,
     if(lNm) return (dag(prime(psi.A(N),lNm))*L).cplx();
     return (dag(psi.A(N))*L).cplx();
     }
+template Cplx overlapC<MPS>(MPS const& psi, MPS const& phi);
+template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
+
 
 } //namespace itensor

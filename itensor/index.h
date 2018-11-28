@@ -90,17 +90,18 @@ class Index
 
     explicit
     Index(long m, 
-          TagSet const& ts = TagSet(),
-          int primelev = 0);
+          TagSet const& ts = TagSet());
 
     template<typename... QN_Sizes>
     Index(QN const& q1, long size1,
           QN_Sizes const&... qnsizes);
 
     Index(qnstorage && qns, 
-          Arrow dir = Out, 
-          TagSet const& ts = TagSet(),
-          int plev = 0);
+          TagSet const& ts = TagSet());
+
+    Index(qnstorage && qns, 
+          Arrow dir,
+          TagSet const& ts);
 
     // Returns the bond dimension
     long 
@@ -221,9 +222,11 @@ class Index
 
     // Constructor taking a QN pointer
     Index(qn_ptr const& p,
-          Arrow dir = Out, 
-          TagSet const& tags = TagSet(),
-          int plev = 0);
+          TagSet const& tags = TagSet());
+
+    Index(qn_ptr const& p,
+          Arrow dir, 
+          TagSet const& tags);
 
     //0-indexed
     long

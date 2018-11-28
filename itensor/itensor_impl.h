@@ -793,7 +793,7 @@ TenRef<Range,V>
 getBlock(ITensor & T,
          IntArray block_ind)
     {
-    if(block_ind.size() != T.r()) Error("Mismatched number of indices and ITensor rank");
+    if(block_ind.size() != size_t(T.r())) Error("Mismatched number of indices and ITensor rank");
     if(not T.store())
         {
         QN q;

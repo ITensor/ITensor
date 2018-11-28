@@ -61,11 +61,10 @@ Index()
 
 Index::
 Index(long m, 
-      TagSet const& t, 
-      int plev)
+      TagSet const& t)
   : id_(generateID()),
     m_(m),
-    primelevel_(plev),
+    primelevel_(0),
     tags_(t)
     { 
     } 
@@ -278,7 +277,7 @@ operator==(IndexVal const& iv, Index const& I)
 Index
 sim(Index const& I, int plev)
     {
-    return Index(I.m(),I.tags(),plev);
+    return Index(I.m(),I.tags()).prime(plev);
     }
 
 string
@@ -485,10 +484,18 @@ totalM(Index::qnstorage const& storage)
 
 Index::
 Index(qnstorage && ind_qn, 
+      TagSet const& ts)
+  : Index(totalM(ind_qn),ts)
+    { 
+    dir_ = Out;
+    makeStorage(std::move(ind_qn));
+    }
+
+Index::
+Index(qnstorage && ind_qn, 
       Arrow dir, 
-      TagSet const& ts,
-      int plev) 
-  : Index(totalM(ind_qn),ts,plev)
+      TagSet const& ts)
+  : Index(totalM(ind_qn),ts)
     { 
     dir_ = dir;
     makeStorage(std::move(ind_qn));

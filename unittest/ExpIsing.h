@@ -65,11 +65,11 @@ init_()
 
         W = ITensor(sites_(n),prime(sites_(n)),row,col);
 
-        W += sites_.op("Id",n) * row(1) * col(1);
-        W += -tau_ * (-h_) * ITensor(sites_.op("Sx",n)) * row(1) * col(1);
+        W += sites_.op("Id",n) * setElt(row(1)) * setElt(col(1));
+        W += -tau_ * (-h_) * ITensor(sites_.op("Sx",n)) * setElt(row(1)) * setElt(col(1));
 
-        W += -tau_ * sites_.op("Sz",n) * row(1) * col(2);
-        W += sites_.op("Sz",n) * row(2) * col(1);
+        W += -tau_ * sites_.op("Sz",n) * setElt(row(1)) * setElt(col(2));
+        W += sites_.op("Sz",n) * setElt(row(2)) * setElt(col(1));
         }
 
     H_.Aref(1)  *= setElt(links.at(0)(1));

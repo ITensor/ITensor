@@ -16,9 +16,7 @@ class Heisenberg
     Heisenberg(SiteSet const& sites, 
                Args const& args = Global::args());
 
-    operator MPO() { init_(); return H.toMPO(); }
-
-    operator IQMPO() { init_(); return H; }
+    operator MPO() { init_(); return H; }
 
     private:
 
@@ -32,7 +30,7 @@ class Heisenberg
          Jz_;
     bool initted_,
          infinite_;
-    IQMPO H;
+    MPO H;
 
     //
     //////////////////
@@ -59,30 +57,21 @@ init_()
     {
     if(initted_) return;
 
-    H = IQMPO(sites_);
+    H = MPO(sites_);
 
-    std::vector<IQIndex> links(N_+1);
-
-    //The names of these indices refer to their Sz quantum numbers
-    std::vector<Index> q0(N_+1),
-                       qP(N_+1),
-                       qM(N_+1);
+    std::vector<Index> links(N_+1);
 
     for(int l = 0; l <= N_; ++l) 
         {
-        // TODO: better constructor for IQIndex
         auto ts = format("Link,MPO,%d",l);
-        q0.at(l) = Index(3,ts);
-        qP.at(l) = Index(1,ts);
-        qM.at(l) = Index(1,ts);
-
-        links.at(l) = IQIndex(q0[l],QN( 0),
-                              qP[l],QN(-2),
-                              qM[l],QN(+2),
-                              Out);
+        links.at(l) = Index(QN( 0),3,
+                            QN(-2),1,
+                            QN(+2),1,
+                            Out,
+                            ts);
         }
 
-    IQIndex const& last = (infinite_ ? links.at(0) : links.at(N_));
+    Index const& last = (infinite_ ? links.at(0) : links.at(N_));
 
     for(int n = 1; n <= N_; ++n)
         {
@@ -90,19 +79,19 @@ init_()
         auto row = dag(links.at(n-1));
         auto col = (n==N_ ? last : links.at(n));
 
-        W = IQTensor(dag(sites_(n)),prime(sites_(n)),row,col);
+        W = ITensor(dag(sites_(n)),prime(sites_(n)),row,col);
 
-        W += sites_.op("Id",n) * row(1) * col(1); //ending state
-        W += sites_.op("Id",n) * row(2) * col(2); //starting state
+        W += sites_.op("Id",n) * setElt(row(1)) * setElt(col(1)); //ending state
+        W += sites_.op("Id",n) * setElt(row(2)) * setElt(col(2)); //starting state
 
-        W += sites_.op("Sz",n) * row(3) * col(1);
-        W += sites_.op("Sz",n) * row(2) * col(3) * Jz_;
+        W += sites_.op("Sz",n) * setElt(row(3)) * setElt(col(1));
+        W += sites_.op("Sz",n) * setElt(row(2)) * setElt(col(3)) * Jz_;
 
-        W += sites_.op("Sm",n) * row(4) * col(1);
-        W += sites_.op("Sp",n) * row(2) * col(4) * J_/2;
+        W += sites_.op("Sm",n) * setElt(row(4)) * setElt(col(1));
+        W += sites_.op("Sp",n) * setElt(row(2)) * setElt(col(4)) * J_/2;
 
-        W += sites_.op("Sp",n) * row(5) * col(1);
-        W += sites_.op("Sm",n) * row(2) * col(5) * J_/2;
+        W += sites_.op("Sp",n) * setElt(row(5)) * setElt(col(1));
+        W += sites_.op("Sm",n) * setElt(row(2)) * setElt(col(5)) * J_/2;
         }
 
     auto LH = setElt(links.at(0)(2));

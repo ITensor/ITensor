@@ -186,9 +186,10 @@ class MPS
 
     }; //class MPS
 
-MPS&
-addAssumeOrth(MPS      & L,
-              MPS const& R, 
+template <typename MPSType>
+MPSType&
+addAssumeOrth(MPSType      & L,
+              MPSType const& R, 
               Args const& args = Args::global());
 
 //void 
@@ -328,18 +329,21 @@ QN
 totalQN(MPS const& psi);
 
 // Re[<psi|phi>]
+template <class MPSType>
 Real 
-overlap(MPS const& psi, MPS const& phi);
+overlap(MPSType const& psi, MPSType const& phi);
 
 // <psi|phi>
+template <class MPSType>
 Cplx 
-overlapC(MPS const& psi, 
-         MPS const& phi);
+overlapC(MPSType const& psi, 
+         MPSType const& phi);
 
 // <psi|phi>
+template <class MPSType>
 void 
-overlap(MPS const& psi,
-        MPS const& phi, 
+overlap(MPSType const& psi,
+        MPSType const& phi, 
         Real& re, Real& im);
 
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
@@ -348,9 +352,10 @@ overlap(MPS const& psi,
 void 
 fitWF(MPS const& psi_basis, MPS & psi_to_fit);
 
-MPS
-sum(MPS const& L, 
-    MPS const& R, 
+template <class MPSType>
+MPSType
+sum(MPSType const& L, 
+    MPSType const& R, 
     Args const& args = Args::global());
 
 
@@ -362,8 +367,9 @@ sum(MPS const& L,
 //
 // Assumes terms are zero-indexed
 //
-MPS
-sum(std::vector<MPS> const& terms, 
+template <class MPSType>
+MPSType
+sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
 
 std::ostream& 

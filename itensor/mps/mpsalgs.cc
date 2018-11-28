@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/mps/mps.h"
-//#include "itensor/mps/mpo.h"
+#include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/tensor/slicemat.h"
@@ -58,8 +58,7 @@ plussers(Index const& l1,
 #endif
         sumind = Index(std::move(siq),
                        sumind.dir(),
-                       sumind.tags(),
-                       sumind.primeLevel());
+                       sumind.tags()).prime(sumind.primeLevel());
         first = ITensor(dag(l1),sumind);
         int n = 1;
         for(auto j : range1(l1.nblock()))
@@ -86,9 +85,10 @@ plussers(Index const& l1,
 // Adds two MPSs but doesn't attempt to
 // orthogonalize them first
 //
-MPS&
-addAssumeOrth(MPS      & L,
-              MPS const& R, 
+template <class MPSType>
+MPSType&
+addAssumeOrth(MPSType      & L,
+              MPSType const& R, 
               Args const& args)
     {
     auto N = L.N();
@@ -121,6 +121,8 @@ addAssumeOrth(MPS      & L,
 
     return L;
     }
+template MPS& addAssumeOrth<MPS>(MPS & L,MPS const& R, Args const& args);
+template MPO& addAssumeOrth<MPO>(MPO & L,MPO const& R, Args const& args);
 
 void 
 fitWF(MPS const& psi_basis, MPS & psi_to_fit)

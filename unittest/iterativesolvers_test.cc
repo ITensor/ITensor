@@ -7,14 +7,13 @@
 using namespace itensor;
 using namespace std;
 
-template <class Tensor>
-class TensorMap
+class ITensorMap
     {
-    Tensor const* A_;
+    ITensor const* A_;
     mutable long size_;
     public:
 
-    TensorMap(Tensor const& A)
+    ITensorMap(ITensor const& A)
       : A_(nullptr),
         size_(-1)
         {
@@ -22,7 +21,7 @@ class TensorMap
         }
 
     void
-    product(Tensor const& x, Tensor& b) const
+    product(ITensor const& x, ITensor& b) const
         {
         b = *A_*x;
         b.mapPrime(1,0);
@@ -45,9 +44,6 @@ class TensorMap
 
     };
 
-using ITensorMap = TensorMap<ITensor>;
-using IQTensorMap = TensorMap<IQTensor>;
-
 TEST_CASE("EigenSolverTest")
 {
 
@@ -65,7 +61,7 @@ SECTION("FourSite")
 
     MPS psi(initState);
 
-    LocalMPO<ITensor> PH(H);
+    LocalMPO PH(H);
 
     ITensor phip;
     psi.position(2);
@@ -156,21 +152,21 @@ SECTION("IQFourSite")
 
     const int N = 4;
     SpinHalf sites(N);
-    IQMPO H = Heisenberg(sites);
+    MPO H = Heisenberg(sites);
 
     InitState initState(sites);
     for(int i = 1; i <= N; ++i)
         initState.set(i,i%2==1 ? "Up" : "Dn");
 
-    IQMPS psi(initState);
+    MPS psi(initState);
 
-    LocalMPO<IQTensor> PH(H);
+    LocalMPO PH(H);
 
-    IQTensor phip;
+    ITensor phip;
     psi.position(2);
     PH.position(2,psi);
 
-    IQTensor phi1 = psi.A(2) * psi.A(3);
+    ITensor phi1 = psi.A(2) * psi.A(3);
 
     Real En1 = davidson(PH,phi1,"MaxIter=9");
     //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;
@@ -185,9 +181,9 @@ SECTION("GMRES (ITensor, Real)")
     auto a2 = Index(4,"Site,a2");
     auto a3 = Index(3,"Site,a3");
 
-    auto A = randomTensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
-    auto x = randomTensor(a1,a2,a3);
-    auto b = randomTensor(a1,a2,a3);
+    auto A = randomITensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomITensor(a1,a2,a3);
+    auto b = randomITensor(a1,a2,a3);
 
     // ITensorMap is defined above, it simply wraps an ITensor that is of the
     // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
@@ -203,9 +199,9 @@ SECTION("GMRES (ITensor, Complex)")
     auto a2 = Index(4,"Site,a2");
     auto a3 = Index(3,"Site,a3");
 
-    auto A = randomTensorC(prime(a1),prime(a2),prime(a3),a1,a2,a3);
-    auto x = randomTensorC(a1,a2,a3);
-    auto b = randomTensorC(a1,a2,a3);
+    auto A = randomITensorC(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomITensorC(a1,a2,a3);
+    auto b = randomITensorC(a1,a2,a3);
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
 
@@ -213,22 +209,22 @@ SECTION("GMRES (ITensor, Complex)")
 
     }
 
-SECTION("GMRES (IQTensor)")
+SECTION("GMRES (ITensor, QN)")
     {
-    auto i = IQIndex(Index(5),QN(+1),
-                     Index(5),QN(0),
-                     Index(5),QN(-1));
-    auto j = IQIndex(Index(5),QN(+1),
-                     Index(5),QN(0),
-                     Index(5),QN(-1),
-                     In);
+    auto i = Index(QN(+1),5,
+                   QN(0),5,
+                   QN(-1),5);
+    auto j = Index(QN(+1),5,
+                   QN(0),5,
+                   QN(-1),5,
+                   In);
     
-    auto A = randomTensor(QN(0),prime(dag(i)),prime(dag(j)),i,j);
+    auto A = randomITensor(QN(0),prime(dag(i)),prime(dag(j)),i,j);
 
-    auto x = randomTensor(QN(0),dag(i),dag(j));
-    auto b = randomTensor(QN(0),dag(i),dag(j));
+    auto x = randomITensor(QN(0),dag(i),dag(j));
+    auto b = randomITensor(QN(0),dag(i),dag(j));
 
-    gmres(IQTensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
+    gmres(ITensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
 
     CHECK_CLOSE(norm((A*x).mapPrime(1,0)-b)/norm(b),0.0);
 

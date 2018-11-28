@@ -79,7 +79,7 @@ SECTION("Orthogonalize")
     {
     auto N = 10;
     auto m = 20;
-    auto sites = SpinHalf(10);
+    auto sites = SpinHalf(10,{"ConserveQNs=",false});
     auto psi = MPS(sites);
 
     //Make a random MPS of bond dim. m
