@@ -8,6 +8,13 @@
 
 namespace itensor {
 
+using Tag = SmallString;
+
+//
+// Pre-defined Tags
+//
+const auto All = Tag("All");
+
 class TagSet;
 
 //
@@ -95,12 +102,10 @@ toString(TagSet const& ts)
 inline bool
 operator==(TagSet const& t1, TagSet const& t2)
     {
-    if(size(t1) != size(t2))
-        return false;
+    if(size(t1) != size(t2)) return false;
     for(auto i : range(size(t1)))
         {
-        if(t1[i] != t2[i])
-            return false;
+        if(t1[i] != t2[i]) return false;
         }
     return true;
     }
@@ -141,8 +146,7 @@ hasTag(Tag const& t) const
     {
     for(auto i : range(size_))
         {
-        if(t == tags_[i])
-            return i;
+        if(t == tags_[i]) return i;
         }
     return -1;
     }
@@ -166,10 +170,8 @@ addTag(Tag const& t)
         auto i = size_;
         for(; i>0; --i)
             {
-            if(t > tags_[i-1])  // Tag comparison uses a cast to a long int
-                break;
-            else
-                tags_[i] = tags_[i-1];
+            if(t > tags_[i-1]) break;   // Tag comparison uses a cast to a long int
+            else               tags_[i] = tags_[i-1];
             }
         tags_[i] = t;
         size_++;

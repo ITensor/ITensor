@@ -1,10 +1,12 @@
+o Add conversion from QN ITensor to dense ITensor
+o Define QDense * Dense contraction directly?
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
 
 o Change default behavior of MPS(sites) constructor
 o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
-o Add conversion from QN ITensor to dense ITensor
+
 o Add read/write for TagSet
 o Fix read/write for Index and test for rest of library
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
