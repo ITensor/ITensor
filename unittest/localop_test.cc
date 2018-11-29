@@ -85,11 +85,6 @@ SECTION("Diag")
     //    auto Op2 = randomITensor(QN(),S2,prime(S2),H1,H2);
     //    auto L = randomITensor(QN(),L0,prime(L0),H0);
     //    auto R = randomITensor(QN(),L2,prime(L2),H2);
-<<<<<<< HEAD
-    //    auto lop = LocalOp<IQTensor>(Op1,Op2,L,R);
-=======
-    //    auto lop = LocalOp(Op1,Op2,L,R);
->>>>>>> 862849928d83151b6612ed548b54dfc7e5e7872e
     //    auto diag = lop.diag();
     //    CHECK(hasIndex(diag,S1));
     //    CHECK(hasIndex(diag,S2));
