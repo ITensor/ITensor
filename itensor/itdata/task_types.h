@@ -538,6 +538,14 @@ typeNameOf(GetBlock<Real>) { return "GetBlock<Real>";}
 inline const char*
 typeNameOf(GetBlock<Cplx>) { return "GetBlock<Cplx>";}
 
+struct ToDense 
+    {
+    IndexSet const& is;
+    ToDense(IndexSet const& is_) : is(is_) {}
+    };
+
+inline const char*
+typeNameOf(ToDense) { return "ToDense";}
 
 } //namespace itensor 
 

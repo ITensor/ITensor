@@ -284,12 +284,12 @@ class ITensor
 
     template <class StorageType>
     ITensor(indexset_type iset,
-             StorageType&& store,
-             scale_type const& scale = LogNum{1.});
+            StorageType&& store,
+            scale_type const& scale = LogNum{1.});
 
     ITensor(indexset_type iset,
-             storage_ptr&& pstore,
-             scale_type const& scale = LogNum{1.});
+            storage_ptr&& pstore,
+            scale_type const& scale = LogNum{1.});
 
     //Provide indices from IndexSet
     explicit
@@ -580,6 +580,9 @@ flux(ITensor const& T);
 
 bool
 hasQNs(ITensor const& T);
+
+ITensor
+toDense(ITensor T);
 
 template<typename V>
 TenRef<Range,V>

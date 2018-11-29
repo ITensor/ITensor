@@ -8,6 +8,7 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/tensor/contract.h"
+#include "itensor/itdata/dense.h"
 #include "itensor/itdata/qdense.h"
 #include "itensor/itdata/qutil.h"
 #include "itensor/util/print_macro.h"
@@ -685,6 +686,41 @@ doTask(GetBlock<V> const& G,
     }
 template TenRef<Range,Real> doTask(GetBlock<Real> const& G,QDense<Real> & d);
 template TenRef<Range,Cplx> doTask(GetBlock<Cplx> const& G,QDense<Cplx> & d);
+
+template<typename V>
+void
+doTask(ToDense & T, 
+       QDense<V> const& d,
+       ManageStore & m)
+    {
+    auto r = T.is.r();
+    auto *nd = m.makeNewData<Dense<V>>(area(T.is),0);
+    auto *pd = d.data();
+    auto *pn = nd->data();
+    IntArray block(r,0);
+    detail::GCounter C(r);
+    for(auto& io : d.offsets)
+        {
+        computeBlockInd(io.block,T.is,block);
+        for(auto j : range(r))
+            {
+            long start = 0;
+            for(auto b : range(block[j]))
+                {
+                start += T.is[j].blocksize0(b);
+                }
+            C.setRange(j,start,start+T.is[j].blocksize0(block[j])-1);
+            }
+        //TODO: need to make a Range/TensorRef iterator
+        //to rewrite the following code more efficiently
+        for(; C.notDone(); ++C)
+            {
+            pn[offset(T.is,C.i)] = pd[io.offset+C.ind];
+            }
+        }
+    }
+template void doTask(ToDense &, QDense<Real> const&, ManageStore &);
+template void doTask(ToDense &, QDense<Cplx> const&, ManageStore &);
 
 } //namespace itensor
 

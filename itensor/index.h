@@ -232,6 +232,9 @@ class Index
     long
     blocksize0(long i) const;
 
+    void
+    removeQNs() { pd.reset(); }
+
     }; //class Index
 
 // i1 compares equal to i2 if i2 is a copy of i1 with same primelevel

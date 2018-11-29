@@ -12,6 +12,7 @@
 using std::array;
 using std::ostream;
 using std::vector;
+using std::move;
 
 namespace itensor {
 
@@ -575,13 +576,15 @@ permute(IndexSet const& iset)
 
 #ifndef USESCALE
 
-//TODO: add toDense function and ToDense task
-//ITensor
-//toDense(ITensor T)
-//    {
-//    if(not hasQNs(T)) return T;
-//    T.store() = newITData<DenseReal>(area(T.inds()),0);
-//    }
+ITensor
+toDense(ITensor T)
+    {
+    if(not hasQNs(T)) return T;
+    doTask(ToDense{T.inds()},T.store());
+    auto nis = T.inds();
+    for(auto& I : nis) I.removeQNs();
+    return ITensor{move(nis),move(T.store()),T.scale()};
+    }
 
 ITensor& ITensor::
 operator*=(Real r)

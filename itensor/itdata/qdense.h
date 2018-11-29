@@ -419,6 +419,12 @@ template<typename V>
 TenRef<Range,V>
 doTask(GetBlock<V> const& G, QDense<V> & d);
 
+template<typename V>
+void
+doTask(ToDense & T, 
+       QDense<V> const& d,
+       ManageStore & m);
+
 
 } //namespace itensor
 
