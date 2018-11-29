@@ -488,7 +488,7 @@ checkSameDiv(ITensor const& T1,
 
 } //namespace detail
 
-
+//TODO: implement proper Dense*QDense to avoid conversion cost
 ITensor& ITensor::
 operator*=(ITensor const& R)
     {
@@ -511,12 +511,19 @@ operator*=(ITensor const& R)
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds());
 
-    auto C = doTask(Contract{L.inds(),R.inds()},
+    //TODO: create a proper doTask(Contract,Dense,QDense)
+    auto hqL = hasQNs(L);
+    auto hqR = hasQNs(R);
+    auto Rdense = R;
+    if(hqL && !hqR) L = toDense(L);
+    else if(!hqL && hqR) Rdense = toDense(Rdense);
+
+    auto C = doTask(Contract{L.inds(),Rdense.inds()},
                     L.store(),
-                    R.store());
+                    Rdense.store());
 
 #ifdef USESCALE
-    L.scale_ *= R.scale();
+    L.scale_ *= Rdense.scale();
     if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;
 #endif
 

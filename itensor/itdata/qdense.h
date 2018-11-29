@@ -313,6 +313,14 @@ doTask(Contract& Con,
        QDense<VB> const& B,
        ManageStore& m);
 
+//TODO: complete implementation
+//template<typename VA, typename VB>
+//void
+//doTask(Contract& Con,
+//       Dense<VA> const& A,
+//       QDense<VB> const& B,
+//       ManageStore& m);
+
 template<typename VA, typename VB>
 void
 doTask(NCProd& P,

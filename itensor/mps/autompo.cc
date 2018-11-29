@@ -538,7 +538,8 @@ MPO
 toMPOImpl(AutoMPO const& am,
           Args const& args)
     {
-    auto checkqn = args.getBool("CheckQN",true);
+    auto checkqns = args.getBool("CheckQN=",true);
+    if(not hasQNs(am.sites()(1))) checkqns = false;
 
     auto const& sites = am.sites();
     auto H = MPO(sites);
@@ -583,7 +584,7 @@ toMPOImpl(AutoMPO const& am,
             if(!has_first) 
                 {
                 //printfln("Adding Op to basis at %d, Op=\n%s",n,Op);
-                if(checkqn)
+                if(checkqns)
                     {
                     auto Op = sites.op(ht.first().op,ht.first().i);
                     bn.emplace_back(ht.first(),-div(Op));
@@ -596,7 +597,7 @@ toMPOImpl(AutoMPO const& am,
             }
         }
 
-    if(checkqn)
+    if(checkqns)
         {
         auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
                        {
@@ -1414,7 +1415,7 @@ svdMPO(AutoMPO const& am,
 
     MPO H;
 
-    auto checkqns = args.getBool("CheckQN",true);
+    auto checkqns = args.getBool("CheckQN=",true);
     if(not hasQNs(am.sites()(1))) checkqns = false;
 
     if(is_real)
@@ -1473,7 +1474,8 @@ toExpH_ZW1(AutoMPO const& am,
            Complex tau,
            Args const& args)
     {
-    auto checkqn = args.getBool("CheckQN",true);
+    auto checkqns = args.getBool("CheckQN=",true);
+    if(not hasQNs(am.sites()(1))) checkqns = false;
 
     auto const& sites = am.sites();
     auto H = MPO(sites);
@@ -1508,7 +1510,7 @@ toExpH_ZW1(AutoMPO const& am,
         bool has_first = (std::find_if(bn.cbegin(),bn.cend(),test) != bn.end());
         if(!has_first) 
             {
-            if(checkqn)
+            if(checkqns)
                 {
                 auto Op = sites.op(ht.first().op,ht.first().i);
                 bn.emplace_back(ht.first(),-div(Op));
@@ -1520,7 +1522,7 @@ toExpH_ZW1(AutoMPO const& am,
             }
         }
 
-    if(checkqn)
+    if(checkqns)
         {
         auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
                        {

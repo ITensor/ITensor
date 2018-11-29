@@ -521,6 +521,31 @@ template void doTask(Contract& Con,QDense<Cplx> const&,QDense<Real> const&,Manag
 template void doTask(Contract& Con,QDense<Real> const&,QDense<Cplx> const&,ManageStore&);
 template void doTask(Contract& Con,QDense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
 
+//Temporary version of Contract for Dense*QDense that converts the storage
+//TODO: make a proper version
+//TODO: make QDense*Dense version
+//template<typename VA, typename VB>
+//void
+//doTask(Contract& Con,
+//       Dense<VA> const& A,
+//       QDense<VB> const& B,
+//       ManageStore& m)
+//    {
+//    auto Bis = Con.Ris;
+//    for(auto& I : Bis) I.removeQNs();
+//    PrintData(Bis);
+//    auto ToDen = ToDense{Bis};
+//    auto mB = ManageStore();
+//    doTask(ToDen,B,mB);
+//    //auto& Bdense = *m.makeNewData<Dense<VB>>();
+//    Dense<VB> Bdense = *mB.makeNewData<Dense<VB>>(B.begin(),B.end());
+//    doTask(Con,A,Bdense,m);
+//    }
+//template void doTask(Contract& Con,Dense<Real> const&,QDense<Real> const&,ManageStore&);
+//template void doTask(Contract& Con,Dense<Cplx> const&,QDense<Real> const&,ManageStore&);
+//template void doTask(Contract& Con,Dense<Real> const&,QDense<Cplx> const&,ManageStore&);
+//template void doTask(Contract& Con,Dense<Cplx> const&,QDense<Cplx> const&,ManageStore&);
+
 template<typename VA, typename VB>
 void
 doTask(NCProd& P,

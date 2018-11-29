@@ -229,32 +229,30 @@ SECTION("No QN MPO")
 
     SECTION("Exact version")
         {
-        //TODO: with {"CheckQN=",true}, getting error "div(ITensor) not defined for non QN conserving ITensor"
-        //TODO: with {"CheckQN=",false}, getting error "doTask not defined for task Contract and storage types DenseReal QDenseReal"
-//        auto H = toMPO(ampo,{"Exact=",true,"CheckQN=",false});
-//
-//        auto AllUp = InitState(sites,"Up");
-//        auto L = AllUp;
-//        auto R = AllUp;
-//        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
-//
-//        L = AllUp;
-//        R = AllUp;
-//        L.set(1,"Dn");
-//        R.set(1,"Dn");
-//        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
-//
-//        L = AllUp;
-//        R = AllUp;
-//        L.set(1,"Dn");
-//        L.set(2,"Dn");
-//        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
-//
-//        L = AllUp;
-//        R = AllUp;
-//        L.set(3,"Dn");
-//        R.set(4,"Dn");
-//        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        auto H = toMPO(ampo,{"Exact=",true});
+
+        auto AllUp = InitState(sites,"Up");
+        auto L = AllUp;
+        auto R = AllUp;
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        R.set(1,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(1,"Dn");
+        L.set(2,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+
+        L = AllUp;
+        R = AllUp;
+        L.set(3,"Dn");
+        R.set(4,"Dn");
+        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
         }
 
     SECTION("Approx version")
@@ -330,48 +328,47 @@ SECTION("Single Site Ops")
     //    }
     }
 
-//TODO: toExpH relies on conversion of QDense -> Dense
-//SECTION("toExpH ITensor (no QNs)")
-//    {
-//    int N = 10;
-//    Real h = 0.2;
-//    Real tau = 0.01234;
-//
-//    auto sites = SpinHalf(N,{"ConserveQNs=",false}); //make a chain of N spin 1/2's
-//
-//    auto ampo = AutoMPO(sites);
-//    for(int j = 1; j < N; ++j)
-//        {
-//        ampo += "Sz",j,"Sz",j+1;
-//        }
-//    for(int j = 1; j <= N; ++j)
-//        {
-//        ampo += -h,"Sx",j;
-//        }
-//
-//    SECTION("Real time")
-//        {
-//        auto expH = toExpH(ampo,tau*1_i);
-//        auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
-//        auto psi = MPS(sites);
-//        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-//        auto xnrm2 = overlap(xpsi,xpsi);
-//        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-//        auto anrm2 = overlap(apsi,apsi);
-//        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
-//      }
-//    SECTION("Imaginary time")
-//        {
-//        auto expH = toExpH(ampo,tau);
-//        auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
-//        auto psi = MPS(sites);
-//        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-//        auto xnrm2 = overlap(xpsi,xpsi);
-//        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-//        auto anrm2 = overlap(apsi,apsi);
-//        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
-//        }
-//    }
+SECTION("toExpH ITensor (no QNs)")
+    {
+    int N = 10;
+    Real h = 0.2;
+    Real tau = 0.01234;
+
+    auto sites = SpinHalf(N,{"ConserveQNs=",false}); //make a chain of N spin 1/2's
+
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += "Sz",j,"Sz",j+1;
+        }
+    for(int j = 1; j <= N; ++j)
+        {
+        ampo += -h,"Sx",j;
+        }
+
+    SECTION("Real time")
+        {
+        auto expH = toExpH(ampo,tau*1_i);
+        auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
+        auto psi = MPS(sites);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
+        auto xnrm2 = overlap(xpsi,xpsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
+        auto anrm2 = overlap(apsi,apsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+      }
+    SECTION("Imaginary time")
+        {
+        auto expH = toExpH(ampo,tau);
+        auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
+        auto psi = MPS(sites);
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
+        auto xnrm2 = overlap(xpsi,xpsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
+        auto anrm2 = overlap(apsi,apsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        }
+    }
 
 SECTION("toExpH ITensor (QN conservation)")
     {
@@ -394,24 +391,24 @@ SECTION("toExpH ITensor (QN conservation)")
 
     SECTION("Real time")
         {
-    //    auto expH = toExpH(ampo,tau*1_i);
-    //    auto expHexact = MPO(ExpHeisenberg(sites,tau*1_i));
-    //    auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-    //    auto xnrm2 = overlap(xpsi,xpsi);
-    //    auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-    //    auto anrm2 = overlap(xpsi,xpsi);
-    //    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        auto expH = toExpH(ampo,tau*1_i);
+        auto expHexact = MPO(ExpHeisenberg(sites,tau*1_i));
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
+        auto xnrm2 = overlap(xpsi,xpsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
+        auto anrm2 = overlap(xpsi,xpsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
-    //SECTION("Imaginary time")
-    //    {
-    //    auto expH = toExpH(ampo,tau);
-    //    auto expHexact = MPO(ExpHeisenberg(sites,tau));
-    //    auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-    //    auto xnrm2 = overlap(xpsi,xpsi);
-    //    auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-    //    auto anrm2 = overlap(xpsi,xpsi);
-    //    CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
-    //    }
+    SECTION("Imaginary time")
+        {
+        auto expH = toExpH(ampo,tau);
+        auto expHexact = MPO(ExpHeisenberg(sites,tau));
+        auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
+        auto xnrm2 = overlap(xpsi,xpsi);
+        auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
+        auto anrm2 = overlap(xpsi,xpsi);
+        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        }
     }
 
 SECTION("Hubbard, Complex Hopping")

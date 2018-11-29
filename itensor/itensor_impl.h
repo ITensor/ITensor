@@ -448,31 +448,8 @@ operator-() const
 
 #endif
 
-//ITensor inline
-//operator*(ITensor A, ITensor const& B) { A *= B; return A; }
-//TODO: implement QDense*Dense contraction to 
-//      remove this ugly workaround!
 ITensor inline
-operator*(ITensor const& A, ITensor const& B)
-    {
-    auto hqA = hasQNs(A);
-    auto hqB = hasQNs(B);
-    if(hqA && !hqB)
-        {
-        auto qA = toDense(A);
-        qA *= B;
-        return qA;
-        }
-    else if(!hqA && hqB)
-        {
-        auto qB = toDense(B);
-        qB *= A;
-        return qB;
-        }
-    auto cA = A;
-    cA *= B;
-    return cA;
-    }
+operator*(ITensor A, ITensor const& B) { A *= B; return A; }
 
 ITensor inline
 operator*(ITensor const& A, ITensor&& B) { B *= A; return B; }
