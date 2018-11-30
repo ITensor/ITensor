@@ -4,6 +4,7 @@
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/permutation.h"
 #include "itensor/tensor/sliceten.h"
+#include "itensor/indexset.h"
 
 using namespace itensor;
 
@@ -410,6 +411,37 @@ SECTION("Slicing")
                 }
             }
 
+        SECTION("TensorRef")
+            {
+            auto v = std::vector<Real>{110,210,310,410,510,
+                                       120,220,320,420,520};
+            auto ind = Range(5,2);
+            auto t = makeTenRef(v.data(),v.size(),&ind);
+            Labels start = {0,0},
+                   stop  = {4,1};
+            auto S = subTensor(t,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), t(start[0]+i[0],
+                                    start[1]+i[1]));
+                }
+            }
+
+        SECTION("TensorRef with Indices")
+            {
+            auto v = std::vector<Real>{110,210,310,410,510,
+                                       120,220,320,420,520};
+            auto ind = IndexSet(Index(5),Index(2));
+            auto t = makeTenRef(v.data(),v.size(),&ind);
+            Labels start = {0,0},
+                   stop  = {4,1};
+            auto S = subTensor(t,start,stop);
+            for(auto& i : S.range())
+                {
+                CHECK_CLOSE(S(i), t(start[0]+i[0],
+                                    start[1]+i[1]));
+                }
+            }
         }
 
     } // Slicing

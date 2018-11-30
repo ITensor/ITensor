@@ -189,6 +189,12 @@ removeTags(TagSet const& tsremove,
     for(auto& J : *this) if(J==imatch) J.removeTags(tsremove); 
     }
 
+void inline IndexSet::
+removeQNs()
+    {
+    for(auto& J : *this) J.removeQNs();
+    }
+
 //
 // Methods for Manipulating IndexSetT
 //
@@ -395,6 +401,9 @@ contractIS(IndexSet const& Lis,
         }
     Nis = newind.build();
     Nis.computeStrides();
+    auto LhasQNs = hasQNs(Lis);
+    auto RhasQNs = hasQNs(Ris);
+    if((LhasQNs && !RhasQNs) || (!LhasQNs && RhasQNs)) Nis.removeQNs();
     }
 
 void inline

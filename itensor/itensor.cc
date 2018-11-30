@@ -589,7 +589,7 @@ toDense(ITensor T)
     if(not hasQNs(T)) return T;
     doTask(ToDense{T.inds()},T.store());
     auto nis = T.inds();
-    for(auto& I : nis) I.removeQNs();
+    nis.removeQNs();
     return ITensor{move(nis),move(T.store()),T.scale()};
     }
 

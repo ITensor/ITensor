@@ -247,6 +247,9 @@ class IndexSet : public RangeT<Index>
     removeTags(TagSet const& tsremove, 
                Index const& imatch);
 
+    void
+    removeQNs();
+
     };
 
 void

@@ -51,7 +51,6 @@ subTensor(Ten_ && T,
     static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subTensor");
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subTensor");
     static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subTensor");
-    using range_type = decltype(T.range());
     auto r = T.r();
 #ifdef DEBUG
     using stop_type = decltype(*stop.begin());
@@ -66,7 +65,7 @@ subTensor(Ten_ && T,
         }
 #endif
     size_t offset = 0;
-    auto rb = RangeBuilderT<range_type>(r);
+    auto rb = RangeBuilder(r);
     auto st = start.begin();
     auto sp = stop.begin();
     for(decltype(r) j = 0; j < r; ++j, ++st, ++sp) 

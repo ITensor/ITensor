@@ -14,23 +14,23 @@ using namespace std;
 //
 
 //TODO: doTask not defined for task Contract and storage types QDenseReal DenseReal
-//TEST_CASE("ITensor Times IndexVal (QN)")
-//    {
-//    Index s(QN(+1),1,
-//            QN(-1),1);
-//
-//    Index l(4);
-//    ITensor T(l);
-//    randomize(T);
-//
-//    ITensor R = T * setElt(s(2));
-//
-//    REQUIRE(hasIndex(R,s));
-//    CHECK(R.real(l(1),s(1)) == 0);
-//    CHECK(R.real(l(2),s(1)) == 0);
-//    CHECK(R.real(l(3),s(1)) == 0);
-//    CHECK(R.real(l(4),s(1)) == 0);
-//    }
+TEST_CASE("ITensor Times IndexVal (QN)")
+    {
+    Index s(QN(+1),1,
+            QN(-1),1);
+
+    Index l(4);
+    ITensor T(l);
+    randomize(T);
+
+    ITensor R = T * setElt(s(2));
+
+    REQUIRE(hasIndex(R,s));
+    CHECK(R.real(l(1),s(1)) == 0);
+    CHECK(R.real(l(2),s(1)) == 0);
+    CHECK(R.real(l(3),s(1)) == 0);
+    CHECK(R.real(l(4),s(1)) == 0);
+    }
 
 TEST_CASE("ITensor from IndexVal (QN)")
     {
@@ -157,25 +157,25 @@ TEST_CASE("SVDIndexOrder")
 //    }
 
 //TODO: create toDense(ITensor) function
-//TEST_CASE("ConvertToITensor")
-//    {
-//    Index L(QN(),1,Out);
-//    Index emp(1),occ(1);
-//    Index S(QN(0,0),1,
-//            QN(1,0),1,
-//            Out);
-//
-//    auto T = ITensor(L,dag(S),prime(S));
-//    T.set(L(1),S(1),prime(S)(1),1);
-//    T.set(L(1),S(2),prime(S)(2),1);
-//
-//    auto t = toITensor(T);
-//
-//    CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
-//    CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
-//    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
-//    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
-//    }
+TEST_CASE("ConvertQDenseToDenseITensor")
+    {
+    Index L(QN(),1,Out);
+    Index emp(1),occ(1);
+    Index S(QN(0,0),1,
+            QN(1,0),1,
+            Out);
+
+    auto T = ITensor(L,dag(S),prime(S));
+    T.set(L(1),S(1),prime(S)(1),1);
+    T.set(L(1),S(2),prime(S)(2),1);
+
+    auto t = toDense(T);
+
+    CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
+    CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
+    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
+    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
+    }
 
 //TEST_CASE("IndexOrder")
 //    {
