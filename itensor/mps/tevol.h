@@ -21,15 +21,15 @@ namespace itensor {
 //
 template <class Iterable>
 Real
-gateTEvol(const Iterable& gatelist, 
+gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
           MPS & psi, 
-          const Args& args = Global::args());
+          Args const& args = Global::args());
 
 template <class Iterable>
 Real
-gateTEvol(const Iterable& gatelist, 
+gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
           MPS & psi, 
@@ -68,7 +68,7 @@ gateTEvol(Iterable const& gatelist,
     Real tot_norm = norm(psi);
 
     Real tsofar = 0;
-    for(int tt = 1; tt <= nt; ++tt)
+    for(auto tt : range1(nt))
         {
         auto g = gatelist.begin();
         while(g != gatelist.end())
@@ -127,11 +127,11 @@ gateTEvol(Iterable const& gatelist,
 
 template <class Iterable>
 Real
-gateTEvol(const Iterable& gatelist, 
+gateTEvol(Iterable const& gatelist, 
           Real ttotal, 
           Real tstep, 
           MPS & psi, 
-          const Args& args)
+          Args const& args)
     {
     TEvolObserver obs(args);
     return gateTEvol(gatelist,ttotal,tstep,psi,obs,args);
