@@ -339,9 +339,8 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args)
     {
-    //if(!args.defined("IndexName")) args.add("IndexName","d");
     //TODO: create tag convention
-    if(!args.defined("Tags")) args.add("Tags","Link,DIAG");
+    if(!args.defined("Tags")) args.add("Tags","Link");
 
     //
     // Pick an arbitrary index and do some analysis

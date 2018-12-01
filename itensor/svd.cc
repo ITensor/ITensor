@@ -54,8 +54,8 @@ svdImpl(ITensor const& A,
     auto ritagset = TagSet();
     if(!args.defined("Tags"))  // If "Tags" is not in Args, fall back to "LeftTags" and "RightTags"
         {
-        litagset = getTagSet(args,"LeftTags","Link,SVD,u");
-        ritagset = getTagSet(args,"RightTags","Link,SVD,v");
+        litagset = getTagSet(args,"LeftTags","Link,U");
+        ritagset = getTagSet(args,"RightTags","Link,V");
         }
     else  // If "Tags" is in Args, use it for the tags of the new indices
         {

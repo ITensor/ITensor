@@ -33,7 +33,7 @@ diagHImpl(ITensor H,
           ITensor& D,
           Args const& args)
     {
-    auto itagset = getTagSet(args,"Tags","Link,DIAG");
+    auto itagset = getTagSet(args,"Tags","Link");
 
     if(not hasQNs(H))
         {
