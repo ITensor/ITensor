@@ -488,13 +488,13 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
 //        plussers(l1,l2,r,first[i],second[i]);
 //        }
 //
-//    Anc(1) = A(1) * first[1] + other.A(1) * second[1];
+//    Aref(1) = A(1) * first[1] + other.A(1) * second[1];
 //    for(int i = 2; i < N_; ++i)
 //        {
-//        Anc(i) = dag(first[i-1]) * A(i) * first[i] 
+//        Aref(i) = dag(first[i-1]) * A(i) * first[i] 
 //                  + dag(second[i-1]) * other.A(i) * second[i];
 //        }
-//    Anc(N) = dag(first[N-1]) * A(N) + dag(second[N-1]) * other.A(N);
+//    Aref(N) = dag(first[N-1]) * A(N) + dag(second[N-1]) * other.A(N);
 //
 //    noprimelink();
 //
@@ -1470,20 +1470,20 @@ void MPS::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         }
         if(s == 1)
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
         }
         else if(s == N)
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s)) 
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s)) 
                                     : IQTensor(dag(linkind[s-1]),si(s)));
         }
         else
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s),linkind[s]) 
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s),linkind[s]) 
                                     : IQTensor(dag(linkind[s-1]),si(s),linkind[s]));
         }
 
-        Foreach(const ITensor& nb, nblock) { iqpsi.Anc(s) += nb; } nblock.clear();
+        Foreach(const ITensor& nb, nblock) { iqpsi.Aref(s) += nb; } nblock.clear();
 
         if(0) //try to get this working ideally
         if(!is_mpo && s > 1) 

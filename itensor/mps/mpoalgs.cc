@@ -71,11 +71,11 @@ nmultMPO(MPO const& Aorig,
 
         nfork = ITensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
 
-        denmatDecomp(clust,res.Anc(i),nfork,Fromleft,args);
+        denmatDecomp(clust,res.Aref(i),nfork,Fromleft,args);
 
         auto mid = commonIndex(res.A(i),nfork,"Link");
         mid.dag();
-        res.Anc(i+1) = ITensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
+        res.Aref(i+1) = ITensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -487,9 +487,9 @@ fitApplyMPO(Real mpsfac,
 ///    args.add("Maxm",MAX_M);
 ///
 ///    MPO Hshift(H.sites());
-///    Hshift.Anc(1) *= -Etot;
+///    Hshift.Aref(1) *= -Etot;
 ///    Hshift.plusEq(H,args);
-///    Hshift.Anc(1) *= -tau;
+///    Hshift.Aref(1) *= -tau;
 ///
 ///    vector<MPO > xx(2);
 ///    xx.at(0) = MPO(H.sites());
@@ -508,7 +508,7 @@ fitApplyMPO(Real mpsfac,
 ///            cout << o << " "; 
 ///            cout.flush();
 ///            }
-///        if(o > 1) xx[1].Anc(1) *= 1.0 / o;
+///        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
 ///
 ///        K = sum(xx,args);
 ///        if(o > 1)
@@ -726,14 +726,14 @@ zipUpApplyMPO(MPS const& psi,
         nfork = ITensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
+        denmatDecomp(clust, res.Aref(i), nfork,Fromleft,args);
         Index mid = commonIndex(res.A(i),nfork);
         //assert(mid.dir() == In);
         mid.dag();
         midsize[i] = mid.m();
         maxdim = std::max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
-        res.Anc(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
+        res.Aref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!

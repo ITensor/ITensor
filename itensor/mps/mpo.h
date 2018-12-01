@@ -39,7 +39,6 @@ class MPO : private MPS
     using Parent::leftLim;
 
     using Parent::A;
-    using Parent::Anc;
     using Parent::Aref;
     using Parent::setA;
 

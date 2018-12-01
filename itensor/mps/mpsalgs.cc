@@ -150,7 +150,7 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     A /= nrm;
 
     psi_to_fit = psi_basis;
-    psi_to_fit.Anc(1) = A;
+    psi_to_fit.Aref(1) = A;
     }
 
 bool 

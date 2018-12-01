@@ -77,8 +77,6 @@ class MPS
     //which allows reading and writing
     ITensor& 
     Aref(int i);
-    ITensor& 
-    Anc(int i) { return Aref(i); }
 
     MPS&
     plusEq(MPS const& R, 
