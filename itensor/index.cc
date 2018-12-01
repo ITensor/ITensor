@@ -193,11 +193,12 @@ operator<(Index const& i1, Index const& i2)
 std::ostream& 
 operator<<(std::ostream & s, Index const& I)
     {
-    s << "(" << I.m();
-    if(size(tags(I)) > 0) s << "," << tags(I);
+    s << "(";
+    if(size(tags(I)) > 0) s << tags(I) << ",";
+    s << I.m();
     if(Global::showIDs()) 
         {
-        s << "|" << (I.id() % 1000);
+        s << "|id=" << (I.id() % 1000);
         //s << "," << I.id();
         }
     s << ")"; 
