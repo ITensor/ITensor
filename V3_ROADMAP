@@ -1,3 +1,4 @@
+o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
 o Add conversion from QN ITensor to dense ITensor
 o Define QDense * Dense contraction directly?
 o Fix toExpH(AutoMPO) and toMPO(AutoMPO)
