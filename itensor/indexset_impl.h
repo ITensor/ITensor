@@ -373,6 +373,14 @@ contractIS(IndexSet const& Lis,
            LabelT & Nind,
            bool sortResult)
     {
+    //Don't allow mixing of Indices with and without QNs
+    auto LhasQNs = hasQNs(Lis);
+    auto RhasQNs = hasQNs(Ris);
+    auto LremoveQNs = false;
+    auto RremoveQNs = false;
+    if(LhasQNs && !RhasQNs) LremoveQNs = true;
+    else if(!LhasQNs && RhasQNs) RremoveQNs = true;
+
     long ncont = 0;
     for(auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
@@ -386,12 +394,18 @@ contractIS(IndexSet const& Lis,
     for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
         {
         if(Lind[j] > 0) //uncontracted
-            newind.nextIndStr(Lis[j],Lind[j]);
+            {
+            if(LremoveQNs) newind.nextIndStr(removeQNs(Lis[j]),Lind[j]);
+            else newind.nextIndStr(Lis[j],Lind[j]);
+            }
         }
     for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
         {
         if(Rind[j] > 0) //uncontracted
-            newind.nextIndStr(Ris[j],Rind[j]);
+            {
+            if(RremoveQNs) newind.nextIndStr(removeQNs(Ris[j]),Rind[j]);
+            else newind.nextIndStr(Ris[j],Rind[j]);
+            }
         }
     if(sortResult) newind.sortByIndex();
     Nind.resize(newind.size());
@@ -401,9 +415,6 @@ contractIS(IndexSet const& Lis,
         }
     Nis = newind.build();
     Nis.computeStrides();
-    auto LhasQNs = hasQNs(Lis);
-    auto RhasQNs = hasQNs(Ris);
-    if((LhasQNs && !RhasQNs) || (!LhasQNs && RhasQNs)) Nis.removeQNs();
     }
 
 void inline
@@ -467,7 +478,8 @@ operator<<(std::ostream& s, IndexSet const& is)
     {
     for(auto i : range1(is.r()))
         { 
-        s << is.index(i) << " ";
+        if(hasQNs(is)) s << is.index(i) << std::endl;
+        else s << is.index(i) << " ";
         } 
     return s;
     }

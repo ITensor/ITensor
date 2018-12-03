@@ -344,6 +344,9 @@ matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I
 bool inline
 hasQNs(Index const& I) { return I.nblock()!=0; }
 
+Index inline
+removeQNs(Index I) { if(hasQNs(I)) I.removeQNs(); return I; }
+
 bool inline
 hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
   
