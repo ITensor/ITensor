@@ -1,10 +1,18 @@
 o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-   # A problem with this was the case where Args need to get passed (to decide whether to use an approximation)
-     and a conversion could not accept a second argument. Maybe it need to be a constructor?
-o Add conversion from QN ITensor to dense ITensor - COMPLETE
+   Matt: A problem with this was the case where Args need to 
+         get passed (to decide whether to use an approximation)
+         and a conversion could not accept a second argument. 
+         Maybe it need to be a constructor?
+   Miles: Good point, though what do you think about the following:
+         1. leave it as-is, for backward compatibility, and because 
+         most people are ok with the default settings of AutoMPO
+         2. but upgrade all of the sample codes and documentation to
+         use toMPO and we start preferring people use that
+         The reasoning here is that it's ok to break things that are
+         bad, but this is not so bad since there's a good default.
+         Still we can encourage people to use a better approach
+         via shifting the convention / soft deprecation.
 o Define QDense * Dense contraction directly?
-o Fix toExpH(AutoMPO) and toMPO(AutoMPO) - COMPLETE
-o Add back unit tests in autompo_test.cc that failed because ITensor{QDense}*ITensor{Dense} isn't defined - COMPLETE
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
@@ -28,5 +36,12 @@ o Update website:
   o Fresh install with new options.mk file compiles
   o Jenkins is passing
   o All sample codes compile and run
-  ? Incorporate sample codes into Jenkins/testing (I found the DMRG codes were useful for catching bugs, and TRG is a good test case for Tags)
+  ? Incorporate sample codes into Jenkins/testing 
+    (I found the DMRG codes were useful for catching bugs, 
+     and TRG is a good test case for Tags)
+    Miles say: Yes I agree. We could put copies of the sample codes
+    or crucial sections of the sample codes into the unit
+    tests. Maybe for the DMRG one just do one sweep.
+    Or perhaps better, Dylan can config Jenkins to 
+    compile the sample codes.
   o All unit tests pass
