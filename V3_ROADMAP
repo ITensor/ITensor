@@ -1,8 +1,10 @@
 o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-o Add conversion from QN ITensor to dense ITensor
+   # A problem with this was the case where Args need to get passed (to decide whether to use an approximation)
+     and a conversion could not accept a second argument. Maybe it need to be a constructor?
+o Add conversion from QN ITensor to dense ITensor - COMPLETE
 o Define QDense * Dense contraction directly?
-o Fix toExpH(AutoMPO) and toMPO(AutoMPO)
-o Add back unit tests in autompo_test.cc that failed because ITensor{QDense}*ITensor{Dense} isn't defined
+o Fix toExpH(AutoMPO) and toMPO(AutoMPO) - COMPLETE
+o Add back unit tests in autompo_test.cc that failed because ITensor{QDense}*ITensor{Dense} isn't defined - COMPLETE
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
