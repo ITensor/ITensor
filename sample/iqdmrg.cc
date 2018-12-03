@@ -10,8 +10,8 @@ main()
     //
     // Initialize the site degrees of freedom.
     //
-    //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
-    auto sites = SpinOne(N); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N,{"ConserveQNs=",true}); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
@@ -29,7 +29,7 @@ main()
         ampo += 0.5,"S-",j,"S+",j+1;
         ampo +=     "Sz",j,"Sz",j+1;
         }
-    auto H = IQMPO(ampo);
+    auto H = toMPO(ampo);
 
     //
     // Set the initial wavefunction matrix product state
@@ -49,7 +49,7 @@ main()
             state.set(i,"Dn");
         }
 
-    auto psi = IQMPS(state);
+    auto psi = MPS(state);
 
     //
     // overlap(psi,H,psi) = <psi|H|psi>

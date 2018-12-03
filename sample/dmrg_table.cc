@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
         ampo += 0.5,"S-",j,"S+",j+1;
         ampo +=     "Sz",j,"Sz",j+1;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     auto state = InitState(sites);
     for(int i = 1; i <= N; ++i) 

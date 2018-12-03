@@ -23,7 +23,7 @@ class SpinlessSite
 
     SpinlessSite(int n, Args const& args = Args::global())
         {
-        auto conserveQNs = args.getBool("ConserveQNs",true);
+        auto conserveQNs = args.getBool("ConserveQNs",false);
         auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
         auto oddevenupdown = args.getBool("OddEvenUpDown",false);
         auto ts = format("Site, %d",n);

@@ -13,8 +13,8 @@ main()
     //
     // Initialize the site degrees of freedom.
     //
-    //auto sites = SpinHalf(N,{"ConserveQNs=",true}); //make a chain of N spin 1/2's
-    auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N,{"ConserveQNs=",false}); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N,{"ConserveQNs=",false}); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
@@ -27,7 +27,7 @@ main()
         ampo += 0.5,"S-",j,"S+",j+1;
         ampo +=     "Sz",j,"Sz",j+1;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.

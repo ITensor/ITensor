@@ -44,24 +44,8 @@ svdImpl(ITensor const& A,
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
-
-    //auto lname = args.getString("LeftIndexName","ul");
-    //auto rname = args.getString("RightIndexName","vl");
-    //auto itype = getIndexType(args,"IndexType",Link);
-    //auto litype = getIndexType(args,"LeftIndexType",itype);
-    //auto ritype = getIndexType(args,"RightIndexType",itype);
-    auto litagset = TagSet();
-    auto ritagset = TagSet();
-    if(!args.defined("Tags"))  // If "Tags" is not in Args, fall back to "LeftTags" and "RightTags"
-        {
-        litagset = getTagSet(args,"LeftTags","Link,U");
-        ritagset = getTagSet(args,"RightTags","Link,V");
-        }
-    else  // If "Tags" is in Args, use it for the tags of the new indices
-        {
-        litagset = getTagSet(args,"Tags");
-        ritagset = litagset;
-        }
+    auto litagset = getTagSet(args,"LeftTags","Link,U");
+    auto ritagset = getTagSet(args,"RightTags","Link,V");
 
     if(not hasQNs(A))
         {
@@ -116,8 +100,8 @@ svdImpl(ITensor const& A,
             showEigs(probs,truncerr,A.scale(),showargs);
             }
         
-        Index uL(m,litagset),
-              vL(m,ritagset);
+        auto uL = Index(m,litagset);
+        auto vL = setTags(uL,ritagset);
 
         //Fix sign to make sure D has positive elements
         Real signfix = (A.scale().sign() == -1) ? -1 : +1;
@@ -235,9 +219,7 @@ svdImpl(ITensor const& A,
             }
 
         auto Liq = Index::qnstorage{};
-        auto Riq = Index::qnstorage{};
         Liq.reserve(Nblock);
-        Riq.reserve(Nblock);
 
         for(auto b : range(Nblock))
             {
@@ -270,11 +252,10 @@ svdImpl(ITensor const& A,
             resize(d,this_m);
 
             Liq.emplace_back(uI.qn(1+B.i1),this_m);
-            Riq.emplace_back(vI.qn(1+B.i2),this_m);
             }
         
         auto L = Index(move(Liq),uI.dir(),litagset);
-        auto R = Index(move(Riq),vI.dir(),ritagset);
+        auto R = setTags(dag(L),ritagset);
 
         auto Uis = IndexSet(uI,dag(L));
         auto Dis = IndexSet(L,R);

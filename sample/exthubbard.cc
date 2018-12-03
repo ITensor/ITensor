@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         ampo += -t2,"Cdagdn",b,"Cdn",b+2;
         ampo += -t2,"Cdagdn",b+2,"Cdn",b;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     //
     // Set the initial wavefunction matrix product state
