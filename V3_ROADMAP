@@ -1,8 +1,10 @@
 o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+   ? Add deprecation warning to MPO(AutoMPO), telling people to switch
+     to toMPO(AutoMPO)
    Matt: A problem with this was the case where Args need to 
          get passed (to decide whether to use an approximation)
          and a conversion could not accept a second argument. 
-         Maybe it need to be a constructor?
+         Maybe it could be a constructor?
    Miles: Good point, though what do you think about the following:
          1. leave it as-is, for backward compatibility, and because 
          most people are ok with the default settings of AutoMPO
@@ -12,15 +14,26 @@ o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
          bad, but this is not so bad since there's a good default.
          Still we can encourage people to use a better approach
          via shifting the convention / soft deprecation.
-o Define QDense * Dense contraction directly?
+   Matt: Yes I am fine with that plan.
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
 
-o Change default behavior of MPS(sites) constructor
-o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
-
-? Add back some removed prime functions, like prime(ITensor,Index,Index,...)
+? MPS(InitState,m) and randomMPS(InitState,m)
+  -> randomMPS(InitState,m) with QNs would require adding qr(A,Q,R) function
+o Add back some removed prime functions, like prime(ITensor,Index,Index,...)
+o Decide what to do with reindex
+  Matt: I think it is still good to have, but would prefer to make a version that
+        internally uses `delta` and does not ignore prime levels, so:
+        auto A = ITensor(i,j,k);
+        auto B = reindex(A,{i,j,k},{l,m,o}); // Or list in pairs like reindex(A,i,l,j,m,k,o)
+        // Shorthand for A*delta(i,l)*delta(j,m)*delta(k,o)
+        This is particularly useful in case some of the reindexing involves a swap of indices,
+        i.e. reindex(A,{i,j,k},{j,i,o}) in the case where i and j are swappable, which in general
+        could become quite tedious to do by hand.
+o Make modifying functions member functions and all other functions free
+  (at least for externally-facing functions)
+  o randomize(ITensor&) -> ITensor::randomize()
 
 o Add read/write for TagSet
 o Fix read/write for Index and test for rest of library
@@ -31,6 +44,9 @@ o Update website:
   o ITensor book
   o Tutorials
   o Code formulas
+
+Optional (possibly post V3)
+o Define QDense * Dense contraction directly
 
 # Final Release Checks
   o Fresh install with new options.mk file compiles
@@ -45,3 +61,13 @@ o Update website:
     Or perhaps better, Dylan can config Jenkins to 
     compile the sample codes.
   o All unit tests pass
+
+
+#######################################################################################################
+Completed (this is to help keep track of changes made, but we should make an official
+           list for the website):
+
+o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
+  o m>1 only allowed with no QNs
+o Add randomMPS(sites,m=1) function with no QNs
+

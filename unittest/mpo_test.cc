@@ -137,7 +137,7 @@ SECTION("applyMPO (DensityMatrix)")
     auto N = 10;
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
-    auto psi = MPS(sites);
+    auto psi = randomMPS(sites);
 
     //Use AutoMPO as a trick to get
     //an MPO with bond dimension > 1
@@ -178,7 +178,7 @@ SECTION("applyMPO (Fit)")
     auto N = 10;
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
-    auto psi = MPS(sites);
+    auto psi = randomMPS(sites);
 
     //Use AutoMPO as a trick to get
     //an MPO with bond dimension > 1
@@ -223,8 +223,8 @@ SECTION("Overlap <psi|HK|phi>")
     auto N = 10;
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
-    auto psi = MPS(sites);
-    auto phi = MPS(sites);
+    auto psi = randomMPS(sites);
+    auto phi = randomMPS(sites);
 
     //Use AutoMPO as a trick to get
     //an MPO with bond dimension > 1
@@ -256,48 +256,47 @@ SECTION("Overlap <psi|HK|phi>")
     CHECK_CLOSE(overlap(phi,H,K,psi),overlap(Hdphi,Kpsi));
     }
 
-// TODO: test conversion from QNs to no QNs
-//SECTION("toMPO function")
-//    {
-//    auto N = 50;
-//    auto sites = Hubbard(N);
-//
-//    auto makeInds = [N](std::string name) -> vector<Index>
-//        {
-//        auto ll = vector<Index>(N);
-//        for(auto n : range1(N-1))
-//            {
-//            auto ts = format("%s,%d",name,n);
-//            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
-//                             QN("Sz=",-1,"Nf=",+1),2,
-//                             QN("Sz=",-1,"Nf=",0),2,
-//                             QN("Sz=",+1,"Nf=",0),2,
-//                             QN("Sz=",+1,"Nf=",-1),2,
-//                             QN("Sz=",+1,"Nf=",+1),2,
-//                             ts);
-//            }
-//        return ll;
-//        };
-//
-//    auto ll = makeInds("Link,I");
-//
-//    auto Z = QN("Sz=",0,"Nf=",0);
-//
-//    auto A = MPO(sites);
-//    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
-//    for(int n = 2; n < N; ++n)
-//        {
-//        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
-//        }
-//    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
-//
-//    auto a = toMPO(A);
-//
-//    for(auto n : range1(N))
-//        {
-//        CHECK(norm(a.A(n) - ITensor(A.A(n))) < 1E-10);
-//        }
-//
-//    }
+SECTION("Remove QNs from MPO")
+    {
+    auto N = 50;
+    auto sites = Hubbard(N);
+
+    auto makeInds = [N](std::string name) -> vector<Index>
+        {
+        auto ll = vector<Index>(N);
+        for(auto n : range1(N-1))
+            {
+            auto ts = format("%s,%d",name,n);
+            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
+                             QN("Sz=",-1,"Nf=",+1),2,
+                             QN("Sz=",-1,"Nf=",0),2,
+                             QN("Sz=",+1,"Nf=",0),2,
+                             QN("Sz=",+1,"Nf=",-1),2,
+                             QN("Sz=",+1,"Nf=",+1),2,
+                             ts);
+            }
+        return ll;
+        };
+
+    auto ll = makeInds("Link,I");
+
+    auto Z = QN("Sz=",0,"Nf=",0);
+
+    auto A = MPO(sites);
+    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
+    for(int n = 2; n < N; ++n)
+        {
+        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
+        }
+    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
+
+    auto a = removeQNs(A);
+
+    for(auto n : range1(N))
+        {
+        CHECK(norm(a.A(n) - removeQNs(A.A(n))) < 1E-10);
+        }
+
+    }
 
 }

@@ -93,7 +93,7 @@ nmultMPO(MPO const& Aorig,
         }
     res.orthogonalize();
 
-    }//void nmultMPO(const MPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+    }
 
 
 MPS
@@ -101,6 +101,8 @@ applyMPO(MPO const& K,
          MPS const& x,
          Args const& args)
     {
+    if(not x.A(1).store()) Error("In applyMPO, MPS is uninitialized.");
+    if(not K.A(1).store()) Error("In applyMPO, MPO is uninitialized.");
     auto method = args.getString("Method","DensityMatrix");
 
     //This is done here because fitApplyMPO() has a different default behavior
@@ -127,6 +129,9 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args const& args)
     {
+    if(not x.A(1).store()) Error("In applyMPO, MPS is uninitialized.");
+    if(not K.A(1).store()) Error("In applyMPO, MPO is uninitialized.");
+    if(not x0.A(1).store()) Error("In applyMPO, guess MPS is uninitialized.");
     auto method = args.getString("Method","Fit");
 
     //This is done here because fitApplyMPO() has a different default behavior
@@ -473,91 +478,6 @@ fitApplyMPO(Real mpsfac,
     return olp.real();
     }
 
-///void 
-///expsmallH(MPO const& H, 
-///          MPO & K, 
-///          Real tau, 
-///          Real Etot, 
-///          Real Kcutoff,
-///          Args args)
-///    {
-///    int ord = args.getInt("ExpHOrder",50);
-///    bool verbose = args.getBool("Verbose",false);
-///    args.add("Cutoff",MIN_CUT);
-///    args.add("Maxm",MAX_M);
-///
-///    MPO Hshift(H.sites());
-///    Hshift.Aref(1) *= -Etot;
-///    Hshift.plusEq(H,args);
-///    Hshift.Aref(1) *= -tau;
-///
-///    vector<MPO > xx(2);
-///    xx.at(0) = MPO(H.sites());
-///    xx.at(1) = Hshift;
-///
-///    //
-///    // Exponentiate by building up a Taylor series in reverse:
-///    //      o=1    o=2      o=3      o=4  
-///    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
-///    //
-///    if(verbose) cout << "Exponentiating H, order: " << endl;
-///    for(int o = ord; o >= 1; --o)
-///        {
-///        if(verbose) 
-///            {
-///            cout << o << " "; 
-///            cout.flush();
-///            }
-///        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
-///
-///        K = sum(xx,args);
-///        if(o > 1)
-///            nmultMPO(K,Hshift,xx[1],args);
-///        }
-///    if(verbose) cout << endl;
-///    }
-
-
-//void 
-//expH(MPO const& H, 
-//     MPO& K, 
-//     Real tau, 
-//     Real Etot,
-//     Real Kcutoff, 
-//     int ndoub, 
-//     Args args)
-//    {
-//    const bool verbose = args.getBool("Verbose",false);
-//    Real ttau = tau / pow(2.0,ndoub);
-//    //cout << "ttau in expH is " << ttau << endl;
-//
-//    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
-//    expsmallH(H, K, ttau,Etot,smallcut,args);
-//
-//    if(verbose) cout << "Starting doubling in expH" << endl;
-//    for(int doub = 1; doub <= ndoub; ++doub)
-//        {
-//        //cout << " Double step " << doub << endl;
-//        if(doub == ndoub) 
-//            args.add("Cutoff",Kcutoff);
-//        else
-//            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
-//        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
-//        MPO KK;
-//        nmultMPO(K,K,KK,args);
-//        K = KK;
-//        /*
-//        if(doub == ndoub)
-//            {
-//            cout << "step " << doub << ", K is " << endl;
-//            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
-//            for(int i = 1; i <= N; i++)
-//                cout << i SP K.A[i];
-//            }
-//        */
-//        }
-//    }
-
 void
 applyExpH(MPS const& psi, 
           MPO const& H, 
@@ -744,6 +664,91 @@ zipUpApplyMPO(MPS const& psi,
     res.mapPrime(1,0,"Site");
     res.position(1);
     } //void zipUpApplyMPO
+
+///void 
+///expsmallH(MPO const& H, 
+///          MPO & K, 
+///          Real tau, 
+///          Real Etot, 
+///          Real Kcutoff,
+///          Args args)
+///    {
+///    int ord = args.getInt("ExpHOrder",50);
+///    bool verbose = args.getBool("Verbose",false);
+///    args.add("Cutoff",MIN_CUT);
+///    args.add("Maxm",MAX_M);
+///
+///    MPO Hshift(H.sites());
+///    Hshift.Aref(1) *= -Etot;
+///    Hshift.plusEq(H,args);
+///    Hshift.Aref(1) *= -tau;
+///
+///    vector<MPO > xx(2);
+///    xx.at(0) = MPO(H.sites());
+///    xx.at(1) = Hshift;
+///
+///    //
+///    // Exponentiate by building up a Taylor series in reverse:
+///    //      o=1    o=2      o=3      o=4  
+///    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
+///    //
+///    if(verbose) cout << "Exponentiating H, order: " << endl;
+///    for(int o = ord; o >= 1; --o)
+///        {
+///        if(verbose) 
+///            {
+///            cout << o << " "; 
+///            cout.flush();
+///            }
+///        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
+///
+///        K = sum(xx,args);
+///        if(o > 1)
+///            nmultMPO(K,Hshift,xx[1],args);
+///        }
+///    if(verbose) cout << endl;
+///    }
+
+
+//void 
+//expH(MPO const& H, 
+//     MPO& K, 
+//     Real tau, 
+//     Real Etot,
+//     Real Kcutoff, 
+//     int ndoub, 
+//     Args args)
+//    {
+//    const bool verbose = args.getBool("Verbose",false);
+//    Real ttau = tau / pow(2.0,ndoub);
+//    //cout << "ttau in expH is " << ttau << endl;
+//
+//    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
+//    expsmallH(H, K, ttau,Etot,smallcut,args);
+//
+//    if(verbose) cout << "Starting doubling in expH" << endl;
+//    for(int doub = 1; doub <= ndoub; ++doub)
+//        {
+//        //cout << " Double step " << doub << endl;
+//        if(doub == ndoub) 
+//            args.add("Cutoff",Kcutoff);
+//        else
+//            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
+//        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
+//        MPO KK;
+//        nmultMPO(K,K,KK,args);
+//        K = KK;
+//        /*
+//        if(doub == ndoub)
+//            {
+//            cout << "step " << doub << ", K is " << endl;
+//            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
+//            for(int i = 1; i <= N; i++)
+//                cout << i SP K.A[i];
+//            }
+//        */
+//        }
+//    }
 
 
 } //namespace itensor

@@ -584,6 +584,9 @@ hasQNs(ITensor const& T);
 ITensor
 toDense(ITensor T);
 
+ITensor
+removeQNs(ITensor T);
+
 template<typename V>
 TenRef<Range,V>
 getBlock(ITensor & T, IntArray block_ind);
