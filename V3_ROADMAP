@@ -1,27 +1,14 @@
-o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-   ? Add deprecation warning to MPO(AutoMPO), telling people to switch
-     to toMPO(AutoMPO)
-   Matt: A problem with this was the case where Args need to 
-         get passed (to decide whether to use an approximation)
-         and a conversion could not accept a second argument. 
-         Maybe it could be a constructor?
-   Miles: Good point, though what do you think about the following:
-         1. leave it as-is, for backward compatibility, and because 
-         most people are ok with the default settings of AutoMPO
-         2. but upgrade all of the sample codes and documentation to
-         use toMPO and we start preferring people use that
-         The reasoning here is that it's ok to break things that are
-         bad, but this is not so bad since there's a good default.
-         Still we can encourage people to use a better approach
-         via shifting the convention / soft deprecation.
-   Matt: Yes I am fine with that plan.
-? New QN design:
+
+o New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
-
-? MPS(InitState,m) and randomMPS(InitState,m)
+o MPS(InitState,m) and randomMPS(InitState,m)
   -> randomMPS(InitState,m) with QNs would require adding qr(A,Q,R) function
-o Add back some removed prime functions, like prime(ITensor,Index,Index,...)
+o Add back some removed prime functions with varargs
+  o prime(Itensor,index1,pinc1,index2,pinc2,...)
+  o prime(ITensor,index1,index2,...) = prime(ITensor,index1,1,index2,1,...)
+  o setPrime(ITensor,index1,plev1,index2,plev2,...)
+  o noPrime(ITensor,index1,index2,...) = setPrime(ITensor,index1,0,index2,0,...)
 o Decide what to do with reindex
   Matt: I think it is still good to have, but would prefer to make a version that
         internally uses `delta` and does not ignore prime levels, so:
@@ -34,7 +21,8 @@ o Decide what to do with reindex
 o Make modifying functions member functions and all other functions free
   (at least for externally-facing functions)
   o randomize(ITensor&) -> ITensor::randomize()
-
+o Need to add some commits from master
+  o errMPOProd and deprecation of checkMPOProd
 o Add read/write for TagSet
 o Fix read/write for Index and test for rest of library
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
@@ -44,6 +32,8 @@ o Update website:
   o ITensor book
   o Tutorials
   o Code formulas
+o Code cleanup
+o Add unit tests for tags functions
 
 Optional (possibly post V3)
 o Define QDense * Dense contraction directly
@@ -70,4 +60,7 @@ Completed (this is to help keep track of changes made, but we should make an off
 o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
   o m>1 only allowed with no QNs
 o Add randomMPS(sites,m=1) function with no QNs
+o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+   o Add deprecation warning to MPO(AutoMPO), telling people to switch
+     to toMPO(AutoMPO)
 
