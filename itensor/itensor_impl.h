@@ -490,6 +490,15 @@ prime(ITensor A,
 
 template<typename... VarArgs>
 ITensor
+setPrime(ITensor A,
+        VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
 noPrime(ITensor A, 
         VarArgs&&... vargs)
     {
@@ -506,6 +515,7 @@ mapPrime(ITensor A,
     return A;
     }
 
+//TODO: bring this back?
 //template<typename Cond>
 //Index
 //findIndex(ITensor const& T, 
@@ -600,7 +610,7 @@ dag(ITensor T)
     }
 
 
-
+//TODO: rename replaceIndices and use deltas?
 template<typename... Inds>
 ITensor
 reindex(ITensor const& cT, 
@@ -673,7 +683,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is);
 
 } //namespace detail
 
-//Version of order accepting syntax: T.permute(i,j,"...")
+//Version of permute accepting syntax: T.permute(i,j,"...")
 template <typename... Indxs>
 auto ITensor::
 permute(Index const& ind1, Indxs const&... inds)

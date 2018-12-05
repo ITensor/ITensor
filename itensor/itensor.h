@@ -122,6 +122,11 @@ class ITensor
 
     template<typename... VarArgs>
     ITensor& 
+    setPrime(VarArgs&&... vargs)
+        { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor& 
     noPrime(VarArgs&&... vargs)
         { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
 

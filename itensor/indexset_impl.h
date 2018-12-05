@@ -41,6 +41,29 @@ setPrime(int plnew, Index const& imatch)
     for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
     }
 
+template<typename... VarArgs>
+void IndexSet::
+setPrime(int plnew1, Index const& imatch1,
+         int plnew2, Index const& imatch2,
+         VarArgs&&... vargs)
+    {
+    auto& is = *this;
+    is.setPrime(plnew1,imatch1);
+    is.setPrime(vargs...);
+    }
+
+template<typename... VarArgs>
+void IndexSet::
+setPrime(int plnew,
+         Index const& imatch1,
+         Index const& imatch2,
+         VarArgs&&... vargs)
+    {
+    auto& is = *this;
+    is.setPrime(plnew,imatch1);
+    is.setPrime(plnew,imatch2,vargs...);
+    }
+
 void inline IndexSet::
 noPrime(TagSet const& tsmatch) 
     { 
@@ -53,7 +76,6 @@ noPrime(Index const& imatch)
     for(auto& J : *this) if(J==imatch) J.setPrime(0); 
     }
 
-// TODO: should this just be replaced by setPrime()?
 void inline IndexSet::
 mapPrime(int plold, 
          int plnew, 
