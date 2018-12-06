@@ -43,13 +43,15 @@ setPrime(int plnew, Index const& imatch)
 
 template<typename... VarArgs>
 void IndexSet::
-setPrime(int plnew1, Index const& imatch1,
-         int plnew2, Index const& imatch2,
+setPrime(int plnew1,
+         Index const& imatch1,
+         int plnew2,
+         Index const& imatch2,
          VarArgs&&... vargs)
     {
     auto& is = *this;
     is.setPrime(plnew1,imatch1);
-    is.setPrime(vargs...);
+    is.setPrime(plnew2,imatch2,vargs...);
     }
 
 template<typename... VarArgs>
@@ -74,6 +76,16 @@ void inline IndexSet::
 noPrime(Index const& imatch) 
     { 
     for(auto& J : *this) if(J==imatch) J.setPrime(0); 
+    }
+
+template<typename... VarArgs>
+void IndexSet::
+noPrime(Index const& imatch1,
+        VarArgs&&... vargs) 
+    {
+    auto& is = *this;
+    is.noPrime(imatch1);
+    is.noPrime(vargs...);
     }
 
 void inline IndexSet::

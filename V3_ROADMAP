@@ -5,14 +5,16 @@ o New QN design:
 o MPS(InitState,m) and randomMPS(InitState,m)
   -> randomMPS(InitState,m) with QNs would require adding qr(A,Q,R) function
 o Add back some removed prime functions with varargs
-  o prime(pinc1,index1,pinc2,index2,...)
-  o prime(pinc,index1,index2,...) = prime(pinc,index1,pinc,index2,...)
-  o prime(index1,index2,...) = prime(index1,1,index2,1,...)
-  o setPrime(plev1,index1,plev2,index2,...) - ADDED
-  o setPrime(plev,index1,index2,...) = setPrime(plev,index1,plev,index2,...) - ADDED
-  o noPrime(index1,index2,...) = setPrime(0,index1,0,index2,...)
-  o primeExcept(plinc=1,index1,index2,...)
-  o primeExcept(plinc=1,tagset)
+  o A.prime(pinc1,index1,pinc2,index2,...)
+  o A.prime(pinc=1,index1,index2,...) = A.prime(pinc,index1,pinc,index2,...)
+  o A.primeExcept(plinc=1,index1,index2,...)
+  o A.primeExcept(plinc=1,tagset)
+  COMPLETE:
+  x A.setPrime(plev1,index1,plev2,index2,...)
+  x A.setPrime(plev,index1,index2,...) = A.setPrime(plev,index1,plev,index2,...)
+  x A.noPrime(index1,index2,...) = A.setPrime(0,index1,0,index2,...)
+o Add some more tag functions
+  o A.addTags(tagset,imatch1,imtach2,...) = A.addTags(tagset,imatch1).addTags(tagset,imatch2,...)
 o Decide what to do with reindex
   Matt: I think it is still good to have, but would prefer to make a version that
         internally uses `delta` and does not ignore prime levels, so:

@@ -179,8 +179,10 @@ class IndexSet : public RangeT<Index>
 
     template<typename... VarArgs>
     void
-    setPrime(int plnew1, Index const& imatch1,
-             int plnew2, Index const& imatch2,
+    setPrime(int plnew1,
+             Index const& imatch1,
+             int plnew2,
+             Index const& imatch2,
              VarArgs&&... vargs);
 
     template<typename... VarArgs>
@@ -196,11 +198,10 @@ class IndexSet : public RangeT<Index>
     void
     noPrime(Index const& imatch);
 
-    //template<typename... VarArgs>
-    //void
-    //noPrime(Index const& imatch1,
-    //        Index const& imatch2,
-    //        VarArgs&&... vargs);
+    template<typename... VarArgs>
+    void
+    noPrime(Index const& imatch1,
+            VarArgs&&... vargs);
 
     void
     mapPrime(int plold, int plnew,
