@@ -1760,6 +1760,23 @@ SECTION("Combiner")
                 }
             }
 
+        SECTION("Combine 2nd,3rd (IndexSet constructor)")
+            {
+            auto C = combiner(IndexSet(k,j));
+            auto R = T * C;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
+                {
+                auto ci_ = k_ + k.m()*(j_-1);
+                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                }
+            }
+
 
         //Uncombine back:
         //auto TT = C * R;
