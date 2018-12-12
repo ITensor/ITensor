@@ -30,14 +30,17 @@ ITensor
 operator*(IndexVal const& iv, ITensor const& B);
 
 ITensor
-combiner(std::vector<Index> inds, Args const& args = Args::global());
+combiner(IndexSet const& inds, Args const& args = Args::global());
+
+ITensor
+combiner(std::vector<Index> const& inds, Args const& args = Args::global());
 
 template<typename... Inds>
 ITensor
 combiner(Index const& i1, 
          Inds const&... inds)
     {
-    return combiner(std::vector<Index>{i1,inds...});
+    return combiner(IndexSet(i1,inds...));
     }
 
 Index
