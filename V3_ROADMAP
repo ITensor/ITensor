@@ -1,4 +1,6 @@
-o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+(! means necessary / blocker for releasing v3)
+
+! Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
    Matt: A problem with this was the case where Args need to 
          get passed (to decide whether to use an approximation)
          and a conversion could not accept a second argument. 
@@ -17,15 +19,21 @@ o Define QDense * Dense contraction directly?
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
 
-o Change default behavior of MPS(sites) constructor
+! Decide about default ConserveQNs of site sets (I think always "true"?)
+  If wanting dense by default just use SiteSet(N,d)
+
+! Change default behavior of MPS(sites) constructor
+  to just make a zero-initialized MPS (for consistency)
+  (Too picky?)
+
 o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
 
 ? Add back some removed prime functions, like prime(ITensor,Index,Index,...)
 
-o Add read/write for TagSet
-o Fix read/write for Index and test for rest of library
+! Add read/write for TagSet
+! Fix read/write for Index and test for rest of library
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
-o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
+! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 o Update website:
   o Detailed documentation
   o ITensor book
