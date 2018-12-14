@@ -1038,16 +1038,16 @@ partitionHTerms(SiteSet const& sites,
         SiteTermProd left, onsite, right;
         decomposeTerm(n, ht.ops, left, onsite, right);
         
-        TIMER_START(10)
+        //TIMER_START(10)
         QN lqn,sqn;
         if(checkqns)
             {
             lqn = calcQN(left);
             sqn = calcQN(onsite);
             }
-        TIMER_STOP(10)
+        //TIMER_STOP(10)
         
-        TIMER_START(11)
+        //TIMER_START(11)
         int j=-1,k=-1;
 
         // qbs.at(i) are the blocks at the link between sites i+1 and i+2
@@ -1090,13 +1090,13 @@ partitionHTerms(SiteSet const& sites,
             {
             rewriteFermionic(onsite, leftF);
             }
-        TIMER_STOP(11)
+        //TIMER_STOP(11)
         
         //
         // Add only unique IQMPOMatElems to tempMPO
         // TODO: assumes terms are unique I think!
         // 
-        TIMER_START(12)
+        //TIMER_START(12)
         auto& tn = tempMPO.at(n-1);
         auto el = IQMPOMatElem(lqn, lqn+sqn, j, k, HTerm(c, onsite));
 
@@ -1116,7 +1116,7 @@ partitionHTerms(SiteSet const& sites,
         auto it = tn.find(el);
         if(it == tn.end()) tn.insert(move(el));
 
-        TIMER_STOP(12)
+        //TIMER_STOP(12)
         }
     }
 

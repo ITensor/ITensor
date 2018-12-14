@@ -236,13 +236,21 @@ DMRGWorker(MPSt<Tensor>& psi,
                 printfln("Sweep=%d, HS=%d, Bond=%d/%d",sw,ha,b,(N-1));
                 }
 
+            START_TIMER(4);
             PH.position(b,psi);
+            STOP_TIMER(4);
 
+            START_TIMER(5);
             auto phi = psi.A(b)*psi.A(b+1);
+            STOP_TIMER(5);
 
+            START_TIMER(2);
             energy = davidson(PH,phi,args);
+            STOP_TIMER(2);
             
+            START_TIMER(3);
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
+            STOP_TIMER(3);
 
 
             if(!quiet)

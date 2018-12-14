@@ -740,7 +740,7 @@ contract(CProps const& p,
     MatRefc<VA> aref;
     if(p.permuteA())
         {
-        SCOPED_TIMER(12)
+        //SCOPED_TIMER(12)
         auto aptr = SAFE_REINTERPRET(VA,ab);
         auto tref = makeTenRef(SAFE_PTR_GET(aptr,Apsize),Apsize,&p.newArange);
         tref &= permute(A,p.PA);
@@ -761,7 +761,7 @@ contract(CProps const& p,
     MatRefc<VB> bref;
     if(p.permuteB())
         {
-        SCOPED_TIMER(13)
+        //SCOPED_TIMER(13)
         auto bptr = SAFE_REINTERPRET(VB,bb);
         auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bpsize),Bpsize,&p.newBrange);
         tref &= permute(B,p.PB);
@@ -799,13 +799,13 @@ contract(CProps const& p,
             }
         }
 
-    START_TIMER(11)
+    //START_TIMER(11)
     gemm(aref,bref,cref,alpha,beta);
-    STOP_TIMER(11)
+    //STOP_TIMER(11)
 
     if(p.permuteC())
         {
-        SCOPED_TIMER(14)
+        //SCOPED_TIMER(14)
 #ifdef DEBUG
         if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
 #endif

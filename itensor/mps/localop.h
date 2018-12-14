@@ -220,23 +220,39 @@ product(Tensor const& phi,
 
     if(LIsNull())
         {
+        START_TIMER(21);
         phip = phi;
+        STOP_TIMER(21);
 
+        START_TIMER(24);
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
+        STOP_TIMER(24);
 
+        START_TIMER(22);
         phip *= Op2; //m^2 k^2
+        STOP_TIMER(22);
+        START_TIMER(23);
         phip *= Op1; //m^2 k^2
+        STOP_TIMER(23);
         }
     else
         {
+        START_TIMER(21);
         phip = phi * L(); //m^3 k d
+        STOP_TIMER(21);
 
+        START_TIMER(22);
         phip *= Op1; //m^2 k^2
+        STOP_TIMER(22);
+        START_TIMER(23);
         phip *= Op2; //m^2 k^2
+        STOP_TIMER(23);
 
+        START_TIMER(24);
         if(!RIsNull()) 
             phip *= R();
+        STOP_TIMER(24);
         }
 
     phip.mapprime(1,0);

@@ -283,7 +283,7 @@ denmatDecomp(Tensor const& AA,
         }
 
     //Apply combiner
-    START_TIMER(8)
+    //START_TIMER(8)
     auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
     auto cmb = combiner(std::move(cinds),iname);
     auto ci = cmb.inds().front();
@@ -302,7 +302,7 @@ denmatDecomp(Tensor const& AA,
         if(tr > 1E-16) rho *= 1./tr;
         }
 
-    STOP_TIMER(8)
+    //STOP_TIMER(8)
 
     if(args.getBool("UseOrigM",false))
         {

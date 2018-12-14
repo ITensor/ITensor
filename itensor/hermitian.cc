@@ -132,7 +132,7 @@ diagHImpl(IQTensor    H,
           IQTensor  & D,
           Args const& args)
     {
-    SCOPED_TIMER(7)
+    //SCOPED_TIMER(7)
     auto cutoff = args.getReal("Cutoff",0.);
     auto maxm = args.getInt("Maxm",MAX_INT);
     auto minm = args.getInt("Minm",1);

@@ -283,23 +283,23 @@ doTask(Contract<Index> & C,
     auto tL = makeTenRef(L.data(),L.size(),&C.Lis);
     auto tR = makeTenRef(R.data(),R.size(),&C.Ris);
     auto rsize = area(C.Nis);
-    START_TIMER(4)
+    //START_TIMER(4)
     auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
-    STOP_TIMER(4)
+    //STOP_TIMER(4)
     auto tN = makeTenRef(nd->data(),nd->size(),&(C.Nis));
 
 #ifdef COLLECT_TSTATS
     tstats(tL,Lind,tR,Rind,tN,Nind);
 #endif
 
-    START_TIMER(2)
+    //START_TIMER(2)
     contract(tL,Lind,tR,Rind,tN,Nind);
-    STOP_TIMER(2)
+    //STOP_TIMER(2)
 
 #ifdef USESCALE
-    START_TIMER(3)
+    //START_TIMER(3)
     if(rsize > 1) C.scalefac = computeScalefac(*nd);
-    STOP_TIMER(3)
+    //STOP_TIMER(3)
 #endif
     }
 template void doTask(Contract<Index>&,DenseReal const&,DenseReal const&,ManageStore&);

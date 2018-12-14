@@ -36,7 +36,7 @@ svdImpl(ITensor const& A,
         ITensor & V,
         Args const& args)
     {
-    SCOPED_TIMER(7);
+    //SCOPED_TIMER(7);
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -56,9 +56,9 @@ svdImpl(ITensor const& A,
     Mat<T> UU,VV;
     Vector DD;
 
-    TIMER_START(6)
+    //TIMER_START(6)
     SVD(M,UU,DD,VV,thresh);
-    TIMER_STOP(6)
+    //TIMER_STOP(6)
 
     //conjugate VV so later we can just do
     //U*D*V to reconstruct ITensor A:

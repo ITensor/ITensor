@@ -454,9 +454,9 @@ doTask(Contract<IQIndex>& Con,
     auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
-    START_TIMER(33)
+    //START_TIMER(33)
     auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
-    STOP_TIMER(33)
+    //STOP_TIMER(33)
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -483,22 +483,22 @@ doTask(Contract<IQIndex>& Con,
         auto cref = makeRef(cblock,&Crange);
 
         //Compute cref += aref*bref
-        START_TIMER(2)
+        //START_TIMER(2)
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
-        STOP_TIMER(2)
+        //STOP_TIMER(2)
         };
 
-    START_TIMER(20)
+    //START_TIMER(20)
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          do_contract);
-    STOP_TIMER(20)
+    //STOP_TIMER(20)
 
 #ifdef USESCALE
-    START_TIMER(21)
+    //START_TIMER(21)
     Con.scalefac = computeScalefac(C);
-    STOP_TIMER(21)
+    //STOP_TIMER(21)
 #endif
     }
 template void doTask(Contract<IQIndex>& Con,QDense<Real> const&,QDense<Real> const&,ManageStore&);
