@@ -438,6 +438,13 @@ combiner(std::vector<IQIndex> const& inds,
     return combiner(IQIndexSet(inds),args);
     }
 
+IQTensor
+combiner(std::initializer_list<IQIndex> inds,
+         Args const& args)
+    {
+    return combiner(IQIndexSet(inds),args);
+    }
+
 struct IsQCombiner
     {
     template<typename D>

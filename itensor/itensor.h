@@ -35,6 +35,16 @@ combiner(IndexSet const& inds, Args const& args = Args::global());
 ITensor
 combiner(std::vector<Index> const& inds, Args const& args = Args::global());
 
+ITensor
+combiner(std::initializer_list<Index> inds, Args const& args = Args::global());
+
+template<size_t N>
+ITensor
+combiner(std::array<Index,N> inds, Args const& args = Args::global())
+    {
+    return combiner(IndexSet(inds));
+    }
+
 template<typename... Inds>
 ITensor
 combiner(Index const& i1, 

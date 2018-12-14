@@ -164,6 +164,12 @@ combiner(std::vector<Index> const& inds, Args const& args)
     return combiner(IndexSet(inds),args);
     }
 
+ITensor
+combiner(std::initializer_list<Index> inds, Args const& args)
+    {
+    return combiner(IndexSet(inds),args);
+    }
+
 struct IsCombiner
     {
     template<typename D>
