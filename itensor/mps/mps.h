@@ -34,7 +34,7 @@ class MPS
 
     MPS(int N);
 
-    MPS(SiteSet const& sites);
+    MPS(SiteSet const& sites, int m = 1);
 
     MPS(InitState const& initState);
 
@@ -91,6 +91,10 @@ class MPS
     void 
     noprimelink();
 
+    // Randomize the tensors of the MPS
+    void
+    randomize();
+
     Spectrum 
     svdBond(int b, 
             ITensor const& AA, 
@@ -114,7 +118,7 @@ class MPS
     orthogonalize(Args const& args = Args::global());
 
     void
-    swap(MPS& other);
+    swap(MPS & other);
 
     bool
     doWrite() const { return do_write_; }
@@ -254,8 +258,15 @@ class InitState
 // Other Methods Related to MPS
 //
 
-//MPS
-//toMPS(IQMPS const& psi);
+//Create a random MPS
+MPS
+randomMPS(SiteSet const& sites,
+          int m = 1);
+
+//Remove the QNs of each tensor of the MPS
+template <class MPSType>
+MPSType
+removeQNs(MPSType const& psi);
 
 bool
 isComplex(MPS const& psi);
@@ -269,6 +280,7 @@ orthoCenter(MPS const& psi);
 Real
 norm(MPS const& psi);
 
+// TODO: make this a class function?
 Real
 normalize(MPS & psi);
 

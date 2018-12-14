@@ -350,7 +350,7 @@ SECTION("toExpH ITensor (no QNs)")
         {
         auto expH = toExpH(ampo,tau*1_i);
         auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
-        auto psi = MPS(sites);
+        auto psi = randomMPS(sites);
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
@@ -361,7 +361,7 @@ SECTION("toExpH ITensor (no QNs)")
         {
         auto expH = toExpH(ampo,tau);
         auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
-        auto psi = MPS(sites);
+        auto psi = randomMPS(sites);
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
         auto xnrm2 = overlap(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});

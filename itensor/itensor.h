@@ -122,6 +122,11 @@ class ITensor
 
     template<typename... VarArgs>
     ITensor& 
+    setPrime(VarArgs&&... vargs)
+        { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor& 
     noPrime(VarArgs&&... vargs)
         { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
@@ -583,6 +588,9 @@ hasQNs(ITensor const& T);
 
 ITensor
 toDense(ITensor T);
+
+ITensor
+removeQNs(ITensor T);
 
 template<typename V>
 TenRef<Range,V>

@@ -195,11 +195,6 @@ class AutoMPO
     int
     size() const { return terms_.size(); }
 
-    //Type conversion AutoMPO -> MPO
-    //TODO: how do we add args?
-    //operator MPO() const { return toMPO(*this,args); }
-    //operator MPO(Args const& args = Args::global()) const { return toMPO(*this,args); }
-
     template <typename T>
     Accumulator
     operator+=(T x) { return Accumulator(this,x); }
@@ -209,6 +204,11 @@ class AutoMPO
 
     void
     reset() { terms_.clear(); }
+
+    //Type conversion AutoMPO -> MPO
+    //This is deprecated in favor of toMPO(AutoMPO)
+    operator MPO() const { Global::warnDeprecated("MPO(AutoMPO) is deprecated in favor of toMPO(AutoMPO)"); return toMPO(*this); }
+
     };
 
 std::ostream& 

@@ -25,6 +25,7 @@ o Define QDense * Dense contraction directly?
 ! Change default behavior of MPS(sites) constructor
   to just make a zero-initialized MPS (for consistency)
   (Too picky?)
+  --> keep current behavior with {"Randomize=",true} Args
 
 o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
 
@@ -32,6 +33,38 @@ o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
 
 ! Add read/write for TagSet
 ! Fix read/write for Index and test for rest of library
+
+o MPS(InitState,m) and randomMPS(InitState,m)
+  -> randomMPS(InitState,m) with QNs would require adding qr(A,Q,R) function
+
+o Add back some removed prime functions with varargs
+  o A.prime(pinc1,index1,pinc2,index2,...)
+  o A.prime(pinc=1,index1,index2,...) = A.prime(pinc,index1,pinc,index2,...)
+  o A.primeExcept(plinc=1,index1,index2,...)
+  o A.primeExcept(plinc=1,tagset)
+  COMPLETE:
+  x A.setPrime(plev1,index1,plev2,index2,...)
+  x A.setPrime(plev,index1,index2,...) = A.setPrime(plev,index1,plev,index2,...)
+  x A.noPrime(index1,index2,...) = A.setPrime(0,index1,0,index2,...)
+o Add some more tag functions
+  o A.addTags(tagset,imatch1,imtach2,...) = A.addTags(tagset,imatch1).addTags(tagset,imatch2,...)
+o Decide what to do with reindex
+  Matt: I think it is still good to have, but would prefer to make a version that
+        internally uses `delta` and does not ignore prime levels, so:
+        auto A = ITensor(i,j,k);
+        auto B = reindex(A,{i,j,k},{l,m,o}); // Or list in pairs like reindex(A,i,l,j,m,k,o)
+        // Shorthand for A*delta(i,l)*delta(j,m)*delta(k,o)
+        This is particularly useful in case some of the reindexing involves a swap of indices,
+        i.e. reindex(A,{i,j,k},{j,i,o}) in the case where i and j are swappable, which in general
+        could become quite tedious to do by hand.
+o Make modifying functions member functions and all other functions free
+  (at least for externally-facing functions)
+  o randomize(ITensor&) -> ITensor::randomize()
+o Need to add some commits from master
+  o errMPOProd and deprecation of checkMPOProd
+o Add read/write for TagSet
+o Fix read/write for Index and test for rest of library
+
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 ! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 o Update website:
@@ -39,6 +72,11 @@ o Update website:
   o ITensor book
   o Tutorials
   o Code formulas
+o Code cleanup
+o Add unit tests for tags functions
+
+Optional (possibly post V3)
+o Define QDense * Dense contraction directly
 
 # Final Release Checks
   o Fresh install with new options.mk file compiles
@@ -53,3 +91,16 @@ o Update website:
     Or perhaps better, Dylan can config Jenkins to 
     compile the sample codes.
   o All unit tests pass
+
+
+#######################################################################################################
+Completed (this is to help keep track of changes made, but we should make an official
+           list for the website):
+
+o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
+  o m>1 only allowed with no QNs
+o Add randomMPS(sites,m=1) function with no QNs
+o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+   o Add deprecation warning to MPO(AutoMPO), telling people to switch
+     to toMPO(AutoMPO)
+

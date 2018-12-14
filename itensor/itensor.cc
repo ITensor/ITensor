@@ -583,11 +583,29 @@ permute(IndexSet const& iset)
 
 #ifndef USESCALE
 
+//TODO: make sure this does the correct thing
+//for Diag and QDiag
+//QDense -> Dense
+//QDiag  -> Dense
+//Diag   -> Dense
 ITensor
 toDense(ITensor T)
     {
     if(not hasQNs(T)) return T;
-    doTask(ToDense{T.inds()},T.store());
+    if(T.store()) doTask(ToDense{T.inds()},T.store());
+    auto nis = T.inds();
+    nis.removeQNs();
+    return ITensor{move(nis),move(T.store()),T.scale()};
+    }
+
+//TODO: make this use a RemoveQNs task type that does:
+//QDense -> Dense
+//QDiag  -> Diag
+ITensor
+removeQNs(ITensor T)
+    {
+    if(not hasQNs(T)) return T;
+    if(T.store()) doTask(ToDense{T.inds()},T.store());
     auto nis = T.inds();
     nis.removeQNs();
     return ITensor{move(nis),move(T.store()),T.scale()};

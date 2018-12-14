@@ -25,7 +25,7 @@ SECTION("Generic SiteSet")
 
 SECTION("SpinHalf (QNs)")
     {
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 2);

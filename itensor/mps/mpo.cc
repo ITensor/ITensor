@@ -51,71 +51,6 @@ MPO(const SiteSet& sites,
     putMPOLinks(*this);
     }
 
-/*
-template<class Tensor> 
-void MPO::
-position(int i, const Args& args)
-    {
-    if(isNull()) Error("position: MPS is null");
-
-    while(l_orth_lim_ < i-1)
-        {
-        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
-        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
-        svdBond(l_orth_lim_+1,WF,Fromleft,args);
-        }
-    while(r_orth_lim_ > i+1)
-        {
-        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
-        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
-        svdBond(r_orth_lim_-2,WF,Fromright,args);
-        }
-
-    is_ortho_ = true;
-    }
-template void MPO<ITensor>::
-position(int b, const Args& args);
-template void MPO<IQTensor>::
-position(int b, const Args& args);
-*/
-
-/*
-template <class Tensor>
-void MPO::
-orthogonalize(const Args& args)
-    {
-    //Do a half-sweep to the right, orthogonalizing each bond
-    //but do not truncate since the basis to the right might not
-    //be ortho (i.e. use the current m).
-    //svd_.useOrigM(true);
-    int orig_maxm = maxm();
-    Real orig_cutoff = cutoff();
-    for(Spectrum& spec : spectrum_)
-        {
-        spec.maxm(MAX_M);
-        spec.cutoff(MIN_CUT);
-        }
-
-    position(1);
-    position(N_);
-
-    //Now basis is ortho, ok to truncate
-    for(Spectrum& spec : spectrum_)
-        {
-        spec.useOrigM(false);
-        spec.maxm(orig_maxm);
-        spec.cutoff(orig_cutoff);
-        }
-    position(1);
-
-    is_ortho_ = true;
-    }
-template
-void MPO<ITensor>::orthogonalize(const Args& args);
-template
-void MPO<IQTensor>::orthogonalize(const Args& args);
-*/
-
 
 MPO& MPO::
 plusEq(MPO const& other_,
@@ -399,22 +334,22 @@ putMPOLinks(MPO& W, Args const& args)
     }
 
 
-MPO
-toMPO(MPO const& K)
-    {
-    int N = K.N();
-    MPO res;
-    if(K.sites()) res = MPO(K.sites());
-    else          res = MPO(N);
-    res.logRefNorm(K.logRefNorm());
-    for(int j = 0; j <= N+1; ++j)
-        {
-        res.Aref(j) = ITensor(K.A(j));
-        }
-    res.leftLim(K.leftLim());
-    res.rightLim(K.rightLim());
-    return res;
-    }
+//MPO
+//toMPO(MPO const& K)
+//    {
+//    int N = K.N();
+//    MPO res;
+//    if(K.sites()) res = MPO(K.sites());
+//    else          res = MPO(N);
+//    res.logRefNorm(K.logRefNorm());
+//    for(int j = 0; j <= N+1; ++j)
+//        {
+//        res.Aref(j) = ITensor(K.A(j));
+//        }
+//    res.leftLim(K.leftLim());
+//    res.rightLim(K.rightLim());
+//    return res;
+//    }
 
 bool
 isComplex(MPO const& W)
@@ -602,5 +537,66 @@ checkMPOProd(MPS const& psi2,
     res += overlap(psi1,Kd,K,psi1);
     return res;
     }
+
+//template<class Tensor> 
+//void MPO::
+//position(int i, const Args& args)
+//    {
+//    if(isNull()) Error("position: MPS is null");
+//
+//    while(l_orth_lim_ < i-1)
+//        {
+//        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
+//        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+//        svdBond(l_orth_lim_+1,WF,Fromleft,args);
+//        }
+//    while(r_orth_lim_ > i+1)
+//        {
+//        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
+//        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+//        svdBond(r_orth_lim_-2,WF,Fromright,args);
+//        }
+//
+//    is_ortho_ = true;
+//    }
+//template void MPO<ITensor>::
+//position(int b, const Args& args);
+//template void MPO<IQTensor>::
+//position(int b, const Args& args);
+
+//template <class Tensor>
+//void MPO::
+//orthogonalize(const Args& args)
+//    {
+//    //Do a half-sweep to the right, orthogonalizing each bond
+//    //but do not truncate since the basis to the right might not
+//    //be ortho (i.e. use the current m).
+//    //svd_.useOrigM(true);
+//    int orig_maxm = maxm();
+//    Real orig_cutoff = cutoff();
+//    for(Spectrum& spec : spectrum_)
+//        {
+//        spec.maxm(MAX_M);
+//        spec.cutoff(MIN_CUT);
+//        }
+//
+//    position(1);
+//    position(N_);
+//
+//    //Now basis is ortho, ok to truncate
+//    for(Spectrum& spec : spectrum_)
+//        {
+//        spec.useOrigM(false);
+//        spec.maxm(orig_maxm);
+//        spec.cutoff(orig_cutoff);
+//        }
+//    position(1);
+//
+//    is_ortho_ = true;
+//    }
+//template
+//void MPO<ITensor>::orthogonalize(const Args& args);
+//template
+//void MPO<IQTensor>::orthogonalize(const Args& args);
 
 } //namespace itensor

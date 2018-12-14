@@ -171,10 +171,26 @@ class IndexSet : public RangeT<Index>
     // Prime methods
     //
     void
-    setPrime(int plnew, TagSet const& tsmatch = TagSet(All));
+    setPrime(int plnew,
+             TagSet const& tsmatch = TagSet(All));
 
     void
     setPrime(int plnew, Index const& imatch);
+
+    template<typename... VarArgs>
+    void
+    setPrime(int plnew1,
+             Index const& imatch1,
+             int plnew2,
+             Index const& imatch2,
+             VarArgs&&... vargs);
+
+    template<typename... VarArgs>
+    void
+    setPrime(int plnew,
+             Index const& imatch1,
+             Index const& imatch2,
+             VarArgs&&... vargs);
 
     void
     noPrime(TagSet const& tsmatch = TagSet(All));
@@ -182,12 +198,18 @@ class IndexSet : public RangeT<Index>
     void
     noPrime(Index const& imatch);
 
-    // TODO: should this just be replaced by setPrime()?
+    template<typename... VarArgs>
     void
-    mapPrime(int plold, int plnew, TagSet const& tsmatch = TagSet(All));
+    noPrime(Index const& imatch1,
+            VarArgs&&... vargs);
 
     void
-    prime(int plinc = 1, TagSet const& tsmatch = TagSet(All));
+    mapPrime(int plold, int plnew,
+             TagSet const& tsmatch = TagSet(All));
+
+    void
+    prime(int plinc = 1,
+          TagSet const& tsmatch = TagSet(All));
 
     void
     prime(TagSet const& tsmatch);
@@ -199,23 +221,28 @@ class IndexSet : public RangeT<Index>
     prime(Index const& imatch);
 
     void
-    swapPrime(int pl1, int pl2, TagSet const& tsmatch = TagSet());
+    swapPrime(int pl1, int pl2,
+              TagSet const& tsmatch = TagSet());
 
     //
     // Tag methods
     //
+
+    //TODO: add replaceTags(tsold,tsnew,index1,index2,...)?
     void
     replaceTags(TagSet const& tsold, 
                 TagSet const& tsnew, 
-                TagSet const& tsmatch = TagSet(All), int plmatch = -1);
+                TagSet const& tsmatch = TagSet(All),
+                int plmatch = -1);
 
+    //TODO: add swapTags(ts1,ts2,index1,index2,...)?
     void
     swapTags(TagSet const& ts1, 
              TagSet const& ts2, 
              TagSet const& tsmatch = TagSet(All), 
              int plmatch = -1);
 
-
+    //TODO: add setTags(tsnew1,imatch1,tsnew2,imatch2,...)?
     void
     setTags(TagSet const& tsnew, 
             TagSet const& tsmatch = TagSet(All), 
@@ -230,10 +257,12 @@ class IndexSet : public RangeT<Index>
     addTags(TagSet const& tsadd, 
             int plmatch);
 
+    //TODO: add addTags(tsadd1,imatch1,tsadd2,imatch2,...)?
     void
     addTags(TagSet const& tsadd, 
             Index const& imatch);
 
+    //TODO: add removeTags(tsremove = TagSet(All),...)?
     void
     removeTags(TagSet const& tsremove, 
                TagSet const& tsmatch = TagSet(All), 
@@ -243,10 +272,12 @@ class IndexSet : public RangeT<Index>
     removeTags(TagSet const& tsremove, 
                int plmatch);
 
+    //TODO: add removeTags(tsremove1,imatch1,tsremove2,imatch2,...)?
     void
     removeTags(TagSet const& tsremove, 
                Index const& imatch);
 
+    // Remove QNs from all indices in the IndexSet
     void
     removeQNs();
 
