@@ -619,13 +619,54 @@ dag(ITensor T)
     }
 
 
-//TODO: rename replaceIndices and use deltas?
+template<typename... Inds>
+ITensor
+replaceInds(ITensor const& cT, 
+            Index o1, Index n1, 
+            Inds... inds) 
+    {
+    constexpr size_t size = 2+sizeof...(inds);
+    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(inds)...}};
+
+    auto T = cT;
+    auto is = T.inds();
+    
+    //This is a random prime level increase to 
+    //prevent clashing indices if there are prime level
+    //swaps
+    auto tempLevel = 43218;
+    for(auto J : is)
+        {
+        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
+            {
+            if(J==ipairs[oi])
+                {
+                if(J.m() != ipairs[ni].m())
+                    {
+                    printfln("Old m = %d",J.m());
+                    printfln("New m would be = %d",ipairs[ni].m());
+                    throw ITError("Mismatch of index dimension in reindex");
+                    }
+                T *= delta(J,prime(ipairs[ni],tempLevel));
+                break;
+                }
+            }
+        }
+
+    //Bring the prime levels back down to the original
+    //desired ones
+    for(size_t ni = 1; ni <= size; ni += 2) T.prime(-tempLevel,prime(ipairs[ni],tempLevel));
+
+    return T;
+    }
+
 template<typename... Inds>
 ITensor
 reindex(ITensor const& cT, 
         Index o1, Index n1, 
         Inds... inds) 
     {
+    Global::warnDeprecated("reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
     constexpr size_t size = 2+sizeof...(inds);
     auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(inds)...}};
 

@@ -477,6 +477,13 @@ sumelsC(ITensor const& t);
 
 template<typename... Inds>
 ITensor
+replaceInds(ITensor const& cT, 
+            Index o1, Index n1, 
+            Inds... inds);
+
+//This is deprecated, use replaceInds() instead
+template<typename... Inds>
+ITensor
 reindex(ITensor const& cT, 
         Index o1, Index n1, 
         Inds... inds);

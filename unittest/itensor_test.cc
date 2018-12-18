@@ -1441,23 +1441,30 @@ SECTION("Prime IndexTypes")
 }
 
 SECTION("CommonIndex")
-{
-ITensor T1(s1,s2,l1,l2),
-        T2(s1,l3),
-        T3(s3,l4);
+    {
+    ITensor T1(s1,s2,l1,l2),
+            T2(s1,l3),
+            T3(s3,l4);
 
-CHECK(hasIndex(T1,s1));
-CHECK(hasIndex(T2,s1));
+    CHECK(hasIndex(T1,s1));
+    CHECK(hasIndex(T2,s1));
 
-Index c = commonIndex(T1,T3);
-CHECK(!c);
+    Index c = commonIndex(T1,T3);
+    CHECK(!c);
 
-c = commonIndex(T2,T3);
-CHECK(!c);
+    c = commonIndex(T2,T3);
+    CHECK(!c);
 
-CHECK(commonIndex(T1,T2) == s1);
-CHECK(commonIndex(T1,T2,"Site") == s1);
-}
+    CHECK(commonIndex(T1,T2) == s1);
+    CHECK(commonIndex(T1,T2,"Site") == s1);
+    }
+
+SECTION("replaceInds")
+    {
+    auto A = randomITensor(s1,prime(s1),l1);
+    auto B = replaceInds(A,s1,prime(s1),l1,l2,prime(s1),s1);
+    CHECK_CLOSE(norm(B-swapPrime(A*delta(l1,l2),0,1,s1)),0.0);
+    }
 
 SECTION("Diag ITensor Contraction")
 {
