@@ -4,6 +4,8 @@
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
 
+? Change niter definition, lowering by 1?
+
 ! Decide about default ConserveQNs of site sets (I think always "true"?)
   If wanting dense by default just use SiteSet(N,d)
 ! New MPS constructor conventions
