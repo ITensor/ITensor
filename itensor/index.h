@@ -139,10 +139,6 @@ class Index
     Index& 
     prime(int inc = 1);
 
-    // Check if other Index is a copy of this, ignoring primeLevel
-    bool 
-    noprimeEquals(Index const& other) const;
-
     // Add tags
     Index&
     addTags(const TagSet& t) { tags_.addTags(t); return *this; }
@@ -242,6 +238,9 @@ bool
 operator==(Index const& i1, Index const& i2);
 bool 
 operator!=(Index const& i1, Index const& i2);
+
+bool
+equalsIgnorePrime(Index const& i1, Index const& i2);
 
 // Useful for sorting Index objects
 bool 

@@ -515,6 +515,15 @@ mapPrime(ITensor A,
     return A;
     }
 
+template<typename... VarArgs>
+ITensor
+swapPrime(ITensor A, 
+          VarArgs&&... vargs)
+    {
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
 //TODO: bring this back?
 //template<typename Cond>
 //Index
@@ -627,7 +636,7 @@ reindex(ITensor const& cT,
         {
         for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
             {
-            if(is[j].noprimeEquals(ipairs[oi]))
+            if(equalsIgnorePrime(is[j],ipairs[oi]))
                 {
                 if(is[j].m() != ipairs[ni].m())
                     {
@@ -637,7 +646,7 @@ reindex(ITensor const& cT,
                     }
                 auto plev = is[j].primeLevel();
                 auto arrow_dir = is[j].dir();
-                is[j] = noprime(ipairs[ni]);
+                is[j] = noPrime(ipairs[ni]);
                 is[j].primeLevel(plev);
                 is[j].dir(arrow_dir);
                 break;

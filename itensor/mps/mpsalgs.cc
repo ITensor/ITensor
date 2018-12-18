@@ -94,7 +94,7 @@ addAssumeOrth(MPSType      & L,
     auto N = L.N();
     if(R.N() != N) Error("Mismatched MPS sizes");
 
-    L.primelinks(0,4);
+    L.mapPrimeLink(0,4);
 
     auto first = vector<ITensor>(N);
     auto second = vector<ITensor>(N);
@@ -115,7 +115,7 @@ addAssumeOrth(MPSType      & L,
         }
     L.Aref(N) = dag(first.at(N-1)) * L.A(N) + dag(second.at(N-1)) * R.A(N);
 
-    L.noprimelink();
+    L.noPrimeLink();
 
     L.orthogonalize(args);
 

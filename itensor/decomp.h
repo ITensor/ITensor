@@ -348,7 +348,7 @@ diagHermitian(ITensor const& M,
     //
     auto k = M.inds().front();
     auto kps = stdx::reserve_vector<int>(rank(M));
-    for(auto& i : M.inds()) if(i.noprimeEquals(k)) kps.push_back(i.primeLevel());
+    for(auto& i : M.inds()) if(equalsIgnorePrime(i,k)) kps.push_back(i.primeLevel());
     if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
         {
         Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
@@ -367,7 +367,7 @@ diagHermitian(ITensor const& M,
     for(auto& i : M.inds())
     for(auto& j : M.inds())
         {
-        if(i.noprimeEquals(j) && i.primeLevel()+pdiff == j.primeLevel())
+        if(equalsIgnorePrime(i,j) && i.primeLevel()+pdiff == j.primeLevel())
             {
             inds.push_back(i);
             }

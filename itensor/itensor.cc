@@ -313,29 +313,6 @@ uniqueIndex(ITensor const& A,
     return Index();
     }
 
-ITensor
-swapPrime(ITensor T, 
-          int plev1, 
-          int plev2,
-          TagSet const& ts)
-    { 
-    int tempLevel = 99999;
-#ifdef DEBUG
-    for(auto& I : T.inds())
-        {
-        if(I.primeLevel() == tempLevel) 
-            {
-            println("tempLevel = ",tempLevel);
-            Error("swapPrime fails if an index has primeLevel==tempLevel");
-            }
-        }
-#endif
-    T.mapPrime(plev1,tempLevel,ts);
-    T.mapPrime(plev2,plev1,ts);
-    T.mapPrime(tempLevel,plev2,ts);
-    return T; 
-    }
-
 Real
 norm(ITensor const& T)
     {

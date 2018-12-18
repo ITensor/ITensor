@@ -135,17 +135,15 @@ class ITensor
     prime(VarArgs&&... vargs)
         { is_.prime(std::forward<VarArgs>(vargs)...); return *this; }
 
-    //Change all Indices having primeLevel plevold to have primeLevel plevnew
-    ITensor& 
-    mapPrime(int plevold, 
-             int plevnew, 
-             TagSet const& tags = TagSet(All))
-        { is_.mapPrime(plevold,plevnew,tags); return *this; }
-
     template<typename... VarArgs>
     ITensor& 
     mapPrime(VarArgs&&... vargs)
         { is_.mapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor& 
+    swapPrime(VarArgs&&... vargs)
+        { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
     //
     // Element Transformation Methods
@@ -372,6 +370,18 @@ ITensor
 mapPrime(ITensor A, 
          VarArgs&&... vargs);
 
+//
+//Return copy of a tensor with primeLevels plev1 and plev2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
+template<typename... VarArgs>
+ITensor
+swapPrime(ITensor A,
+          VarArgs&&... vargs);
+
 bool
 hasIndex(ITensor const& T, Index const& I);
 
@@ -411,19 +421,6 @@ uniqueIndex(ITensor const& A,
             ITensor const& T1,
             ITensor const& T2,
             Tensors const&... Tens);
-
-//
-//Return copy of a tensor with primeLevels plev1 and plev2 swapped
-//
-//For example, if T has indices i,i' (like a matrix or a site
-//operator) then swapPrime(T,0,1) will have indices i',i 
-//i.e. the transpose of T.
-//
-ITensor
-swapPrime(ITensor T, 
-          int plev1, 
-          int plev2,
-          TagSet const& ts = TagSet(All));
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor

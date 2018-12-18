@@ -460,19 +460,10 @@ mapPrime(int oldp, int newp, TagSet const& ts)
     }
 
 void MPS::
-primelinks(int oldp, int newp)
+noPrimeLink()
     { 
     if(do_write_)
-        Error("primelinks not supported if doWrite(true)");
-    for(int i = 1; i <= N_; ++i) 
-        A_[i].mapPrime(oldp,newp,"Link"); 
-    }
-
-void MPS::
-noprimelink()
-    { 
-    if(do_write_)
-        Error("noprimelink not supported if doWrite(true)");
+        Error("noPrimeLink not supported if doWrite(true)");
     for(int i = 1; i <= N_; ++i) 
         A_[i].noPrime("Link"); 
     }
@@ -1110,7 +1101,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //    if(do_write_)
 //        Error("operator+= not supported if doWrite(true)");
 //
-//    primelinks(0,4);
+//    mapPrimeLink(0,4);
 //
 //    //Create new link indices
 //    vector<IQIndex> nlinks(N);
@@ -1150,7 +1141,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //    if(do_write_)
 //        Error("operator+= not supported if doWrite(true)");
 //
-//    primelinks(0,4);
+//    mapPrimeLink(0,4);
 //
 //    vector<Tensor> first(N), second(N);
 //    for(int i = 1; i < N_; ++i)
@@ -1169,7 +1160,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //        }
 //    Aref(N) = dag(first[N-1]) * A(N) + dag(second[N-1]) * other.A(N);
 //
-//    noprimelink();
+//    noPrimeLink();
 //
 //    orthogonalize();
 //

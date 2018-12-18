@@ -85,11 +85,14 @@ class MPS
     void 
     mapPrime(int oldp, int newp, TagSet const& ts = TagSet("All"));
 
-    void 
-    primelinks(int oldp, int newp);
+    void
+    mapPrimeLink(int oldp, int newp)
+        {
+        mapPrime(oldp,newp,"Link");
+        }
 
     void 
-    noprimelink();
+    noPrimeLink();
 
     // Randomize the tensors of the MPS
     void

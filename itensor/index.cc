@@ -100,12 +100,6 @@ Index::
 operator bool() const { return (id_!=0); }
 
 
-bool Index::
-noprimeEquals(Index const& other) const
-    { 
-    return (id_ == other.id_);
-    }
-
 IndexVal Index::
 operator()(long val) const
     {
@@ -163,6 +157,12 @@ bool
 operator!=(Index const& i1, Index const& i2)
     { 
     return not operator==(i1,i2);
+    }
+
+bool
+equalsIgnorePrime(Index const& i1, Index const& i2)
+    { 
+    return (i1.id() == i2.id()) && (tags(i1) == tags(i2));
     }
 
 bool

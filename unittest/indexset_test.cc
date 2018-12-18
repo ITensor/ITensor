@@ -127,9 +127,6 @@ SECTION("Prime IndexType")
     SECTION("Case 3")
         {
         IndexSet is(i2,w1,prime(i2),v1);
-        //OLD: Use multiple IndexType arguments
-        //TODO: allow prime to take multiple TagSets,
-        //which would mean match one TagSet or the other?
         is.prime("Wtype");
         is.prime("Vtype");
         CHECK(is[0] == i2);
@@ -140,10 +137,6 @@ SECTION("Prime IndexType")
     SECTION("Case 4")
         {
         IndexSet is(i2,w1,prime(i2),v1);
-        //OLD: Use multiple IndexType arguments
-        //and an increment
-        //TODO: allow prime to take multiple TagSets,
-        //which would mean match one TagSet or the other?
         is.prime(4,"Wtype");
         is.prime(4,"Vtype");
         CHECK(is[0] == i2);
@@ -155,29 +148,19 @@ SECTION("Prime IndexType")
 
 SECTION("Prime Indices")
     {
-    /*
     SECTION("Case 1")
         {
         IndexSet is(i5,i2,prime(i2),i4);
-        //TODO: allow listing multiple indices
-        //This example doesn't work properly
-        //since we want to take i2->prime(i2) and prime(i2)->prime(i2,2)
-        //at the same time
-        is.prime(i2);
-        is.prime(prime(i2));
+        is.prime(i2,prime(i2));
         CHECK(is[0] == i5);
         CHECK(is[1] == prime(i2));
         CHECK(is[2] == prime(i2,2));
         CHECK(is[3] == i4);
         }
-    */
-
     SECTION("Case 2")
         {
         IndexSet is(i5,i2,prime(i2),i4);
-        //TODO: allow listing multiple indices?
-        is.prime(prime(i2));
-        is.prime(i2);
+        is.prime(prime(i2),i2);
         CHECK(is[0] == i5);
         CHECK(is[1] == prime(i2));
         CHECK(is[2] == prime(i2,2));
@@ -187,22 +170,18 @@ SECTION("Prime Indices")
     SECTION("Case 3 - include inc")
         {
         IndexSet is(i5,i2,prime(i2),i4);
-        //TODO: allow listing multiple indices?
-        is.prime(4,prime(i2));
-        is.prime(4,i2);
+        is.prime(4,prime(i2),i2);
         CHECK(is[0] == i5);
         CHECK(is[1] == prime(i2,4));
         CHECK(is[2] == prime(i2,5));
         CHECK(is[3] == i4);
         }
-    /*
-    SECTION("Check Error Condition")
-        {
-        IndexSet is(i5,i2,i3,i4);
-        //TODO: add debug check that index is in IndexSet
-        CHECK_THROWS_AS(is.prime(prime(i2)),ITError);
-        }
-    */
+    //TODO: add this check back in
+    //SECTION("Check Error Condition")
+    //    {
+    //    IndexSet is(i5,i2,i3,i4);
+    //    CHECK_THROWS_AS(is.prime(prime(i2)),ITError);
+    //    }
     }
 
 SECTION("Prime Mix of IndexType and Index")
@@ -210,9 +189,6 @@ SECTION("Prime Mix of IndexType and Index")
     SECTION("Case 1 Basic")
         {
         auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
-        //TODO: add priming of Index or TagSet
-        //This is bad because it can prime twice if there is an
-        //overlap (if i2 had Tag "Vtype")
         is.prime(i2);
         is.prime("Vtype");
         CHECK(is[0] == i5);
@@ -224,9 +200,6 @@ SECTION("Prime Mix of IndexType and Index")
     SECTION("Case 2 Increment")
         {
         auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
-        //TODO: add priming of Index or TagSet
-        //This is bad because it can prime twice if there is an
-        //overlap (if i2 had Tag "Vtype")
         is.prime(3,i2);
         is.prime(3,"Vtype");
         CHECK(is[0] == i5);
@@ -238,9 +211,6 @@ SECTION("Prime Mix of IndexType and Index")
     SECTION("Case 3 Other Order")
         {
         auto is = IndexSet(i5,i2,prime(i2,2),v1,prime(w1));
-        //TODO: add priming of Index or TagSet
-        //This is bad because it can prime twice if there is an
-        //overlap (if i2 had Tag "Vtype")
         is.prime(3,"Vtype");
         is.prime(3,i2);
         CHECK(is[0] == i5);
@@ -263,94 +233,61 @@ SECTION("Prime Mix of IndexType and Index")
         }
     }
 
-//
-// This feature was experimental and has been
-// removed. Use mapprime instead.
-//
-//SECTION("Prime Using IndexVals")
+// For now, primeExcept has been removed
+// TODO: consider putting it back?
+//SECTION("Prime Except")
 //    {
 //    SECTION("Case 1")
 //        {
-//        auto is = IndexSet(i5,i2,prime(i2),i4);
-//        prime(is,i2(1),prime(i2)(2));
+//        IndexSet is(i5,i2,i3,i4);
+//        primeExcept(is,i5);
 //        CHECK(is[0] == i5);
 //        CHECK(is[1] == prime(i2));
-//        CHECK(is[2] == prime(i2,3));
-//        CHECK(is[3] == i4);
+//        CHECK(is[2] == prime(i3));
+//        CHECK(is[3] == prime(i4));
 //        }
 //    SECTION("Case 2")
 //        {
-//        IndexSet is(i5,i2,prime(i2),i4);
-//        prime(is,i2(5),prime(i2)(1),i4(2));
-//        CHECK(is[0] == i5);
-//        CHECK(is[1] == prime(i2,5));
-//        CHECK(is[2] == prime(i2,2));
+//        IndexSet is(i5,i2,i3,i4);
+//        primeExcept(is,i2,2);
+//        CHECK(is[0] == prime(i5,2));
+//        CHECK(is[1] == i2);
+//        CHECK(is[2] == prime(i3,2));
 //        CHECK(is[3] == prime(i4,2));
 //        }
-//    SECTION("Check Error Condition")
+//    SECTION("Case 3")
 //        {
 //        IndexSet is(i5,i2,i3,i4);
-//        CHECK_THROWS_AS(prime(is,prime(i2)(3)),ITError);
+//        primeExcept(is,i2,i4,2);
+//        CHECK(is[0] == prime(i5,2));
+//        CHECK(is[1] == i2);
+//        CHECK(is[2] == prime(i3,2));
+//        CHECK(is[3] == i4);
+//        }
+//    SECTION("Case 4")
+//        {
+//        IndexSet is(i5,i2,i3,i4);
+//        primeExcept(is,i4,i2,2);
+//        CHECK(is[0] == prime(i5,2));
+//        CHECK(is[1] == i2);
+//        CHECK(is[2] == prime(i3,2));
+//        CHECK(is[3] == i4);
+//        }
+//    SECTION("Regression Test 1")
+//        {
+//        Index x("x",2,Xtype),
+//              z("z",2,Ztype),
+//              y("y",2,Ytype),
+//              v("v",2,Vtype);
+//        IndexSet is(prime(x,3),prime(y,1),prime(z,3),y,v);
+//        primeExcept(is,Vtype,Ytype,-2);
+//        CHECK(is[0]==prime(x,1));
+//        CHECK(is[1]==prime(y,1));
+//        CHECK(is[2]==prime(z,1));
+//        CHECK(is[3]==      y   );
+//        CHECK(is[4]==      v   );
 //        }
 //    }
-
-/*
-// For now, primeExcept has been removed
-// TODO: consider putting it back?
-SECTION("Prime Except")
-    {
-    SECTION("Case 1")
-        {
-        IndexSet is(i5,i2,i3,i4);
-        primeExcept(is,i5);
-        CHECK(is[0] == i5);
-        CHECK(is[1] == prime(i2));
-        CHECK(is[2] == prime(i3));
-        CHECK(is[3] == prime(i4));
-        }
-    SECTION("Case 2")
-        {
-        IndexSet is(i5,i2,i3,i4);
-        primeExcept(is,i2,2);
-        CHECK(is[0] == prime(i5,2));
-        CHECK(is[1] == i2);
-        CHECK(is[2] == prime(i3,2));
-        CHECK(is[3] == prime(i4,2));
-        }
-    SECTION("Case 3")
-        {
-        IndexSet is(i5,i2,i3,i4);
-        primeExcept(is,i2,i4,2);
-        CHECK(is[0] == prime(i5,2));
-        CHECK(is[1] == i2);
-        CHECK(is[2] == prime(i3,2));
-        CHECK(is[3] == i4);
-        }
-    SECTION("Case 4")
-        {
-        IndexSet is(i5,i2,i3,i4);
-        primeExcept(is,i4,i2,2);
-        CHECK(is[0] == prime(i5,2));
-        CHECK(is[1] == i2);
-        CHECK(is[2] == prime(i3,2));
-        CHECK(is[3] == i4);
-        }
-    SECTION("Regression Test 1")
-        {
-        Index x("x",2,Xtype),
-              z("z",2,Ztype),
-              y("y",2,Ytype),
-              v("v",2,Vtype);
-        IndexSet is(prime(x,3),prime(y,1),prime(z,3),y,v);
-        primeExcept(is,Vtype,Ytype,-2);
-        CHECK(is[0]==prime(x,1));
-        CHECK(is[1]==prime(y,1));
-        CHECK(is[2]==prime(z,1));
-        CHECK(is[3]==      y   );
-        CHECK(is[4]==      v   );
-        }
-    }
-*/
 
 SECTION("NoPrime Index")
     {
@@ -437,24 +374,14 @@ SECTION("Map Prime")
     SECTION("Case 1")
         {
         auto is = IndexSet(i1,prime(i1));
-        //TODO: this is a strange use case of mapPrime(),
-        //I think this should just be handled by
-        //is.prime(2,i1), since most other functions
-        //don't ignore the prime levels of the Index
-        //is.mapPrime(0,2,i1);
-        is.prime(2,i1);
+        is.mapPrime(0,2,i1);
         CHECK(is[0] == prime(i1,2));
         CHECK(is[1] == prime(i1,1));
         }
     SECTION("Case 2")
         {
         auto is = IndexSet(i1,prime(i1));
-        //TODO: this is a strange use case of mapPrime(),
-        //I think this should just be handled by
-        //is.prime(prime(i1)), since most other functions
-        //don't ignore the prime levels of the Index
-        //is.mapPrime(1,2,i1);
-        is.prime(prime(i1));
+        is.mapPrime(1,2,i1);
         CHECK(is[0] == i1);
         CHECK(is[1] == prime(i1,2));
         }
@@ -463,47 +390,40 @@ SECTION("Map Prime")
         auto is = IndexSet(i1,prime(i1),v1);
         // TODO: allow listing a mix of TagSet and Index?
         is.mapPrime(0,2,"Link");
-        //TODO: this is a strange use case of mapPrime(),
-        //I think this should just be handled by
-        //is.prime(4,v1), since most other functions
-        //don't ignore the prime levels of the Index
-        //is.mapPrime(0,4,v1);
-        is.prime(4,v1);
+        is.mapPrime(0,4,v1);
         CHECK(is[0] == prime(i1,2));
         CHECK(is[1] == prime(i1,1));
         CHECK(is[2] == prime(v1,4));
         }
     }
 
-/*
 // TODO: add back this functionality?
-// This should probably be called setPrime()
-SECTION("PrimeLevel")
-    {
-    IndexSet is(i2,i3,prime(i2),i4);
-    is.primeLevel(1,2,4,5);
-    CHECK(is[0] == prime(i2,1));
-    CHECK(is[1] == prime(i3,2));
-    CHECK(is[2] == prime(i2,4));
-    CHECK(is[3] == prime(i4,5));
-    }
-*/
+// This should be called setPrime()
+//SECTION("PrimeLevel")
+//    {
+//    IndexSet is(i2,i3,prime(i2),i4);
+//    is.primeLevel(1,2,4,5);
+//    CHECK(is[0] == prime(i2,1));
+//    CHECK(is[1] == prime(i3,2));
+//    CHECK(is[2] == prime(i2,4));
+//    CHECK(is[3] == prime(i4,5));
+//    }
 
 } //PrimeLevelMethods
 
 SECTION("IndexSet Iterator")
-{
-auto s1 = Index(2,"s1");
-auto s2 = Index(3,"s2"); 
-auto s3 = Index(4,"s3"); 
-auto s4 = Index(5,"s4"); 
-auto i = IndexSet(s1,s2,s3,s4); 
-auto c = i.begin(); 
-CHECK(*c == s1);
-CHECK(*(c+1) == s2);
-CHECK(*(c+2) == s3);
-CHECK(*(c+3) == s4);
-CHECK((c+4) == i.end());
-}
+    {
+    auto s1 = Index(2,"s1");
+    auto s2 = Index(3,"s2"); 
+    auto s3 = Index(4,"s3"); 
+    auto s4 = Index(5,"s4"); 
+    auto i = IndexSet(s1,s2,s3,s4); 
+    auto c = i.begin(); 
+    CHECK(*c == s1);
+    CHECK(*(c+1) == s2);
+    CHECK(*(c+2) == s3);
+    CHECK(*(c+3) == s4);
+    CHECK((c+4) == i.end());
+    }
 
 } //IndexSetTest

@@ -630,7 +630,7 @@ zipUpApplyMPO(MPS const& psi,
 #endif
 
     res = psi; 
-    res.primelinks(0,4);
+    res.mapPrimeLink(0,4);
     res.mapPrime(0,1,"Site");
 
     ITensor clust,nfork;
@@ -660,7 +660,7 @@ zipUpApplyMPO(MPS const& psi,
 	//throw ResultIsZero("nfork.iten size == 0");
 
     res.svdBond(N-1,nfork,Fromright,args);
-    res.noprimelink();
+    res.noPrimeLink();
     res.mapPrime(1,0,"Site");
     res.position(1);
     } //void zipUpApplyMPO

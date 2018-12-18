@@ -57,8 +57,8 @@ class MPO : private MPS
            Args const& args = Args::global());
 
     using Parent::mapPrime;
-    using Parent::primelinks;
-    using Parent::noprimelink;
+    using Parent::mapPrimeLink;
+    using Parent::noPrimeLink;
 
     void 
     primeall()	// sites i,i' -> i',i'';  link:  l -> l'

@@ -170,112 +170,189 @@ class IndexSet : public RangeT<Index>
     //
     // Prime methods
     //
+
+    //Increase prime level of all indices by plinc
+    //Optionally, prime only indices containing tags tsmatch
+    void
+    prime(int plinc,
+          TagSet const& tsmatch = TagSet("All"));
+
+    //Increase prime level of all indices by 1
+    //Optionally, prime only indices containing tags tsmatch
+    void
+    prime(TagSet const& tsmatch = TagSet("All"))
+        {
+        prime(1,tsmatch);
+        }
+
+    //Increase prime level of index imatch by plinc
+    void
+    prime(int plinc,
+          Index const& imatch);
+
+    //Increase prime level of indices imatch1,imatch2,... by plinc
+    template<typename... VarArgs>
+    void
+    prime(int plinc,
+          Index const& imatch1,
+          Index const& imatch2,
+          VarArgs&&... vargs);
+    
+    //Increase prime level of indices imatch1,imatch2,... by plinc1,plinc2,...
+    //template<typename... VarArgs>
+    //void
+    //prime(int plinc1,
+    //      Index const& imatch1,
+    //      int plinc2,
+    //      Index const& imatch2,
+    //      VarArgs&&... vargs);
+
+    //Increase prime level of indices imatch1,imatch2,... by 1
+    template<typename... VarArgs>
+    void
+    prime(Index const& imatch1,
+          VarArgs&&... vargs)
+        {
+        prime(1,imatch1,vargs...);
+        }
+
+    //Set the prime level of all indices to plnew
+    //Optionally, only set the prime levels of indices containing tags tsmatch
     void
     setPrime(int plnew,
-             TagSet const& tsmatch = TagSet(All));
+             TagSet const& tsmatch = TagSet("All"));
 
+    //Set the prime level of Index imatch to plnew
     void
-    setPrime(int plnew, Index const& imatch);
+    setPrime(int plnew,
+             Index const& imatch);
 
     template<typename... VarArgs>
     void
-    setPrime(int plnew1,
+    setPrime(int plnew,
              Index const& imatch1,
-             int plnew2,
              Index const& imatch2,
              VarArgs&&... vargs);
 
-    template<typename... VarArgs>
-    void
-    setPrime(int plnew,
-             Index const& imatch1,
-             Index const& imatch2,
-             VarArgs&&... vargs);
-
-    void
-    noPrime(TagSet const& tsmatch = TagSet(All));
-
-    void
-    noPrime(Index const& imatch);
+    //template<typename... VarArgs>
+    //void
+    //setPrime(int plnew1,
+    //         Index const& imatch1,
+    //         int plnew2,
+    //         Index const& imatch2,
+    //         VarArgs&&... vargs);
 
     template<typename... VarArgs>
     void
-    noPrime(Index const& imatch1,
-            VarArgs&&... vargs);
+    noPrime(VarArgs&&... vargs)
+        {
+        setPrime(0,vargs...);
+        }
 
     void
     mapPrime(int plold, int plnew,
-             TagSet const& tsmatch = TagSet(All));
+             TagSet const& tsmatch = TagSet("All"));
 
     void
-    prime(int plinc = 1,
-          TagSet const& tsmatch = TagSet(All));
+    mapPrime(int plold, int plnew,
+             Index const& imatch);
 
-    void
-    prime(TagSet const& tsmatch);
+    //template<typename... VarArgs>
+    //void
+    //mapPrime(int plold, int plnew,
+    //         Index const& imatch1,
+    //         Index const& imatch2,
+    //         VarArgs&&... vargs);
 
-    void
-    prime(int plinc, Index const& imatch);
+    //template<typename... VarArgs>
+    //void
+    //mapPrime(int plold1, int plnew1,
+    //         Index const& imatch1,
+    //         int plold2, int plnew2,
+    //         Index const& imatch2,
+    //         VarArgs&&... vargs);
 
-    void
-    prime(Index const& imatch);
-
+    template<typename... VarArgs>
     void
     swapPrime(int pl1, int pl2,
-              TagSet const& tsmatch = TagSet());
+              VarArgs&&... vargs);
 
     //
     // Tag methods
     //
 
-    //TODO: add replaceTags(tsold,tsnew,index1,index2,...)?
     void
     replaceTags(TagSet const& tsold, 
                 TagSet const& tsnew, 
-                TagSet const& tsmatch = TagSet(All),
+                TagSet const& tsmatch = TagSet("All"),
                 int plmatch = -1);
 
-    //TODO: add swapTags(ts1,ts2,index1,index2,...)?
     void
-    swapTags(TagSet const& ts1, 
-             TagSet const& ts2, 
-             TagSet const& tsmatch = TagSet(All), 
-             int plmatch = -1);
+    replaceTags(TagSet const& tsold, 
+                TagSet const& tsnew, 
+                int plmatch)
+        {
+        replaceTags(tsold,tsnew,TagSet("All"),plmatch);
+        }
 
-    //TODO: add setTags(tsnew1,imatch1,tsnew2,imatch2,...)?
+    void
+    replaceTags(TagSet const& tsold, 
+                TagSet const& tsnew, 
+                Index const& imatch);
+
     void
     setTags(TagSet const& tsnew, 
-            TagSet const& tsmatch = TagSet(All), 
+            TagSet const& tsmatch = TagSet("All"), 
+            int plmatch = -1);
+
+    void
+    setTags(TagSet const& tsnew, 
+            int plmatch)
+        {
+        setTags(tsnew,TagSet("All"),plmatch);
+        }
+
+    void
+    setTags(TagSet const& tsnew, 
+            Index const& imatch);
+
+    void
+    addTags(TagSet const& tsadd, 
+            TagSet const& tsmatch = TagSet("All"), 
             int plmatch = -1);
 
     void
     addTags(TagSet const& tsadd, 
-            TagSet const& tsmatch = TagSet(All), 
-            int plmatch = -1);
+            int plmatch)
+        {
+        addTags(tsadd,TagSet("All"),plmatch);
+        }
 
-    void
-    addTags(TagSet const& tsadd, 
-            int plmatch);
-
-    //TODO: add addTags(tsadd1,imatch1,tsadd2,imatch2,...)?
     void
     addTags(TagSet const& tsadd, 
             Index const& imatch);
 
-    //TODO: add removeTags(tsremove = TagSet(All),...)?
     void
     removeTags(TagSet const& tsremove, 
-               TagSet const& tsmatch = TagSet(All), 
+               TagSet const& tsmatch = TagSet("All"), 
                int plmatch = -1);
 
     void
     removeTags(TagSet const& tsremove, 
-               int plmatch);
+               int plmatch)
+        {
+        removeTags(tsremove,TagSet("All"),plmatch);
+        }
 
-    //TODO: add removeTags(tsremove1,imatch1,tsremove2,imatch2,...)?
     void
     removeTags(TagSet const& tsremove, 
                Index const& imatch);
+
+    template<typename... VarArgs>
+    void
+    swapTags(TagSet const& ts1,
+             TagSet const& ts2,
+             VarArgs&&... vargs);
 
     // Remove QNs from all indices in the IndexSet
     void

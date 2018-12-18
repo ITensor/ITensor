@@ -28,104 +28,63 @@ cbegin() const { return begin(); }
 IndexSet::const_iterator inline IndexSet::
 cend() const { return end(); }
 
-
 void inline IndexSet::
-setPrime(int plnew, TagSet const& tsmatch) 
-    { 
-    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); 
-    }
-
-void inline IndexSet::
-setPrime(int plnew, Index const& imatch) 
-    { 
-    for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
-    }
-
-template<typename... VarArgs>
-void IndexSet::
-setPrime(int plnew1,
-         Index const& imatch1,
-         int plnew2,
-         Index const& imatch2,
-         VarArgs&&... vargs)
-    {
-    auto& is = *this;
-    is.setPrime(plnew1,imatch1);
-    is.setPrime(plnew2,imatch2,vargs...);
-    }
-
-template<typename... VarArgs>
-void IndexSet::
-setPrime(int plnew,
-         Index const& imatch1,
-         Index const& imatch2,
-         VarArgs&&... vargs)
-    {
-    auto& is = *this;
-    is.setPrime(plnew,imatch1);
-    is.setPrime(plnew,imatch2,vargs...);
-    }
-
-void inline IndexSet::
-noPrime(TagSet const& tsmatch) 
-    { 
-    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(0); 
-    }
-
-void inline IndexSet::
-noPrime(Index const& imatch) 
-    { 
-    for(auto& J : *this) if(J==imatch) J.setPrime(0); 
-    }
-
-template<typename... VarArgs>
-void IndexSet::
-noPrime(Index const& imatch1,
-        VarArgs&&... vargs) 
-    {
-    auto& is = *this;
-    is.noPrime(imatch1);
-    is.noPrime(vargs...);
-    }
-
-void inline IndexSet::
-mapPrime(int plold, 
-         int plnew, 
-         TagSet const& tsmatch) 
-    { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); 
-    }
-
-void inline IndexSet::
-prime(int plinc, 
-      TagSet const& tsmatch) 
+prime(int plinc, TagSet const& tsmatch)
     { 
     for(auto& J : *this) if(hasTags(J,tsmatch)) J.prime(plinc);
     }
 
 void inline IndexSet::
-prime(TagSet const& tsmatch) 
-    { 
-    this->prime(1,tsmatch);
-    }
-
-void inline IndexSet::
-prime(int plinc, 
-      Index const& imatch) 
+prime(int plinc, Index const& imatch)
     { 
     for(auto& J : *this) if(J==imatch) J.prime(plinc);
     }
 
-void inline IndexSet::
-prime(Index const& imatch) 
+template<typename... VarArgs>
+void IndexSet::
+prime(int plinc, Index const& imatch1, Index const& imatch2, VarArgs&&... vargs)
     { 
-    this->prime(1,imatch);
+    auto ismatch = IndexSet(imatch1,imatch2,vargs...);
+    //Store the locations of the indices
+    auto iloc = IntArray(ismatch.r(),-1);
+    for(auto i : itensor::range(ismatch.r())) iloc[i] = findIndex(*this,ismatch[i]);
+    //Now prime them
+    for(auto i : iloc) parent::index(i).prime(plinc);
     }
 
 void inline IndexSet::
-swapPrime(int pl1, 
-          int pl2, 
-          TagSet const& tsmatch)
+setPrime(int plnew, TagSet const& tsmatch)
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+setPrime(int plnew, Index const& imatch)
+    { 
+    for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+mapPrime(int plold,
+         int plnew,
+         TagSet const& tsmatch)
+    { 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); 
+    }
+
+void inline IndexSet::
+mapPrime(int plold,
+         int plnew,
+         Index const& imatch)
+    { 
+    for(auto& J : *this) if(J.primeLevel()==plold && equalsIgnorePrime(J,imatch)) J.setPrime(plnew); 
+    }
+
+template<typename... VarArgs>
+void IndexSet::
+swapPrime(int pl1,
+          int pl2,
+          VarArgs&&... vargs)
     {
     int tempLevel = 99999;
 #ifdef DEBUG
@@ -138,9 +97,9 @@ swapPrime(int pl1,
             }
         }
 #endif
-    this->mapPrime(pl1,tempLevel,tsmatch);
-    this->mapPrime(pl2,pl1,tsmatch);
-    this->mapPrime(tempLevel,pl2,tsmatch);
+    this->mapPrime(pl1,tempLevel,vargs...);
+    this->mapPrime(pl2,pl1,vargs...);
+    this->mapPrime(tempLevel,pl2,vargs...);
     }
 
 void inline IndexSet::
@@ -150,25 +109,46 @@ replaceTags(TagSet const& tsold,
             int plmatch)
     {
     for(auto& J : *this)
-        {
         if(matchTagsPrime(J,tsmatch,plmatch) && hasTags(J,tsold))
             {
             J.removeTags(tsold);
             J.addTags(tsnew);
             }
-        }
     }
 
 void inline IndexSet::
+replaceTags(TagSet const& tsold, 
+            TagSet const& tsnew, 
+            Index const& imatch)
+    {
+    for(auto& J : *this)
+        if(J==imatch && hasTags(J,tsold))
+            {
+            J.removeTags(tsold);
+            J.addTags(tsnew);
+            }
+    }
+
+template<typename... VarArgs>
+void IndexSet::
 swapTags(TagSet const& ts1, 
          TagSet const& ts2, 
-         TagSet const& tsmatch, 
-         int plmatch)
+         VarArgs&&... vargs)
     {
-    auto tmp = TagSet("df4sd321");  // Some random temporary tag. TODO: Debug level check that ts1!=tmp && ts2!=tmp
-    this->replaceTags(ts1,tmp,tsmatch,plmatch);
-    this->replaceTags(ts2,ts1,tsmatch,plmatch);
-    this->replaceTags(tmp,ts2,tsmatch,plmatch);
+    auto tempTags = TagSet("df4sd321");
+#ifdef DEBUG
+    for(auto& I : *this)
+        {
+        if(hasTags(I,tempTags))
+            {
+            println("tempTags = ",tempTags);
+            Error("swapTags fails if an index has tags tempTags");
+            }
+        }
+#endif
+    this->replaceTags(ts1,tempTags,vargs...);
+    this->replaceTags(ts2,ts1,vargs...);
+    this->replaceTags(tempTags,ts2,vargs...);
     }
 
 void inline IndexSet::
@@ -180,19 +160,19 @@ setTags(TagSet const& tsnew,
     }
 
 void inline IndexSet::
-addTags(TagSet const& tsadd, 
-        TagSet const& tsmatch, int plmatch) 
+setTags(TagSet const& tsnew, 
+        Index const& imatch)
     { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); 
+    for(auto& J : *this) if(J==imatch) J.setTags(tsnew); 
     }
 
 void inline IndexSet::
 addTags(TagSet const& tsadd, 
+        TagSet const& tsmatch,
         int plmatch) 
     { 
-    for(auto& J : *this) if(J.primeLevel()==plmatch) J.addTags(tsadd); 
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); 
     }
-
 
 void inline IndexSet::
 addTags(TagSet const& tsadd, 
@@ -206,21 +186,14 @@ removeTags(TagSet const& tsremove,
            TagSet const& tsmatch,
            int plmatch) 
     { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.removeTags(tsremove); 
-    }
-
-void inline IndexSet::
-removeTags(TagSet const& tsremove, 
-           int plmatch) 
-    { 
-    for(auto& J : *this) if(J.primeLevel()==plmatch) J.removeTags(tsremove);
+    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch) || tsremove==TagSet("All")) J.removeTags(tsremove); 
     }
 
 void inline IndexSet::
 removeTags(TagSet const& tsremove, 
            Index const& imatch) 
     { 
-    for(auto& J : *this) if(J==imatch) J.removeTags(tsremove); 
+    for(auto& J : *this) if(J==imatch || tsremove==TagSet("All")) J.removeTags(tsremove); 
     }
 
 void inline IndexSet::

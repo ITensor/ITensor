@@ -1,53 +1,25 @@
 (! means necessary / blocker for releasing v3)
 
-! Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-   Matt: A problem with this was the case where Args need to 
-         get passed (to decide whether to use an approximation)
-         and a conversion could not accept a second argument. 
-         Maybe it need to be a constructor?
-   Miles: Good point, though what do you think about the following:
-         1. leave it as-is, for backward compatibility, and because 
-         most people are ok with the default settings of AutoMPO
-         2. but upgrade all of the sample codes and documentation to
-         use toMPO and we start preferring people use that
-         The reasoning here is that it's ok to break things that are
-         bad, but this is not so bad since there's a good default.
-         Still we can encourage people to use a better approach
-         via shifting the convention / soft deprecation.
-o Define QDense * Dense contraction directly?
 ? New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.
 
 ! Decide about default ConserveQNs of site sets (I think always "true"?)
   If wanting dense by default just use SiteSet(N,d)
-
-! Change default behavior of MPS(sites) constructor
-  to just make a zero-initialized MPS (for consistency)
-  (Too picky?)
-  --> keep current behavior with {"Randomize=",true} Args
-
-o Add randomMPS(sites,m) function (also perhaps randomMPS(InitState,m))
-
-? Add back some removed prime functions, like prime(ITensor,Index,Index,...)
-
+! New MPS constructor conventions
+  ! Remove MPS.randomize()
+  ! Remove randomMPS(SiteSet,m>1)
+  ? Add {"Randomize=",true} args for MPS(SiteSet)
+  o Implement MPS(InitState,m>1) and randomMPS(InitState,m>1)
 ! Add read/write for TagSet
 ! Fix read/write for Index and test for rest of library
+! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 
-o MPS(InitState,m) and randomMPS(InitState,m)
-  -> randomMPS(InitState,m) with QNs would require adding qr(A,Q,R) function
-
-o Add back some removed prime functions with varargs
-  o A.prime(pinc1,index1,pinc2,index2,...)
-  o A.prime(pinc=1,index1,index2,...) = A.prime(pinc,index1,pinc,index2,...)
+? Add back some prime functions:
   o A.primeExcept(plinc=1,index1,index2,...)
   o A.primeExcept(plinc=1,tagset)
-  COMPLETE:
-  x A.setPrime(plev1,index1,plev2,index2,...)
-  x A.setPrime(plev,index1,index2,...) = A.setPrime(plev,index1,plev,index2,...)
-  x A.noPrime(index1,index2,...) = A.setPrime(0,index1,0,index2,...)
-o Add some more tag functions
-  o A.addTags(tagset,imatch1,imtach2,...) = A.addTags(tagset,imatch1).addTags(tagset,imatch2,...)
+? Add some more tag functions
+  o A.addTags(tagset,imatch1,imatch2,...) = A.addTags(tagset,imatch1).addTags(tagset,imatch2,...)
 o Decide what to do with reindex
   Matt: I think it is still good to have, but would prefer to make a version that
         internally uses `delta` and does not ignore prime levels, so:
@@ -62,11 +34,9 @@ o Make modifying functions member functions and all other functions free
   o randomize(ITensor&) -> ITensor::randomize()
 o Need to add some commits from master
   o errMPOProd and deprecation of checkMPOProd
-o Add read/write for TagSet
-o Fix read/write for Index and test for rest of library
+  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
-! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 o Update website:
   o Detailed documentation
   o ITensor book
@@ -74,14 +44,15 @@ o Update website:
   o Code formulas
 o Code cleanup
 o Add unit tests for tags functions
+  o addTags, removeTags, swapTags, etc.
 
 Optional (possibly post V3)
 o Define QDense * Dense contraction directly
 
 # Final Release Checks
-  o Fresh install with new options.mk file compiles
-  o Jenkins is passing
-  o All sample codes compile and run
+  ! Fresh install with new options.mk file compiles
+  ! Jenkins is passing
+  ! All sample codes compile and run
   ? Incorporate sample codes into Jenkins/testing 
     (I found the DMRG codes were useful for catching bugs, 
      and TRG is a good test case for Tags)
@@ -90,7 +61,6 @@ o Define QDense * Dense contraction directly
     tests. Maybe for the DMRG one just do one sweep.
     Or perhaps better, Dylan can config Jenkins to 
     compile the sample codes.
-  o All unit tests pass
 
 
 #######################################################################################################
