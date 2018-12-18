@@ -276,6 +276,14 @@ operator()(int i, String const& state) const
     return sites_->state(i,state);
     }
 
+bool inline
+hasQNs(SiteSet const& sites)
+    {
+    for(auto i : range1(sites.N()))
+        if(not hasQNs(sites(i))) return false;
+    return true;
+    }
+
 inline ITensor SiteSet::
 op(String const& opname, 
    int i, 

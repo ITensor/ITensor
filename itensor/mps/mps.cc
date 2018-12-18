@@ -125,25 +125,35 @@ MPS::
 void MPS::
 randomize()
     {
-    //TODO: check MPS for QNs?
+    if(maxM(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension m>1.\nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
     for(auto i : range1(N_)) itensor::randomize(A_[i]);
     }
 
 MPS
 randomMPS(SiteSet const& sites, int m)
     {
-    //TODO: create hasQNs(SiteSet)
-    if(not hasQNs(sites(1)))
+    if(not hasQNs(sites))
         {
+        if(m>1) Error("randomMPS(SiteSet,m>1) not currently supported");
         auto psi = MPS(sites,m);
         psi.randomize();
         return psi;
         }
     else
         {
-        Error("randomMPS(SiteSet) with QN conservation not supported.");
+        Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
         }
     return MPS();
+    }
+
+//TODO: implement for m>1 in terms of random gates
+MPS
+randomMPS(InitState const& initstate, int m)
+    {
+    if(m>1) Error("randomMPS(InitState,m>1) not currently supported.");
+    auto psi = MPS(initstate);
+    psi.randomize();
+    return psi;
     }
 
 ITensor const& MPS::
@@ -363,10 +373,10 @@ new_tensors(std::vector<ITensor>& A,
     {
     auto N = sites.N();
     auto a = std::vector<Index>(N+1);
-    if(hasQNs(sites(1)))
+    if(hasQNs(sites))
         {
         if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,format("Link,MPS,%d",i));
-        else Error("Cannot create QN conserving MPS with bond dimension greater than 1");
+        else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from a SiteSet");
         }
     else
         {
@@ -384,7 +394,7 @@ void MPS::
 init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     { 
     auto a = std::vector<Index>(N_+1);
-    if(hasQNs(initState(1)))
+    if(hasQNs(initState))
         {
         auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
         for(auto i : range1(N_)) qa[0] -= initState(i).qn()*In;
@@ -806,6 +816,14 @@ checkRange(int i) const
         println("Valid range is 1 to ",sites_.N());
         Error("i out of range");
         }
+    }
+
+bool
+hasQNs(InitState const& initstate)
+    {
+    for(auto i : range1(initstate.sites().N()))
+        if(not hasQNs(initstate(i))) return false;
+    return true;
     }
 
 int 

@@ -261,9 +261,16 @@ class InitState
 // Other Methods Related to MPS
 //
 
+bool
+hasQNs(InitState const& initstate);
+
 //Create a random MPS
 MPS
 randomMPS(SiteSet const& sites,
+          int m = 1);
+
+MPS
+randomMPS(InitState const& initstate,
           int m = 1);
 
 //Remove the QNs of each tensor of the MPS

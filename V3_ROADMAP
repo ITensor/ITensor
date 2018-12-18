@@ -6,22 +6,10 @@
 
 ? Change niter definition, lowering by 1?
 
-! Decide about default ConserveQNs of site sets (I think always "true"?)
-  If wanting dense by default just use SiteSet(N,d)
-! New MPS constructor conventions
-  ! Remove MPS.randomize()
-  ! Remove randomMPS(SiteSet,m>1)
-  ? Add {"Randomize=",true} args for MPS(SiteSet)
-  o Implement MPS(InitState,m>1) and randomMPS(InitState,m>1)
 ! Add read/write for TagSet
 ! Fix read/write for Index and test for rest of library
 ! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 
-? Add back some prime functions:
-  o A.primeExcept(plinc=1,index1,index2,...)
-  o A.primeExcept(plinc=1,tagset)
-? Add some more tag functions
-  o A.addTags(tagset,imatch1,imatch2,...) = A.addTags(tagset,imatch1).addTags(tagset,imatch2,...)
 o Decide what to do with reindex
   Matt: I think it is still good to have, but would prefer to make a version that
         internally uses `delta` and does not ignore prime levels, so:
@@ -34,7 +22,7 @@ o Decide what to do with reindex
 o Make modifying functions member functions and all other functions free
   (at least for externally-facing functions)
   o randomize(ITensor&) -> ITensor::randomize()
-o Need to add some commits from master
+o Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 
@@ -49,7 +37,16 @@ o Add unit tests for tags functions
   o addTags, removeTags, swapTags, etc.
 
 Optional (possibly post V3)
+o Implement randomMPS(InitState,m>1)
 o Define QDense * Dense contraction directly
+o Add back some prime functions:
+  o A.primeExcept(plinc=1,index1,index2,...)
+  o A.primeExcept(plinc=1,tagset)
+? Add {"Randomize=",true} args for MPS(SiteSet)
+  o Right now, just call randomMPS(siteset)
+? Error for calls like Index(0,"i")
+? Add some more tag functions
+  o A.addTags(tagset,imatch1,imatch2,...)
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
@@ -69,9 +66,11 @@ o Define QDense * Dense contraction directly
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
+o All site sets except SiteSet(N,d) default to ConserveQNs=true
 o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
   o m>1 only allowed with no QNs
-o Add randomMPS(sites,m=1) function with no QNs
+o Add randomMPS(SiteSet,m=1) function with no QNs
+o Add randomMPS(InitState) function for QNs and no QNs
 o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
    o Add deprecation warning to MPO(AutoMPO), telling people to switch
      to toMPO(AutoMPO)

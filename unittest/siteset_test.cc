@@ -43,6 +43,14 @@ SECTION("SpinHalf (QNs)")
     //sites.op("ISy",2); 
     }
 
+SECTION("hasQNs")
+    {
+    auto sites = SpinHalf(N,{"ConserveQNs=",true});
+    CHECK(hasQNs(sites));
+    auto sitesNoQNs = SpinHalf(N,{"ConserveQNs=",false});
+    CHECK(not hasQNs(sitesNoQNs));
+    }
+
 SECTION("SpinHalf (no QNs)")
     {
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
@@ -64,7 +72,7 @@ SECTION("SpinHalf (no QNs)")
 
 SECTION("SpinOne")
     {
-    auto sites = SpinOne(N);
+    auto sites = SpinOne(N,{"ConserveQNs=",false});
     for(auto i : range1(N)) 
         {
         CHECK(sites(i).m() == 3);
@@ -83,7 +91,7 @@ SECTION("SpinOne")
 
 SECTION("Hubbard")
     {
-    auto sites = Hubbard(N);
+    auto sites = Hubbard(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 4);
@@ -104,7 +112,7 @@ SECTION("Hubbard")
 
 SECTION("Spinless")
     {
-    auto sites = Spinless(N);
+    auto sites = Spinless(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 2);
@@ -119,7 +127,7 @@ SECTION("Spinless")
 
 SECTION("tJ")
     {
-    auto sites = tJ(N);
+    auto sites = tJ(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(sites(i).m() == 3);

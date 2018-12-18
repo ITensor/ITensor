@@ -23,9 +23,6 @@ class SpinHalfSite
 
     SpinHalfSite(int n, Args const& args = Args::global())
         {
-        // TODO: make a nicer constructor for TagSet that accepts an integer
-        // i.e. TagSet("Site,S=1/2,%d",n)
-        // Also allow conversion from std::string to TagSet?
         auto ts = format("Site,S=1/2,%d",n);
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);

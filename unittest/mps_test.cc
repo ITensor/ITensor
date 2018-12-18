@@ -11,9 +11,11 @@ TEST_CASE("MPSTest")
 {
 
 static const int N = 10;
-SpinHalf shsites(N);
+SpinHalf shsites(N,{"ConserveQNs=",false});
+SpinHalf shsitesQNs(N,{"ConserveQNs=",true});
 
 InitState shFerro(shsites,"Up");
+InitState shFerroQNs(shsitesQNs,"Up");
 InitState shNeel(shsites);
 
 for(int j = 1; j <= N; ++j)
@@ -39,9 +41,43 @@ SECTION("Constructors")
 //    CHECK_EQUAL(totalQN(psiFerro),QN(10));
 //    }
 
+SECTION("hasQNs")
+    {
+    CHECK(hasQNs(shFerroQNs));
+    CHECK(not hasQNs(shFerro));
+    }
+
+SECTION("Constructors (m==1)")
+    {
+    auto psi = MPS(shsitesQNs);
+    auto l2 = commonIndex(psi.A(2),psi.A(3));
+    CHECK(1==l2.m());
+    }
+
+SECTION("Constructors (m>1)")
+    {
+    auto m = 4;
+    auto psi = MPS(shsites,m);
+    auto l2 = commonIndex(psi.A(2),psi.A(3));
+    CHECK(m==l2.m());
+    }
+
+SECTION("Random constructors (m==1)")
+    {
+    auto psi = randomMPS(shsites);
+    psi.position(1);
+    CHECK(norm(psi)>0);
+    }
+
+SECTION("Random constructors, QN conserved (m==1)")
+    {
+    auto psi = randomMPS(shFerroQNs);
+    CHECK(norm(psi)>0);
+    }
+
 SECTION("MPSAddition")
     {
-    Spinless sites(10);
+    Spinless sites(10,{"ConserveQNs=",true});
 
     InitState i1(sites,"Emp"),
               i2(sites,"Emp");
