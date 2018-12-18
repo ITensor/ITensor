@@ -10,7 +10,7 @@
 #include "itensor/util/print.h"
 #include "itensor/itensor.h"
 
-//#define COLLECT_TSTATS
+#define COLLECT_TSTATS
 
 #ifdef COLLECT_TSTATS
 namespace itensor {
@@ -151,6 +151,65 @@ doHistogram1(Real bucket_size = 0.5)
     for(auto b : range(histogram))
         {
         printfln(f,"%.12f %.12f",b*bucket_size,histogram[b]);
+        }
+    f.close();
+    }
+
+void inline
+makeBenchmark(std::string name)
+    {
+    auto charOf = [](int n) -> char
+        {
+        char i = 'a'-1;
+        return i+abs(n);
+        };
+    auto printLabels = [charOf](std::ofstream & f,
+                                TStats::iarray labels,
+                                int r)
+
+        {
+        for(auto l : range(r)) 
+            {
+            if(l != 0) print(f,",");
+            print(f,charOf(labels[l]));
+            }
+        };
+    auto printSizes = [charOf](std::ofstream & f,
+                               int j,
+                               TStats::iarray labels,
+                               TStats::iarray dims,
+                               int r)
+
+        {
+        for(auto i : range(r))
+            {
+            if(abs(labels[i]) == j)
+                {
+                print(f," ",charOf(j),":",dims[i]);
+                return true;
+                }
+            }
+        return false;
+        };
+    std::ofstream f(name+".dat");
+    for(auto& t : global_tstats())
+        {
+        print(f,"C[");
+        printLabels(f,t.Clabs,t.Cr);
+        print(f,"] = A[");
+        printLabels(f,t.Alabs,t.Ar);
+        print(f,"] * B[");
+        printLabels(f,t.Blabs,t.Br);
+        print(f,"] &");
+
+        auto Nind = (t.Ar+t.Br+t.Cr)/2;
+        for(int j : range1(Nind))
+            {
+            bool found = printSizes(f,j,t.Clabs,t.Cdims,t.Cr);
+            if(!found) found = printSizes(f,j,t.Alabs,t.Adims,t.Ar);
+            if(!found) printSizes(f,j,t.Blabs,t.Bdims,t.Br);
+            }
+        print(f,";\n");
         }
     f.close();
     }
