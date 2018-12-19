@@ -92,6 +92,13 @@ class Index
     Index(long m, 
           TagSet const& ts = TagSet());
 
+    explicit
+    Index(std::string s,
+          long m)
+        {
+        Error("Index(string,int) constructor deprecated, use Index(int,...) instead");
+        }
+
     template<typename... QN_Sizes>
     Index(QN const& q1, long size1,
           QN_Sizes const&... qnsizes);

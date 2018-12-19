@@ -190,6 +190,14 @@ class IndexSet : public RangeT<Index>
     prime(int plinc,
           Index const& imatch);
 
+    void
+    prime(Index const& imatch,
+          int plinc)
+        {
+        Global::warnDeprecated("prime(Index,int) is deprecated, use prime(int,Index) instead.");
+        prime(plinc,imatch);
+        }
+
     //Increase prime level of indices imatch1,imatch2,... by plinc
     template<typename... VarArgs>
     void
@@ -234,6 +242,7 @@ class IndexSet : public RangeT<Index>
              Index const& imatch2,
              VarArgs&&... vargs);
 
+    //TODO: consider this version
     //template<typename... VarArgs>
     //void
     //setPrime(int plnew1,
@@ -257,6 +266,15 @@ class IndexSet : public RangeT<Index>
     mapPrime(int plold, int plnew,
              Index const& imatch);
 
+    void
+    mapprime(Index const& imatch,
+             int plold, int plnew)
+        {
+        Global::warnDeprecated("mapprime(Index,int,int) is deprecated, use mapPrime(int,int,Index) instead.");
+        mapPrime(plold,plnew,imatch);
+        }
+
+    //TODO: consider this version
     //template<typename... VarArgs>
     //void
     //mapPrime(int plold, int plnew,
@@ -264,6 +282,7 @@ class IndexSet : public RangeT<Index>
     //         Index const& imatch2,
     //         VarArgs&&... vargs);
 
+    //TODO: consider this version
     //template<typename... VarArgs>
     //void
     //mapPrime(int plold1, int plnew1,

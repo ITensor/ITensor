@@ -5,11 +5,12 @@
   of triples name-val-modfac.
 
 ? Change niter definition, lowering by 1?
+? In site sets, make all of the indices have the same ids but different tags
 
-! Add read/write for TagSet
-! Fix read/write for Index and test for rest of library
+! Fix read/write for Index with QNs and test for rest of library
+  o Matt: how should we distinguish whether someone wants to read an Index with
+          QNs or not?
 ! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
-
 ! Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
@@ -17,6 +18,7 @@
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 o Update website:
   o Detailed documentation
+  o List of depecrations/guide to update code
   o ITensor book
   o Tutorials
   o Code formulas
@@ -25,6 +27,13 @@ o Add unit tests for tags functions
   o addTags, removeTags, swapTags, etc.
 
 Optional (possibly post V3)
+? PrintMatrix(ITensor,{Index,...},{Index,...}) function
+  o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
+    as one big list, but instead print it in a grid that makes it look like a matrix. For example,
+    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j}) prints A as if it were a matrix where the
+    rows run over the combined Index (i,j) and the columns run over the combined index (l,j). 
+    I think this is especially useful for QN conserving ITensors, where it could make it easier to visualize
+    blocks of the ITensor.
 o Implement randomMPS(InitState,m>1)
 o Define QDense * Dense contraction directly
 o Add back some prime functions:
@@ -67,4 +76,7 @@ o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
      to toMPO(AutoMPO)
 o Depecrate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,Index,Index,...)
   that does not ignore prime levels and internally calls delta()
+o Add deprecation error for Index("i",3) constructor pointing towards Index(3,...)
+o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
+o Add read/write for TagSet
 

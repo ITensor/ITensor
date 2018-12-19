@@ -44,6 +44,9 @@ class TagSet
     Tag const&
     operator[](int i) const { return tags_[i]; }
 
+    Tag &
+    operator[](int i) { return tags_[i]; }
+
     size_t
     size() const {return size_;}
 
@@ -230,6 +233,25 @@ operator<<(std::ostream & s, TagSet const& ts)
         }
     s << "\"";
     return s;
+    }
+
+inline void
+write(std::ostream& s, TagSet const& ts)
+    {
+    for(auto i : range(MAX_TAGS))
+        write(s,ts[i]);
+    }
+
+inline void
+read(std::istream& s, TagSet & ts)
+    {
+    auto tag = Tag();
+    for(auto i : range(MAX_TAGS))
+        {
+        (void)i; // This is just to suppress warnings that i is unused
+        read(s,tag);
+        ts.addTag(tag);
+        }
     }
 
 } //namespace itensor

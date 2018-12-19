@@ -286,10 +286,6 @@ SECTION("Diag Rank 2 from container")
     }
 }
 
-/*
-//TODO: this is failing because the tags
-//are not being read or written
-//Needs to be added to read() and write() for Index
 SECTION("Write to Disk")
 {
 auto fname = "_write_test";
@@ -328,7 +324,6 @@ SECTION("DiagRealAllSame Storage")
 
 std::system(format("rm -f %s",fname).c_str());
 }
-*/
 
 SECTION("Set and Get Elements")
 {

@@ -116,17 +116,16 @@ write(std::ostream& s) const
     { 
     if(!bool(*this)) Error("Index::write: Index is default initialized");
     itensor::write(s,primelevel_);
-    //itensor::write(s,tags_);
+    itensor::write(s,tags_);
     itensor::write(s,id_);
     itensor::write(s,m_);
     }
 
-//TODO: read and write for TagSet
 Index& Index::
 read(std::istream& s)
     {
     itensor::read(s,primelevel_);
-    //itensor::read(s,tags_);
+    itensor::read(s,tags_);
     if(Global::read32BitIDs())
         {
         using ID32 = std::mt19937::result_type;
