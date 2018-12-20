@@ -351,10 +351,10 @@ div(IQTensor const& T)
     }
 
 IQTensor
-combiner(std::vector<IQIndex> cinds,
+combiner(IQIndexSet const& inds,
          Args const& args)
     {
-    if(cinds.empty()) Error("No indices passed to combiner");
+    if(inds.empty()) Error("No indices passed to combiner");
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",Link);
 
@@ -368,7 +368,7 @@ combiner(std::vector<IQIndex> cinds,
         //If not specified by user, make combined IQIndex
         //point Out unless all combined indices have In arrows.
         auto allin = true;
-        for(auto& i : cinds) 
+        for(auto& i : inds) 
             if(i.dir() != In)
                 {
                 allin = false;
@@ -378,7 +378,7 @@ combiner(std::vector<IQIndex> cinds,
         }
 
 
-    auto C = QCombiner{cinds};
+    auto C = QCombiner(inds);
 
     //Build the combined IQIndex,
     //saving information about
@@ -393,10 +393,10 @@ combiner(std::vector<IQIndex> cinds,
         QNm qm;
         //For this sector, figure out the total QN (qm.q)
         //and combined sector size (qm.m)
-        for(auto j : range(cinds))
+        for(auto j : range(inds))
             {
-            qm.q += cinds[j].qn(1+I[j]) * cinds[j].dir() * cdir;
-            qm.m *= cinds[j].index(1+I[j]).m();
+            qm.q += inds[j].qn(1+I[j]) * inds[j].dir() * cdir;
+            qm.m *= inds[j].index(1+I[j]).m();
             }
 
         size_t n = 0;
@@ -419,17 +419,30 @@ combiner(std::vector<IQIndex> cinds,
         {
         cstore.emplace_back(Index{nameint("c",n),qms[n].m,itype},qms[n].q);
         }
-    auto cind = IQIndex{cname,std::move(cstore),cdir};
+    auto cind = IQIndex(cname,std::move(cstore),cdir);
 
-    auto newind = IQIndexSetBuilder(1+cinds.size());
+    auto newind = IQIndexSetBuilder(1+inds.size());
     newind.nextIndex(std::move(cind));
-    for(auto& I : cinds) 
+    for(auto& I : inds) 
         {
-        I.dag();
-        newind.nextIndex(std::move(I));
+        newind.nextIndex(std::move(dag(I)));
         }
 
-    return IQTensor{newind.build(),std::move(C)};
+    return IQTensor(newind.build(),std::move(C));
+    }
+
+IQTensor
+combiner(std::vector<IQIndex> const& inds,
+         Args const& args)
+    {
+    return combiner(IQIndexSet(inds),args);
+    }
+
+IQTensor
+combiner(std::initializer_list<IQIndex> inds,
+         Args const& args)
+    {
+    return combiner(IQIndexSet(inds),args);
     }
 
 struct IsQCombiner

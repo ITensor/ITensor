@@ -139,23 +139,35 @@ matrixTensor(CMatrix const& M, const Index& i1, const Index& i2)
 
 
 ITensor
-combiner(std::vector<Index> inds, Args const& args)
+combiner(IndexSet const& inds, Args const& args)
     {
     if(inds.empty()) Error("No indices passed to combiner");
     long rm = 1;
-    for(const auto& i : inds)rm *= i.m();
-    //increase size by 1
-    inds.push_back(Index());
-    //shuffle contents to the end
-    for(size_t j = inds.size()-1; j > 0; --j)
-        {
-        inds[j] = inds[j-1];
-        }
+    for(const auto& i : inds) rm *= i.m();
     //create combined index
     auto cname = args.getString("IndexName","cmb");
     auto itype = getIndexType(args,"IndexType",Link);
-    inds.front() = Index(cname,rm,itype);
-    return ITensor(IndexSet(std::move(inds)),Combiner{});
+    auto cind = Index(cname,rm,itype);
+    //create new IndexSet with combined index in front
+    auto newind = IndexSetBuilder(1+inds.r());
+    newind.nextIndex(std::move(cind));
+    for(auto& I : inds)
+        {
+        newind.nextIndex(std::move(I));
+        }
+    return ITensor(newind.build(),Combiner{});
+    }
+
+ITensor
+combiner(std::vector<Index> const& inds, Args const& args)
+    {
+    return combiner(IndexSet(inds),args);
+    }
+
+ITensor
+combiner(std::initializer_list<Index> inds, Args const& args)
+    {
+    return combiner(IndexSet(inds),args);
     }
 
 struct IsCombiner

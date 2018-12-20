@@ -125,14 +125,6 @@ operator*(IndexVal const& iv, IQTensor const& T)
     return setElt(iv) * toITensor(T); 
     }
 
-template<typename... Inds>
-IQTensor
-combiner(IQIndex const& i1, 
-         Inds const&... inds)
-    {
-    return combiner(std::vector<IQIndex>{i1,inds...});
-    }
-
 IQTensor inline
 delta(IQIndexSet const& is)
     {
