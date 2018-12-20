@@ -5,11 +5,10 @@
 #ifndef __ITENSOR_DECOMP_H
 #define __ITENSOR_DECOMP_H
 #include "itensor/spectrum.h"
-#include "itensor/mps/localop.h"  // TODO: Can we remove this dependency?
+#include "itensor/itensor.h"
 
 
 namespace itensor {
-
 
 //
 // Singular value decomposition (SVD)
@@ -60,6 +59,22 @@ factor(ITensor const& T,
 // will end up on B if dir==Fromleft or on A if dir==Fromright.
 //
 
+//Class that acts as an empty LocalOp
+class NoOp
+    {
+    public:
+
+    NoOp() { /* Empty on purpose */ }
+
+    explicit operator bool() const { return false; }
+
+    ITensor
+    deltaRho(ITensor const& rho,
+             ITensor const& combine,
+             Direction dir) const { return rho; }
+
+    };
+
 //Density matrix decomp with BigMatrixT object supporting the noise term
 //The BigMatrixT argument PH has to provide the deltaRho method
 //to enable the noise term feature (see localop.h for example)
@@ -79,7 +94,7 @@ denmatDecomp(ITensor const& AA,
              Direction dir, 
              Args const& args = Global::args())
     {
-    return denmatDecomp(AA,A,B,dir,LocalOp{},args);
+    return denmatDecomp(AA,A,B,dir,NoOp(),args);
     }
 
 

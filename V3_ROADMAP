@@ -7,7 +7,6 @@
 ? Change niter definition, lowering by 1?
 ? In site sets, make all of the indices have the same ids but different tags
 
-! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 ! Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
@@ -77,4 +76,5 @@ o Add deprecation error for Index("i",3) constructor pointing towards Index(3,..
 o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
 o Add read/write for TagSet
 o Fix read/write for Index with QNs and test for rest of library
+o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 
