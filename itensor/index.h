@@ -436,6 +436,11 @@ long
 QNblockSize(Index const& I, 
             QN const& Q);
 
+void
+write(std::ostream & s, QNInt const& q);
+
+void
+read(std::istream & s, QNInt & q);
 
 } //namespace itensor
 

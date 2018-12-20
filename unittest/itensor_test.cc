@@ -39,7 +39,8 @@ enum class Type {
             DiagRealAllSame, 
             DiagCplx, 
             DiagCplxAllSame, 
-            Combiner 
+            Combiner,
+            QDenseReal
           };
 Type
 typeOf(ITensor const& t) 
@@ -51,6 +52,7 @@ typeOf(ITensor const& t)
         Type operator()(Diag<Real> const& d) { return d.allSame() ? Type::DiagRealAllSame : Type::DiagReal; }
         Type operator()(Diag<Cplx> const& d) { return d.allSame() ? Type::DiagCplxAllSame : Type::DiagCplx; }
         Type operator()(Combiner const& d) { return Type::Combiner; }
+        Type operator()(QDenseReal const& d) { return Type::QDenseReal; }
         };
     return applyFunc(GetType{},t.store()); 
     }
@@ -66,6 +68,7 @@ operator<<(std::ostream& s, Type t)
     else if(t == Type::DiagCplx) s << "DiagCplx";
     else if(t == Type::DiagCplxAllSame) s << "DiagCplxAllSame";
     else if(t == Type::Combiner) s << "Combiner";
+    else if(t == Type::QDenseReal) s << "QDenseReal";
     else Error("Unrecognized Type value");
     return s;
     }
@@ -321,7 +324,16 @@ SECTION("DiagRealAllSame Storage")
     auto nT = readFromFile<ITensor>(fname);
     CHECK(typeOf(nT) == Type::DiagRealAllSame);
     }
-
+SECTION("QDense Real Storage")
+    {
+    auto i = Index(QN(0),2,QN(-1),2,In,"i,Site");
+    auto j = Index(QN(0),2,QN(-1),3,Out,"j,Site");
+    auto T = randomITensor(QN(0),i,j);
+    writeToFile(fname,T);
+    auto nT = readFromFile<ITensor>(fname);
+    CHECK(typeOf(nT) == Type::QDenseReal);
+    CHECK(norm(T-nT) < 1E-12);
+    }
 std::system(format("rm -f %s",fname).c_str());
 }
 

@@ -372,11 +372,11 @@ read(std::istream& s)
     else if(type==StorageType::Combiner) { store_ = readType<Combiner>(s); }
     else if(type==StorageType::DiagReal) { store_ = readType<Diag<Real>>(s); }
     else if(type==StorageType::DiagCplx) { store_ = readType<Diag<Cplx>>(s); }
-    //else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
-    //else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
-    //else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
-    //else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
-    //else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
+    else if(type==StorageType::QDenseReal) { store_ = readType<QDense<Real>>(s); }
+    else if(type==StorageType::QDenseCplx) { store_ = readType<QDense<Cplx>>(s); }
+    else if(type==StorageType::QDiagReal) { store_ = readType<QDiag<Real>>(s); }
+    else if(type==StorageType::QDiagCplx) { store_ = readType<QDiag<Cplx>>(s); }
+    else if(type==StorageType::QCombiner) { store_ = readType<QCombiner>(s); }
     else if(type==StorageType::ScalarReal) { store_ = readType<ScalarReal>(s); }
     else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
     else

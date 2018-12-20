@@ -111,41 +111,6 @@ operator=(long val) const
     return operator()(val); 
     }
 
-void Index::
-write(std::ostream& s) const 
-    { 
-    if(!bool(*this)) Error("Index::write: Index is default initialized");
-    itensor::write(s,primelevel_);
-    itensor::write(s,tags_);
-    itensor::write(s,id_);
-    itensor::write(s,m_);
-    }
-
-Index& Index::
-read(std::istream& s)
-    {
-    itensor::read(s,primelevel_);
-    itensor::read(s,tags_);
-    if(Global::read32BitIDs())
-        {
-        using ID32 = std::mt19937::result_type;
-        ID32 oldid = 0;
-        itensor::read(s,oldid);
-        id_ = oldid;
-        }
-    else
-        {
-        itensor::read(s,id_);
-        }
-    itensor::read(s,m_);
-
-#ifdef DEBUG
-    if(primelevel_ < 0) Error("Negative primeLevel");
-#endif
-
-    return *this;
-    }
-
 bool 
 operator==(Index const& i1, Index const& i2)
     { 
@@ -413,6 +378,34 @@ class IQIndexDat
 #define IQINDEX_CHECK_NULL
 #endif
 
+void
+write(std::ostream & s, QNInt const& q)
+    {
+    write(s,q.first);
+    write(s,q.second);
+    }
+
+void
+read(std::istream & s, QNInt & q)
+    {
+    read(s,q.first);
+    read(s,q.second);
+    }
+
+void 
+write(std::ostream & s, IQIndexDat const& d) 
+    { 
+    write(s,d.store()); 
+    }
+
+void 
+read(std::istream & s, IQIndexDat & d) 
+    { 
+    IQIndexDat::storage store;
+    read(s,store); 
+    d.setStore(std::move(store));
+    }
+
 long Index::
 nblock() const 
     {
@@ -522,6 +515,49 @@ QNblockSize(Index const& I,
             QN const& Q)
     { 
     return I.blocksize(QNblock(I,Q));
+    }
+
+void Index::
+write(std::ostream& s) const 
+    { 
+    if(!bool(*this)) Error("Index::write: Index is default initialized");
+    itensor::write(s,primelevel_);
+    itensor::write(s,tags_);
+    itensor::write(s,id_);
+    itensor::write(s,m_);
+    itensor::write(s,dir_);
+    if(pd) itensor::write(s,*pd);
+    else itensor::write(s,IQIndexDat());
+    }
+
+Index& Index::
+read(std::istream& s)
+    {
+    itensor::read(s,primelevel_);
+    itensor::read(s,tags_);
+    if(Global::read32BitIDs())
+        {
+        using ID32 = std::mt19937::result_type;
+        ID32 oldid = 0;
+        itensor::read(s,oldid);
+        id_ = oldid;
+        }
+    else
+        {
+        itensor::read(s,id_);
+        }
+    itensor::read(s,m_);
+    itensor::read(s,dir_);
+    IQIndexDat dat;
+    itensor::read(s,dat);
+    if(dat.size()>0)
+        pd = std::make_shared<IQIndexDat>(std::move(dat.store()));
+
+#ifdef DEBUG
+    if(primelevel_ < 0) Error("Negative primeLevel");
+#endif
+
+    return *this;
     }
 
 } //namespace itensor

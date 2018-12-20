@@ -7,9 +7,6 @@
 ? Change niter definition, lowering by 1?
 ? In site sets, make all of the indices have the same ids but different tags
 
-! Fix read/write for Index with QNs and test for rest of library
-  o Matt: how should we distinguish whether someone wants to read an Index with
-          QNs or not?
 ! Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 ! Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd
@@ -41,7 +38,7 @@ o Add back some prime functions:
   o A.primeExcept(plinc=1,tagset)
 ? Add {"Randomize=",true} args for MPS(SiteSet)
   o Right now, just call randomMPS(siteset)
-? Error for calls like Index(0,"i")
+? Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
 ? Add some more tag functions
   o A.addTags(tagset,imatch1,imatch2,...)
 o Make modifying functions member functions and all other functions free
@@ -79,4 +76,5 @@ o Depecrate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,I
 o Add deprecation error for Index("i",3) constructor pointing towards Index(3,...)
 o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
 o Add read/write for TagSet
+o Fix read/write for Index with QNs and test for rest of library
 
