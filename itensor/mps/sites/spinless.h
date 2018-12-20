@@ -21,29 +21,29 @@ class SpinlessSite
 
     SpinlessSite(Index I) : s(I) { }
 
-    SpinlessSite(int n, Args const& args = Args::global())
+    SpinlessSite(Args const& args = Args::global())
         {
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
-        auto oddevenupdown = args.getBool("OddEvenUpDown",false);
-        auto ts = format("Site,NoSpin,%d",n);
+        //TODO: put this back
+        //auto oddevenupdown = args.getBool("OddEvenUpDown",false);
+        auto ts = TagSet("Site,S=0");
 
-        if(not oddevenupdown) //usual case
-            {
+        //if(not oddevenupdown) //usual case
+        //    {
             auto q_occ = QN("Nf=",1);
             if(not conserve_Nf) q_occ = QN("Pf=",1);
-            // TODO: should this have Tag("Spinless")?
-            s = Index{QN(),1,
-                      q_occ,1,Out,ts};
-            }
-        else
-            {
-            QN q_occ;
-            if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
-            else       q_occ = QN("Sz",-1,"Nf=",1);
-            s = Index{QN(),1,
-                      q_occ,1,Out,ts};
-            }
+            s = Index(QN(),1,
+                      q_occ,1,Out,ts);
+        //    }
+        //else
+        //    {
+        //    QN q_occ;
+        //    if(n%2==1) q_occ = QN("Sz",+1,"Nf=",1);
+        //    else       q_occ = QN("Sz",-1,"Nf=",1);
+        //    s = Index(QN(),1,
+        //              q_occ,1,Out,ts);
+        //    }
         }
 
     Index

@@ -21,12 +21,12 @@ class tJSite
 
     tJSite(Index I) : s(I) { }
 
-    tJSite(int n, Args const& args = Args::global())
+    tJSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,tJ,%d",n);
-        s = Index{QN("Sz=", 0,"Nf=",0),1,
+        auto ts = TagSet("Site,tJ");
+        s = Index(QN("Sz=", 0,"Nf=",0),1,
                   QN("Sz=",+1,"Nf=",1),1,
-                  QN("Sz=",-1,"Nf=",1),1,Out,ts};
+                  QN("Sz=",-1,"Nf=",1),1,Out,ts);
         }
 
     Index

@@ -239,10 +239,10 @@ inline SiteSet::
 SiteSet(int N, int d)
     {
     auto sites = SiteStore(N);
+    auto I = Index(d,format("Site"));
     for(int j = 1; j <= N; ++j)
         {
-        auto I = Index(d,format("Site,%d",j));
-        sites.set(j,GenericSite(I));
+        sites.set(j,GenericSite(addTags(I,format("%d",j))));
         }
     SiteSet::init(std::move(sites));
     }
@@ -390,9 +390,10 @@ class BasicSiteSet : public SiteSet
                  Args const& args = Args::global())
         {
         auto sites = SiteStore(N);
+        auto s = SiteType(args);
         for(int j = 1; j <= N; ++j)
             {
-            sites.set(j,SiteType(j,args));
+            sites.set(j,SiteType(addTags(s.index(),format("%d",j))));
             }
         SiteSet::init(std::move(sites));
         }

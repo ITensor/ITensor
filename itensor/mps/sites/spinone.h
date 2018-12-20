@@ -35,20 +35,20 @@ class SpinOneSite
 
     SpinOneSite(Index I) : s(I) { }
 
-    SpinOneSite(int n, Args const& args = Args::global())
+    SpinOneSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1,%d",n);
+        auto ts = "Site,S=1";
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+2),1,
+            s = Index(QN("Sz=",+2),1,
                       QN("Sz=", 0),1,
-                      QN("Sz=",-2),1,Out,ts};
+                      QN("Sz=",-2),1,Out,ts);
             }
         else
             {
-            s = Index{3,ts};
+            s = Index(3,ts);
             }
         }
 
@@ -245,27 +245,30 @@ SpinOne(int N,
 
     auto sites = SiteStore(N);
 
+    auto sone = SpinOneSite(args);
+    auto shalf = SpinHalfSite(args);
+
     auto start = 1;
     if(shedge || Lshedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
-        sites.set(1,SpinHalfSite(1,args));
+        sites.set(1,SpinHalfSite(addTags(shalf.index(),format("%d",1))));
         start = 2;
         }
 
     for(int j = start; j < N; ++j)
         {
-        sites.set(j,SpinOneSite(j,args));
+        sites.set(j,SpinOneSite(addTags(sone.index(),format("%d",j))));
         }
 
     if(shedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
-        sites.set(N,SpinHalfSite(N,args));
+        sites.set(N,SpinHalfSite(addTags(shalf.index(),format("%d",N))));
         }
     else
         {
-        sites.set(N,SpinOneSite(N,args));
+        sites.set(N,SpinOneSite(addTags(sone.index(),format("%d",N))));
         }
 
     SiteSet::init(std::move(sites));

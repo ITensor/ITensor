@@ -35,22 +35,22 @@ class SpinTwoSite
 
     SpinTwoSite(Index I) : s(I) { }
 
-    SpinTwoSite(int n, Args const& args = Args::global())
+    SpinTwoSite(Args const& args = Args::global())
 		{
-        auto ts = format("Site,S=2,%d",n);
+        auto ts = TagSet("Site,S=2");
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+4),1,
+            s = Index(QN("Sz=",+4),1,
                       QN("Sz=",+2),1,
                       QN("Sz=",0),1,
                       QN("Sz=",-2),1,
-                      QN("Sz=",-4),1,Out,ts};
+                      QN("Sz=",-4),1,Out,ts);
             }
         else
             {
-            s = Index{5,ts};
+            s = Index(5,ts);
             }
 		}
 

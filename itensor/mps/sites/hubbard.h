@@ -21,28 +21,28 @@ class HubbardSite
 
     HubbardSite(Index I) : s(I) { }
 
-    HubbardSite(int n, Args const& args = Args::global())
+    HubbardSite(Args const& args = Args::global())
         {
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveNf = args.getBool("ConserveNf",conserveQNs);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
-        auto ts = format("Site,Hubbard,%d",n);
+        auto ts = TagSet("Site,Hubbard");
         if(conserveNf)
             {
-            s = Index{QN("Sz=", 0,"Nf=",0),1,
+            s = Index(QN("Sz=", 0,"Nf=",0),1,
                       QN("Sz=",Up,"Nf=",1),1,
                       QN("Sz=",Dn,"Nf=",1),1,
-                      QN("Sz=", 0,"Nf=",2),1,Out,ts};
+                      QN("Sz=", 0,"Nf=",2),1,Out,ts);
             }
         else //don't conserve Nf, only fermion parity
             {
             if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
-            s = Index{QN("Sz=", 0,"Pf=",0),1,
+            s = Index(QN("Sz=", 0,"Pf=",0),1,
                       QN("Sz=",+1,"Pf=",1),1,
                       QN("Sz=",-1,"Pf=",1),1,
-                      QN("Sz=", 0,"Pf=",0),1,Out,ts};
+                      QN("Sz=", 0,"Pf=",0),1,Out,ts);
             }
         }
 

@@ -21,19 +21,19 @@ class SpinHalfSite
 
     SpinHalfSite(Index const& I) : s(I) { }
 
-    SpinHalfSite(int n, Args const& args = Args::global())
+    SpinHalfSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1/2,%d",n);
+        auto ts = TagSet("Site,S=1/2");
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+1),1,
-                      QN("Sz=",-1),1,Out,ts};
+            s = Index(QN("Sz=",+1),1,
+                      QN("Sz=",-1),1,Out,ts);
             }
         else
             {
-            s = Index{2,ts};
+            s = Index(2,ts);
             }
         }
 
