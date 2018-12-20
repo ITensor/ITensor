@@ -54,6 +54,7 @@ nmultMPO(MPOType const& Aorig,
     auto siB = uniqueIndex(B.A(1),A.A(1),B.A(2));
     res.Aref(1) = Tensor(siA,siB,linkInd(A,1));
 
+    //println("\n\n");
     //Print(A);
     //Print(B);
 
@@ -84,13 +85,16 @@ nmultMPO(MPOType const& Aorig,
         //Print(res.A(i));
         //Print(nfork);
 
+        //println("<>--<>--<>--<>");
+        //PAUSE;
+
         auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
-        auto siA = uniqueIndex(A.A(i+1),B.A(i+1),B.A(i),B.A(i+2));
+        auto siA = uniqueIndex(A.A(i+1),A.A(i),A.A(i+2),B.A(i+1));
         auto siB = uniqueIndex(B.A(i+1),B.A(i),B.A(i+2),A.A(i+1));
+        //Print(siA);
+        //Print(siB);
         res.Aref(i+1) = Tensor(mid,siA,siB,rightLinkInd(res,i+1));
-
-        //println("--------------");
         }
 
     nfork = clust * A.A(N) * B.A(N);
