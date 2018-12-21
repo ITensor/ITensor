@@ -10,6 +10,7 @@
 ! Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
+  o Bugfix for nmultMPO
 
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 o Update website:
@@ -26,9 +27,10 @@ Optional (possibly post V3)
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
-    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j}) prints A as if it were a matrix where the
-    rows run over the combined Index (i,j) and the columns run over the combined index (l,j). 
-    I think this is especially useful for QN conserving ITensors, where it could make it easier to visualize
+    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j}) 
+    prints A as if it were a matrix where the rows run over the combined Index (i,j) and 
+    the columns run over the combined index (l,j). I think this is especially useful 
+    for QN conserving ITensors, where it could make it easier to visualize
     blocks of the ITensor.
 o Implement randomMPS(InitState,m>1)
 o Define QDense * Dense contraction directly
@@ -47,7 +49,7 @@ o Make modifying functions member functions and all other functions free
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
   ! Jenkins is passing
-  ! All sample codes compile and run
+  ! All sample codes compile and run and are up to date
   ? Incorporate sample codes into Jenkins/testing 
     (I found the DMRG codes were useful for catching bugs, 
      and TRG is a good test case for Tags)
@@ -62,6 +64,8 @@ o Make modifying functions member functions and all other functions free
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
+o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
+  removed IQIndexVal, IQMPS, IQMPO, etc)
 o All site sets except SiteSet(N,d) default to ConserveQNs=true
 o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
   o m>1 only allowed with no QNs
