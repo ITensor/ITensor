@@ -16,10 +16,10 @@ class Observer
     Observer() { }
     
     void virtual
-    measure(const Args& args = Global::args()) { }
+    measure(Args const& args = Args::global()) { }
     
     bool virtual
-    checkDone(const Args& args = Global::args()) { return false; }
+    checkDone(Args const& args = Args::global()) { return false; }
 
     virtual ~Observer() { }
 

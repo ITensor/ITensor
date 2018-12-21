@@ -48,13 +48,13 @@ class LocalOp
 
     LocalOp(ITensor const& Op1, 
             ITensor const& Op2,
-            Args const& args = Global::args());
+            Args const& args = Args::global());
 
     LocalOp(ITensor const& Op1, 
             ITensor const& Op2, 
             ITensor const& L, 
             ITensor const& R,
-            Args const& args = Global::args());
+            Args const& args = Args::global());
 
     //
     // Sparse Matrix Methods

@@ -20,15 +20,15 @@ class TEvolObserver : public Observer
     {
     public:
     
-    TEvolObserver(const Args& args = Global::args());
+    TEvolObserver(Args const& args = Args::global());
 
     virtual ~TEvolObserver() { }
 
     void virtual
-    measure(const Args& args = Global::args());
+    measure(Args const& args = Args::global());
     
     bool virtual
-    checkDone(const Args& args = Global::args());
+    checkDone(Args const& args = Args::global());
 
     private:
 

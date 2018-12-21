@@ -41,7 +41,7 @@ Real inline
 dmrg(MPS & psi, 
      MPO const& H, 
      Sweeps const& sweeps,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
@@ -56,7 +56,7 @@ dmrg(MPS& psi,
      MPO const& H, 
      Sweeps const& sweeps, 
      DMRGObserver & obs,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
@@ -74,7 +74,7 @@ dmrg(MPS& psi,
      ITensor const& LH, 
      ITensor const& RH,
      Sweeps const& sweeps,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
@@ -92,7 +92,7 @@ dmrg(MPS& psi,
      ITensor const& RH,
      Sweeps const& sweeps, 
      DMRGObserver& obs,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
@@ -107,7 +107,7 @@ Real inline
 dmrg(MPS& psi, 
      std::vector<MPO> const& Hset, 
      Sweeps const& sweeps,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
@@ -123,7 +123,7 @@ dmrg(MPS& psi,
      std::vector<MPO> const& Hset, 
      Sweeps const& sweeps, 
      DMRGObserver& obs,
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
@@ -145,7 +145,7 @@ dmrg(MPS& psi,
      MPO const& H, 
      std::vector<MPS> const& psis, 
      Sweeps const& sweeps, 
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
@@ -169,7 +169,7 @@ dmrg(MPS & psi,
      std::vector<MPS> const& psis, 
      Sweeps const& sweeps, 
      DMRGObserver& obs, 
-     Args const& args = Global::args())
+     Args const& args = Args::global())
     {
     LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);

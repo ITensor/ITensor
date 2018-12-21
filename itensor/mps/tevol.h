@@ -25,7 +25,7 @@ gateTEvol(Iterable const& gatelist,
           Real ttotal, 
           Real tstep, 
           MPS & psi, 
-          Args const& args = Global::args());
+          Args const& args = Args::global());
 
 template <class Iterable>
 Real
@@ -34,7 +34,7 @@ gateTEvol(Iterable const& gatelist,
           Real tstep, 
           MPS & psi, 
           Observer& obs,
-          Args args = Global::args());
+          Args args = Args::global());
 
 //
 //

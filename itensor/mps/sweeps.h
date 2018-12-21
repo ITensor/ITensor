@@ -237,7 +237,7 @@ class SweepSetter
 struct RampM
     {
     RampM(int start_m, int end_m,
-          const Args& args = Global::args())
+          const Args& args = Args::global())
         :
         start_m_(start_m),
         end_m_(end_m),
@@ -264,7 +264,7 @@ struct RampM
 struct ExpM
     {
     ExpM(int start_m, int end_m,
-         const Args& args = Global::args())
+         Args const& args = Args::global())
         :
         start_m_(start_m),
         end_m_(end_m),

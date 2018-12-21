@@ -734,7 +734,7 @@ copyWriteDir()
     if(do_write_)
         {
         string old_writedir = writedir_;
-        string global_write_dir = Global::args().getString("WriteDir","./");
+        string global_write_dir = Args::global().getString("WriteDir","./");
         writedir_ = mkTempDir("psi",global_write_dir);
 
         string cmdstr = "cp -r " + old_writedir + "/* " + writedir_;

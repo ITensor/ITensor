@@ -28,14 +28,14 @@ idmrgRVal
 idmrg(MPS      & psi, 
       MPO const& H, 
       Sweeps       const& sweeps, 
-      Args         const& args = Global::args());
+      Args         const& args = Args::global());
 
 idmrgRVal
 idmrg(MPS      & psi, 
       MPO const& H,
       Sweeps       const& sweeps,
       DMRGObserver & obs,
-      Args         const& args = Global::args());
+      Args         const& args = Args::global());
 
 //For restarting idmrg calculations
 //from a previous run (creates a new DMRGObserver automatically)
@@ -52,7 +52,7 @@ idmrg(MPS & psi,
       idmrgRVal last_rval,
       Sweeps const& sweeps,
       DMRGObserver & obs,
-      Args args = Global::args());
+      Args args = Args::global());
 
 
 //Given an MPS (or MPO) A1 A2 A3 | A4 A5 A6,
