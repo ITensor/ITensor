@@ -254,6 +254,10 @@ svdImpl(ITensor const& A,
             Liq.emplace_back(uI.qn(1+B.i1),this_m);
             }
         
+#ifdef DEBUG
+        if(Liq.empty()) throw std::runtime_error("Index of S after SVD is empty");
+#endif
+
         auto L = Index(move(Liq),uI.dir(),litagset);
         auto R = setTags(dag(L),ritagset);
 

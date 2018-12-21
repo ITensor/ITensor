@@ -116,6 +116,21 @@ Index J(10,"J,Link"),
       L(10,"L,Link"),
       M(10,"M,Link");
 
+auto S1 = Index(QN(-1),1,
+                QN(+1),1,"S1,Site");
+auto S2 = Index(QN(-1),1,
+                QN(+1),1,"S2,Site");
+auto S3 = Index(QN(-1),1,
+                QN(+1),1,"S3,Site");
+auto S4 = Index(QN(-1),1,
+                QN(+1),1,"S4,Site");
+auto L1 = Index(QN(+1),2,
+                QN( 0),2,
+                QN(-1),2,"L1,Link");
+auto L2 = Index(QN(+2),2,
+                QN( 0),2,
+                QN(-2),2,"L2,Link");
+
 IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
 
 ITensor A,
@@ -1788,6 +1803,83 @@ SECTION("Combiner")
                 }
             }
 
+         SECTION("Combine 2nd,3rd (initializer_list constructor)")
+            {
+            auto C = combiner({k,j});
+            auto R = T * C;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
+                {
+                auto ci_ = k_ + k.m()*(j_-1);
+                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                }
+            }
+
+        SECTION("Combine 2nd,3rd (array constructor)")
+            {
+            auto C = combiner(std::array<Index,2>({k,j}));
+            auto R = T * C;
+            auto ci = commonIndex(C,R);
+
+            CHECK_CLOSE(norm(R),norm(T));
+
+            for(auto i_ : range1(i.m()))
+            for(auto j_ : range1(j.m()))
+            for(auto k_ : range1(k.m()))
+                {
+                auto ci_ = k_ + k.m()*(j_-1);
+                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                }
+            }
+        
+         SECTION("Combine / Uncombine 4 - Permute (QN, initialize_list constructor)")
+            {
+            auto T = randomITensor(QN(),L1,L2,S1,S2);
+            auto C = combiner({L1,S1});
+            auto R = T*C;
+            auto ci = commonIndex(R,C); //get combined index
+            //check that ci exists
+            CHECK(ci);
+            CHECK_CLOSE(norm(T),norm(R));
+            CHECK(div(T) == div(R));
+
+            R *= dag(C); //uncombine
+            //Check that R equals original T
+            for(int i1 = 1; i1 <= L1.m(); ++i1)
+            for(int i2 = 1; i2 <= L2.m(); ++i2)
+            for(int j1 = 1; j1 <= S1.m(); ++j1)
+            for(int j2 = 1; j2 <= S2.m(); ++j2)
+                {
+                CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+                }
+            }
+
+         SECTION("Combine / Uncombine 4 - Permute (QN, array constructor)")
+            {
+            auto T = randomITensor(QN(),L1,L2,S1,S2);
+            auto C = combiner(std::array<Index,2>({L1,S1}));
+            auto R = T*C;
+            auto ci = commonIndex(R,C); //get combined index
+            //check that ci exists
+            CHECK(ci);
+            CHECK_CLOSE(norm(T),norm(R));
+            CHECK(div(T) == div(R));
+
+            R *= dag(C); //uncombine
+            //Check that R equals original T
+            for(int i1 = 1; i1 <= L1.m(); ++i1)
+            for(int i2 = 1; i2 <= L2.m(); ++i2)
+            for(int j1 = 1; j1 <= S1.m(); ++j1)
+            for(int j2 = 1; j2 <= S2.m(); ++j2)
+                {
+                CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+                }
+            }
 
         //Uncombine back:
         //auto TT = C * R;

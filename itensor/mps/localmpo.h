@@ -170,7 +170,7 @@ class LocalMPO
         nc_ = val; 
         }
 
-    long
+    size_t
     size() const { return lop_.size(); }
 
     explicit operator bool() const { return Op_ != 0 || Psi_ != 0; }

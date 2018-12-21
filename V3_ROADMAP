@@ -19,7 +19,7 @@ o Update website:
   o ITensor book
   o Tutorials
   o Code formulas
-o Code cleanup
+o Make sure rc3 is up to date with changes to master (updated as of 12/21)
 o Add unit tests for tags functions
   o addTags, removeTags, swapTags, etc.
 
@@ -37,6 +37,7 @@ o Define QDense * Dense contraction directly
 o Add back some prime functions:
   o A.primeExcept(plinc=1,index1,index2,...)
   o A.primeExcept(plinc=1,tagset)
+  o A.mapPrime(pold1,pnew1,index1,pold2,pnew2,index2,...)
 ? Add {"Randomize=",true} args for MPS(SiteSet)
   o Right now, just call randomMPS(siteset)
 ? Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.

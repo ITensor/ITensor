@@ -345,6 +345,19 @@ getInt(Name const& name, long default_value) const
     return default_value;
     }
 
+size_t Args::
+getSizeT(Name const& name) const
+    {
+    return get(name).size_tVal();
+    }
+
+size_t Args::
+getSizeT(Name const& name, long default_value) const
+    {
+    if(defined(name)) return get(name).size_tVal();
+    return default_value;
+    }
+
 Real Args::
 getReal(Name const& name) const
     {

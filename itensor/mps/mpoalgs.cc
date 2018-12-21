@@ -75,7 +75,9 @@ nmultMPO(MPO const& Aorig,
 
         auto mid = commonIndex(res.A(i),nfork,"Link");
         mid.dag();
-        res.Aref(i+1) = ITensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
+        auto siA = uniqueIndex(A.A(i+1),A.A(i),A.A(i+2),B.A(i+1));
+        auto siB = uniqueIndex(B.A(i+1),B.A(i),B.A(i+2),A.A(i+1));
+        res.Aref(i+1) = ITensor(mid,siA,siB,rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
