@@ -35,8 +35,9 @@ struct SmallString
 
     SmallString();
 
-    explicit
     SmallString(const char* name);
+
+    SmallString(std::string const& name) : SmallString(name.c_str()) { }
 
     size_t static constexpr
     size() { return SmallStringSize(); }
