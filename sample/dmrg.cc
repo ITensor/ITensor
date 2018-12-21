@@ -1,8 +1,4 @@
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/autompo.h"
-
+#include "itensor/all.h"
 using namespace itensor;
 
 int 
@@ -11,17 +7,20 @@ main()
     int N = 100;
 
     //
-    // Initialize the site degrees of freedom.
+    // Initialize the site degrees of freedom
+    // Setting "ConserveQNs=",true makes the indices
+    // carry Sz quantum numbers and will lead to 
+    // block-sparse MPO and MPS tensors
     //
-    //auto sites = SpinHalf(N,{"ConserveQNs=",false}); //make a chain of N spin 1/2's
-    auto sites = SpinOne(N,{"ConserveQNs=",false}); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N,{"ConserveQNs=",true}); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 
     // next-neighbor Heisenberg model
     //
     auto ampo = AutoMPO(sites);
-    for(int j = 1; j < N; ++j)
+    for(auto j : range1(N-1))
         {
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
@@ -33,12 +32,10 @@ main()
     // to be a Neel state.
     //
     auto state = InitState(sites);
-    for(int i = 1; i <= N; ++i) 
+    for(auto i : range1(N))
         {
-        if(i%2 == 1)
-            state.set(i,"Up");
-        else
-            state.set(i,"Dn");
+        if(i%2 == 1) state.set(i,"Up");
+        else         state.set(i,"Dn");
         }
     auto psi = MPS(state);
 
