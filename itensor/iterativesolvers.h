@@ -76,10 +76,10 @@ davidson(BigMatrixT const& A,
          std::vector<ITensor>& phi,
          Args const& args)
     {
-    auto maxiter_ = args.getInt("MaxIter",2);
+    auto maxiter_ = args.getSizeT("MaxIter",2);
     auto errgoal_ = args.getReal("ErrGoal",1E-14);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-    auto miniter_ = args.getInt("MinIter",1);
+    auto miniter_ = args.getSizeT("MinIter",1);
 
     Real Approx0 = 1E-12;
 
@@ -97,14 +97,14 @@ davidson(BigMatrixT const& A,
         }
 
     auto maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,static_cast<decltype(maxiter_)>(maxsize)-1);
+    auto actual_maxiter = std::min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
                  (maxsize-1), maxiter_, actual_maxiter);
         }
 
-    if(area(phi.front().inds()) != size_t(maxsize))
+    if(area(phi.front().inds()) != maxsize)
         {
         println("area(phi.front().inds()) = ",area(phi.front().inds()));
         println("A.size() = ",A.size());
@@ -143,10 +143,10 @@ davidson(BigMatrixT const& A,
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
 
-    size_t t = 0; //which eigenvector we are currently targeting
+    auto t = size_t(0); //which eigenvector we are currently targeting
 
-    int iter = 0;
-    for(int ii = 0; ii <= actual_maxiter; ++ii)
+    auto iter = size_t(0);
+    for(auto ii : range(actual_maxiter+1))
         {
         //Diagonalize dag(V)*A*V
         //and compute the residual q
@@ -178,7 +178,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-            for(int k = 1; k <= ii; ++k)
+            for(auto k : range(ii+1))
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
@@ -357,7 +357,7 @@ davidson(BigMatrixT const& A,
         //Add new row and column to M
         Mref = subMatrix(M,0,ni+1,0,ni+1);
         auto newCol = subVector(NC,0,1+ni);
-        for(int k = 0; k <= ni; ++k)
+        for(auto k : range(ni+1))
             {
             newCol(k) = (dag(V.at(k))*AV.at(ni)).cplx();
             }
@@ -378,13 +378,13 @@ davidson(BigMatrixT const& A,
     //Compute any remaining eigenvalues and eigenvectors requested
     //(zero indexed) value of t indicates how many have been "targeted" so far
     if(debug_level_ >= 2 && t+1 < nget) printfln("Max iter. reached, computing remaining %d evecs",nget-t-1);
-    for(size_t j = t+1; j < nget; ++j)
+    for(auto j : range(t+1,nget))
         {
         eigs.at(j) = D(j);
         auto& phi_j = phi.at(j);
-        size_t Nr = nrows(U);
+        auto Nr = size_t(nrows(U));
         phi_j = U(0,j)*V[0];
-        for(size_t k = 1; k < std::min(V.size(),Nr); ++k)
+        for(auto k : range1(std::min(V.size(),Nr)-1))
             {
             phi_j += U(k,j)*V[k];
             }
@@ -394,8 +394,8 @@ davidson(BigMatrixT const& A,
         {
         //Check V's are orthonormal
         auto Vo_final = CMatrix(iter+1,iter+1);
-        for(int r = 0; r < iter+1; ++r)
-        for(int c = r; c < iter+1; ++c)
+        for(auto r : range(iter+1))
+        for(auto c : range(r,iter+1))
             {
             auto z = (dag(V[r])*V[c]).cplx();
             Vo_final(r,c) = std::abs(z);
@@ -549,7 +549,7 @@ gmresImpl(BigMatrixT const& A,
 
             // Begin Arnoldi iteration
             // TODO: turn into a function?
-            for(k = 0; k<=i; k++)
+            for(k = 0; k<=i; ++k)
                 {
                 gmres_details::dot(w, v[k], H(k,i));
                 w -= H(k,i)*v[k];
@@ -573,7 +573,7 @@ gmresImpl(BigMatrixT const& A,
                 error("Norm of new Krylov vector is zero. Try raising 'ErrGoal'.");
                 }
 
-            for(k = 0; k<i; k++)
+            for(k = 0; k<i; ++k)
                 gmres_details::applyPlaneRotation(H(k,i), H(k+1,i), cs[k], sn[k]);
 
             gmres_details::generatePlaneRotation(H(i,i), H(i+1,i), cs[i], sn[i]);

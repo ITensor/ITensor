@@ -5,7 +5,6 @@
   of triples name-val-modfac.
 
 ? Change niter definition, lowering by 1?
-? In site sets, make all of the indices have the same ids but different tags
 
 ! Need to add recent commits from master, for example:
   o errMPOProd and deprecation of checkMPOProd

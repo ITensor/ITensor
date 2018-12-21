@@ -36,7 +36,7 @@ class LocalOp
     ITensor const* Op2_;
     ITensor const* L_;
     ITensor const* R_;
-    mutable long size_;
+    mutable size_t size_;
     public:
 
 
@@ -74,7 +74,7 @@ class LocalOp
     ITensor
     diag() const;
 
-    long
+    size_t
     size() const;
 
     //
@@ -332,11 +332,11 @@ diag() const
     return Diag;
     }
 
-long inline LocalOp::
+size_t inline LocalOp::
 size() const
     {
     if(!(*this)) Error("LocalOp is default constructed");
-    if(size_ == -1)
+    if(size_ == size_t(-1))
         {
         //Calculate linear size of this 
         //op as a square matrix

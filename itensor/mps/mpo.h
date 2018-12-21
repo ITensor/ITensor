@@ -380,9 +380,20 @@ std::ostream&
 operator<<(std::ostream& s, MPO const& M);
 
 Real
+errorMPOProd(MPS const& psi2,
+             MPO const& K, 
+             MPS const& psi1);
+
+Real
 checkMPOProd(MPS const& psi2,
              MPO const& K, 
              MPS const& psi1);
+
+bool
+checkMPOProd(MPS const& psi2,
+             MPO const& K, 
+             MPS const& psi1,
+             Real threshold);
 
 //
 // Deprecated interfaces - kept for backwards compatibility

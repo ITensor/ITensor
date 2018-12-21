@@ -509,7 +509,20 @@ ITensor
 multSiteOps(ITensor A, ITensor const& B);
 
 ITensor
-combiner(std::vector<Index> inds, Args const& args = Args::global());
+combiner(IndexSet const& inds, Args const& args = Global::args());
+
+ITensor
+combiner(std::vector<Index> const& inds, Args const& args = Global::args());
+
+ITensor
+combiner(std::initializer_list<Index> inds, Args const& args = Global::args());
+
+template <size_t N>
+ITensor
+combiner(std::array<Index,N> inds, Args const& args = Global::args())
+    {
+    return combiner(IndexSet(inds),args);
+    }
 
 template<typename... Inds>
 ITensor

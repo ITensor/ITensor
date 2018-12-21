@@ -9,7 +9,9 @@
 ## GNU GCC compiler
 CCCOM=g++ -m64 -std=c++11 -fPIC
 
-## Clang compiler (good to use on Mac OS)
+## Clang compiler (good to use on macOS)
+## Note: try this if you have trouble compiling 
+##       with g++ on macOS Mojave 10.14
 #CCCOM=clang++ -std=c++11 -fPIC
 
 ## GCC On Windows cygwin

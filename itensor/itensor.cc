@@ -849,7 +849,7 @@ matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
 
 
 ITensor
-combiner(std::vector<Index> inds, Args const& args)
+combiner(IndexSet const& inds, Args const& args)
     {
     auto itagset = getTagSet(args,"Tags","Link,CMB");
 
@@ -857,17 +857,15 @@ combiner(std::vector<Index> inds, Args const& args)
         {
         if(inds.empty()) Error("No indices passed to combiner");
         long rm = 1;
-        for(const auto& i : inds)rm *= i.m();
-        //increase size by 1
-        inds.push_back(Index());
-        //shuffle contents to the end
-        for(size_t j = inds.size()-1; j > 0; --j)
-            {
-            inds[j] = inds[j-1];
-            }
+        for(const auto& i : inds) rm *= i.m();
         //create combined index
-        inds.front() = Index(rm,itagset);
-        return ITensor(IndexSet(std::move(inds)),Combiner{});
+        auto cind = Index(rm,itagset);
+        //create new IndexSet with combined index in front
+        auto newind = IndexSetBuilder(1+inds.r());
+        newind.nextIndex(std::move(cind));
+        for(auto& I : inds)
+            newind.nextIndex(std::move(I));
+        return ITensor(newind.build(),Combiner());
         }
     else if(hasQNs(inds))
         {
@@ -893,7 +891,7 @@ combiner(std::vector<Index> inds, Args const& args)
             }
 
 
-        auto C = QCombiner{inds};
+        auto C = QCombiner(inds);
 
         //Build the combined Index,
         //saving information about
@@ -934,18 +932,31 @@ combiner(std::vector<Index> inds, Args const& args)
             {
             cstore.emplace_back(qms[n].q,qms[n].m);
             }
-        auto cind = Index{std::move(cstore),cdir,itagset};
+        auto cind = Index(std::move(cstore),cdir,itagset);
 
         auto newind = IndexSetBuilder(1+inds.size());
         newind.nextIndex(std::move(cind));
         for(auto& I : inds) 
             {
-            I.dag();
-            newind.nextIndex(std::move(I));
+            newind.nextIndex(std::move(dag(I)));
             }
-        return ITensor{newind.build(),std::move(C)};
+        return ITensor(newind.build(),std::move(C));
         }
-    return ITensor{};
+    return ITensor();
+    }
+
+ITensor
+combiner(std::vector<Index> const& inds,
+         Args const& args)
+    {
+    return combiner(IndexSet(inds),args);
+    }
+
+ITensor
+combiner(std::initializer_list<Index> inds,
+         Args const& args)
+    {
+    return combiner(IndexSet(inds),args);
     }
 
 struct IsCombiner
