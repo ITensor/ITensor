@@ -18,7 +18,7 @@ namespace itensor {
 //
 Spectrum 
 svd(ITensor AA, ITensor& U, ITensor& D, ITensor& V, 
-    Args args = Global::args());
+    Args args = Args::global());
 
 
 //
@@ -60,19 +60,24 @@ factor(ITensor const& T,
 //
 
 //Class that acts as an empty LocalOp
+//to provide a default implementation for denmatDecomp
+//case where noise is zero / off
 class NoOp
     {
     public:
 
-    NoOp() { /* Empty on purpose */ }
+    NoOp() { }
 
     explicit operator bool() const { return false; }
 
     ITensor
     deltaRho(ITensor const& rho,
              ITensor const& combine,
-             Direction dir) const { return rho; }
-
+             Direction dir) const 
+        { 
+        Error("Non-zero noise not supported without providing a Hamiltonian");
+        return rho; 
+        }
     };
 
 //Density matrix decomp with BigMatrixT object supporting the noise term
@@ -85,14 +90,14 @@ denmatDecomp(ITensor const& AA,
              ITensor & B, 
              Direction dir, 
              BigMatrixT const& PH,
-             Args args = Global::args());
+             Args args = Args::global());
 
 Spectrum inline
 denmatDecomp(ITensor const& AA, 
              ITensor & A, 
              ITensor & B, 
              Direction dir, 
-             Args const& args = Global::args())
+             Args const& args = Args::global())
     {
     return denmatDecomp(AA,A,B,dir,NoOp(),args);
     }
