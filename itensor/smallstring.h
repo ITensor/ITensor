@@ -94,6 +94,18 @@ operator>(SmallString const& t1, SmallString const& t2)
     return t2 < t1;
     }
 
+bool inline
+operator<=(SmallString const& t1, SmallString const& t2)
+    {
+    return int64_t(t1) <= int64_t(t2);
+    }
+
+bool inline
+operator>=(SmallString const& t1, SmallString const& t2)
+    {
+    return t2 <= t1;
+    }
+
 void inline
 write(std::ostream& s, SmallString const& t)
     {
