@@ -938,7 +938,7 @@ combiner(IndexSet const& inds, Args const& args)
         newind.nextIndex(std::move(cind));
         for(auto& I : inds) 
             {
-            newind.nextIndex(std::move(dag(I)));
+            newind.nextIndex(dag(I));
             }
         return ITensor(newind.build(),std::move(C));
         }
