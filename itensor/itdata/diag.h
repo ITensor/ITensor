@@ -181,6 +181,12 @@ template <typename T>
 Cplx
 doTask(GetElt<Index> const& g, Diag<T> const& d);
 
+template <typename T>
+void
+doTask(ToDense<Index> const& td,
+       Diag<T> const& d,
+       ManageStore & m);
+
 template<typename T1, typename T2>
 void
 doTask(Contract<Index> & C,

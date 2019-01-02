@@ -542,6 +542,9 @@ reindex(ITensorT<IndexT> const& cT,
         IndexT o1, IndexT n1, 
         Inds... inds);
 
+template<typename IndexT>
+ITensorT<IndexT>
+dense(ITensorT<IndexT> const& T);
 
 //
 // Given Tensors which represent operator matrices

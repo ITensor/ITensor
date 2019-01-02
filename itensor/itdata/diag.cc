@@ -329,6 +329,20 @@ doTask(TakeImag, DiagCplx const& D, ManageStore& m)
 
 template<typename T>
 void
+doTask(ToDense<Index> const& td, Diag<T> const& D, ManageStore & m)
+    {
+    auto& nD = *m.makeNewData<Dense<T>>(area(td.is));
+    //TODO: make a TensorRef and assign to the diagonals
+    for(auto n : range(D.size()))
+        {
+        PrintData(n);
+        PrintData(D[n]);
+        nD[n] = D[n];
+        }
+    }
+
+template<typename T>
+void
 doTask(PrintIT<Index>& P, Diag<T> const& d)
     {
     auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";

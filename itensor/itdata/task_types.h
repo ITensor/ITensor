@@ -41,6 +41,18 @@ template<typename I>
 const char*
 typeNameOf(GetElt<I> const&) { return "GetElt"; }
 
+template<typename IndexT>
+struct ToDense
+    {
+    IndexSetT<IndexT> const& is;
+
+    ToDense(IndexSetT<IndexT> const& is_);
+    };
+
+template<typename I>
+const char*
+typeNameOf(ToDense<I> const&) { return "ToDense"; }
+
 template<typename T, typename IndexT>
 struct SetElt
     {

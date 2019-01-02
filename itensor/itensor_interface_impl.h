@@ -940,6 +940,17 @@ sumelsC(ITensorT<I> const& t)
 #endif
     }
 
+//toDense(Diag) -> Dense
+//toDense(QDiag) -> QDense (TODO)
+template<typename IndexT>
+ITensorT<IndexT>
+dense(ITensorT<IndexT> const& T)
+    {
+    auto d = doTask(ToDense<IndexT>(T.inds()),T.store());
+    auto TD = ITensor(T.inds());
+    return TD;
+    }
+
 template<typename IndexT, typename... Inds>
 ITensorT<IndexT>
 reindex(ITensorT<IndexT> const& cT, 
