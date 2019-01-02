@@ -180,6 +180,13 @@ class SpinOneSite
             Op.set(Dn,DnP,1);
             }
         else
+        if(opname == "expiSz") //exp(i*pi*Sz)
+            {
+                Op.set(Z0,Z0P,1);
+                Op.set(Up,UpP,-1);
+                Op.set(Dn,DnP,-1);
+            }
+        else
         if(opname == "XUp")
             {
             //m = +1 state along x axis
