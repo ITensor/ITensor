@@ -100,10 +100,18 @@ class ITensorT
     Real
     real(IndexVals&&... ivs) const;
 
+    Cplx
+    cplx(std::vector<indexval_type> const& ivs) const;
+
     template <typename IV, typename... IVs>
     auto
     cplx(IV const& iv1, IVs&&... ivs) const
          -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>;
+
+    template <typename Int>
+    auto
+    cplx(std::vector<Int> const& ints) const
+        -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>;
 
     template <typename Int, typename... Ints>
     auto
