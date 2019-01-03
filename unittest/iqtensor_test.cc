@@ -1278,30 +1278,42 @@ for(auto kk : range1(k.m()))
 }
 
 SECTION("Set and Get with int")
-{
-auto I = IQIndex("I",Index("I+",1),QN(+1),
-                     Index("I-",1),QN(-1));
-auto J = IQIndex("J",Index("I+",2),QN(+1),
-                     Index("I-",2),QN(-1));
-auto T = IQTensor(I,J);
-T.set(2,1,21);
-CHECK_CLOSE(T.real(J(1),I(2)),21);
-CHECK_CLOSE(T.real(2,1),21);
-}
+    {
+    auto I = IQIndex("I",Index("I+",1),QN(+1),
+                         Index("I-",1),QN(-1));
+    auto J = IQIndex("J",Index("I+",2),QN(+1),
+                         Index("I-",2),QN(-1));
+    auto T = IQTensor(I,J);
+    T.set(2,1,21);
+    CHECK_CLOSE(T.real(J(1),I(2)),21);
+    CHECK_CLOSE(T.real(2,1),21);
+    }
+
+SECTION("Set and Get with vector<int>")
+    {
+    auto I = IQIndex("I",Index("I+",1),QN(+1),
+                         Index("I-",1),QN(-1));
+    auto J = IQIndex("J",Index("I+",2),QN(+1),
+                         Index("I-",2),QN(-1));
+    auto T = IQTensor(I,J);
+    T.set(vector<int>({2,1}),21);
+    CHECK_CLOSE(T.real(vector<IQIndexVal>({J(1),I(2)})),21);
+    CHECK_CLOSE(T.real(vector<int>({2,1})),21);
+    }
 
 SECTION("Set and Get with long int")
-{
-auto I = IQIndex("I",Index("I+",1),QN(+1),
-                     Index("I-",1),QN(-1));
-auto J = IQIndex("J",Index("I+",2),QN(+1),
-                     Index("I-",2),QN(-1));
-auto T = IQTensor(I,J);
-long int i1 = 1,
-         i2 = 2;
-T.set(i2,i1,21);
-CHECK_CLOSE(T.real(J(1),I(2)),21);
-CHECK_CLOSE(T.real(i2,i1),21);
-}
+    {
+    auto I = IQIndex("I",Index("I+",1),QN(+1),
+                         Index("I-",1),QN(-1));
+    auto J = IQIndex("J",Index("I+",2),QN(+1),
+                         Index("I-",2),QN(-1));
+    auto T = IQTensor(I,J);
+    long int i1 = 1,
+             i2 = 2;
+    T.set(i2,i1,21);
+    CHECK_CLOSE(T.real(J(1),I(2)),21);
+    CHECK_CLOSE(T.real(i2,i1),21);
+    }
 
 SECTION("Reindex")
     {
