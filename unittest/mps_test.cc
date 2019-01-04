@@ -75,7 +75,7 @@ SECTION("Random constructors, QN conserved (m==1)")
     CHECK(norm(psi)>0);
     }
 
-SECTION("MPSAddition")
+SECTION("MPSAddition 1")
     {
     Spinless sites(10,{"ConserveQNs=",true});
 
@@ -90,6 +90,20 @@ SECTION("MPSAddition")
 
     CHECK_CLOSE(norm(psi),1);
     CHECK_EQUAL(totalQN(psi),QN("Nf=",1));
+    }
+
+SECTION("MPSAddition 2")
+    {
+    auto sites = SiteSet(10,2);
+    auto psi1 = randomMPS(sites);
+    auto psi2 = randomMPS(sites);
+    auto psi = sum(psi1,psi2);
+
+    CHECK_EQUAL(rank(psi.A(1)),2);
+    CHECK_EQUAL(rank(psi.A(2)),3);
+    CHECK_EQUAL(rank(psi.A(5)),3);
+    CHECK_EQUAL(rank(psi.A(9)),3);
+    CHECK_EQUAL(rank(psi.A(10)),2);
     }
 
 //SECTION("PositionTest")

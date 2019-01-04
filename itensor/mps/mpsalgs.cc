@@ -32,7 +32,7 @@ plussers(Index const& l1,
         {
         auto m = l1.m()+l2.m();
         if(m <= 0) m = 1;
-        sumind = Index(m);
+        sumind = Index(m,"Link");
 
         first = delta(l1,sumind);
         auto S = Matrix(l2.m(),sumind.m());
