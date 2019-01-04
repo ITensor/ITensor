@@ -170,13 +170,8 @@ exactApplyMPO(MPO const& K,
     auto siteTags = getTagSet(args,"SiteTags","Site");
     auto linkTags = getTagSet(args,"LinkTags","Link");
 
-    // TODO: this might need to be index(K.A(1),"Site,1") since index()
-    // matches the exact pattern, otherwise make a findIndex() function that
-    // outputs the first index found
-    if(findIndex(K.A(1),"Site",0) != findIndex(psi.A(1),"Site",0))
-        {
-        Error("MPS and MPO have different site indices in exactApplyMPO");
-        }
+    if(not commonIndex(K.A(1),psi.A(1),siteTags))
+        Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
 
     int plev = 14741;
 
