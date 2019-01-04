@@ -40,7 +40,7 @@ plussers(Index const& l1,
             {
             S(i,l1.m()+i) = 1;
             }
-        second = matrixTensor(std::move(S),l2,sumind);
+        second = matrixITensor(std::move(S),l2,sumind);
         }
     else
         {

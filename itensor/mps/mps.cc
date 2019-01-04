@@ -1409,7 +1409,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                        }
 //                    string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
 //                    Index qbond(qname,mm);
-//                    auto compressor = matrixTensor(std::move(M),bond,qbond);
+//                    auto compressor = matrixITensor(std::move(M),bond,qbond);
 //                    for(const ITensor& t : blks) nblock.push_back(t * compressor);
 //                    iq.push_back(IndexQN(qbond,q));
 //                    qC[q] = compressor;

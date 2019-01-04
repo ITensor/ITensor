@@ -273,7 +273,7 @@ SECTION("Dense Rank 1 from container")
     {
     Index linkind(10,"linkind");
     auto data = randomData(linkind.m());
-    auto t10 = diagTensor(data,linkind);
+    auto t10 = diagITensor(data,linkind);
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasIndex(t10,linkind));
@@ -290,7 +290,7 @@ SECTION("Diag Rank 2 from container")
     Index i1(10,"i1"),
           i2(10,"i2");
     auto data = randomData(i1.m());
-    auto T = diagTensor(data,i1,i2);
+    auto T = diagITensor(data,i1,i2);
     CHECK(typeOf(T) == Type::DiagReal);
 
     CHECK_EQUAL(T.r(),2);
@@ -714,8 +714,8 @@ SECTION("Diag Apply")
     auto vr = vector<Real>{{3.,4.,5.,6.}};
     auto vc = vector<Cplx>{{3._i,4.,5._i,6.}};
 
-    auto dr = diagTensor(vr,i,j);
-    auto dc = diagTensor(vc,i,j);
+    auto dr = diagITensor(vr,i,j);
+    auto dc = diagITensor(vc,i,j);
     
     auto frr = [](Real r) { return 2*r; };
     auto frc = [](Real r) { return 2_i*r; };
@@ -747,8 +747,8 @@ SECTION("Diag Visit")
     auto vr = vector<Real>{{3.,4.,5.,6.}};
     auto vc = vector<Cplx>{{3._i,4.,5._i,6.}};
 
-    auto dr = diagTensor(vr,i,j);
-    auto dc = diagTensor(vc,i,j);
+    auto dr = diagITensor(vr,i,j);
+    auto dc = diagITensor(vc,i,j);
 
     auto rtot1 = stdx::accumulate(vr,0.);
     auto rtot2 = 0.;
@@ -842,8 +842,8 @@ SECTION("Add diag")
     {
     auto data1 = randomData(std::min(l6.m(),b4.m())),
          data2 = randomData(std::min(l6.m(),b4.m()));
-    auto v1 = diagTensor(data1,l6,b4),
-         v2 = diagTensor(data2,b4,l6);
+    auto v1 = diagITensor(data1,l6,b4),
+         v2 = diagITensor(data2,b4,l6);
     auto r = v1+v2;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
@@ -1508,7 +1508,7 @@ SECTION("Diag All Same")
 SECTION("Diag")
     {
     std::vector<Real> v = {{1.23234, -0.9237}};
-    auto op = diagTensor(v,s1,b2);
+    auto op = diagITensor(v,s1,b2);
     CHECK(typeOf(op) == Type::DiagReal);
 
     auto r2 = randomITensor(s1,s2);
@@ -1577,7 +1577,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     CHECK_CLOSE(R.real(),val);
 
     auto data = randomData(minjk);
-    auto d2 = diagTensor(data,J,K);
+    auto d2 = diagITensor(data,J,K);
     R = d2*T;
     CHECK(typeOf(R) == Type::DiagRealAllSame);
     val = 0;
@@ -2016,7 +2016,7 @@ M(0,0) = 11;
 M(0,1) = 12;
 M(1,0) = 21;
 M(1,1) = 22;
-auto T = matrixTensor(move(M),l1,l2);
+auto T = matrixITensor(move(M),l1,l2);
 CHECK_CLOSE(T.real(l1(1),l2(1)),11);
 CHECK_CLOSE(T.real(l1(1),l2(2)),12);
 CHECK_CLOSE(T.real(l1(2),l2(1)),21);
@@ -2084,7 +2084,7 @@ for(auto kk : range1(k.m()))
     }
 
 auto data = randomData(i.m());
-auto ITD = diagTensor(data,i,j,k);
+auto ITD = diagITensor(data,i,j,k);
 
 auto O4 = permute(ITD,k,i,j);
 CHECK(ITD.inds().index(1)==O4.inds().index(2));

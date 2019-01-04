@@ -603,6 +603,38 @@ randomITensorC(QN q, Index const& i1, Inds&&... inds)
     return randomITensor(q,std::move(is),{"Complex=",true});
     }
 
+//Deprecated
+template <typename... Inds>
+ITensor
+randomTensor(Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensor(Index,...) is deprecated in favor of randomITensor(Index,...)");
+    return randomITensor(i1,inds...);
+    }
+template <typename... Inds>
+ITensor
+randomTensorC(Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensorC(Index,...) is deprecated in favor of randomITensorC(Index,...)");
+    return randomITensorC(i1,inds...);
+    }
+
+//Deprecated
+template <typename... Inds>
+ITensor
+randomTensor(QN q, Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensor(QN,Index,...) is deprecated in favor of randomITensor(QN,Index,...)");
+    return randomITensor(q,i1,inds...);
+    }
+template <typename... Inds>
+ITensor
+randomTensorC(QN q, Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensorC(QN,Index,...) is deprecated in favor of randomITensorC(QN,Index,...)");
+    return randomITensorC(q,i1,inds...);
+    }
+
 
 ITensor inline
 conj(ITensor T)
@@ -824,9 +856,9 @@ delta(Index const& i1,
 
 template<typename Container, typename... Inds, class>
 ITensor
-diagTensor(Container const& C, 
-           Index const& i1,
-           Inds &&... inds)
+diagITensor(Container const& C, 
+            Index const& i1,
+            Inds &&... inds)
     { 
     auto is = IndexSet(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
@@ -844,6 +876,17 @@ diagTensor(Container const& C,
 #endif
     using value_type = typename Container::value_type;
     return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+    }
+
+//Deprecated
+template<typename Container, typename... Inds, class>
+ITensor
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
+    { 
+    Global::warnDeprecated("diagTensor(Container,Index,...) is deprecated in favor of diagITensor(Container,Index,...)");
+    return diagITensor(C,i1,inds...);
     }
 
 bool inline

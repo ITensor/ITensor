@@ -803,21 +803,37 @@ operator<<(ostream & s, ITensor const& t)
     }
 
 ITensor
-matrixTensor(Matrix&& M, Index const& i1, Index const& i2)
+matrixITensor(Matrix&& M, Index const& i1, Index const& i2)
     {
     auto res = ITensor({i1,i2},DenseReal{std::move(M.storage())});
     M.clear();
     return res;
     }
 
+//Deprecated
 ITensor
-matrixTensor(Matrix const& M, Index const& i1, Index const& i2)
+matrixTensor(Matrix&& M, Index const& i1, Index const& i2)
     {
-    return matrixTensor(Matrix(M),i1,i2);
+    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
     }
 
 ITensor
-matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
+matrixITensor(Matrix const& M, Index const& i1, Index const& i2)
+    {
+    return matrixITensor(Matrix(M),i1,i2);
+    }
+
+//Deprecated
+ITensor
+matrixTensor(Matrix const& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
+    }
+
+ITensor
+matrixITensor(CMatrix&& M, Index const& i1, Index const& i2)
     {
     bool isReal = true;
     for(auto& el : M)
@@ -841,10 +857,26 @@ matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
     return res;
     }
 
+//Deprecated
+ITensor
+matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
+    }
+
+ITensor
+matrixITensor(CMatrix const& M, Index const& i1, Index const& i2)
+    {
+    return matrixITensor(CMatrix(M),i1,i2);
+    }
+
+//Deprecated
 ITensor
 matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
     {
-    return matrixTensor(CMatrix(M),i1,i2);
+    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
     }
 
 

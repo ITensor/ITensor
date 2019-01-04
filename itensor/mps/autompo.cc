@@ -1374,7 +1374,7 @@ constructMPOTensors(SiteSet const& sites,
                 }
             else
                 {
-                auto t = matrixTensor(M,dag(row),col);
+                auto t = matrixITensor(M,dag(row),col);
                 W += (rc+t)*Op;
                 }
             W.scaleTo(1.);

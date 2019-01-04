@@ -551,35 +551,68 @@ template<typename Container,
          class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
                                 || stdx::containerOf<Cplx,Container>::value> >
 ITensor
+diagITensor(Container const& C,
+            Index const& i1,
+            Inds&&... inds);
+
+//Depecrated
+template<typename Container, 
+         typename... Inds,
+         class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
+                                || stdx::containerOf<Cplx,Container>::value> >
+ITensor
 diagTensor(Container const& C,
            Index const& i1,
            Inds&&... inds);
 
-
 template <typename... Inds>
 ITensor
 randomITensor(Index const& i1, Inds&&... inds);
-
 template <typename... Inds>
 ITensor
 randomITensorC(Index const& i1, Inds&&... inds);
-
 ITensor
 randomITensor(IndexSet const& inds);
 
+//Depecrated
+template <typename... Inds>
+ITensor
+randomTensor(Index const& i1, Inds&&... inds);
+template <typename... Inds>
+ITensor
+randomTensorC(Index const& i1, Inds&&... inds);
+ITensor
+randomTensor(IndexSet const& inds);
 
 template <typename... Inds>
 ITensor
 randomITensor(QN q, Index const& i1, Inds&&... inds);
-
 template <typename... Inds>
 ITensor
 randomITensorC(QN q, Index const& i1, Inds&&... inds);
-
 ITensor
 randomITensor(QN q, IndexSet const& inds, Args const& args = Args::global());
 
+//Deprecated
+template <typename... Inds>
+ITensor
+randomTensor(QN q, Index const& i1, Inds&&... inds);
+template <typename... Inds>
+ITensor
+randomTensorC(QN q, Index const& i1, Inds&&... inds);
+ITensor
+randomTensor(QN q, IndexSet const& inds, Args const& args = Args::global());
 
+ITensor
+matrixITensor(Matrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixITensor(Matrix const& M, Index const& i1, Index const& i2);
+ITensor
+matrixITensor(CMatrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixITensor(CMatrix const& M, Index const& i1, Index const& i2);
+
+//Deprecated
 ITensor
 matrixTensor(Matrix && M, Index const& i1, Index const& i2);
 ITensor
