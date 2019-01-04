@@ -121,14 +121,14 @@ loopContractedBlocks(BlockSparseA const& A,
     auto BtoC = IntArray(rB,-1);
     for(auto ic : range(rC))
         {
-        auto j = findIndex(Ais,Cis[ic]);
+        auto j = indexLocation(Ais,Cis[ic]);
         if(j >= 0)
             {
             AtoC[j] = ic;
             }
         else
             {
-            j = findIndex(Bis,Cis[ic]);
+            j = indexLocation(Bis,Cis[ic]);
             BtoC[j] = ic;
             }
         }

@@ -400,7 +400,7 @@ findIndexExact(ITensor const& T,
                TagSet const& tsmatch, 
                int plmatch = -1);
 
-//Find index of tensor A (of optional type t) 
+//Find index of tensor A (optionally having tags ts)
 //which is shared with tensor B
 Index
 commonIndex(ITensor const& A, 

@@ -397,16 +397,20 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     return is.range().end();
     }
 
-// Return the first index found with the specified tags
-// This is useful if we know there is only one index
-// that contains Tags ts, but don't know the other tags
+// Find the Index containing tags in the specified TagSet 
+// and matching the specified prime level
+// This is useful if we know there is an Index
+// that contains Tags tsmatch, but don't know the other tags
+// If multiple indices are found, throw an error
+// If none are found, return a default Index
 Index
 findIndex(IndexSet const& is,
           TagSet const& tsmatch, 
           int plmatch = -1);
 
 // Find the Index with a certain TagSet and prime level
-// If multiple indices or no index is found, throw an error
+// If multiple indices are found, throw an error
+// If none are found, return a default Index
 Index
 findIndexExact(IndexSet const& is,
                TagSet const& tsmatch, 
@@ -436,13 +440,13 @@ sim(IndexSet & is,
 
 
 //
-// Given IndexSetT iset and Index I,
+// Given IndexSet iset and Index I,
 // return int j such that iset[j] == I.
 // If not found, returns -1
 //
 long
-findIndex(IndexSet const& iset, 
-          Index const& I);
+indexLocation(IndexSet const& iset, 
+              Index const& I);
 
 Index
 finddir(IndexSet const& iset, Arrow dir);

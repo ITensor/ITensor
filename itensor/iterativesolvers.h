@@ -483,7 +483,7 @@ dot(ITensor const& A, ITensor const& B, Real& res)
     res = (dag(A)*B).real();
     }
 
-void
+void inline
 dot(ITensor const& A, ITensor const& B, Cplx& res)
     {
     res = (dag(A)*B).cplx();
