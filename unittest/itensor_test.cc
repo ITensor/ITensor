@@ -1479,6 +1479,9 @@ SECTION("CommonIndex")
 
     CHECK(commonIndex(T1,T2) == s1);
     CHECK(commonIndex(T1,T2,"Site") == s1);
+
+    c = commonIndex(T1,T2,"Link");
+    CHECK(!c);
     }
 
 SECTION("replaceInds")

@@ -291,7 +291,7 @@ commonIndex(ITensor const& A,
             TagSet const& ts)
     {
     for(auto& I : A.inds())
-        if( (ts.hasTag(All) || hasTags(I,ts))
+        if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
          && hasIndex(B.inds(),I) ) 
             {
             return I;
