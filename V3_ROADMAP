@@ -7,18 +7,16 @@
 ? Change niter definition, lowering by 1?
 ? In site sets, make all of the indices have the same ids but different tags
 
-! Need to add recent commits from master (rc3 is up to date with master as of 12/21):
+o Need to add recent commits from master (rc3 is up to date with master as of 12/21):
  o .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
 
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
-o Update website:
+! Update website:
   o Detailed documentation
   o List of depecrations/guide to update code
   o ITensor book
   o Tutorials
   o Code formulas
-o Add unit tests for tags functions
-  o addTags, removeTags, swapTags, etc.
 
 Optional (possibly post V3)
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
@@ -82,6 +80,7 @@ o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to
 o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor
 o Change name of findIndex(ITensor,Index) -> int to indexLocation(ITensor,Index) -> int
 o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor containing certain tags and matching an optional prime level
+o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
 
 Recent commits to v2 (master branch):
 o errMPOProd and deprecation of checkMPOProd
