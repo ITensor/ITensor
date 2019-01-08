@@ -491,7 +491,7 @@ prime(ITensor A,
 template<typename... VarArgs>
 ITensor
 setPrime(ITensor A,
-        VarArgs&&... vargs)
+         VarArgs&&... vargs)
     {
     A.setPrime(std::forward<VarArgs>(vargs)...);
     return A;
@@ -521,6 +521,51 @@ swapPrime(ITensor A,
           VarArgs&&... vargs)
     {
     A.swapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+replaceTags(ITensor A,
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+setTags(ITensor A,
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+addTags(ITensor A,
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+removeTags(ITensor A,
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+swapTags(ITensor A,
+         VarArgs&&... vargs)
+    {
+    A.swapTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

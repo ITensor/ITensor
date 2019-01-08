@@ -41,6 +41,7 @@ class ITensor
     //Construct rank n tensor, all elements set to zero
     //Usage: ITensor(i1,i2,i3,...)
     template <typename... index_types>
+    explicit
     ITensor(index_type  const& i1,
             index_types const&... i2etc);
 
@@ -144,6 +145,35 @@ class ITensor
     ITensor& 
     swapPrime(VarArgs&&... vargs)
         { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    //
+    // Index Tag Methods
+    //
+
+    template<typename... VarArgs>
+    ITensor&
+    replaceTags(VarArgs&&... vargs)
+        { is_.replaceTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    setTags(VarArgs&&... vargs)
+        { is_.setTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    addTags(VarArgs&&... vargs)
+        { is_.addTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    removeTags(VarArgs&&... vargs)
+        { is_.removeTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    swapTags(VarArgs&&... vargs)
+        { is_.swapTags(std::forward<VarArgs>(vargs)...); return *this; }
 
     //
     // Element Transformation Methods
@@ -354,11 +384,16 @@ setElt(IVal  const& iv1,
 //
 // ITensor prime level functions
 //
+
+template<typename... VarArgs>
+ITensor
+setPrime(ITensor A, 
+         VarArgs&&... vargs);
+
 template<typename... VarArgs>
 ITensor
 prime(ITensor A, 
       VarArgs&&... vargs);
-
 
 template<typename... VarArgs>
 ITensor
@@ -381,6 +416,35 @@ template<typename... VarArgs>
 ITensor
 swapPrime(ITensor A,
           VarArgs&&... vargs);
+
+//
+// ITensor tag functions
+//
+
+template<typename... VarArgs>
+ITensor
+replaceTags(ITensor A,
+            VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+setTags(ITensor A,
+        VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+addTags(ITensor A,
+        VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+removeTags(ITensor A,
+           VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+swapTags(ITensor A,
+         VarArgs&&... vargs);
 
 bool
 hasIndex(ITensor const& T, Index const& I);

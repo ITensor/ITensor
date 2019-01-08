@@ -7,6 +7,22 @@
 
 namespace itensor {
 
+namespace detail {
+    void inline
+    check(IndexSet const& is)
+        {
+        //Check if any duplicate indices
+        for(size_t j = 0; j < is.size(); ++j) 
+        for(size_t k = 0; k < is.size(); ++k)
+            if(k != j && is[j] == is[k])
+                {
+                println("index set = \n",is);
+                throw ITError("Duplicate indices in index set");
+                }
+        }
+
+} //namespace detail
+
 void inline IndexSet::
 dag() { for(auto& J : *this) J.dag(); }
 
@@ -56,12 +72,18 @@ void inline IndexSet::
 setPrime(int plnew, TagSet const& tsmatch)
     { 
     for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
 setPrime(int plnew, Index const& imatch)
     { 
     for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -70,6 +92,9 @@ mapPrime(int plold,
          TagSet const& tsmatch)
     { 
     for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -78,6 +103,9 @@ mapPrime(int plold,
          Index const& imatch)
     { 
     for(auto& J : *this) if(J.primeLevel()==plold && equalsIgnorePrime(J,imatch)) J.setPrime(plnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 template<typename... VarArgs>
@@ -93,7 +121,7 @@ swapPrime(int pl1,
         if(I.primeLevel() == tempLevel)
             {
             println("tempLevel = ",tempLevel);
-            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            throw ITError("swapPrime fails if an index has primeLevel==tempLevel");
             }
         }
 #endif
@@ -111,9 +139,11 @@ replaceTags(TagSet const& tsold,
     for(auto& J : *this)
         if(matchTagsPrime(J,tsmatch,plmatch) && hasTags(J,tsold))
             {
-            J.removeTags(tsold);
-            J.addTags(tsnew);
+            J.replaceTags(tsold,tsnew);
             }
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -124,9 +154,11 @@ replaceTags(TagSet const& tsold,
     for(auto& J : *this)
         if(J==imatch && hasTags(J,tsold))
             {
-            J.removeTags(tsold);
-            J.addTags(tsnew);
+            J.replaceTags(tsold,tsnew);
             }
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 template<typename... VarArgs>
@@ -135,20 +167,20 @@ swapTags(TagSet const& ts1,
          TagSet const& ts2, 
          VarArgs&&... vargs)
     {
-    auto tempTags = TagSet("df4sd321");
+    auto tempTags = TagSet("df4sd32");
 #ifdef DEBUG
     for(auto& I : *this)
         {
         if(hasTags(I,tempTags))
             {
             println("tempTags = ",tempTags);
-            Error("swapTags fails if an index has tags tempTags");
+            throw ITError("swapTags fails if an index has tags tempTags");
             }
         }
 #endif
     this->replaceTags(ts1,tempTags,vargs...);
     this->replaceTags(ts2,ts1,vargs...);
-    this->replaceTags(tempTags,ts2,vargs...);
+    this->replaceTags(tempTags,ts2);
     }
 
 void inline IndexSet::
@@ -157,6 +189,9 @@ setTags(TagSet const& tsnew,
         int plmatch) 
     { 
     for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.setTags(tsnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -164,6 +199,9 @@ setTags(TagSet const& tsnew,
         Index const& imatch)
     { 
     for(auto& J : *this) if(J==imatch) J.setTags(tsnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -172,6 +210,9 @@ addTags(TagSet const& tsadd,
         int plmatch) 
     { 
     for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -179,6 +220,9 @@ addTags(TagSet const& tsadd,
         Index const& imatch) 
     { 
     for(auto& J : *this) if(J==imatch) J.addTags(tsadd);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -187,6 +231,9 @@ removeTags(TagSet const& tsremove,
            int plmatch) 
     { 
     for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch) || tsremove==TagSet("All")) J.removeTags(tsremove); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -194,6 +241,9 @@ removeTags(TagSet const& tsremove,
            Index const& imatch) 
     { 
     for(auto& J : *this) if(J==imatch || tsremove==TagSet("All")) J.removeTags(tsremove); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
@@ -222,22 +272,6 @@ read(std::istream& s, IndexSet & is)
     itensor::read(s,pr);
     }
 
-namespace detail {
-    void inline
-    check(IndexSet const& is)
-        {
-        //Check if any duplicate indices
-        for(size_t j = 0; j < is.size(); ++j) 
-        for(size_t k = 0; k < is.size(); ++k)
-            if(k != j && is[j] == is[k])
-                {
-                println("index set = \n",is);
-                throw ITError("Duplicate indices in index set");
-                }
-        }
-
-} //namespace detail
-
 void inline
 sim(IndexSet & is, 
     Index const& I)
@@ -258,19 +292,19 @@ dir(const IndexSet& is, const Index& I)
         {
         if(J == I) return J.dir();
         }
-    Error("dir: Index not found");
+    throw ITError("dir: Index not found");
     return In;
     }
 
 
 Index inline
-finddir(IndexSet const& iset, Arrow dir)
+findIndex(IndexSet const& iset, Arrow dir)
     {
     for(const auto& J : iset)
         {
         if(J.dir() == dir) return J;
         }
-    Error("Couldn't find index with specified dir");
+    throw ITError("Couldn't find index with specified dir");
     return Index();
     }
 
@@ -533,12 +567,14 @@ findIndex(IndexSet const& is,
         {
         if(matchTagsPrime(J,tsmatch,plmatch))
             {
-            if(j) Error("Multiple indices with those tags and prime level found");
+#ifdef DEBUG
+            if(j) throw ITError("Multiple indices with those tags and prime level found");
+#endif
             j = J;
             }
         }
 #ifdef DEBUG
-    if(!j) Error("No index with those tags and prime level found");
+    if(!j) throw ITError("No index with those tags and prime level found");
 #endif
     return j;
     }
@@ -553,12 +589,12 @@ findIndexExact(IndexSet const& is,
         {
         if(matchTagsPrimeExact(J,tsmatch,plmatch))
             {
-            if(j) Error("Multiple indices with those tags and prime level found");
+            if(j) throw ITError("Multiple indices with those tags and prime level found");
             j = J;
             }
         }
 #ifdef DEBUG
-    if(!j) Error("No index with those tags and prime level found");
+    if(!j) throw ITError("No index with those tags and prime level found");
 #endif
     return j;
     }

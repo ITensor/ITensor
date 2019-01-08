@@ -158,6 +158,10 @@ class Index
     Index&
     setTags(const TagSet& t) { tags_ = t; return *this; }
 
+    // Set tags
+    Index&
+    replaceTags(const TagSet& tsold, const TagSet& tsnew) { tags_.removeTags(tsold); tags_.addTags(tsnew); return *this; }
+
     // Return a copy of this Index with new tags
     Index
     operator()(const TagSet& t) const { auto I = *this; I.setTags(t); return I; }
@@ -323,6 +327,9 @@ removeTags(Index I, const TagSet& t) { I.removeTags(t); return I; }
 
 Index inline
 setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
+
+Index inline
+replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew) { I.replaceTags(tsold,tsnew); return I; }
 
 //
 // Check if Index I contains the tags tsmatch.

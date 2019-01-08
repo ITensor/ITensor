@@ -59,7 +59,7 @@ class TagSet
     c_str() { return this->toString().c_str(); }
 
     int
-    hasTag(Tag const& t) const;
+    tagLocation(Tag const& t) const;
 
     void
     addTag(Tag const& t);
@@ -123,7 +123,7 @@ inline TagSet::
 TagSet(const char* ts)
     {
     auto t = Tag();
-    auto j = 0;
+    auto j = size_t(0);
     auto len = std::strlen(ts);
     for(auto i : range(len))
         {
@@ -135,6 +135,9 @@ TagSet(const char* ts)
             }
         else
             {
+#ifdef DEBUG
+            if(j >= SmallString::size()) throw std::runtime_error("Tag name is too long");
+#endif
             t.set(j,ts[i]);
             ++j;
             }
@@ -145,7 +148,7 @@ TagSet(const char* ts)
 // Returns -1 if Tag is not found,
 // otherwise return the Tag's location
 inline int TagSet::
-hasTag(Tag const& t) const
+tagLocation(Tag const& t) const
     {
     for(auto i : range(size_))
         {
@@ -158,7 +161,7 @@ inline bool
 hasTags(TagSet const& T, TagSet const& ts)
     {
     for(auto i : range(size(ts)))
-        if(T.hasTag(ts[i]) == -1) return false;
+        if(T.tagLocation(ts[i]) == -1) return false;
     return true;
     }
 
@@ -168,7 +171,7 @@ inline void TagSet::
 addTag(Tag const& t)
     {
     if(size_ == MAX_TAGS) error("Too many tags already, cannot add more. If you want more, consider raising MAX_TAGS.");
-    if(this->hasTag(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
+    if(this->tagLocation(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
         {
         auto i = size_;
         for(; i>0; --i)
@@ -199,7 +202,7 @@ addTags(TagSet T, TagSet const& ts)
 inline void TagSet::
 removeTag(Tag const& t)
     {
-    auto loc = this->hasTag(t);
+    auto loc = this->tagLocation(t);
     if(loc > -1)
         {
         for(size_t i = loc; i<size_; ++i)

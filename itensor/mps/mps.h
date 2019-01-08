@@ -82,6 +82,15 @@ class MPS
     plusEq(MPS const& R, 
            Args const& args = Args::global());
 
+    //void 
+    //prime(int plinc, TagSet const& ts = TagSet("All"));
+
+    //void 
+    //prime(TagSet const& ts = TagSet("All"))
+    //    {
+    //    prime(1,ts);
+    //    }
+
     void 
     mapPrime(int oldp, int newp, TagSet const& ts = TagSet("All"));
 

@@ -1432,8 +1432,6 @@ SECTION("NoprimeTest")
         CHECK(T.inds()[0] == s1);
         CHECK(T.inds()[1] == s2);
         }
-    /*
-    //TODO: this is not being checked anymore, but it back
     SECTION("Case 2")
         {
         ITensor T(s1,prime(s1));
@@ -1443,10 +1441,9 @@ SECTION("NoprimeTest")
         //lead to duplicate indices
         CHECK_THROWS_AS(T.noPrime(),ITError);
         }
-    */
     }
 
-SECTION("Prime IndexTypes")
+SECTION("Prime using Tags")
     {
     Index x(2,"x,Xtype"),
           z(2,"z,Ztype"),
@@ -1461,6 +1458,184 @@ SECTION("Prime IndexTypes")
     CHECK(T.inds()[2] == prime(v));
     }
 }
+
+SECTION("Tag functions")
+    {
+    Index l(3,"x,left,Link"),
+          r(3,"x,right,Link"),
+          u(3,"y,up,Link"),
+          d(3,"y,down,Link"),
+          s(2,"Site");
+    auto T = ITensor(l,r,u,d,s);
+
+    SECTION("addTags (all)")
+        {
+        auto T2 = addTags(T,"tag");
+        CHECK(hasIndex(T2,addTags(l,"tag")));
+        CHECK(hasIndex(T2,addTags(r,"tag")));
+        CHECK(hasIndex(T2,addTags(u,"tag")));
+        CHECK(hasIndex(T2,addTags(d,"tag")));
+        CHECK(hasIndex(T2,addTags(s,"tag")));
+        }
+
+    SECTION("addTags (match tags)")
+        {
+        auto T2 = addTags(T,"tag","x");
+        CHECK(hasIndex(T2,addTags(l,"tag")));
+        CHECK(hasIndex(T2,addTags(r,"tag")));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("addTags (match index)")
+        {
+        auto T2 = addTags(T,"tag",u);
+        CHECK(hasIndex(T2,l));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,addTags(u,"tag")));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("removeTags (all)")
+        {
+        auto T2 = removeTags(T,"Link");
+        CHECK(hasIndex(T2,removeTags(l,"Link")));
+        CHECK(hasIndex(T2,removeTags(r,"Link")));
+        CHECK(hasIndex(T2,removeTags(u,"Link")));
+        CHECK(hasIndex(T2,removeTags(d,"Link")));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("removeTags (match tags)")
+        {
+        auto T2 = removeTags(T,"x","left");
+        CHECK(hasIndex(T2,removeTags(l,"x")));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("removeTags (match index)")
+        {
+        auto T2 = removeTags(T,"Link",d);
+        CHECK(hasIndex(T2,l));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,removeTags(d,"Link")));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("setTags (all)")
+        {
+        auto T2 = setTags(T,"tag1,tag2");
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
+        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
+        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
+        CHECK(hasIndex(T2,u("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
+        CHECK(hasIndex(T2,d("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
+        CHECK(hasIndex(T2,s("tag2,tag1")));
+        }
+
+    SECTION("setTags (match tags)")
+        {
+        auto T2 = setTags(T,"tag1,tag2","x");
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
+        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
+        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("setTags (match index)")
+        {
+        auto T2 = setTags(T,"tag1,tag2",s);
+        CHECK(hasIndex(T2,l));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
+        CHECK(hasIndex(T2,s("tag2,tag1")));
+        }
+
+    SECTION("replaceTags (all)")
+        {
+        auto T2 = replaceTags(T,"Link","tag");
+        CHECK(hasIndex(T2,replaceTags(l,"Link","tag")));
+        CHECK(hasIndex(T2,replaceTags(r,"Link","tag")));
+        CHECK(hasIndex(T2,replaceTags(u,"Link","tag")));
+        CHECK(hasIndex(T2,replaceTags(d,"Link","tag")));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("replaceTags (match tags)")
+        {
+        auto T2 = replaceTags(T,"Link","tag1,tag2","y");
+        CHECK(hasIndex(T2,l));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,replaceTags(u,"Link","tag2,tag1")));
+        CHECK(hasIndex(T2,replaceTags(d,"Link","tag2,tag1")));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("replaceTags (match index)")
+        {
+        auto T2 = replaceTags(T,"Link","tag1,tag2",l);
+        CHECK(hasIndex(T2,replaceTags(l,"Link","tag2,tag1")));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("swapTags (all)")
+        {
+        auto T2 = swapTags(T,"Link","Site");
+        CHECK(hasIndex(T2,replaceTags(l,"Link","Site")));
+        CHECK(hasIndex(T2,replaceTags(r,"Link","Site")));
+        CHECK(hasIndex(T2,replaceTags(u,"Link","Site")));
+        CHECK(hasIndex(T2,replaceTags(d,"Link","Site")));
+        CHECK(hasIndex(T2,replaceTags(s,"Site","Link")));
+        }
+
+    SECTION("swapTags (match tags)")
+        {
+        auto T2 = swapTags(T,"x","y","x");
+        CHECK(hasIndex(T2,replaceTags(l,"x","y")));
+        CHECK(hasIndex(T2,replaceTags(r,"x","y")));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("swapTags (match index)")
+        {
+        auto T2 = swapTags(T,"x","y",l);
+        CHECK(hasIndex(T2,replaceTags(l,"x","y")));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,s));
+        }
+
+    SECTION("Check error throws for duplicate indices")
+        {
+        auto T2 = ITensor(l("Link"),l("Link,2"));
+        //Check that remove the tag "2"
+        //throws an exception since it would
+        //lead to duplicate indices
+        CHECK_THROWS_AS(T2.removeTags("2"),ITError);
+        }
+
+    }
 
 SECTION("CommonIndex")
     {

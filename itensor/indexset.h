@@ -449,7 +449,7 @@ indexLocation(IndexSet const& iset,
               Index const& I);
 
 Index
-finddir(IndexSet const& iset, Arrow dir);
+findIndex(IndexSet const& iset, Arrow dir);
 
 Arrow
 dir(IndexSet const& is, Index const& I);

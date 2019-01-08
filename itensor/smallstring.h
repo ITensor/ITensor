@@ -62,7 +62,7 @@ struct SmallString
     void
     check_ind(size_t j) const
         {
-        if(j >= size()) Error("SmallString: index out of range");
+        if(j >= size()) throw std::runtime_error("SmallString: index out of range");
         }
     };
 
@@ -127,7 +127,7 @@ SmallString(const char* name)
     for(size_t j = 0; j < len; ++j)
         {
 #ifdef DEBUG
-        if(name[j]==',') Error("SmallString cannot contain character ','");
+        if(name[j]==',') throw std::runtime_error("SmallString cannot contain character ','");
 #endif
         name_[j] = name[j];
         }
