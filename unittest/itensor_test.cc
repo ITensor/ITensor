@@ -1461,11 +1461,11 @@ SECTION("Prime using Tags")
 
 SECTION("Tag functions")
     {
-    Index l(3,"x,left,Link"),
-          r(3,"x,right,Link"),
-          u(3,"y,up,Link"),
-          d(3,"y,down,Link"),
-          s(2,"Site");
+    auto l = Index(3,"x,left,Link");
+    auto r = Index(3,"x,right,Link");
+    auto u = Index(3,"y,up,Link");
+    auto d = Index(3,"y,down,Link");
+    auto s = Index(2,"Site");
     auto T = ITensor(l,r,u,d,s);
 
     SECTION("addTags (all)")
@@ -1635,6 +1635,21 @@ SECTION("Tag functions")
         CHECK_THROWS_AS(T2.removeTags("2"),ITError);
         }
 
+    SECTION("Test contraction")
+        {
+        auto ll = l("horiz,left,Link");
+        auto lr = l("horiz,right,Link");
+        auto lu = l("vert,up,Link");
+        auto ld = l("vert,down,Link");
+        auto A = randomITensor(ll,lr,lu,ld,s);
+        // Contract over l,r,s
+        auto B = addTags(A,"bra","vert")*addTags(dag(A),"ket","vert");
+        CHECK(ord(B) == 4);
+        CHECK(hasIndex(B,addTags(lu,"bra")));
+        CHECK(hasIndex(B,addTags(lu,"ket")));
+        CHECK(hasIndex(B,addTags(ld,"bra")));
+        CHECK(hasIndex(B,addTags(ld,"ket")));
+        }
     }
 
 SECTION("CommonIndex")
