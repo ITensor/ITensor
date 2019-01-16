@@ -106,6 +106,49 @@ operator>=(SmallString const& t1, SmallString const& t2)
     return t2 <= t1;
     }
 
+bool inline
+operator==(SmallString const& t1, std::string s2)
+    {
+    return operator==(t1,SmallString(s2));
+    }
+bool inline
+operator==(std::string s1, SmallString const& t2)
+    {
+    return operator==(SmallString(s1),t2);
+    }
+bool inline
+operator!=(SmallString const& t1, std::string s2)
+    {
+    return operator!=(t1,SmallString(s2));
+    }
+bool inline
+operator!=(std::string s1, SmallString const& t2)
+    {
+    return operator!=(SmallString(s1),t2);
+    }
+
+bool inline
+operator==(SmallString const& t1, const char* s2)
+    {
+    return operator==(t1,SmallString(s2));
+    }
+bool inline
+operator==(const char* s1, SmallString const& t2)
+    {
+    return operator==(SmallString(s1),t2);
+    }
+bool inline
+operator!=(SmallString const& t1, const char* s2)
+    {
+    return operator!=(t1,SmallString(s2));
+    }
+bool inline
+operator!=(const char* s1, SmallString const& t2)
+    {
+    return operator!=(SmallString(s1),t2);
+    }
+
+
 void inline
 write(std::ostream& s, SmallString const& t)
     {
