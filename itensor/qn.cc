@@ -4,7 +4,7 @@
 
 namespace itensor {
 
-void QNVal::
+void QNum::
 set(qn_t v)
     { 
     auto m = std::abs(mod_);
@@ -27,13 +27,13 @@ set(qn_t v)
     }
 
 void
-checkCompatible(QNVal const& qva, QNVal const& qvb) 
+checkCompatible(QNum const& qva, QNum const& qvb) 
     {
 #ifdef DEBUG
     if(qva.name() != qvb.name())
         {
         printfln("qva.name()=%s, qvb.name()=%s",qva.name(),qvb.name());
-        Error("Mismatched QNVal names");
+        Error("Mismatched QNum names");
         }
     if(qva.mod() != qvb.mod())
         {
@@ -44,57 +44,57 @@ checkCompatible(QNVal const& qva, QNVal const& qvb)
     }
 
 
-QNVal&
-operator+=(QNVal& qva, QNVal const& qvb) 
+QNum&
+operator+=(QNum& qva, QNum const& qvb) 
     { 
     checkCompatible(qva,qvb);
     qva.set(qva.val()+qvb.val());
     return qva;
     }
 
-QNVal&
-operator-=(QNVal& qva, QNVal const& qvb) 
+QNum&
+operator-=(QNum& qva, QNum const& qvb) 
     { 
     checkCompatible(qva,qvb);
     qva.set(qva.val()-qvb.val());
     return qva;
     }
 
-QNVal&
-operator*=(QNVal& qva, Arrow dir)
+QNum&
+operator*=(QNum& qva, Arrow dir)
     { 
     qva.set(qva.val() * static_cast<int>(dir));
     return qva;
     }
 
 bool
-operator==(QNVal const& qva, QNVal const& qvb)
+operator==(QNum const& qva, QNum const& qvb)
     {
     checkCompatible(qva,qvb);
     return qva.val() == qvb.val();
     }
 
 bool
-operator!=(QNVal const& qva, QNVal const& qvb)
+operator!=(QNum const& qva, QNum const& qvb)
     {
     checkCompatible(qva,qvb);
     return qva.val() != qvb.val();
     }
 
 void
-read(std::istream & s, QNVal & q)
+read(std::istream & s, QNum & q)
     {
     QNName n;
-    QNVal::qn_t v = 0,
+    QNum::qn_t v = 0,
                 m = 0;
     itensor::read(s,n);
     itensor::read(s,v);
     itensor::read(s,m);
-    q = QNVal(n,v,m);
+    q = QNum(n,v,m);
     }
 
 void
-write(std::ostream & s, QNVal const& q)
+write(std::ostream & s, QNum const& q)
     {
     itensor::write(s,q.name());
     itensor::write(s,q.val());
@@ -102,7 +102,7 @@ write(std::ostream & s, QNVal const& q)
     }
 
 std::ostream& 
-operator<<(std::ostream & s, QNVal const& qv)
+operator<<(std::ostream & s, QNum const& qv)
     {
     s << "{";
     if(qv.name() != QNName())
@@ -124,43 +124,43 @@ operator<<(std::ostream & s, QNVal const& qv)
 QN::
 QN(qn_t q0)
     {
-    qvs_[0] = QNVal(q0);
+    qvs_[0] = QNum(q0);
     }
 
-QN::
-QN(qn_t q0,
-   qn_t q1)
-    {
-    addVal(QNVal(q0));
-    addVal(QNVal(q1));
-    }
-
-QN::
-QN(qn_t q0,
-   qn_t q1,
-   qn_t q2)
-    {
-    addVal(QNVal(q0));
-    addVal(QNVal(q1));
-    addVal(QNVal(q2));
-    }
-
-QN::
-QN(qn_t q0,
-   qn_t q1,
-   qn_t q2,
-   qn_t q3)
-    {
-    addVal(QNVal(q0));
-    addVal(QNVal(q1));
-    addVal(QNVal(q2));
-    addVal(QNVal(q3));
-    }
+//QN::
+//QN(qn_t q0,
+//   qn_t q1)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    }
+//
+//QN::
+//QN(qn_t q0,
+//   qn_t q1,
+//   qn_t q2)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    addVal(QNum(q2));
+//    }
+//
+//QN::
+//QN(qn_t q0,
+//   qn_t q1,
+//   qn_t q2,
+//   qn_t q3)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    addVal(QNum(q2));
+//    addVal(QNum(q3));
+//    }
 
 //template<typename Func>
 //void
 //mergeDo(QN & q, 
-//        QNVal const& v,
+//        QNum const& v,
 //        Func && eq_action)
 //    {
 //    auto& qvs = q.store();
@@ -195,7 +195,7 @@ QN(qn_t q0,
 
 
 void QN::
-addVal(QNVal const& qv)
+addVal(QNum const& qv)
     {
     if(isActive(qvs_.back())) Error("addVal: all QN slots are filled");
 
@@ -229,11 +229,21 @@ addVal(QNVal const& qv)
     }
 
 QN::qn_t QN::
-getVal(QNName const& name) const
+val(QNName const& name) const
     {
     for(auto& v : qvs_)
         {
         if(v.name() == name) return v.val();
+        }
+    return 0;
+    }
+
+QN::qn_t QN::
+mod(QNName const& name) const
+    {
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return v.mod();
         }
     return 0;
     }
@@ -243,7 +253,7 @@ modAssign(QN const& qo)
     {
     for(size_t n = 0; n < QNSize(); ++n)
         {
-        qvs_[n] = QNVal(qvs_[n].name(),qvs_[n].val(),qo.qvs_[n].mod());
+        qvs_[n] = QNum(qvs_[n].name(),qvs_[n].val(),qo.qvs_[n].mod());
         }
     }
 
@@ -296,10 +306,10 @@ operator==(QN qa, QN const& qb)
 bool
 operator<(QN const& qa, QN const& qb)
     {
-    for(auto n : range(QNSize()))
+    for(auto n : range1(QNSize()))
         {
-        auto& vn = qa.val0(n);
-        auto bval = qb.getVal(vn.name());
+        auto& vn = qa.num(n);
+        auto bval = qb.val(vn.name());
         if(vn.val() == bval) continue;
         return vn.val() < bval;
         }
@@ -363,7 +373,7 @@ combineQN(QN & qa,
 QN&
 operator+=(QN & qa, QN const& qb) 
     { 
-    auto addOp = [](QNVal & qva, QNVal const& qvb)
+    auto addOp = [](QNum & qva, QNum const& qvb)
         {
         qva += qvb;
         };
@@ -397,14 +407,14 @@ operator<<(std::ostream & s, QN const& q)
         auto& v = q.store()[n];
         if(!isActive(v)) break;
         if(n > 0) s << ",";
-        if(v.mod() == 1)
+        s << "{";
+        if(v.name() != QNName()) s << "\"" << v.name() << "\",";
+        s << v.val();
+        if(v.mod() != 1)
             {
-            s << "{\"" << v.name() << "\"," << v.val() << "}";
+            s << "," << v.mod();
             }
-        else
-            {
-            s << "{\"" << v.name() << "\"," << v.val() << "," << v.mod() << "}";
-            }
+        s << "}";
         }
     s << ")";
     return s;

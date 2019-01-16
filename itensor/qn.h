@@ -24,7 +24,7 @@ using QNName = SmallString;
 size_t inline constexpr
 QNSize() { return 4ul; }
 
-//QNVal: storage element type for QN
+//QNum: storage element type for QN
 //Represents a number with a Z (integer)
 //or Z_M (integer mod M) addition rule
 //
@@ -33,7 +33,7 @@ QNSize() { return 4ul; }
 // mod >  1  => Z_M addition
 // mod <  0  => same as above, fermionic
 // mod == 0  => inactive/not used
-struct QNVal
+struct QNum
     {
     using qn_t = int;
     private:
@@ -42,18 +42,18 @@ struct QNVal
          mod_ = 0;
     public:
 
-    QNVal() { }
+    QNum() { }
 
     explicit 
-    QNVal(qn_t v) : name_(""), mod_(1) { set(v); }
+    QNum(qn_t v) : name_(""), mod_(1) { set(v); }
 
-    QNVal(QNName name, qn_t v) : name_(name), mod_(1) { set(v); }
+    QNum(QNName name, qn_t v) : name_(name), mod_(1) { set(v); }
 
-    QNVal(qn_t v, qn_t m) : name_(""), mod_(m) { set(v); }
+    QNum(qn_t v, qn_t m) : name_(""), mod_(m) { set(v); }
 
-    QNVal(QNName name, qn_t v, qn_t m) : name_(name), mod_(m) { set(v); }
+    QNum(QNName name, qn_t v, qn_t m) : name_(name), mod_(m) { set(v); }
 
-    //QNVal(std::tuple<std::string,int,int> qv)
+    //QNum(std::tuple<std::string,int,int> qv)
     //    {
     //    name_ = QNName(std::get<0>(qv));
     //    mod_ = std::get<2>(qv);
@@ -73,8 +73,8 @@ struct QNVal
     void
     set(qn_t v);
 
-    QNVal
-    operator-() const { return QNVal(name_,-val_, mod_); }
+    QNum
+    operator-() const { return QNum(name_,-val_, mod_); }
 
     explicit operator bool() const { return mod_ != 0; }
     };
@@ -86,8 +86,8 @@ struct QNVal
 class QN
     {
     public:
-    using qn_t = QNVal::qn_t;
-    using storage_type = std::array<QNVal,QNSize()>;
+    using qn_t = QNum::qn_t;
+    using storage_type = std::array<QNum,QNSize()>;
     using iterator = storage_type::iterator;
     using const_iterator = storage_type::const_iterator;
     private:
@@ -99,23 +99,11 @@ class QN
     explicit
     QN(qn_t q0);
 
-    QN(qn_t q0,
-       qn_t q1);
-
-    QN(qn_t q0,
-       qn_t q1,
-       qn_t q2);
-
-    QN(qn_t q0,
-       qn_t q1,
-       qn_t q2,
-       qn_t q3);
-
     explicit
-    QN(QNVal v0,
-       QNVal v1 = QNVal{},
-       QNVal v2 = QNVal{},
-       QNVal v3 = QNVal{}) 
+    QN(QNum v0,
+       QNum v1 = QNum{},
+       QNum v2 = QNum{},
+       QNum v3 = QNum{}) 
        { 
        addVal(v0);
        if(not v1) return;
@@ -132,10 +120,33 @@ class QN
     size() const { return qvs_.size(); }
 
     void
-    addVal(QNVal const& qv);
+    addVal(QNum const& qv);
+
+    QNum 
+    num(QNName name) const;
 
     qn_t //qn_t == int
-    getVal(QNName const& name) const;
+    val(QNName const& name) const;
+
+    qn_t //qn_t == int
+    mod(QNName const& name) const;
+
+    //1-indexed
+    QNum &
+    num(size_t n);
+
+    //1-indexed
+    QNum const&
+    num(size_t n) const;
+
+    QNName
+    name(size_t n) { return num(n).name(); }
+
+    qn_t
+    val(size_t n) { return num(n).val(); }
+
+    qn_t
+    mod(size_t n) { return num(n).mod(); }
 
     storage_type &
     store() { return qvs_; }
@@ -143,61 +154,61 @@ class QN
     storage_type const&
     store() const { return qvs_; }
 
-    //0-indexed
-    QNVal &
-    val0(size_t n);
-
-    //0-indexed
-    QNVal const&
-    val0(size_t n) const;
-
     void
     modAssign(QN const& qo);
     };
 
+
+
 /////////////////////////////////
 //
-// QNVal functions
+// QNum functions
 // 
 /////////////////////////////////
 
 bool inline
-isFermionic(QNVal const& qv) { return qv.mod() < 0; }
+isFermionic(QNum const& qv) { return qv.mod() < 0; }
 
 bool inline
-isActive(QNVal const& qv) { return qv.mod() != 0; }
+isActive(QNum const& qv) { return qv.mod() != 0; }
 
-QNVal&
-operator+=(QNVal& qva, QNVal const& qvb);
+QNum&
+operator+=(QNum& qva, QNum const& qvb);
 
-QNVal&
-operator-=(QNVal& qva, QNVal const& qvb);
+QNum&
+operator-=(QNum& qva, QNum const& qvb);
 
-QNVal&
-operator*=(QNVal& qva, Arrow dir);
+QNum&
+operator*=(QNum& qva, Arrow dir);
 
-QNVal inline
-operator+(QNVal qva, QNVal const& qvb) { return qva += qvb; }
+QNum inline
+operator+(QNum qva, QNum const& qvb) { return qva += qvb; }
 
-QNVal inline
-operator-(QNVal qva, QNVal const& qvb) { return qva -= qvb; }
-
-bool
-operator==(QNVal const& qva, QNVal const& qvb);
+QNum inline
+operator-(QNum qva, QNum const& qvb) { return qva -= qvb; }
 
 bool
-operator!=(QNVal const& qva, QNVal const& qvb);
+operator==(QNum const& qva, QNum const& qvb);
+
+bool
+operator!=(QNum const& qva, QNum const& qvb);
 
 void
-read(std::istream & s, QNVal & q);
+read(std::istream & s, QNum & q);
 
 void
-write(std::ostream & s, QNVal const& q);
+write(std::ostream & s, QNum const& q);
 
 
 //
 // QN functions
 // 
+
+bool inline
+isFermionic(QN const& q, QNName const& name) 
+    { 
+    return isFermionic(q.num(name));
+    }
 
 bool
 operator==(QN qa, QN const& qb);
@@ -245,25 +256,36 @@ void
 printFull(QN const& q);
 
 std::ostream& 
-operator<<(std::ostream & s, QNVal const& qv);
+operator<<(std::ostream & s, QNum const& qv);
 
-inline QNVal& QN::
-val0(size_t n)
+inline QNum QN::
+num(QNName name) const 
+    { 
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return v;
+        }
+    Error("QNum with given name not found");
+    return QNum();
+    }
+
+inline QNum& QN::
+num(size_t n)
     { 
 #ifdef DEBUG
-    return qvs_.at(n); 
+    return qvs_.at(n-1); 
 #else
-    return qvs_[n]; 
+    return qvs_[n-1]; 
 #endif
     }
 
-inline QNVal const& QN::
-val0(size_t n) const 
+inline QNum const& QN::
+num(size_t n) const 
     { 
 #ifdef DEBUG
-    return qvs_.at(n); 
+    return qvs_.at(n-1); 
 #else
-    return qvs_[n]; 
+    return qvs_[n-1]; 
 #endif
     }
 
