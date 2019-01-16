@@ -24,9 +24,9 @@ class tJSite
     tJSite(int n, Args const& args = Args::global())
         {
         auto ts = format("Site,tJ,%d",n);
-        s = Index{QN("Sz=", 0,"Nf=",0),1,
-                  QN("Sz=",+1,"Nf=",1),1,
-                  QN("Sz=",-1,"Nf=",1),1,Out,ts};
+        s = Index{QN({"Sz", 0},{"Nf",0}),1,
+                  QN({"Sz",+1},{"Nf",1}),1,
+                  QN({"Sz",-1},{"Nf",1}),1,Out,ts};
         }
 
     Index

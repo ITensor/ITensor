@@ -24,9 +24,9 @@ class Z3Site
     Z3Site(int n, Args const& args = Args::global())
         {
         auto ts = format("Site,Z3,%d",n);
-        s = Index{QN({0,3}),1,
-                  QN({1,3}),1,
-                  QN({2,3}),1,Out,ts};
+        s = Index{QN({"T",0,3}),1,
+                  QN({"T",1,3}),1,
+                  QN({"T",2,3}),1,Out,ts};
         }
 
     Index
