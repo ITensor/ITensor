@@ -11,6 +11,7 @@
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
   o Bugfix for nmultMPO
+  o .real and .cplx accepting vector<int> (pull #194)
 
 o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 o Update website:
@@ -19,7 +20,6 @@ o Update website:
   o ITensor book
   o Tutorials
   o Code formulas
-o Make sure rc3 is up to date with changes to master (updated as of 12/21)
 o Add unit tests for tags functions
   o addTags, removeTags, swapTags, etc.
 
