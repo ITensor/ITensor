@@ -219,7 +219,9 @@ svdImpl(ITensor const& A,
             }
 
         auto Liq = Index::qnstorage{};
+        auto Riq = Index::qnstorage{};
         Liq.reserve(Nblock);
+        Riq.reserve(Nblock);
 
         for(auto b : range(Nblock))
             {
@@ -252,14 +254,16 @@ svdImpl(ITensor const& A,
             resize(d,this_m);
 
             Liq.emplace_back(uI.qn(1+B.i1),this_m);
+            Riq.emplace_back(vI.qn(1+B.i2),this_m);
             }
         
 #ifdef DEBUG
-        if(Liq.empty()) throw std::runtime_error("Index of S after SVD is empty");
+        if(Liq.empty()) throw std::runtime_error("New Index of U after SVD is empty");
+        if(Riq.empty()) throw std::runtime_error("New Index of V after SVD is empty");
 #endif
 
         auto L = Index(move(Liq),uI.dir(),litagset);
-        auto R = setTags(dag(L),ritagset);
+        auto R = Index(move(Riq),vI.dir(),ritagset);
 
         auto Uis = IndexSet(uI,dag(L));
         auto Dis = IndexSet(L,R);
