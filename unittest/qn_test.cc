@@ -239,4 +239,98 @@ SECTION("Z3 Clock")
     CHECK(Q == QN({"T",1,3}));
     }
 
+SECTION("Add to Default Zero")
+    {
+    auto q = QN({"Sz",3});
+    CHECK(q.val("Sz") == 3);
+
+    q = QN() + q;
+    CHECK(q.val("Sz") == 3);
+
+    q = q+ QN();
+    CHECK(q.val("Sz") == 3);
+    }
+
+SECTION("Compare to Default Zero")
+    {
+    auto q0 = QN({"Sz",0});
+    CHECK(q0.val("Sz") == 0);
+
+    auto q3 = QN({"Sz",3});
+    CHECK(q3.val("Sz") == 3);
+
+    CHECK(q0 == QN());
+    CHECK(q3 != QN());
+    }
+
+SECTION("Mixed Comparison")
+    {
+    auto qa = QN({"Sz",0});
+    auto qb = QN({"Nf",0});
+    CHECK(qa == qb);
+
+    qa = QN({"Sz",0},{"Nf",1});
+    qb = QN({"Nf",1});
+    CHECK(qa == qb);
+
+    qa = QN({"Sz",1},{"Nf",0});
+    qb = QN({"Sz",1});
+    CHECK(qa == qb);
+    }
+
+SECTION("Negate")
+    {
+    auto q = QN({"Sz",1},{"Nf",2});
+
+    auto n = -q;
+
+    CHECK(n.val("Sz") == -1);
+    CHECK(n.val("Nf") == -2);
+    }
+
+SECTION("Arrow Multiplication")
+    {
+    auto q = QN({"Sz",1},{"Nf",2});
+
+    auto qi = q*In;
+    CHECK(qi.val("Sz") == -1);
+    CHECK(qi.val("Nf") == -2);
+
+    auto qo = q*Out;
+    CHECK(qo.val("Sz") == 1);
+    CHECK(qo.val("Nf") == 2);
+    }
+
+SECTION("Ordering")
+    {
+    auto z = QN();
+    auto qa = QN({"Sz",1},{"Nf",1});
+    auto qb = QN({"Sz",0},{"Nf",2});
+    auto qc = QN({"Sz",1},{"Nf",2});
+    auto qd = QN({"Sz",1},{"Nf",2});
+    auto qe = QN({"Sz",-1},{"Nf",-2});
+
+    CHECK(not (z < z));
+    CHECK(not (qa < z));
+    CHECK(z < qa);
+    CHECK(not (qa < z));
+    CHECK(z < qb);
+    CHECK(not (qb < z));
+    CHECK(z < qc);
+    CHECK(not (qc < z));
+    CHECK(z < qd);
+    CHECK(not (qd < z));
+    CHECK(not (z < qe));
+    CHECK(qe < z);
+
+    CHECK(qa < qb);
+    CHECK((not (qb < qa)));
+    CHECK((not (qb == qa)));
+    CHECK(qb < qc);
+    CHECK((not (qc < qb)));
+    CHECK((not (qc == qb)));
+    CHECK(qc == qd);
+    CHECK((not (qc < qd)));
+    CHECK((not (qd < qc)));
+    }
 }
