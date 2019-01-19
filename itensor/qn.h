@@ -140,13 +140,13 @@ class QN
     num(size_t n) const;
 
     QNName
-    name(size_t n) { return num(n).name(); }
+    name(size_t n) const { return num(n).name(); }
 
     qn_t
-    val(size_t n) { return num(n).val(); }
+    val(size_t n) const { return num(n).val(); }
 
     qn_t
-    mod(size_t n) { return num(n).mod(); }
+    mod(size_t n) const { return num(n).mod(); }
 
     storage_type &
     store() { return qvs_; }
@@ -288,6 +288,16 @@ num(size_t n) const
     return qvs_[n-1]; 
 #endif
     }
+
+//QN inline
+//zeroOf(QN q)
+//    {
+//    for(auto n : range1(QNSize()))
+//        {
+//        q.num(n).set(0);
+//        }
+//    return q;
+//    }
 
 } //namespace itensor
 
