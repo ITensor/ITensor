@@ -286,19 +286,31 @@ operator==(QN qa, QN const& qb)
     {
     for(auto& bv : qb.store()) if(bv.val() != 0)
         {
+        bool found = false;
         for(auto& av : qa.store())
             {
-            if(av.name() == bv.name() 
-               && av.val() != bv.val()) return false;
+            if(av.name() == bv.name())
+                {
+                if(av.val() != bv.val()) return false;
+                found = true;
+                break;
+                }
             }
+        if(not found) return false;
         }
     for(auto& av : qa.store()) if(av.val() != 0)
         {
+        bool found = false;
         for(auto& bv : qb.store())
             {
-            if(bv.name() == av.name() 
-               && bv.val() != av.val()) return false;
+            if(bv.name() == av.name())
+                {
+                if(bv.val() != av.val()) return false;
+                found = true;
+                break;
+                }
             }
+        if(not found) return false;
         }
     return true;
     }
