@@ -318,12 +318,62 @@ operator==(QN qa, QN const& qb)
 bool
 operator<(QN const& qa, QN const& qb)
     {
-    for(auto n : range1(QNSize()))
+    int a = 1;
+    int b = 1;
+    while(a <= QNSize() && b <= QNSize()
+          && (isActive(qa.num(a)) || isActive(qb.num(b))))
         {
-        auto& vn = qa.num(n);
-        auto bval = qb.val(vn.name());
-        if(vn.val() == bval) continue;
-        return vn.val() < bval;
+        if(not isActive(qa.num(a)))
+            {
+            if(0 == qb.val(b))
+                {
+                b += 1;
+                continue;
+                }
+            return 0 < qb.val(b);
+            }
+        else if(not isActive(qb.num(b)))
+            {
+            if(qa.val(a) == 0)
+                {
+                a += 1;
+                continue;
+                }
+            return qa.val(a) < 0;
+            }
+        else //both active
+            {
+            auto aname = qa.name(a);
+            auto bname = qb.name(b);
+            if(aname < bname) //b doesn't have aname, assume bval=0
+                {
+                if(qa.val(a) == 0) 
+                    {
+                    a += 1;
+                    continue;
+                    }
+                return qa.val(a) < 0;
+                }
+            else if(bname < aname) //a doesn't have bname, assume aval=0
+                {
+                if(qb.val(b) == 0)
+                    {
+                    b += 1;
+                    continue;
+                    }
+                return 0 < qb.val(b);
+                }
+            else // bname == aname
+                {
+                if(qa.val(a) == qb.val(b))
+                    {
+                    a += 1;
+                    b += 1;
+                    continue;
+                    }
+                return qa.val(a) < qb.val(b);
+                }
+            }
         }
     return false;
     }
