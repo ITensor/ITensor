@@ -7,6 +7,8 @@
   o Tutorials
   o Code formulas
 
+! Test that new QN system allows mixing different site types
+
 ? Change niter definition, lowering by 1?
 ? In site sets, make all of the indices have the same ids but different tags
 
