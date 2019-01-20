@@ -7,8 +7,8 @@ include/*
 *.swp
 sample/dmrg
 sample/dmrg-g
-sample/iqdmrg
-sample/iqdmrg-g
+sample/mixedspin
+sample/mixedspin-g
 sample/dmrg_table
 sample/dmrg_table-g
 sample/dmrgj1j2
