@@ -28,8 +28,8 @@ class SpinHalfSite
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+1),1,
-                      QN("Sz=",-1),1,Out,ts};
+            s = Index{QN({"Sz",+1}),1,
+                      QN({"Sz",-1}),1,Out,ts};
             }
         else
             {

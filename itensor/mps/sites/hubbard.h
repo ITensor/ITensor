@@ -31,18 +31,18 @@ class HubbardSite
         auto ts = format("Site,Hubbard,%d",n);
         if(conserveNf)
             {
-            s = Index{QN("Sz=", 0,"Nf=",0),1,
-                      QN("Sz=",Up,"Nf=",1),1,
-                      QN("Sz=",Dn,"Nf=",1),1,
-                      QN("Sz=", 0,"Nf=",2),1,Out,ts};
+            s = Index{QN({"Sz", 0},{"Nf",0,-1}),1,
+                      QN({"Sz",Up},{"Nf",1,-1}),1,
+                      QN({"Sz",Dn},{"Nf",1,-1}),1,
+                      QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts};
             }
         else //don't conserve Nf, only fermion parity
             {
             if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
-            s = Index{QN("Sz=", 0,"Pf=",0),1,
-                      QN("Sz=",+1,"Pf=",1),1,
-                      QN("Sz=",-1,"Pf=",1),1,
-                      QN("Sz=", 0,"Pf=",0),1,Out,ts};
+            s = Index{QN({"Sz", 0},{"Pf",0,-1}),1,
+                      QN({"Sz",+1},{"Pf",1,-1}),1,
+                      QN({"Sz",-1},{"Pf",1,-1}),1,
+                      QN({"Sz", 0},{"Pf",0,-1}),1,Out,ts};
             }
         }
 

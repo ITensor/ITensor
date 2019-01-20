@@ -7,6 +7,7 @@
 
 #include "itensor/global.h"
 #include "itensor/arrow.h"
+#include "itensor/smallstring.h"
 
 namespace itensor {
 
@@ -18,43 +19,12 @@ namespace itensor {
 
 class QN;
 
-//
-// QN convenience accessor functions
-// 
-
-//Get the Sz value
-//Appropriate for QNs constructed via:
-//spin, spinboson, electron, elparity
-int
-Sz(QN const& q);
-
-//Get the Nb (boson number) value
-//Appropriate for QNs constructed via:
-//boson, spinboson
-int
-Nb(QN const& q);
-
-//Get the Nf (fermion number) value
-//Appropriate for QNs constructed via:
-//electron
-int
-Nf(QN const& q);
-
-//Get the fermion parity value.
-//Either 0 for even parity or 1 for odd parity.
-//Appropriate for QNs constructed via:
-//electron, elparity
-int
-Pf(QN const& q);
-//Nfp is an alias for Pf
-int
-Nfp(QN const& q);
-
+using QNName = SmallString;
 
 size_t inline constexpr
 QNSize() { return 4ul; }
 
-//QNVal: storage element type for QN
+//QNum: storage element type for QN
 //Represents a number with a Z (integer)
 //or Z_M (integer mod M) addition rule
 //
@@ -63,26 +33,36 @@ QNSize() { return 4ul; }
 // mod >  1  => Z_M addition
 // mod <  0  => same as above, fermionic
 // mod == 0  => inactive/not used
-struct QNVal
+struct QNum
     {
     using qn_t = int;
     private:
+    QNName name_;
     qn_t val_ = 0,
          mod_ = 0;
     public:
 
-    QNVal() { }
+    QNum() { }
 
-    explicit QNVal(qn_t v) : val_(v), mod_(1) { }
+    explicit 
+    QNum(qn_t v) : name_(""), mod_(1) { set(v); }
 
-    QNVal(qn_t v, qn_t m) : mod_(m) { set(v); }
+    QNum(QNName name, qn_t v) : name_(name), mod_(1) { set(v); }
 
-    QNVal(std::initializer_list<qn_t> qv)
-        {
-        if(qv.size() != 2) Error("initializer_list arg to QNVal must have two elements");
-        mod_ = *(qv.begin()+1);
-        set(*(qv.begin()));
-        }
+    QNum(qn_t v, qn_t m) : name_(""), mod_(m) { set(v); }
+
+    QNum(QNName name, qn_t v, qn_t m) : name_(name), mod_(m) { set(v); }
+
+    //QNum(std::tuple<std::string,int,int> qv)
+    //    {
+    //    name_ = QNName(std::get<0>(qv));
+    //    mod_ = std::get<2>(qv);
+    //    auto value = std::get<1>(qv);
+    //    set(value);
+    //    }
+
+    QNName
+    name() const { return name_; }
 
     qn_t
     mod() const { return mod_; }
@@ -93,8 +73,10 @@ struct QNVal
     void
     set(qn_t v);
 
-    QNVal
-    operator-() const { return QNVal(-val_, mod_); }
+    QNum
+    operator-() const { return QNum(name_,-val_, mod_); }
+
+    explicit operator bool() const { return mod_ != 0; }
     };
 
 //
@@ -104,162 +86,132 @@ struct QNVal
 class QN
     {
     public:
-    using qn_t = QNVal::qn_t;
-    using storage_type = std::array<QNVal,QNSize()>;
+    using qn_t = QNum::qn_t;
+    using storage_type = std::array<QNum,QNSize()>;
     using iterator = storage_type::iterator;
     using const_iterator = storage_type::const_iterator;
     private:
-    storage_type qn_{};
+    storage_type qvs_{};
     public:
 
     QN() { }
 
-    // Takes named Args:
-    // QN({"Sz=",-1,"Nf=",2})
-    explicit
-    QN(Args const& args);
-
     explicit
     QN(qn_t q0);
 
-    QN(qn_t q0,
-       qn_t q1);
-
-    QN(qn_t q0,
-       qn_t q1,
-       qn_t q2);
-
-    QN(qn_t q0,
-       qn_t q1,
-       qn_t q2,
-       qn_t q3);
-
-    template <typename T, typename... Rest>
-    QN(const char* name1,
-       T const& t1, 
-       Rest const&... rest)
-      : QN(Args(name1,t1,rest...))
-        { }
-
-    // Takes QNVal arguments,
-    // specifying both a qn value in each
-    // sector and a mod factor
-    // Can call as as QN({0,2},{1,2})
     explicit
-    QN(QNVal v0,
-       QNVal v1 = QNVal{},
-       QNVal v2 = QNVal{},
-       QNVal v3 = QNVal{}) 
-     : qn_{{v0,v1,v2,v3}} 
-       { }
+    QN(QNum v0,
+       QNum v1 = QNum{},
+       QNum v2 = QNum{},
+       QNum v3 = QNum{}) 
+       { 
+       addVal(v0);
+       if(not v1) return;
+       addVal(v1);
+       if(not v2) return;
+       addVal(v2);
+       if(not v3) return;
+       addVal(v3);
+       }
 
-    explicit
-    QN(std::initializer_list<qn_t> qv)
-        {
-        qn_[0] = qv;
-        }
-
-    explicit operator bool() const { return qn_.front().mod() != 0; }
-
-    qn_t
-    operator[](size_t n) const
-        { 
-#ifdef DEBUG
-        return qn_.at(n).val(); 
-#else
-        return qn_[n].val(); 
-#endif
-        }
-
-    //1-indexed
-    qn_t
-    operator()(size_t n) const { return operator[](n-1); }
-
-    //1-indexed
-    qn_t
-    mod(size_t n) const { return qn_.at(n-1).mod(); }
+    explicit operator bool() const { return qvs_.front().mod() != 0; }
 
     size_t
-    size() const { return qn_.size(); }
+    size() const { return qvs_.size(); }
 
-    //0-indexed
-    QNVal &
-    val0(size_t n)
-        { 
-#ifdef DEBUG
-        return qn_.at(n); 
-#else
-        return qn_[n]; 
-#endif
-        }
+    void
+    addVal(QNum const& qv);
 
-    //0-indexed
-    QNVal const&
-    val0(size_t n) const 
-        { 
-#ifdef DEBUG
-        return qn_.at(n); 
-#else
-        return qn_[n]; 
-#endif
-        }
+    QNum 
+    num(QNName name) const;
+
+    qn_t //qn_t == int
+    val(QNName const& name) const;
+
+    qn_t //qn_t == int
+    mod(QNName const& name) const;
+
+    //1-indexed
+    QNum &
+    num(size_t n);
+
+    //1-indexed
+    QNum const&
+    num(size_t n) const;
+
+    QNName
+    name(size_t n) const { return num(n).name(); }
+
+    qn_t
+    val(size_t n) const { return num(n).val(); }
+
+    qn_t
+    mod(size_t n) const { return num(n).mod(); }
+
+    storage_type &
+    store() { return qvs_; }
+
+    storage_type const&
+    store() const { return qvs_; }
 
     void
     modAssign(QN const& qo);
-
-    storage_type &
-    store() { return qn_; }
-
-    storage_type const&
-    store() const { return qn_; }
     };
 
 
+
+/////////////////////////////////
 //
-// QNVal functions
+// QNum functions
 // 
+/////////////////////////////////
 
 bool inline
-isFermionic(QNVal const& qv) { return qv.mod() < 0; }
+isFermionic(QNum const& qv) { return qv.mod() < 0; }
 
 bool inline
-isActive(QNVal const& qv) { return qv.mod() != 0; }
+isActive(QNum const& qv) { return qv.mod() != 0; }
 
-void
-operator+=(QNVal& qva, QNVal const& qvb);
+QNum&
+operator+=(QNum& qva, QNum const& qvb);
 
-void
-operator-=(QNVal& qva, QNVal const& qvb);
+QNum&
+operator-=(QNum& qva, QNum const& qvb);
 
-void
-operator*=(QNVal& qva, Arrow dir);
+QNum&
+operator*=(QNum& qva, Arrow dir);
+
+QNum inline
+operator+(QNum qva, QNum const& qvb) { return qva += qvb; }
+
+QNum inline
+operator-(QNum qva, QNum const& qvb) { return qva -= qvb; }
 
 bool
-operator==(QNVal const& qva, QNVal const& qvb);
+operator==(QNum const& qva, QNum const& qvb);
 
 bool
-operator!=(QNVal const& qva, QNVal const& qvb);
+operator!=(QNum const& qva, QNum const& qvb);
 
 void
-read(std::istream & s, QNVal & q);
+read(std::istream & s, QNum & q);
 
 void
-write(std::ostream & s, QNVal const& q);
+write(std::ostream & s, QNum const& q);
 
 
 //
 // QN functions
 // 
 
-//1-indexed
 bool inline
-isActive(QN const& q, size_t n) { return isActive(q.val0(n-1)); }
-
-bool inline
-isFermionic(QN const& q, size_t n) { return q.mod(n) < 0; }
+isFermionic(QN const& q, QNName const& name) 
+    { 
+    return isFermionic(q.num(name));
+    }
 
 bool
-operator==(QN const& qa, QN const& qb);
+operator==(QN qa, QN const& qb);
 
 bool inline
 operator!=(QN const& qa, QN const& qb) { return !operator==(qa,qb); }
@@ -270,13 +222,13 @@ operator<(QN const& qa, QN const& qb);
 QN
 operator-(QN q);
 
-void
+QN&
 operator+=(QN & qa, QN const& qb);
 
-void
+QN&
 operator-=(QN & qa, QN const& qb);
 
-void
+QN&
 operator*=(QN & qa, Arrow dir);
 
 QN inline
@@ -294,15 +246,6 @@ operator*(Arrow dir, QN q) { q *= dir; return q; }
 std::ostream& 
 operator<<(std::ostream & s, QN const& q);
 
-//returns -1 if any sector of the QN is fermionic and odd-parity
-//otherwise returns +1
-int
-paritySign(QN const& q);
-
-//returns true if any sector of the QN is fermionic
-bool
-isFermionic(QN const& q);
-
 void
 read(std::istream & s, QN & q);
 
@@ -312,21 +255,49 @@ write(std::ostream & s, QN const& q);
 void
 printFull(QN const& q);
 
+std::ostream& 
+operator<<(std::ostream & s, QNum const& qv);
 
-int inline
-Sz(QN const& q) { return q[0]; }
+inline QNum QN::
+num(QNName name) const 
+    { 
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return v;
+        }
+    Error("QNum with given name not found");
+    return QNum();
+    }
 
-int inline
-Nb(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
+inline QNum& QN::
+num(size_t n)
+    { 
+#ifdef DEBUG
+    return qvs_.at(n-1); 
+#else
+    return qvs_[n-1]; 
+#endif
+    }
 
-int inline
-Nf(QN const& q) { return isActive(q,2) ? q(2) : q(1); }
+inline QNum const& QN::
+num(size_t n) const 
+    { 
+#ifdef DEBUG
+    return qvs_.at(n-1); 
+#else
+    return qvs_[n-1]; 
+#endif
+    }
 
-int inline
-Pf(QN const& q) { return std::abs(Nf(q))%2; }
-
-int inline
-Nfp(QN const& q) { return Pf(q); }
+//QN inline
+//zeroOf(QN q)
+//    {
+//    for(auto n : range1(QNSize()))
+//        {
+//        q.num(n).set(0);
+//        }
+//    return q;
+//    }
 
 } //namespace itensor
 

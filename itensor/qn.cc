@@ -1,76 +1,10 @@
 #include "itensor/qn.h"
 #include "itensor/util/readwrite.h"
+#include "itensor/util/print_macro.h"
 
 namespace itensor {
 
-QN::
-QN(qn_t q0)
-    {
-    qn_[0] = QNVal(q0);
-    }
-
-QN::
-QN(qn_t q0,
-   qn_t q1)
-    {
-    qn_[0] = QNVal(q0);
-    qn_[1] = QNVal(q1);
-    }
-
-QN::
-QN(qn_t q0,
-   qn_t q1,
-   qn_t q2)
-    {
-    qn_[0] = QNVal(q0);
-    qn_[1] = QNVal(q1);
-    qn_[2] = QNVal(q2);
-    }
-
-QN::
-QN(qn_t q0,
-   qn_t q1,
-   qn_t q2,
-   qn_t q3)
-    {
-    qn_[0] = QNVal(q0);
-    qn_[1] = QNVal(q1);
-    qn_[2] = QNVal(q2);
-    qn_[3] = QNVal(q3);
-    }
-
-QN::
-QN(Args const& args)
-    {
-    auto hasSz = args.defined("Sz");
-    auto start = hasSz ? 1 : 0;
-
-    if(hasSz) qn_[0] = QNVal(args.getInt("Sz"));
-
-    if(args.defined("Nb"))
-        {
-        qn_[start] = QNVal(args.getInt("Nb"),+1);
-        }
-    else if(args.defined("Nf"))
-        {
-        qn_[start] = QNVal(args.getInt("Nf"),-1);
-        }
-    else if(args.defined("Pf"))
-        {
-        qn_[start] = QNVal(args.getInt("Pf"),-2);
-        }
-    }
-
-void QN::
-modAssign(QN const& qo)
-    {
-    for(size_t n = 0; n < QNSize(); ++n)
-        {
-        qn_[n] = QNVal(qn_[n].val(),qo.qn_[n].mod());
-        }
-    }
-
-void QNVal::
+void QNum::
 set(qn_t v)
     { 
     auto m = std::abs(mod_);
@@ -92,83 +26,291 @@ set(qn_t v)
         }
     }
 
-
 void
-operator+=(QNVal& qva, QNVal const& qvb) 
-    { 
+checkCompatible(QNum const& qva, QNum const& qvb) 
+    {
 #ifdef DEBUG
+    if(qva.name() != qvb.name())
+        {
+        printfln("qva.name()=%s, qvb.name()=%s",qva.name(),qvb.name());
+        Error("Mismatched QNum names");
+        }
     if(qva.mod() != qvb.mod())
         {
         printfln("qva.mod()=%d, qvb.mod()=%d",qva.mod(),qvb.mod());
         Error("Mismatched mod factors");
         }
 #endif
-    qva.set(qva.val()+qvb.val());
     }
 
-void
-operator-=(QNVal& qva, QNVal const& qvb) 
+
+QNum&
+operator+=(QNum& qva, QNum const& qvb) 
     { 
-    assert(qva.mod() == qvb.mod());
-    qva.set(qva.val()-qvb.val());
+    checkCompatible(qva,qvb);
+    qva.set(qva.val()+qvb.val());
+    return qva;
     }
 
-void
-operator*=(QNVal& qva, Arrow dir)
+QNum&
+operator-=(QNum& qva, QNum const& qvb) 
+    { 
+    checkCompatible(qva,qvb);
+    qva.set(qva.val()-qvb.val());
+    return qva;
+    }
+
+QNum&
+operator*=(QNum& qva, Arrow dir)
     { 
     qva.set(qva.val() * static_cast<int>(dir));
+    return qva;
     }
 
 bool
-operator==(QNVal const& qva, QNVal const& qvb)
+operator==(QNum const& qva, QNum const& qvb)
     {
-    assert(qva.mod() == qvb.mod());
+    checkCompatible(qva,qvb);
     return qva.val() == qvb.val();
     }
 
 bool
-operator!=(QNVal const& qva, QNVal const& qvb)
+operator!=(QNum const& qva, QNum const& qvb)
     {
-    assert(qva.mod() == qvb.mod());
+    checkCompatible(qva,qvb);
     return qva.val() != qvb.val();
     }
 
 void
-read(std::istream & s, QNVal & q)
+read(std::istream & s, QNum & q)
     {
-    QNVal::qn_t v = 0,
+    QNName n;
+    QNum::qn_t v = 0,
                 m = 0;
+    itensor::read(s,n);
     itensor::read(s,v);
     itensor::read(s,m);
-    q = QNVal(v,m);
+    q = QNum(n,v,m);
     }
 
 void
-write(std::ostream & s, QNVal const& q)
+write(std::ostream & s, QNum const& q)
     {
+    itensor::write(s,q.name());
     itensor::write(s,q.val());
     itensor::write(s,q.mod());
+    }
+
+std::ostream& 
+operator<<(std::ostream & s, QNum const& qv)
+    {
+    s << "{";
+    if(qv.name() != QNName())
+        {
+        s << "\"" << qv.name() << "\",";
+        }
+    s << qv.val() << "," << qv.mod() << "}";
+    return s;
+    }
+
+////////////////////////
+////////////////////////
+//
+// QN
+//
+////////////////////////
+////////////////////////
+
+QN::
+QN(qn_t q0)
+    {
+    qvs_[0] = QNum(q0);
+    }
+
+//QN::
+//QN(qn_t q0,
+//   qn_t q1)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    }
+//
+//QN::
+//QN(qn_t q0,
+//   qn_t q1,
+//   qn_t q2)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    addVal(QNum(q2));
+//    }
+//
+//QN::
+//QN(qn_t q0,
+//   qn_t q1,
+//   qn_t q2,
+//   qn_t q3)
+//    {
+//    addVal(QNum(q0));
+//    addVal(QNum(q1));
+//    addVal(QNum(q2));
+//    addVal(QNum(q3));
+//    }
+
+//template<typename Func>
+//void
+//mergeDo(QN & q, 
+//        QNum const& v,
+//        Func && eq_action)
+//    {
+//    auto& qvs = q.store();
+//    auto n = QNSize()-1;
+//    while(n >= 1)
+//        {
+//        Print(n);
+//        if(isActive(qvs[n-1]))
+//            {
+//            if(qvs[n-1].name() == v.name()) 
+//                {
+//                eq_action(qvs[n-1],v);
+//                return;
+//                }
+//            else if(qvs[n-1].name() < v.name())
+//                {
+//                qvs[n] = v;
+//                return;
+//                }
+//            else //n-1's name is > v.name()
+//                {
+//                //move qvs_[n-1] to the right
+//                //and leave a 'hole' at n
+//                qvs[n] = qvs[n-1]; 
+//                }
+//            }
+//        n -= 1;
+//        }
+//    assert(n == 0);
+//    qvs[n] = v;
+//    }
+
+
+void QN::
+addVal(QNum const& qv)
+    {
+    if(isActive(qvs_.back())) Error("addVal: all QN slots are filled");
+
+    auto n = QNSize()-1;
+    while(n >= 1)
+        {
+        if(isActive(qvs_[n-1]))
+            {
+            if(qvs_[n-1].name() == qv.name()) 
+                {
+                Print(qvs_[n-1].name());
+                Print(qv.name());
+                Error("Duplicate name in QN");
+                }
+            else if(qvs_[n-1].name() < qv.name())
+                {
+                qvs_[n] = qv;
+                return;
+                }
+            else //n-1's name is > qv.name()
+                {
+                //move qvs_[n-1] to the right
+                //and leave a 'hole' at n
+                qvs_[n] = qvs_[n-1]; 
+                }
+            }
+        n -= 1;
+        }
+    assert(n == 0);
+    qvs_[n] = qv;
+    }
+
+QN::qn_t QN::
+val(QNName const& name) const
+    {
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return v.val();
+        }
+    return 0;
+    }
+
+QN::qn_t QN::
+mod(QNName const& name) const
+    {
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return v.mod();
+        }
+    return 0;
+    }
+
+void QN::
+modAssign(QN const& qo)
+    {
+    for(size_t n = 0; n < QNSize(); ++n)
+        {
+        qvs_[n] = QNum(qvs_[n].name(),qvs_[n].val(),qo.qvs_[n].mod());
+        }
     }
 
 void
 printFull(QN const& q)
     {
     print("QN(");
-    for(auto n : range1(QNSize()))
+    for(auto n : range(q.store()))
         {
-        if(!isActive(q,n)) break;
-        if(n > 1) print(",");
-        print("{",q(n),",",q.mod(n),"}");
+        auto& v = q.store()[n];
+        if(!isActive(v)) break;
+        if(n > 0) print(",");
+        print("{\"",v.name(),"\",",v.val(),",",v.mod(),"}");
         }
     println(")");
     }
 
-bool
-operator==(QN const& qa, QN const& qb)
+void
+checkCompatible(QN const& qa, QN const& qb) 
     {
-    for(size_t n = 0; n < QNSize(); ++n)
+#ifdef DEBUG
+    //for(auto n : range(QNSize()))
+    //    {
+    //    }
+#endif
+    }
+
+bool
+operator==(QN qa, QN const& qb)
+    {
+    for(auto& bv : qb.store()) if(bv.val() != 0)
         {
-        if(qa.val0(n).val() != qb.val0(n).val()) return false;
+        bool found = false;
+        for(auto& av : qa.store())
+            {
+            if(av.name() == bv.name())
+                {
+                if(av.val() != bv.val()) return false;
+                found = true;
+                break;
+                }
+            }
+        if(not found) return false;
+        }
+    for(auto& av : qa.store()) if(av.val() != 0)
+        {
+        bool found = false;
+        for(auto& bv : qb.store())
+            {
+            if(bv.name() == av.name())
+                {
+                if(bv.val() != av.val()) return false;
+                found = true;
+                break;
+                }
+            }
+        if(not found) return false;
         }
     return true;
     }
@@ -176,10 +318,62 @@ operator==(QN const& qa, QN const& qb)
 bool
 operator<(QN const& qa, QN const& qb)
     {
-    for(size_t n = 0; n < QNSize(); ++n)
+    int a = 1;
+    int b = 1;
+    while(a <= QNSize() && b <= QNSize()
+          && (isActive(qa.num(a)) || isActive(qb.num(b))))
         {
-        if(qa.val0(n).val() == qb.val0(n).val()) continue;
-        return qa.val0(n).val() < qb.val0(n).val();
+        if(not isActive(qa.num(a)))
+            {
+            if(0 == qb.val(b))
+                {
+                b += 1;
+                continue;
+                }
+            return 0 < qb.val(b);
+            }
+        else if(not isActive(qb.num(b)))
+            {
+            if(qa.val(a) == 0)
+                {
+                a += 1;
+                continue;
+                }
+            return qa.val(a) < 0;
+            }
+        else //both active
+            {
+            auto aname = qa.name(a);
+            auto bname = qb.name(b);
+            if(aname < bname) //b doesn't have aname, assume bval=0
+                {
+                if(qa.val(a) == 0) 
+                    {
+                    a += 1;
+                    continue;
+                    }
+                return qa.val(a) < 0;
+                }
+            else if(bname < aname) //a doesn't have bname, assume aval=0
+                {
+                if(qb.val(b) == 0)
+                    {
+                    b += 1;
+                    continue;
+                    }
+                return 0 < qb.val(b);
+                }
+            else // bname == aname
+                {
+                if(qa.val(a) == qb.val(b))
+                    {
+                    a += 1;
+                    b += 1;
+                    continue;
+                    }
+                return qa.val(a) < qb.val(b);
+                }
+            }
         }
     return false;
     }
@@ -187,133 +381,117 @@ operator<(QN const& qa, QN const& qb)
 QN
 operator-(QN q)
     {
-    for(size_t n = 0; n < QNSize(); ++n)
+    for(auto& v : q.store())
         {
-        q.val0(n) = -q.val0(n);
+        v = -v;
         }
     return q;
     }
 
+//
+// Common implementation for += and -= of QNs
+//
+template<typename Func>
 void
+combineQN(QN & qa, 
+          QN const& qb,
+          Func && operation)
+    { 
+    auto& avs = qa.store();
+    for(auto & bv : qb.store())
+        {
+        if(not isActive(bv)) break;
+
+        for(auto n : range(QNSize()))
+            {
+            auto& av = avs[n];
+            if(av.name() == bv.name()) 
+                {
+                operation(av,bv);
+                break;
+                }
+            else if(not isActive(avs[n]))
+                {
+                av = bv;
+                break;
+                }
+            else if(bv.name() < av.name() && 
+                    (n==0 || bv.name() > avs[n-1].name()))
+                {
+                //Name of bv is missing from qa,
+                //move this and all remaining vals over one place
+                for(size_t m = QNSize()-1; m > n; m -= 1)
+                    {
+                    avs[m] = avs[m-1];
+                    }
+                //Put bv into n'th place
+                av = bv;
+                break;
+                }
+            }
+        }
+    }
+
+QN&
 operator+=(QN & qa, QN const& qb) 
     { 
-    if(!qa) qa.modAssign(qb);
-    if(!qb) return;
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
+    auto addOp = [](QNum & qva, QNum const& qvb)
         {
-        qa.val0(n) += qb.val0(n);
-        }
+        qva += qvb;
+        };
+    combineQN(qa,qb,addOp);
+    return qa;
     }
 
-void
+QN&
 operator-=(QN & qa, QN const& qb) 
     { 
-    if(!qa) qa.modAssign(qb);
-    if(!qb) return;
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
-        {
-        qa.val0(n) -= qb.val0(n);
-        }
+    qa += (-qb);
+    return qa;
     }
 
-void
+QN&
 operator*=(QN & qa, Arrow dir)
     { 
-    for(size_t n = 0; n < QNSize() && isActive(qa.val0(n)); ++n)
+    for(auto& v : qa.store())
         {
-        qa.val0(n) *= dir;
+        v *= dir;
         }
+    return qa;
     }
 
 std::ostream& 
 operator<<(std::ostream & s, QN const& q)
     {
-    if(q.mod(1) == 1 && !isActive(q,2))
+    s << "QN(";
+    for(auto n : range(q.store()))
         {
-        //spin or spinless boson
-        s << "QN(" << q(1) << ")";
-        }
-    else
-    if(q.mod(1) == -1 && !isActive(q,2))
-        {
-        //spinless fermion
-        s << "(Nf=" << q(1) << ")";
-        }
-    else
-    if(q.mod(1) == -2 && !isActive(q,2))
-        {
-        //parity-only spinless fermion
-        s << "(Pf=" << q(1) << ")";
-        }
-    else
-    if(q.mod(1) == 1 && q.mod(2) == -1 && !isActive(q,3))
-        {
-        //electron
-        s << "(Sz=" << q(1) << ",Nf=" << q(2) << ")";
-        }
-    else
-    if(q.mod(1) == 1 && q.mod(2) == -2 && !isActive(q,3))
-        {
-        //"superconducting" electron (parity conservation only)
-        s << "(Sz=" << q(1) << ",Pf=" << q(2) << ")";
-        }
-    else
-        {
-        //catch-all behavior
-        s << "QN(";
-        for(auto n : range1(QNSize()))
+        auto& v = q.store()[n];
+        if(!isActive(v)) break;
+        if(n > 0) s << ",";
+        s << "{";
+        if(v.name() != QNName()) s << "\"" << v.name() << "\",";
+        s << v.val();
+        if(v.mod() != 1)
             {
-            if(!isActive(q,n)) break;
-            if(n > 1) s << ",";
-            if(q.mod(n) != 1)
-                {
-                s << "{" << q(n) << "," << q.mod(n) << "}";
-                }
-            else
-                {
-                s << q(n);
-                }
+            s << "," << v.mod();
             }
-        s << ")";
+        s << "}";
         }
+    s << ")";
     return s;
-    }
-
-int
-paritySign(QN const& q)
-    {
-    int p = 1;
-    for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
-        {
-        if(isFermionic(q.val0(n)) && std::abs(q[n])%2==1)
-            {
-            p *= -1;
-            }
-        }
-    return p;
-    }
-
-bool
-isFermionic(QN const& q)
-    {
-    for(size_t n = 0; n < QNSize() && isActive(q.val0(n)); ++n)
-        {
-        if(isFermionic(q.val0(n))) return true;
-        }
-    return false;
     }
 
 void
 read(std::istream & s, QN & q)
     {
-    for(auto& el : q.store())
-        itensor::read(s,el);
+    for(auto& v : q.store()) itensor::read(s,v);
     }
 
 void
 write(std::ostream & s, QN const& q)
     {
-    for(auto& el : q.store())
-        itensor::write(s,el);
+    for(auto& v : q.store()) itensor::write(s,v);
     }
+
 } //namespace itensor

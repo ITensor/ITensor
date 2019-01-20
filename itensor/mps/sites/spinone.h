@@ -42,9 +42,9 @@ class SpinOneSite
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+2),1,
-                      QN("Sz=", 0),1,
-                      QN("Sz=",-2),1,Out,ts};
+            s = Index{QN({"Sz",+2}),1,
+                      QN({"Sz", 0}),1,
+                      QN({"Sz",-2}),1,Out,ts};
             }
         else
             {

@@ -42,11 +42,11 @@ class SpinTwoSite
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         if(conserveSz)
             {
-            s = Index{QN("Sz=",+4),1,
-                      QN("Sz=",+2),1,
-                      QN("Sz=",0),1,
-                      QN("Sz=",-2),1,
-                      QN("Sz=",-4),1,Out,ts};
+            s = Index{QN({"Sz",+4}),1,
+                      QN({"Sz",+2}),1,
+                      QN({"Sz",0}),1,
+                      QN({"Sz",-2}),1,
+                      QN({"Sz",-4}),1,Out,ts};
             }
         else
             {

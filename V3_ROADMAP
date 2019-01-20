@@ -1,22 +1,26 @@
 (! means necessary / blocker for releasing v3)
 
-? New QN design:
-  Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
-  of triples name-val-modfac.
-
-? Change niter definition, lowering by 1?
-? In site sets, make all of the indices have the same ids but different tags
-
-o Need to add recent commits from master (rc3 is up to date with master as of 12/21):
- o .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
-
-o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
 ! Update website:
   o Detailed documentation
   o List of depecrations/guide to update code
   o ITensor book
   o Tutorials
   o Code formulas
+
+? Change niter definition, lowering by 1?
+? In site sets, make all of the indices have the same ids but different tags
+
+! Need to add recent commits from master, for example:
+  o errMPOProd and deprecation of checkMPOProd
+  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
+  o Bugfix for nmultMPO
+  o .real and .cplx accepting vector<int> (pull #194)
+  o .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
+
+o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
+
+o Add unit tests for tags functions
+  o addTags, removeTags, swapTags, etc.
 
 Optional (possibly post V3)
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
@@ -60,6 +64,9 @@ o Make modifying functions member functions and all other functions free
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
+o New QN design:
+  Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
+  of triples name-val-modfac.
 o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
   removed IQIndexVal, IQMPS, IQMPO, etc)
 o All site sets except SiteSet(N,d) default to ConserveQNs=true
