@@ -31,11 +31,11 @@ dmrg: dmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 dmrg-g: mkdebugdir .debug_objs/dmrg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg.o -o dmrg-g $(LIBGFLAGS)
 
-iqdmrg: iqdmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
+mixedspin: mixedspin.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) mixedspin.o -o mixedspin $(LIBFLAGS)
 
-iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
+mixedspin-g: mkdebugdir .debug_objs/mixedspin.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/mixedspin.o -o mixedspin-g $(LIBGFLAGS)
 
 dmrg_table: dmrg_table.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg_table.o -o dmrg_table $(LIBFLAGS)

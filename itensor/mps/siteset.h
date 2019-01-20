@@ -417,6 +417,57 @@ class BasicSiteSet : public SiteSet
 
     };
 
+template<typename ASiteType, typename BSiteType>
+class MixedSiteSet : public SiteSet
+    {
+    public:
+
+    MixedSiteSet() { }
+
+    MixedSiteSet(int N, 
+                 Args const& args = Args::global())
+        {
+        auto sites = SiteStore(N);
+        for(int j = 1; j <= N; ++j)
+            {
+            if(j%2 == 1) sites.set(j,ASiteType(j,args));
+            else         sites.set(j,BSiteType(j,args));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
+    MixedSiteSet(std::vector<Index> const& inds)
+        {
+        int N = inds.size();
+        auto sites = SiteStore(N);
+        for(int j = 1, i = 0; j <= N; ++j, ++i)
+            {
+            auto& Ii = inds.at(i);
+            if(j%2 == 1) sites.set(j,ASiteType(Ii));
+            else         sites.set(j,BSiteType(Ii));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
+    void
+    read(std::istream& s)
+        {
+        int N = itensor::read<int>(s);
+        if(N > 0)
+            {
+            auto store = SiteStore(N);
+            for(int j = 1; j <= N; ++j) 
+                {
+                auto I = Index{};
+                I.read(s);
+                if(j%2==1) store.set(j,ASiteType(I));
+                else       store.set(j,BSiteType(I));
+                }
+            init(std::move(store));
+            }
+        }
+    };
+
 template<typename SiteSetT,
          class = stdx::enable_if_t<std::is_base_of<SiteSet,SiteSetT>::value>>
 SiteSetT
