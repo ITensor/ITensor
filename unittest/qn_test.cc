@@ -241,14 +241,24 @@ SECTION("Z3 Clock")
 
 SECTION("Add to Default Zero")
     {
-    auto q = QN({"Sz",3});
-    CHECK(q.val("Sz") == 3);
+        {
+        auto q = QN({"Sz",3});
+        CHECK(q.val("Sz") == 3);
 
-    q = QN() + q;
-    CHECK(q.val("Sz") == 3);
+        q = QN() + q;
+        CHECK(q.val("Sz") == 3);
 
-    q = q+ QN();
-    CHECK(q.val("Sz") == 3);
+        q = q+ QN();
+        CHECK(q.val("Sz") == 3);
+        }
+
+        {
+        auto q = QN(0);
+        q = QN() + q;
+        CHECK(q.val(1) == 0);
+        q = q + QN();
+        CHECK(q.val(1) == 0);
+        }
     }
 
 SECTION("Compare to Default Zero")

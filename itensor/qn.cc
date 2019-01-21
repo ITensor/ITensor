@@ -405,14 +405,14 @@ combineQN(QN & qa,
         for(auto n : range(QNSize()))
             {
             auto& av = avs[n];
-            if(av.name() == bv.name()) 
-                {
-                operation(av,bv);
-                break;
-                }
-            else if(not isActive(avs[n]))
+            if(not isActive(av))
                 {
                 av = bv;
+                break;
+                }
+            else if(av.name() == bv.name()) 
+                {
+                operation(av,bv);
                 break;
                 }
             else if(bv.name() < av.name() && 
