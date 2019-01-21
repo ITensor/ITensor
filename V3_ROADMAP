@@ -1,5 +1,15 @@
 (! means necessary / blocker for releasing v3)
 
+! Need to add recent commits from master, for example:
+  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
+  o Bugfix for nmultMPO
+
+! Add unit tests for tags functions
+  o addTags, removeTags, swapTags, etc.
+
+? Change niter definition, lowering by 1?
+  (Can't do this post v3, since a breaking change)
+
 ! Update website:
   o Detailed documentation
   o List of depecrations/guide to update code
@@ -7,24 +17,9 @@
   o Tutorials
   o Code formulas
 
-! Test that new QN system allows mixing different site types
+-----------------------------------------------
 
-? Change niter definition, lowering by 1?
-? In site sets, make all of the indices have the same ids but different tags
-
-! Need to add recent commits from master, for example:
-  o errMPOProd and deprecation of checkMPOProd
-  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
-  o Bugfix for nmultMPO
-  o .real and .cplx accepting vector<int> (pull #194)
-  o .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
-
-o Fix Heisenberg.h dependency for idmrg (or incorporate Anna's inf. AutoMPO pull request)
-
-o Add unit tests for tags functions
-  o addTags, removeTags, swapTags, etc.
-
-Optional (possibly post V3)
+Optional (possibly post V3, because not breaking changes):
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
@@ -47,6 +42,7 @@ o Add back some prime functions:
 o Make modifying functions member functions and all other functions free
   (at least for externally-facing functions)
   o randomize(ITensor&) -> ITensor::randomize()
+? In site sets, make all of the indices have the same ids but different tags
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
@@ -62,10 +58,16 @@ o Make modifying functions member functions and all other functions free
     compile the sample codes.
 
 
-#######################################################################################################
+#################################################################################################
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
+
+o Added .real and .cplx accepting vector<int> (pull #194)
+o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
+o Added errMPOProd and deprecated checkMPOProd
+o Test that new QN system allows mixing different site types
+  (--> add MixedSiteSet to docs)
 o New QN design:
   Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
   of triples name-val-modfac.

@@ -80,9 +80,6 @@ class ITensor
     Real
     real(IndexVals&&... ivs) const;
 
-    Real
-    real(std::vector<IndexVal> const& ivs) const;
-
     template <typename IV, typename... IVs>
     auto
     cplx(IV const& iv1, IVs&&... ivs) const
@@ -91,13 +88,19 @@ class ITensor
     template <typename Int, typename... Ints>
     auto
     cplx(Int iv1, Ints... ivs) const
-        -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>;
+        -> stdx::enable_if_t<std::is_integral<Int>::value 
+                          && stdx::and_<std::is_integral<Ints>...>::value,Cplx>;
 
     Cplx
     cplx() const;
 
     Cplx
     cplx(std::vector<IndexVal> const& ivs) const;
+
+    template<typename Int>
+    auto
+    cplx(std::vector<Int> const& ints) const
+        -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>;
 
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage

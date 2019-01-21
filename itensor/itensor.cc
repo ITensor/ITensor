@@ -171,18 +171,7 @@ cplx(std::vector<IndexVal> const& ivs) const
 #endif
     }
 
-Real ITensor::
-real(std::vector<IndexVal> const& ivs) const
-    {
-    auto z = cplx(ivs);
-    if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
-        {
-        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        //Error("tensor is Complex valued, use .cplx(...) method");
-        throw ITError("tensor is complex valued, use .cplx(...) method");
-        }
-    return z.real();
-    }
+
 
 void ITensor::
 set(std::vector<IndexVal> const& ivals,

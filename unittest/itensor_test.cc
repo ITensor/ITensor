@@ -434,7 +434,7 @@ CHECK_CLOSE(T.real(vector<IndexVal>({s1(1),s2(2)})),12);
 CHECK_CLOSE(T.real(vector<IndexVal>({s1(2),s2(1)})),21);
 }
 
-SECTION("Set Using vector<int>")
+SECTION("Set and Get Using vector<int>")
 {
 auto T = ITensor(s1,s2);
 auto v12 = vector<int>{{1,2}};
@@ -443,6 +443,8 @@ auto v21 = vector<int>{{2,1}};
 T.set(v21,21);
 CHECK_CLOSE(T.real(s1(1),s2(2)),12);
 CHECK_CLOSE(T.real(s1(2),s2(1)),21);
+CHECK_CLOSE(T.real(vector<int>{{1,2}}),12);
+CHECK_CLOSE(T.real(vector<int>{{2,1}}),21);
 }
 
 SECTION("IndexValConstructors")

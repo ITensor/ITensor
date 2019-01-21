@@ -79,7 +79,8 @@ cplx(IV const& iv1, IVs&&... ivs) const
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",
+                     inds().r(),size));
         }
 
     auto inds = IntArray(size);
@@ -106,13 +107,15 @@ cplx(IV const& iv1, IVs&&... ivs) const
 #endif
     }
 
-template<typename Int, typename... Ints>
+
+template<typename Int>
 auto ITensor::
-cplx(Int iv1, Ints... ivs) const
-    -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
+cplx(std::vector<Int> const& ints) const
+    -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>
     {
-    constexpr size_t size = sizeof...(ivs)+1;
-    auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
+    if(!store()) Error("tensor storage unallocated");
+
+    auto size = ints.size();
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -121,17 +124,19 @@ cplx(Int iv1, Ints... ivs) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",
+                     inds().r(),size));
         }
 
     auto inds = IntArray(size);
-    for(auto i : range(size)) inds[i] = ints[i]-1;
+    for(auto i : range(size))
+        inds[i] = ints[i]-1;
     auto z = itensor::doTask(GetElt{is_,inds},store_);
 #ifndef USESCALE
     return z;
 #else
     try {
-        return z*scale_.real0(); 
+        return z*scale_.real0();
         }
     catch(TooBigForReal const& e)
         {
@@ -147,7 +152,14 @@ cplx(Int iv1, Ints... ivs) const
 #endif
     }
 
-
+template<typename Int, typename... Ints>
+auto ITensor::
+cplx(Int iv1, Ints... ivs) const
+    -> stdx::enable_if_t<std::is_integral<Int>::value 
+                     && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
+    {
+    return this->cplx(std::vector<Int>{{iv1,static_cast<int>(ivs)...}});
+    }
 
 template <typename... IVals>
 Real ITensor::
