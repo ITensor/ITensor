@@ -161,8 +161,8 @@ TEST_CASE("ConvertQDenseToDenseITensor")
     {
     Index L(QN(),1,Out);
     Index emp(1),occ(1);
-    Index S(QN(0,0),1,
-            QN(1,0),1,
+    Index S(QN(0),1,
+            QN(1),1,
             Out);
 
     auto T = ITensor(L,dag(S),prime(S));

@@ -67,12 +67,12 @@ SECTION("Add MPOs")
         for(auto n : range1(N-1))
             {
             auto ts = format("%s,%d",name,n);
-            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
-                             QN("Sz=",-1,"Nf=",+1),2,
-                             QN("Sz=",-1,"Nf=",0),2,
-                             QN("Sz=",+1,"Nf=",0),2,
-                             QN("Sz=",+1,"Nf=",-1),2,
-                             QN("Sz=",+1,"Nf=",+1),2,
+            ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
+                             QN({"Sz",-1},{"Nf",+1,-1}),2,
+                             QN({"Sz",-1},{"Nf=",0,-1}),2,
+                             QN({"Sz",+1},{"Nf=",0,-1}),2,
+                             QN({"Sz",+1},{"Nf=",-1,-1}),2,
+                             QN({"Sz",+1},{"Nf=",+1,-1}),2,
                              ts);
             }
         return ll;
@@ -81,7 +81,7 @@ SECTION("Add MPOs")
     auto l1 = makeInds("Link,I1");
     auto l2 = makeInds("Link,I2");
 
-    auto Z = QN("Sz=",0,"Nf=",0);
+    auto Z = QN({"Sz",0},{"Nf",0,-1});
 
     auto A = MPO(sites);
     auto B = MPO(sites);
@@ -115,16 +115,16 @@ SECTION("Regression Test")
     auto sites = Hubbard(2);
 
     auto A = MPO(sites);
-    auto Ia = Index(QN("Sz",1,"Nf",-1),2,
-                    QN("Sz",-1,"Nf",-1),1,"I");
-    A.Aref(1) = randomITensor(QN("Sz",-1,"Nf",1), prime(sites(1)), dag(Ia), dag(sites(1)));
-    A.Aref(2) = randomITensor(QN("Sz",1,"Nf",-1), Ia, dag(sites(2)), prime(sites(2)));
+    auto Ia = Index(QN({"Sz",1},{"Nf",-1,-1}),2,
+                    QN({"Sz",-1},{"Nf",-1,-1}),1,"I");
+    A.Aref(1) = randomITensor(QN({"Sz",-1},{"Nf",1,-1}), prime(sites(1)), dag(Ia), dag(sites(1)));
+    A.Aref(2) = randomITensor(QN({"Sz",1},{"Nf",-1,}), Ia, dag(sites(2)), prime(sites(2)));
 
     auto B = MPO(sites);
-    auto Ib = Index(QN("Sz",1,"Nf",-1),2,
-                    QN("Sz",-1,"Nf",-1),1,"I");
-    B.Aref(1) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(1)), dag(Ib), dag(sites(1)));
-    B.Aref(2) = randomITensor(QN("Sz",0,"Nf",0), prime(sites(2)), Ib, dag(sites(2)));
+    auto Ib = Index(QN({"Sz",1},{"Nf",-1,-1}),2,
+                    QN({"Sz",-1},{"Nf",-1,-1}),1,"I");
+    B.Aref(1) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(1)), dag(Ib), dag(sites(1)));
+    B.Aref(2) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(2)), Ib, dag(sites(2)));
 
     REQUIRE_NOTHROW(A.plusEq(B));
     }
@@ -308,12 +308,12 @@ SECTION("Remove QNs from MPO")
         for(auto n : range1(N-1))
             {
             auto ts = format("%s,%d",name,n);
-            ll.at(n) = Index(QN("Sz=",-1,"Nf=",-1),2,
-                             QN("Sz=",-1,"Nf=",+1),2,
-                             QN("Sz=",-1,"Nf=",0),2,
-                             QN("Sz=",+1,"Nf=",0),2,
-                             QN("Sz=",+1,"Nf=",-1),2,
-                             QN("Sz=",+1,"Nf=",+1),2,
+            ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
+                             QN({"Sz",-1},{"Nf",+1,-1}),2,
+                             QN({"Sz",-1},{"Nf",0,-1}),2,
+                             QN({"Sz",+1},{"Nf",0,-1}),2,
+                             QN({"Sz",+1},{"Nf",-1,-1}),2,
+                             QN({"Sz",+1},{"Nf",+1,-1}),2,
                              ts);
             }
         return ll;
@@ -321,7 +321,7 @@ SECTION("Remove QNs from MPO")
 
     auto ll = makeInds("Link,I");
 
-    auto Z = QN("Sz=",0,"Nf=",0);
+    auto Z = QN({"Sz",0},{"Nf",0,-1});
 
     auto A = MPO(sites);
     A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));

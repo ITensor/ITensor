@@ -89,7 +89,7 @@ SECTION("MPSAddition 1")
     MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
 
     CHECK_CLOSE(norm(psi),1);
-    CHECK_EQUAL(totalQN(psi),QN("Nf=",1));
+    CHECK_EQUAL(totalQN(psi),QN({"Nf",1}));
     }
 
 SECTION("MPSAddition 2")
