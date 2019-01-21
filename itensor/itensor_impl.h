@@ -41,7 +41,7 @@ ITensor(Index  const& i1,
 
 template<size_t N> 
 ITensor::
-ITensor(std::array<index_type,N> const& inds)
+ITensor(std::array<Index,N> const& inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
@@ -52,7 +52,7 @@ ITensor(std::array<index_type,N> const& inds)
 
 template <class DataType>
 ITensor::
-ITensor(indexset_type iset,
+ITensor(IndexSet iset,
         DataType&& dat,
         LogNum const& scale) :
     is_(std::move(iset)),
@@ -68,11 +68,9 @@ auto ITensor::
 cplx(IV const& iv1, IVs&&... ivs) const
     -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>
     {
-
-    if(!store()) Error("tensor storage unallocated");
-
     constexpr size_t size = sizeof...(ivs)+1;
-    auto vals = std::array<IndexVal,size>{{static_cast<IndexVal>(iv1),static_cast<IndexVal>(ivs)...}};
+    auto vals = std::array<IndexVal,size>{{static_cast<IndexVal>(iv1),
+                                           static_cast<IndexVal>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -113,8 +111,6 @@ auto ITensor::
 cplx(Int iv1, Ints... ivs) const
     -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
     {
-    if(!store()) Error("tensor storage unallocated");
-
     constexpr size_t size = sizeof...(ivs)+1;
     auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
     if(size != size_t(inds().r()))
@@ -129,8 +125,7 @@ cplx(Int iv1, Ints... ivs) const
         }
 
     auto inds = IntArray(size);
-    for(auto i : range(size))
-        inds[i] = ints[i]-1;
+    for(auto i : range(size)) inds[i] = ints[i]-1;
     auto z = itensor::doTask(GetElt{is_,inds},store_);
 #ifndef USESCALE
     return z;
@@ -151,6 +146,7 @@ cplx(Int iv1, Ints... ivs) const
     return Cplx(NAN,NAN);
 #endif
     }
+
 
 
 template <typename... IVals>
@@ -414,7 +410,6 @@ ITensor
 setElt(IVal const& iv1, 
        IVals const&... rest)
     {
-    //using index_type = typename IVal::index_type;
     using index_type = typename std::common_type<IVal,IVals...>::type::index_type;
     const constexpr auto size = 1+sizeof...(rest);
     auto ivs = stdx::make_array(iv1,rest...);

@@ -18,15 +18,13 @@ class ITensor
     {
     public:
     using index_type = Index;
-    using indexval_type = IndexVal;
-    using indexset_type = IndexSet;
     using range_type = RangeT<Index>;
     using size_type = typename range_type::size_type;
     using storage_ptr = PData;
     using const_storage_ptr = CPData;
     using scale_type = LogNum;
     private:
-    indexset_type is_;
+    IndexSet is_;
     mutable storage_ptr store_;
     IF_USESCALE(scale_type scale_;)
     public:
@@ -40,19 +38,19 @@ class ITensor
 
     //Construct rank n tensor, all elements set to zero
     //Usage: ITensor(i1,i2,i3,...)
-    template <typename... index_types>
+    template <typename... Indices>
     explicit
-    ITensor(index_type  const& i1,
-            index_types const&... i2etc);
+    ITensor(Index  const& i1,
+            Indices const&... i2etc);
 
     explicit
-    ITensor(std::vector<index_type> const& inds);
+    ITensor(std::vector<Index> const& inds);
 
     template<size_t N> 
     explicit
-    ITensor(std::array<index_type,N> const& inds);
+    ITensor(std::array<Index,N> const& inds);
 
-    ITensor(std::initializer_list<index_type> inds);
+    ITensor(std::initializer_list<Index> inds);
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
@@ -68,11 +66,11 @@ class ITensor
     r() const { return is_.r(); }
 
     //Access index set
-    indexset_type const&
+    IndexSet const&
     inds() const { return is_; }
 
     //Access index
-    index_type const&
+    Index const&
     index(size_type I) const { return is_.index(I); }
 
     //evaluates to false if default constructed
@@ -81,6 +79,9 @@ class ITensor
     template <typename... IndexVals>
     Real
     real(IndexVals&&... ivs) const;
+
+    Real
+    real(std::vector<IndexVal> const& ivs) const;
 
     template <typename IV, typename... IVs>
     auto
@@ -94,6 +95,9 @@ class ITensor
 
     Cplx
     cplx() const;
+
+    Cplx
+    cplx(std::vector<IndexVal> const& ivs) const;
 
     //Set element at location given by collection
     //of IndexVals or IQIndexVals. Will not switch storage
@@ -112,7 +116,7 @@ class ITensor
     set(Cplx val);
 
     void
-    set(std::vector<indexval_type> const& ivs, Cplx val);
+    set(std::vector<IndexVal> const& ivs, Cplx val);
 
     void
     set(std::vector<int> const& ivs, Cplx val);
@@ -282,20 +286,20 @@ class ITensor
 
     template<typename... Indxs>
     auto 
-    permute(index_type const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<not stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
+    permute(Index const& ind1, Indxs const&... inds)
+            -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
 
     template <typename... Indxs>
     auto 
-    permute(index_type const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<stdx::and_<std::is_same<index_type, Indxs>...>::value,ITensor&>;
+    permute(Index const& ind1, Indxs const&... inds)
+            -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
 
     template<typename... Indxs>
     ITensor&
     permute(std::string const& dots, Indxs const&... inds);
 
     ITensor&
-    permute(indexset_type const& iset);
+    permute(IndexSet const& iset);
 
     //
     // Read from and write to streams
@@ -316,17 +320,17 @@ class ITensor
     //
 
     template <class StorageType>
-    ITensor(indexset_type iset,
+    ITensor(IndexSet iset,
             StorageType&& store,
             scale_type const& scale = LogNum{1.});
 
-    ITensor(indexset_type iset,
+    ITensor(IndexSet iset,
             storage_ptr&& pstore,
             scale_type const& scale = LogNum{1.});
 
     //Provide indices from IndexSet
     explicit
-    ITensor(indexset_type const& is);
+    ITensor(IndexSet const& is);
 
     storage_ptr&
     store() { return store_; }

@@ -21,28 +21,28 @@ namespace itensor {
 //
 
 ITensor::
-ITensor(std::vector<index_type> const& inds)
+ITensor(std::vector<Index> const& inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
 ITensor::
-ITensor(std::initializer_list<index_type> inds)
+ITensor(std::initializer_list<Index> inds)
   : is_(inds)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
 ITensor::
-ITensor(indexset_type const& is)
+ITensor(IndexSet const& is)
   : is_(is)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
 ITensor::
-ITensor(indexset_type iset,
+ITensor(IndexSet iset,
         storage_ptr&& pdat,
         LogNum const& scale)
     :
@@ -128,6 +128,60 @@ cplx() const
         }
     return Cplx(NAN,NAN);
 #endif
+    }
+
+Cplx ITensor::
+cplx(std::vector<IndexVal> const& ivs) const
+    {
+    if(!store()) Error("tensor storage unallocated");
+
+    auto size = ivs.size();
+    if(size != size_t(inds().r()))
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : ivs) println(iv.index);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        }
+
+    auto ints = IntArray(size);
+    detail::permute_map(inds(),ivs,ints,
+                [](IndexVal const& iv) { return iv.val-1; });
+    auto z = itensor::doTask(GetElt{inds(),ints},store_);
+#ifndef USESCALE
+    return z;
+#else
+    try {
+        return z*scale().real0();
+        }
+    catch(TooBigForReal const& e)
+        {
+        println("too big for real in cplx(...), scale = ",scale());
+        throw e;
+        }
+    catch(TooSmallForReal const&)
+        {
+        println("warning: too small for real in cplx(...)");
+        return Cplx(0.,0.);
+        }
+    return Cplx(NAN,NAN);
+#endif
+    }
+
+Real ITensor::
+real(std::vector<IndexVal> const& ivs) const
+    {
+    auto z = cplx(ivs);
+    if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
+        {
+        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+        //Error("tensor is Complex valued, use .cplx(...) method");
+        throw ITError("tensor is complex valued, use .cplx(...) method");
+        }
+    return z.real();
     }
 
 void ITensor::
