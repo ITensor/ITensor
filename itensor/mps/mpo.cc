@@ -536,7 +536,7 @@ errorMPOProd(MPS const& psi2,
         Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
         }
     err /= overlap(psi1,Kd,K,psi1);
-    err = std::sqrt(1.0+err);
+    err = std::sqrt(std::abs(1.0+err));
     return err;
     }
 
