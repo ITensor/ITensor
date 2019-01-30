@@ -425,7 +425,7 @@ combiner(IQIndexSet const& inds,
     newind.nextIndex(std::move(cind));
     for(auto& I : inds) 
         {
-        newind.nextIndex(std::move(dag(I)));
+        newind.nextIndex(dag(I));
         }
 
     return IQTensor(newind.build(),std::move(C));
