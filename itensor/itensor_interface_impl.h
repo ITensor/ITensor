@@ -119,6 +119,52 @@ ITensorT<IndexT>::
 operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *this; }
 
 template<typename IndexT>
+Cplx ITensorT<IndexT>::
+cplx(std::vector<indexval_type> const& ivs) const
+    {
+    //using indexval_type = typename IndexT::indexval_type;
+
+    if(!store()) Error("tensor storage unallocated");
+
+    auto size = ivs.size();
+    //constexpr size_t size = sizeof...(ivs)+1;
+    //auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(iv1),static_cast<indexval_type>(ivs)...}};
+    if(size != size_t(inds().r()))
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",inds(),"\n");
+        println("---------------------------------------------");
+        println("Indices provided = ");
+        for(auto& iv : ivs) println(iv.index);
+        println("---------------------------------------------");
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        }
+
+    auto inds = IntArray(size);
+    detail::permute_map(is_,ivs,inds,
+                [](indexval_type const& iv) { return iv.val-1; });
+    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
+#ifndef USESCALE
+    return z;
+#else
+    try {
+        return z*scale().real0();
+        }
+    catch(TooBigForReal const& e)
+        {
+        println("too big for real in cplx(...), scale = ",scale());
+        throw e;
+        }
+    catch(TooSmallForReal const&)
+        {
+        println("warning: too small for real in cplx(...)");
+        return Cplx(0.,0.);
+        }
+    return Cplx(NAN,NAN);
+#endif
+    }
+
+template<typename IndexT>
 template<typename IV, typename... IVs>
 auto ITensorT<IndexT>::
 cplx(IV const& iv1, IVs&&... ivs) const
@@ -166,15 +212,16 @@ cplx(IV const& iv1, IVs&&... ivs) const
     }
 
 template<typename IndexT>
-template<typename Int, typename... Ints>
+template<typename Int>
 auto ITensorT<IndexT>::
-cplx(Int iv1, Ints... ivs) const
-    -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
+cplx(std::vector<Int> const& ints) const
+    -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>
     {
     if(!store()) Error("tensor storage unallocated");
 
-    constexpr size_t size = sizeof...(ivs)+1;
-    auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
+    auto size = ints.size();
+    //constexpr size_t size = sizeof...(ivs)+1;
+    //auto ints = std::array<Int,size>{{iv1,static_cast<int>(ivs)...}};
     if(size != size_t(inds().r()))
         {
         println("---------------------------------------------");
@@ -194,7 +241,7 @@ cplx(Int iv1, Ints... ivs) const
     return z;
 #else
     try {
-        return z*scale_.real0(); 
+        return z*scale_.real0();
         }
     catch(TooBigForReal const& e)
         {
@@ -208,6 +255,15 @@ cplx(Int iv1, Ints... ivs) const
         }
     return Cplx(NAN,NAN);
 #endif
+    }
+
+template<typename IndexT>
+template<typename Int, typename... Ints>
+auto ITensorT<IndexT>::
+cplx(Int iv1, Ints... ivs) const
+    -> stdx::enable_if_t<std::is_integral<Int>::value && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
+    {
+    return this->cplx(std::vector<Int>{{iv1,static_cast<int>(ivs)...}});
     }
 
 template<typename IndexT>

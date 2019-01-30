@@ -160,9 +160,8 @@ diagHImpl(IQTensor    H,
     auto showeigs = args.getBool("ShowEigs",false);
     auto compute_qns = args.getBool("ComputeQNs",false);
     auto iname = args.getString("IndexName","d");
-
     args.add("IgnoreDegeneracy",ignore_degeneracy);
-
+    auto itype = getIndexType(args,"IndexType",Link);
     if(H.r() != 2)
         {
         Print(H.inds());
@@ -315,14 +314,14 @@ diagHImpl(IQTensor    H,
         d = subVector(d,0,this_m);
         UU = columns(UU,0,this_m);
 
-        iq.emplace_back(Index(iname+nameint("_",b),this_m),ai.qn(1+B.i1));
+        iq.emplace_back(Index(iname+nameint("_",b),this_m, itype),ai.qn(1+B.i1));
         }
 
     if(iq.empty())
         {
         if(blocks.empty()) Error("No blocks in IQTensor svd");
         auto& B = blocks.front();
-        iq.emplace_back(Index(iname+nameint("_",0),1),ai.qn(1+B.i1));
+        iq.emplace_back(Index(iname+nameint("_",0),1, itype),ai.qn(1+B.i1));
         }
 
     auto d = IQIndex(iname,move(iq),-ai.dir());
