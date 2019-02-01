@@ -1,14 +1,13 @@
 (! means necessary / blocker for releasing v3)
 
-! Need to add recent commits from master, for example:
-  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
-  o Bugfix for nmultMPO
-
 ! Add unit tests for tags functions
   o addTags, removeTags, swapTags, etc.
 
 ? Change niter definition, lowering by 1?
   (Can't do this post v3, since a breaking change)
+
+? Incorporate Anna Keselman's infinite AutoMPO pull request?
+  Certainly not a blocker for v3 release...
 
 ! Update website:
   o Detailed documentation
@@ -16,6 +15,19 @@
   o ITensor book
   o Tutorials
   o Code formulas
+
+# Final Release Checks
+  ! Fresh install with new options.mk file compiles
+  ! Jenkins is passing
+  ! All sample codes compile and run and are up to date
+  ? Incorporate sample codes into Jenkins/testing 
+    (I found the DMRG codes were useful for catching bugs, 
+     and TRG is a good test case for Tags)
+    Miles say: Yes I agree. We could put copies of the sample codes
+    or crucial sections of the sample codes into the unit
+    tests. Maybe for the DMRG one just do one sweep.
+    Or perhaps better, Dylan can config Jenkins to 
+    compile the sample codes.
 
 -----------------------------------------------
 
@@ -44,18 +56,6 @@ o Make modifying functions member functions and all other functions free
   o randomize(ITensor&) -> ITensor::randomize()
 ? In site sets, make all of the indices have the same ids but different tags
 
-# Final Release Checks
-  ! Fresh install with new options.mk file compiles
-  ! Jenkins is passing
-  ! All sample codes compile and run and are up to date
-  ? Incorporate sample codes into Jenkins/testing 
-    (I found the DMRG codes were useful for catching bugs, 
-     and TRG is a good test case for Tags)
-    Miles say: Yes I agree. We could put copies of the sample codes
-    or crucial sections of the sample codes into the unit
-    tests. Maybe for the DMRG one just do one sweep.
-    Or perhaps better, Dylan can config Jenkins to 
-    compile the sample codes.
 
 
 #################################################################################################
@@ -97,4 +97,5 @@ Recent commits to v2 (master branch):
 o errMPOProd and deprecation of checkMPOProd
 o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 o Bugfix for nmultMPO
+o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 
