@@ -37,7 +37,7 @@ class SpinTwoSite
 
     SpinTwoSite(int n, Args const& args = Args::global())
 		{
-        auto ts = format("Site,S=2,%d",n);
+        auto ts = format("Site,S=2,n=%d",n);
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         if(conserveSz)

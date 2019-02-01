@@ -23,7 +23,7 @@ class SpinHalfSite
 
     SpinHalfSite(int n, Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1/2,%d",n);
+        auto ts = format("Site,S=1/2,n=%d",n);
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)

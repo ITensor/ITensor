@@ -28,7 +28,7 @@ class HubbardSite
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
-        auto ts = format("Site,Hubbard,%d",n);
+        auto ts = format("Site,Hubbard,n=%d",n);
         if(conserveNf)
             {
             s = Index{QN({"Sz", 0},{"Nf",0,-1}),1,

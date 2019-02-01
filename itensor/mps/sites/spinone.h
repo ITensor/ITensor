@@ -37,7 +37,7 @@ class SpinOneSite
 
     SpinOneSite(int n, Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1,%d",n);
+        auto ts = format("Site,S=1,n=%d",n);
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
