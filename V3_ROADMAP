@@ -1,17 +1,13 @@
 (! means necessary / blocker for releasing v3)
 
-! Add unit tests for tags functions
-  o addTags, removeTags, swapTags, etc.
-
 ? Change niter definition, lowering by 1?
   (Can't do this post v3, since a breaking change)
 
-? Incorporate Anna Keselman's infinite AutoMPO pull request?
-  Certainly not a blocker for v3 release...
-
 ! Update website:
   o Detailed documentation
-  o List of depecrations/guide to update code
+    - info about QN info in Index objects
+    - how to make QN ITensors
+  o List of deprecrations/guide to update code
   o ITensor book
   o Tutorials
   o Code formulas
