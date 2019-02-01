@@ -377,13 +377,6 @@ template<typename... VarArgs>
 Index
 noPrime(Index I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
-//TODO: clean up
-//Return a copy of I with prime level changed to plevnew if
-//old prime level was plevold. Otherwise has no effect.
-//Index inline
-//mapprime(Index I, int plevold, int plevnew, IndexType type = All)
-//    { I.mapprime(plevold,plevnew,type); return I; }
-
 template<typename... VarArgs>
 IndexVal
 prime(IndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
@@ -392,12 +385,6 @@ template<typename... VarArgs>
 IndexVal
 noPrime(IndexVal I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
-//TODO: clean up
-//Return a copy of I with prime level changed to plevnew if
-//old prime level was plevold. Otherwise has no effect.
-//IndexVal inline
-//mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
-//    { I.mapprime(plevold,plevnew,type); return I; }
 
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)
