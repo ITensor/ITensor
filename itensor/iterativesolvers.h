@@ -97,7 +97,7 @@ davidson(BigMatrixT const& A,
         }
 
     auto maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,maxsize-1);
+    auto actual_maxiter = std::min(maxiter_,maxsize-size_t(1));
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
@@ -384,7 +384,7 @@ davidson(BigMatrixT const& A,
         auto& phi_j = phi.at(j);
         auto Nr = size_t(nrows(U));
         phi_j = U(0,j)*V[0];
-        for(auto k : range1(std::min(V.size(),Nr)-1))
+        for(auto k : range1(std::min(V.size(),Nr)-size_t(1)))
             {
             phi_j += U(k,j)*V[k];
             }
