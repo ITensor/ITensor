@@ -445,7 +445,7 @@ sim(IndexSet & is,
 // If not found, returns -1
 //
 long
-indexLocation(IndexSet const& iset, 
+indexPosition(IndexSet const& iset, 
               Index const& I);
 
 Index

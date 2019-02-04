@@ -117,7 +117,7 @@ combine(QDense<T> const& d,
 #ifdef DEBUG
     for(auto i : range(1,Cis.r()))
         {
-        auto jc = indexLocation(dis,Cis[i]);
+        auto jc = indexPosition(dis,Cis[i]);
         if(jc == -1)
             {
             printfln("Indices of tensor = \n%s\n------",dis);
@@ -136,7 +136,7 @@ combine(QDense<T> const& d,
     auto uncomb_dest = ncomb;
     for(auto i : range(dr)) 
         {
-        auto jc = indexLocation(Cis,dis[i]);
+        auto jc = indexPosition(Cis,dis[i]);
         if(jc >= 0) dperm[i] = jc-1;
         else        dperm[i] = uncomb_dest++;
         }

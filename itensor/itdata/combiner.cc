@@ -52,7 +52,7 @@ combine(Storage  const& d,
     //TODO: try to make use of Lind,Rind label vectors
     //      to simplify combine logic
     auto const& cind = Cis[0];
-    auto jc = indexLocation(dis,cind);
+    auto jc = indexPosition(dis,cind);
     if(jc >= 0) //has cind, uncombining
         {
         //dis has cind, replace with other inds
@@ -75,7 +75,7 @@ combine(Storage  const& d,
         //dis doesn't have cind, replace
         //Cis[1], Cis[2], ... with cind
         //may need to permute
-        auto J1 = indexLocation(dis,Cis[1]);
+        auto J1 = indexPosition(dis,Cis[1]);
         if(J1 < 0) 
             {
             println("IndexSet of dense tensor = \n",dis);
@@ -117,7 +117,7 @@ combine(Storage  const& d,
             long ni = 0;
             for(auto c : range(1,Cis.r()))
                 {
-                auto j = indexLocation(dis,Cis[c]);
+                auto j = indexPosition(dis,Cis[c]);
                 if(j < 0) 
                     {
                     println("IndexSet of dense tensor =\n  ",dis);

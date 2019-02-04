@@ -63,7 +63,7 @@ prime(int plinc, Index const& imatch1, Index const& imatch2, VarArgs&&... vargs)
     auto ismatch = IndexSet(imatch1,imatch2,vargs...);
     //Store the locations of the indices
     auto iloc = IntArray(ismatch.r(),-1);
-    for(auto i : itensor::range(ismatch.r())) iloc[i] = indexLocation(*this,ismatch[i]);
+    for(auto i : itensor::range(ismatch.r())) iloc[i] = indexPosition(*this,ismatch[i]);
     //Now prime them
     for(auto i : iloc) parent::index(i).prime(plinc);
     }
@@ -314,7 +314,7 @@ findIndex(IndexSet const& iset, Arrow dir)
 // If not found, returns -1
 //
 long inline
-indexLocation(const IndexSet& iset, 
+indexPosition(const IndexSet& iset, 
               const Index& I)
     {
     for(long j = 0; j < iset.r(); ++j)

@@ -3,6 +3,12 @@
 ? Change niter definition, lowering by 1?
   (Can't do this post v3, since a breaking change)
 
+o Improve tags of MPS class
+  o Better tag convention for labelling site index (i.e. "x=1" instead of "1" for site 1)
+  o Make sure that "Link" index keeps a consistent convention for labelling which link
+    (i.e. MPS at site "x=4" should have left link with tags "Link,l=3" and right link with
+     tags "Link,l=4")
+
 ! Update website:
   o Detailed documentation
     - info about QN info in Index objects
@@ -85,7 +91,7 @@ o Add read/write for TagSet
 o Fix read/write for Index with QNs and test for rest of library
 o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
 o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor
-o Change name of findIndex(ITensor,Index) -> int to indexLocation(ITensor,Index) -> int
+o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
 o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor containing certain tags and matching an optional prime level
 o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
 

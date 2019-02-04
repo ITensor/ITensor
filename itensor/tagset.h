@@ -59,7 +59,7 @@ class TagSet
     c_str() { return this->toString().c_str(); }
 
     int
-    tagLocation(Tag const& t) const;
+    tagPosition(Tag const& t) const;
 
     void
     addTag(Tag const& t);
@@ -148,7 +148,7 @@ TagSet(const char* ts)
 // Returns -1 if Tag is not found,
 // otherwise return the Tag's location
 inline int TagSet::
-tagLocation(Tag const& t) const
+tagPosition(Tag const& t) const
     {
     for(auto i : range(size_))
         {
@@ -161,7 +161,7 @@ inline bool
 hasTags(TagSet const& T, TagSet const& ts)
     {
     for(auto i : range(size(ts)))
-        if(T.tagLocation(ts[i]) == -1) return false;
+        if(T.tagPosition(ts[i]) == -1) return false;
     return true;
     }
 
@@ -171,7 +171,7 @@ inline void TagSet::
 addTag(Tag const& t)
     {
     if(size_ == MAX_TAGS) error("Too many tags already, cannot add more. If you want more, consider raising MAX_TAGS.");
-    if(this->tagLocation(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
+    if(this->tagPosition(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
         {
         auto i = size_;
         for(; i>0; --i)
@@ -202,7 +202,7 @@ addTags(TagSet T, TagSet const& ts)
 inline void TagSet::
 removeTag(Tag const& t)
     {
-    auto loc = this->tagLocation(t);
+    auto loc = this->tagPosition(t);
     if(loc > -1)
         {
         for(size_t i = loc; i<size_; ++i)

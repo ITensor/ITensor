@@ -268,14 +268,14 @@ doTask(Contract & C,
         Nind.resize(C.Nis.r());
         for(auto i : range(C.Nis.r()))
             {
-            auto j = indexLocation(C.Lis,C.Nis[i]);
+            auto j = indexPosition(C.Lis,C.Nis[i]);
             if(j >= 0)
                 {
                 Nind[i] = Lind[j];
                 }
             else
                 {
-                j = indexLocation(C.Ris,C.Nis[i]);
+                j = indexPosition(C.Ris,C.Nis[i]);
                 Nind[i] = Rind[j];
                 }
             }
