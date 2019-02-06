@@ -318,8 +318,8 @@ operator==(QN qa, QN const& qb)
 bool
 operator<(QN const& qa, QN const& qb)
     {
-    int a = 1;
-    int b = 1;
+    size_t a = 1;
+    size_t b = 1;
     while(a <= QNSize() && b <= QNSize()
           && (isActive(qa.num(a)) || isActive(qb.num(b))))
         {

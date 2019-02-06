@@ -303,7 +303,8 @@ denmatDecomp(ITensor const& AA,
     //Apply combiner
     START_TIMER(8)
     //TODO: decide on a tag convention for denmatDecomp
-    auto itagset = getTagSet(args,"Tags","Link,MID");
+    auto itagset = getTagSet(args,"Tags","Link");
+    args.add("Tags",toString(itagset));
     auto cmb = combiner(std::move(cinds),{"Tags",toString(itagset)});
     auto ci = cmb.inds().front();
 
