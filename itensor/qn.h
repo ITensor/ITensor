@@ -105,13 +105,13 @@ class QN
        QNum v2 = QNum{},
        QNum v3 = QNum{}) 
        { 
-       addVal(v0);
+       addNum(v0);
        if(not v1) return;
-       addVal(v1);
+       addNum(v1);
        if(not v2) return;
-       addVal(v2);
+       addNum(v2);
        if(not v3) return;
-       addVal(v3);
+       addNum(v3);
        }
 
     explicit operator bool() const { return qvs_.front().mod() != 0; }
@@ -120,7 +120,7 @@ class QN
     size() const { return qvs_.size(); }
 
     void
-    addVal(QNum const& qv);
+    addNum(QNum const& qv);
 
     QNum 
     num(QNName name) const;

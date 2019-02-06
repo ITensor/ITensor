@@ -131,8 +131,8 @@ QN(qn_t q0)
 //QN(qn_t q0,
 //   qn_t q1)
 //    {
-//    addVal(QNum(q0));
-//    addVal(QNum(q1));
+//    addNum(QNum(q0));
+//    addNum(QNum(q1));
 //    }
 //
 //QN::
@@ -140,9 +140,9 @@ QN(qn_t q0)
 //   qn_t q1,
 //   qn_t q2)
 //    {
-//    addVal(QNum(q0));
-//    addVal(QNum(q1));
-//    addVal(QNum(q2));
+//    addNum(QNum(q0));
+//    addNum(QNum(q1));
+//    addNum(QNum(q2));
 //    }
 //
 //QN::
@@ -151,10 +151,10 @@ QN(qn_t q0)
 //   qn_t q2,
 //   qn_t q3)
 //    {
-//    addVal(QNum(q0));
-//    addVal(QNum(q1));
-//    addVal(QNum(q2));
-//    addVal(QNum(q3));
+//    addNum(QNum(q0));
+//    addNum(QNum(q1));
+//    addNum(QNum(q2));
+//    addNum(QNum(q3));
 //    }
 
 //template<typename Func>
@@ -195,9 +195,9 @@ QN(qn_t q0)
 
 
 void QN::
-addVal(QNum const& qv)
+addNum(QNum const& qv)
     {
-    if(isActive(qvs_.back())) Error("addVal: all QN slots are filled");
+    if(isActive(qvs_.back())) Error("addNum: all QN slots are filled");
 
     auto n = QNSize()-1;
     while(n >= 1)
