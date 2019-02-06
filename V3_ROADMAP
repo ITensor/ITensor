@@ -1,16 +1,18 @@
 (! means necessary / blocker for releasing v3)
 
-? Change niter definition, lowering by 1?
-  (Can't do this post v3, since a breaking change)
+o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
+
+! Implement dim(Index) -> long function as preferred alternative to I.m().
+  Update documentation (especially ITensor book and Index synopsis).
+
+! Fix removeQNs to work correctly for QDiag -> Diag
+  case. Remove the toDense function.
 
 o Improve tags of MPS class
   X Better tag convention for labelling site index (i.e. "x=1" instead of "1" for site 1)
   o Make sure that "Link" index keeps a consistent convention for labelling which link
     (i.e. MPS at site "x=4" should have left link with tags "Link,l=3" and right link with
      tags "Link,l=4")
-
-! Fix removeQNs to work correctly for QDiag -> Diag
-  case. Remove the toDense function.
 
 ! Update website:
   o Detailed documentation
