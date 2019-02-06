@@ -4,15 +4,20 @@
   (Can't do this post v3, since a breaking change)
 
 o Improve tags of MPS class
-  o Better tag convention for labelling site index (i.e. "x=1" instead of "1" for site 1)
+  X Better tag convention for labelling site index (i.e. "x=1" instead of "1" for site 1)
   o Make sure that "Link" index keeps a consistent convention for labelling which link
     (i.e. MPS at site "x=4" should have left link with tags "Link,l=3" and right link with
      tags "Link,l=4")
 
+! Fix removeQNs to work correctly for QDiag -> Diag
+  case. Remove the toDense function.
+
 ! Update website:
   o Detailed documentation
-    - info about QN info in Index objects
-    - how to make QN ITensors
+    - info about QN blocks in Index objects
+    X how to make QN ITensors
+    - removeQNs ITensor function
+    - removeQNs MPS function
   o List of deprecrations/guide to update code
   o ITensor book
   o Tutorials
