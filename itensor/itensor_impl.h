@@ -769,10 +769,10 @@ reindex(ITensor const& cT,
                     printfln("New m would be = %d",ipairs[ni].m());
                     throw ITError("Mismatch of index dimension in reindex");
                     }
-                auto plev = is[j].primeLevel();
+                auto plev = primeLevel(is[j]);
                 auto arrow_dir = is[j].dir();
                 is[j] = noPrime(ipairs[ni]);
-                is[j].primeLevel(plev);
+                is[j].setPrime(plev);
                 is[j].dir(arrow_dir);
                 break;
                 }

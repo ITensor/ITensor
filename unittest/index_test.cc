@@ -24,16 +24,23 @@ TEST_CASE("IndexTest")
         Index I(1);
 
         I = prime(I);
-        CHECK_EQUAL(I.primeLevel(),1);
+        CHECK_EQUAL(primeLevel(I),1);
 
         I = prime(I);
-        CHECK_EQUAL(I.primeLevel(),2);
+        CHECK_EQUAL(primeLevel(I),2);
 
         I = prime(I,7);
-        CHECK_EQUAL(I.primeLevel(),9);
+        CHECK_EQUAL(primeLevel(I),9);
 
         I = prime(I,-7);
-        CHECK_EQUAL(I.primeLevel(),2);
+        CHECK_EQUAL(primeLevel(I),2);
+
+        I = setPrime(I,5);
+        CHECK_EQUAL(primeLevel(I),5);
+        
+        I = noPrime(I);
+        CHECK_EQUAL(primeLevel(I),0);
+
         }
 
     SECTION("IndexVal Basic")

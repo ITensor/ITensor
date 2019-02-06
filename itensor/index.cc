@@ -71,13 +71,21 @@ Index(long m,
 
 
 Index& Index::
-primeLevel(int plev) 
+setPrime(int plev) 
     { 
     primelevel_ = plev; 
 #ifdef DEBUG
     if(primelevel_ < 0)
         Error("Negative primeLevel");
 #endif
+    return *this;
+    }
+
+
+Index& Index::
+noPrime()  
+    {
+    primelevel_ = 0;
     return *this;
     }
 

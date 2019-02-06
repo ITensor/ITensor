@@ -117,9 +117,6 @@ class Index
     // Returns the prime level
     int 
     primeLevel() const { return primelevel_; }
-    // Sets the prime level to a specified value.
-    Index& 
-    primeLevel(int plev);
 
     // Returns the TagSet
     TagSet
@@ -136,11 +133,13 @@ class Index
     explicit operator long() const { return m(); }
     explicit operator size_t() const { return m(); }
 
+    // Sets the prime level to a specified value.
     Index& 
-    setPrime(int p) { primelevel_ = p; return *this; };
+    setPrime(int p);
 
+    // Sets the prime level to 0.
     Index& 
-    noPrime() { primelevel_ = 0; return *this; };
+    noPrime();
 
     // Increase primelevel by 1 (or by optional amount inc)
     Index& 
@@ -286,17 +285,11 @@ class IndexVal
     IndexVal& 
     prime(int inc = 1) { index.prime(inc); return *this; }
 
-    //TODO: clean up
-    //IndexVal& 
-    //prime(IndexType type, int inc = 1) { index.prime(type,inc); return *this; }
+    IndexVal&
+    setPrime(int n) { index.setPrime(n); return *this; }
 
     IndexVal& 
     noPrime() { index.noPrime(); return *this; }
-
-    //TODO: clean up
-    //IndexVal& 
-    //mapprime(int plevold, int plevnew, IndexType type = All) 
-    //    { index.mapprime(plevold,plevnew,type); return *this; }
 
     IndexVal& 
     dag();
@@ -353,7 +346,7 @@ hasTags(Index I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags
 // If plmatch < 0, Index I can have any prime level
 //
 bool inline
-matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==I.primeLevel()); }
+matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==primeLevel(I)); }
 
 //
 // Return true if Index I has tags tsmatch and has prime level plmatch
@@ -361,7 +354,7 @@ matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,t
 // If plmatch < 0, Index I can have any prime level
 //
 bool inline
-matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I)==tsmatch && (plmatch<0 || plmatch==I.primeLevel()); }
+matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I)==tsmatch && (plmatch<0 || plmatch==primeLevel(I)); }
 
 bool inline
 hasQNs(Index const& I) { return I.nblock()!=0; }
@@ -384,11 +377,19 @@ prime(Index I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); r
 
 template<typename... VarArgs>
 Index
+setPrime(Index I, VarArgs&&... vargs) { I.setPrime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+Index
 noPrime(Index I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
 
 template<typename... VarArgs>
 IndexVal
 prime(IndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+IndexVal
+setPrime(IndexVal I, VarArgs&&... vargs) { I.setPrime(std::forward<VarArgs>(vargs)...); return I; }
 
 template<typename... VarArgs>
 IndexVal
