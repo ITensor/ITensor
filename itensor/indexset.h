@@ -435,7 +435,7 @@ sim(IndexSet & is,
     Index const& I);
 
 //
-// IndexSetT helper methods
+// IndexSet helper methods
 //
 
 
