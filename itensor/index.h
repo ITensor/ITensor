@@ -316,6 +316,15 @@ operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
 
+long inline
+dim(Index const& I) { return I.m(); }
+
+long inline
+dim(IndexVal const& I) { return I.m(); }
+
+int inline
+primeLevel(Index const& I) { return I.primeLevel(); }
+
 TagSet inline
 tags(const Index& I) { return I.tags(); }
 

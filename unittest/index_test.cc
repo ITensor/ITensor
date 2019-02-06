@@ -12,11 +12,11 @@ TEST_CASE("IndexTest")
         {
         Index i1;
         CHECK(!i1);
-        CHECK(1 == i1.m());
+        CHECK(1 == dim(i1));
 
         Index i2(1);
         CHECK(i2);
-        CHECK(1 == i2.m());
+        CHECK(1 == dim(i2));
         }
 
     SECTION("Primes")
@@ -42,7 +42,7 @@ TEST_CASE("IndexTest")
         IndexVal iv = i(2);
         CHECK(iv.val == 2);
         CHECK(iv.index == i);
-        CHECK(iv.m() == 4);
+        CHECK(dim(iv) == 4);
         if(iv) CHECK(true);
         else   CHECK(false);
 
@@ -61,14 +61,14 @@ TEST_CASE("IndexTest")
         auto i = Index(4,"i");
 
         auto i1 = sim(i);
-        CHECK(i1.m() == i.m());
-        CHECK(i1.tags() == i.tags());
-        CHECK(i1.primeLevel() == 0);
+        CHECK(dim(i1) == dim(i));
+        CHECK(tags(i1) == tags(i));
+        CHECK(primeLevel(i1) == 0);
 
         auto i2 = sim(prime(i,3));
-        CHECK(i2.m() == i.m());
-        CHECK(i2.tags() == i.tags());
-        CHECK(i2.primeLevel() == 0);
+        CHECK(dim(i2) == dim(i));
+        CHECK(tags(i2) == tags(i));
+        CHECK(primeLevel(i2) == 0);
         }
 
     SECTION("Tag Basics")

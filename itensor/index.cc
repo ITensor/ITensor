@@ -242,7 +242,7 @@ operator==(IndexVal const& iv, Index const& I)
 Index
 sim(Index const& I, int plev)
     {
-    return Index(I.m(),I.tags()).prime(plev);
+    return Index(dim(I),tags(I)).prime(plev);
     }
 
 string
