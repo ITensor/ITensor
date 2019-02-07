@@ -18,12 +18,10 @@ int maxm = 20;
 int topscale = 8;
 
 auto m0 = 2;
-auto x = Index(m0,"scale=0");
-auto y = Index(m0,"scale=0");
-auto x0 = addTags(x,"x=0");
-auto y0 = addTags(y,"y=0");
-auto x1 = addTags(x,"x=1");
-auto y1 = addTags(y,"y=1");
+auto x0 = Index(m0,"x=0,scale=0");
+auto y0 = Index(m0,"y=0,scale=0");
+auto x1 = replaceTags(x0,"x=0","x=1");
+auto y1 = replaceTags(y0,"y=0","y=1");
 
 auto A = ITensor(x0,y1,x1,y0);
 
@@ -46,24 +44,19 @@ for(auto scale : range(topscale))
     {
     printfln("\n---------- Scale %d -> %d  ----------",scale,1+scale);
 
-    auto x0 = findIndex(A,"x=0");
-    auto y0 = findIndex(A,"y=0");
-    auto x1 = findIndex(A,"x=1");
-    auto y1 = findIndex(A,"y=1");
-
-    auto F1 = ITensor(x1,y0);
-    auto F3 = ITensor(x0,y1);
+    auto F3 = ITensor(x1,y0);
+    auto F1 = ITensor(x0,y1);
     auto xtags = format("x=0,scale=%d",scale+1);
-    factor(A,F1,F3,{"Maxm=",maxm,"ShowEigs=",true,
+    factor(A,F3,F1,{"Maxm=",maxm,"ShowEigs=",true,
                     "Tags=",xtags});
-    F3 = replaceTags(F3,"x=0","x=1",format("scale=%d",scale+1));
+    F1 = replaceTags(F1,"x=0","x=1",format("scale=%d",scale+1));
 
-    auto F2 = ITensor(x0,y0);
-    auto F4 = ITensor(x1,y1);
+    auto F2 = ITensor(x1,y1);
+    auto F4 = ITensor(x0,y0);
     auto ytags = format("y=0,scale=%d",scale+1);
     factor(A,F2,F4,{"Maxm=",maxm,"ShowEigs=",true,
                     "Tags=",ytags});
-    F2 = replaceTags(F2,"y=0","y=1",format("scale=%d",scale+1));
+    F4 = replaceTags(F4,"y=0","y=1",format("scale=%d",scale+1));
 
     // TODO:
     // Add code here combining F1, F2, F3, F4 to
@@ -72,7 +65,7 @@ for(auto scale : range(topscale))
     // Hint: first manipulate the tags properly so
     // the correct contractions are performed, for example:
     //
-    // F1 = replaceTags(F1,"x=1","x=0",format("scale=%d",scale));
+    // F1 = replaceTags(F1,"x=0","x=1",format("scale=%d",scale));
     //
     // Use the Print(...) command to print and inspect 
     // each intermediate tensor.
@@ -82,14 +75,22 @@ for(auto scale : range(topscale))
     // A = F1 * ... ; ? 
     //
 
+
+
+
+
+
+
+    // Finally, grab the new renormalized indices:
+
+    x0 = findIndex(A,"x=0");
+    y0 = findIndex(A,"y=0");
+    x1 = findIndex(A,"x=1");
+    y1 = findIndex(A,"y=1");
+
     }
 
 println("\n---------- Calculating at Scale ",topscale," ----------");
-
-x0 = findIndex(A,"x=0");
-y0 = findIndex(A,"y=0");
-x1 = findIndex(A,"x=1");
-y1 = findIndex(A,"y=1");
 
 auto Trx = delta(x0,x1);
 auto Try = delta(y0,y1);
