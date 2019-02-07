@@ -2,17 +2,9 @@
 
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
 
-! Implement dim(Index) -> long function as preferred alternative to I.m().
-  Update documentation (especially ITensor book and Index synopsis).
 
 ! Fix removeQNs to work correctly for QDiag -> Diag
   case. Remove the toDense function.
-
-o Improve tags of MPS class
-  X Better tag convention for labelling site index (i.e. "x=1" instead of "1" for site 1)
-  o Make sure that "Link" index keeps a consistent convention for labelling which link
-    (i.e. MPS at site "x=4" should have left link with tags "Link,l=3" and right link with
-     tags "Link,l=4")
 
 ! Update website:
   o Detailed documentation
@@ -24,6 +16,7 @@ o Improve tags of MPS class
   o ITensor book
   o Tutorials
   o Code formulas
+    o Update TRG to show use of Tags
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
@@ -101,6 +94,13 @@ o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, ma
 o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
 o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor containing certain tags and matching an optional prime level
 o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
+o Better tag convention for labelling site index (i.e. "n=1" instead of "1" for site 1)
+o Make sure that "Link" index keeps a consistent convention for labelling which link
+  (i.e. MPS at site "n=4" should have left link with tags "Link,l=3" and right link with
+   tags "Link,l=4")
+o Implement dim(Index) -> long function as preferred alternative to I.m().
+  Update documentation (especially ITensor book and Index synopsis).
+
 
 Recent commits to v2 (master branch):
 o errMPOProd and deprecation of checkMPOProd

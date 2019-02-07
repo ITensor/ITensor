@@ -1,5 +1,4 @@
 #include "itensor/all.h"
-
 using namespace itensor;
 
 int 

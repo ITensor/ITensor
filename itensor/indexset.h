@@ -194,7 +194,7 @@ class IndexSet : public RangeT<Index>
     prime(Index const& imatch,
           int plinc)
         {
-        Global::warnDeprecated("prime(Index,int) is deprecated, use prime(int,Index) instead.");
+        Global::warnDeprecated("prime(ITensor,Index,int) is deprecated, use prime(ITensor,int,Index) instead.");
         prime(plinc,imatch);
         }
 
