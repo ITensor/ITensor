@@ -10,7 +10,7 @@ namespace itensor {
 template <class BigMatrixT>
 Spectrum MPS::
 svdBond(int b, ITensor const& AA, Direction dir, 
-        BigMatrixT const& PH, Args const& args)
+        BigMatrixT const& PH, Args args)
     {
     setBond(b);
     if(dir == Fromleft && b-1 > leftLim())
@@ -27,6 +27,10 @@ svdBond(int b, ITensor const& AA, Direction dir,
     auto noise = args.getReal("Noise",0.);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto usesvd = args.getBool("UseSVD",false);
+    auto tagset = getTagSet(args,"Tags",format("Link,l=%d",b));
+    args.add("Tags",toString(tagset));
+    if(dir == Fromleft) args.add("LeftTags",toString(tagset));
+    else                args.add("RightTags",toString(tagset));
 
     Spectrum res;
 

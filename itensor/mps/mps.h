@@ -111,7 +111,7 @@ class MPS
     svdBond(int b, 
             ITensor const& AA, 
             Direction dir, 
-            Args const& args = Args::global());
+            Args args = Args::global());
 
     template<class LocalOpT>
     Spectrum 
@@ -119,7 +119,7 @@ class MPS
             ITensor const& AA, 
             Direction dir, 
             LocalOpT const& PH, 
-            Args const& args = Args::global());
+            Args args = Args::global());
 
     //Move the orthogonality center to site i 
     //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)

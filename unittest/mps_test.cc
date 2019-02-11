@@ -52,6 +52,13 @@ SECTION("Constructors (m==1)")
     auto psi = MPS(shsitesQNs);
     auto l2 = commonIndex(psi.A(2),psi.A(3));
     CHECK(1==l2.m());
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsitesQNs(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
     }
 
 SECTION("Constructors (m>1)")
@@ -60,19 +67,81 @@ SECTION("Constructors (m>1)")
     auto psi = MPS(shsites,m);
     auto l2 = commonIndex(psi.A(2),psi.A(3));
     CHECK(m==l2.m());
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
+    for(int n = 1; n <= N; ++n)
+      randomize(psi.Aref(n));
+
+    psi.position(1);
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
+    psi.position(N);
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
     }
 
 SECTION("Random constructors (m==1)")
     {
     auto psi = randomMPS(shsites);
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
     psi.position(1);
-    CHECK(norm(psi)>0);
+    auto normpsi = norm(psi);
+    CHECK(normpsi>0);
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
+    psi.position(N);
+    CHECK_CLOSE(normpsi,norm(psi));
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
     }
 
 SECTION("Random constructors, QN conserved (m==1)")
     {
     auto psi = randomMPS(shFerroQNs);
     CHECK(norm(psi)>0);
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(shFerroQNs(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
     }
 
 SECTION("MPSAddition 1")
@@ -88,6 +157,14 @@ SECTION("MPSAddition 1")
     //"Valence bond" between sites 1 and 2
     MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
     CHECK_CLOSE(norm(psi),1);
     CHECK_EQUAL(totalQN(psi),QN({"Nf",1}));
     }
@@ -98,6 +175,14 @@ SECTION("MPSAddition 2")
     auto psi1 = randomMPS(sites);
     auto psi2 = randomMPS(sites);
     auto psi = sum(psi1,psi2);
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
 
     CHECK_EQUAL(rank(psi.A(1)),2);
     CHECK_EQUAL(rank(psi.A(2)),3);
@@ -132,11 +217,19 @@ SECTION("Orthogonalize")
     auto sites = SpinHalf(10,{"ConserveQNs=",false});
     auto psi = MPS(sites);
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
     //Make a random MPS of bond dim. m
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(m,format("Link,MPS,%d",n));
+        links.at(n) = Index(m,format("Link,l=%d",n));
         }
     psi.Aref(1) = randomITensor(links.at(1),sites(1));
     for(auto n : range1(2,N-1))
@@ -144,6 +237,14 @@ SECTION("Orthogonalize")
         psi.Aref(n) = randomITensor(links.at(n-1),sites(n),links.at(n));
         }
     psi.Aref(N) = randomITensor(links.at(N-1),sites(N));
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
 
     //Normalize psi
     auto n2 = overlap(psi,psi);
@@ -158,6 +259,14 @@ SECTION("Orthogonalize")
 
     psi.orthogonalize({"Cutoff",1E-16});
     CHECK_CLOSE(overlap(opsi,psi),1.0);
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
 
     //for(auto b : range1(psi.N()-1))
     //    {
@@ -180,6 +289,14 @@ SECTION("Orthogonalize")
     for(auto b : range1(psi.N()-1))
         {
         CHECK(linkInd(psi,b).m() <= 10);
+        }
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
 
     }

@@ -222,7 +222,7 @@ exactApplyMPO(MPO const& K,
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
     ITensor U,D;
-    dargs.add("Tags=",format("Link,MPO,%d",N));
+    dargs.add("Tags=",format("Link,l=%d",N-1));
     auto spec = diagHermitian(rho,U,D,dargs);
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
 
@@ -246,7 +246,7 @@ exactApplyMPO(MPO const& K,
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
         //TODO: make sure this tag convention is working
-        dargs.add("Tags=",format("Link,MPO,%d",j));
+        dargs.add("Tags=",format("Link,l=%d",j-1));
         auto spec = diagHermitian(rho,U,D,dargs);
         O = O*U*psi.A(j-1)*K.A(j-1);
         O.noPrime(siteTags);
@@ -359,7 +359,7 @@ fitApplyMPO(Real fac,
                 }
 
             //TODO: does this tag the correct bond, independent of the sweep direction?
-            args.add("Tags",format("Link,MPS,%d",b));
+            args.add("Tags",format("Link,l=%d",b));
 
             auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);

@@ -23,7 +23,7 @@ SECTION("Orthogonalize")
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
         {
-        links.at(n) = Index(m,format("Link,MPS,%d",n));
+        links.at(n) = Index(m,format("Link,l=%d",n));
         }
     W.Aref(1) = randomITensor(links.at(1),sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
@@ -45,6 +45,9 @@ SECTION("Orthogonalize")
     for(int n = N; n > 1; --n)
         {
         auto li = commonIndex(W.A(n),W.A(n-1),"Link");
+        CHECK(li==findIndex(W.A(n),format("l=%d",n-1)));
+        CHECK(li==findIndex(W.A(n-1),format("l=%d",n-1)));
+        CHECK(sites(n)==findIndex(W.A(n),format("n=%d",n),0));
         auto rho = W.A(n) * dag(prime(W.A(n),li));
         auto id = ITensor(li,prime(li));
         for(auto l : range1(li.m()))
@@ -66,7 +69,7 @@ SECTION("Add MPOs")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,%d",name,n);
+            auto ts = format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf=",0,-1}),2,
@@ -96,6 +99,14 @@ SECTION("Add MPOs")
     B.Aref(N) = randomITensor(Z,sites(N),dag(l2.at(N-1)));
 
     auto C = sum(A,B);
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(C.A(n),C.A(n+1),"Link");
+        CHECK(ln==findIndex(C.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(C.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(C.A(n),format("n=%d",n),0));
+        }
 
     auto AA = overlap(A,A);
     auto AB = overlap(A,B);
@@ -139,6 +150,14 @@ SECTION("applyMPO (DensityMatrix)")
 
     auto psi = randomMPS(sites);
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        }
+
     //Use AutoMPO as a trick to get
     //an MPO with bond dimension > 1
     auto ampo = AutoMPO(sites);
@@ -160,11 +179,35 @@ SECTION("applyMPO (DensityMatrix)")
         K.Aref(j) *= 0.2;
         }
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(H.A(n),H.A(n+1),"Link");
+        CHECK(ln==findIndex(H.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(H.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(H.A(n),format("n=%d",n),0));
+        }
+
     // Apply K to psi to entangle psi
     psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
     psi /= norm(psi);
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        }
+
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
 
@@ -204,12 +247,36 @@ SECTION("applyMPO (Fit)")
     psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
     psi /= norm(psi);
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        }
+
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
 
     // Now with a trial starting state
     auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(Hpsi_2.A(n),Hpsi_2.A(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi_2.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi_2.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi_2.A(n),format("n=%d",n),0));
+        }
 
     CHECK_EQUAL(checkMPOProd(Hpsi_2,H,psi,1E-10),true);
 
@@ -249,7 +316,23 @@ SECTION("errorMPOProd Scaling")
     psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
     psi /= norm(psi);
 
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
+        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        }
+
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        }
 
     //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
     CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.);
@@ -307,7 +390,7 @@ SECTION("Remove QNs from MPO")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,%d",name,n);
+            auto ts = format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf",0,-1}),2,
@@ -332,6 +415,14 @@ SECTION("Remove QNs from MPO")
     A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
 
     auto a = removeQNs(A);
+
+    for(int n = 1; n < N; ++n)
+        {
+        auto ln = commonIndex(a.A(n),a.A(n+1),"Link");
+        CHECK(ln==findIndex(a.A(n),format("l=%d",n)));
+        CHECK(ln==findIndex(a.A(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(a.A(n),format("n=%d",n),0));
+        }
 
     for(auto n : range1(N))
         {
