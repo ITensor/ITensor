@@ -1,6 +1,8 @@
 (! means necessary / blocker for releasing v3)
 
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
+  --> Hard to make backwards compatible with table read mode
+  ?-> Just change the definition by 1?
 
 ! Fix removeQNs to work correctly for QDiag -> Diag
   case. Remove the toDense function.

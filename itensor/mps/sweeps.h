@@ -360,13 +360,6 @@ init(Args const& args)
     cutoff_ = std::vector<Real>(nsweep_+1,cutoff);
     niter_ = std::vector<int>(nsweep_+1,niter);
     noise_ = std::vector<Real>(nsweep_+1,noise);
-
-    ////Set number of Davidson iterations
-    //const int Max_niter = 9;
-    //for(int s = 1; s <= std::min(4,nsweep_); ++s)
-    //    {
-    //    niter_.at(s) = std::max(Max_niter-s+1,2);
-    //    }
     } //Sweeps::init
 
 void inline Sweeps::
