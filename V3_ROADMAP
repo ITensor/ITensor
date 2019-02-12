@@ -2,7 +2,6 @@
 
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
 
-
 ! Fix removeQNs to work correctly for QDiag -> Diag
   case. Remove the toDense function.
 
