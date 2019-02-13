@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/itdata/diag.h"
 #include "itensor/itdata/qdiag.h"
 #include "itensor/detail/gcounter.h"
 #include "itensor/tensor/contract.h"
@@ -512,6 +513,18 @@ template void doTask(Contract& Con,QDense<Cplx> const& A,QDiag<Real> const& B,Ma
 template void doTask(Contract& Con,QDense<Real> const& A,QDiag<Cplx> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDense<Cplx> const& A,QDiag<Cplx> const& B,ManageStore& m);
 
+template<typename V>
+void
+doTask(RemoveQNs & R, 
+       QDiag<V> const& qd,
+       ManageStore & m)
+    {
+    //auto *pd = qd.data();
+    if(qd.allSame()) m.makeNewData<Diag<V>>(qd.length,qd.val);
+    else             m.makeNewData<Diag<V>>(qd.begin(),qd.end());
+    }
+template void doTask(RemoveQNs &, QDiag<Real> const&, ManageStore &);
+template void doTask(RemoveQNs &, QDiag<Cplx> const&, ManageStore &);
 
 } //namespace itensor
 

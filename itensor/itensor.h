@@ -708,9 +708,6 @@ bool
 hasQNs(ITensor const& T);
 
 ITensor
-toDense(ITensor T);
-
-ITensor
 removeQNs(ITensor T);
 
 template<typename V>

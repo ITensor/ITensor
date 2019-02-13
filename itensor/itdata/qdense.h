@@ -429,7 +429,7 @@ doTask(GetBlock<V> const& G, QDense<V> & d);
 
 template<typename V>
 void
-doTask(ToDense & T, 
+doTask(RemoveQNs & T, 
        QDense<V> const& d,
        ManageStore & m);
 

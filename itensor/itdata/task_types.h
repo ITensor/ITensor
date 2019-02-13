@@ -538,14 +538,14 @@ typeNameOf(GetBlock<Real>) { return "GetBlock<Real>";}
 inline const char*
 typeNameOf(GetBlock<Cplx>) { return "GetBlock<Cplx>";}
 
-struct ToDense 
+struct RemoveQNs 
     {
     IndexSet const& is;
-    ToDense(IndexSet const& is_) : is(is_) {}
+    RemoveQNs(IndexSet const& is_) : is(is_) {}
     };
 
 inline const char*
-typeNameOf(ToDense) { return "ToDense";}
+typeNameOf(RemoveQNs) { return "RemoveQNs";}
 
 } //namespace itensor 
 

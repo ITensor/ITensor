@@ -689,38 +689,38 @@ template TenRef<Range,Cplx> doTask(GetBlock<Cplx> const& G,QDense<Cplx> & d);
 
 template<typename V>
 void
-doTask(ToDense & T, 
+doTask(RemoveQNs & R, 
        QDense<V> const& d,
        ManageStore & m)
     {
-    auto r = T.is.r();
-    auto *nd = m.makeNewData<Dense<V>>(area(T.is),0);
+    auto r = R.is.r();
+    auto *nd = m.makeNewData<Dense<V>>(area(R.is),0);
     auto *pd = d.data();
     auto *pn = nd->data();
     IntArray block(r,0);
     detail::GCounter C(r);
     for(auto& io : d.offsets)
         {
-        computeBlockInd(io.block,T.is,block);
+        computeBlockInd(io.block,R.is,block);
         for(auto j : range(r))
             {
             long start = 0;
             for(auto b : range(block[j]))
                 {
-                start += T.is[j].blocksize0(b);
+                start += R.is[j].blocksize0(b);
                 }
-            C.setRange(j,start,start+T.is[j].blocksize0(block[j])-1);
+            C.setRange(j,start,start+R.is[j].blocksize0(block[j])-1);
             }
         //TODO: need to make a Range/TensorRef iterator
         //to rewrite the following code more efficiently
         for(; C.notDone(); ++C)
             {
-            pn[offset(T.is,C.i)] = pd[io.offset+C.ind];
+            pn[offset(R.is,C.i)] = pd[io.offset+C.ind];
             }
         }
     }
-template void doTask(ToDense &, QDense<Real> const&, ManageStore &);
-template void doTask(ToDense &, QDense<Cplx> const&, ManageStore &);
+template void doTask(RemoveQNs &, QDense<Real> const&, ManageStore &);
+template void doTask(RemoveQNs &, QDense<Cplx> const&, ManageStore &);
 
 } //namespace itensor
 

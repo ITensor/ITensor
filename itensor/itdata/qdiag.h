@@ -350,6 +350,10 @@ template<typename V>
 bool
 doTask(IsEmpty, QDiag<V> const& d) { return (d.length == 0ul); }
 
+template<typename V>
+void
+doTask(RemoveQNs &, QDiag<V> const&, ManageStore &);
+
 } //namespace itensor
 
 #endif

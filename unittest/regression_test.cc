@@ -169,7 +169,7 @@ TEST_CASE("ConvertQDenseToDenseITensor")
     T.set(L(1),S(1),prime(S)(1),1);
     T.set(L(1),S(2),prime(S)(2),1);
 
-    auto t = toDense(T);
+    auto t = removeQNs(T);
 
     CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
     CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
