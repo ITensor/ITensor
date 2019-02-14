@@ -385,9 +385,9 @@ long inline
 minM(const IndexSet& iset)
     {
     if(iset.empty()) return 1l;
-    auto mm = iset[0].m();
+    auto mm = dim(iset[0]);
     for(long j = 1; j < iset.r(); ++j)
-        mm = std::min(mm,iset[j].m());
+        mm = std::min(mm,dim(iset[j]));
 
     return mm;
     }
@@ -397,9 +397,9 @@ maxM(const IndexSet& iset)
     {
     if(iset.empty()) return 1l;
 
-    auto mm = iset[0].m();
+    auto mm = dim(iset[0]);
     for(long j = 1; j < iset.r(); ++j)
-        mm = std::max(mm,iset[j].m());
+        mm = std::max(mm,dim(iset[j]));
 
     return mm;
     }

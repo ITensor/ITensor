@@ -148,16 +148,16 @@ svdImpl(ITensor const& A,
         //      make dvecs a vector<VecRef>
         auto dvecs = vector<Vector>(Nblock);
 
-        auto alleig = stdx::reserve_vector<Real>(std::min(uI.m(),vI.m()));
+        auto alleig = stdx::reserve_vector<Real>(std::min(dim(uI),dim(vI)));
 
         auto alleigqn = vector<EigQN>{};
         if(compute_qn)
             {
-            alleigqn = stdx::reserve_vector<EigQN>(std::min(uI.m(),vI.m()));
+            alleigqn = stdx::reserve_vector<EigQN>(std::min(dim(uI),dim(vI)));
             }
 
-        if(uI.m() == 0) throw ResultIsZero("uI.m() == 0");
-        if(vI.m() == 0) throw ResultIsZero("vI.m() == 0");
+        if(dim(uI) == 0) throw ResultIsZero("dim(uI) == 0");
+        if(dim(vI) == 0) throw ResultIsZero("dim(vI) == 0");
 
         for(auto b : range(Nblock))
             {
@@ -288,8 +288,6 @@ svdImpl(ITensor const& A,
             //printfln("{B.i1,n} = {%d,%d}",B.i1,n);
             //printfln("{n,n} = {%d,%d}",n,n);
             //printfln("{B.i2,n} = {%d,%d}",B.i2,n);
-            //Print(uI[B.i1].m());
-            //Print(L[n].m());
 
             auto uind = stdx::make_array(B.i1,n);
             auto pU = getBlock(Ustore,Uis,uind);

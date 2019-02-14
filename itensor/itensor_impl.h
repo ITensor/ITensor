@@ -725,10 +725,10 @@ replaceInds(ITensor const& cT,
             {
             if(J==ipairs[oi])
                 {
-                if(J.m() != ipairs[ni].m())
+                if(dim(J) != dim(ipairs[ni]))
                     {
-                    printfln("Old m = %d",J.m());
-                    printfln("New m would be = %d",ipairs[ni].m());
+                    printfln("Old m = %d",dim(J));
+                    printfln("New m would be = %d",dim(ipairs[ni]));
                     throw ITError("Mismatch of index dimension in reindex");
                     }
                 T *= delta(J,prime(ipairs[ni],tempLevel));
@@ -763,10 +763,10 @@ reindex(ITensor const& cT,
             {
             if(equalsIgnorePrime(is[j],ipairs[oi]))
                 {
-                if(is[j].m() != ipairs[ni].m())
+                if(dim(is[j]) != dim(ipairs[ni]))
                     {
-                    printfln("Old m = %d",is[j].m());
-                    printfln("New m would be = %d",ipairs[ni].m());
+                    printfln("Old m = %d",dim(is[j]));
+                    printfln("New m would be = %d",dim(ipairs[ni]));
                     throw ITError("Mismatch of index dimension in reindex");
                     }
                 auto plev = primeLevel(is[j]);
@@ -916,9 +916,9 @@ diagITensor(Container const& C,
 #ifdef DEBUG
     using size_type = decltype(C.size());
     //Compute min of all index dimensions
-    auto minm = i1.m();
+    auto minm = dim(i1);
     for(const auto& ind : is)
-        if(ind.m() < minm) minm = ind.m();
+        if(dim(ind) < minm) minm = dim(ind);
     if(C.size() != size_type(minm))
         {
         println("minm = ",minm);

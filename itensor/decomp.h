@@ -240,12 +240,12 @@ svd(ITensor AA,
             //auto mid = commonIndex(U,V,Link);
             //TODO: check this does the same thing
             auto mid = commonIndex(U,V,"Link");
-            if(mid) minm = maxm = mid.m();
+            if(mid) minm = maxm = dim(mid);
             else    minm = maxm = 1;
             }
         else
             {
-            minm = maxm = D.inds().front().m();
+            minm = maxm = dim(D.inds().front());
             }
         args.add("Minm",minm);
         args.add("Maxm",maxm);
@@ -329,8 +329,8 @@ denmatDecomp(ITensor const& AA,
     if(args.getBool("UseOrigM",false))
         {
         args.add("Cutoff",-1);
-        args.add("Minm",mid.m());
-        args.add("Maxm",mid.m());
+        args.add("Minm",dim(mid));
+        args.add("Maxm",dim(mid));
         }
 
     if(args.getBool("TraceReIm",false))

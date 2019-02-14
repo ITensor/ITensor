@@ -50,7 +50,7 @@ SECTION("Orthogonalize")
         CHECK(sites(n)==findIndex(W.A(n),format("n=%d",n),0));
         auto rho = W.A(n) * dag(prime(W.A(n),li));
         auto id = ITensor(li,prime(li));
-        for(auto l : range1(li.m()))
+        for(auto l : range1(dim(li)))
             {
             id.set(li(l),prime(li)(l),1.0);
             }

@@ -38,7 +38,7 @@ diagHImpl(ITensor H,
     if(not hasQNs(H))
         {
         auto cutoff = args.getReal("Cutoff",0.);
-        auto maxm = args.getInt("Maxm",H.inds().front().m());
+        auto maxm = args.getInt("Maxm",dim(H.inds().front()));
         auto minm = args.getInt("Minm",1);
         auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
         auto do_truncate = args.getBool("Truncate",def_do_trunc);
@@ -180,9 +180,9 @@ diagHImpl(ITensor H,
         auto ddata = vector<Real>(totaldsize);
         auto dvecs = vector<VectorRef>(Nblock);
 
-        auto alleig = stdx::reserve_vector<Real>(ai.m());
+        auto alleig = stdx::reserve_vector<Real>(dim(ai));
         auto alleigqn = vector<EigQN>{};
-        if(compute_qns) alleigqn = stdx::reserve_vector<EigQN>(ai.m());
+        if(compute_qns) alleigqn = stdx::reserve_vector<EigQN>(dim(ai));
 
         //1. Diagonalize each ITensor within H.
         //   Store results in mmatrix and mvector.

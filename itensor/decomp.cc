@@ -57,9 +57,9 @@ toMatRefc(ITensor const& T,
     {
     if(i1 == T.inds().front())
         {
-        return doTask(ToMatRefc<V>{i1.m(),i2.m()},T.store());
+        return doTask(ToMatRefc<V>{dim(i1),dim(i2)},T.store());
         }
-    return doTask(ToMatRefc<V>{i2.m(),i1.m(),true},T.store());
+    return doTask(ToMatRefc<V>{dim(i2),dim(i1),true},T.store());
     }
 template MatRefc<Real>
 toMatRefc(ITensor const& T, Index const& i1, Index const& i2);
@@ -300,7 +300,7 @@ eigDecompImpl(ITensor T,
             eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
             }
 
-        auto newmid = Index(lind.m());
+        auto newmid = Index(dim(lind));
 
         //put right eigenvectors into an ITensor
         if(norm(Ri) > 1E-16*norm(Rr))

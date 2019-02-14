@@ -36,7 +36,7 @@ class ITensorMap
             for(auto& I : A_->inds())
                 {
                 if(I.primeLevel() > 0)
-                    size_ *= I.m();
+                    size_ *= dim(I);
                 }
             }
         return size_;

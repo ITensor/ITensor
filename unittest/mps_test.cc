@@ -51,7 +51,7 @@ SECTION("Constructors (m==1)")
     {
     auto psi = MPS(shsitesQNs);
     auto l2 = commonIndex(psi.A(2),psi.A(3));
-    CHECK(1==l2.m());
+    CHECK(1==l2.dim());
     for(int n = 1; n < N; ++n)
         {
         auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
@@ -66,7 +66,7 @@ SECTION("Constructors (m>1)")
     auto m = 4;
     auto psi = MPS(shsites,m);
     auto l2 = commonIndex(psi.A(2),psi.A(3));
-    CHECK(m==l2.m());
+    CHECK(m==l2.dim());
 
     for(int n = 1; n < N; ++n)
         {
@@ -278,7 +278,7 @@ SECTION("Orthogonalize")
         auto li = commonIndex(psi.A(n),psi.A(n-1),"Link");
         auto rho = psi.A(n) * dag(prime(psi.A(n),li));
         auto id = ITensor(li,prime(li));
-        for(auto l : range1(li.m()))
+        for(auto l : range1(li.dim()))
             {
             id.set(li(l),prime(li)(l),1.0);
             }
@@ -288,7 +288,7 @@ SECTION("Orthogonalize")
     psi.orthogonalize({"Maxm=",10,"Cutoff=",1E-16});
     for(auto b : range1(psi.N()-1))
         {
-        CHECK(linkInd(psi,b).m() <= 10);
+        CHECK(linkInd(psi,b).dim() <= 10);
         }
 
     for(int n = 1; n < N; ++n)

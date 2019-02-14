@@ -18,7 +18,7 @@ SECTION("Generic SiteSet")
     auto sites = SiteSet(N,3);
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 3);
+        CHECK(dim(sites(i)) == 3);
         CHECK(hasTags(sites(i),"Site"));
         }
     }
@@ -28,7 +28,7 @@ SECTION("SpinHalf (QNs)")
     auto sites = SpinHalf(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 2);
+        CHECK(dim(sites(i)) == 2);
         CHECK(hasTags(sites(i),"Site"));
         }
 
@@ -56,7 +56,7 @@ SECTION("SpinHalf (no QNs)")
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 2);
+        CHECK(dim(sites(i)) == 2);
         CHECK(hasTags(sites(i),"Site"));
         }
 
@@ -75,7 +75,7 @@ SECTION("SpinOne")
     auto sites = SpinOne(N,{"ConserveQNs=",false});
     for(auto i : range1(N)) 
         {
-        CHECK(sites(i).m() == 3);
+        CHECK(dim(sites(i)) == 3);
         CHECK(hasTags(sites(i),"Site"));
         }
 
@@ -94,7 +94,7 @@ SECTION("Hubbard")
     auto sites = Hubbard(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 4);
+        CHECK(dim(sites(i)) == 4);
         CHECK(hasTags(sites(i),"Site"));
         }
 
@@ -115,7 +115,7 @@ SECTION("Spinless")
     auto sites = Spinless(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 2);
+        CHECK(sites(i).dim() == 2);
         CHECK(hasTags(sites(i),"Site"));
         }
 
@@ -130,7 +130,7 @@ SECTION("tJ")
     auto sites = tJ(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
-        CHECK(sites(i).m() == 3);
+        CHECK(sites(i).dim() == 3);
         CHECK(hasTags(sites(i),"Site"));
         }
 

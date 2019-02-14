@@ -53,7 +53,7 @@ Index::
 Index() 
     : 
     id_(0),
-    m_(1),
+    dim_(1),
     primelevel_(0),
     tags_(TagSet())
     {
@@ -63,7 +63,7 @@ Index::
 Index(long m, 
       TagSet const& t)
   : id_(generateID()),
-    m_(m),
+    dim_(m),
     primelevel_(0),
     tags_(t)
     { 
@@ -140,23 +140,23 @@ equalsIgnorePrime(Index const& i1, Index const& i2)
 bool
 operator>(Index const& i1, Index const& i2)
     { 
-    if(i1.m() == i2.m()) 
+    if(dim(i1) == dim(i2)) 
         {
         if(i1.id() == i2.id()) return i1.primeLevel() > i2.primeLevel();
         return i1.id() > i2.id();
         }
-    return i1.m() > i2.m();
+    return dim(i1) > dim(i2);
     }
 
 bool
 operator<(Index const& i1, Index const& i2)
     {
-    if(i1.m() == i2.m()) 
+    if(dim(i1) == dim(i2)) 
         {
         if(i1.id() == i2.id()) return i1.primeLevel() < i2.primeLevel();
         return i1.id() < i2.id();
         }
-    return i1.m() < i2.m();
+    return dim(i1) < dim(i2);
     }
 
 
@@ -167,7 +167,7 @@ operator<<(std::ostream & s, Index const& I)
     {
     s << "(";
     if(size(tags(I)) > 0) s << tags(I) << ",";
-    s << I.m();
+    s << dim(I);
     if(Global::showIDs()) 
         {
         s << "|id=" << (I.id() % 1000);
@@ -214,7 +214,7 @@ IndexVal(Index const& index_,
 #ifdef DEBUG
     if(!index) Error("IndexVal initialized with default initialized Index");
     //Can also use IndexVal's to indicate prime increments:
-    //if(val_ < 1 || val_ > index.m())
+    //if(val_ < 1 || val_ > dim(index))
     //    {
     //    println("val = ",val_);
     //    println("index = ",index);
@@ -254,7 +254,7 @@ sim(Index const& I, int plev)
     }
 
 string
-showm(Index const& I) { return format("m=%d",I.m()); }
+showm(Index const& I) { return format("m=%d",dim(I)); }
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)
@@ -532,7 +532,7 @@ write(std::ostream& s) const
     itensor::write(s,primelevel_);
     itensor::write(s,tags_);
     itensor::write(s,id_);
-    itensor::write(s,m_);
+    itensor::write(s,dim_);
     itensor::write(s,dir_);
     if(pd) itensor::write(s,*pd);
     else itensor::write(s,IQIndexDat());
@@ -554,7 +554,7 @@ read(std::istream& s)
         {
         itensor::read(s,id_);
         }
-    itensor::read(s,m_);
+    itensor::read(s,dim_);
     itensor::read(s,dir_);
     IQIndexDat dat;
     itensor::read(s,dat);

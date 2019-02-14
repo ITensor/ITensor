@@ -119,12 +119,12 @@ SECTION("Contracting Product")
         CHECK(!hasIndex(R,L1));
         CHECK(!hasIndex(R,L2));
 
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
             {
             Real val = 0;
-            for(int j1 = 1; j1 <= L1.m(); ++j1)
-            for(int j2 = 1; j2 <= L2.m(); ++j2)
+            for(int j1 = 1; j1 <= L1.dim(); ++j1)
+            for(int j2 = 1; j2 <= L2.dim(); ++j2)
                 {
                 //printf("val += %f*%f",A.real(L1(j1),S1(k1),L2(j2),S2(k2)),B.real(L1(j1),L2(j2)));
                 val += A.real(L1(j1),S1(k1),L2(j2),S2(k2))*B.real(L1(j1),L2(j2));
@@ -144,13 +144,13 @@ SECTION("Contracting Product")
         CHECK(hasIndex(R,S1));
         CHECK(hasIndex(R,S2));
 
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
-        for(int j1 = 1; j1 <= L1.m(); ++j1)
-        for(int j1p = 1; j1p <= L1.m(); ++j1p)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
+        for(int j1 = 1; j1 <= L1.dim(); ++j1)
+        for(int j1p = 1; j1p <= L1.dim(); ++j1p)
             {
             Real val = 0;
-            for(int j2 = 1; j2 <= L2.m(); ++j2)
+            for(int j2 = 1; j2 <= L2.dim(); ++j2)
                 {
                 val += A.real(L1(j1),S1(k1),L2(j2),S2(k2))*B.real(L1(j1p),L2(j2));
                 }
@@ -168,8 +168,8 @@ SECTION("Contracting Product")
 
         IQIndexVal Up(s(1)),
                    UpP(sP(1)),
-                   Dn(s(s.m())),
-                   DnP(sP(s.m())),
+                   Dn(s(s.dim())),
+                   DnP(sP(s.dim())),
                    Z0(s(2)),
                    Z0P(sP(2));
 
@@ -186,9 +186,9 @@ SECTION("Contracting Product")
 
         auto R = Op * t;
 
-        for(auto i : range1(s.m()))
-        for(auto iP : range1(sP.m()))
-        for(auto j : range1(l1.m()))
+        for(auto i : range1(s.dim()))
+        for(auto iP : range1(sP.dim()))
+        for(auto j : range1(l1.dim()))
             {
             auto val = Op.real(s(i),sP(iP)) * t.real(l0(1),l1(j));
             CHECK_CLOSE(val, R.real(s(i),sP(iP),l0(1),l1(j)) );
@@ -226,10 +226,10 @@ SECTION("Addition and Subtraction")
              T2 = randomTensor(QN(0),L1,S1,L2,S2);
         auto R = T1+T2;
 
-        for(int j1 = 1; j1 <= L1.m(); ++j1)
-        for(int j2 = 1; j2 <= L2.m(); ++j2)
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int j1 = 1; j1 <= L1.dim(); ++j1)
+        for(int j2 = 1; j2 <= L2.dim(); ++j2)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
             {
             auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
             CHECK_CLOSE(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
@@ -242,10 +242,10 @@ SECTION("Addition and Subtraction")
              T2 = randomTensor(QN(0),S1,S2,L1,L2);
         auto R = T1+T2;
 
-        for(int j1 = 1; j1 <= L1.m(); ++j1)
-        for(int j2 = 1; j2 <= L2.m(); ++j2)
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int j1 = 1; j1 <= L1.dim(); ++j1)
+        for(int j2 = 1; j2 <= L2.dim(); ++j2)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
             {
             auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
             CHECK_CLOSE(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
@@ -261,8 +261,8 @@ SECTION("Apply")
     FuncObj f;
     B1.apply(f);
 
-    for(int j1 = 1; j1 <= L1.m(); ++j1)
-    for(int j2 = 1; j2 <= L2.m(); ++j2)
+    for(int j1 = 1; j1 <= L1.dim(); ++j1)
+    for(int j2 = 1; j2 <= L2.dim(); ++j2)
         {
         CHECK_CLOSE( f( B.real(L1(j1),L2(j2)) ), 
                     B1.real(L1(j1),L2(j2)));
@@ -282,19 +282,19 @@ SECTION("QDense ITensor Conversion")
     SECTION("Case 1")
         {
         auto itphi = toITensor(phi);
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
-        for(int j2 = 1; j2 <= L2.m(); ++j2)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
+        for(int j2 = 1; j2 <= L2.dim(); ++j2)
             CHECK_CLOSE(phi.real(S1(k1),S2(k2),L2(j2)),itphi.real(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)));
         }
 
     SECTION("Case 2")
         {
         ITensor itA = A; //implicit conversion 
-        for(int k1 = 1; k1 <= S1.m(); ++k1)
-        for(int k2 = 1; k2 <= S2.m(); ++k2)
-        for(int j1 = 1; j1 <= L1.m(); ++j1)
-        for(int j2 = 1; j2 <= L2.m(); ++j2)
+        for(int k1 = 1; k1 <= S1.dim(); ++k1)
+        for(int k2 = 1; k2 <= S2.dim(); ++k2)
+        for(int j1 = 1; j1 <= L1.dim(); ++j1)
+        for(int j2 = 1; j2 <= L2.dim(); ++j2)
             CHECK_CLOSE(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
                         itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
         }
@@ -367,8 +367,8 @@ SECTION("Combiner")
 
         R *= dag(C); //uncombine
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
             }
@@ -386,8 +386,8 @@ SECTION("Combiner")
 
         R *= dag(C); //uncombine
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
             }
@@ -412,9 +412,9 @@ SECTION("Combiner")
         CHECK(hasIndex(R,L2));
         CHECK(hasIndex(R,S1));
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
-        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
+        for(int j1 = 1; j1 <= S1.dim(); ++j1)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
             }
@@ -433,10 +433,10 @@ SECTION("Combiner")
 
         R *= dag(C); //uncombine
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
-        for(int j1 = 1; j1 <= S1.m(); ++j1)
-        for(int j2 = 1; j2 <= S2.m(); ++j2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
+        for(int j1 = 1; j1 <= S1.dim(); ++j1)
+        for(int j2 = 1; j2 <= S2.dim(); ++j2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
@@ -455,10 +455,10 @@ SECTION("Combiner")
 
         R *= dag(C); //uncombine
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
-        for(int j1 = 1; j1 <= S1.m(); ++j1)
-        for(int j2 = 1; j2 <= S2.m(); ++j2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
+        for(int j1 = 1; j1 <= S1.dim(); ++j1)
+        for(int j2 = 1; j2 <= S2.dim(); ++j2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
@@ -486,10 +486,10 @@ SECTION("Combiner")
         CHECK(hasIndex(R,S1));
         CHECK(hasIndex(R,S2));
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
-        for(int j1 = 1; j1 <= S1.m(); ++j1)
-        for(int j2 = 1; j2 <= S2.m(); ++j2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
+        for(int j1 = 1; j1 <= S1.dim(); ++j1)
+        for(int j2 = 1; j2 <= S2.dim(); ++j2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
@@ -512,10 +512,10 @@ SECTION("Combiner")
 
         R *= dag(C); //uncombine
         //Check that R equals original T
-        for(int i1 = 1; i1 <= L1.m(); ++i1)
-        for(int i2 = 1; i2 <= L2.m(); ++i2)
-        for(int j1 = 1; j1 <= S1.m(); ++j1)
-        for(int j2 = 1; j2 <= S2.m(); ++j2)
+        for(int i1 = 1; i1 <= L1.dim(); ++i1)
+        for(int i2 = 1; i2 <= L2.dim(); ++i2)
+        for(int j1 = 1; j1 <= S1.dim(); ++j1)
+        for(int j2 = 1; j2 <= S2.dim(); ++j2)
             {
             CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
@@ -529,10 +529,10 @@ SECTION("Combiner")
         CHECK_CLOSE(norm(R),norm(T));
 
         auto U = dag(C)*R;
-        for(auto l1 : range1(L1.m()))
-        for(auto l2 : range1(L1.m()))
-        for(auto s1 : range1(S1.m()))
-        for(auto s2 : range1(S2.m()))
+        for(auto l1 : range1(L1.dim()))
+        for(auto l2 : range1(L1.dim()))
+        for(auto s1 : range1(S1.dim()))
+        for(auto s2 : range1(S2.dim()))
             {
             CHECK_CLOSE(U.real(L1(l1),L2(l2),S1(s1),S2(s2)),T.real(L1(l1),L2(l2),S1(s1),S2(s2)));
             }
@@ -603,8 +603,8 @@ SECTION("Combiner")
             auto cT = C1 * T * C2;
             auto ci1 = commonIndex(C1,cT);
             auto ci2 = commonIndex(C2,cT);
-            CHECK(ci1.m() == (i1.m()*i3.m()));
-            CHECK(ci2.m() == (i2.m()*i1.m()));
+            CHECK(ci1.dim() == (i1.dim()*i3.dim()));
+            CHECK(ci2.dim() == (i2.dim()*i1.dim()));
             CHECK(hasIndex(cT,prime(i2)));
             CHECK(div(T) == div(cT));
             CHECK(std::fabs(norm(cT)-norm(T)) < 1E-11);
@@ -802,7 +802,7 @@ SECTION("Tie Indices with Diag IQTensor")
 //    auto R = d*T;
 //    //CHECK(typeOf(R) == Type::DiagReal);
 //    //CHECK(hasIndex(R,L));
-//    //auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+//    //auto minjkl = std::min(std::min(J.dim(),K.dim()),L.dim());
 //    //for(long j = 1; j <= minjkl; ++j)
 //    //    CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
 //    }
@@ -815,7 +815,7 @@ SECTION("Tie Indices with Diag IQTensor")
 //    auto R = d1*T;
 //    CHECK(typeOf(R) == Type::DiagRealAllSame);
 //    Real val = 0;
-//    auto minjk = std::min(J.m(),K.m());
+//    auto minjk = std::min(J.dim(),K.dim());
 //    for(long j = 1; j <= minjk; ++j)
 //        val += T.real(J(j),K(j));
 //    CHECK_CLOSE(R.real(),val);
@@ -842,8 +842,8 @@ SECTION("Single IQIndex Replacement")
     CHECK(hasIndex(R,S2));
     CHECK(hasIndex(R,prime(S1)));
 
-    for(auto i1 : range1(S1.m()))
-    for(auto i2 : range1(S1.m()))
+    for(auto i1 : range1(S1.dim()))
+    for(auto i2 : range1(S1.dim()))
         {
         CHECK(T.real(S1(i1),prime(S1)(i2)) == R.real(S2(i1),prime(S1)(i2)));
         }
@@ -873,10 +873,10 @@ SECTION("Scalar")
     CHECK(S.r() == 0);
 
     Real val = 0;
-    for(int i1 = 1; i1 <= L1.m(); ++i1)
-    for(int i2 = 1; i2 <= L2.m(); ++i2)
-    for(int j1 = 1; j1 <= S1.m(); ++j1)
-    for(int j2 = 1; j2 <= S2.m(); ++j2)
+    for(int i1 = 1; i1 <= L1.dim(); ++i1)
+    for(int i2 = 1; i2 <= L2.dim(); ++i2)
+    for(int j1 = 1; j1 <= S1.dim(); ++j1)
+    for(int j2 = 1; j2 <= S2.dim(); ++j2)
         {
         val += T1.real(L1(i1),L2(i2),S1(j1),S2(j2))*T2.real(L1(i1),L2(i2),S1(j1),S2(j2));
         }
@@ -894,10 +894,10 @@ SECTION("Contraction with Scalar")
     auto T3 = S * T1;
 
     auto z = S.cplx();
-    for(int i1 = 1; i1 <= L1.m(); ++i1)
-    for(int i2 = 1; i2 <= L2.m(); ++i2)
-    for(int j1 = 1; j1 <= S1.m(); ++j1)
-    for(int j2 = 1; j2 <= S2.m(); ++j2)
+    for(int i1 = 1; i1 <= L1.dim(); ++i1)
+    for(int i2 = 1; i2 <= L2.dim(); ++i2)
+    for(int j1 = 1; j1 <= S1.dim(); ++j1)
+    for(int j2 = 1; j2 <= S2.dim(); ++j2)
         {
         auto val = z*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
         CHECK_CLOSE(val,T3.real(L1(i1),L2(i2),S1(j1),S2(j2)));
@@ -907,10 +907,10 @@ SECTION("Contraction with Scalar")
     auto Q = IQTensor(2);
     auto q = Q.real();
     auto T4 = Q * T1;
-    for(int i1 = 1; i1 <= L1.m(); ++i1)
-    for(int i2 = 1; i2 <= L2.m(); ++i2)
-    for(int j1 = 1; j1 <= S1.m(); ++j1)
-    for(int j2 = 1; j2 <= S2.m(); ++j2)
+    for(int i1 = 1; i1 <= L1.dim(); ++i1)
+    for(int i2 = 1; i2 <= L2.dim(); ++i2)
+    for(int j1 = 1; j1 <= S1.dim(); ++j1)
+    for(int j2 = 1; j2 <= S2.dim(); ++j2)
         {
         auto val = q*T1.real(L1(i1),L2(i2),S1(j1),S2(j2));
         CHECK_CLOSE(val,T4.real(L1(i1),L2(i2),S1(j1),S2(j2)));
@@ -920,10 +920,10 @@ SECTION("Contraction with Scalar")
     //auto Q = IQTensor(1.+3_i);
     //auto q = Q.cplx();
     //auto T4 = Q * T1;
-    //for(int i1 = 1; i1 <= L1.m(); ++i1)
-    //for(int i2 = 1; i2 <= L2.m(); ++i2)
-    //for(int j1 = 1; j1 <= S1.m(); ++j1)
-    //for(int j2 = 1; j2 <= S2.m(); ++j2)
+    //for(int i1 = 1; i1 <= L1.dim(); ++i1)
+    //for(int i2 = 1; i2 <= L2.dim(); ++i2)
+    //for(int j1 = 1; j1 <= S1.dim(); ++j1)
+    //for(int j2 = 1; j2 <= S2.dim(); ++j2)
     //    {
     //    auto val = q*T1.cplx(L1(i1),L2(i2),S1(j1),S2(j2));
     //    CHECK_CLOSE(val,T4.cplx(L1(i1),L2(i2),S1(j1),S2(j2)));
@@ -1073,10 +1073,10 @@ CHECK(IT.inds().index(1).dir()==O1.inds().index(4).dir());
 CHECK(IT.inds().index(2).dir()==O1.inds().index(3).dir());
 CHECK(IT.inds().index(3).dir()==O1.inds().index(1).dir());
 CHECK(IT.inds().index(4).dir()==O1.inds().index(2).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1090,10 +1090,10 @@ CHECK(IT.inds().index(1).dir()==O2.inds().index(2).dir());
 CHECK(IT.inds().index(2).dir()==O2.inds().index(1).dir());
 CHECK(IT.inds().index(3).dir()==O2.inds().index(4).dir());
 CHECK(IT.inds().index(4).dir()==O2.inds().index(3).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1109,10 +1109,10 @@ CHECK(CIT.inds().index(1).dir()==O3.inds().index(3).dir());
 CHECK(CIT.inds().index(2).dir()==O3.inds().index(4).dir());
 CHECK(CIT.inds().index(3).dir()==O3.inds().index(1).dir());
 CHECK(CIT.inds().index(4).dir()==O3.inds().index(2).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(CIT.cplx(i(ii),j(jj),jp(jjp),k(kk)),O3.cplx(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1136,10 +1136,10 @@ auto IT = randomTensor(QN(0),i,j,jp,dag(k));
 auto O1 = permute(IT,"...",i);
 CHECK(IT.inds().index(1)==O1.inds().index(4));
 CHECK(IT.inds().index(1).dir()==O1.inds().index(4).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1149,10 +1149,10 @@ CHECK(IT.inds().index(1)==O2.inds().index(4));
 CHECK(IT.inds().index(2)==O2.inds().index(3));
 CHECK(IT.inds().index(1).dir()==O2.inds().index(4).dir());
 CHECK(IT.inds().index(2).dir()==O2.inds().index(3).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1166,10 +1166,10 @@ CHECK(IT.inds().index(1).dir()==O3.inds().index(4).dir());
 CHECK(IT.inds().index(2).dir()==O3.inds().index(3).dir());
 CHECK(IT.inds().index(3).dir()==O3.inds().index(1).dir());
 CHECK(IT.inds().index(4).dir()==O3.inds().index(2).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O3.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1177,10 +1177,10 @@ for(auto kk : range1(k.m()))
 auto O4 = permute(IT,k,"...");
 CHECK(IT.inds().index(4)==O4.inds().index(1));
 CHECK(IT.inds().index(4).dir()==O4.inds().index(1).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O4.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1194,10 +1194,10 @@ CHECK(IT.inds().index(1).dir()==O5.inds().index(3).dir());
 CHECK(IT.inds().index(2).dir()==O5.inds().index(4).dir());
 CHECK(IT.inds().index(3).dir()==O5.inds().index(2).dir());
 CHECK(IT.inds().index(4).dir()==O5.inds().index(1).dir());
-for(auto ii : range1(i.m()))
-for(auto jj : range1(j.m()))
-for(auto jjp : range1(jp.m()))
-for(auto kk : range1(k.m()))
+for(auto ii : range1(i.dim()))
+for(auto jj : range1(j.dim()))
+for(auto jjp : range1(jp.dim()))
+for(auto kk : range1(k.dim()))
     {
     CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O5.real(i(ii),j(jj),jp(jjp),k(kk)));
     }
@@ -1282,10 +1282,10 @@ SECTION("Reindex")
 //        auto C = A/B;
 //
 //        auto diff = 0.;
-//        for(auto S : range1(s.m()))
-//        for(auto H : range1(h.m()))
-//        for(auto K : range1(k.m()))
-//        for(auto T : range1(t.m()))
+//        for(auto S : range1(s.dim()))
+//        for(auto H : range1(h.dim()))
+//        for(auto K : range1(k.dim()))
+//        for(auto T : range1(t.dim()))
 //            {
 //            diff += C.real(t(T),s(S),h(H),k(K)) - A.real(s(S),h(H))*B.real(h(H),k(K),t(T));
 //            }
@@ -1300,9 +1300,9 @@ SECTION("Reindex")
 //    {
 //    IQTensor D1 = tieIndices(D,L1,prime(L1),L1);
 //
-//    for(int k1 = 1; k1 <= L1.m(); ++k1)
-//    for(int k2 = 1; k2 <= L1.m(); ++k2)
-//    for(int k3 = 1; k3 <= S1.m(); ++k3)
+//    for(int k1 = 1; k1 <= L1.dim(); ++k1)
+//    for(int k2 = 1; k2 <= L1.dim(); ++k2)
+//    for(int k3 = 1; k3 <= S1.dim(); ++k3)
 //        {
 //        CHECK_DIFF(D1(L1(k1),prime(L1,2)(k2),S1(k3)),D(L1(k1),prime(L1)(k1),prime(L1,2)(k2),S1(k3)),1E-10);
 //        }
@@ -1351,11 +1351,11 @@ SECTION("Reindex")
 //
 //    IQTensor Dt = trace(D,dag(L1),prime(L1,2));
 //
-//    for(int j2 = 1; j2 <= S1.m(); ++j2)
-//    for(int j1 = 1; j1 <= L1.m(); ++j1)
+//    for(int j2 = 1; j2 <= S1.dim(); ++j2)
+//    for(int j1 = 1; j1 <= L1.dim(); ++j1)
 //        {
 //        Real val = 0;
-//        for(int k1 = 1; k1 <= L1.m(); ++k1)
+//        for(int k1 = 1; k1 <= L1.dim(); ++k1)
 //            {
 //            val += D(dag(L1)(k1),S1(j2),prime(L1)(j1),prime(L1,2)(k1));
 //            }

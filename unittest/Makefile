@@ -21,7 +21,6 @@ SOURCES+= index_test.cc
 SOURCES+= indexset_test.cc
 SOURCES+= itensor_test.cc
 SOURCES+= qn_test.cc
-##SOURCES+= iqindex_test.cc
 ##SOURCES+= iqtensor_test.cc
 SOURCES+= decomp_test.cc
 SOURCES+= mps_test.cc

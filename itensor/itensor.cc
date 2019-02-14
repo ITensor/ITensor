@@ -931,7 +931,7 @@ combiner(IndexSet const& inds, Args const& args)
         {
         if(inds.empty()) Error("No indices passed to combiner");
         long rm = 1;
-        for(const auto& i : inds) rm *= i.m();
+        for(const auto& i : inds) rm *= dim(i);
         //create combined index
         auto cind = Index(rm,itagset);
         //create new IndexSet with combined index in front

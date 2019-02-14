@@ -79,7 +79,7 @@ class Index
 
     private:
     id_type id_;
-    extent_type m_;
+    extent_type dim_;
     prime_type primelevel_; 
     Arrow dir_ = Out;
     qn_ptr pd;
@@ -110,9 +110,9 @@ class Index
           Arrow dir,
           TagSet const& ts);
 
-    // Returns the bond dimension
+    // Returns the dimension of this Index
     long 
-    m() const { return m_; }
+    dim() const { return dim_; }
 
     // Returns the prime level
     int 
@@ -241,6 +241,12 @@ class Index
     void
     removeQNs() { pd.reset(); }
 
+    public:
+
+    //Deprecated: prefer to use I.dim() or dim(I)
+    long 
+    m() const { return dim_; }
+
     }; //class Index
 
 // i1 compares equal to i2 if i2 is a copy of i1 with same primelevel
@@ -278,7 +284,7 @@ class IndexVal
     IndexVal(const Index& index, long val_);
 
     long
-    m() const { return index.m(); }
+    dim() const { return index.dim(); }
 
     explicit operator bool() const { return bool(index); }
 
@@ -297,6 +303,11 @@ class IndexVal
     QN const&
     qn() const;
 
+
+    //Deprecated: prefer to use .dim()
+    long
+    m() const { return index.m(); }
+
     };
 
 bool
@@ -310,10 +321,10 @@ bool
 operator==(Index const& I, IndexVal const& iv);
 
 long inline
-dim(Index const& I) { return I.m(); }
+dim(Index const& I) { return I.dim(); }
 
 long inline
-dim(IndexVal const& I) { return I.m(); }
+dim(IndexVal const& I) { return I.dim(); }
 
 int inline
 primeLevel(Index const& I) { return I.primeLevel(); }
