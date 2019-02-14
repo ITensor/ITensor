@@ -4,8 +4,11 @@ o Add alternative to niter which starts at 1. Solver iterations? Eigen iteration
   --> Hard to make backwards compatible with table read mode
   ?-> Just change the definition by 1?
 
-! Fix removeQNs to work correctly for QDiag -> Diag
+! Test removeQNs is working correctly for QDiag -> Diag
   case. Remove the toDense function.
+
+X Replace i.m() with dim(i) throughout library
+o Replace dim throughout documentation
 
 ! Update website:
   o Detailed documentation
@@ -15,9 +18,10 @@ o Add alternative to niter which starts at 1. Solver iterations? Eigen iteration
     - removeQNs MPS function
   o List of deprecrations/guide to update code
   o ITensor book
+    - Update TRG to show use of Tags
+    - TRG code (book/trg.cc)
   o Tutorials
   o Code formulas
-    o Update TRG to show use of Tags
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
