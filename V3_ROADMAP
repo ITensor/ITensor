@@ -1,13 +1,5 @@
 (! means necessary / blocker for releasing v3)
 
-o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
-  --> Hard to make backwards compatible with table read mode
-  ?-> Just change the definition by 1?
-
-! Test removeQNs is working correctly for QDiag -> Diag
-  case. Remove the toDense function.
-
-X Replace i.m() with dim(i) throughout library
 o Replace dim throughout documentation
 
 ! Update website:
@@ -22,6 +14,10 @@ o Replace dim throughout documentation
     - TRG code (book/trg.cc)
   o Tutorials
   o Code formulas
+
+o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
+  --> Hard to make backwards compatible with table read mode
+  ?-> Just change the definition by 1?
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
@@ -70,6 +66,8 @@ Completed (this is to help keep track of changes made, but we should make an off
            list for the website):
 
 
+o Replace i.m() with dim(i) throughout library
+o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
 o Added .real and .cplx accepting vector<int> (pull #194)
 o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
 o Added errMPOProd and deprecated checkMPOProd
