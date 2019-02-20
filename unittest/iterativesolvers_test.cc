@@ -3,6 +3,7 @@
 #include "sample/Heisenberg.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/localmpo.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 using namespace std;
@@ -179,6 +180,120 @@ SECTION("IQFourSite")
 
     }
 
+SECTION("Arnoldi (No QN)")
+    {
+    const int N = 50;
+    const int Nc = N/2;
+    SpinHalf sites(N);
+
+    // Create random MPO
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = MPO(ampo);
+    for(int j = 1; j <= N; ++j)
+      {
+      randomize(H.Aref(j));
+      H.Aref(j) /= norm(H.A(j));
+      }
+    auto normH = sqrt(overlap(H,H));
+    for(int j = 1; j <= N; ++j)
+      H.Aref(j) /= pow(normH,1.0/N);
+
+    // Create random starting MPS
+    auto initState = InitState(sites);
+    for(int i = 1; i <= N; ++i)
+        initState.set(i,i%2==1 ? "Up" : "Dn");
+    auto psi = MPS(initState);
+    for(int j = 1; j < 2; ++j)
+      {
+      psi = applyMPO(H,psi);
+      normalize(psi);
+      }
+    for(int j = 1; j <= N; ++j)
+      {
+      randomize(psi.Aref(j));
+      psi.Aref(j) /= norm(psi.A(j));
+      }
+    psi.position(Nc);
+    normalize(psi);
+
+    LocalMPO<ITensor> PH(H);
+
+    psi.position(Nc);
+    PH.position(Nc,psi);
+
+    auto x = psi.A(Nc) * psi.A(Nc+1);
+    randomize(x);
+
+    auto lambda = arnoldi(PH,x,{"MaxIter",20,"ErrGoal",1e-14,"DebugLevel",0,"WhichEig","LargestMagnitude"});
+    auto PHx = x;
+    PH.product(x,PHx);
+
+    CHECK_CLOSE(norm(PHx-lambda*x)/norm(PHx),0.0);
+    }
+
+SECTION("Arnoldi (QN)")
+    {
+    const int N = 50;
+    const int Nc = N/2;
+    SpinHalf sites(N);
+
+    // Create random MPO
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = IQMPO(ampo);
+    for(int j = 1; j <= N; ++j)
+      {
+      randomize(H.Aref(j));
+      H.Aref(j) /= norm(H.A(j));
+      }
+    auto normH = sqrt(overlap(H,H));
+    for(int j = 1; j <= N; ++j)
+      H.Aref(j) /= pow(normH,1.0/N);
+
+    // Create random starting MPS
+    auto initState = InitState(sites);
+    for(int i = 1; i <= N; ++i)
+        initState.set(i,i%2==1 ? "Up" : "Dn");
+    auto psi = IQMPS(initState);
+    for(int j = 1; j < 2; ++j)
+      {
+      psi = applyMPO(H,psi);
+      normalize(psi);
+      }
+    for(int j = 1; j <= N; ++j)
+      {
+      randomize(psi.Aref(j));
+      psi.Aref(j) /= norm(psi.A(j));
+      }
+    psi.position(Nc);
+    normalize(psi);
+
+    LocalMPO<IQTensor> PH(H);
+
+    psi.position(Nc);
+    PH.position(Nc,psi);
+
+    auto x = psi.A(Nc) * psi.A(Nc+1);
+    randomize(x);
+
+    auto lambda = arnoldi(PH,x,{"MaxIter",20,"ErrGoal",1e-14,"DebugLevel",0,"WhichEig","LargestMagnitude"});
+    auto PHx = x;
+    PH.product(x,PHx);
+
+    CHECK_CLOSE(norm(PHx-lambda*x)/norm(PHx),0.0);
+
+    }
 SECTION("GMRES (ITensor, Real)")
     {
     auto a1 = Index("a1",3,Site);
