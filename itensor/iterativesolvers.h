@@ -635,7 +635,7 @@ gmres(BigMatrixT const& A,
         }
     }
 
-int
+int inline
 findEig(Vector const& vr, Vector const& vi, std::string whichEig)
     {
     int n = -1;
