@@ -344,6 +344,9 @@ setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
 Index inline
 replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew) { I.replaceTags(tsold,tsnew); return I; }
 
+Index
+tags(Index I, std::string st);
+
 //
 // Check if Index I contains the tags tsmatch.
 // If tsmatch==TagSet(All), return true

@@ -115,4 +115,27 @@ TEST_CASE("IndexTest")
         CHECK(hasTags(addTags(ic,"a,b"),"a,b,c"));
         }
 
+    SECTION("Tag Function")
+        {
+        auto i0 = Index(2);
+        
+        auto i = tags(i0, " -> i");
+        CHECK(hasTags(i,"i"));
+
+        i = tags(i, " -> site");
+        CHECK(hasTags(i,"i,site"));
+
+        i = tags(i, "i -> j");
+        CHECK(hasTags(i,"j,site"));
+
+        i = tags(i, "site -> ");
+        CHECK(hasTags(i,"j"));
+
+        i = tags(i, "j -> j,temp");
+        CHECK(hasTags(i,"j,temp"));
+
+        i = tags(i, "j,temp -> ");
+        CHECK(i==i0);
+
+        }
     }

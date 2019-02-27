@@ -159,8 +159,55 @@ operator<(Index const& i1, Index const& i2)
     return dim(i1) < dim(i2);
     }
 
+Index
+tags(Index I, std::string str)
+  {
+  // Remove spaces from input
+  str.erase(std::remove(str.begin(),str.end(),' '),str.end());
 
-
+  std::string swapstr = "<->";
+  size_t swapfound = str.find(swapstr);
+  if(swapfound==std::string::npos)
+    {
+    std::string repstr = "->";
+    size_t repfound = str.find(repstr);
+    if(repfound==std::string::npos)
+      throw std::runtime_error("String in tags(Index,std::string) must contain '->' or '<->'");
+    std::string oldtags = str.substr(0,repfound);
+    std::string newtags = str.substr(repfound+repstr.length(),str.length());
+    if(oldtags=="")
+      {
+      I.addTags(newtags);
+      }
+    else if(hasTags(I,oldtags))
+      {
+      I.replaceTags(oldtags,newtags);
+      }
+    }
+  else
+    {
+    std::string tags1 = str.substr(0,swapfound);
+    std::string tags2 = str.substr(swapfound+swapstr.length(),str.length());
+    //I.swapTags(tags1,tags2);
+    auto ts1 = TagSet(tags1);
+    auto ts2 = TagSet(tags2);
+    auto hasts1 = hasTags(I,ts1);
+    auto hasts2 = hasTags(I,ts2);
+    if(hasts1 && hasts2)
+      {
+      return I;
+      }
+    else if(hasts1)
+      {
+      I.replaceTags(ts1,ts2);
+      }
+    else if(hasts2)
+      {
+      I.replaceTags(ts2,ts1);
+      }
+    }
+  return I;
+  }
 
 std::ostream& 
 operator<<(std::ostream & s, Index const& I)
