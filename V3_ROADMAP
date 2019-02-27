@@ -18,6 +18,31 @@ o Replace dim throughout documentation
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Hard to make backwards compatible with table read mode
   ?-> Just change the definition by 1?
+o Related: Make arnoldi, gmres, and davidson Args consistent
+  o gmres and arnoldi have restarts, so there are two Args:
+    the size of the Krylov space, and then the number of times
+    they get restarted. Davidson doesn't have any restarts (but maybe
+    it should?), so it just has the option of the Krylov size, which 
+    equals the number of total iterations.
+  o It seems common to specify the maximum Krylov size, and then
+    also the maximum number of iterations, which means the algorithm
+    gets restarted (maximum number of iterations) % (Krylov size) number
+    of times. I think this is pretty standard, and good since it
+    let's the user be explicit about the number of matrix-vector multiplications
+    to perform
+  o Matt's proposal: 
+    - "MaxIterations" controls the total matrix-vector multiplies
+    - "KrylovSize" ("SubspaceSize"???) controls the maximum Krylov space size
+    `arnoldi` and `gmres` will have both of these, and davidson only has "MaxIterations"
+    (or "KrylovSize"???).
+    However, "MaxIterations" is not a great name for the DMRG interface, so
+    maybe it gets translated to "SolverIterations"? But we also may want to
+    leave the option open for having restarts/using a different solver,
+    like Lanczos... I think this is something we need to discuss, since it
+    gets pretty complicated.
+
+o Add `tags(IndexSet,string)` and `tags(ITensor,string)`
+o Remove whitespace from tags
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
