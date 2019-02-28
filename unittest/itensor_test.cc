@@ -652,7 +652,7 @@ SECTION("Complex Scalar Multiply")
     CHECK(typeOf(T) == Type::DenseReal);
     CHECK(typeOf(A) == Type::DenseCplx);
 
-    randomize(T,"Complex");
+    T.randomize("Complex");
     CHECK(typeOf(T) == Type::DenseCplx);
 
     auto z = 2.2-3.1_i;

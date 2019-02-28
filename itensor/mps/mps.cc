@@ -125,8 +125,8 @@ MPS::
 void MPS::
 randomize()
     {
-    if(maxM(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension m>1.\nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
-    for(auto i : range1(N_)) itensor::randomize(A_[i]);
+    if(maxM(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension m>1."); // TODO: \nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
+    for(auto i : range1(N_)) A_[i].randomize();
     }
 
 MPS

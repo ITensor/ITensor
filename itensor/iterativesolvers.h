@@ -90,7 +90,7 @@ davidson(BigMatrixT const& A,
         auto nrm = norm(phi[j]);
         while(nrm == 0.0) 
             {
-            randomize(phi[j]);
+            phi[j].randomize();
             nrm = norm(phi[j]);
             }
         phi[j] *= 1./nrm;
@@ -298,7 +298,7 @@ davidson(BigMatrixT const& A,
                 //try randomizing
                 if(debug_level_ >= 2) println("Vector not independent, randomizing");
                 q = V.at(ni-1);
-                randomize(q);
+                q.randomize();
                 qnrm = norm(q);
                 //Do another orthog pass
                 --pass;

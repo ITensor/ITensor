@@ -77,7 +77,7 @@ SECTION("Constructors (m>1)")
         }
 
     for(int n = 1; n <= N; ++n)
-      randomize(psi.Aref(n));
+      psi.Aref(n).randomize();
 
     psi.position(1);
     for(int n = 1; n < N; ++n)
