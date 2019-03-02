@@ -40,6 +40,7 @@ diagHImpl(ITensor H,
     auto do_truncate = args.getBool("Truncate",def_do_trunc);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     auto showeigs = args.getBool("ShowEigs",false);
     auto iname = args.getString("IndexName","d");
 
@@ -82,7 +83,22 @@ diagHImpl(ITensor H,
         {
         //if(DD(1) < 0) DD *= -1; //DEBUG
         tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff,args);
-        m = DD.size();
+        if(ignore_degeneracy)
+            {
+            m = DD.size();
+            }
+        else
+            {
+            long total_m = 0;
+            for(decltype(DD.size()) n = 0; n < DD.size() && DD(n) > docut; ++n)
+                {
+                total_m += 1;
+                }
+            m = total_m;
+            }
+#ifdef DEBUG
+        if(m==0) throw std::runtime_error("Index of D after diagHermitian is empty. Consider raising Maxm or Cutoff, or making IgnoreDegeneracy true");
+#endif
         reduceCols(UU,m);
         }
 
@@ -130,7 +146,7 @@ Spectrum
 diagHImpl(IQTensor    H, 
           IQTensor  & U, 
           IQTensor  & D,
-          Args const& args)
+          Args        args)
     {
     SCOPED_TIMER(7)
     auto cutoff = args.getReal("Cutoff",0.);
@@ -140,9 +156,11 @@ diagHImpl(IQTensor    H,
     auto do_truncate = args.getBool("Truncate",def_do_trunc);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     auto showeigs = args.getBool("ShowEigs",false);
     auto compute_qns = args.getBool("ComputeQNs",false);
     auto iname = args.getString("IndexName","d");
+    args.add("IgnoreDegeneracy",ignore_degeneracy);
     auto itype = getIndexType(args,"IndexType",Link);
     if(H.r() != 2)
         {
@@ -267,6 +285,7 @@ diagHImpl(IQTensor    H,
     IQIndex::storage iq;
     iq.reserve(Nblock);
 
+    long total_m = 0;
     for(auto b : range(Nblock))
         {
         auto& UU = Umats.at(b);
@@ -279,6 +298,14 @@ diagHImpl(IQTensor    H,
             //Truncate all elems of d falling below docut
             while(this_m > 0 && d(this_m-1) <= docut) --this_m;
             }
+        //We need to check that the number of states doesn't
+        //go above m, which can happen if there are degeneracies
+        total_m += this_m;
+        if(total_m > m)
+          {
+          this_m += (m-total_m);
+          total_m = m;
+          }
 
         if(this_m == 0) 
             { 
