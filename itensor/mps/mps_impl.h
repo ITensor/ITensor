@@ -116,9 +116,8 @@ call .position(j) or .orthogonalize() to set ortho center");
 Real inline
 normalize(MPS & psi)
     {
-    auto nrm = norm(psi);
-    if(std::fabs(nrm) < 1E-20) Error("Zero norm");
-    psi /= nrm;
+    Global::warnDeprecated("normalize(MPS) is deprecated in favor of .normalize()");
+    auto nrm = psi.normalize();
     return nrm;
     }
 

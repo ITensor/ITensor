@@ -73,6 +73,9 @@ class MPS
     void
     setA(int i, ITensor && nA) { Aref(i) = std::move(nA); }
 
+    Real
+    normalize();
+
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
     ITensor& 

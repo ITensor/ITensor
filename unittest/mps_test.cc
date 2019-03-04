@@ -96,6 +96,10 @@ SECTION("Constructors (m>1)")
         CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
         CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
+
+    psi.normalize();
+    CHECK(norm(psi)==1);
+
     }
 
 SECTION("Random constructors (m==1)")

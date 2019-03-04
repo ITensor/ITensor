@@ -1,7 +1,5 @@
 (! means necessary / blocker for releasing v3)
 
-o Replace dim throughout documentation
-
 ! Update website:
   o Detailed documentation
     - info about QN blocks in Index objects
@@ -9,12 +7,20 @@ o Replace dim throughout documentation
     - removeQNs ITensor function
     - removeQNs MPS function
   o List of deprecrations/guide to update code
+  o Replace dim throughout documentation
   o ITensor book
     - Update TRG to show use of Tags
     - TRG code (book/trg.cc)
   o Tutorials
   o Code formulas
 
+o Replace .m() in source
+  o averageM(psi) -> averageLinkDim
+  o maxM(psi) -> maxLinkDim
+o Finalize tags interface
+  o Add `tags(IndexSet,string)` and `tags(ITensor,string)`
+  o Remove whitespace from tags
+  o Add access of prime level through the tag system
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Hard to make backwards compatible with table read mode
   ?-> Just change the definition by 1?
@@ -41,9 +47,6 @@ o Related: Make arnoldi, gmres, and davidson Args consistent
     like Lanczos... I think this is something we need to discuss, since it
     gets pretty complicated.
 
-o Add `tags(IndexSet,string)` and `tags(ITensor,string)`
-o Remove whitespace from tags
-
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
   ! Jenkins is passing
@@ -60,6 +63,21 @@ o Remove whitespace from tags
 -----------------------------------------------
 
 Optional (possibly post V3, because not breaking changes):
+o Remove "Link" and "Site" from MPS and MPO functions
+  o linkInd(psi,b)
+  o rightLinkInd(psi,b)
+  o leftLinkInd(psi,b)
+  o DMRG, applyMPO, etc.
+o Implement randomMPS(InitState,m>1)
+  o Make initial MPS from initstate, then apply a random unitary circuit
+o Define QDense * Dense contraction directly
+o Make modifying functions member functions and all other functions free
+  (at least for externally-facing functions)
+o Add MPS(std::vector<ITensor>) constructor
+o Generalize the convention for diagHermitian to accept a general pair of indices
+  {ia,ja,ka,...,ib,jb,kb...} where ia==replaceTags(ib,tags(ib),tags(ia)), etc.
+o Generalize the convention of DMRG and applyMPO to accept MPOs with more general
+  tag conventions, not just {s1,s2,...,s1',s2',...}
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
@@ -68,20 +86,17 @@ Optional (possibly post V3, because not breaking changes):
     the columns run over the combined index (l,j). I think this is especially useful 
     for QN conserving ITensors, where it could make it easier to visualize
     blocks of the ITensor.
-o Implement randomMPS(InitState,m>1)
-o Define QDense * Dense contraction directly
-o Add back some prime functions:
+? Add back some prime functions:
   o A.primeExcept(plinc=1,index1,index2,...)
   o A.primeExcept(plinc=1,tagset)
   o A.mapPrime(pold1,pnew1,index1,pold2,pnew2,index2,...)
 ? Add {"Randomize=",true} args for MPS(SiteSet)
   o Right now, just call randomMPS(siteset)
+  o Matt: I prefer randomMPS(...) since it is consistent with randomITensor(...),
+    though we could make ITensor(...) accept {"Randomize=",true} args
 ? Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
 ? Add some more tag functions
   o A.addTags(tagset,imatch1,imatch2,...)
-o Make modifying functions member functions and all other functions free
-  (at least for externally-facing functions)
-  o randomize(ITensor&) -> ITensor::randomize()
 ? In site sets, make all of the indices have the same ids but different tags
 
 
@@ -91,6 +106,8 @@ Completed (this is to help keep track of changes made, but we should make an off
            list for the website):
 
 
+o Deprecate normalize(MPS& psi) in favor of psi.normalize()
+o Deprecate randomize(ITensor& T) in favor of T.randomize()
 o Replace i.m() with dim(i) throughout library
 o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
 o Added .real and .cplx accepting vector<int> (pull #194)

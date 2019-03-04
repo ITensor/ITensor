@@ -129,6 +129,15 @@ randomize()
     for(auto i : range1(N_)) A_[i].randomize();
     }
 
+Real MPS::
+normalize()
+    {
+    auto nrm = norm(*this);
+    if(std::fabs(nrm) < 1E-20) Error("Zero norm");
+    *this /= nrm;
+    return nrm;
+    }
+
 MPS
 randomMPS(SiteSet const& sites, int m)
     {
