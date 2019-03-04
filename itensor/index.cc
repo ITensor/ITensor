@@ -301,7 +301,7 @@ sim(Index const& I, int plev)
     }
 
 string
-showm(Index const& I) { return format("m=%d",dim(I)); }
+showDim(Index const& I) { return format("dim=%d",dim(I)); }
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)
