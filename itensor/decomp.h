@@ -167,7 +167,7 @@ eigen(ITensor const& T,
 
 
 Spectrum 
-svdRank2(ITensor const& A, 
+svdOrd2(ITensor const& A, 
          Index const& ui, 
          Index const& vi,
          ITensor & U, 
@@ -254,7 +254,7 @@ svd(ITensor AA,
     auto ui = commonIndex(AA,Ucomb);
     auto vi = commonIndex(AA,Vcomb);
 
-    auto spec = svdRank2(AA,ui,vi,U,D,V,args);
+    auto spec = svdOrd2(AA,ui,vi,U,D,V,args);
 
     U = dag(Ucomb) * U;
     V = V * dag(Vcomb);
@@ -368,7 +368,7 @@ diagHermitian(ITensor const& M,
     // on its prime level spacing
     //
     auto k = M.inds().front();
-    auto kps = stdx::reserve_vector<int>(rank(M));
+    auto kps = stdx::reserve_vector<int>(ord(M));
     for(auto& i : M.inds()) if(equalsIgnorePrime(i,k)) kps.push_back(i.primeLevel());
     if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
         {
@@ -384,7 +384,7 @@ diagHermitian(ITensor const& M,
     //pdiff == spacing between lower and higher prime level index pairs
     auto pdiff = mdiff-idiff;
 
-    auto inds = stdx::reserve_vector<Index>(rank(M)/2);
+    auto inds = stdx::reserve_vector<Index>(ord(M)/2);
     for(auto& i : M.inds())
     for(auto& j : M.inds())
         {
@@ -393,7 +393,7 @@ diagHermitian(ITensor const& M,
             inds.push_back(i);
             }
         }
-    if(inds.empty() || rank(M)/2 != (long)inds.size()) 
+    if(inds.empty() || ord(M)/2 != (long)inds.size()) 
         {
         Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
@@ -453,7 +453,7 @@ struct GetBlocks
     };
 
 template<typename T>
-struct Rank2Block
+struct Ord2Block
     {
     MatRefc<T> M;
     long i1 = 0,
@@ -461,7 +461,7 @@ struct Rank2Block
     };
 
 template<typename T>
-std::vector<Rank2Block<T>>
+std::vector<Ord2Block<T>>
 doTask(GetBlocks<T> const& G, 
        QDense<T> const& d);
 

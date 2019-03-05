@@ -89,7 +89,7 @@ class Index
     Index();
 
     explicit
-    Index(long m, 
+    Index(long dim, 
           TagSet const& ts = TagSet());
 
     explicit
