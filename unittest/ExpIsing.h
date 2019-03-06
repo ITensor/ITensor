@@ -40,7 +40,7 @@ ExpIsing(SpinHalf const& sites,
     tau_(tau),
     initted_(false)
     { 
-    N_ = sites_.N();
+    N_ = sites_.length();
     h_ = args.getReal("h",0.);
     }
 

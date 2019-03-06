@@ -652,7 +652,7 @@ SECTION("Complex Scalar Multiply")
     CHECK(typeOf(T) == Type::DenseReal);
     CHECK(typeOf(A) == Type::DenseCplx);
 
-    randomize(T,"Complex");
+    T.randomize("Complex");
     CHECK(typeOf(T) == Type::DenseCplx);
 
     auto z = 2.2-3.1_i;
@@ -2839,7 +2839,7 @@ SECTION("NormTest")
 //    t1.randomize();
 //    t1 *= -8.232244;
 //    Vector d1 = t1.diag();
-//    for(int i = 1; i <= minM(t1.indices()); ++i)
+//    for(int i = 1; i <= minDim(t1.indices()); ++i)
 //        {
 //        CHECK(fabs(d1(i)-t1(b3(i),b4(i))) < 1E-12);
 //        }

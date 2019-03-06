@@ -58,10 +58,10 @@ MPS::
 MPS(SiteSet const& sites,
     int m)
     : 
-    N_(sites.N()), 
-    A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
+    N_(sites.length()), 
+    A_(sites.length()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
-    r_orth_lim_(sites.N()+1),
+    r_orth_lim_(sites.length()+1),
     sites_(sites), 
     atb_(1),
     writedir_("./"),
@@ -73,8 +73,8 @@ MPS(SiteSet const& sites,
 MPS::
 MPS(InitState const& initState)
     : 
-    N_(initState.sites().N()),
-    A_(initState.sites().N()+2), //idmrg may use A_[0] and A[N+1]
+    N_(initState.sites().length()),
+    A_(initState.sites().length()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
     sites_(initState.sites()), 
@@ -125,8 +125,17 @@ MPS::
 void MPS::
 randomize()
     {
-    if(maxM(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension m>1.\nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
-    for(auto i : range1(N_)) itensor::randomize(A_[i]);
+    if(maxLinkDim(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension greater than 1."); // TODO: \nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
+    for(auto i : range1(N_)) A_[i].randomize();
+    }
+
+Real MPS::
+normalize()
+    {
+    auto nrm = norm(*this);
+    if(std::fabs(nrm) < 1E-20) Error("Zero norm");
+    *this /= nrm;
+    return nrm;
     }
 
 MPS
@@ -228,7 +237,7 @@ write(std::ostream& s) const
     if(do_write_)
         Error("MPS::write not yet supported if doWrite(true)");
 
-    itensor::write(s,N());
+    itensor::write(s,length());
     for(auto j : range(A_.size()))
         {
         itensor::write(s,A_[j]);
@@ -371,7 +380,7 @@ new_tensors(std::vector<ITensor>& A,
             SiteSet const& sites,
             int m)
     {
-    auto N = sites.N();
+    auto N = length(sites);
     auto a = std::vector<Index>(N+1);
     if(hasQNs(sites))
         {
@@ -621,7 +630,7 @@ orthogonalize(Args const& args)
             //Infer maxm from bond dim of original MPS
             //i.e. upper bound on rank of rho
             auto ci = commonIndex(O,E.at(j-1));
-            auto maxm = (ci) ? ci.m() : 1l;
+            auto maxm = (ci) ? dim(ci) : 1l;
             dargs.add("Maxm",maxm);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
@@ -634,6 +643,12 @@ orthogonalize(Args const& args)
 
     l_orth_lim_ = 0;
     r_orth_lim_ = 2;
+    }
+
+int
+length(MPS const& psi)
+    {
+    return psi.length();
     }
 
 //Methods for use internally by checkOrtho
@@ -681,7 +696,7 @@ checkOrtho(MPS const& psi)
         return false;
         }
 
-    for(int i = psi.N(); i >= psi.rightLim(); --i)
+    for(int i = length(psi); i >= psi.rightLim(); --i)
     if(!checkOrtho(psi,i,false))
         {
         std::cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
@@ -784,9 +799,9 @@ InitState::
 InitState(SiteSet const& sites)
     : 
     sites_(sites), 
-    state_(1+sites.N())
+    state_(1+length(sites))
     { 
-    for(int n = 1; n <= sites_.N(); ++n)
+    for(int n = 1; n <= length(sites_); ++n)
         {
         state_[n] = sites_(n)(1);
         }
@@ -796,7 +811,7 @@ InitState::
 InitState(SiteSet const& sites, String const& state)
     : 
     sites_(sites), 
-    state_(1+sites.N())
+    state_(1+length(sites))
     { 
     setAll(state);
     }
@@ -812,7 +827,7 @@ set(int i, const String& state)
 InitState& InitState::
 setAll(String const& state)
     { 
-    for(int n = 1; n <= sites_.N(); ++n)
+    for(int n = 1; n <= length(sites_); ++n)
         {
         state_[n] = sites_(n,state);
         }
@@ -822,10 +837,10 @@ setAll(String const& state)
 void InitState::
 checkRange(int i) const
     {
-    if(i > sites_.N() || i < 1) 
+    if(i > length(sites_) || i < 1) 
         {
         println("i = ",i);
-        println("Valid range is 1 to ",sites_.N());
+        println("Valid range is 1 to ",length(sites_));
         Error("i out of range");
         }
     }
@@ -833,7 +848,7 @@ checkRange(int i) const
 bool
 hasQNs(InitState const& initstate)
     {
-    for(auto i : range1(initstate.sites().N()))
+    for(auto i : range1(length(initstate.sites())))
         if(not hasQNs(initstate(i))) return false;
     return true;
     }
@@ -853,7 +868,7 @@ periodicWrap(int j, int N)
 int 
 findCenter(MPS const& psi)
     {
-    for(int j = 1; j <= psi.N(); ++j) 
+    for(int j = 1; j <= length(psi); ++j) 
         {
         auto& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
@@ -880,7 +895,7 @@ std::ostream&
 operator<<(std::ostream& s, MPS const& M)
     {
     s << "\n";
-    for(int i = 1; i <= M.N(); ++i) 
+    for(int i = 1; i <= length(M); ++i) 
         {
         s << M.A(i) << "\n";
         }
@@ -891,7 +906,7 @@ std::ostream&
 operator<<(std::ostream& s, InitState const& state)
     {
     s << "\n";
-    for(int i = 1; i <= state.sites().N(); ++i) 
+    for(int i = 1; i <= length(state.sites()); ++i) 
         {
         s << state(i) << "\n";
         }
@@ -902,7 +917,7 @@ template <class MPSType>
 MPSType
 removeQNs(MPSType const& psi)
     {
-    int N = psi.N();
+    int N = length(psi);
     MPSType res;
     if(psi.sites()) res = MPSType(psi.sites());
     else            res = MPSType(N);
@@ -970,8 +985,8 @@ Cplx
 overlapC(MPSType const& psi, 
          MPSType const& phi)
     {
-    auto N = psi.N();
-    if(N != phi.N()) Error("overlap: mismatched N");
+    auto N = length(psi);
+    if(N != length(phi)) Error("overlap: mismatched N");
 
     auto l1 = linkInd(psi,1);
     auto L = phi.A(1);
@@ -1096,7 +1111,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //        return false;
 //        }
 //
-//    for(int i = N(); i >= r_orth_lim_; --i)
+//    for(int i = length(); i >= r_orth_lim_; --i)
 //    if(!checkRightOrtho(i))
 //        {
 //        cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
@@ -1202,11 +1217,11 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //convertToIQ(const SiteSet& sites, const vector<ITensor>& A, 
 //            vector<IQTensor>& qA, QN totalq, Real cut)
 //    {
-//    const int N = sites.N();
+//    const int N = length(sites);
 //    qA.resize(A.size());
 //    const bool is_mpo = hasIndex(A[1],sites.siP(1));
-//    const int Dim = sites.si(1).m();
-//    if(sites.si(2).m() != Dim)
+//    const int Dim = dim(sites.si(1));
+//    if(dim(sites.si(2)) != Dim)
 //        Error("convertToIQ assumes uniform site dimension");
 //    const int PDim = (is_mpo ? Dim : 1);
 //
@@ -1306,7 +1321,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //            Vector& D = qD[q];
 //            if(count == 0) 
 //                { 
-//                D.resize(bond.m()); 
+//                D.resize(dim(bond)); 
 //                for(auto& el : D) el = 0; 
 //                }
 //
@@ -1314,7 +1329,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                {
 //                println("For n = ",n);
 //                printfln("Got a block with norm %.10f",norm(block));
-//                println("bond.m() = ",bond.m());
+//                println("dim(bond) = ",dim(bond));
 //                PrintData(block);
 //                if(s != 1) PrintData(comp);
 //                }
@@ -1324,7 +1339,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                { keep_block = true; }
 //            else
 //                {
-//                if(bond.m() == 1 && norm(block) != 0) 
+//                if(dim(bond) == 1 && norm(block) != 0) 
 //                    { 
 //                    for(auto& el : D) el = 1; 
 //                    keep_block = true; 
@@ -1347,7 +1362,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //
 //                    Real rel_cut = -1;
 //                    const ITensor& sb = summed_block;
-//                    for(int j = 1; j <= bond.m(); ++j)
+//                    for(int j = 1; j <= dim(bond); ++j)
 //                        { rel_cut = std::max(std::fabs(sb.real(bond(j))),rel_cut); }
 //                    assert(rel_cut >= 0);
 //                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
@@ -1355,7 +1370,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    //cout << "rel_cut == " << rel_cut << "\n";
 //
 //                    if(rel_cut > 0)
-//                    for(int j = 1; j <= bond.m(); ++j)
+//                    for(int j = 1; j <= dim(bond); ++j)
 //                        {
 //                        if(std::fabs(sb.real(bond(j))) > rel_cut) 
 //                            { 
@@ -1479,7 +1494,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //
 //    if(!A_[1].hasIndex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
 //    bool is_mpo = A_[1].hasIndex(prime(si(1)));
-//    const int Dim = si(1).m();
+//    const int Dim = dim(si(1));
 //    const int PDim = (is_mpo ? Dim : 1);
 //
 //    vector<IQIndex> linkind(N);
@@ -1535,13 +1550,13 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //            //the right Link Index to keep for the current QN q)
 //            int count = qD.count(q);
 //            Vector& D = qD[q];
-//            if(count == 0) { D.ReDimension(bond.m()); D = 0; }
+//            if(count == 0) { D.ReDimension(dim(bond)); D = 0; }
 //
 //            if(s == show_s)
 //            {
 //                cout << format("For n = %d\n")%n;
 //                cout << format("Got a block with norm %.10f\n")%block.norm();
-//                cout << format("bond.m() = %d\n")%bond.m();
+//                cout << format("dim(bond) = %d\n")%dim(bond);
 //                PrintData(block);
 //                if(s != 1) PrintData(comp);
 //            }
@@ -1550,7 +1565,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //            if(s == N) keep_block = true;
 //            else
 //            {
-//                if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
+//                if(dim(bond) == 1 && block.norm() != 0) { D = 1; keep_block = true; }
 //                else
 //                {
 //                    ITensor summed_block;
@@ -1567,7 +1582,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    //summed_block.print("summed_block");
 //
 //                    Real rel_cut = -1;
-//                    for(int j = 1; j <= bond.m(); ++j)
+//                    for(int j = 1; j <= dim(bond); ++j)
 //                    { rel_cut = std::max(std::fabs(summed_block.val1(j)),rel_cut); }
 //                    assert(rel_cut >= 0);
 //                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
@@ -1575,7 +1590,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    //cout << "rel_cut == " << rel_cut << "\n";
 //
 //                    if(rel_cut > 0)
-//                    for(int j = 1; j <= bond.m(); ++j)
+//                    for(int j = 1; j <= dim(bond); ++j)
 //                    if(std::fabs(summed_block.val1(j)) > rel_cut) 
 //                    { D(j) = 1; keep_block = true; }
 //                }

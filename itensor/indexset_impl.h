@@ -382,7 +382,7 @@ hasIndex(const IndexSet& iset,
 	}
 
 long inline
-minM(const IndexSet& iset)
+minDim(const IndexSet& iset)
     {
     if(iset.empty()) return 1l;
     auto mm = dim(iset[0]);
@@ -393,7 +393,7 @@ minM(const IndexSet& iset)
     }
 
 long inline
-maxM(const IndexSet& iset)
+maxDim(const IndexSet& iset)
     {
     if(iset.empty()) return 1l;
 

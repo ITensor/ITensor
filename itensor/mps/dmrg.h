@@ -205,7 +205,7 @@ DMRGWorker(MPS & psi,
     const bool quiet = args.getBool("Quiet",false);
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
 
-    const int N = psi.N();
+    const int N = length(psi);
     Real energy = NAN;
 
     psi.position(1);
@@ -284,7 +284,7 @@ DMRGWorker(MPS & psi,
     
         } //for loop over sw
     
-    normalize(psi);
+    psi.normalize();
 
     return energy;
     }

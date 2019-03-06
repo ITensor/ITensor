@@ -64,7 +64,7 @@ template <class MPSType>
 void
 swapUnitCells(MPSType & psi)
     {
-    auto Nuc = psi.N()/2;
+    auto Nuc = length(psi)/2;
     for(auto n : range1(Nuc))
         {
         psi.Aref(n).swap(psi.Aref(Nuc+n));
@@ -111,7 +111,7 @@ idmrg(MPS & psi,
     auto inverse_cut = args.getReal("InverseCut",1E-8);
     auto actual_nucsweeps = nucsweeps;
 
-    int N0 = psi.N(); //Number of sites in center
+    int N0 = length(psi); //Number of sites in center
     int Nuc = N0/2;   //Number of sites in unit cell
     int N = N0;       //Current system size
 
@@ -164,11 +164,11 @@ idmrg(MPS & psi,
         if(do_randomize)
             {
             println("Randomizing psi");
-            for(int j = 1; j <= psi.N(); ++j)
+            for(int j = 1; j <= length(psi); ++j)
                 {
-                randomize(psi.Aref(j));
+                psi.Aref(j).randomize();
                 }
-            normalize(psi);
+            psi.normalize();
             }
 
         printfln("\n    Energy per site = %.14f\n",energy/N0);
@@ -248,7 +248,7 @@ idmrg(MPS & psi,
         if(show_overlap || olevel >= 1)
             {
             Real ovrlap, im;
-            psiphi(initPsi,psi,ovrlap,im);
+            overlap(initPsi,psi,ovrlap,im);
             print("\n    Overlap of initial and final psi = ");
             printfln((std::fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),std::fabs(ovrlap));
             print("\n    1-Overlap of initial and final psi = ");
@@ -337,7 +337,7 @@ idmrg(MPS & psi,
         psi.Aref(1) *= D;
 
         psi.orthogonalize();
-        normalize(psi);
+        psi.normalize();
 
         } //for loop over sw
     
@@ -362,7 +362,7 @@ idmrg(MPS      & psi,
     //picking out ending state of MPO
     //automaton:
     auto lval = idmrgRVal();
-    lval.IL = ITensor(dag(H.A(H.N()+1)));
+    lval.IL = ITensor(dag(H.A(length(H)+1)));
     return idmrg(psi,H,lval,sweeps,obs,args);
     }
 

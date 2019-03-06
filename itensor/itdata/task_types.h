@@ -476,7 +476,7 @@ checkEltInd(IndexSet const& is,
             println();
             Error("Out of range: IndexVals are 1-indexed for getting tensor elements");
             }
-        if(i >= is[k].m())
+        if(i >= dim(is[k]))
             {
             print("inds = ");
             for(auto j : inds) print(1+j," ");

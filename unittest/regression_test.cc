@@ -21,7 +21,7 @@ TEST_CASE("ITensor Times IndexVal (QN)")
 
     Index l(4);
     ITensor T(l);
-    randomize(T);
+    T.randomize();
 
     ITensor R = T * setElt(s(2));
 

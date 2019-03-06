@@ -129,7 +129,7 @@ class LocalMPO
     reset()
         {
         LHlim_ = 0;
-        RHlim_ = Op_->N()+1;
+        RHlim_ = Op_->length()+1;
         }
 
     ITensor const&
@@ -256,9 +256,9 @@ inline LocalMPO::
 LocalMPO(const MPO& H, 
          const Args& args)
     : Op_(&H),
-      PH_(H.N()+2),
+      PH_(H.length()+2),
       LHlim_(0),
-      RHlim_(H.N()+1),
+      RHlim_(H.length()+1),
       nc_(2),
       Psi_(0)
     { 
@@ -270,9 +270,9 @@ inline LocalMPO::
 LocalMPO(const MPS& Psi, 
          const Args& args)
     : Op_(0),
-      PH_(Psi.N()+2),
+      PH_(Psi.length()+2),
       LHlim_(0),
-      RHlim_(Psi.N()+1),
+      RHlim_(Psi.length()+1),
       nc_(2),
       Psi_(&Psi)
     { 
@@ -285,15 +285,15 @@ LocalMPO(const MPO& H,
          const ITensor& LH, const ITensor& RH,
          const Args& args)
     : Op_(&H),
-      PH_(H.N()+2),
+      PH_(H.length()+2),
       LHlim_(0),
-      RHlim_(H.N()+1),
+      RHlim_(H.length()+1),
       nc_(2),
       Psi_(0)
     { 
     PH_[0] = LH;
-    PH_[H.N()+1] = RH;
-    if(H.N()==2)
+    PH_[H.length()+1] = RH;
+    if(H.length()==2)
         lop_.update(Op_->A(1),Op_->A(2),L(),R());
     if(args.defined("NumCenter"))
         numCenter(args.getInt("NumCenter"));
@@ -305,14 +305,14 @@ LocalMPO(MPS const& Psi,
          ITensor const& RP,
          Args const& args)
     : Op_(0),
-      PH_(Psi.N()+2),
+      PH_(Psi.length()+2),
       LHlim_(0),
-      RHlim_(Psi.N()+1),
+      RHlim_(Psi.length()+1),
       nc_(2),
       Psi_(&Psi)
     { 
     PH_[0] = LP;
-    PH_[Psi.N()+1] = RP;
+    PH_[Psi.length()+1] = RP;
     if(args.defined("NumCenter"))
         numCenter(args.getInt("NumCenter"));
     }
@@ -325,7 +325,7 @@ LocalMPO(MPO const& H,
          int RHlim,
          Args const& args)
     : Op_(&H),
-      PH_(H.N()+2),
+      PH_(H.length()+2),
       LHlim_(LHlim),
       RHlim_(RHlim),
       nc_(2),
@@ -333,7 +333,7 @@ LocalMPO(MPO const& H,
     { 
     PH_.at(LHlim) = LH;
     PH_.at(RHlim) = RH;
-    if(H.N()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(H.length()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
     if(args.defined("NumCenter")) numCenter(args.getInt("NumCenter"));
     }
 
@@ -582,7 +582,7 @@ setRHlim(int val)
         PH_.at(RHlim_) = ITensor();
         }
     RHlim_ = val;
-    if(RHlim_ > Op_->N()) 
+    if(RHlim_ > Op_->length()) 
         {
         //Set to null tensor and return
         PH_.at(RHlim_) = ITensor();

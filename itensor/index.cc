@@ -122,7 +122,7 @@ operator=(long val) const
 bool 
 operator==(Index const& i1, Index const& i2)
     { 
-    return (i1.id() == i2.id()) && (tags(i1) == tags(i2)) && (i1.primeLevel() == i2.primeLevel()); 
+    return (id(i1) == id(i2)) && (tags(i1) == tags(i2)) && (primeLevel(i1) == primeLevel(i2)); 
     }
 
 bool 
@@ -134,7 +134,7 @@ operator!=(Index const& i1, Index const& i2)
 bool
 equalsIgnorePrime(Index const& i1, Index const& i2)
     { 
-    return (i1.id() == i2.id()) && (tags(i1) == tags(i2));
+    return (id(i1) == id(i2)) && (tags(i1) == tags(i2));
     }
 
 bool
@@ -142,8 +142,8 @@ operator>(Index const& i1, Index const& i2)
     { 
     if(dim(i1) == dim(i2)) 
         {
-        if(i1.id() == i2.id()) return i1.primeLevel() > i2.primeLevel();
-        return i1.id() > i2.id();
+        if(id(i1) == id(i2)) return primeLevel(i1) > primeLevel(i2);
+        return id(i1) > id(i2);
         }
     return dim(i1) > dim(i2);
     }
@@ -153,8 +153,8 @@ operator<(Index const& i1, Index const& i2)
     {
     if(dim(i1) == dim(i2)) 
         {
-        if(i1.id() == i2.id()) return i1.primeLevel() < i2.primeLevel();
-        return i1.id() < i2.id();
+        if(id(i1) == id(i2)) return primeLevel(i1) < primeLevel(i2);
+        return id(i1) < id(i2);
         }
     return dim(i1) < dim(i2);
     }
@@ -217,19 +217,19 @@ operator<<(std::ostream & s, Index const& I)
     s << dim(I);
     if(Global::showIDs()) 
         {
-        s << "|id=" << (I.id() % 1000);
-        //s << "," << I.id();
+        s << "|id=" << (id(I) % 1000);
+        //s << "," << id(I);
         }
     s << ")"; 
-    if(I.primeLevel() > 0) 
+    if(primeLevel(I) > 0) 
         {
-        if(I.primeLevel() > 3)
+        if(primeLevel(I) > 3)
             {
-            s << "'" << I.primeLevel();
+            s << "'" << primeLevel(I);
             }
         else
             {
-            for(int n = 1; n <= I.primeLevel(); ++n)
+            for(int n = 1; n <= primeLevel(I); ++n)
                 s << "'";
             }
         }

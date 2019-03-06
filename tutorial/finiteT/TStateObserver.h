@@ -67,7 +67,7 @@ measure(const Args& args)
         long maxm = 0;
         for(int b = 1; b < psi_.N(); ++b)
             {
-            maxm = std::max(maxm,linkInd(psi_,b).m());
+            maxm = std::max(maxm,dim(linkInd(psi_,b)));
             }
         printfln("%2.f%%:%d ",percentdone,maxm);
         }

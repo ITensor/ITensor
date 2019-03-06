@@ -368,7 +368,7 @@ template <class T>
 Cplx
 doTask(SumEls S, Diag<T> const& d) 
     { 
-    if(d.allSame()) return Real(minM(S.is))*d.val;
+    if(d.allSame()) return Real(minDim(S.is))*d.val;
     T sum = 0;
     for(const auto& elt : d.store)
         sum += elt;

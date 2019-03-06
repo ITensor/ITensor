@@ -173,8 +173,8 @@ SECTION("applyMPO (DensityMatrix)")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        randomize(H.Aref(j));
-        randomize(K.Aref(j));
+        H.Aref(j).randomize();
+        K.Aref(j).randomize();
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.2;
         }
@@ -237,8 +237,8 @@ SECTION("applyMPO (Fit)")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        randomize(H.Aref(j));
-        randomize(K.Aref(j));
+        H.Aref(j).randomize();
+        K.Aref(j).randomize();
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.2;
         }
@@ -306,8 +306,8 @@ SECTION("errorMPOProd Scaling")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        randomize(H.Aref(j));
-        randomize(K.Aref(j));
+        H.Aref(j).randomize();
+        K.Aref(j).randomize();
         H.Aref(j) *= 10.0; //crazy large tensor
         K.Aref(j) *= 10.0;
         }
@@ -365,8 +365,8 @@ SECTION("Overlap <psi|HK|phi>")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        randomize(H.Aref(j));
-        randomize(K.Aref(j));
+        H.Aref(j).randomize();
+        K.Aref(j).randomize();
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.3;
         Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,"Site"));

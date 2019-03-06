@@ -50,7 +50,15 @@ class MPS
     //
 
     int 
-    N() const { return N_;}
+    length() const { return N_;}
+
+    // Deprecated in favor of length()
+    int 
+    N() const
+        {
+        Global::warnDeprecated(".N() is deprecated in favor of length(MPS)");
+        return this->length();
+        }
 
     SiteSet const& 
     sites() const;
@@ -72,6 +80,9 @@ class MPS
 
     void
     setA(int i, ITensor && nA) { Aref(i) = std::move(nA); }
+
+    Real
+    normalize();
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
@@ -270,6 +281,9 @@ class InitState
 // Other Methods Related to MPS
 //
 
+int 
+length(MPS const& psi);
+
 bool
 hasQNs(InitState const& initstate);
 
@@ -316,7 +330,13 @@ Index
 leftLinkInd(MPSType const& psi, int i);
 
 Real
+averageLinkDim(MPS const& psi);
+
+Real
 averageM(MPS const& psi);
+
+int
+maxLinkDim(MPS const& psi);
 
 int
 maxM(MPS const& psi);

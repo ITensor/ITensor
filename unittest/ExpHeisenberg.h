@@ -39,7 +39,7 @@ ExpHeisenberg(SiteSet const& sites,
     tau_(tau),
     initted_(false)
     { 
-    N_ = sites_.N();
+    N_ = sites_.length();
     }
 
 void inline ExpHeisenberg::

@@ -75,7 +75,7 @@ DMRGObserver(MPS const& psi, Args const& args)
 void inline DMRGObserver::
 measure(Args const& args)
     {
-    auto N = psi_.N();
+    auto N = length(psi_);
     auto b = args.getInt("AtBond",1);
     auto sw = args.getInt("Sweep",0);
     auto nsweep = args.getInt("NSweep",0);

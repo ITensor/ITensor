@@ -290,6 +290,19 @@ takeImag()
 
 
 ITensor& ITensor::
+randomize(Args const& args)
+    {
+    if(!this->store()) detail::allocReal(*this);
+#ifdef DEBUG
+    if(!(*this)) Error("default initialized tensor in randomize");
+#endif
+    auto cplx = args.getBool("Complex",false);
+    if(cplx) this->generate(detail::quickranCplx);
+    else     this->generate(detail::quickran);
+    return *this;
+    }
+
+ITensor& ITensor::
 fill(Cplx z)
     {
     if(!store_) 
@@ -374,13 +387,8 @@ norm(ITensor const& T)
 void
 randomize(ITensor & T, Args const& args)
     {
-    if(!T.store()) detail::allocReal(T);
-#ifdef DEBUG
-    if(!T) Error("default initialized tensor in randomize");
-#endif
-    auto cplx = args.getBool("Complex",false);
-    if(cplx) T.generate(detail::quickranCplx);
-    else     T.generate(detail::quickran);
+    Global::warnDeprecated("randomize(ITensor,args) is deprecated in favor of .randomize(args)");
+    T.randomize(args);
     }
 
 void ITensor::
@@ -791,7 +799,7 @@ isReal(ITensor const& T)
 ITensor 
 random(ITensor T, const Args& args)
     {
-    randomize(T,args);
+    T.randomize(args);
     return T;
     }
 

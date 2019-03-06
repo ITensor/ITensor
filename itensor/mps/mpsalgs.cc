@@ -30,15 +30,15 @@ plussers(Index const& l1,
     {
     if(not hasQNs(l1) && not hasQNs(l2))
         {
-        auto m = l1.m()+l2.m();
+        auto m = dim(l1)+dim(l2);
         if(m <= 0) m = 1;
         sumind = Index(m,"Link");
 
         first = delta(l1,sumind);
-        auto S = Matrix(l2.m(),sumind.m());
-        for(auto i : range(l2.m()))
+        auto S = Matrix(dim(l2),dim(sumind));
+        for(auto i : range(dim(l2)))
             {
-            S(i,l1.m()+i) = 1;
+            S(i,dim(l1)+i) = 1;
             }
         second = matrixITensor(std::move(S),l2,sumind);
         }
@@ -91,8 +91,8 @@ addAssumeOrth(MPSType      & L,
               MPSType const& R, 
               Args const& args)
     {
-    auto N = L.N();
-    if(R.N() != N) Error("Mismatched MPS sizes");
+    auto N = length(L);
+    if(length(R) != N) Error("Mismatched MPS sizes");
 
     L.mapPrimeLink(0,4);
 
@@ -132,8 +132,8 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     if(orthoCenter(psi_basis) != 1) 
         Error("psi_basis must be orthogonolized to site 1.");
 
-    auto N = psi_basis.N();
-    if(psi_to_fit.N() != N) 
+    auto N = length(psi_basis);
+    if(length(psi_to_fit) != N) 
         Error("Wavefunctions must have same number of sites.");
 
     auto A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),"Link"));
@@ -156,7 +156,7 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
 bool 
 checkQNs(MPS const& psi)
     {
-    const int N = psi.N();
+    const int N = length(psi);
 
     QN Zero;
 

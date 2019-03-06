@@ -41,10 +41,10 @@ MPO(const SiteSet& sites,
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
     // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = sites.N();
+    if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = sites.length();
 
     //Set all tensors to identity ops
-    for(int j = 1; j <= N(); ++j)
+    for(int j = 1; j <= length(); ++j)
         {
         Aref(j) = sites.op("Id",j);
         }
@@ -192,7 +192,7 @@ psiHKphiC(MPS const& psi,
 int 
 findCenter(MPO const& psi)
     {
-    for(int j = 1; j <= psi.N(); ++j) 
+    for(int j = 1; j <= length(psi); ++j) 
         {
         const auto& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPO");
@@ -218,7 +218,7 @@ findCenter(MPO const& psi)
 void
 checkQNs(MPO const& H)
     {
-    const int N = H.N();
+    const int N = length(H);
 
     const QN Zero;
 
@@ -286,7 +286,7 @@ std::ostream&
 operator<<(std::ostream& s, MPO const& M)
     {
     s << "\n";
-    for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
+    for(int i = 1; i <= length(M); ++i) s << M.A(i) << "\n";
     return s;
     }
 
@@ -296,23 +296,23 @@ putMPOLinks(MPO& W, Args const& args)
     if(not hasQNs(W.A(1)))
         {
         string pfix = args.getString("Prefix","MPO");
-        auto links = vector<Index>(W.N());
-        for(int b = 1; b < W.N(); ++b)
+        auto links = vector<Index>(length(W));
+        for(int b = 1; b < length(W); ++b)
             {
             links.at(b) = Index(1,format("Link,%s,%d",pfix,b));
             }
         W.Aref(1) *= setElt(links.at(1)(1));
-        for(int b = 2; b < W.N(); ++b)
+        for(int b = 2; b < length(W); ++b)
             {
             W.Aref(b) *= setElt(links.at(b-1)(1));
             W.Aref(b) *= setElt(links.at(b)(1));
             }
-        W.Aref(W.N()) *= setElt(links.at(W.N()-1)(1));
+        W.Aref(length(W)) *= setElt(links.at(length(W)-1)(1));
         }
     else
         {
         QN q;
-        auto N = W.N();
+        auto N = length(W);
         auto pfix = args.getString("Prefix","l");
 
         auto links = vector<Index>(N);
@@ -337,7 +337,7 @@ putMPOLinks(MPO& W, Args const& args)
 //MPO
 //toMPO(MPO const& K)
 //    {
-//    int N = K.N();
+//    int N = length(K);
 //    MPO res;
 //    if(K.sites()) res = MPO(K.sites());
 //    else          res = MPO(N);
@@ -354,7 +354,7 @@ putMPOLinks(MPO& W, Args const& args)
 bool
 isComplex(MPO const& W)
     {
-    for(auto j : range1(W.N()))
+    for(auto j : range1(length(W)))
         {
         if(itensor::isComplex(W.A(j))) return true;
         }
@@ -369,8 +369,8 @@ overlap(MPS const& psi,
         Real& re, 
         Real& im)
     {
-    auto N = H.N();
-    if(phi.N() != N || psi.N() != N) Error("psiHphi: mismatched N");
+    auto N = length(H);
+    if(length(phi) != N || length(psi) != N) Error("psiHphi: mismatched N");
 
     auto L = phi.A(1); 
     //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
@@ -425,8 +425,8 @@ overlap(MPS const& psi,
         Real& re, 
         Real& im) //<psi|H|phi>
     {
-    auto N = psi.N();
-    if(N != phi.N() || H.N() < N) Error("mismatched N in psiHphi");
+    auto N = length(psi);
+    if(N != length(phi) || length(H) < N) Error("mismatched N in psiHphi");
 
     auto L = (LB ? LB*phi.A(1) : phi.A(1));
     L *= H.A(1); 
@@ -468,8 +468,8 @@ overlap(MPS const& psi,
         Real& im)
     {
     //println("Running psiHKphi");
-    if(psi.N() != phi.N() || psi.N() != H.N() || psi.N() != K.N()) Error("Mismatched N in psiHKphi");
-    auto N = psi.N();
+    if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) Error("Mismatched N in psiHKphi");
+    auto N = length(psi);
     auto psidag = psi;
     for(int i = 1; i <= N; i++)
         {
@@ -531,7 +531,7 @@ errorMPOProd(MPS const& psi2,
     err += -2.*overlapC(psi2,K,psi1).real();
     //Compute Kd, Hermitian conjugate of K
     auto Kd = K;
-    for(auto j : range1(K.N()))
+    for(auto j : range1(length(K)))
         {
         Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
         }
@@ -551,7 +551,7 @@ checkMPOProd(MPS const& psi2,
     res += -2.*overlapC(psi2,K,psi1).real();
     //Compute Kd, Hermitian conjugate of K
     auto Kd = K;
-    for(auto j : range1(K.N()))
+    for(auto j : range1(length(K)))
         {
         Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
         }

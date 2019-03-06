@@ -109,10 +109,10 @@ computeLength(IndexSet const& is)
     {
     if(rank(is)==0) return 1ul;
 
-    auto length = is[0].m();
+    auto length = dim(is[0]);
     for(auto& I : is)
         {
-        if(length != I.m())
+        if(length != dim(I))
             Error("QDiag storage requires all IQIndices to be same size");
         }
     return length;

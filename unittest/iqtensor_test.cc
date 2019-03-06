@@ -273,7 +273,7 @@ SECTION("RandomizeTest")
     {
     auto T = setElt(L1(1),S1(1),L2(4),S2(2));
     const QN D = div(T);
-    randomize(T);
+    T.randomize();
     CHECK_EQUAL(D,div(T));
     }
 
@@ -317,7 +317,7 @@ SECTION("QDiag ITensor Conversion")
     SECTION("Case 2")
         {
         auto D = delta(dag(L1),prime(L1));
-        randomize(D);
+        D.randomize();
         auto d = toITensor(D);
         CHECK(typeOf(d) == QType::DiagReal);
         Index l1 = L1;

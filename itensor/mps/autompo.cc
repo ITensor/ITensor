@@ -543,7 +543,7 @@ toMPOImpl(AutoMPO const& am,
 
     auto const& sites = am.sites();
     auto H = MPO(sites);
-    auto N = sites.N();
+    auto N = length(sites);
 
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
@@ -672,8 +672,8 @@ toMPOImpl(AutoMPO const& am,
 
         W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        for(auto r : range(row.m()))
-        for(auto c : range(col.m()))
+        for(auto r : range(dim(row)))
+        for(auto c : range(dim(col)))
             {
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;
@@ -797,8 +797,8 @@ toMPOImpl(AutoMPO const& am,
 #ifdef SHOW_AUTOMPO
         if(n <= 10 or n == N)
             {
-            for(int r = 0; r < row.m(); ++r, println())
-            for(int c = 0; c < col.m(); ++c)
+            for(int r = 0; r < dim(row); ++r, println())
+            for(int c = 0; c < dim(col); ++c)
                 {
                 print(ws[r][c],"\t");
                 if(ws[r][c].length() < 8 && c == 1) 
@@ -976,7 +976,7 @@ partitionHTerms(SiteSet const& sites,
                 vector<IQMatEls> & tempMPO,
                 bool checkqns = true)
     {
-    auto N = sites.N();
+    auto N = length(sites);
 
     // TODO: This version of calcQN uses a "qnmap" to improve
     //       the speed.
@@ -1141,7 +1141,7 @@ compressMPO(SiteSet const& sites,
             Complex tau = 0,
             Args const& args = Args::global())
     {
-    int N = sites.N();
+    int N = length(sites);
     Real eps = 1E-14;
 
     int minm = args.getInt("Minm",1);
@@ -1166,7 +1166,7 @@ compressMPO(SiteSet const& sites,
     if(hasqn) links.at(0) = Index(ZeroQN,d0,format("Link,l=%d",0));
     else      links.at(0) = Index(d0,format("Link,l=%d",0));
 
-    auto max_d = links.at(0).m();
+    auto max_d = dim(links.at(0));
     for(int n = 1; n <= N; ++n)
         {
         //printfln("=== Making compressed MPO at site %d ===",n);
@@ -1244,8 +1244,8 @@ compressMPO(SiteSet const& sites,
             }
         else
             {
-            lm = ll.m();
-            rm = rl.m();
+            lm = dim(ll);
+            rm = dim(rl);
             }
         IdM = Mat<T>(lm,rm);
         IdM(0,0) = 1.;
@@ -1271,8 +1271,8 @@ compressMPO(SiteSet const& sites,
                     }
                 else
                     {
-                    rowm = ll.m();
-                    colm = rl.m();
+                    rowm = dim(ll);
+                    colm = dim(rl);
                     }
                 M = Mat<T>(rowm,colm);
                 }
@@ -1324,7 +1324,7 @@ compressMPO(SiteSet const& sites,
         // Store SVD computed at this step for next link
         V_n = move(V_npp);
         
-        max_d = max(max_d, links.at(n).m());
+        max_d = max(max_d, dim(links.at(n)));
         }
     //println("Maximal dimension of the MPO is ", max_d);
     }
@@ -1337,7 +1337,7 @@ constructMPOTensors(SiteSet const& sites,
                     Args const& args = Args::global())
     {
     auto H = MPO(sites);
-    int N = sites.N();
+    int N = length(sites);
 
     auto isExpH = args.getBool("IsExpH",false);
     auto infinite = args.getBool("Infinite",false);
@@ -1442,7 +1442,7 @@ svdMPO(AutoMPO const& am,
 #ifdef DEBUG
     if(is_real)
         {
-        for(auto n : range1(H.N()))
+        for(auto n : range1(length(H)))
             {
             if(isComplex(H.A(n)))
                 {
@@ -1479,7 +1479,7 @@ toExpH_ZW1(AutoMPO const& am,
 
     auto const& sites = am.sites();
     auto H = MPO(sites);
-    const int N = sites.N();
+    const int N = length(sites);
 
     const QN Zero;
 
@@ -1592,8 +1592,8 @@ toExpH_ZW1(AutoMPO const& am,
 
         W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        for(int r = 0; r < row.m(); ++r)
-        for(int c = 0; c < col.m(); ++c)
+        for(int r = 0; r < dim(row); ++r)
+        for(int c = 0; c < dim(col); ++c)
             {
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;

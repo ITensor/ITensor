@@ -77,7 +77,7 @@ SECTION("Constructors (m>1)")
         }
 
     for(int n = 1; n <= N; ++n)
-      randomize(psi.Aref(n));
+      psi.Aref(n).randomize();
 
     psi.position(1);
     for(int n = 1; n < N; ++n)
@@ -96,6 +96,10 @@ SECTION("Constructors (m>1)")
         CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
         CHECK(shsites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
+
+    psi.normalize();
+    CHECK(norm(psi)==1);
+
     }
 
 SECTION("Random constructors (m==1)")
@@ -252,7 +256,7 @@ SECTION("Orthogonalize")
 
     auto opsi = psi;
 
-    //for(auto b : range1(psi.N()-1))
+    //for(auto b : range1(length(psi)-1))
     //    {
     //    Print(linkInd(psi,b));
     //    }
@@ -268,7 +272,7 @@ SECTION("Orthogonalize")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
 
-    //for(auto b : range1(psi.N()-1))
+    //for(auto b : range1(length(psi)-1))
     //    {
     //    Print(linkInd(psi,b));
     //    }
@@ -286,7 +290,7 @@ SECTION("Orthogonalize")
         }
 
     psi.orthogonalize({"Maxm=",10,"Cutoff=",1E-16});
-    for(auto b : range1(psi.N()-1))
+    for(auto b : range1(length(psi)-1))
         {
         CHECK(linkInd(psi,b).dim() <= 10);
         }

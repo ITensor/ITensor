@@ -124,6 +124,9 @@ class ITensor
     void
     set(std::vector<int> const& ivs, Cplx val);
 
+    ITensor&
+    randomize(Args const& args = Args::global());
+
     //
     // Index Prime Level Methods
     //

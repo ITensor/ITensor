@@ -919,7 +919,7 @@ delta(Index const& i1,
         {
         return ITensor(std::move(is),QDiagReal(is,1.));
         }
-    auto len = minM(is);
+    auto len = minDim(is);
     return ITensor(std::move(is),DiagReal(len,1.));
     }
 
