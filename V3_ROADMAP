@@ -4,12 +4,20 @@
 
 o Replace dim throughout documentation
 
+o Use order instead of ord in library and docs
+
 ! Update website:
   o Detailed documentation
+    - (see Matt's list of website issues)
+    - update .real and .cplx to .elt and .eltC
+    - use i=2 instead of i(2) in Index examples (and TRG code)
+    - use i=2 instead of i(2) in Index detailed docs
+    - list free functions in IndexVal docs
     - info about QN blocks in Index objects
     X how to make QN ITensors
     - removeQNs ITensor function
     - removeQNs MPS function
+    - add permute(ITensor,...) function which takes "..." string
   o List of deprecrations/guide to update code
   o ITensor book
     - Update TRG to show use of Tags
@@ -93,6 +101,8 @@ Completed (this is to help keep track of changes made, but we should make an off
            list for the website):
 
 
+o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
+  backwards compatibility.
 o Replace i.m() with dim(i) throughout library
 o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
 o Added .real and .cplx accepting vector<int> (pull #194)
