@@ -262,7 +262,7 @@ DMRGWorker(MPS & psi,
                           sweeps.maxm(sw) );
                 printfln("    Trunc. err=%.1E, States kept: %s",
                          spec.truncerr(),
-                         showm(linkInd(psi,b)) );
+                         showDim(linkInd(psi,b)) );
                 }
 
             obs.lastSpectrum(spec);

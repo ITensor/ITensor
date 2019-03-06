@@ -46,19 +46,19 @@ diagHImpl(ITensor H,
         auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
         auto showeigs = args.getBool("ShowEigs",false);
 
-        if(H.r() != 2)
+        if(ord(H) != 2)
             {
-            Print(H.r());
+            Print(ord(H));
             Print(H);
-            Error("Rank greater than 2 in diag_hermitian");
+            Error("Tensor has more than 2 indices in diag_hermitian");
             }
 
         auto i1 = H.inds().front();
         auto i2 = H.inds().back();
 
-        auto active = (i1.primeLevel() < i2.primeLevel()) ? i1 : i2;
+        auto active = (primeLevel(i1) < primeLevel(i2)) ? i1 : i2;
 
-        auto pdiff = std::abs(i1.primeLevel()-i2.primeLevel());
+        auto pdiff = std::abs(primeLevel(i1)-primeLevel(i2));
 
 
 #ifdef USESCALE
@@ -149,8 +149,8 @@ diagHImpl(ITensor H,
         
         auto i1 = H.inds().front();
         auto i2 = H.inds().back();
-        auto ai = (i1.primeLevel() < i2.primeLevel()) ? i1 : i2;
-        auto pdiff = std::abs(i1.primeLevel()-i2.primeLevel());
+        auto ai = (primeLevel(i1) < primeLevel(i2)) ? i1 : i2;
+        auto pdiff = std::abs(primeLevel(i1)-primeLevel(i2));
 
 #ifdef DEBUG
         auto Zero = QN();

@@ -65,7 +65,7 @@ ITensor(IndexSet iset,
 
 template<typename IV, typename... IVs>
 auto ITensor::
-cplx(IV const& iv1, IVs&&... ivs) const
+eltC(IV const& iv1, IVs&&... ivs) const
     -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>
     {
     constexpr size_t size = sizeof...(ivs)+1;
@@ -95,12 +95,12 @@ cplx(IV const& iv1, IVs&&... ivs) const
         }
     catch(TooBigForReal const& e)
         {
-        println("too big for real in cplx(...), scale = ",scale());
+        println("too big for real in eltC(...), scale = ",scale());
         throw e;
         }
     catch(TooSmallForReal const&)
         {
-        println("warning: too small for real in cplx(...)");
+        println("warning: too small for real in eltC(...)");
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
@@ -110,7 +110,7 @@ cplx(IV const& iv1, IVs&&... ivs) const
 
 template<typename Int>
 auto ITensor::
-cplx(std::vector<Int> const& ints) const
+eltC(std::vector<Int> const& ints) const
     -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>
     {
     if(!store()) Error("tensor storage unallocated");
@@ -140,12 +140,12 @@ cplx(std::vector<Int> const& ints) const
         }
     catch(TooBigForReal const& e)
         {
-        println("too big for real in cplx(...), scale = ",scale());
+        println("too big for real in eltC(...), scale = ",scale());
         throw e;
         }
     catch(TooSmallForReal const&)
         {
-        println("warning: too small for real in cplx(...)");
+        println("warning: too small for real in eltC(...)");
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
@@ -154,25 +154,39 @@ cplx(std::vector<Int> const& ints) const
 
 template<typename Int, typename... Ints>
 auto ITensor::
-cplx(Int iv1, Ints... ivs) const
+eltC(Int iv1, Ints... ivs) const
     -> stdx::enable_if_t<std::is_integral<Int>::value 
                      && stdx::and_<std::is_integral<Ints>...>::value,Cplx>
     {
-    return this->cplx(std::vector<Int>{{iv1,static_cast<int>(ivs)...}});
+    return this->eltC(std::vector<Int>{{iv1,static_cast<int>(ivs)...}});
+    }
+
+template <typename... IVals>
+Real ITensor::
+elt(IVals&&... ivs) const
+    {
+    auto z = eltC(std::forward<IVals>(ivs)...);
+    if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
+        {
+        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+        //Error("tensor is Complex valued, use .eltC(...) method");
+        throw ITError("tensor is complex valued, use .eltC(...) method");
+        }
+    return z.real();
     }
 
 template <typename... IVals>
 Real ITensor::
 real(IVals&&... ivs) const
     {
-    auto z = cplx(std::forward<IVals>(ivs)...);
-    if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
-        {
-        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        //Error("tensor is Complex valued, use .cplx(...) method");
-        throw ITError("tensor is complex valued, use .cplx(...) method");
-        }
-    return z.real();
+    return elt(std::forward<IVals>(ivs)...);
+    }
+
+template <typename... IVals>
+Cplx ITensor::
+cplx(IVals&&... ivs) const
+    {
+    return eltC(std::forward<IVals>(ivs)...);
     }
 
 namespace detail {
@@ -621,6 +635,9 @@ rank(ITensor const& T) { return rank(T.inds()); }
 long inline
 ord(ITensor const& T) { return rank(T.inds()); }
 
+long inline
+order(ITensor const& T) { return rank(T.inds()); }
+
 Real
 norm(ITensor const& T);
 
@@ -794,7 +811,7 @@ getDotInds(Iter it,
            std::string const& dots)
     {
     if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
+        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
     }
 
 template<typename Iter,
@@ -830,7 +847,7 @@ permute(Index const& ind1, Indxs const&... inds)
     return *this;
     }
 
-//Version of order accepting syntax: T.permute(i,j,k)
+//Version of permute accepting syntax: T.permute(i,j,k)
 template <typename... Indxs>
 auto ITensor::
 permute(Index const& ind1, Indxs const&... inds)
@@ -840,18 +857,18 @@ permute(Index const& ind1, Indxs const&... inds)
     return *this;
     }
 
-//Version of order accepting syntax: T.permute("...",j,k)
+//Version of permute accepting syntax: T.permute("...",j,k)
 template <typename... Indxs>
 ITensor& ITensor::
 permute(std::string const& dots, Indxs const&... inds)
     {
     if(dots != "...")
-        Error(format("Wrong string passed to order (expected '...', got '%s')",dots));
+        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
     permute(detail::moveToBack(IndexSet(inds...),this->inds()));
     return *this;
     }
 
-//order function which returns a new ITensor 
+//permute function which returns a new ITensor 
 template<typename... Indxs>
 ITensor
 permute(ITensor A, Indxs const&... inds)

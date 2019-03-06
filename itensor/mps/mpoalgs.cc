@@ -378,7 +378,7 @@ fitApplyMPO(Real fac,
                 {
                 printfln("    Trunc. err=%.1E, States kept=%s",
                          spec.truncerr(),
-                         showm(linkInd(res,b)) );
+                         showDim(linkInd(res,b)) );
                 }
 
             if(ha == 1)

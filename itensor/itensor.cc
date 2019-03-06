@@ -101,7 +101,7 @@ ITensor(Cplx val)
 //    }
 
 Cplx ITensor::
-cplx() const
+eltC() const
     {
     if(inds().r() != 0)
         {
@@ -118,12 +118,12 @@ cplx() const
         }
     catch(TooBigForReal const& e)
         {
-        println("too big for real in cplx(...), scale = ",scale());
+        println("too big for real in eltC(...), scale = ",scale());
         throw e;
         }
     catch(TooSmallForReal const&)
         {
-        println("warning: too small for real in cplx(...)");
+        println("warning: too small for real in eltC(...)");
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
@@ -131,7 +131,7 @@ cplx() const
     }
 
 Cplx ITensor::
-cplx(std::vector<IndexVal> const& ivs) const
+eltC(std::vector<IndexVal> const& ivs) const
     {
     if(!store()) Error("tensor storage unallocated");
 
@@ -159,12 +159,12 @@ cplx(std::vector<IndexVal> const& ivs) const
         }
     catch(TooBigForReal const& e)
         {
-        println("too big for real in cplx(...), scale = ",scale());
+        println("too big for real in eltC(...), scale = ",scale());
         throw e;
         }
     catch(TooSmallForReal const&)
         {
-        println("warning: too small for real in cplx(...)");
+        println("warning: too small for real in eltC(...)");
         return Cplx(0.,0.);
         }
     return Cplx(NAN,NAN);
@@ -526,13 +526,13 @@ operator*=(ITensor const& R)
 
     if(L.r() == 0)
         {
-        auto z = L.cplx();
+        auto z = L.eltC();
         *this = R*z;
         return *this;
         }
     else if(R.r()==0)
         {
-        auto z = R.cplx();
+        auto z = R.eltC();
         *this *= z;
         return *this;
         }
@@ -579,7 +579,7 @@ permute(IndexSet const& iset)
         println("---------------------------------------------");
         println("Indices provided = \n",iset,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of Indexes passed to order (expected %d, got %d)",r,iset.r()));
+        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.r()));
         }
 
     // Get permutation
@@ -825,7 +825,7 @@ sumelsC(ITensor const& t)
 ostream& 
 operator<<(ostream & s, ITensor const& t)
     {
-    s << "ITensor r=" << t.r() << ": "; 
+    s << "ITensor ord=" << order(t) << ": "; 
     if(hasQNs(t)) 
         {
         if(t.r() > 0) s << "\n";
@@ -1121,7 +1121,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n",isf," '...'\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rf));
+        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
         }
 
     auto iso = IndexSet(r);
@@ -1136,7 +1136,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n",isf," '...'\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
+            Error(format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1168,7 +1168,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n'...' ",isb,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to order (expected < %d, got %d)",r,rb));
+        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
         }
 
     auto iso = IndexSet(r);
@@ -1183,7 +1183,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n'...' ",isb,"\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to order"));
+            Error(format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;

@@ -1,5 +1,9 @@
 (! means necessary / blocker for releasing v3)
 
+! Update branch names on Github (v2 and v3 branches etc.)
+
+o Replace dim throughout documentation
+
 ! Update website:
   o Detailed documentation
     - info about QN blocks in Index objects
@@ -7,7 +11,6 @@
     - removeQNs ITensor function
     - removeQNs MPS function
   o List of deprecrations/guide to update code
-  o Replace dim throughout documentation
   o ITensor book
     - Update TRG to show use of Tags
     - TRG code (book/trg.cc)
@@ -100,6 +103,7 @@ o Generalize the convention of DMRG and applyMPO to accept MPOs with more genera
     the columns run over the combined index (l,j). I think this is especially useful 
     for QN conserving ITensors, where it could make it easier to visualize
     blocks of the ITensor.
+o Implement randomMPS(InitState,m>1)
 ? Add back some prime functions:
   o A.primeExcept(plinc=1,index1,index2,...)
   o A.primeExcept(plinc=1,tagset)

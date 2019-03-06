@@ -36,7 +36,7 @@ class ITensor
     //Default constructed tensor will evaluate to false in boolean context
     ITensor() { }
 
-    //Construct rank n tensor, all elements set to zero
+    //Construct n-index tensor, all elements set to zero
     //Usage: ITensor(i1,i2,i3,...)
     template <typename... Indices>
     explicit
@@ -78,28 +78,28 @@ class ITensor
 
     template <typename... IndexVals>
     Real
-    real(IndexVals&&... ivs) const;
+    elt(IndexVals&&... ivs) const;
 
     template <typename IV, typename... IVs>
     auto
-    cplx(IV const& iv1, IVs&&... ivs) const
+    eltC(IV const& iv1, IVs&&... ivs) const
          -> stdx::if_compiles_return<Cplx,decltype(iv1.index),decltype(iv1.val)>;
 
     template <typename Int, typename... Ints>
     auto
-    cplx(Int iv1, Ints... ivs) const
+    eltC(Int iv1, Ints... ivs) const
         -> stdx::enable_if_t<std::is_integral<Int>::value 
                           && stdx::and_<std::is_integral<Ints>...>::value,Cplx>;
 
     Cplx
-    cplx() const;
+    eltC() const;
 
     Cplx
-    cplx(std::vector<IndexVal> const& ivs) const;
+    eltC(std::vector<IndexVal> const& ivs) const;
 
     template<typename Int>
     auto
-    cplx(std::vector<Int> const& ints) const
+    eltC(std::vector<Int> const& ints) const
         -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>;
 
     //Set element at location given by collection
@@ -377,6 +377,18 @@ class ITensor
 
 #endif
 
+    //
+    // Deprecated methods
+    //
+
+    template <typename... IndexVals>
+    Real
+    real(IndexVals&&... ivs) const;
+
+    template <typename... IndexVals>
+    Cplx
+    cplx(IndexVals&&... ivs) const;
+
     }; // class ITensor
 
 //
@@ -521,6 +533,8 @@ rank(ITensor const& T);
 
 //return number of indices of T
 //(same as rank)
+long
+order(ITensor const& T);
 long
 ord(ITensor const& T);
 

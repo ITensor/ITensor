@@ -69,12 +69,12 @@ toMatRefc(ITensor const& T, Index const& i1, Index const& i2);
 /////////////
 
 template<typename T>
-vector<Rank2Block<T>>
+vector<Ord2Block<T>>
 doTask(GetBlocks<T> const& G, 
        QDense<T> const& d)
     {
-    if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports rank 2");
-    auto res = vector<Rank2Block<T>>{d.offsets.size()};
+    if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
+    auto res = vector<Ord2Block<T>>{d.offsets.size()};
     auto dblock = IntArray(2,0);
     size_t n = 0;
     for(auto& dio : d.offsets)
@@ -97,9 +97,9 @@ doTask(GetBlocks<T> const& G,
         }
     return res;
     }
-template vector<Rank2Block<Real>>
+template vector<Ord2Block<Real>>
 doTask(GetBlocks<Real> const& G, QDense<Real> const& d);
-template vector<Rank2Block<Cplx>>
+template vector<Ord2Block<Cplx>>
 doTask(GetBlocks<Cplx> const& G, QDense<Cplx> const& d);
 
 ///////////////
@@ -277,11 +277,11 @@ eigDecompImpl(ITensor T,
         {
         auto full = args.getBool("FullDecomp",false);
 
-        if(rank(T) != 2)
+        if(ord(T) != 2)
             {
-            Print(rank(T));
+            Print(ord(T));
             Print(T);
-            Error("eig_decomp requires rank 2 tensor as input");
+            Error("eig_decomp requires 2-index tensor as input");
             }
 
         auto lind = noPrime(T.inds().front());
@@ -393,7 +393,7 @@ eigDecompImpl(ITensor T,
 //        {
 //        Print(T.r());
 //        Print(T);
-//        Error("eig_decomp requires rank 2 tensor as input");
+//        Error("eig_decomp requires 2-index tensor as input");
 //        }
 //#endif
 //

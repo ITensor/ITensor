@@ -89,7 +89,7 @@ class Index
     Index();
 
     explicit
-    Index(long m, 
+    Index(long dim, 
           TagSet const& ts = TagSet());
 
     explicit
@@ -429,7 +429,7 @@ sim(Index const& I, int plev = 0);
 
 //Returns a string version of this Index's bond dimension.
 std::string
-showm(Index const& I);
+showDim(Index const& I);
 
 //TODO: clean up
 //Depecreate, nameint is a strange name when Indices don't

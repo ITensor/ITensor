@@ -364,7 +364,7 @@ svdImpl(ITensor const& A,
 
 
 Spectrum 
-svdRank2(ITensor const& A, 
+svdOrd2(ITensor const& A, 
          Index const& uI, 
          Index const& vI,
          ITensor & U, 
