@@ -14,9 +14,8 @@
   o Tutorials
   o Code formulas
 
-o Replace .m() in source
-  o averageM(psi) -> averageLinkDim
-  o maxM(psi) -> maxLinkDim
+o Priming and tagging functions for MPS and MPO
+  o primeall(MPO) -> prime(MPO)
 o Finalize tags interface
   o Add `tags(IndexSet,string)` and `tags(ITensor,string)`
   o Remove whitespace from tags
@@ -78,6 +77,21 @@ o Generalize the convention for diagHermitian to accept a general pair of indice
   {ia,ja,ka,...,ib,jb,kb...} where ia==replaceTags(ib,tags(ib),tags(ia)), etc.
 o Generalize the convention of DMRG and applyMPO to accept MPOs with more general
   tag conventions, not just {s1,s2,...,s1',s2',...}
+? Change how MPS and MPO tensors are accessed
+  o Make psi(b) get the MPS/MPO tensor at site b
+  o psi.A(b) or psi.Aref(b) gets a reference to the MPS/MPO tensor in order to modify
+  o Otherwise, we can just prefer psi.set(b,...) as the method for modifying an MPS tensor?
+? Remove SiteSet from MPS class.
+  o Matt: this would make it so that people can use MPS without SiteSet, if they
+    want to do that, since SiteSet is a bit constrained and requires a lot of code
+    to make an MPS on a set of sites that is not defined in ITensor.
+    One can define siteInd(psi,b) = uniqueIndex(psi.A(b),psi.A(b-1),psi.A(b+1))
+    to get a site index, and siteInds(psi) to extract the sites as a siteset
+    to make another MPS with the same sites.
+  o Note that the MPO class could also have SiteSet removed, and the sites could
+    be defined by siteInds(H,b) = uniqueInds(H.A(b),H.A(b-1),H.A(b+1)) -> IndexSet to allow MPOs
+    with arbitrary Index conventions, i.e. {i1,i2,i3,...,j1,j2,j3,...}
+    Then, siteInds(H,b) can be used for tracing, for example H.A(b)*delta(siteInds(H,b))
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
@@ -106,9 +120,17 @@ Completed (this is to help keep track of changes made, but we should make an off
            list for the website):
 
 
+o Replace .m() with dim(Index)
+o Replace .id() with id(Index)
+o Replace .N() with length(MPS)
+o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
+o Replace maxM(IndexSet) and minM(IndexSet) with maxDim(IndexSet) and minDim(IndexSet)
+o Deprecate maxM(MPS) and averageM(MPS) in favor of maxLinkDim(MPS) and averageLinkDim(MPS)
+o Add length(MPS) as preferred alternative to MPS.N() to get length of MPS
+o Add id(Index) as preferred alternative to .id()
 o Deprecate normalize(MPS& psi) in favor of psi.normalize()
 o Deprecate randomize(ITensor& T) in favor of T.randomize()
-o Replace i.m() with dim(i) throughout library
+o Deprecate i.m() in favor of dim(i), replace throughout library
 o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
 o Added .real and .cplx accepting vector<int> (pull #194)
 o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.

@@ -347,7 +347,7 @@ size() const
                 {
                 if(I.primeLevel() > 0)
                     {
-                    size_ *= I.m();
+                    size_ *= dim(I);
                     break;
                     }
                 }
@@ -358,14 +358,14 @@ size() const
                 {
                 if(I.primeLevel() > 0)
                     {
-                    size_ *= I.m();
+                    size_ *= dim(I);
                     break;
                     }
                 }
             }
 
-        size_ *= findIndex(*Op1_,"Site",0).m();
-        size_ *= findIndex(*Op2_,"Site",0).m();
+        size_ *= dim(findIndex(*Op1_,"Site",0));
+        size_ *= dim(findIndex(*Op2_,"Site",0));
         }
     return size_;
     }

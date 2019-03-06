@@ -32,6 +32,8 @@ class MPO : private MPS
 
     explicit operator bool() const { return Parent::operator bool(); }
 
+    using Parent::length;
+    // Deprecate N()
     using Parent::N;
     using Parent::sites;
 
@@ -63,7 +65,7 @@ class MPO : private MPS
     void 
     primeall()	// sites i,i' -> i',i'';  link:  l -> l'
         {
-        for(int i = 1; i <= this->N(); i++)
+        for(int i = 1; i <= this->length(); i++)
             {
             Aref(i).prime();
             }
@@ -131,6 +133,9 @@ operator*(Cplx z, MPO W) { return W *= z; }
 ////Convert an IQMPO to an MPO
 //MPO
 //toMPO(IQMPO const& K);
+
+inline int
+length(MPO const& W) { return W.length(); }
 
 bool
 isComplex(MPO const& W);

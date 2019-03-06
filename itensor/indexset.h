@@ -460,10 +460,10 @@ hasIndex(IndexSet const& iset,
          Index const& I);
 
 long
-minM(IndexSet const& iset);
+minDim(IndexSet const& iset);
 
 long
-maxM(IndexSet const& iset);
+maxDim(IndexSet const& iset);
 
 void
 contractIS(IndexSet const& Lis,

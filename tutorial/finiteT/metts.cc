@@ -163,7 +163,7 @@ main(int argc, char* argv[])
         int maxmm = 0;
         for(int b = 0; b < psi.N(); ++b)
             {
-            int m_b = linkInd(psi,b).m();
+            int m_b = dim(linkInd(psi,b));
             maxmm = std::max(maxmm,m_b);
             }
             

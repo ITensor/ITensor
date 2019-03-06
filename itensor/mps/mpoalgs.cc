@@ -28,8 +28,8 @@ nmultMPO(MPO const& Aorig,
 
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
 
-    if(Aorig.N() != Borig.N()) Error("nmultMPO(MPO): Mismatched N");
-    const int N = Borig.N();
+    if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
+    const int N = length(Borig);
 
     auto A = Aorig;
     A.position(1);
@@ -177,7 +177,7 @@ exactApplyMPO(MPO const& K,
 
     auto res = psi;
 
-    auto N = psi.N();
+    auto N = length(psi);
 
     //Set up conjugate psi and K
     auto psic = psi;
@@ -224,7 +224,7 @@ exactApplyMPO(MPO const& K,
     ITensor U,D;
     dargs.add("Tags=",format("Link,l=%d",N-1));
     auto spec = diagHermitian(rho,U,D,dargs);
-    if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),commonIndex(U,D).m());
+    if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
 
     res.Aref(N) = dag(U);
 
@@ -240,8 +240,8 @@ exactApplyMPO(MPO const& K,
             //i.e. upper bound on rank of rho
             auto cip = commonIndex(psi.A(j),E.at(j-1));
             auto ciw = commonIndex(K.A(j),E.at(j-1));
-            auto maxm = (cip) ? cip.m() : 1l;
-            maxm *= (ciw) ? ciw.m() : 1l;
+            auto maxm = (cip) ? dim(cip) : 1l;
+            maxm *= (ciw) ? dim(ciw) : 1l;
             dargs.add("Maxm",maxm);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
@@ -251,7 +251,7 @@ exactApplyMPO(MPO const& K,
         O = O*U*psi.A(j-1)*K.A(j-1);
         O.noPrime(siteTags);
         res.Aref(j) = dag(U);
-        if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),commonIndex(U,D).m());
+        if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
         }
 
     if(normalize) O /= norm(O);
@@ -327,7 +327,7 @@ fitApplyMPO(Real fac,
             Sweeps const& sweeps,
             Args args)
     {
-    auto N = psi.N();
+    auto N = length(psi);
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",true);
 
@@ -419,7 +419,7 @@ fitApplyMPO(Real mpsfac,
         {
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
         }
-    auto N = psiA.N();
+    auto N = length(psiA);
     auto nsweep = args.getInt("Nsweep",1);
 
     res.position(1);
@@ -486,7 +486,7 @@ applyExpH(MPS const& psi,
 
     const int order = args.getInt("Order",10);
 
-    const int N = res.N();
+    const int N = length(res);
     const int nsweep = args.getInt("Nsweep",1);
 
     res.position(1);
@@ -603,8 +603,8 @@ zipUpApplyMPO(MPS const& psi,
     //Real cutoff = args.getReal("Cutoff",psi.cutoff());
     //int maxm = args.getInt("Maxm",psi.maxm());
 
-    auto N = psi.N();
-    if(K.N() != N) 
+    auto N = length(psi);
+    if(length(K) != N) 
         Error("Mismatched N in zipUpApplyMPO");
 
     if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
@@ -647,7 +647,7 @@ zipUpApplyMPO(MPS const& psi,
         Index mid = commonIndex(res.A(i),nfork);
         //assert(mid.dir() == In);
         mid.dag();
-        midsize[i] = mid.m();
+        midsize[i] = dim(mid);
         maxdim = std::max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
         res.Aref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));

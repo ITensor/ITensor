@@ -44,6 +44,10 @@ class SiteSet
     explicit operator bool() const { return bool(sites_); }
 
     int 
+    length() const;
+
+		// Deprecated in favor of .length()
+    int 
     N() const;
 
     //Index at Site i
@@ -207,7 +211,15 @@ struct SiteStore
         }
 
     int
-    N() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
+    length() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
+
+		// Deprecated in favor of .length()
+    int
+    N() const 
+        {
+				Global::warnDeprecated(".N() is deprecated in favor of length(SiteStore)");
+        return this->length();
+        }
 
     Index
     si(int j) const 
@@ -260,7 +272,18 @@ SiteSet(std::vector<Index> const& inds)
 
 
 int inline SiteSet::
-N() const { return sites_ ? sites_->N() : 0; }
+length() const { return sites_ ? sites_->length() : 0; }
+
+int inline
+length(SiteSet const& sites) { return sites.length(); }
+
+// Deprecated in favor of .length()
+int inline SiteSet::
+N() const 
+    {
+    Global::warnDeprecated(".N() is deprecated in favor of length(SiteSet)");
+    return this->length();
+    }
 
 inline Index SiteSet::
 operator()(int i) const
@@ -279,7 +302,7 @@ operator()(int i, String const& state) const
 bool inline
 hasQNs(SiteSet const& sites)
     {
-    for(auto i : range1(sites.N()))
+    for(auto i : range1(length(sites)))
         if(not hasQNs(sites(i))) return false;
     return true;
     }
@@ -295,7 +318,7 @@ op(String const& opname,
         Index s = dag(si(i));
         Index sP = siP(i);
         auto id_ = ITensor(s,sP);
-        for(int j = 1; j <= s.m(); ++j)
+        for(int j = 1; j <= dim(s); ++j)
             {
             id_.set(s(j),sP(j),1);
             }
@@ -358,10 +381,10 @@ readType(std::istream & s)
 void inline SiteSet::
 write(std::ostream & s) const
     {
-    itensor::write(s,N());
+    itensor::write(s,length());
     if(sites_)
         {
-        for(int j = 1; j <= N(); ++j) 
+        for(int j = 1; j <= length(); ++j) 
             {
             sites_->si(j).write(s);
             }
@@ -372,7 +395,7 @@ inline std::ostream&
 operator<<(std::ostream& s, SiteSet const& sites)
     {
     s << "SiteSet:\n";
-    for(int j = 1; j <= sites.N(); ++j) 
+    for(int j = 1; j <= length(sites); ++j) 
         {
         s << format("site %d = %s\n",j,sites(j));
         }
@@ -475,8 +498,8 @@ merge(SiteSetT const& sites1,
       SiteSetT const& sites2,
       Args const& args = Args::global())
     {
-    auto N1 = sites1.N();
-    auto N2 = sites2.N();
+    auto N1 = length(sites1);
+    auto N2 = length(sites2);
     auto start1 = args.getInt("Start1",1);
     auto end1 = args.getInt("End1",N1);
     auto start2 = args.getInt("Start2",1);

@@ -281,9 +281,9 @@ read(std::istream& s)
             {
             auto I = Index{};
             I.read(s);
-            if(I.m() == 3) store.set(j,SpinTwoSite(I));
-            else if(I.m() == 2) store.set(j,SpinHalfSite(I));
-            else Error(format("SpinTwo cannot read index of size %d",I.m()));
+            if(dim(I) == 3) store.set(j,SpinTwoSite(I));
+            else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
+            else Error(format("SpinTwo cannot read index of size %d",dim(I)));
             }
         init(std::move(store));
         }

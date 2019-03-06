@@ -46,7 +46,7 @@ Heisenberg(SiteSet const& sites,
   : sites_(sites), 
     initted_(false)
     { 
-    N_ = sites_.N();
+    N_ = sites_.length();
     J_ = args.getReal("J",1.);
     Jz_ = args.getReal("Jz",J_);
     infinite_ = args.getBool("Infinite",false);

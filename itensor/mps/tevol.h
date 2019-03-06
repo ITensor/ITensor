@@ -106,7 +106,7 @@ gateTEvol(Iterable const& gatelist,
 
         if(do_normalize)
             {
-            tot_norm *= normalize(psi);
+            tot_norm *= psi.normalize();
             }
 
         tsofar += tstep;

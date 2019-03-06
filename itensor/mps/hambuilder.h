@@ -219,7 +219,7 @@ template <class Tensor>
 void HamBuilder<Tensor>::
 setident_() const
     {
-    for(int j = 1; j <= sites_->N(); ++j)
+    for(int j = 1; j <= sites_->length(); ++j)
         W_.Aref(j) = sites_->op("Id",j);
     }
 

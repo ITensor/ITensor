@@ -129,9 +129,9 @@ class Index
     explicit operator bool() const;
 
     // (Explicitly) convertible to integer types
-    explicit operator int() const { return m(); }
-    explicit operator long() const { return m(); }
-    explicit operator size_t() const { return m(); }
+    explicit operator int() const { return dim(); }
+    explicit operator long() const { return dim(); }
+    explicit operator size_t() const { return dim(); }
 
     // Sets the prime level to a specified value.
     Index& 
@@ -171,10 +171,10 @@ class Index
     IndexVal
     operator=(long val) const;
 
-    //define size()==m() in order to do 
+    //define size()==dim() in order to do 
     //for(auto n : range(I)) { ... } for some Index I
     long
-    size() const { return m(); }
+    size() const { return dim(); }
 
     // Write Index to binary output stream.
     void 
@@ -244,8 +244,12 @@ class Index
     public:
 
     //Deprecated: prefer to use I.dim() or dim(I)
-    long 
-    m() const { return dim_; }
+    //long 
+    //m() const
+    //    {
+    //    Global::warnDeprecated(".m() is deprecated in favor of dim(Index)");
+    //    return this->dim();
+    //    }
 
     }; //class Index
 
@@ -306,7 +310,11 @@ class IndexVal
 
     //Deprecated: prefer to use .dim()
     long
-    m() const { return index.m(); }
+    m() const 
+      {
+      Global::warnDeprecated(".m() is deprecated in favor of dim(IndexVal)");
+      return this->dim();
+      }
 
     };
 
@@ -319,6 +327,9 @@ bool
 operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
+
+Index::id_type inline
+id(Index const& I) { return I.id(); }
 
 long inline
 dim(Index const& I) { return I.dim(); }

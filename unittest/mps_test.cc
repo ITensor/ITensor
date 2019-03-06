@@ -256,7 +256,7 @@ SECTION("Orthogonalize")
 
     auto opsi = psi;
 
-    //for(auto b : range1(psi.N()-1))
+    //for(auto b : range1(length(psi)-1))
     //    {
     //    Print(linkInd(psi,b));
     //    }
@@ -272,7 +272,7 @@ SECTION("Orthogonalize")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
 
-    //for(auto b : range1(psi.N()-1))
+    //for(auto b : range1(length(psi)-1))
     //    {
     //    Print(linkInd(psi,b));
     //    }
@@ -290,7 +290,7 @@ SECTION("Orthogonalize")
         }
 
     psi.orthogonalize({"Maxm=",10,"Cutoff=",1E-16});
-    for(auto b : range1(psi.N()-1))
+    for(auto b : range1(length(psi)-1))
         {
         CHECK(linkInd(psi,b).dim() <= 10);
         }

@@ -31,7 +31,7 @@ class IndexDim
     size() const { return is_.r(); }
 
     //size_t
-    //operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
+    //operator[](size_t j) const { return (is_[j])[dim(ind_[j]]); }
     size_t
     operator[](size_t j) const { return (is_[j]).blocksize0(ind_[j]); }
     };

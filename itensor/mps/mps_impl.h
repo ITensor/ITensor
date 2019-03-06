@@ -84,7 +84,7 @@ svdBond(int b, ITensor const& AA, Direction dir,
 bool inline
 isComplex(MPS const& psi)
     {
-    for(auto j : range1(psi.N()))
+    for(auto j : range1(length(psi)))
         {
         if(itensor::isComplex(psi.A(j))) return true;
         }
@@ -143,27 +143,41 @@ leftLinkInd(MPSType const& psi, int i)
     }
 
 Real inline
+averageLinkDim(MPS const& psi)
+    {
+    Real avgdim = 0;
+    for(int b = 1; b < length(psi); ++b)
+        {
+        avgdim += dim(linkInd(psi,b));
+        }
+    avgdim /= (length(psi)-1);
+    return avgdim;
+    }
+
+Real inline
 averageM(MPS const& psi)
     {
-    Real avgm = 0;
-    for(int b = 1; b < psi.N(); ++b) 
+    Global::warnDeprecated("averageM(MPS) is deprecated in favor of averageLinkDim(MPS)");
+		return averageLinkDim(psi);
+    }
+
+int inline
+maxLinkDim(MPS const& psi)
+    {
+    int maxdim_ = 0;
+    for(int b = 1; b < length(psi); ++b)
         {
-        avgm += linkInd(psi,b).m();
+        int mb = dim(commonIndex(psi.A(b),psi.A(b+1)));
+        maxdim_ = std::max(mb,maxdim_);
         }
-    avgm /= (psi.N()-1);
-    return avgm;
+    return maxdim_;
     }
 
 int inline
 maxM(MPS const& psi)
     {
-    int maxM_ = 0;
-    for(int b = 1; b < psi.N(); ++b) 
-        {
-        int mb = commonIndex(psi.A(b),psi.A(b+1)).m();
-        maxM_ = std::max(mb,maxM_);
-        }
-    return maxM_;
+    Global::warnDeprecated("maxM(MPS) is deprecated in favor of maxLinkDim(MPS)");
+    return maxLinkDim(psi);
     }
 
 template <typename MPSType>
@@ -190,18 +204,21 @@ Complex inline
 psiphiC(MPS const& psi, 
         MPS const& phi)
     {
+    Global::warnDeprecated("psiphiC(MPS,MPS) is deprecated in favor of overlapC(MPS,MPS)");
     return overlapC(psi,phi);
     }
 
 void inline
 psiphi(MPS const& psi, MPS const& phi, Real& re, Real& im)
     {
+    Global::warnDeprecated("psiphi(MPS,MPS,Real,Real) is deprecated in favor of overlap(MPS,MPS,Real,Real)");
     overlap(psi,phi,re,im);
     }
 
 Real inline
 psiphi(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
     {
+    Global::warnDeprecated("psiphi(MPS,MPS) is deprecated in favor of overlap(MPS,MPS)");
     return overlap(psi,phi);
     }
 

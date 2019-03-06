@@ -89,8 +89,8 @@ class SpinOneSite
         auto UpP = sP(1);
         auto Z0  = s(2);
         auto Z0P = sP(2);
-        auto Dn  = s(s.m());
-        auto DnP = sP(s.m());
+        auto Dn  = s(dim(s));
+        auto DnP = sP(dim(s));
 
         auto Op = ITensor(dag(s),sP);
 
@@ -203,10 +203,10 @@ class SpinOneSite
         else
         if(opname == "S2")
             {
-            auto ssp1 = (s.m()==2 ? 0.75 : 2.);
+            auto ssp1 = (dim(s)==2 ? 0.75 : 2.);
             Op.set(Up,UpP,ssp1); 
             Op.set(Dn,DnP,ssp1);
-            if(s.m() > 2)
+            if(dim(s) > 2)
                 Op.set(Z0,Z0P,ssp1);
             }
         else
@@ -226,7 +226,7 @@ SpinOne(std::vector<Index> const& inds)
     for(int j = 1, i = 0; j <= N; ++j, ++i)
         {
         auto& Ii = inds.at(i);
-        if(Ii.m() != 3)
+        if(dim(Ii) != 3)
             {
             printfln("Index at entry %d = %s",i,Ii);
             Error("Only S=1 IQIndices allowed in SpinOne(vector<Index>) constructor");
@@ -282,9 +282,9 @@ read(std::istream& s)
             {
             auto I = Index{};
             I.read(s);
-            if(I.m() == 3) store.set(j,SpinOneSite(I));
-            else if(I.m() == 2) store.set(j,SpinHalfSite(I));
-            else Error(format("SpinOne cannot read index of size %d",I.m()));
+            if(dim(I) == 3) store.set(j,SpinOneSite(I));
+            else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
+            else Error(format("SpinOne cannot read index of size %d",dim(I)));
             }
         init(std::move(store));
         }
