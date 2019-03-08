@@ -47,7 +47,7 @@ int main()
             Heff.position(b,psi);
 
             //Solve effective eigenvalue problem
-            ITensor phi = psi.A(b)*psi.A(b+1);
+            ITensor phi = psi(b)*psi(b+1);
             energy = davidson(Heff,phi);
 
             //Update accuracy parameters
@@ -58,8 +58,8 @@ int main()
 
             //Define tensor (references/aliases)
             //to hold SVD results
-            auto& A = psi.Aref(b);  //ref means reference
-            auto& B = psi.Aref(b+1); //ref means reference
+            auto& A = psi.ref(b);  //ref means reference
+            auto& B = psi.ref(b+1); //ref means reference
             ITensor D;
 
             //Add code:

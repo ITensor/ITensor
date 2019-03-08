@@ -107,13 +107,13 @@ addAssumeOrth(MPSType      & L,
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    L.Aref(1) = L.A(1) * first.at(1) + R.A(1) * second.at(1);
+    L.ref(1) = L(1) * first.at(1) + R(1) * second.at(1);
     for(auto i : range1(2,N-1))
         {
-        L.Aref(i) = dag(first.at(i-1)) * L.A(i) * first.at(i) 
-                     + dag(second.at(i-1)) * R.A(i) * second.at(i);
+        L.ref(i) = dag(first.at(i-1)) * L(i) * first.at(i) 
+                     + dag(second.at(i-1)) * R(i) * second.at(i);
         }
-    L.Aref(N) = dag(first.at(N-1)) * L.A(N) + dag(second.at(N-1)) * R.A(N);
+    L.ref(N) = dag(first.at(N-1)) * L(N) + dag(second.at(N-1)) * R(N);
 
     L.noPrimeLink();
 
@@ -136,13 +136,13 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     if(length(psi_to_fit) != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    auto A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),"Link"));
+    auto A = psi_to_fit(N) * dag(prime(psi_basis(N),"Link"));
     for(int n = N-1; n > 1; --n)
         {
-        A *= dag(prime(psi_basis.A(n),"Link"));
-        A *= psi_to_fit.A(n);
+        A *= dag(prime(psi_basis(n),"Link"));
+        A *= psi_to_fit(n);
         }
-    A = psi_to_fit.A(1) * A;
+    A = psi_to_fit(1) * A;
     A.noPrime();
 
     auto nrm = norm(A);
@@ -150,7 +150,7 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     A /= nrm;
 
     psi_to_fit = psi_basis;
-    psi_to_fit.Aref(1) = A;
+    psi_to_fit.ref(1) = A;
     }
 
 bool 
@@ -172,15 +172,15 @@ checkQNs(MPS const& psi)
     for(int i = 1; i <= N; ++i) 
         {
         if(i == center) continue;
-        if(!psi.A(i))
+        if(!psi(i))
             {
             println("A(",i,") null, QNs not well defined");
             return false;
             }
-        if(div(psi.A(i)) != Zero)
+        if(div(psi(i)) != Zero)
             {
             cout << "At i = " << i << "\n";
-            Print(psi.A(i));
+            Print(psi(i));
             cout << "IQTensor other than the ortho center had non-zero divergence\n";
             return false;
             }
@@ -230,7 +230,7 @@ totalQN(MPS const& psi)
     const int center = findCenter(psi);
     if(center == -1)
         Error("Could not find ortho. center");
-    return div(psi.A(center));
+    return div(psi(center));
     }
 
 } //namespace itensor

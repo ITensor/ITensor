@@ -63,10 +63,10 @@ main(int argc, char* argv[])
         wf.set(s1(1),s2(2), ISqrt2);
         wf.set(s1(2),s2(1), -ISqrt2);
         ITensor D;
-        psi.Aref(n) = ITensor(s1);
-        psi.Aref(n+1) = ITensor(s2);
-        svd(wf,psi.Aref(n),D,psi.Aref(n+1));
-        psi.Aref(n) *= D;
+        psi.ref(n) = ITensor(s1);
+        psi.ref(n+1) = ITensor(s2);
+        svd(wf,psi.ref(n),D,psi.ref(n+1));
+        psi.ref(n) *= D;
         }
 
     auto obs = TStateObserver<ITensor>(psi);
@@ -91,7 +91,7 @@ main(int argc, char* argv[])
         psi = applyMPO(expH,psi,args);
 
         //Normalize wavefunction
-        psi.Aref(1) /= norm(psi.A(1));
+        psi.ref(1) /= norm(psi(1));
 
         tsofar += tau;
         targs.add("TimeStepNum",tt);

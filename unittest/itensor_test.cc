@@ -1536,24 +1536,24 @@ SECTION("Tag functions")
         {
         auto T2 = setTags(T,"tag1,tag2");
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
-        CHECK(hasIndex(T2,u("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
-        CHECK(hasIndex(T2,d("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,s("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
         }
 
     SECTION("setTags (match tags)")
         {
         auto T2 = setTags(T,"tag1,tag2","x");
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,s));
@@ -1567,7 +1567,7 @@ SECTION("Tag functions")
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,s("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
         }
 
     SECTION("replaceTags (all)")
@@ -1632,7 +1632,7 @@ SECTION("Tag functions")
 
     SECTION("Check error throws for duplicate indices")
         {
-        auto T2 = ITensor(l("Link"),l("Link,2"));
+        auto T2 = ITensor(setTags(l,"Link"),setTags(l,"Link,2"));
         //Check that remove the tag "2"
         //throws an exception since it would
         //lead to duplicate indices
@@ -1641,10 +1641,10 @@ SECTION("Tag functions")
 
     SECTION("Test contraction")
         {
-        auto ll = l("horiz,left,Link");
-        auto lr = l("horiz,right,Link");
-        auto lu = l("vert,up,Link");
-        auto ld = l("vert,down,Link");
+        auto ll = setTags(l,"horiz,left,Link");
+        auto lr = setTags(l,"horiz,right,Link");
+        auto lu = setTags(l,"vert,up,Link");
+        auto ld = setTags(l,"vert,down,Link");
         auto A = randomITensor(ll,lr,lu,ld,s);
         // Contract over l,r,s
         auto B = addTags(A,"bra","vert")*addTags(dag(A),"ket","vert");

@@ -161,10 +161,6 @@ class Index
     Index&
     replaceTags(const TagSet& tsold, const TagSet& tsnew) { tags_.removeTags(tsold); tags_.addTags(tsnew); return *this; }
 
-    // Return a copy of this Index with new tags
-    Index
-    operator()(const TagSet& t) const { auto I = *this; I.setTags(t); return I; }
-
     //Return an IndexVal with specified value
     IndexVal
     operator()(long val) const;

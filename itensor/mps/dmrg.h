@@ -247,7 +247,7 @@ DMRGWorker(MPS & psi,
 
             PH.position(b,psi);
 
-            auto phi = psi.A(b)*psi.A(b+1);
+            auto phi = psi(b)*psi(b+1);
 
             energy = davidson(PH,phi,args);
             

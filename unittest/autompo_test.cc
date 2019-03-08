@@ -311,10 +311,10 @@ SECTION("Single Site Ops")
     //    auto n = 4;
     //    ampo += "Cdagup",n;
     //    auto Op = toMPO(ampo);
-    //    //PrintData(Op.A(1));
-    //    //PrintData(Op.A(2));
-    //    //PrintData(Op.A(3));
-    //    //PrintData(Op.A(4));
+    //    //PrintData(Op(1));
+    //    //PrintData(Op(2));
+    //    //PrintData(Op(3));
+    //    //PrintData(Op(4));
     //    for(auto i : range1(L))
     //        {
     //        auto state = InitState(sites,"Emp");
@@ -584,7 +584,7 @@ SECTION("Spinless")
 
     for(auto j : range1(N))
         {
-        CHECK(not isComplex(Ha.A(j)));
+        CHECK(not isComplex(Ha(j)));
         }
 
     for(auto b : range1(N-1))

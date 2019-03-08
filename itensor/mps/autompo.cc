@@ -666,7 +666,7 @@ toMPOImpl(AutoMPO const& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -809,8 +809,8 @@ toMPOImpl(AutoMPO const& am,
 #endif
         }
 
-    H.Aref(1) *= setElt(links.at(0)(1));
-    H.Aref(N) *= setElt(dag(links.at(N))(1));
+    H.ref(1) *= setElt(links.at(0)(1));
+    H.ref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 
@@ -1346,7 +1346,7 @@ constructMPOTensors(SiteSet const& sites,
         {
         auto& row = links.at(n-1);
         auto& col = links.at(n);
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
 
         W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
@@ -1384,13 +1384,13 @@ constructMPOTensors(SiteSet const& sites,
     int min_n = isExpH ? 1 : 2;
     if(infinite)
         {
-        H.Aref(0) = setElt(links.at(0)(min_n));
-        H.Aref(N+1) = setElt(dag(links.at(N))(1));   
+        H.ref(0) = setElt(links.at(0)(min_n));
+        H.ref(N+1) = setElt(dag(links.at(N))(1));   
         }
     else
         {
-        H.Aref(1) *= setElt(links.at(0)(min_n));
-        H.Aref(N) *= setElt(dag(links.at(N))(1));   
+        H.ref(1) *= setElt(links.at(0)(min_n));
+        H.ref(N) *= setElt(dag(links.at(N))(1));   
         }
     
     return H;
@@ -1444,7 +1444,7 @@ svdMPO(AutoMPO const& am,
         {
         for(auto n : range1(length(H)))
             {
-            if(isComplex(H.A(n)))
+            if(isComplex(H(n)))
                 {
                 Error("Complex tensor produced from real AutoMPO terms");
                 }
@@ -1586,7 +1586,7 @@ toExpH_ZW1(AutoMPO const& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -1648,8 +1648,8 @@ toExpH_ZW1(AutoMPO const& am,
             }
         }
 
-    H.Aref(1) *= setElt(links.at(0)(1));
-    H.Aref(N) *= setElt(dag(links.at(N))(1));
+    H.ref(1) *= setElt(links.at(0)(1));
+    H.ref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 

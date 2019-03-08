@@ -32,7 +32,7 @@ collapse(MPS & psi,
             }
         else Error("Direction '" + direction + "' not recognized");
 
-        Real prob_up = (dag(prime(psi.A(j),Site))*PUp*psi.A(j)).elt();
+        Real prob_up = (dag(prime(psi(j),Site))*PUp*psi(j)).elt();
 
         int st = 1;
         if(Global::random() > prob_up) st = 2;
@@ -59,12 +59,12 @@ collapse(MPS & psi,
         ITensor jstate = (st==1) ? upState : downState;
         if(j < N)
             {
-            auto newA = psi.A(j+1)*(dag(jstate)*psi.A(j));
+            auto newA = psi(j+1)*(dag(jstate)*psi(j));
             newA /= norm(newA);
-            psi.setA(j+1,newA);
+            psi.set(j+1,newA);
             }
         //Set site j tensor 
-        psi.setA(j,jstate);
+        psi.set(j,jstate);
         }
 
     return cps;
@@ -156,7 +156,7 @@ main(int argc, char* argv[])
         for(int tt = 1; tt <= nt; ++tt)
             {
             psi = applyMPO(expH,psi,args);
-            psi.Aref(1) /= norm(psi.A(1));
+            psi.ref(1) /= norm(psi(1));
             }
 
         if(step > nwarm) println("Done making METTS ",step-nwarm);

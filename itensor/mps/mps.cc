@@ -166,7 +166,7 @@ randomMPS(InitState const& initstate, int m)
     }
 
 ITensor const& MPS::
-A(int i) const
+operator()(int i) const
     { 
     if(i < 0) i = N_+i+1;
     setSite(i);
@@ -174,7 +174,7 @@ A(int i) const
     }
 
 ITensor& MPS::
-Aref(int i)
+ref(int i)
     { 
     if(i < 0) i = N_+i+1;
     setSite(i);
@@ -183,6 +183,21 @@ Aref(int i)
     return A_.at(i); 
     }
 
+// Deprecated
+ITensor const& MPS::
+A(int i) const
+    { 
+    return this->operator()(i);
+    }
+
+// Deprecated
+ITensor& MPS::
+Aref(int i)
+    { 
+    return this->ref(i);
+    }
+
+// Deprecated
 SiteSet const& MPS::
 sites() const 
     { 
@@ -545,7 +560,7 @@ position(int i, Args args)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            auto WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+            auto WF = operator()(l_orth_lim_+1) * operator()(l_orth_lim_+2);
             //TODO: allow custom tag convention
             auto tagset = format("Link,l=%d",l_orth_lim_+1);
             args.add("Tags",tagset);
@@ -556,7 +571,7 @@ position(int i, Args args)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            auto WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+            auto WF = operator()(r_orth_lim_-2) * operator()(r_orth_lim_-1);
             //TODO: allow custom tag convention
             auto tagset = format("Link,l=%d",r_orth_lim_-2);
             args.add("Tags",tagset);
@@ -574,7 +589,7 @@ position(int i, Args args)
             auto tagset = format("Link,l=%d",l_orth_lim_+1);
             args.add("Tags",tagset);
             args.add("LeftTags",tagset);
-            orthMPS(Aref(l_orth_lim_+1),Aref(l_orth_lim_+2),Fromleft,args);
+            orthMPS(ref(l_orth_lim_+1),ref(l_orth_lim_+2),Fromleft,args);
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
             }
@@ -586,7 +601,7 @@ position(int i, Args args)
             auto tagset = format("Link,l=%d",r_orth_lim_-2);
             args.add("Tags",tagset);
             args.add("LeftTags",tagset);
-            orthMPS(Aref(r_orth_lim_-2),Aref(r_orth_lim_-1),Fromright,args);
+            orthMPS(ref(r_orth_lim_-2),ref(r_orth_lim_-1),Fromright,args);
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
             }
@@ -664,7 +679,7 @@ checkOrtho(MPS const& psi,
            bool left)
     {
     Index link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
-    ITensor rho = psi.A(i) * dag(prime(psi.A(i),4,link));
+    ITensor rho = psi(i) * dag(prime(psi(i),4,link));
     ITensor Delta = delta(link, prime(link,4));
     ITensor Diff = rho - Delta;
 
@@ -713,7 +728,7 @@ applyGate(ITensor const& gate,
     {
     auto fromleft = args.getBool("Fromleft",true);
     const int c = orthoCenter(psi);
-    ITensor AA = psi.A(c) * psi.A(c+1) * gate;
+    ITensor AA = psi(c) * psi(c+1) * gate;
     AA.noPrime();
     //TODO: add position tag to Link
     //args.add("Tags",toString(getTagSet(args,"Tags",format("Link,l=%d",c))))
@@ -870,7 +885,7 @@ findCenter(MPS const& psi)
     {
     for(int j = 1; j <= length(psi); ++j) 
         {
-        auto& A = psi.A(j);
+        auto& A = psi(j);
         if(A.order() == 0) Error("Zero order tensor in MPS");
         bool allSameDir = true;
         auto it = A.inds().begin();
@@ -897,7 +912,7 @@ operator<<(std::ostream& s, MPS const& M)
     s << "\n";
     for(int i = 1; i <= length(M); ++i) 
         {
-        s << M.A(i) << "\n";
+        s << M(i) << "\n";
         }
     return s;
     }
@@ -923,7 +938,7 @@ removeQNs(MPSType const& psi)
     else            res = MPSType(N);
     for(int j = 0; j <= N+1; ++j)
         {
-        res.Aref(j) = removeQNs(psi.A(j));
+        res.ref(j) = removeQNs(psi(j));
         }
     res.leftLim(psi.leftLim());
     res.rightLim(psi.rightLim());
@@ -989,21 +1004,21 @@ overlapC(MPSType const& psi,
     if(N != length(phi)) Error("overlap: mismatched N");
 
     auto l1 = linkInd(psi,1);
-    auto L = phi.A(1);
-    if(l1) L *= dag(prime(psi.A(1),l1)); 
-    else   L *= dag(psi.A(1));
+    auto L = phi(1);
+    if(l1) L *= dag(prime(psi(1),l1)); 
+    else   L *= dag(psi(1));
 
     if(N == 1) return L.eltC();
 
     for(decltype(N) i = 2; i < N; ++i) 
         { 
-        L = L * phi.A(i) * dag(prime(psi.A(i),"Link")); 
+        L = L * phi(i) * dag(prime(psi(i),"Link")); 
         }
-    L = L * phi.A(N);
+    L = L * phi(N);
 
     auto lNm = linkInd(psi,N-1);
-    if(lNm) return (dag(prime(psi.A(N),lNm))*L).eltC();
-    return (dag(psi.A(N))*L).eltC();
+    if(lNm) return (dag(prime(psi(N),lNm))*L).eltC();
+    return (dag(psi(N))*L).eltC();
     }
 template Cplx overlapC<MPS>(MPS const& psi, MPS const& phi);
 template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
@@ -1063,7 +1078,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //    setSite(i);
 //    IndexT link = (left ? rightLinkInd(*this,i) : leftLinkInd(*this,i));
 //
-//    Tensor rho = A(i) * dag(prime(A(i),link,4));
+//    Tensor rho =(i) * dag(prime(i),link,4));
 //
 //    Tensor Delta = makeKroneckerDelta(link,4);
 //
@@ -1158,7 +1173,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //        nlinks.at(b) = IQIndex(l2,iq);
 //        }
 //    //Create new A tensors
-//    vector<IQTensor> nA(N+1);
+//    vector<IQTensor> (N+1);
 //    nA[1] = IQTensor(si(1),nlinks[1]);
 //    for(int j = 2; j < N_; ++j)
 //        nA[j] = IQTensor(dag(nlinks[j-1]),si(j),nlinks[j]);
@@ -1166,9 +1181,9 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //
 //    for(int j = 1; j <= N_; ++j)
 //        {
-//        Foreach(const ITensor& t, A(j).blocks())
+//        Foreach(const ITensor& t,(j).blocks())
 //            { nA[j].insert(t); }
-//        Foreach(const ITensor& t, other.A(j).blocks())
+//        Foreach(const ITensor& t, other(j).blocks())
 //            { nA[j].insert(t); }
 //        }
 //
@@ -1196,13 +1211,13 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //        plussers(l1,l2,r,first[i],second[i]);
 //        }
 //
-//    Aref(1) = A(1) * first[1] + other.A(1) * second[1];
+//    ref(1) =(1) * first[1] + other(1) * second[1];
 //    for(int i = 2; i < N_; ++i)
 //        {
-//        Aref(i) = dag(first[i-1]) * A(i) * first[i] 
-//                  + dag(second[i-1]) * other.A(i) * second[i];
+//        ref(i) = dag(first[i-1]) *(i) * first[i] 
+//                  + dag(second[i-1]) * other(i) * second[i];
 //        }
-//    Aref(N) = dag(first[N-1]) * A(N) + dag(second[N-1]) * other.A(N);
+//    ref(N) = dag(first[N-1]) *(N) + dag(second[N-1]) * other(N);
 //
 //    noPrimeLink();
 //
@@ -1665,20 +1680,20 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //        }
 //        if(s == 1)
 //        {
-//            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+//            iqpsi.ref(s) = (is_mpo ? IQTensor(dag(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
 //        }
 //        else if(s == N)
 //        {
-//            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s)) 
+//            iqpsi.ref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s)) 
 //                                    : IQTensor(dag(linkind[s-1]),si(s)));
 //        }
 //        else
 //        {
-//            iqpsi.Aref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s),linkind[s]) 
+//            iqpsi.ref(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s),linkind[s]) 
 //                                    : IQTensor(dag(linkind[s-1]),si(s),linkind[s]));
 //        }
 //
-//        Foreach(const ITensor& nb, nblock) { iqpsi.Aref(s) += nb; } nblock.clear();
+//        Foreach(const ITensor& nb, nblock) { iqpsi.ref(s) += nb; } nblock.clear();
 //
 //        if(0) //try to get this working ideally
 //        if(!is_mpo && s > 1) 
@@ -1689,7 +1704,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //
 //        if(s==show_s)
 //        {
-//        iqpsi.A(s).print((format("qA[%d]")%s).str(),ShowData);
+//        iqpsi(s).print((format("qA[%d]")%s).str(),ShowData);
 //        Error("Stopping");
 //        }
 //

@@ -175,13 +175,13 @@ set(const String& opname1, int j1,
         {
         Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
-    W_.Aref(j1) = sites_->op(opname1,j1);
+    W_.ref(j1) = sites_->op(opname1,j1);
     if(j2 != 0)
-        W_.Aref(j2) = sites_->op(opname2,j2);
+        W_.ref(j2) = sites_->op(opname2,j2);
     if(j3 != 0)
-        W_.Aref(j3) = sites_->op(opname3,j3);
+        W_.ref(j3) = sites_->op(opname3,j3);
     if(j4 != 0)
-        W_.Aref(j4) = sites_->op(opname4,j4);
+        W_.ref(j4) = sites_->op(opname4,j4);
     return *this;
     }
 
@@ -196,13 +196,13 @@ set(const Tensor& op1, int j1,
         {
         Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
-    W_.Aref(j1) = op1;
+    W_.ref(j1) = op1;
     if(j2 != 0)
-        W_.Aref(j2) = op2;
+        W_.ref(j2) = op2;
     if(j3 != 0)
-        W_.Aref(j3) = op3;
+        W_.ref(j3) = op3;
     if(j4 != 0)
-        W_.Aref(j4) = op4;
+        W_.ref(j4) = op4;
     return *this;
     }
 
@@ -220,7 +220,7 @@ void HamBuilder<Tensor>::
 setident_() const
     {
     for(int j = 1; j <= sites_->length(); ++j)
-        W_.Aref(j) = sites_->op("Id",j);
+        W_.ref(j) = sites_->op("Id",j);
     }
 
 } //namespace itensor

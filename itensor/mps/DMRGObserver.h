@@ -86,7 +86,7 @@ measure(Args const& args)
         {
         if(b < N && b > 0)
             {
-            auto wfb = psi_.A(b)*psi_.A(b+1);
+            auto wfb = psi_(b)*psi_(b+1);
             //for(const std::string& opname : default_ops_)
             //    {
             //    auto sb = IndexT(psi_.sites()(b));

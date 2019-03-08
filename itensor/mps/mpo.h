@@ -40,6 +40,11 @@ class MPO : private MPS
     using Parent::rightLim;
     using Parent::leftLim;
 
+    using Parent::operator();
+    using Parent::ref;
+    using Parent::set;
+
+    // Deprecated
     using Parent::A;
     using Parent::Aref;
     using Parent::setA;
@@ -67,7 +72,7 @@ class MPO : private MPS
         {
         for(int i = 1; i <= this->length(); i++)
             {
-            Aref(i).prime();
+            ref(i).prime();
             }
         }
 
@@ -107,16 +112,16 @@ class MPO : private MPS
 
 
 inline MPO& 
-operator*=(MPO & W, Real a) { W.Aref(W.leftLim()+1) *= a; return W; }
+operator*=(MPO & W, Real a) { W.ref(W.leftLim()+1) *= a; return W; }
 
 inline MPO& 
-operator*=(MPO & W, Cplx a) { W.Aref(W.leftLim()+1) *= a; return W; }
+operator*=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) *= a; return W; }
 
 inline MPO& 
-operator/=(MPO & W, Real a) { W.Aref(W.leftLim()+1) /= a; return W; }
+operator/=(MPO & W, Real a) { W.ref(W.leftLim()+1) /= a; return W; }
 
 inline MPO& 
-operator/=(MPO & W, Cplx a) { W.Aref(W.leftLim()+1) /= a; return W; }
+operator/=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) /= a; return W; }
 
 MPO inline
 operator*(MPO W, Real r) { return W *= r; }

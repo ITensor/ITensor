@@ -46,7 +46,7 @@ int main()
         auto i1 = N/2;
         psi.position(i1);
         auto B1 = makeB(sites,i1);
-        auto wf1 = psi.A(i1)*psi.A(i1+1);
+        auto wf1 = psi(i1)*psi(i1+1);
         // compute <wf1|B1|wf1>
         D +=  (dag(prime(wf1,Site)) * B1 * wf1).elt();
 
@@ -56,7 +56,7 @@ int main()
         auto i2 = N/2-1;
         psi.position(i2);
         auto B2 = makeB(sites,i2);
-        auto wf2 = psi.A(i2)*psi.A(i2+1);
+        auto wf2 = psi(i2)*psi(i2+1);
         //TODO: ADD CODE to compute <wf2|B2|wf2>
         //      replacing the ... below
         //D += (-0.5) * ...
@@ -67,7 +67,7 @@ int main()
         auto i3 = N/2+1;
         psi.position(i3);
         auto B3 = makeB(sites,i3);
-        auto wf3 = psi.A(i3)*psi.A(i3+1);
+        auto wf3 = psi(i3)*psi(i3+1);
         //TODO: ADD CODE to compute <wf3|B3|wf3>
         //      replacing the ... below
         //D +=  (-0.5) * ...
