@@ -188,11 +188,11 @@ SECTION("MPSAddition 2")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
         }
 
-    CHECK_EQUAL(rank(psi.A(1)),2);
-    CHECK_EQUAL(rank(psi.A(2)),3);
-    CHECK_EQUAL(rank(psi.A(5)),3);
-    CHECK_EQUAL(rank(psi.A(9)),3);
-    CHECK_EQUAL(rank(psi.A(10)),2);
+    CHECK_EQUAL(order(psi.A(1)),2);
+    CHECK_EQUAL(order(psi.A(2)),3);
+    CHECK_EQUAL(order(psi.A(5)),3);
+    CHECK_EQUAL(order(psi.A(9)),3);
+    CHECK_EQUAL(order(psi.A(10)),2);
     }
 
 //SECTION("PositionTest")

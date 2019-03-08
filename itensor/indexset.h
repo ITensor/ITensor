@@ -92,7 +92,11 @@ class IndexSet : public RangeT<Index>
     stride(size_type i) const { return parent::stride(i); }
 
     long
-    r() const { return parent::r(); }
+    order() const { return parent::order(); }
+    
+    // Deprecated
+    long
+    r() const { return this->order(); }
     
     // 0-indexed access
     index_type &

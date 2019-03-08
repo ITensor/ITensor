@@ -189,8 +189,8 @@ doTask(PrintIT& P,
                                             : "Dense Cplx";
     P.printInfo(D,name,doTask(NormNoScale{},D));
      
-    auto rank = P.is.r();
-    if(rank == 0) 
+    auto ord = P.is.order();
+    if(ord == 0) 
         {
         P.s << "  ";
         P.s << formatVal(P.scalefac*D.store.front()) << "\n";
@@ -199,8 +199,8 @@ doTask(PrintIT& P,
 
     if(!P.print_data) return;
 
-    auto gc = detail::GCounter(rank);
-    for(auto i : range(rank))
+    auto gc = detail::GCounter(ord);
+    for(auto i : range(ord))
         gc.setRange(i,0,P.is.extent(i)-1);
 
     for(; gc.notDone(); ++gc)
@@ -253,7 +253,7 @@ doTask(Contract & C,
     Labels Lind,
           Rind,
           Nind;
-    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
     if(not C.Nis)
         {
         //Optimization TODO:
@@ -265,8 +265,8 @@ doTask(Contract & C,
         }
     else
         {
-        Nind.resize(C.Nis.r());
-        for(auto i : range(C.Nis.r()))
+        Nind.resize(C.Nis.order());
+        for(auto i : range(C.Nis.order()))
             {
             auto j = indexPosition(C.Lis,C.Nis[i]);
             if(j >= 0)
@@ -317,7 +317,7 @@ doTask(NCProd& P,
     Labels Lind,
           Rind,
           Nind;
-    computeLabels(P.Lis,P.Lis.r(),P.Ris,P.Ris.r(),Lind,Rind);
+    computeLabels(P.Lis,P.Lis.order(),P.Ris,P.Ris.order(),Lind,Rind);
     ncprod(P.Lis,Lind,P.Ris,Rind,P.Nis,Nind);
 
     auto tL = makeTenRef(L.data(),L.size(),&P.Lis);

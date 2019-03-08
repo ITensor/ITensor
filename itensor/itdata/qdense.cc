@@ -53,7 +53,7 @@ calcDiv(IndexSet const& is,
         Labels const& block_ind)
     {
     QN div;
-    for(auto i : range(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
+    for(auto i : range(order(is))) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
     return div;
     }
 
@@ -62,9 +62,9 @@ QN
 doTask(CalcDiv const& C,
        QDense<T> const& D)
     {
-    if(C.is.r()==0 || D.offsets.empty()) return QN{};
+    if(order(C.is)==0 || D.offsets.empty()) return QN{};
     auto b = D.offsets.front().block;
-    Labels block_ind(C.is.r());
+    Labels block_ind(order(C.is));
     computeBlockInd(b,C.is,block_ind);
     return calcDiv(C.is,block_ind);
     }
@@ -89,22 +89,22 @@ updateOffsets(IndexSet const& is,
     {
     offsets.clear();
 
-    if(is.r()==0)
+    if(order(is)==0)
         {
         offsets.push_back(make_blof(0,0));
         return 1;
         }
 
     //Set up a Range to iterate over all blocks
-    auto RB = RangeBuilder(is.r());
-    for(auto j : range(is.r()))
+    auto RB = RangeBuilder(order(is));
+    for(auto j : range(order(is)))
         RB.nextIndex(is[j].nblock());
 
     long totalsize = 0;
     for(auto I : RB.build())
         {
         auto blockqn = QN{};
-        for(auto j : range(is.r()))
+        for(auto j : range(order(is)))
             {
             auto& J = is[j];
             blockqn += J.qn(1+I[j])*J.dir();
@@ -114,7 +114,7 @@ updateOffsets(IndexSet const& is,
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  totm = 1;   //accumulate area of Indices
-            for(auto j : range(is.r()))
+            for(auto j : range(order(is)))
                 {
                 auto& J = is[j];
                 auto i_j = I[j];
@@ -299,20 +299,20 @@ doTask(PrintIT& P, QDense<T> const& d)
     //if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     //else P.s << "(omitting too large scale factor)\n";
 
-    auto rank = P.is.r();
-    if(rank == 0) 
+    auto ord = order(P.is);
+    if(ord == 0) 
         {
         P.s << "  ";
         P.s << formatVal(d.store.front()) << "\n";
         return;
         }
         
-    Labels block(rank,0);
+    Labels block(ord,0);
     //auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
     auto blockSize = [&block,&P](long i)->long { return (P.is[i]).blocksize0(block[i]); };
 
     Range brange;
-    auto C = detail::GCounter(rank);
+    auto C = detail::GCounter(ord);
     for(const auto& io : d.offsets)
         {
         bool block_info_printed = false;
@@ -321,8 +321,8 @@ doTask(PrintIT& P, QDense<T> const& d)
         //this non-zero block is located)
         computeBlockInd(io.block,P.is,block);
 
-        Labels boff(rank,0);
-        for(auto i : range(rank))
+        Labels boff(ord,0);
+        for(auto i : range(ord))
             {
             for(auto j : range(block[i]))
                 boff[i] += P.is[i].blocksize0(j);
@@ -330,7 +330,7 @@ doTask(PrintIT& P, QDense<T> const& d)
 
         //Wire up GCounter with appropriate dims
         C.reset();
-        for(auto i : range(rank))
+        for(auto i : range(ord))
             {
             C.setRange(i,0,blockSize(i)-1);
             }
@@ -354,18 +354,18 @@ doTask(PrintIT& P, QDense<T> const& d)
                     }
 
                 P.s << "(";
-                for(auto ii : range(rank))
+                for(auto ii : range(ord))
                     {
                     P.s << (1+boff[ii]+C[ii]);
-                    if(1+ii != rank) P.s << ",";
+                    if(1+ii != ord) P.s << ",";
                     }
                 P.s << ") ";
 
                 //P.s << "[";
-                //for(auto ii : range(rank))
+                //for(auto ii : range(ord))
                 //    {
                 //    P.s << (1+C[ii]);
-                //    if(1+ii != rank) P.s << ",";
+                //    if(1+ii != ord) P.s << ",";
                 //    }
                 //P.s << "] ";
 
@@ -403,7 +403,7 @@ add(PlusEQ const& P,
         }
     else
         {
-        auto r = P.is1().r();
+        auto r = order(P.is1());
         Labels Ablock(r,0),
               Bblock(r,0);
         Range Arange,
@@ -460,7 +460,7 @@ doTask(Contract& Con,
     using VC = common_type<VA,VB>;
     Labels Lind,
           Rind;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
+    computeLabels(Con.Lis,order(Con.Lis),Con.Ris,order(Con.Ris),Lind,Rind);
     //compute new index set (Con.Nis):
     Labels Cind;
     const bool sortResult = false;
@@ -532,8 +532,8 @@ doTask(NCProd& P,
     auto& Ais = P.Lis;
     auto& Bis = P.Ris;
     auto& Cis = P.Nis;
-    auto rA = rank(Ais);
-    auto rB = rank(Bis);
+    auto rA = order(Ais);
+    auto rB = order(Bis);
     Labels Aind,
            Bind,
            Cind;
@@ -629,7 +629,7 @@ permuteQDense(Permutation  const& P,
     {
     // Recalculate new indexset by permuting
     // original indexset (otherwise it segfaults)
-    auto r = Ais.r();
+    auto r = order(Ais);
     auto bind = IndexSetBuilder(r);
     for(auto i : range(r))
         {
@@ -677,8 +677,8 @@ doTask(GetBlock<V> const& G,
        QDense<V> & d)
     {
     auto block = getBlock(d,G.is,G.block_ind);
-    auto RB = RangeBuilder(G.is.r());
-    for(auto j : range(G.is.r()))
+    auto RB = RangeBuilder(order(G.is));
+    for(auto j : range(order(G.is)))
         {
         RB.nextIndex(G.is[j].blocksize0(G.block_ind[j]));
         }
@@ -693,7 +693,7 @@ doTask(RemoveQNs & R,
        QDense<V> const& d,
        ManageStore & m)
     {
-    auto r = R.is.r();
+    auto r = order(R.is);
     auto *nd = m.makeNewData<Dense<V>>(area(R.is),0);
     auto *pd = d.data();
     auto *pn = nd->data();

@@ -195,7 +195,7 @@ findCenter(MPO const& psi)
     for(int j = 1; j <= length(psi); ++j) 
         {
         const auto& A = psi.A(j);
-        if(A.r() == 0) Error("Zero rank tensor in MPO");
+        if(A.order() == 0) Error("Zero order tensor in MPO");
         bool allOut = true;
         for(const auto& I : A.inds())
             {

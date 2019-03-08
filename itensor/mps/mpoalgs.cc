@@ -212,7 +212,7 @@ exactApplyMPO(MPO const& K,
     for(int j = 2; j < N; ++j)
         {
         E.at(j) = E.at(j-1)*psi.A(j)*K.A(j)*Kc.A(j)*psic.A(j);
-        //assert(rank(E[j])==4);
+        //assert(order(E[j])==4);
         }
     if(verbose) println("done");
 
@@ -237,7 +237,7 @@ exactApplyMPO(MPO const& K,
             {
             //Infer maxm from bond dim of original MPS
             //times bond dim of MPO
-            //i.e. upper bound on rank of rho
+            //i.e. upper bound on order of rho
             auto cip = commonIndex(psi.A(j),E.at(j-1));
             auto ciw = commonIndex(K.A(j),E.at(j-1));
             auto maxm = (cip) ? dim(cip) : 1l;

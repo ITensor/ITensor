@@ -379,10 +379,10 @@ svdOrd2(ITensor const& A,
         args.add("Truncate",do_truncate);
         }
 
-    if(A.r() != 2) 
+    if(A.order() != 2) 
         {
         Print(A);
-        Error("A must be matrix-like (rank 2)");
+        Error("A must be matrix-like (order 2)");
         }
     if(isComplex(A))
         {

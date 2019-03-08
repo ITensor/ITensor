@@ -54,9 +54,9 @@ ncprod_impl(TenRefc<R,VA> A, Labels const& ai,
             TenRefc<R,VB> B, Labels const& bi, 
             TenRef<R,common_type<VA,VB>>  C, Labels const& ci)
     {
-    auto rA = rank(A),
-         rB = rank(B),
-         rC = rank(C);
+    auto rA = order(A),
+         rB = order(B),
+         rC = order(C);
 
     auto cb = rangeBegin(C.range());
     auto ce = rangeEnd(C.range());

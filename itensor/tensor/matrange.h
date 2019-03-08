@@ -61,7 +61,11 @@ struct MatRangeT : public MatRangeType
         }
 
     size_type
-    r() const { return 2; }
+    order() const { return 2; }
+
+    // Deprecated
+    size_type
+    r() const { return this->order(); }
 
     iterator
     begin() const;
@@ -79,7 +83,7 @@ struct MatRangeT : public MatRangeType
 
 template<size_t S>
 size_t
-rank(MatRangeT<S> const& R) { return 2ul; }
+order(MatRangeT<S> const& R) { return 2ul; }
 
 //make MatRange with same extents 
 //but usual strides

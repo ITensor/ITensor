@@ -73,7 +73,7 @@ vector<Ord2Block<T>>
 doTask(GetBlocks<T> const& G, 
        QDense<T> const& d)
     {
-    if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
+    if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
     auto dblock = IntArray(2,0);
     size_t n = 0;
@@ -277,9 +277,9 @@ eigDecompImpl(ITensor T,
         {
         auto full = args.getBool("FullDecomp",false);
 
-        if(ord(T) != 2)
+        if(order(T) != 2)
             {
-            Print(ord(T));
+            Print(order(T));
             Print(T);
             Error("eig_decomp requires 2-index tensor as input");
             }
@@ -389,9 +389,9 @@ eigDecompImpl(ITensor T,
 //    bool cplx = T.isComplex();
 //
 //#ifdef DEBUG
-//    if(T.r() != 2)
+//    if(T.order() != 2)
 //        {
-//        Print(T.r());
+//        Print(T.order());
 //        Print(T);
 //        Error("eig_decomp requires 2-index tensor as input");
 //        }

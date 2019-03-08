@@ -71,7 +71,7 @@ eltC(IV const& iv1, IVs&&... ivs) const
     constexpr size_t size = sizeof...(ivs)+1;
     auto vals = std::array<IndexVal,size>{{static_cast<IndexVal>(iv1),
                                            static_cast<IndexVal>(ivs)...}};
-    if(size != size_t(inds().r()))
+    if(size != size_t(inds().order()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -80,7 +80,7 @@ eltC(IV const& iv1, IVs&&... ivs) const
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
 
     auto inds = IntArray(size);
@@ -116,7 +116,7 @@ eltC(std::vector<Int> const& ints) const
     if(!store()) Error("tensor storage unallocated");
 
     auto size = ints.size();
-    if(size != size_t(inds().r()))
+    if(size != size_t(inds().order()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -125,7 +125,7 @@ eltC(std::vector<Int> const& ints) const
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
         Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
 
     auto inds = IntArray(size);
@@ -308,7 +308,7 @@ set(IV const& iv1, VArgs&&... vargs)
     std::array<IndexVal,size> vals;
     Cplx z;
     detail::getVals<IndexVal>(vals.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
-    if(size != size_t(inds().r())) 
+    if(size != size_t(inds().order())) 
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -317,9 +317,9 @@ set(IV const& iv1, VArgs&&... vargs)
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
-    auto inds = IntArray(is_.r(),0);
+    auto inds = IntArray(is_.order(),0);
     detail::permute_map(is_,vals,inds,
                         [](IndexVal const& iv) { return iv.val-1; });
     //TODO: if !store_ and !is_real, call allocCplx instead
@@ -345,7 +345,7 @@ set(Int iv1, VArgs&&... vargs)
     auto ints = IntArray(size,0);
     Cplx z;
     detail::getInts<Int>(ints.begin(),z,iv1,std::forward<VArgs&&>(vargs)...);
-    if(size != size_t(inds().r())) 
+    if(size != size_t(inds().order())) 
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -355,7 +355,7 @@ set(Int iv1, VArgs&&... vargs)
         println();
         println("---------------------------------------------");
         Error(format("Wrong number of ints passed to set (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
     //TODO: if !store_ and !is_real, call allocCplx instead
     //and move this line after check for is_real
@@ -628,15 +628,11 @@ apply(ITensor T, F&& f)
 
 
 long inline
-rank(ITensor const& T) { return rank(T.inds()); }
+order(ITensor const& T) { return order(T.inds()); }
 
-//return number of indices of T
-//(same as rank)
+// Deprecated
 long inline
-ord(ITensor const& T) { return rank(T.inds()); }
-
-long inline
-order(ITensor const& T) { return rank(T.inds()); }
+rank(ITensor const& T) { return order(T); }
 
 Real
 norm(ITensor const& T);
@@ -966,7 +962,7 @@ TenRef<Range,V>
 getBlock(ITensor & T,
          IntArray block_ind)
     {
-    if(block_ind.size() != size_t(T.r())) Error("Mismatched number of indices and ITensor rank");
+    if(block_ind.size() != size_t(T.order())) Error("Mismatched number of indices and ITensor order");
     if(not T.store())
         {
         QN q;

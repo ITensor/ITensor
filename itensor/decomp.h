@@ -133,7 +133,7 @@ expHermitian(ITensor const& T, Cplx t = 1.);
 // T must be "square-matrix-like" in the sense that
 // T has only indices I,J,K,... and indices I',J',K',...
 //
-// D is a diagonal rank 2 tensor (matrix) containing the eigenvalues.
+// D is a diagonal order 2 tensor (matrix) containing the eigenvalues.
 // On return, V has the "column" indices of T and a new index shared with D
 // (the index labeled "C" below).
 //
@@ -198,11 +198,11 @@ svd(ITensor AA,
 
 
     //Combiners which transform AA
-    //into a rank 2 tensor
+    //into a order 2 tensor
     std::vector<Index> Uinds, 
                         Vinds;
-    Uinds.reserve(AA.r());
-    Vinds.reserve(AA.r());
+    Uinds.reserve(AA.order());
+    Vinds.reserve(AA.order());
     //Divide up indices based on U
     //If U is null, use V instead
     auto &L = (U ? U : V);
@@ -235,7 +235,7 @@ svd(ITensor AA,
         args.add("Cutoff",-1);
         long minm = 1,
              maxm = MAX_M;
-        if(D.r() == 0)
+        if(D.order() == 0)
             {
             //auto mid = commonIndex(U,V,Link);
             //TODO: check this does the same thing
@@ -294,7 +294,7 @@ denmatDecomp(ITensor const& AA,
     
     auto& activeInds = (to_orth ? to_orth : AA).inds();
 
-    auto cinds = stdx::reserve_vector<Index>(activeInds.r());
+    auto cinds = stdx::reserve_vector<Index>(activeInds.order());
     for(auto& I : activeInds)
         {
         if(!hasIndex(newoc,I)) cinds.push_back(I);
@@ -368,7 +368,7 @@ diagHermitian(ITensor const& M,
     // on its prime level spacing
     //
     auto k = M.inds().front();
-    auto kps = stdx::reserve_vector<int>(ord(M));
+    auto kps = stdx::reserve_vector<int>(order(M));
     for(auto& i : M.inds()) if(equalsIgnorePrime(i,k)) kps.push_back(i.primeLevel());
     if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
         {
@@ -384,7 +384,7 @@ diagHermitian(ITensor const& M,
     //pdiff == spacing between lower and higher prime level index pairs
     auto pdiff = mdiff-idiff;
 
-    auto inds = stdx::reserve_vector<Index>(ord(M)/2);
+    auto inds = stdx::reserve_vector<Index>(order(M)/2);
     for(auto& i : M.inds())
     for(auto& j : M.inds())
         {
@@ -393,7 +393,7 @@ diagHermitian(ITensor const& M,
             inds.push_back(i);
             }
         }
-    if(inds.empty() || ord(M)/2 != (long)inds.size()) 
+    if(inds.empty() || order(M)/2 != (long)inds.size())
         {
         Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
@@ -447,7 +447,7 @@ struct GetBlocks
               Index const& i2_)
       : is(is_)
         { 
-        if(is.r() != 2) Error("GetBlocks only supports rank 2 currently");
+        if(is.order() != 2) Error("GetBlocks only supports order 2 currently");
         transpose = (i2_ == is.front());
         }
     };

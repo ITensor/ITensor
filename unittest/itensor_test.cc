@@ -994,7 +994,7 @@ SECTION("Real+-Complex")
 SECTION("ContractingProduct")
 {
 
-//Check for rank 0 ITensors
+//Check for order 0 ITensors
 SECTION("Rank 0")
     {
     Real f = Global::random();
@@ -1648,7 +1648,7 @@ SECTION("Tag functions")
         auto A = randomITensor(ll,lr,lu,ld,s);
         // Contract over l,r,s
         auto B = addTags(A,"bra","vert")*addTags(dag(A),"ket","vert");
-        CHECK(ord(B) == 4);
+        CHECK(order(B) == 4);
         CHECK(hasIndex(B,addTags(lu,"bra")));
         CHECK(hasIndex(B,addTags(lu,"ket")));
         CHECK(hasIndex(B,addTags(ld,"bra")));

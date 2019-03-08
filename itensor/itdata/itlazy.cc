@@ -24,7 +24,7 @@ evaluate(ITLazy& Z)
     long maxr = 0;
     for(auto& t : Z.todo())
         {
-        maxr = std::max(maxr,t.i.r());
+        maxr = std::max(maxr,t.i.order());
         }
 
     //Convention for contA, contB
@@ -58,7 +58,7 @@ evaluate(ITLazy& Z)
                 contB[nb] = -(na+1);
                 }
 
-        auto nuncont = Ais.r() + Bis.r() - 2*ncont;
+        auto nuncont = Ais.order() + Bis.order() - 2*ncont;
         cis.resize(nuncont);
 
         //Indices we want in Cis:

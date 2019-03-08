@@ -77,7 +77,11 @@ class VecRangeT : public VecRangeType
         }
 
     size_type
-    r() const { return 1; }
+    order() const { return 1; }
+
+    // Deprecated
+    size_type
+    r() const { return this->order(); }
 
     size_type
     size() const { return 1; }
@@ -113,7 +117,7 @@ class VecRangeT : public VecRangeType
 
 template<size_t S>
 size_t
-rank(VecRangeT<S> const& R) { return 1ul; }
+order(VecRangeT<S> const& R) { return 1ul; }
 
 //template<size_t S>
 //size_t

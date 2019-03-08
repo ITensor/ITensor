@@ -331,7 +331,7 @@ SECTION("QDiag ITensor Conversion")
 
 SECTION("Combiner")
     {
-    SECTION("Simple rank 2 combiner")
+    SECTION("Simple order 2 combiner")
         {
         //Rank 2 combiner just replaces index
         auto s = IQIndex(Index(2),QN(+1),

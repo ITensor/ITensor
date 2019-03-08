@@ -56,9 +56,9 @@ combine(Storage  const& d,
     if(jc >= 0) //has cind, uncombining
         {
         //dis has cind, replace with other inds
-        auto newind = IndexSetBuilder(dis.r()+Cis.r()-2);
+        auto newind = IndexSetBuilder(dis.order()+Cis.order()-2);
         long i = 0;
-        for(auto j : range(dis.r()))
+        for(auto j : range(dis.order()))
             if(j == jc)
                 {
                 for(size_t k = 1; k < Cis.size(); ++k)
@@ -85,29 +85,29 @@ combine(Storage  const& d,
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
         //and in same order as on combiner
         bool contig_sameord = true;
-        decltype(Cis.r()) c = 2;
-        for(auto j = J1+1; c < Cis.r() && j < dis.r(); ++j,++c)
+        decltype(Cis.order()) c = 2;
+        for(auto j = J1+1; c < Cis.order() && j < dis.order(); ++j,++c)
             if(dis[j] != Cis[c])
                 {
                 contig_sameord = false;
                 break;
                 }
-        if(c != Cis.r()) contig_sameord = false;
+        if(c != Cis.order()) contig_sameord = false;
 
         if(contig_sameord)
             {
-            auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
+            auto newind = IndexSetBuilder(dis.order()+2-Cis.order());
             long i = 0;
             for(auto j : range(J1))
                 newind.setIndex(i++,dis[j]);
             newind.setIndex(i++,cind);
-            for(auto j : range(J1+Cis.r()-1, dis.r()))
+            for(auto j : range(J1+Cis.order()-1, dis.order()))
                 newind.setIndex(i++,dis[j]);
             Nis = newind.build();
             }
         else
             {
-            auto P = Permutation(dis.r());
+            auto P = Permutation(dis.order());
             //Set P destination values to -1 to mark
             //indices that need to be assigned destinations:
             for(auto i : range(P)) P.setFromTo(i,-1);
@@ -115,7 +115,7 @@ combine(Storage  const& d,
             //permute combined indices to the front, in same
             //order as in Cis:
             long ni = 0;
-            for(auto c : range(1,Cis.r()))
+            for(auto c : range(1,Cis.order()))
                 {
                 auto j = indexPosition(dis,Cis[c]);
                 if(j < 0) 
@@ -128,10 +128,10 @@ combine(Storage  const& d,
                 P.setFromTo(j,ni++);
                 }
             //permute uncombined indices to back, keeping relative order:
-            auto newind = IndexSetBuilder(dis.r()+2-Cis.r());
+            auto newind = IndexSetBuilder(dis.order()+2-Cis.order());
             long i = 0;
             newind.setIndex(i++,cind);
-            for(auto j : range(dis.r()))
+            for(auto j : range(dis.order()))
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);

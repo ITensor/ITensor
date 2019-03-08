@@ -52,7 +52,7 @@ class ITensor
 
     ITensor(std::initializer_list<Index> inds);
 
-    //Construct rank 0 tensor (scalar), value set to val
+    //Construct order 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit
     ITensor(Cplx val);
@@ -61,9 +61,13 @@ class ITensor
     // Accessor Methods
     //
 
-    //Tensor rank (number of indices)
+    //Tensor order (number of indices)
     int 
-    r() const { return is_.r(); }
+    order() const { return is_.order(); }
+
+    // Deprecated
+    int 
+    r() const { return this->order(); }
 
     //Access index set
     IndexSet const&
@@ -527,16 +531,12 @@ bool
 isReal(ITensor const& T);
 
 //return number of indices of T
-//(same as order)
-long
-rank(ITensor const& T);
-
-//return number of indices of T
-//(same as rank)
 long
 order(ITensor const& T);
+
+// Deprecated, same as order
 long
-ord(ITensor const& T);
+rank(ITensor const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).

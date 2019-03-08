@@ -148,7 +148,11 @@ class TenRefc : public TensorType
     ownRange() const { return prange_ == &range_; }
 
     size_type
-    r() const { return prange_->r(); }
+    order() const { return prange_->order(); }
+
+    // Deprecated
+    size_type
+    r() const { return this->order(); }
 
     size_type 
     size() const { return area(*prange_); }
@@ -536,7 +540,11 @@ class Ten : public TensorType
     explicit operator bool() const { return !data_.empty(); }
 
     size_type
-    r() const { return range_.r(); }
+    order() const { return range_.order(); }
+
+    // Deprecated
+    size_type
+    r() const { return this->order(); }
 
     size_type
     size() const { return data_.size(); }
@@ -778,20 +786,11 @@ makeRefc(Ten<R,T> && t, VArgs&&... args)
 
 template<typename R,typename T>
 auto
-rank(TenRefc<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+order(TenRefc<R,T> const& t) -> decltype(order(t.range())) { return order(t.range()); }
 
 template<typename R,typename T>
 auto
-rank(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
-
-//ord is alias for rank, order is preferred in applied math literature over rank
-template<typename R,typename T>
-auto
-ord(TenRefc<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
-
-template<typename R,typename T>
-auto
-ord(Ten<R,T> const& t) -> decltype(rank(t.range())) { return rank(t.range()); }
+order(Ten<R,T> const& t) -> decltype(order(t.range())) { return order(t.range()); }
 
 template<typename R, typename V>
 Real
@@ -809,7 +808,7 @@ template<typename R, typename T>
 bool
 isContiguous(Ten<R,T> const& t) { return isContiguous(t.range()); }
 
-//Make a scalar (rank 0) tensor with value val
+//Make a scalar (order 0) tensor with value val
 Tensor
 scalarTen(Real val);
 

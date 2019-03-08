@@ -124,7 +124,11 @@ class RangeT : public RangeType
     index(size_type i) { return store_[i].ind; }
 
     size_type
-    r() const { return store_.size(); }
+    order() const { return store_.size(); }
+
+    // Deprecated
+    size_type
+    r() const { return this->order(); }
 
     value_type const&
     operator[](size_type i) const { return store_[i]; }
@@ -247,7 +251,7 @@ init(Container const& c)
 
 template<typename index_type, size_t start>
 auto
-rank(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
+order(RangeT<index_type,start> const& R) -> decltype(R.size()) { return R.size(); }
 
 //template<typename index_type, size_t start>
 //auto
@@ -259,9 +263,9 @@ std::ostream&
 operator<<(std::ostream& s, RangeT<index_type,start> const& r)
     {
     s << "exts: ";
-    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.extent(i) << " ";
+    for(decltype(r.order()) i = 0; i < r.order(); ++i) s << r.extent(i) << " ";
     s << "strs: ";
-    for(decltype(r.r()) i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
+    for(decltype(r.order()) i = 0; i < r.order(); ++i) s << r.stride(i) << " ";
     return s;
     }
 
@@ -406,7 +410,7 @@ namespace detail {
         for(auto& ii : inds)
             {
 #ifdef DEBUG
-            if(ri >= size_type(r.r()))
+            if(ri >= size_type(r.order()))
                 Error("Container-Range size mismatch in offset(...)");
 #endif
             I += r.stride(ri)*(ii-start);
@@ -429,7 +433,7 @@ namespace detail {
         for(decltype(inds.size()) n = 0; n < inds.size(); ++n)
             {
 #ifdef DEBUG
-            if(static_cast<size_type>(n) >= r.r())
+            if(static_cast<size_type>(n) >= r.order())
                 Error("Container-Range size mismatch in offset(...)");
 #endif
             I += r.stride(n)*(inds[n]-start);
@@ -467,8 +471,8 @@ offset(Range_ const& r, size_t i1, Inds... inds)
     -> decltype(r.stride(0))
     {
 #ifdef DEBUG
-    if(1+sizeof...(inds) != rank(r)) 
-        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",rank(r),1+sizeof...(inds)));
+    if(1+sizeof...(inds) != order(r)) 
+        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",order(r),1+sizeof...(inds)));
 #endif
     auto ia = stdx::make_array(i1,inds...);
     return detail::offsetImpl(stdx::select_overload{},r,ia);
@@ -481,7 +485,7 @@ area(RangeT<I,S> const& R)
     { 
     using size_type = decltype(R.size());
     size_type A = 1;
-    for(decltype(R.r()) n = 0; n < R.r(); ++n)
+    for(decltype(R.order()) n = 0; n < R.order(); ++n)
         {
         A *= R.extent(n);
         }
@@ -494,8 +498,8 @@ template<typename I, size_t S>
 Range
 normalRange(RangeT<I,S> const& R)
     {
-    auto rb = RangeBuilder(R.r());
-    for(decltype(R.r()) n = 0; n < R.r(); ++n)
+    auto rb = RangeBuilder(R.order());
+    for(decltype(R.order()) n = 0; n < R.order(); ++n)
         rb.nextIndex(R.extent(n));
     return rb.build();
     }
@@ -524,7 +528,7 @@ isContiguous(RangeT<I,S> const& R)
     using size_type = decltype(R.size());
     size_type max_offset = 0,
               area = 1;
-    for(decltype(R.r()) n = 0; n < R.r(); ++n)
+    for(decltype(R.order()) n = 0; n < R.order(); ++n)
         {
         max_offset += R.stride(n)*(R.extent(n)-1);
         area *= R.extent(n);

@@ -46,9 +46,9 @@ diagHImpl(ITensor H,
         auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
         auto showeigs = args.getBool("ShowEigs",false);
 
-        if(ord(H) != 2)
+        if(order(H) != 2)
             {
-            Print(ord(H));
+            Print(order(H));
             Print(H);
             Error("Tensor has more than 2 indices in diag_hermitian");
             }
@@ -141,10 +141,10 @@ diagHImpl(ITensor H,
         auto compute_qns = args.getBool("ComputeQNs",false);
         auto iname = args.getString("IndexName","d");
 
-        if(H.r() != 2)
+        if(H.order() != 2)
             {
             Print(H.inds());
-            Error("diag_hermitian requires rank 2 input tensor");
+            Error("diag_hermitian requires order 2 input tensor");
             }
         
         auto i1 = H.inds().front();

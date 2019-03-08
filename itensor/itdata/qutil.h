@@ -28,7 +28,7 @@ class IndexDim
         { }
 
     size_t
-    size() const { return is_.r(); }
+    size() const { return is_.order(); }
 
     //size_t
     //operator[](size_t j) const { return (is_[j])[dim(ind_[j]]); }
@@ -62,7 +62,7 @@ computeBlockInd(long block,
     {
     using size_type = decltype(ind.size());
     size_type r = ind.size();
-    assert(r == size_type(is.r()));
+    assert(r == size_type(is.order()));
     for(size_type j = 0; j < r-1; ++j)
         {
         auto res = std::ldiv(block,is[j].nblock());
@@ -82,7 +82,7 @@ getBlock(BlockSparse & d,
     auto r = long(block_ind.size());
     if(r == 0) return makeDataRange(d.data(),d.size());
 #ifdef DEBUG
-    if(is.r() != r) Error("Mismatched size of IndexSet and block_ind in getBlock");
+    if(is.order() != r) Error("Mismatched size of IndexSet and block_ind in getBlock");
 #endif
     long ii = 0;
     for(auto i = r-1; i > 0; --i)
@@ -112,9 +112,9 @@ loopContractedBlocks(BlockSparseA const& A,
                      IndexSet const& Cis,
                      Callable & callback)
     {
-    auto rA = Ais.r();
-    auto rB = Bis.r();
-    auto rC = Cis.r();
+    auto rA = Ais.order();
+    auto rB = Bis.order();
+    auto rC = Cis.order();
 
     auto AtoB = IntArray(rA,-1);
     auto AtoC = IntArray(rA,-1);

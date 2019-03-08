@@ -37,19 +37,19 @@ struct TStats
            TenRef<RangeT,common_type<VA,VB>>  C, 
            Labels const& ci)
         {
-        Ar = A.r();
+        Ar = A.order();
         for(auto n : range(Ar))
             {
             Adims[n] = A.extent(n);
             Alabs[n] = ai[n];
             }
-        Br = B.r();
+        Br = B.order();
         for(auto n : range(Br))
             {
             Bdims[n] = B.extent(n);
             Blabs[n] = bi[n];
             }
-        Cr = C.r();
+        Cr = C.order();
         for(auto n : range(Cr))
             {
             Cdims[n] = C.extent(n);

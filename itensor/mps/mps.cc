@@ -871,7 +871,7 @@ findCenter(MPS const& psi)
     for(int j = 1; j <= length(psi); ++j) 
         {
         auto& A = psi.A(j);
-        if(A.r() == 0) Error("Zero rank tensor in MPS");
+        if(A.order() == 0) Error("Zero order tensor in MPS");
         bool allSameDir = true;
         auto it = A.inds().begin();
         Arrow dir = (*it).dir();
@@ -1232,12 +1232,12 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //            qA.at(j) = sites.op("Id",j);
 //        }
 //
-//    const int fullrank = (is_mpo ? 4 : 3);
+//    const int fullorder = (is_mpo ? 4 : 3);
 //    int start = 1, end = N;
 //
 //    for(int j = 1; j <= N; ++j)
-//        if(A[j].r() == fullrank)
-//            if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
+//        if(A[j].order() == fullorder)
+//            if(A.at(periodicWrap(j-1,N)).order() < fullorder) 
 //                {
 //                start = periodicWrap(j-1,N);
 //                //cout << "Got start at " << start << "\n";
@@ -1245,8 +1245,8 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                }
 //
 //    for(int j = 1; j <= N; ++j)
-//        if(A[j].r() == fullrank)
-//            if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
+//        if(A[j].order() == fullorder)
+//            if(A.at(periodicWrap(j+1,N)).order() < fullorder) 
 //                {
 //                end = periodicWrap(j+1,N);
 //                //cout << "Got end at " << end << "\n";
@@ -1353,7 +1353,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                        {
 //                        //Here we sum over the previous link index
 //                        //which is already ok, analyze the one to the right
-//                        assert(comp.r()==2);
+//                        assert(comp.order()==2);
 //                        auto ci = comp.inds().begin();
 //                        const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
 //                        summed_block = diag(1,new_ind) * block;
@@ -1574,7 +1574,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    {
 //                        //Here we sum over the previous link index
 //                        //which is already ok, analyze the one to the right
-//                        assert(comp.r()==2);
+//                        assert(comp.order()==2);
 //                        Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
 //                        summed_block = ITensor(new_ind,1) * block;
 //                    }
