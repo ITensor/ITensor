@@ -21,13 +21,13 @@ main(int argc, char* argv[])
     auto beta = input.getReal("beta",1);
     auto tau = input.getReal("tau",0.01);
 
-    auto maxm = input.getInt("maxm",1000);
+    auto maxdim = input.getInt("maxdim",1000);
     auto cutoff = input.getReal("cutoff",1E-11);
 
     auto verbose = input.getYesNo("verbose",false);
 
     Args args;
-    args.add("Maxm",maxm);
+    args.add("MaxDim",maxdim);
     args.add("Cutoff",cutoff);
     args.add("Verbose",verbose);
     args.add("Method","DensityMatrix");

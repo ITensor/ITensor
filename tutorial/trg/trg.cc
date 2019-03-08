@@ -53,7 +53,7 @@ for(auto scale : range1(topscale))
 
     auto Fl = ITensor(r,d);
     auto Fr = ITensor(l,u);
-    factor(A,Fl,Fr,{"Maxm=",maxdim,"ShowEigs=",true,
+    factor(A,Fl,Fr,{"MaxDim=",maxdim,"ShowEigs=",true,
                     "Tags=",scale_tag});
     // Add the proper tags to the new indices
     Fl = addTags(Fl,"left",scale_tag);
@@ -61,7 +61,7 @@ for(auto scale : range1(topscale))
 
     auto Fu = ITensor(l,d);
     auto Fd = ITensor(u,r);
-    factor(A,Fu,Fd,{"Maxm=",maxdim,"ShowEigs=",true,
+    factor(A,Fu,Fd,{"MaxDim=",maxdim,"ShowEigs=",true,
                     "Tags=",scale_tag});
     // Add the proper tags to the new indices
     Fu = addTags(Fu,"up",scale_tag);

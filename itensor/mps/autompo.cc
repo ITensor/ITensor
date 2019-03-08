@@ -1144,12 +1144,12 @@ compressMPO(SiteSet const& sites,
     int N = length(sites);
     Real eps = 1E-14;
 
-    int minm = args.getInt("Minm",1);
-    int maxm = args.getInt("Maxm",5000);
+    int mindim = args.getInt("MinDim",1);
+    int maxdim = args.getInt("MaxDim",5000);
     Real cutoff = args.getReal("Cutoff",1E-13);
     //printfln("Using cutoff = %.2E",cutoff);
-    //printfln("Using minm = %d",minm);
-    //printfln("Using maxm = %d",maxm);
+    //printfln("Using mindim = %d",mindim);
+    //printfln("Using maxdim = %d",maxdim);
 
     auto hasqn = hasQNs(sites(1));
 
@@ -1193,7 +1193,7 @@ compressMPO(SiteSet const& sites,
 
             //square singular vals for call to truncate
             for(auto& d : D) d = sqr(d);
-            truncate(D,maxm,minm,cutoff);
+            truncate(D,maxdim,mindim,cutoff);
             int m = D.size();
 
             int nc = ncols(M);

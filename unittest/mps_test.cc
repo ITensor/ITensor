@@ -289,7 +289,7 @@ SECTION("Orthogonalize")
         CHECK(norm(rho-id) < 1E-10);
         }
 
-    psi.orthogonalize({"Maxm=",10,"Cutoff=",1E-16});
+    psi.orthogonalize({"MaxDim=",10,"Cutoff=",1E-16});
     for(auto b : range1(length(psi)-1))
         {
         CHECK(linkInd(psi,b).dim() <= 10);

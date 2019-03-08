@@ -25,7 +25,7 @@ int main()
 
     //Define DMRG sweeps
     auto sweeps = Sweeps(5);
-    sweeps.maxm() = 10,20,100,100,200;
+    sweeps.maxdim() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
 
     //Some stuff needed to solve
@@ -53,8 +53,8 @@ int main()
             //Update accuracy parameters
             //to pass to svd
             auto args = Args("Cutoff",sweeps.cutoff(sw),
-                             "Maxm",sweeps.maxm(sw),
-                             "Minm",sweeps.minm(sw));
+                             "MaxDim",sweeps.maxdim(sw),
+                             "MinDim",sweeps.mindim(sw));
 
             //Define tensor (references/aliases)
             //to hold SVD results

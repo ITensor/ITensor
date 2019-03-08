@@ -37,7 +37,7 @@ class TStateObserver : public TEvolObserver
     // Data Members
 
     const MPST& psi_;
-    bool show_maxm_;
+    bool show_maxdim_;
 
     //
     /////////////
@@ -51,7 +51,7 @@ TStateObserver(const MPST& psi,
     :
     psi_(psi)
     { 
-    show_maxm_ = args.getBool("ShowMaxm",true);
+    show_maxdim_ = args.getBool("ShowMaxDim",true);
     }
 
 
@@ -60,16 +60,16 @@ void inline TStateObserver<Tensor>::
 measure(const Args& args)
     {
     const auto t = args.getReal("Time");
-    if(show_maxm_)
+    if(show_maxdim_)
         {
         const auto ttotal = args.getReal("TotalTime");
         const Real percentdone = (100.*t)/ttotal;
-        long maxm = 0;
+        long maxdim = 0;
         for(int b = 1; b < psi_.N(); ++b)
             {
-            maxm = std::max(maxm,dim(linkInd(psi_,b)));
+            maxdim = std::max(maxdim,dim(linkInd(psi_,b)));
             }
-        printfln("%2.f%%:%d ",percentdone,maxm);
+        printfln("%2.f%%:%d ",percentdone,maxdim);
         }
     }
 

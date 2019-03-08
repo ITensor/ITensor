@@ -188,7 +188,7 @@ SECTION("applyMPO (DensityMatrix)")
         }
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
     for(int n = 1; n < N; ++n)
@@ -199,7 +199,7 @@ SECTION("applyMPO (DensityMatrix)")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
         }
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
     for(int n = 1; n < N; ++n)
         {
@@ -244,7 +244,7 @@ SECTION("applyMPO (Fit)")
         }
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
     for(int n = 1; n < N; ++n)
@@ -255,7 +255,7 @@ SECTION("applyMPO (Fit)")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
         }
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
 
     for(int n = 1; n < N; ++n)
         {
@@ -268,7 +268,7 @@ SECTION("applyMPO (Fit)")
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
 
     // Now with a trial starting state
-    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000,"Sweeps=",100});
+    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
 
     for(int n = 1; n < N; ++n)
         {
@@ -313,7 +313,7 @@ SECTION("errorMPOProd Scaling")
         }
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"Maxm=",100});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
     for(int n = 1; n < N; ++n)
@@ -324,7 +324,7 @@ SECTION("errorMPOProd Scaling")
         CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
         }
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"Maxm=",5000});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
     for(int n = 1; n < N; ++n)
         {
@@ -372,8 +372,8 @@ SECTION("Overlap <psi|HK|phi>")
         Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,"Site"));
         }
 
-    auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
-    auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"Maxm=",5000,"Method=","DensityMatrix"});
+    auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
+    auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
 
     //Print(overlap(phi,H,K,psi));
     //Print(overlap(Hdphi,Kpsi));

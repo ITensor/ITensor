@@ -149,8 +149,8 @@ idmrg(MPS & psi,
             }
 
         auto ucsweeps = Sweeps(actual_nucsweeps);
-        ucsweeps.minm() = sweeps.minm(sw);
-        ucsweeps.maxm() = sweeps.maxm(sw);
+        ucsweeps.mindim() = sweeps.mindim(sw);
+        ucsweeps.maxdim() = sweeps.maxdim(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
@@ -217,12 +217,12 @@ idmrg(MPS & psi,
     for(; sw <= sweeps.nsweep(); ++sw)
         {
         auto ucsweeps = Sweeps(actual_nucsweeps);
-        ucsweeps.minm() = sweeps.minm(sw);
-        ucsweeps.maxm() = sweeps.maxm(sw);
+        ucsweeps.mindim() = sweeps.mindim(sw);
+        ucsweeps.maxdim() = sweeps.maxdim(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
-        args.add("Maxm",sweeps.maxm(sw));
+        args.add("MaxDim",sweeps.maxdim(sw));
 
         print(ucsweeps);
 

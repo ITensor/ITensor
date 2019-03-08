@@ -38,9 +38,9 @@ diagHImpl(ITensor H,
     if(not hasQNs(H))
         {
         auto cutoff = args.getReal("Cutoff",0.);
-        auto maxm = args.getInt("Maxm",dim(H.inds().front()));
-        auto minm = args.getInt("Minm",1);
-        auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
+        auto maxdim = args.getInt("MaxDim",dim(H.inds().front()));
+        auto mindim = args.getInt("MinDim",1);
+        auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
         auto do_truncate = args.getBool("Truncate",def_do_trunc);
         auto doRelCutoff = args.getBool("DoRelCutoff",true);
         auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
@@ -84,15 +84,15 @@ diagHImpl(ITensor H,
         if(do_truncate)
             {
             //if(DD(1) < 0) DD *= -1; //DEBUG
-            tie(truncerr,docut) = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff,args);
+            tie(truncerr,docut) = truncate(DD,maxdim,mindim,cutoff,absoluteCutoff,doRelCutoff,args);
             m = DD.size();
             reduceCols(UU,m);
             }
 
-        if(m > maxm)
+        if(m > maxdim)
             {
-            printfln("m > maxm; m = %d, maxm = %d",m,maxm);
-            Error("m > maxm");
+            printfln("m > maxdim; m = %d, maxdim = %d",m,maxdim);
+            Error("m > maxdim");
             }
         if(m > 50000)
             {
@@ -103,8 +103,8 @@ diagHImpl(ITensor H,
             {
             auto showargs = args;
             showargs.add("Cutoff",cutoff);
-            showargs.add("Maxm",maxm);
-            showargs.add("Minm",minm);
+            showargs.add("MaxDim",maxdim);
+            showargs.add("MinDim",mindim);
             showargs.add("Truncate",do_truncate);
             showargs.add("DoRelCutoff",doRelCutoff);
             showargs.add("AbsoluteCutoff",absoluteCutoff);
@@ -131,9 +131,9 @@ diagHImpl(ITensor H,
         {
         SCOPED_TIMER(7)
         auto cutoff = args.getReal("Cutoff",0.);
-        auto maxm = args.getInt("Maxm",MAX_INT);
-        auto minm = args.getInt("Minm",1);
-        auto def_do_trunc = args.defined("Cutoff") || args.defined("Maxm");
+        auto maxdim = args.getInt("MaxDim",MAX_INT);
+        auto mindim = args.getInt("MinDim",1);
+        auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
         auto do_truncate = args.getBool("Truncate",def_do_trunc);
         auto doRelCutoff = args.getBool("DoRelCutoff",true);
         auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
@@ -230,7 +230,7 @@ diagHImpl(ITensor H,
         Real docut = -1;
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
                                            absoluteCutoff,doRelCutoff,args);
             m = probs.size();
             alleigqn.resize(m);
@@ -240,18 +240,18 @@ diagHImpl(ITensor H,
             {
             auto showargs = args;
             showargs.add("Cutoff",cutoff);
-            showargs.add("Maxm",maxm);
-            showargs.add("Minm",minm);
+            showargs.add("MaxDim",maxdim);
+            showargs.add("MinDim",mindim);
             showargs.add("Truncate",do_truncate);
             showargs.add("DoRelCutoff",doRelCutoff);
             showargs.add("AbsoluteCutoff",absoluteCutoff);
             showEigs(probs,truncerr,H.scale(),showargs);
             }
 
-        if(m > maxm)
+        if(m > maxdim)
             {
-            printfln("m > maxm; m = %d, maxm = %d",m,maxm);
-            Error("m > maxm");
+            printfln("m > maxdim; m = %d, maxdim = %d",m,maxdim);
+            Error("m > maxdim");
             }
         if(m > 20000)
             {

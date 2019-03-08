@@ -219,14 +219,14 @@ DMRGWorker(MPS & psi,
         args.add("Sweep",sw);
         args.add("NSweep",sweeps.nsweep());
         args.add("Cutoff",sweeps.cutoff(sw));
-        args.add("Minm",sweeps.minm(sw));
-        args.add("Maxm",sweeps.maxm(sw));
+        args.add("MinDim",sweeps.mindim(sw));
+        args.add("MaxDim",sweeps.maxdim(sw));
         args.add("Noise",sweeps.noise(sw));
         args.add("MaxIter",sweeps.niter(sw));
 
         if(!PH.doWrite()
            && args.defined("WriteM")
-           && sweeps.maxm(sw) >= args.getInt("WriteM"))
+           && sweeps.maxdim(sw) >= args.getInt("WriteM"))
             {
             if(!quiet)
                 {
@@ -258,8 +258,8 @@ DMRGWorker(MPS & psi,
                 { 
                 printfln("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d",
                           sweeps.cutoff(sw),
-                          sweeps.minm(sw), 
-                          sweeps.maxm(sw) );
+                          sweeps.mindim(sw), 
+                          sweeps.maxdim(sw) );
                 printfln("    Trunc. err=%.1E, States kept: %s",
                          spec.truncerr(),
                          showDim(linkInd(psi,b)) );

@@ -231,24 +231,24 @@ svd(ITensor AA,
     if(useOrigM)
         {
         //Try to determine current m,
-        //then set minm_ and maxm_ to this.
+        //then set mindim_ and maxdim_ to this.
         args.add("Cutoff",-1);
-        long minm = 1,
-             maxm = MAX_M;
+        long mindim = 1,
+             maxdim = MAX_DIM;
         if(D.order() == 0)
             {
             //auto mid = commonIndex(U,V,Link);
             //TODO: check this does the same thing
             auto mid = commonIndex(U,V,"Link");
-            if(mid) minm = maxm = dim(mid);
-            else    minm = maxm = 1;
+            if(mid) mindim = maxdim = dim(mid);
+            else    mindim = maxdim = 1;
             }
         else
             {
-            minm = maxm = dim(D.inds().front());
+            mindim = maxdim = dim(D.inds().front());
             }
-        args.add("Minm",minm);
-        args.add("Maxm",maxm);
+        args.add("MinDim",mindim);
+        args.add("MaxDim",maxdim);
         }
 
     auto ui = commonIndex(AA,Ucomb);
@@ -329,8 +329,8 @@ denmatDecomp(ITensor const& AA,
     if(args.getBool("UseOrigM",false))
         {
         args.add("Cutoff",-1);
-        args.add("Minm",dim(mid));
-        args.add("Maxm",dim(mid));
+        args.add("MinDim",dim(mid));
+        args.add("MaxDim",dim(mid));
         }
 
     if(args.getBool("TraceReIm",false))
@@ -422,8 +422,8 @@ diagHermitian(ITensor const& M,
 //Return value is: (trunc_error,docut)
 std::tuple<Real,Real>
 truncate(Vector & P,
-         long maxm,
-         long minm,
+         long maxdim,
+         long mindim,
          Real cutoff,
          bool absoluteCutoff = false,
          bool doRelCutoff = false,

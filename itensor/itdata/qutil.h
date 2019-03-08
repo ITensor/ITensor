@@ -152,7 +152,7 @@ loopContractedBlocks(BlockSparseA const& A,
         //Reconstruct indices labeling this block of A, put into Ablock
         //TODO: optimize away need to call computeBlockInd by
         //      storing block indices directly in QDense
-        //      Taking 10% of running time in S=1 N=100 DMRG tests (maxm=100)
+        //      Taking 10% of running time in S=1 N=100 DMRG tests (maxdim=100)
         computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();

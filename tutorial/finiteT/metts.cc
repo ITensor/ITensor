@@ -87,7 +87,7 @@ main(int argc, char* argv[])
     auto tau = input.getReal("tau",0.1);
 
     auto cutoff = input.getReal("cutoff");
-    auto maxm = input.getInt("maxm",5000);
+    auto maxdim = input.getInt("maxdim",5000);
 
     auto nmetts = input.getInt("nmetts",50000);
     auto nwarm = input.getInt("nwarm",5);
@@ -95,7 +95,7 @@ main(int argc, char* argv[])
     auto sites = SpinHalf(N);
         
     Args args;
-    args.add("Maxm",maxm);
+    args.add("MaxDim",maxdim);
     args.add("Cutoff",cutoff);
     args.add("Method","DensityMatrix");
 
@@ -128,8 +128,8 @@ main(int argc, char* argv[])
         
     Args targs;
     targs.add("Verbose",false);
-    targs.add("Maxm",maxm);
-    targs.add("Minm",6);
+    targs.add("MaxDim",maxdim);
+    targs.add("MinDim",6);
     targs.add("Cutoff",cutoff);
         
     auto ttotal = beta/2.;
@@ -160,11 +160,11 @@ main(int argc, char* argv[])
             }
 
         if(step > nwarm) println("Done making METTS ",step-nwarm);
-        int maxmm = 0;
+        int maxdimm = 0;
         for(int b = 0; b < psi.N(); ++b)
             {
             int m_b = dim(linkInd(psi,b));
-            maxmm = std::max(maxmm,m_b);
+            maxdimm = std::max(maxdimm,m_b);
             }
             
         if(step > nwarm)

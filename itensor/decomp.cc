@@ -107,8 +107,8 @@ doTask(GetBlocks<Cplx> const& G, QDense<Cplx> const& d);
 
 std::tuple<Real,Real>
 truncate(Vector & P,
-         long maxm,
-         long minm,
+         long maxdim,
+         long mindim,
          Real cutoff,
          bool absoluteCutoff,
          bool doRelCutoff,
@@ -139,8 +139,8 @@ truncate(Vector & P,
         }
 
     Real truncerr = 0;
-    //Always truncate down to at least m==maxm (m==n+1)
-    while(n >= maxm)
+    //Always truncate down to at least m==maxdim (m==n+1)
+    while(n >= maxdim)
         {
         truncerr += P(n);
         --n;
@@ -150,7 +150,7 @@ truncate(Vector & P,
         {
         //Test if individual prob. weights fall below cutoff
         //rather than using *sum* of discarded weights
-        for(; P(n) < cutoff && n >= minm; --n) 
+        for(; P(n) < cutoff && n >= mindim; --n) 
             {
             truncerr += P(n);
             }
@@ -166,8 +166,8 @@ truncate(Vector & P,
             }
 
         //Continue truncating until *sum* of discarded probability 
-        //weight reaches cutoff reached (or m==minm)
-        while(truncerr+P(n) < cutoff*scale && n >= minm)
+        //weight reaches cutoff reached (or m==mindim)
+        while(truncerr+P(n) < cutoff*scale && n >= mindim)
             {
             truncerr += P(n);
             --n;
@@ -205,13 +205,13 @@ showEigs(Vector const& P,
     {
     auto do_truncate = args.getBool("Truncate",true);
     auto cutoff = args.getReal("Cutoff",0.);
-    auto maxm = args.getInt("Maxm",P.size());
-    auto minm = args.getInt("Minm",1);
+    auto maxdim = args.getInt("MaxDim",P.size());
+    auto mindim = args.getInt("MinDim",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
 
     println();
-    printfln("minm = %d, maxm = %d, cutoff = %.2E, truncate = %s",minm,maxm,cutoff,do_truncate);
+    printfln("mindim = %d, maxdim = %d, cutoff = %.2E, truncate = %s",mindim,maxdim,cutoff,do_truncate);
     printfln("Kept m=%d states, trunc. err. = %.3E", P.size(),truncerr);
     printfln("doRelCutoff = %s, absoluteCutoff = %s",doRelCutoff,absoluteCutoff);
     IF_USESCALE(printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());)

@@ -10,7 +10,7 @@ int main()
 
     int Nrow = 4;
     int Ncol = 3;
-    auto maxm = std::min(Nrow,Ncol);
+    auto maxdim = std::min(Nrow,Ncol);
 
     auto M = Matrix(Nrow,Ncol);
     M(0,0) = 0.435839; M(0,1) = 0.223707; M(0,2) = 0.10;
@@ -28,7 +28,7 @@ int main()
     Print(V);
 
     int nkeep = 2;
-    auto Dtrunc = Matrix(maxm,maxm);
+    auto Dtrunc = Matrix(maxdim,maxdim);
     for(auto j : range(nkeep))
         {
         Dtrunc(j,j) = d(j);

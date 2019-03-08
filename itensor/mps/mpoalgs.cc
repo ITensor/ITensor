@@ -161,8 +161,8 @@ exactApplyMPO(MPO const& K,
     {
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
-    auto maxm_set = args.defined("Maxm");
-    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
+    auto maxdim_set = args.defined("MaxDim");
+    if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
     //auto siteType = getIndexType(args,"SiteType",Site);
@@ -233,16 +233,16 @@ exactApplyMPO(MPO const& K,
 
     for(int j = N-1; j > 1; --j)
         {
-        if(not maxm_set)
+        if(not maxdim_set)
             {
-            //Infer maxm from bond dim of original MPS
+            //Infer maxdim from bond dim of original MPS
             //times bond dim of MPO
             //i.e. upper bound on order of rho
             auto cip = commonIndex(psi.A(j),E.at(j-1));
             auto ciw = commonIndex(K.A(j),E.at(j-1));
-            auto maxm = (cip) ? dim(cip) : 1l;
-            maxm *= (ciw) ? dim(ciw) : 1l;
-            dargs.add("Maxm",maxm);
+            auto maxdim = (cip) ? dim(cip) : 1l;
+            maxdim *= (ciw) ? dim(ciw) : 1l;
+            dargs.add("MaxDim",maxdim);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
         //TODO: make sure this tag convention is working
@@ -314,8 +314,8 @@ fitApplyMPO(Real fac,
     Sweeps sweeps(nsweep);
     auto cutoff = args.getReal("Cutoff",-1);
     if(cutoff >= 0) sweeps.cutoff() = cutoff;
-    auto maxm = args.getInt("Maxm",-1);
-    if(maxm >= 1) sweeps.maxm() = maxm;
+    auto maxdim = args.getInt("MaxDim",-1);
+    if(maxdim >= 1) sweeps.maxdim() = maxdim;
     fitApplyMPO(fac,psi,K,res,sweeps,args);
     }
 
@@ -347,8 +347,8 @@ fitApplyMPO(Real fac,
         {
         args.add("Sweep",sw);
         args.add("Cutoff",sweeps.cutoff(sw));
-        args.add("Minm",sweeps.minm(sw));
-        args.add("Maxm",sweeps.maxm(sw));
+        args.add("MinDim",sweeps.mindim(sw));
+        args.add("MaxDim",sweeps.maxdim(sw));
         args.add("Noise",sweeps.noise(sw));
 
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
@@ -601,7 +601,7 @@ zipUpApplyMPO(MPS const& psi,
         Error("psi and res must be different MPS instances");
 
     //Real cutoff = args.getReal("Cutoff",psi.cutoff());
-    //int maxm = args.getInt("Maxm",psi.maxm());
+    //int maxdim = args.getInt("MaxDim",psi.maxdim());
 
     auto N = length(psi);
     if(length(K) != N) 
@@ -673,7 +673,7 @@ zipUpApplyMPO(MPS const& psi,
 ///    int ord = args.getInt("ExpHOrder",50);
 ///    bool verbose = args.getBool("Verbose",false);
 ///    args.add("Cutoff",MIN_CUT);
-///    args.add("Maxm",MAX_M);
+///    args.add("MaxDim",MAX_DIM);
 ///
 ///    MPO Hshift(H.sites());
 ///    Hshift.Aref(1) *= -Etot;
@@ -739,7 +739,7 @@ zipUpApplyMPO(MPS const& psi,
 //        if(doub == ndoub)
 //            {
 //            cout << "step " << doub << ", K is " << endl;
-//            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
+//            cout << "K.cutoff, K.maxdim are " << K.cutoff SP K.maxdim << endl;
 //            for(int i = 1; i <= N; i++)
 //                cout << i SP K.A[i];
 //            }

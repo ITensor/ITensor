@@ -604,11 +604,11 @@ checkMPOProd(MPS const& psi2,
 //    //but do not truncate since the basis to the right might not
 //    //be ortho (i.e. use the current m).
 //    //svd_.useOrigM(true);
-//    int orig_maxm = maxm();
+//    int orig_maxdim = maxdim();
 //    Real orig_cutoff = cutoff();
 //    for(Spectrum& spec : spectrum_)
 //        {
-//        spec.maxm(MAX_M);
+//        spec.maxdim(MAX_DIM);
 //        spec.cutoff(MIN_CUT);
 //        }
 //
@@ -619,7 +619,7 @@ checkMPOProd(MPS const& psi2,
 //    for(Spectrum& spec : spectrum_)
 //        {
 //        spec.useOrigM(false);
-//        spec.maxm(orig_maxm);
+//        spec.maxdim(orig_maxdim);
 //        spec.cutoff(orig_cutoff);
 //        }
 //    position(1);

@@ -134,10 +134,10 @@ SECTION("Chop Spaces and Equals Signs")
     CHECK(!args.defined("Size = "));
     CHECK(args.getInt("Size")==5);
 
-    args.add("Maxm  ",100);
-    CHECK(args.defined("Maxm"));
-    CHECK(!args.defined("Maxm  "));
-    CHECK(args.getInt("Maxm")==100);
+    args.add("MaxDim  ",100);
+    CHECK(args.defined("MaxDim"));
+    CHECK(!args.defined("MaxDim  "));
+    CHECK(args.getInt("MaxDim")==100);
     }
 
 SECTION("Read/Write")

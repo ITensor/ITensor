@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     MPO H = Heisenberg(sites,{"Infinite=",true});
 
     auto sweeps = Sweeps(20);
-    sweeps.maxm() = 20,80,140,200;
+    sweeps.maxdim() = 20,80,140,200;
     sweeps.cutoff() = 1E-10,Args("Repeat",10),1E-14;
     sweeps.niter() = 3,2;
 

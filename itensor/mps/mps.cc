@@ -601,8 +601,8 @@ orthogonalize(Args const& args)
 
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
-    auto maxm_set = args.defined("Maxm");
-    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
+    auto maxdim_set = args.defined("MaxDim");
+    if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
 
     int plev = 14741;
 
@@ -625,13 +625,13 @@ orthogonalize(Args const& args)
 
     for(int j = N_-1; j > 1; --j)
         {
-        if(not maxm_set)
+        if(not maxdim_set)
             {
-            //Infer maxm from bond dim of original MPS
+            //Infer maxdim from bond dim of original MPS
             //i.e. upper bound on rank of rho
             auto ci = commonIndex(O,E.at(j-1));
-            auto maxm = (ci) ? dim(ci) : 1l;
-            dargs.add("Maxm",maxm);
+            auto maxdim = (ci) ? dim(ci) : 1l;
+            dargs.add("MaxDim",maxdim);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
         auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",format("Link,l=%d",j-1)});
@@ -1490,7 +1490,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //    assert(sites_ != 0);
 //    const SiteSet& sst = *sites_;
 //
-//    iqpsi = IQMPSType(sst,maxm,cutoff);
+//    iqpsi = IQMPSType(sst,maxdim,cutoff);
 //
 //    if(!A_[1].hasIndex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
 //    bool is_mpo = A_[1].hasIndex(prime(si(1)));

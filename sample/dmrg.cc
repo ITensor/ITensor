@@ -52,7 +52,7 @@ main()
     // so all remaining sweeps will use the last one given (= 1E-10).
     //
     auto sweeps = Sweeps(5);
-    sweeps.maxm() = 10,20,100,100,200;
+    sweeps.maxdim() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
     sweeps.noise() = 1E-7,1E-8,0.0;

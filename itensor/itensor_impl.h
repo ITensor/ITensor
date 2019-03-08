@@ -929,12 +929,12 @@ diagITensor(Container const& C,
 #ifdef DEBUG
     using size_type = decltype(C.size());
     //Compute min of all index dimensions
-    auto minm = dim(i1);
+    auto mindim = dim(i1);
     for(const auto& ind : is)
-        if(dim(ind) < minm) minm = dim(ind);
-    if(C.size() != size_type(minm))
+        if(dim(ind) < mindim) mindim = dim(ind);
+    if(C.size() != size_type(mindim))
         {
-        println("minm = ",minm);
+        println("mindim = ",mindim);
         println("C.size() = ",C.size());
         Error("Wrong size of data in diagonal ITensor constructor");
         }
