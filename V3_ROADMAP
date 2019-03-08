@@ -9,10 +9,6 @@ o Use order instead of ord in library and docs
 ! Update website:
   o Detailed documentation
     - (see Matt's list of website issues)
-    - update .real and .cplx to .elt and .eltC
-    - use i=2 instead of i(2) in Index examples (and TRG code)
-    - use i=2 instead of i(2) in Index detailed docs
-    - list free functions in IndexVal docs
     - info about QN blocks in Index objects
     X how to make QN ITensors
     - removeQNs ITensor function
@@ -28,34 +24,10 @@ o Use order instead of ord in library and docs
 o Priming and tagging functions for MPS and MPO
   o primeall(MPO) -> prime(MPO)
 o Finalize tags interface
-  o Add `tags(IndexSet,string)` and `tags(ITensor,string)`
-  o Remove whitespace from tags
   o Add access of prime level through the tag system
+  ? Remove whitespace from tags
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
-  --> Hard to make backwards compatible with table read mode
-  ?-> Just change the definition by 1?
-o Related: Make arnoldi, gmres, and davidson Args consistent
-  o gmres and arnoldi have restarts, so there are two Args:
-    the size of the Krylov space, and then the number of times
-    they get restarted. Davidson doesn't have any restarts (but maybe
-    it should?), so it just has the option of the Krylov size, which 
-    equals the number of total iterations.
-  o It seems common to specify the maximum Krylov size, and then
-    also the maximum number of iterations, which means the algorithm
-    gets restarted (maximum number of iterations) % (Krylov size) number
-    of times. I think this is pretty standard, and good since it
-    let's the user be explicit about the number of matrix-vector multiplications
-    to perform
-  o Matt's proposal: 
-    - "MaxIterations" controls the total matrix-vector multiplies
-    - "KrylovSize" ("SubspaceSize"???) controls the maximum Krylov space size
-    `arnoldi` and `gmres` will have both of these, and davidson only has "MaxIterations"
-    (or "KrylovSize"???).
-    However, "MaxIterations" is not a great name for the DMRG interface, so
-    maybe it gets translated to "SolverIterations"? But we also may want to
-    leave the option open for having restarts/using a different solver,
-    like Lanczos... I think this is something we need to discuss, since it
-    gets pretty complicated.
+  --> Matt: see https://github.com/ITensor/ITensor/issues/209
 
 # Final Release Checks
   ! Fresh install with new options.mk file compiles
@@ -70,9 +42,81 @@ o Related: Make arnoldi, gmres, and davidson Args consistent
     Or perhaps better, Dylan can config Jenkins to 
     compile the sample codes.
 
+#################################################################################################
+Completed (this is to help keep track of changes made, but we should make an official
+           list for the website):
+
+Common operation deprecations (for upgrade guide):
+ - Index operations:
+  o Index("i",2) -> Index(2,"i") (deprecation error)
+  o noprime -> noPrime (deprecation error)
+  o i.m() -> dim(i) throughout library (no error?)
+  o i.id() -> id(i)
+  o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
+    removed IQIndexVal, IQMPS, IQMPO, etc)
+  o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor containing certain tags and matching an optional prime level
+  o Remove findType, use findIndex instead
+ - ITensor operations:
+  o `order(A,i,j,k)` -> `permute(A,i,j,k)` to permute the date of an ITensor
+  o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
+  o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
+    backwards compatibility. Replaced throughout library.
+  o Replace maxM(IndexSet) and minM(IndexSet) with maxDim(IndexSet) and minDim(IndexSet)
+  o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
+  o Deprecate randomize(ITensor& T) in favor of T.randomize()
+  o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
+    removed IQIndexVal, IQMPS, IQMPO, etc)
+  o Depecrate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,Index,Index,...)
+    that does not ignore prime levels and internally calls delta()
+  o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor (deprecation warnings)
+ - MPS operations:
+  o psi.N() -> length(psi)
+  o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
+  o Deprecate normalize(MPS& psi) in favor of psi.normalize()
+  o Better tag convention for labelling site index (i.e. "n=1" instead of "1" for site 1)
+    o Site and Link IndexTypes removed in favor of tags
+    o Make sure that "Link" index keeps a consistent convention for labelling which link
+      (i.e. MPS at site "n=4" should have left link with tags "Link,l=3" and right link with
+       tags "Link,l=4")
+ - MPO operations:
+  o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+   o Add deprecation warning to MPO(AutoMPO), telling people to switch
+     to toMPO(AutoMPO)
+ - DMRG operations:
+  o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
+
+Misc changes:
+  o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
+  o Added .real and .cplx accepting vector<int> (pull #194)
+  o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
+  o Added errMPOProd and deprecated checkMPOProd
+  o Test that new QN system allows mixing different site types
+    (--> add MixedSiteSet to docs)
+  o New QN design:
+    Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
+    of triples name-val-modfac.
+  o All site sets except SiteSet(N,d) default to ConserveQNs=true
+  o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
+    o m>1 only allowed with no QNs
+  o Add randomMPS(SiteSet,m=1) function with no QNs
+  o Add randomMPS(InitState) function for QNs and no QNs
+  o Add read/write for TagSet
+  o Fix read/write for Index with QNs and test for rest of library
+  o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
+  o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
+  o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
+
+
+Recent commits to v2 (master branch):
+  o errMPOProd and deprecation of checkMPOProd
+  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
+  o Bugfix for nmultMPO
+  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
+
 -----------------------------------------------
 
 Optional (possibly post V3, because not breaking changes):
+ --> TODO: add these as issues on Github
 o Remove "Link" and "Site" from MPS and MPO functions
   o linkInd(psi,b)
   o rightLinkInd(psi,b)
@@ -106,9 +150,9 @@ o Generalize the convention of DMRG and applyMPO to accept MPOs with more genera
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
-    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j}) 
-    prints A as if it were a matrix where the rows run over the combined Index (i,j) and 
-    the columns run over the combined index (l,j). I think this is especially useful 
+    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j})
+    prints A as if it were a matrix where the rows run over the combined Index (i,j) and
+    the columns run over the combined index (l,j). I think this is especially useful
     for QN conserving ITensors, where it could make it easier to visualize
     blocks of the ITensor.
 o Implement randomMPS(InitState,m>1)
@@ -124,69 +168,4 @@ o Implement randomMPS(InitState,m>1)
 ? Add some more tag functions
   o A.addTags(tagset,imatch1,imatch2,...)
 ? In site sets, make all of the indices have the same ids but different tags
-
-
-
-#################################################################################################
-Completed (this is to help keep track of changes made, but we should make an official
-           list for the website):
-
-
-o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
-  backwards compatibility.
-o Replace i.m() with dim(i) throughout library
-o Replace .m() with dim(Index)
-o Replace .id() with id(Index)
-o Replace .N() with length(MPS)
-o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
-o Replace maxM(IndexSet) and minM(IndexSet) with maxDim(IndexSet) and minDim(IndexSet)
-o Deprecate maxM(MPS) and averageM(MPS) in favor of maxLinkDim(MPS) and averageLinkDim(MPS)
-o Add length(MPS) as preferred alternative to MPS.N() to get length of MPS
-o Add id(Index) as preferred alternative to .id()
-o Deprecate normalize(MPS& psi) in favor of psi.normalize()
-o Deprecate randomize(ITensor& T) in favor of T.randomize()
-o Deprecate i.m() in favor of dim(i), replace throughout library
-o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
-o Added .real and .cplx accepting vector<int> (pull #194)
-o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
-o Added errMPOProd and deprecated checkMPOProd
-o Test that new QN system allows mixing different site types
-  (--> add MixedSiteSet to docs)
-o New QN design:
-  Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
-  of triples name-val-modfac.
-o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
-  removed IQIndexVal, IQMPS, IQMPO, etc)
-o All site sets except SiteSet(N,d) default to ConserveQNs=true
-o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
-  o m>1 only allowed with no QNs
-o Add randomMPS(SiteSet,m=1) function with no QNs
-o Add randomMPS(InitState) function for QNs and no QNs
-o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-   o Add deprecation warning to MPO(AutoMPO), telling people to switch
-     to toMPO(AutoMPO)
-o Depecrate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,Index,Index,...)
-  that does not ignore prime levels and internally calls delta()
-o Add deprecation error for Index("i",3) constructor pointing towards Index(3,...)
-o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
-o Add read/write for TagSet
-o Fix read/write for Index with QNs and test for rest of library
-o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
-o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor
-o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
-o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor containing certain tags and matching an optional prime level
-o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
-o Better tag convention for labelling site index (i.e. "n=1" instead of "1" for site 1)
-o Make sure that "Link" index keeps a consistent convention for labelling which link
-  (i.e. MPS at site "n=4" should have left link with tags "Link,l=3" and right link with
-   tags "Link,l=4")
-o Implement dim(Index) -> long function as preferred alternative to I.m().
-  Update documentation (especially ITensor book and Index synopsis).
-
-
-Recent commits to v2 (master branch):
-o errMPOProd and deprecation of checkMPOProd
-o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
-o Bugfix for nmultMPO
-o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 
