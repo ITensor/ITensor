@@ -472,7 +472,7 @@ fitApplyMPO(Real mpsfac,
     olp *= psiA.A(1);
     olp *= dag(prime(res.A(1),"Link"));
 
-    return olp.real();
+    return olp.elt();
     }
 
 void

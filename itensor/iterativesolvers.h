@@ -138,7 +138,7 @@ davidson(BigMatrixT const& A,
     V[0] = phi.front();
     A.product(V[0],AV[0]);
 
-    auto initEn = ((dag(V[0])*AV[0]).cplx()).real();
+    auto initEn = ((dag(V[0])*AV[0]).eltC()).real();
 
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
@@ -283,7 +283,7 @@ davidson(BigMatrixT const& A,
             ++tot_pass;
             for(auto k : range(ni))
                 {
-                Vq[k] = (dag(V[k])*q).cplx();
+                Vq[k] = (dag(V[k])*q).eltC();
                 //printfln("pass=%d Vq[%d] = %s",pass,k,Vq[k]);
                 }
             for(auto k : range(ni))
@@ -333,7 +333,7 @@ davidson(BigMatrixT const& A,
         //for(int r = 1; r <= ni+1; ++r)
         //for(int c = r; c <= ni+1; ++c)
         //    {
-        //    z = (dag(V[r-1])*V[c-1]).cplx();
+        //    z = (dag(V[r-1])*V[c-1]).eltC();
         //    Vo(r,c) = abs(z);
         //    Vo(c,r) = Vo(r,c);
         //    }
@@ -359,7 +359,7 @@ davidson(BigMatrixT const& A,
         auto newCol = subVector(NC,0,1+ni);
         for(auto k : range(ni+1))
             {
-            newCol(k) = (dag(V.at(k))*AV.at(ni)).cplx();
+            newCol(k) = (dag(V.at(k))*AV.at(ni)).eltC();
             }
         column(Mref,ni) &= newCol;
         row(Mref,ni) &= conj(newCol);
@@ -397,7 +397,7 @@ davidson(BigMatrixT const& A,
         for(auto r : range(iter+1))
         for(auto c : range(r,iter+1))
             {
-            auto z = (dag(V[r])*V[c]).cplx();
+            auto z = (dag(V[r])*V[c]).eltC();
             Vo_final(r,c) = std::abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
@@ -480,13 +480,13 @@ applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
 void inline
 dot(ITensor const& A, ITensor const& B, Real& res)
     {
-    res = (dag(A)*B).real();
+    res = elt(dag(A)*B);
     }
 
 void inline
 dot(ITensor const& A, ITensor const& B, Cplx& res)
     {
-    res = (dag(A)*B).cplx();
+    res = eltC(dag(A)*B);
     }
 
 }//namespace gmres_details

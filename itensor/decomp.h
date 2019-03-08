@@ -320,7 +320,7 @@ denmatDecomp(ITensor const& AA,
         rho += noise*PH.deltaRho(AA,cmb,dir);
         //println("delta(dag(ci),prime(ci)) = ",delta(dag(ci),prime(ci)));
         //print("realPart(rho) = ",realPart(rho));
-        auto tr = (delta(dag(ci),prime(ci))*realPart(rho)).real();
+        auto tr = (delta(dag(ci),prime(ci))*realPart(rho)).elt();
         if(tr > 1E-16) rho *= 1./tr;
         }
 

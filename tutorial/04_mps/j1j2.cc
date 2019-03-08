@@ -48,7 +48,7 @@ int main()
         auto B1 = makeB(sites,i1);
         auto wf1 = psi.A(i1)*psi.A(i1+1);
         // compute <wf1|B1|wf1>
-        D +=  (dag(prime(wf1,Site)) * B1 * wf1).real();
+        D +=  (dag(prime(wf1,Site)) * B1 * wf1).elt();
 
         //
         // Compute: -1/2 <B_(N/2-1)>

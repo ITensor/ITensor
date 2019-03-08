@@ -32,7 +32,7 @@ collapse(MPS & psi,
             }
         else Error("Direction '" + direction + "' not recognized");
 
-        Real prob_up = (dag(prime(psi.A(j),Site))*PUp*psi.A(j)).real();
+        Real prob_up = (dag(prime(psi.A(j),Site))*PUp*psi.A(j)).elt();
 
         int st = 1;
         if(Global::random() > prob_up) st = 2;

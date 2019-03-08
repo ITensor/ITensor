@@ -352,7 +352,7 @@ product(ITensor const& phi,
         auto othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
         auto othrR = (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
         othr *= othrR;
-        auto z = (othr*phi).cplx();
+        auto z = (othr*phi).eltC();
 
         phip = dag(othr);
         phip *= z;

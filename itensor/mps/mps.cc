@@ -993,7 +993,7 @@ overlapC(MPSType const& psi,
     if(l1) L *= dag(prime(psi.A(1),l1)); 
     else   L *= dag(psi.A(1));
 
-    if(N == 1) return L.cplx();
+    if(N == 1) return L.eltC();
 
     for(decltype(N) i = 2; i < N; ++i) 
         { 
@@ -1002,8 +1002,8 @@ overlapC(MPSType const& psi,
     L = L * phi.A(N);
 
     auto lNm = linkInd(psi,N-1);
-    if(lNm) return (dag(prime(psi.A(N),lNm))*L).cplx();
-    return (dag(psi.A(N))*L).cplx();
+    if(lNm) return (dag(prime(psi.A(N),lNm))*L).eltC();
+    return (dag(psi.A(N))*L).eltC();
     }
 template Cplx overlapC<MPS>(MPS const& psi, MPS const& phi);
 template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
@@ -1363,7 +1363,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    Real rel_cut = -1;
 //                    const ITensor& sb = summed_block;
 //                    for(int j = 1; j <= dim(bond); ++j)
-//                        { rel_cut = std::max(std::fabs(sb.real(bond(j))),rel_cut); }
+//                        { rel_cut = std::max(std::fabs(sb.elt(bond(j))),rel_cut); }
 //                    assert(rel_cut >= 0);
 //                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
 //                    rel_cut *= cut;
@@ -1372,7 +1372,7 @@ template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
 //                    if(rel_cut > 0)
 //                    for(int j = 1; j <= dim(bond); ++j)
 //                        {
-//                        if(std::fabs(sb.real(bond(j))) > rel_cut) 
+//                        if(std::fabs(sb.elt(bond(j))) > rel_cut) 
 //                            { 
 //                            D(j) = 1; 
 //                            keep_block = true; 

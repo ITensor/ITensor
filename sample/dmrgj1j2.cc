@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
         auto ketmp = psi.A(b)*psi.A(b+1)*sites.op("Sm",b)*sites.op("Sp",b+1)*0.5;
         auto bra = dag(psi.A(b)*psi.A(b+1));
         bra.prime("Site");
-        auto SdS = (bra*ketzz).real() + (bra*ketpm).real() + (bra*ketmp).real();
+        auto SdS = (bra*ketzz).elt() + (bra*ketpm).elt() + (bra*ketmp).elt();
         printfln("S.S b %d = %.10f",b,SdS);
         }
 

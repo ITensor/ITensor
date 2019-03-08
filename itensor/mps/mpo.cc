@@ -386,7 +386,7 @@ overlap(MPS const& psi,
     L *= H.A(N);
     if(H.A(N+1)) L *= H.A(N+1);
 
-    auto z = (dag(prime(psi.A(N)))*L).cplx();
+    auto z = (dag(prime(psi.A(N)))*L).eltC();
     re = z.real();
     im = z.imag();
     }
@@ -440,7 +440,7 @@ overlap(MPS const& psi,
 
     if(RB) L *= RB;
 
-    auto z = L.cplx();
+    auto z = eltC(L);
     re = z.real();
     im = z.imag();
     }
@@ -491,7 +491,7 @@ overlap(MPS const& psi,
     //scales as m^2 k^2 d
     L = L * phi.A(N) * K.A(N) * Hp.A(N) * psidag.A(N);
     //PrintData(L);
-    auto z = L.cplx();
+    auto z = L.eltC();
     re = z.real();
     im = z.imag();
     }

@@ -310,7 +310,7 @@ SECTION("Overlap - 1 site")
     auto psi = MPS(1);
     auto s = Index(2,"s");
     psi.Aref(1) = randomITensor(s);
-    CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).real());
+    CHECK_CLOSE(overlap(psi,psi),(psi.A(1)*psi.A(1)).elt());
     }
 
 }

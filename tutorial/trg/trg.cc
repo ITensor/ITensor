@@ -101,7 +101,7 @@ for(auto scale : range1(topscale))
 
     // Normalize the current tensor and keep track of
     // the total normalization
-    Real TrA = (A*delta(l,r)*delta(u,d)).elt();
+    Real TrA = elt(A*delta(l,r)*delta(u,d));
     A /= TrA;
     z *= pow(TrA,1./pow(2,1+scale));
 

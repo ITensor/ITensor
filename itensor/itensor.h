@@ -160,6 +160,12 @@ class ITensor
     swapPrime(VarArgs&&... vargs)
         { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
+    // Deprecations
+    template<typename... VarArgs>
+    ITensor& 
+    noprime(VarArgs&&... vargs)
+        { Error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
+
     //
     // Index Tag Methods
     //
@@ -406,6 +412,16 @@ ITensor
 setElt(IVal  const& iv1, 
        IVals const&... rest);
 
+// Get ITensor values
+template <typename... VarArgs>
+Real
+elt(ITensor A,
+    VarArgs&&... vargs);
+
+template <typename... VarArgs>
+Cplx
+eltC(ITensor A,
+     VarArgs&&... vargs);
 
 //
 // ITensor prime level functions
@@ -540,7 +556,7 @@ rank(ITensor const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
-//Result is equivalent to sqrt((T*T).real()) 
+//Result is equivalent to sqrt((T*T).elt()) 
 //(and similar for complex case) but computed more efficiently
 Real
 norm(ITensor const& T);

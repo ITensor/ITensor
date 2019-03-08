@@ -499,6 +499,21 @@ operator/(ITensor A, ITensor const& B) { A /= B; return A; }
 ITensor inline
 operator/(ITensor const& A, ITensor && B) { B /= A; return B; }
 
+template<typename... VarArgs>
+Real
+elt(ITensor A, 
+    VarArgs&&... vargs)
+    {
+    return A.elt(std::forward<VarArgs>(vargs)...);
+    }
+
+template<typename... VarArgs>
+Cplx
+eltC(ITensor A, 
+     VarArgs&&... vargs)
+    {
+    return A.eltC(std::forward<VarArgs>(vargs)...);
+    }
 
 template<typename... VarArgs>
 ITensor

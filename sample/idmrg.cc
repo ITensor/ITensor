@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
         //ui is the IQIndex "sticking out" of the right edge of psi.A(n)
         auto ui = uniqueIndex(psi.A(n),lcorr,"Link");
         //prime ui so it contracts with the "bra" tensor on top = dag(prime(psi.A(n)))
-        Real val = (dag(prime(psi.A(n)))*lcorr*prime(psi.A(n),ui)*sites.op("Sz",n)).real();
+        Real val = (dag(prime(psi.A(n)))*lcorr*prime(psi.A(n),ui)*sites.op("Sz",n)).elt();
         printfln("%d %.20f",j,val);
         lcorr *= psi.A(n);
         lcorr *= dag(prime(psi.A(n),"Link"));

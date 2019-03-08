@@ -74,7 +74,7 @@ int main()
     //
 
     auto cpsi = dag(prime(psi));
-    Real E = (cpsi * H * psi).real();
+    Real E = (cpsi * H * psi).elt();
 
     Print(E);
 

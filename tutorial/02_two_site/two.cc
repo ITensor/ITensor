@@ -69,7 +69,7 @@ int main()
     ITensor H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
 
     // Initial energy expectation value
-    Real initEn = (dag(prime(psi_init)) * H * psi_init).real();
+    Real initEn = (dag(prime(psi_init)) * H * psi_init).elt();
     printfln("\nInitial energy = %.10f",initEn);
 
 
@@ -82,7 +82,7 @@ int main()
     psi.noprime();
     psi/= norm(psi);
 
-    Real En = (dag(prime(psi)) * H * psi).real();
+    Real En = (dag(prime(psi)) * H * psi).elt();
     printfln("At beta=%.1f, energy = %.10f",beta,En);
 
     //
