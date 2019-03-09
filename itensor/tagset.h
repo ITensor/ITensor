@@ -228,13 +228,13 @@ removeTags(TagSet T, TagSet const& ts)
 inline std::ostream&
 operator<<(std::ostream & s, TagSet const& ts)
     {
-    s << "\"";
+    //s << "\"";
     for(auto i : range(size(ts)))
         {
         s << ts[i];
-        if(i<size(ts)-1) s << ",";
+        if(i < size(ts)-1) s << ",";
         }
-    s << "\"";
+    //s << "\"";
     return s;
     }
 
