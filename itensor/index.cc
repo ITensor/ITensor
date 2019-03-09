@@ -213,13 +213,13 @@ std::ostream&
 operator<<(std::ostream & s, Index const& I)
     {
     s << "(";
-    if(size(tags(I)) > 0) s << tags(I) << ",";
     s << dim(I);
     if(Global::showIDs()) 
         {
         s << "|id=" << (id(I) % 1000);
         //s << "," << id(I);
         }
+    if(size(tags(I)) > 0) s << "|" << tags(I);
     s << ")"; 
     if(primeLevel(I) > 0) 
         {
