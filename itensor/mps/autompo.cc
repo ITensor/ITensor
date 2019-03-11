@@ -1141,6 +1141,11 @@ compressMPO(SiteSet const& sites,
             Complex tau = 0,
             Args const& args = Args::global())
     {
+    if(args.defined("Maxm"))
+      Error("Error in compressMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in compressMPO: Arg Minm is deprecated in favor of MinDim.");
+
     int N = length(sites);
     Real eps = 1E-14;
 
@@ -1400,6 +1405,11 @@ MPO
 svdMPO(AutoMPO const& am, 
        Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdMPO: Arg Minm is deprecated in favor of MinDim.");
+
     bool isExpH = false;
     Cplx tau = 0.;
 
@@ -1459,6 +1469,11 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
+    if(args.defined("Maxm"))
+      Error("Error in toMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in toMPO: Arg Minm is deprecated in favor of MinDim.");
+
     auto verbose = args.getBool("Verbose",false);
     if(args.getBool("Exact",false))
         {

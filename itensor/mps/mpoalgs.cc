@@ -25,6 +25,10 @@ nmultMPO(MPO const& Aorig,
          MPO& res,
          Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in nmultMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in nmultMPO: Arg Minm is deprecated in favor of MinDim.");
 
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
 
@@ -103,8 +107,13 @@ applyMPO(MPO const& K,
          MPS const& x,
          Args const& args)
     {
-    if(not x(1).store()) Error("In applyMPO, MPS is uninitialized.");
-    if(not K(1).store()) Error("In applyMPO, MPO is uninitialized.");
+    if(args.defined("Maxm"))
+      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
+
+    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
+    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
     auto method = args.getString("Method","DensityMatrix");
 
     //This is done here because fitApplyMPO() has a different default behavior
@@ -131,9 +140,14 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args const& args)
     {
-    if(not x(1).store()) Error("In applyMPO, MPS is uninitialized.");
-    if(not K(1).store()) Error("In applyMPO, MPO is uninitialized.");
-    if(not x0(1).store()) Error("In applyMPO, guess MPS is uninitialized.");
+    if(args.defined("Maxm"))
+      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
+
+    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
+    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
+    if(not x0(1).store()) Error("Error in applyMPO, guess MPS is uninitialized.");
     auto method = args.getString("Method","Fit");
 
     //This is done here because fitApplyMPO() has a different default behavior

@@ -101,6 +101,11 @@ idmrg(MPS & psi,
       DMRGObserver & obs,
       Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto olevel = args.getInt("OutputLevel",0);
     auto quiet = args.getBool("Quiet",olevel == 0);
     auto nucsweeps = args.getInt("NUCSweeps",1);
@@ -358,6 +363,11 @@ idmrg(MPS      & psi,
       DMRGObserver & obs,
       Args         const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     //Assumes H(N+1) contains vector
     //picking out ending state of MPO
     //automaton:
@@ -372,6 +382,11 @@ idmrg(MPS      & psi,
       Sweeps       const& sweeps, 
       Args         const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto obs = DMRGObserver(psi);
     return idmrg(psi,H,sweeps,obs,args);
     }
@@ -383,6 +398,11 @@ idmrg(MPS      & psi,
       Sweeps       const& sweeps, 
       Args         const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto obs = DMRGObserver(psi);
     return idmrg(psi,H,last_res,sweeps,obs,args);
     }

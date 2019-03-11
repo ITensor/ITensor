@@ -36,6 +36,11 @@ svdImpl(ITensor const& A,
         ITensor & V,
         Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdImpl: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdImpl: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -372,6 +377,11 @@ svdOrd2(ITensor const& A,
          ITensor & V,
          Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdOrd2: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdOrd2: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.defined("Cutoff") 
                     || args.defined("MaxDim");
     if(not args.defined("Truncate")) 

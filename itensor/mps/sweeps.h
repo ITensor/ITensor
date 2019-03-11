@@ -349,6 +349,11 @@ nsweep(int val)
 void inline Sweeps::
 init(Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in Sweeps: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in Sweeps: Arg Minm is deprecated in favor of MinDim.");
+
     auto min_dim = args.getInt("MinDim",1);
     auto max_dim = args.getInt("MaxDim");
     auto cutoff = args.getReal("Cutoff");

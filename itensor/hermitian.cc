@@ -33,6 +33,11 @@ diagHImpl(ITensor H,
           ITensor& D,
           Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in diagHImpl: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in diagHImpl: Arg Minm is deprecated in favor of MinDim.");
+
     auto itagset = getTagSet(args,"Tags","Link");
 
     if(not hasQNs(H))
@@ -362,6 +367,11 @@ diag_hermitian(ITensor    H,
                ITensor  & D,
                Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in diag_hermitian: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in diag_hermitian: Arg Minm is deprecated in favor of MinDim.");
+
     if(isComplex(H))
         {
         return diagHImpl<Cplx>(H,U,D,args);

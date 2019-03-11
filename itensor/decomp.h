@@ -182,6 +182,11 @@ svd(ITensor AA,
     ITensor & V, 
     Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svd: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svd: Arg Minm is deprecated in favor of MinDim.");
+
 #ifdef DEBUG
     if(!U && !V) 
         Error("U and V default-initialized in svd, must indicate at least one index on U or V");
@@ -277,6 +282,11 @@ denmatDecomp(ITensor const& AA,
              BigMatrixT const& PH,
              Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in denmatDecomp: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in denmatDecomp: Arg Minm is deprecated in favor of MinDim.");
+
     auto noise = args.getReal("Noise",0.);
 
     //TODO: try to avoid using "Link" here
@@ -360,6 +370,11 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in diagHermitian: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in diagHermitian: Arg Minm is deprecated in favor of MinDim.");
+
     //TODO: create tag convention
     if(!args.defined("Tags")) args.add("Tags","Link");
 

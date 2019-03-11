@@ -203,6 +203,11 @@ showEigs(Vector const& P,
          LogNum const& scale,
          Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in showEigs: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in showEigs: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.getBool("Truncate",true);
     auto cutoff = args.getReal("Cutoff",0.);
     auto maxdim = args.getInt("MaxDim",P.size());
@@ -249,6 +254,11 @@ factor(ITensor const& T,
        ITensor      & B,
        Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in factor: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in factor: Arg Minm is deprecated in favor of MinDim.");
+
     //TODO: make a standard TagSet for factor()
     //auto name = args.getString("IndexName","c");
     auto itagset = getTagSet(args,"Tags","Link,FAC");
