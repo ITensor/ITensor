@@ -68,12 +68,19 @@ class MPO : private MPS
     using Parent::noPrimeLink;
 
     void 
-    primeall()	// sites i,i' -> i',i'';  link:  l -> l'
+    prime()	// sites i,i' -> i',i'';  link:  l -> l'
         {
         for(int i = 1; i <= this->length(); i++)
             {
             ref(i).prime();
             }
+        }
+
+    void 
+    primeall()
+        {
+        Global::warnDeprecated("MPO.primeall() is deprecated, use MPO.prime() instead");
+        prime();
         }
 
     void 

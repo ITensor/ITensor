@@ -233,6 +233,10 @@ addAssumeOrth(MPSType      & L,
               MPSType const& R, 
               Args const& args = Args::global());
 
+template <typename MPSType>
+SiteSet const&
+sites(MPSType const& psi) { return psi.sites(); }
+
 //void 
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
 //            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);

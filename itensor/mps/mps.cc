@@ -959,7 +959,7 @@ removeQNs(MPSType const& psi)
     {
     int N = length(psi);
     MPSType res;
-    if(psi.sites()) res = MPSType(psi.sites());
+    if(sites(psi)) res = MPSType(sites(psi));
     else            res = MPSType(N);
     for(int j = 0; j <= N+1; ++j)
         {
