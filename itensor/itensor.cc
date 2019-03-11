@@ -341,14 +341,20 @@ swap(ITensor & other)
     IF_USESCALE(scale_.swap(other.scale_);)
     }
 
+IndexSet const&
+inds(ITensor const& A) { return A.inds(); }
+
+Index const&
+index(ITensor const& A, RangeT<Index>::size_type I) { return A.index(I); }
+
 Index
 commonIndex(ITensor const& A, 
             ITensor const& B, 
             TagSet const& ts)
     {
-    for(auto& I : A.inds())
+    for(auto& I : inds(A))
         if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && hasIndex(B.inds(),I) ) 
+         && hasIndex(inds(B),I) ) 
             {
             return I;
             }
@@ -360,9 +366,9 @@ uniqueIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& ts)
     {
-    for(auto& I : A.inds())
+    for(auto& I : inds(A))
         if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && !hasIndex(B.inds(),I) ) 
+         && !hasIndex(inds(B),I) ) 
             {
             return I;
             }
@@ -442,25 +448,25 @@ void
 allocReal(ITensor& T)
     {
     if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
-    T.store() = newITData<DenseReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(dim(inds(T)),0);
     }
 
 void
-allocReal(ITensor& T, IntArray const& inds)
+allocReal(ITensor& T, IntArray const& ints)
     {
     if(not hasQNs(T))
         {
-        T.store() = newITData<DenseReal>(area(T.inds()),0);
+        T.store() = newITData<DenseReal>(dim(inds(T)),0);
         }
     else
         {
         QN div;
-        for(auto i : range(T.inds()))
+        for(auto i : range(inds(T)))
             {
-            auto iv = (T.inds()[i])(1+inds[i]);
+            auto iv = (inds(T)[i])(1+ints[i]);
             div += iv.qn()*iv.index.dir();
             }
-        T.store() = newITData<QDenseReal>(T.inds(),div);
+        T.store() = newITData<QDenseReal>(inds(T),div);
         }
     }
 
@@ -468,7 +474,7 @@ void
 allocCplx(ITensor& T)
     {
     if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
-    T.store() = newITData<DenseCplx>(area(T.inds()),0);
+    T.store() = newITData<DenseCplx>(dim(inds(T)),0);
     }
 
 
@@ -632,8 +638,8 @@ ITensor
 removeQNs(ITensor T)
     {
     if(not hasQNs(T)) return T;
-    if(T.store()) doTask(RemoveQNs{T.inds()},T.store());
-    auto nis = T.inds();
+    if(T.store()) doTask(RemoveQNs{inds(T)},T.store());
+    auto nis = inds(T);
     nis.removeQNs();
     return ITensor{move(nis),move(T.store()),T.scale()};
     }
@@ -701,10 +707,10 @@ daxpy(ITensor & L,
 
     using permutation = typename PlusEQ::permutation;
 
-    auto P = permutation(L.inds().size());
+    auto P = permutation(inds(L).size());
 
     try {
-        calcPerm(R.inds(),L.inds(),P);
+        calcPerm(inds(R),inds(L),P);
         }
     catch(std::exception const& e)
         {
@@ -716,7 +722,7 @@ daxpy(ITensor & L,
     if(Global::checkArrows()) 
         {
         auto shouldMatch = true;
-        detail::checkArrows(L.inds(),R.inds(),shouldMatch);
+        detail::checkArrows(inds(L),inds(R),shouldMatch);
         }
 
     if(!L.store()) Error("L not initialized in daxpy");
@@ -736,7 +742,7 @@ daxpy(ITensor & L,
         }
 #endif
 
-    auto PEq = PlusEQ{P,L.inds(),R.inds(),alpha};
+    auto PEq = PlusEQ{P,inds(L),inds(R),alpha};
     doTask(PEq,L.store(),R.store());
     } 
 
@@ -780,7 +786,7 @@ multSiteOps(ITensor A, ITensor const& B)
 bool
 hasIndex(ITensor const& T, Index const& I)
     {
-    return detail::contains(T.inds(),I);
+    return detail::contains(inds(T),I);
     }
 
 bool
@@ -814,7 +820,7 @@ sumels(ITensor const& t)
 Cplx 
 sumelsC(ITensor const& t)
     {
-    auto z = doTask(SumEls{t.inds()},t.store());
+    auto z = doTask(SumEls{inds(t)},t.store());
 #ifndef USESCALE
     return z;
 #else
@@ -829,11 +835,11 @@ operator<<(ostream & s, ITensor const& t)
     if(hasQNs(t)) 
         {
         if(t.order() > 0) s << "\n";
-        for(auto& I : t.inds()) s << I << "\n";
+        for(auto& I : inds(t)) s << I << "\n";
         }
     else
         {
-        s << t.inds();
+        s << inds(t);
         }
     if(not hasQNs(t)) s << "\n";
     if(not t.store()) 
@@ -847,7 +853,7 @@ operator<<(ostream & s, ITensor const& t)
         //format string %f (or another float-related format string)
         bool ff_set = (std::ios::floatfield & s.flags()) != 0;
         bool print_data = (ff_set || Global::printdat());
-        doTask(PrintIT{s,t.scale(),t.inds(),print_data},t.store());
+        doTask(PrintIT{s,t.scale(),inds(t),print_data},t.store());
         }
     return s;
     }
@@ -1060,7 +1066,7 @@ combinedIndex(ITensor const& C)
         throw ITError("Called combinedIndex on ITensor that is not a combiner");
         }
 #endif
-    return C.inds().front();
+    return inds(C).front();
     }
 
 ITensor
@@ -1097,7 +1103,7 @@ div(ITensor const& T)
     { 
     if(not hasQNs(T)) Error("div(ITensor) not defined for non QN conserving ITensor");
     if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
-    return doTask(CalcDiv{T.inds()},T.store());
+    return doTask(CalcDiv{inds(T)},T.store());
     }
 
 QN

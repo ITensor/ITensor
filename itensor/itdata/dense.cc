@@ -282,7 +282,7 @@ doTask(Contract & C,
         }
     auto tL = makeTenRef(L.data(),L.size(),&C.Lis);
     auto tR = makeTenRef(R.data(),R.size(),&C.Ris);
-    auto rsize = area(C.Nis);
+    auto rsize = dim(C.Nis);
     START_TIMER(4)
     auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
     STOP_TIMER(4)
@@ -322,7 +322,7 @@ doTask(NCProd& P,
 
     auto tL = makeTenRef(L.data(),L.size(),&P.Lis);
     auto tR = makeTenRef(R.data(),R.size(),&P.Ris);
-    auto rsize = area(P.Nis);
+    auto rsize = dim(P.Nis);
     auto nd = m.makeNewData<Dense<common_type<VL,VR>>>(rsize);
     auto tN = makeTenRef(nd->data(),nd->size(),&(P.Nis));
 

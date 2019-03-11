@@ -419,13 +419,14 @@ Index
 findIndexExact(IndexSet const& is,
                TagSet const& tsmatch, 
                int plmatch = -1);
+
 //
 //
 // IndexSet Primelevel Methods
 //
 
 
-//Replace all indices of type t by 'similar' indices 
+//Replace all indices with tags t by 'similar' indices 
 //with same properties but which don't compare equal 
 //to the indices they replace (using sim(Index) function)
 void 
@@ -452,8 +453,8 @@ long
 indexPosition(IndexSet const& iset, 
               Index const& I);
 
-Index
-findIndex(IndexSet const& iset, Arrow dir);
+//Index
+//findIndex(IndexSet const& iset, Arrow dir);
 
 Arrow
 dir(IndexSet const& is, Index const& I);

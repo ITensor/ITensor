@@ -296,23 +296,9 @@ class ITensor
     ITensor&
     operator/=(ITensor const& other);
 
-    //template<typename... Indxs>
-    //ITensor&
-    //permute(index_type const& ind1, Indxs const&... inds);
-
-    template<typename... Indxs>
-    auto 
-    permute(Index const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
-
     template <typename... Indxs>
-    auto 
-    permute(Index const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
-
-    template<typename... Indxs>
     ITensor&
-    permute(std::string const& dots, Indxs const&... inds);
+    permute(Index const& ind1, Indxs const&... inds);
 
     ITensor&
     permute(IndexSet const& iset);
@@ -423,6 +409,14 @@ Cplx
 eltC(ITensor A,
      VarArgs&&... vargs);
 
+// Get IndexSet
+IndexSet const& 
+inds(ITensor const& A);
+
+// Get Index
+Index const& 
+index(ITensor const& A, RangeT<Index>::size_type I);
+
 //
 // ITensor prime level functions
 //
@@ -490,11 +484,6 @@ swapTags(ITensor A,
 
 bool
 hasIndex(ITensor const& T, Index const& I);
-
-//template<typename Cond>
-//Index
-//findIndex(ITensor const& T, 
-//          Cond && cond);
 
 Index
 findIndex(ITensor const& T,

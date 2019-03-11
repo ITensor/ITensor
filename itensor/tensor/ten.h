@@ -155,7 +155,7 @@ class TenRefc : public TensorType
     r() const { return this->order(); }
 
     size_type 
-    size() const { return area(*prange_); }
+    size() const { return dim(*prange_); }
 
     explicit operator bool() const { return bool(d_.data());}
 
@@ -630,7 +630,7 @@ class Ten : public TensorType
     resize(range_type const& newrange)
         {
         range_ = newrange;
-        data_.resize(area(range_));
+        data_.resize(dim(range_));
         }
 
     void
@@ -659,12 +659,12 @@ class Ten : public TensorType
     void
     init()
         {
-        auto len = area(range_);
+        auto len = dim(range_);
 #ifdef DEBUG
         if(!isContiguous(range_))
             throw std::runtime_error("Tensor can only be constructed from contiguous range");
         if(len == 0) 
-            throw std::runtime_error("Zero area in tensor");
+            throw std::runtime_error("Zero dim in tensor");
 #endif
         data_.assign(len,0.);
         }
@@ -674,7 +674,7 @@ class Ten : public TensorType
     assignFromRef(TenRefc<R,value_type> const& ref)
         {
         range_ = normalRange(ref.range());
-        data_.resize(area(range_));
+        data_.resize(dim(range_));
         makeRef(*this) &= ref;
         }
     };

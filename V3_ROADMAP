@@ -1,10 +1,6 @@
 (! means necessary / blocker for releasing v3)
 
 # Library code:
-!!! Deprecated "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in 
-    svd(), diagHermitian(), factorize(), sweeps, dmrg(), idmrg(), etc.
-    -> How should we make people upgrade this? This changes the notation 
-       of the sweeps object and DMRG input files.
 o Priming and tagging functions for MPS and MPO
   o primeall(MPO) -> prime(MPO)
 ! Finalize tags interface
@@ -55,66 +51,72 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation deprecations (for upgrade guide):
  - Index operations:
-  o Index("i",2) -> Index(2,"i") (deprecation error)
+  o `sim(Index)` now by default keeps the prime level of the Index instead of setting to zero
+  o `Index.dir(Arrow)` -> `Index.setDir(Arrow)`
+  o Added `dir(Index)` as preferred alternative to `Index.dir()`
+  o Changed index constructor from `Index("i",2)` -> `Index(2,"i")` (deprecation error)
   o noprime -> noPrime (deprecation error)
-  o i.m() -> dim(i) throughout library (no error?)
-  o i.id() -> id(i)
+  o Added `dim(Index)` as preferred alternative to `Index.m()`, changed throughout library (deprecation warning?)
+  o Removed `findIndex(IndexSet const& iset, Arrow dir)`
+  o Added `id(Index)` as preferred alternative to `Index.id()`
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
   o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor 
     containing certain tags and matching an optional prime level
   o Remove findType, use findIndex instead
  - ITensor operations:
+  o Add `inds(ITensor)` as preferred alternative to `ITensor.inds()`
+  o Add `index(ITensor,int)` as preferred alternative to `ITensor.index(int)`
+  o New QN design:
+    Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
+    of triples name-val-modfac.
   o `order(A,i,j,k)` -> `permute(A,i,j,k)` to permute the date of an ITensor
+  o Removed `permute(A,i,"...")` syntax
   o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
   o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
     backwards compatibility. Replaced throughout library.
   o Replace maxM(IndexSet) and minM(IndexSet) with maxDim(IndexSet) and minDim(IndexSet)
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
+    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o Deprecate randomize(ITensor& T) in favor of T.randomize()
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
   o Deprecate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,Index,Index,...)
-    that does not ignore prime levels and internally calls delta()
+    that does not ignore prime levels and internally calls delta() (deprecation error)
   o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor (deprecation warnings)
+  o Added .elt and .eltC accepting vector<int> (pull #194)
+  o Added .elt(vector<IndexVal>), .eltC(vector<IndexVal>), etc.
+  o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
+  o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
  - MPS operations:
   o psi.A(i) -> psi(i), psi.Aref(i) -> psi.ref(i), psi.setA(i,T) -> psi.set(i,T) (no warning or error)
   o psi.N() -> length(psi)
   o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
+  o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
+    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o Deprecate normalize(MPS& psi) in favor of psi.normalize()
   o Better tag convention for labelling site index (i.e. "n=1" instead of "1" for site 1)
     o Site and Link IndexTypes removed in favor of tags
     o Make sure that "Link" index keeps a consistent convention for labelling which link
       (i.e. MPS at site "n=4" should have left link with tags "Link,l=3" and right link with
        tags "Link,l=4")
- - MPO operations:
-  o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
-   o Add deprecation warning to MPO(AutoMPO), telling people to switch
-     to toMPO(AutoMPO)
- - DMRG operations:
-  o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
-
-Misc changes:
-  o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
-  o Added .real and .cplx accepting vector<int> (pull #194)
-  o Added .real(vector<IndexVal>), .cplx(vector<IndexVal>), etc.
-  o Added errMPOProd and deprecated checkMPOProd
+  o All site sets except SiteSet(N,d) default to ConserveQNs=true
   o Test that new QN system allows mixing different site types
     (--> add MixedSiteSet to docs)
-  o New QN design:
-    Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
-    of triples name-val-modfac.
-  o All site sets except SiteSet(N,d) default to ConserveQNs=true
   o Change default behavior of MPS(sites,m) constructor to be uninitialized MPS of size m
     o m>1 only allowed with no QNs
   o Add randomMPS(SiteSet,m=1) function with no QNs
   o Add randomMPS(InitState) function for QNs and no QNs
-  o Add read/write for TagSet
-  o Fix read/write for Index with QNs and test for rest of library
   o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
-  o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
-  o Add unit tests for tags functions (addTags, removeTags, swapTags, replaceTags, setTags)
-
+ - MPO operations:
+  o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
+   o Add deprecation warning to MPO(AutoMPO), telling people to switch
+     to toMPO(AutoMPO)
+  o Added errMPOProd and deprecated checkMPOProd
+ - DMRG operations:
+  o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
+    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
+  o In Sweeps object, changed from .maxm() and .minm() to .maxdim() and .mindim(), is there a good way to deprecate?
 
 Recent commits to v2 (master branch):
   o errMPOProd and deprecation of checkMPOProd

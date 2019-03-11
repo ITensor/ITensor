@@ -149,7 +149,7 @@ normalRange(VecRangeT<S> const& vr)
 
 template<size_t S>
 auto
-area(VecRangeT<S> const& vr)
+dim(VecRangeT<S> const& vr)
     -> decltype(vr.extent())
     {
     return vr.extent();

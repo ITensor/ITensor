@@ -480,7 +480,7 @@ offset(Range_ const& r, size_t i1, Inds... inds)
 
 template<typename I, size_t S>
 auto
-area(RangeT<I,S> const& R)
+dim(RangeT<I,S> const& R)
     -> decltype(R.extent(0))
     { 
     using size_type = decltype(R.size());
@@ -508,18 +508,18 @@ normalRange(RangeT<I,S> const& R)
 //
 //A range R is contiguous if collecting
 //all possible outputs of offset(R,...) yields
-//the set {0,1,...,area(R)-1} (though 
+//the set {0,1,...,dim(R)-1} (though 
 //in no particular order)
 //For this to be true, sufficient that
 //the max possible output of offset(R,...)
-//equals (area(R)-1)
+//equals (dim(R)-1)
 //
 //Proof:
 // Ranges always start at offset(R,{1,1,1...})=0;
-// area(R) gives the number of outputs;
-// IF the max output is area(R)-1 and
-// there are area(R) outputs, the only
-// set fulfilling this is {0,1,...,area(R)-1})
+// dim(R) gives the number of outputs;
+// IF the max output is dim(R)-1 and
+// there are dim(R) outputs, the only
+// set fulfilling this is {0,1,...,dim(R)-1})
 //
 template<typename I, size_t S>
 bool
@@ -527,13 +527,13 @@ isContiguous(RangeT<I,S> const& R)
     {
     using size_type = decltype(R.size());
     size_type max_offset = 0,
-              area = 1;
+              dim = 1;
     for(decltype(R.order()) n = 0; n < R.order(); ++n)
         {
         max_offset += R.stride(n)*(R.extent(n)-1);
-        area *= R.extent(n);
+        dim *= R.extent(n);
         }
-    return (1+max_offset) == area;
+    return (1+max_offset) == dim;
     }
 
 

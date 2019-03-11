@@ -297,16 +297,16 @@ dir(const IndexSet& is, const Index& I)
     }
 
 
-Index inline
-findIndex(IndexSet const& iset, Arrow dir)
-    {
-    for(const auto& J : iset)
-        {
-        if(J.dir() == dir) return J;
-        }
-    throw ITError("Couldn't find index with specified dir");
-    return Index();
-    }
+//Index inline
+//findIndex(IndexSet const& iset, Arrow dir)
+//    {
+//    for(const auto& J : iset)
+//        {
+//        if(J.dir() == dir) return J;
+//        }
+//    throw ITError("Couldn't find index with specified dir");
+//    return Index();
+//    }
 
 //
 // Given IndexSet iset and Index I,

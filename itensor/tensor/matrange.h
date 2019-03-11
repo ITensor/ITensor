@@ -122,7 +122,7 @@ transpose(MatRangeT<S> const& mr)
 
 template<size_t S>
 auto
-area(MatRangeT<S> const& mr)
+dim(MatRangeT<S> const& mr)
     -> typename MatRangeT<S>::size_type
     {
     return mr.rn * mr.cn;

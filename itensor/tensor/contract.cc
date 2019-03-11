@@ -725,9 +725,9 @@ contract(CProps const& p,
          Real beta = 0.)
     {
     using VC = common_type<VA,VB>;
-    auto Apsize = p.permuteA() ? area(p.newArange) : 0ul;
-    auto Bpsize = p.permuteB() ? area(p.newBrange) : 0ul;
-    auto Cpsize = p.permuteC() ? area(p.newCrange) : 0ul;
+    auto Apsize = p.permuteA() ? dim(p.newArange) : 0ul;
+    auto Bpsize = p.permuteB() ? dim(p.newBrange) : 0ul;
+    auto Cpsize = p.permuteC() ? dim(p.newCrange) : 0ul;
     auto Abufsize = isCplx(A) ? 2ul*Apsize : Apsize;
     auto Bbufsize = isCplx(B) ? 2ul*Bpsize : Bpsize;
     auto Cbufsize = isCplx(C) ? 2ul*Cpsize : Cpsize;

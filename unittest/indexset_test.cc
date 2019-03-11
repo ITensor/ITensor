@@ -26,13 +26,13 @@ SECTION("Constructors")
         {
         auto is = IndexSet(i4);
         CHECK(is.r() == 1);
-        CHECK(area(is) == 4);
+        CHECK(dim(is) == 4);
         CHECK(is[0] == i4);
         CHECK(is[0] == is.index(1));
 
         is = IndexSet(i1);
         CHECK(is.r() == 1);
-        CHECK(area(is) == 1);
+        CHECK(dim(is) == 1);
         CHECK(is[0] == i1);
         CHECK(is[0] == is.index(1));
         }
@@ -41,13 +41,13 @@ SECTION("Constructors")
         {
         auto is1 = IndexSet(i4,i3);
         CHECK(is1.r() == 2);
-        CHECK(area(is1) == 4*3);
+        CHECK(dim(is1) == 4*3);
         CHECK(is1[0] == i4);
         CHECK(is1[1] == i3);
 
         auto is2 = IndexSet(i3,i4);
         CHECK(is2.r() == 2);
-        CHECK(area(is2) == 4*3);
+        CHECK(dim(is2) == 4*3);
         CHECK(is2[0] == i3);
         CHECK(is2[1] == i4);
         }
@@ -56,7 +56,7 @@ SECTION("Constructors")
         {
         auto is = IndexSet(i3,i1,i4);
         CHECK(is.r() == 3);
-        CHECK(area(is) == 4*3);
+        CHECK(dim(is) == 4*3);
         CHECK(is[0] == i3);
         CHECK(is[1] == i1);
         CHECK(is[2] == i4);

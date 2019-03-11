@@ -44,11 +44,11 @@ SECTION("Orthogonalize")
 
     for(int n = N; n > 1; --n)
         {
-        auto li = commonIndex(W.A(n),W.A(n-1),"Link");
-        CHECK(li==findIndex(W.A(n),format("l=%d",n-1)));
-        CHECK(li==findIndex(W.A(n-1),format("l=%d",n-1)));
-        CHECK(sites(n)==findIndex(W.A(n),format("n=%d",n),0));
-        auto rho = W.A(n) * dag(prime(W.A(n),li));
+        auto li = commonIndex(W(n),W(n-1),"Link");
+        CHECK(li==findIndex(W(n),format("l=%d",n-1)));
+        CHECK(li==findIndex(W(n-1),format("l=%d",n-1)));
+        CHECK(sites(n)==findIndex(W(n),format("n=%d",n),0));
+        auto rho = W(n) * dag(prime(W(n),li));
         auto id = ITensor(li,prime(li));
         for(auto l : range1(dim(li)))
             {
@@ -102,10 +102,10 @@ SECTION("Add MPOs")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(C.A(n),C.A(n+1),"Link");
-        CHECK(ln==findIndex(C.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(C.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(C.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(C(n),C(n+1),"Link");
+        CHECK(ln==findIndex(C(n),format("l=%d",n)));
+        CHECK(ln==findIndex(C(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(C(n),format("n=%d",n),0));
         }
 
     auto AA = overlap(A,A);
@@ -152,10 +152,10 @@ SECTION("applyMPO (DensityMatrix)")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
-        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n)));
+        auto ln = commonIndex(psi(n),psi(n+1),"Link");
+        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
         }
 
     //Use AutoMPO as a trick to get
@@ -181,10 +181,10 @@ SECTION("applyMPO (DensityMatrix)")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(H.A(n),H.A(n+1),"Link");
-        CHECK(ln==findIndex(H.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(H.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(H.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(H(n),H(n+1),"Link");
+        CHECK(ln==findIndex(H(n),format("l=%d",n)));
+        CHECK(ln==findIndex(H(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(H(n),format("n=%d",n),0));
         }
 
     // Apply K to psi to entangle psi
@@ -193,20 +193,20 @@ SECTION("applyMPO (DensityMatrix)")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
-        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(psi(n),psi(n+1),"Link");
+        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
@@ -249,20 +249,20 @@ SECTION("applyMPO (Fit)")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
-        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(psi(n),psi(n+1),"Link");
+        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
@@ -272,10 +272,10 @@ SECTION("applyMPO (Fit)")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(Hpsi_2.A(n),Hpsi_2.A(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi_2.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi_2.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi_2.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(Hpsi_2(n),Hpsi_2(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi_2(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi_2(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi_2(n),format("n=%d",n),0));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi_2,H,psi,1E-10),true);
@@ -318,20 +318,20 @@ SECTION("errorMPOProd Scaling")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(psi.A(n),psi.A(n+1),"Link");
-        CHECK(ln==findIndex(psi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(psi(n),psi(n+1),"Link");
+        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(Hpsi.A(n),Hpsi.A(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
+        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
+        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
         }
 
     //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
@@ -369,7 +369,7 @@ SECTION("Overlap <psi|HK|phi>")
         K.Aref(j).randomize();
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.3;
-        Hdag.Aref(j) = dag(swapPrime(H.A(j),0,1,"Site"));
+        Hdag.Aref(j) = dag(swapPrime(H(j),0,1,"Site"));
         }
 
     auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
@@ -418,15 +418,15 @@ SECTION("Remove QNs from MPO")
 
     for(int n = 1; n < N; ++n)
         {
-        auto ln = commonIndex(a.A(n),a.A(n+1),"Link");
-        CHECK(ln==findIndex(a.A(n),format("l=%d",n)));
-        CHECK(ln==findIndex(a.A(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(a.A(n),format("n=%d",n),0));
+        auto ln = commonIndex(a(n),a(n+1),"Link");
+        CHECK(ln==findIndex(a(n),format("l=%d",n)));
+        CHECK(ln==findIndex(a(n+1),format("l=%d",n)));
+        CHECK(sites(n)==findIndex(a(n),format("n=%d",n),0));
         }
 
     for(auto n : range1(N))
         {
-        CHECK(norm(a.A(n) - removeQNs(A.A(n))) < 1E-10);
+        CHECK(norm(a(n) - removeQNs(A(n))) < 1E-10);
         }
 
     }

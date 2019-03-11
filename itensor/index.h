@@ -198,8 +198,9 @@ class Index
 
     Arrow 
     dir() const { return dir_; }
+
     void
-    dir(Arrow ndir) { dir_ = ndir; }
+    setDir(Arrow ndir) { dir_ = ndir; }
 
     Index& 
     dag() { dir_ = -dir_; return *this; }
@@ -392,6 +393,9 @@ dag(Index res) { res.dag(); return res; }
 IndexVal inline
 dag(IndexVal res) { res.dag(); return res; }
 
+Arrow inline
+dir(Index res) { return res.dir(); }
+
 template<typename... VarArgs>
 Index
 prime(Index I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
@@ -419,19 +423,12 @@ noPrime(IndexVal I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)
 
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)
-//and primelevel zero (or specified value)
 Index
-sim(Index const& I, int plev = 0);
+sim(Index const& I);
 
 //Returns a string version of this Index's bond dimension.
 std::string
 showDim(Index const& I);
-
-//TODO: clean up
-//Depecreate, nameint is a strange name when Indices don't
-//have names anymore, easy enough to write format("%s%d",f,d)
-//std::string 
-//nameint(std::string const& f, int n);
 
 std::ostream& 
 operator<<(std::ostream & s, Index const& t);

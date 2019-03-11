@@ -72,7 +72,7 @@ Index(QN const& q1, long size1,
     auto am = detail::fill(qi,q1,size1,qnsizes...);
     auto I = Index(am.m,am.tags);
     operator=(I);
-    dir(am.dir);
+    setDir(am.dir);
     makeStorage(std::move(qi));
     }
 

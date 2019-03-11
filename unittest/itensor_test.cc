@@ -2296,73 +2296,73 @@ for(auto kk : range1(k.dim()))
 
 }
 
-SECTION("Permute Test: Dots Syntax")
-{
-Index i(2,"i"),
-      j(3,"j"),
-      k(4,"k");
-auto jp = prime(j);
-
-auto IT = randomITensor(i,j,jp,k);
-
-auto O1 = permute(IT,"...",i);
-CHECK(O1.index(4) == i);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O1.elt(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O2 = permute(IT,"...",j,i);
-CHECK(O2.inds().index(3) == j);
-CHECK(O2.inds().index(4) == i);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O2.elt(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O3 = permute(IT,"...",jp,i,j);
-CHECK(O3.inds().index(1)==k);
-CHECK(O3.inds().index(2)==jp);
-CHECK(O3.inds().index(3)==i);
-CHECK(O3.inds().index(4)==j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O3.elt(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O4 = permute(IT,j,"...");
-CHECK(O4.inds().index(1) == j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O4.elt(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O5 = permute(IT,jp,k,i,"...");
-CHECK(O5.inds().index(1) == jp);
-CHECK(O5.inds().index(2) == k);
-CHECK(O5.inds().index(3) == i);
-CHECK(O5.inds().index(4) == j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O5.elt(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-}
+//SECTION("Permute Test: Dots Syntax")
+//{
+//Index i(2,"i"),
+//      j(3,"j"),
+//      k(4,"k");
+//auto jp = prime(j);
+//
+//auto IT = randomITensor(i,j,jp,k);
+//
+//auto O1 = permute(IT,"...",i);
+//CHECK(O1.index(4) == i);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O1.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O2 = permute(IT,"...",j,i);
+//CHECK(O2.inds().index(3) == j);
+//CHECK(O2.inds().index(4) == i);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O2.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O3 = permute(IT,"...",jp,i,j);
+//CHECK(O3.inds().index(1)==k);
+//CHECK(O3.inds().index(2)==jp);
+//CHECK(O3.inds().index(3)==i);
+//CHECK(O3.inds().index(4)==j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O3.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O4 = permute(IT,j,"...");
+//CHECK(O4.inds().index(1) == j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O4.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O5 = permute(IT,jp,k,i,"...");
+//CHECK(O5.inds().index(1) == jp);
+//CHECK(O5.inds().index(2) == k);
+//CHECK(O5.inds().index(3) == i);
+//CHECK(O5.inds().index(4) == j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O5.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//}
 
 SECTION("Index Test")
 {

@@ -605,22 +605,12 @@ swapTags(ITensor A,
     return A;
     }
 
-//TODO: bring this back?
-//template<typename Cond>
-//Index
-//findIndex(ITensor const& T, 
-//          Cond && cond)
-//    {
-//    for(auto& i : T.inds()) if(cond(i)) return i;
-//    return Index{};
-//    }
-
 Index inline
 findIndex(ITensor const& T,
           TagSet const& tsmatch, 
           int plmatch)
     {
-    return findIndex(T.inds(),tsmatch,plmatch);
+    return findIndex(inds(T),tsmatch,plmatch);
     }
 
 Index inline
@@ -628,7 +618,7 @@ findIndexExact(ITensor const& T,
                TagSet const& tsmatch, 
                int plmatch)
     {
-    return findIndex(T.inds(),tsmatch,plmatch);
+    return findIndexExact(inds(T),tsmatch,plmatch);
     }
 
 //Apply x = f(x) for each element x of T
@@ -643,11 +633,15 @@ apply(ITensor T, F&& f)
 
 
 long inline
-order(ITensor const& T) { return order(T.inds()); }
+order(ITensor const& T) { return order(inds(T)); }
 
 // Deprecated
 long inline
-rank(ITensor const& T) { return order(T); }
+rank(ITensor const& T)
+  {
+  Global::warnDeprecated("rank(ITensor) is deprecated in favor of order(ITensor)");
+  return order(T);
+  }
 
 Real
 norm(ITensor const& T);
@@ -735,13 +729,13 @@ template<typename... Inds>
 ITensor
 replaceInds(ITensor const& cT, 
             Index o1, Index n1, 
-            Inds... inds) 
+            Inds... indxs) 
     {
-    constexpr size_t size = 2+sizeof...(inds);
-    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(inds)...}};
+    constexpr size_t size = 2+sizeof...(indxs);
+    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(indxs)...}};
 
     auto T = cT;
-    auto is = T.inds();
+    auto is = inds(T);
     
     //This is a random prime level increase to 
     //prevent clashing indices if there are prime level
@@ -772,110 +766,12 @@ replaceInds(ITensor const& cT,
     return T;
     }
 
-template<typename... Inds>
-ITensor
-reindex(ITensor const& cT, 
-        Index o1, Index n1, 
-        Inds... inds) 
-    {
-    Global::warnDeprecated("reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
-    constexpr size_t size = 2+sizeof...(inds);
-    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(inds)...}};
 
-    auto T = cT;
-    auto is = T.inds();
-
-    for(auto j : range(is))
-        {
-        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
-            {
-            if(equalsIgnorePrime(is[j],ipairs[oi]))
-                {
-                if(dim(is[j]) != dim(ipairs[ni]))
-                    {
-                    printfln("Old m = %d",dim(is[j]));
-                    printfln("New m would be = %d",dim(ipairs[ni]));
-                    throw ITError("Mismatch of index dimension in reindex");
-                    }
-                auto plev = primeLevel(is[j]);
-                auto arrow_dir = is[j].dir();
-                is[j] = noPrime(ipairs[ni]);
-                is[j].setPrime(plev);
-                is[j].dir(arrow_dir);
-                break;
-                }
-            }
-        }
-    auto nT = ITensor(is,std::move(T.store()),T.scale());
-    return nT;
-    }
-
-
-namespace detail {
-
-
-// TODO: check for incorrect inputs
-
-template<typename Iter>
-void
-getDotInds(Iter it,
-           std::string const& dots)
-    {
-    if(dots != "...")
-        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
-    }
-
-template<typename Iter,
-         typename... Rest>
-void
-getDotInds(Iter it,
-           Index const& ind,
-           Rest const&... rest)
-    {
-    *it = ind;
-    getDotInds(++it,std::forward<Rest const&>(rest)...);
-    }
-
-IndexSet
-moveToFront(IndexSet const& isf, IndexSet const& is);
-
-IndexSet 
-moveToBack(IndexSet const& isb, IndexSet const& is);
-
-
-} //namespace detail
-
-//Version of permute accepting syntax: T.permute(i,j,"...")
-template <typename... Indxs>
-auto ITensor::
-permute(Index const& ind1, Indxs const&... inds)
-        -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
-    {
-    static constexpr auto size = 1+(sizeof...(inds)-1);
-    auto isf = IndexSet(size);
-    detail::getDotInds(isf.begin(),ind1,std::forward<Indxs const&>(inds)...);
-    permute(detail::moveToFront(isf,this->inds()));
-    return *this;
-    }
-
-//Version of permute accepting syntax: T.permute(i,j,k)
-template <typename... Indxs>
-auto ITensor::
-permute(Index const& ind1, Indxs const&... inds)
-        -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>
-    {
-    permute(IndexSet(ind1, inds...));
-    return *this;
-    }
-
-//Version of permute accepting syntax: T.permute("...",j,k)
 template <typename... Indxs>
 ITensor& ITensor::
-permute(std::string const& dots, Indxs const&... inds)
+permute(Index const& ind1, Indxs const&... inds)
     {
-    if(dots != "...")
-        Error(format("Wrong string passed to permute (expected '...', got '%s')",dots));
-    permute(detail::moveToBack(IndexSet(inds...),this->inds()));
+    permute(IndexSet(ind1, inds...));
     return *this;
     }
 
@@ -970,7 +866,7 @@ diagTensor(Container const& C,
     }
 
 bool inline
-hasQNs(ITensor const& T) { return hasQNs(T.inds()); }
+hasQNs(ITensor const& T) { return hasQNs(inds(T)); }
 
 template<typename V>
 TenRef<Range,V>
@@ -983,14 +879,14 @@ getBlock(ITensor & T,
         QN q;
         for(auto n : range(block_ind))
             {
-            auto& I = T.inds()[n];
-            q += I.qn(block_ind[n])*I.dir();
+            auto& I = inds(T)[n];
+            q += I.qn(block_ind[n])*dir(I);
             }
-        T = ITensor(T.inds(),QDense<V>(T.inds(),q));
+        T = ITensor(inds(T),QDense<V>(inds(T),q));
         }
     //Interface is 1-indexed; switch to 0-indexed
     for(auto& i : block_ind) { i -= 1; }
-    auto G = GetBlock<V>(T.inds(),block_ind);
+    auto G = GetBlock<V>(inds(T),block_ind);
     return doTask(G,T.store());
     }
 
@@ -1002,7 +898,7 @@ uniqueIndex(ITensor const& A,
             Tensors const&... Tens)
     {
     auto Ts = stdx::make_array(T1,T2,Tens...);
-    for(auto& I : A.inds())
+    for(auto& I : inds(A))
         {
         bool found = false;
         for(auto& T : Ts) if(hasIndex(T,I))
@@ -1013,6 +909,45 @@ uniqueIndex(ITensor const& A,
         if(!found) return I;
         }
     return Index();
+    }
+
+// Deprecated
+template<typename... Inds>
+ITensor
+reindex(ITensor const& cT, 
+        Index o1, Index n1, 
+        Inds... indxs)
+    {
+    Error("Error: reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
+    constexpr size_t size = 2+sizeof...(indxs);
+    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(indxs)...}};
+
+    auto T = cT;
+    auto is = inds(T);
+
+    for(auto j : range(is))
+        {
+        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
+            {
+            if(equalsIgnorePrime(is[j],ipairs[oi]))
+                {
+                if(dim(is[j]) != dim(ipairs[ni]))
+                    {
+                    printfln("Old m = %d",dim(is[j]));
+                    printfln("New m would be = %d",dim(ipairs[ni]));
+                    throw ITError("Mismatch of index dimension in reindex");
+                    }
+                auto plev = primeLevel(is[j]);
+                auto arrow_dir = is[j].dir();
+                is[j] = noPrime(ipairs[ni]);
+                is[j].setPrime(plev);
+                is[j].setDir(arrow_dir);
+                break;
+                }
+            }
+        }
+    auto nT = ITensor(is,std::move(T.store()),T.scale());
+    return nT;
     }
 
 } // namespace itensor

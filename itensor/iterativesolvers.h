@@ -104,9 +104,9 @@ davidson(BigMatrixT const& A,
                  (maxsize-1), maxiter_, actual_maxiter);
         }
 
-    if(area(phi.front().inds()) != maxsize)
+    if(dim(inds(phi.front())) != maxsize)
         {
-        println("area(phi.front().inds()) = ",area(phi.front().inds()));
+        println("dim(inds(phi.front())) = ",dim(inds(phi.front())));
         println("A.size() = ",A.size());
         Error("davidson: size of initial vector should match linear matrix size");
         }

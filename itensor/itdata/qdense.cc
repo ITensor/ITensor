@@ -113,7 +113,7 @@ updateOffsets(IndexSet const& is,
             {
             long indstr = 1, //accumulate Index strides
                  ind = 0,
-                 totm = 1;   //accumulate area of Indices
+                 totm = 1;   //accumulate dim of Indices
             for(auto j : range(order(is)))
                 {
                 auto& J = is[j];
@@ -694,7 +694,7 @@ doTask(RemoveQNs & R,
        ManageStore & m)
     {
     auto r = order(R.is);
-    auto *nd = m.makeNewData<Dense<V>>(area(R.is),0);
+    auto *nd = m.makeNewData<Dense<V>>(dim(R.is),0);
     auto *pd = d.data();
     auto *pn = nd->data();
     IntArray block(r,0);

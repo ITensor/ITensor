@@ -67,7 +67,7 @@ contractDiagDense(Diag<T1>  const& d,
 
     if(t_has_uncontracted)
         {
-        auto nd = m.makeNewData<Dense<T3>>(area(Nis),0.);
+        auto nd = m.makeNewData<Dense<T3>>(dim(Nis),0.);
         auto Nref = makeTenRef(nd->data(),nd->size(),&Nis);
         if(d.allSame())
             {
