@@ -1433,8 +1433,8 @@ template<>
 IQMPO 
 toMPO(AutoMPO const& am, 
       Args const& args) 
-    { 
-    auto verbose = args.getBool("Verbose",false);
+    {
+    auto verbose = args.getBool("Verbose", false);
     if(args.getBool("Exact",false))
         {
         if(verbose) println("Using exact conversion of AutoMPO->IQMPO");
@@ -1448,13 +1448,14 @@ template<>
 MPO 
 toMPO(AutoMPO const& am, 
       Args const& args) 
-    { 
+    {
+    auto verbose = args.getBool("Verbose", false);
     if(args.getBool("Exact",false))
         {
-        println("Using exact conversion of AutoMPO->MPO");
+        if(verbose) println("Using exact conversion of AutoMPO->MPO");
         return toMPOImpl<ITensor>(am,{args,"CheckQN",false});
         }
-    println("Using approx/svd conversion of AutoMPO->MPO");
+    if(verbose) println("Using approx/svd conversion of AutoMPO->MPO");
     return svdMPO<ITensor>(am,{args,"CheckQN",false});
     }
 
