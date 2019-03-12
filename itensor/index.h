@@ -89,6 +89,8 @@ class Index
     // Returns the bond dimension
     long 
     m() const { return m_; }
+    long 
+    dim() const { return m_; }
 
     // Returns the prime level
     int 
@@ -215,6 +217,8 @@ class IndexVal
 
     long
     m() const { return index.m(); }
+    long
+    dim() const { return index.dim(); }
 
     explicit operator bool() const { return bool(index); }
 
@@ -280,6 +284,11 @@ noprime(IndexVal I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)
 IndexVal inline
 mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
+
+long inline
+dim(Index const& I) { return I.dim(); }
+long inline
+dim(IndexVal const& iv) { return iv.dim(); }
 
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)
