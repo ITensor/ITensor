@@ -347,9 +347,9 @@ getElt(IndexSet const& is,
     auto r = long(ind.size());
     if(r == 0) return store.data();
 #ifdef DEBUG
-    if(is.r() != r) 
+    if(is.order() != r) 
         {
-        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
+        printfln("is.order() = %d, ind.size() = %d",is.order(),ind.size());
         Error("Mismatched size of IndexSet and elt_ind in get_block");
         }
 #endif

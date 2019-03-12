@@ -75,7 +75,7 @@ TEST_CASE("IndexTest")
         auto i2 = sim(prime(i,3));
         CHECK(dim(i2) == dim(i));
         CHECK(tags(i2) == tags(i));
-        CHECK(primeLevel(i2) == 0);
+        CHECK(primeLevel(i2) == 3);
         }
 
     SECTION("Tag Basics")

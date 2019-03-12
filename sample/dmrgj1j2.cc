@@ -53,12 +53,12 @@ int main(int argc, char* argv[])
 
     //
     // Set the parameters controlling the accuracy of the DMRG
-    // calculation for each DMRG sweep. Here less than 10 maxm
+    // calculation for each DMRG sweep. Here less than 10 maxdim
     // values are provided, so all remaining sweeps will use the
-    // last maxm (= 200).
+    // last maxdim (= 200).
     //
     auto sweeps = Sweeps(5);
-    sweeps.maxm() = 50,50,100,100,200;
+    sweeps.maxdim() = 50,50,100,100,200;
     sweeps.cutoff() = 1E-8;
     println(sweeps);
 
@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
     for(int b = 1; b < N; ++b)
         {
         psi.position(b);
-        auto ketzz = psi.A(b)*psi.A(b+1)*sites.op("Sz",b)*sites.op("Sz",b+1);
-        auto ketpm = psi.A(b)*psi.A(b+1)*sites.op("Sp",b)*sites.op("Sm",b+1)*0.5;
-        auto ketmp = psi.A(b)*psi.A(b+1)*sites.op("Sm",b)*sites.op("Sp",b+1)*0.5;
-        auto bra = dag(psi.A(b)*psi.A(b+1));
+        auto ketzz = psi(b)*psi(b+1)*sites.op("Sz",b)*sites.op("Sz",b+1);
+        auto ketpm = psi(b)*psi(b+1)*sites.op("Sp",b)*sites.op("Sm",b+1)*0.5;
+        auto ketmp = psi(b)*psi(b+1)*sites.op("Sm",b)*sites.op("Sp",b+1)*0.5;
+        auto bra = dag(psi(b)*psi(b+1));
         bra.prime("Site");
-        auto SdS = (bra*ketzz).real() + (bra*ketpm).real() + (bra*ketmp).real();
+        auto SdS = (bra*ketzz).elt() + (bra*ketpm).elt() + (bra*ketmp).elt();
         printfln("S.S b %d = %.10f",b,SdS);
         }
 

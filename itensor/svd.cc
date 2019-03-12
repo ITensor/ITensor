@@ -36,11 +36,16 @@ svdImpl(ITensor const& A,
         ITensor & V,
         Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdImpl: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdImpl: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    auto maxm = args.getInt("Maxm",MAX_M);
-    auto minm = args.getInt("Minm",1);
+    auto maxdim = args.getInt("MaxDim",MAX_DIM);
+    auto mindim = args.getInt("MinDim",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto show_eigs = args.getBool("ShowEigs",false);
@@ -79,7 +84,7 @@ svdImpl(ITensor const& A,
         long m = DD.size();
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
                                            absoluteCutoff,doRelCutoff,args);
             m = probs.size();
             resize(DD,m);
@@ -92,8 +97,8 @@ svdImpl(ITensor const& A,
             {
             auto showargs = args;
             showargs.add("Cutoff",cutoff);
-            showargs.add("Maxm",maxm);
-            showargs.add("Minm",minm);
+            showargs.add("MaxDim",maxdim);
+            showargs.add("MinDim",mindim);
             showargs.add("Truncate",do_truncate);
             showargs.add("DoRelCutoff",doRelCutoff);
             showargs.add("AbsoluteCutoff",absoluteCutoff);
@@ -200,7 +205,7 @@ svdImpl(ITensor const& A,
         Real docut = -1;
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
+            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
                                            absoluteCutoff,doRelCutoff,args);
             m = probs.size();
             alleigqn.resize(m);
@@ -210,8 +215,8 @@ svdImpl(ITensor const& A,
             {
             auto showargs = args;
             showargs.add("Cutoff",cutoff);
-            showargs.add("Maxm",maxm);
-            showargs.add("Minm",minm);
+            showargs.add("MaxDim",maxdim);
+            showargs.add("MinDim",mindim);
             showargs.add("Truncate",do_truncate);
             showargs.add("DoRelCutoff",doRelCutoff);
             showargs.add("AbsoluteCutoff",absoluteCutoff);
@@ -372,17 +377,22 @@ svdOrd2(ITensor const& A,
          ITensor & V,
          Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdOrd2: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdOrd2: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.defined("Cutoff") 
-                    || args.defined("Maxm");
+                    || args.defined("MaxDim");
     if(not args.defined("Truncate")) 
         {
         args.add("Truncate",do_truncate);
         }
 
-    if(A.r() != 2) 
+    if(A.order() != 2) 
         {
         Print(A);
-        Error("A must be matrix-like (rank 2)");
+        Error("A must be matrix-like (order 2)");
         }
     if(isComplex(A))
         {

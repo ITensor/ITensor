@@ -51,7 +51,7 @@ subTensor(Ten_ && T,
     static_assert(!std::is_same<Ten_&&,Tensor&&>::value,"Cannot pass temp/rvalue Tensor to subTensor");
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subTensor");
     static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subTensor");
-    auto r = T.r();
+    auto r = T.order();
 #ifdef DEBUG
     using stop_type = decltype(*stop.begin());
     if(r != decltype(r)(start.size())) throw std::runtime_error("subTensor: wrong size of start");
@@ -87,7 +87,7 @@ subIndex(Ten_ && T,
     static_assert(!std::is_same<Ten_&&,Vector&&>::value,"Cannot pass temp/rvalue Vector to subIndex");
     static_assert(!std::is_same<Ten_&&,Matrix&&>::value,"Cannot pass temp/rvalue Matrix to subIndex");
 #ifdef DEBUG
-    if(ind >= size_t(T.r())) throw std::runtime_error("subIndex: index out of range");
+    if(ind >= size_t(T.order())) throw std::runtime_error("subIndex: index out of range");
 #endif
     auto R = T.range();
     R[ind].ind = stop-start;

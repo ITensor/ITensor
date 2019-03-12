@@ -11,13 +11,13 @@ input
     nsweeps = 6
     sweeps
         {
-        maxm  minm  cutoff  niter  noise
-        50    10    1E-12   2      1E-7
-        100   20    1E-12   2      1E-8
-        200   20    1E-12   2      1E-10
-        400   20    1E-12   2      0
-        800   20    1E-12   2      1E-11
-        800   20    1E-12   2      0
+        maxdim  mindim  cutoff  niter  noise
+        50      10      1E-12   2      1E-7
+        100     20      1E-12   2      1E-8
+        200     20      1E-12   2      1E-10
+        400     20      1E-12   2      0
+        800     20      1E-12   2      1E-11
+        800     20      1E-12   2      0
         }
 
     quiet = yes

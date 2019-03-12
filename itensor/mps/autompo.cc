@@ -666,7 +666,7 @@ toMPOImpl(AutoMPO const& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -809,8 +809,8 @@ toMPOImpl(AutoMPO const& am,
 #endif
         }
 
-    H.Aref(1) *= setElt(links.at(0)(1));
-    H.Aref(N) *= setElt(dag(links.at(N))(1));
+    H.ref(1) *= setElt(links.at(0)(1));
+    H.ref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 
@@ -1141,15 +1141,20 @@ compressMPO(SiteSet const& sites,
             Complex tau = 0,
             Args const& args = Args::global())
     {
+    if(args.defined("Maxm"))
+      Error("Error in compressMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in compressMPO: Arg Minm is deprecated in favor of MinDim.");
+
     int N = length(sites);
     Real eps = 1E-14;
 
-    int minm = args.getInt("Minm",1);
-    int maxm = args.getInt("Maxm",5000);
+    int mindim = args.getInt("MinDim",1);
+    int maxdim = args.getInt("MaxDim",5000);
     Real cutoff = args.getReal("Cutoff",1E-13);
     //printfln("Using cutoff = %.2E",cutoff);
-    //printfln("Using minm = %d",minm);
-    //printfln("Using maxm = %d",maxm);
+    //printfln("Using mindim = %d",mindim);
+    //printfln("Using maxdim = %d",maxdim);
 
     auto hasqn = hasQNs(sites(1));
 
@@ -1193,7 +1198,7 @@ compressMPO(SiteSet const& sites,
 
             //square singular vals for call to truncate
             for(auto& d : D) d = sqr(d);
-            truncate(D,maxm,minm,cutoff);
+            truncate(D,maxdim,mindim,cutoff);
             int m = D.size();
 
             int nc = ncols(M);
@@ -1346,7 +1351,7 @@ constructMPOTensors(SiteSet const& sites,
         {
         auto& row = links.at(n-1);
         auto& col = links.at(n);
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
 
         W = ITensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
@@ -1384,13 +1389,13 @@ constructMPOTensors(SiteSet const& sites,
     int min_n = isExpH ? 1 : 2;
     if(infinite)
         {
-        H.Aref(0) = setElt(links.at(0)(min_n));
-        H.Aref(N+1) = setElt(dag(links.at(N))(1));   
+        H.ref(0) = setElt(links.at(0)(min_n));
+        H.ref(N+1) = setElt(dag(links.at(N))(1));   
         }
     else
         {
-        H.Aref(1) *= setElt(links.at(0)(min_n));
-        H.Aref(N) *= setElt(dag(links.at(N))(1));   
+        H.ref(1) *= setElt(links.at(0)(min_n));
+        H.ref(N) *= setElt(dag(links.at(N))(1));   
         }
     
     return H;
@@ -1400,6 +1405,11 @@ MPO
 svdMPO(AutoMPO const& am, 
        Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdMPO: Arg Minm is deprecated in favor of MinDim.");
+
     bool isExpH = false;
     Cplx tau = 0.;
 
@@ -1444,7 +1454,7 @@ svdMPO(AutoMPO const& am,
         {
         for(auto n : range1(length(H)))
             {
-            if(isComplex(H.A(n)))
+            if(isComplex(H(n)))
                 {
                 Error("Complex tensor produced from real AutoMPO terms");
                 }
@@ -1459,6 +1469,11 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
+    if(args.defined("Maxm"))
+      Error("Error in toMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in toMPO: Arg Minm is deprecated in favor of MinDim.");
+
     auto verbose = args.getBool("Verbose",false);
     if(args.getBool("Exact",false))
         {
@@ -1586,7 +1601,7 @@ toExpH_ZW1(AutoMPO const& am,
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
 
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
         auto &row = links.at(n-1),
              &col = links.at(n);
 
@@ -1648,8 +1663,8 @@ toExpH_ZW1(AutoMPO const& am,
             }
         }
 
-    H.Aref(1) *= setElt(links.at(0)(1));
-    H.Aref(N) *= setElt(dag(links.at(N))(1));
+    H.ref(1) *= setElt(links.at(0)(1));
+    H.ref(N) *= setElt(dag(links.at(N))(1));
 
     //checkQNs(H);
 

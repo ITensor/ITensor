@@ -61,7 +61,7 @@ init_()
 
     for(int n = 1; n <= N_; ++n)
         {
-        auto& W = H_.Aref(n);
+        auto& W = H_.ref(n);
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
 
@@ -79,8 +79,8 @@ init_()
         W += sites_.op("S+",n) * setElt(row(4)) * setElt(col(1));
         }
 
-    H_.Aref(1)  *= setElt(links.at(0)(1));
-    H_.Aref(N_) *= setElt(dag(links.at(N_)(1)));
+    H_.ref(1)  *= setElt(links.at(0)(1));
+    H_.ref(N_) *= setElt(dag(links.at(N_)(1)));
 
     initted_ = true;
     }

@@ -252,12 +252,12 @@ SECTION("Rank 7")
     CHECK_EQUAL(t7.r(),2);
     CHECK(hasIndex(t7,l1));
     CHECK(hasIndex(t7,l2));
-    CHECK_DIFF(t7.real(l1(1),l2(1)),a,1E-5);
-    CHECK_DIFF(t7.real(l1(1),l2(2)),a,1E-5);
-    CHECK_DIFF(t7.real(l1(2),l2(1)),a,1E-5);
-    CHECK_DIFF(t7.real(l1(2),l2(2)),a,1E-5);
+    CHECK_DIFF(t7.elt(l1(1),l2(1)),a,1E-5);
+    CHECK_DIFF(t7.elt(l1(1),l2(2)),a,1E-5);
+    CHECK_DIFF(t7.elt(l1(2),l2(1)),a,1E-5);
+    CHECK_DIFF(t7.elt(l1(2),l2(2)),a,1E-5);
     t7.set(l1(2),l2(2),1.5);
-    CHECK_DIFF(t7.real(l1(2),l2(2)),1.5,1E-5);
+    CHECK_DIFF(t7.elt(l1(2),l2(2)),1.5,1E-5);
     }
 
 
@@ -360,17 +360,17 @@ T.set(s1(1),s2(2),12);
 T.set(s1(2),s2(1),21);
 T.set(s1(2),s2(2),22);
 CHECK(!isComplex(T));
-CHECK_CLOSE(T.real(s1(1),s2(1)),11);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21);
-CHECK_CLOSE(T.real(s1(2),s2(2)),22);
+CHECK_CLOSE(T.elt(s1(1),s2(1)),11);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),12);
+CHECK_CLOSE(T.elt(s1(2),s2(1)),21);
+CHECK_CLOSE(T.elt(s1(2),s2(2)),22);
 
 T.set(s2(2),s1(1),3);
-CHECK_CLOSE(T.real(s1(1),s2(2)),3);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),3);
 
 T.set(s2(2),s1(1),3+5_i);
 CHECK(isComplex(T));
-CHECK_CLOSE(T.cplx(s1(1),s2(2)),3+5_i);
+CHECK_CLOSE(T.eltC(s1(1),s2(2)),3+5_i);
 }
 
 SECTION("Set and Get Elements Using int")
@@ -381,19 +381,19 @@ T.set(1,2,12);
 T.set(2,1,21);
 T.set(2,2,22);
 CHECK(!isComplex(T));
-CHECK_CLOSE(T.real(s1(1),s2(1)),11);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21);
-CHECK_CLOSE(T.real(s1(2),s2(2)),22);
-CHECK_CLOSE(T.real(1,1),11);
-CHECK_CLOSE(T.real(1,2),12);
-CHECK_CLOSE(T.real(2,1),21);
-CHECK_CLOSE(T.real(2,2),22);
+CHECK_CLOSE(T.elt(s1(1),s2(1)),11);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),12);
+CHECK_CLOSE(T.elt(s1(2),s2(1)),21);
+CHECK_CLOSE(T.elt(s1(2),s2(2)),22);
+CHECK_CLOSE(T.elt(1,1),11);
+CHECK_CLOSE(T.elt(1,2),12);
+CHECK_CLOSE(T.elt(2,1),21);
+CHECK_CLOSE(T.elt(2,2),22);
 
 T.set(2,1,3+5_i);
 CHECK(isComplex(T));
-CHECK_CLOSE(T.cplx(s1(2),s2(1)),3+5_i);
-CHECK_CLOSE(T.cplx(2,1),3+5_i);
+CHECK_CLOSE(T.eltC(s1(2),s2(1)),3+5_i);
+CHECK_CLOSE(T.eltC(2,1),3+5_i);
 }
 
 SECTION("Set and Get Elements Using long int")
@@ -406,19 +406,19 @@ T.set(1,i2,12);
 T.set(i2,1,21);
 T.set(i2,2,22);
 CHECK(!isComplex(T));
-CHECK_CLOSE(T.real(s1(1),s2(1)),11);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21);
-CHECK_CLOSE(T.real(s1(2),s2(2)),22);
-CHECK_CLOSE(T.real(i1,i1),11);
-CHECK_CLOSE(T.real(i1,2),12);
-CHECK_CLOSE(T.real(2,i1),21);
-CHECK_CLOSE(T.real(i2,2),22);
+CHECK_CLOSE(T.elt(s1(1),s2(1)),11);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),12);
+CHECK_CLOSE(T.elt(s1(2),s2(1)),21);
+CHECK_CLOSE(T.elt(s1(2),s2(2)),22);
+CHECK_CLOSE(T.elt(i1,i1),11);
+CHECK_CLOSE(T.elt(i1,2),12);
+CHECK_CLOSE(T.elt(2,i1),21);
+CHECK_CLOSE(T.elt(i2,2),22);
 
 T.set(i2,i1,3+5_i);
 CHECK(isComplex(T));
-CHECK_CLOSE(T.cplx(s1(2),s2(1)),3+5_i);
-CHECK_CLOSE(T.cplx(i2,i1),3+5_i);
+CHECK_CLOSE(T.eltC(s1(2),s2(1)),3+5_i);
+CHECK_CLOSE(T.eltC(i2,i1),3+5_i);
 }
 
 SECTION("Set Using vector<IndexVal>")
@@ -428,10 +428,10 @@ auto v12 = vector<IndexVal>{{s2(2),s1(1)}};
 T.set(v12,12);
 auto v21 = vector<IndexVal>{{s1(2),s2(1)}};
 T.set(v21,21);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21);
-CHECK_CLOSE(T.real(vector<IndexVal>({s1(1),s2(2)})),12);
-CHECK_CLOSE(T.real(vector<IndexVal>({s1(2),s2(1)})),21);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),12);
+CHECK_CLOSE(T.elt(s1(2),s2(1)),21);
+CHECK_CLOSE(T.elt(vector<IndexVal>({s1(1),s2(2)})),12);
+CHECK_CLOSE(T.elt(vector<IndexVal>({s1(2),s2(1)})),21);
 }
 
 SECTION("Set and Get Using vector<int>")
@@ -441,10 +441,10 @@ auto v12 = vector<int>{{1,2}};
 T.set(v12,12);
 auto v21 = vector<int>{{2,1}};
 T.set(v21,21);
-CHECK_CLOSE(T.real(s1(1),s2(2)),12);
-CHECK_CLOSE(T.real(s1(2),s2(1)),21);
-CHECK_CLOSE(T.real(vector<int>{{1,2}}),12);
-CHECK_CLOSE(T.real(vector<int>{{2,1}}),21);
+CHECK_CLOSE(T.elt(s1(1),s2(2)),12);
+CHECK_CLOSE(T.elt(s1(2),s2(1)),21);
+CHECK_CLOSE(T.elt(vector<int>{{1,2}}),12);
+CHECK_CLOSE(T.elt(vector<int>{{2,1}}),21);
 }
 
 SECTION("IndexValConstructors")
@@ -454,8 +454,8 @@ SECTION("Rank 1")
     auto t1 = setElt(l1(2));
     CHECK_EQUAL(t1.r(),1);
     CHECK(hasIndex(t1,l1));
-    CHECK_DIFF(t1.real(l1(1)),0,1E-10);
-    CHECK_DIFF(t1.real(l1(2)),1,1E-10);
+    CHECK_DIFF(t1.elt(l1(1)),0,1E-10);
+    CHECK_DIFF(t1.elt(l1(2)),1,1E-10);
     CHECK_DIFF(sumels(t1),1,1E-10);
     CHECK_DIFF(norm(t1),1,1E-10);
     }
@@ -467,10 +467,10 @@ SECTION("Rank 2")
     CHECK_EQUAL(t2.r(),2);
     CHECK(hasIndex(t2,l1));
     CHECK(hasIndex(t2,l2));
-    CHECK_DIFF(t2.real(l1(1),l2(1)),0,1E-10);
-    CHECK_DIFF(t2.real(l1(1),l2(2)),0,1E-10);
-    CHECK_DIFF(t2.real(l1(2),l2(1)),1,1E-10);
-    CHECK_DIFF(t2.real(l1(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t2.elt(l1(1),l2(1)),0,1E-10);
+    CHECK_DIFF(t2.elt(l1(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t2.elt(l1(2),l2(1)),1,1E-10);
+    CHECK_DIFF(t2.elt(l1(2),l2(2)),0,1E-10);
     CHECK_DIFF(sumels(t2),1,1E-10);
     CHECK_DIFF(norm(t2),1,1E-10);
 
@@ -479,8 +479,8 @@ SECTION("Rank 2")
     CHECK_EQUAL(u2a.r(),2);
     CHECK(hasIndex(u2a,a1));
     CHECK(hasIndex(u2a,l2));
-    CHECK_DIFF(u2a.real(a1(1),l2(1)),0,1E-10);
-    CHECK_DIFF(u2a.real(a1(1),l2(2)),1,1E-10);
+    CHECK_DIFF(u2a.elt(a1(1),l2(1)),0,1E-10);
+    CHECK_DIFF(u2a.elt(a1(1),l2(2)),1,1E-10);
     CHECK_DIFF(sumels(u2a),1,1E-10);
     CHECK_DIFF(norm(u2a),1,1E-10);
 
@@ -489,8 +489,8 @@ SECTION("Rank 2")
     CHECK_EQUAL(u2b.r(),2);
     CHECK(hasIndex(u2b,l1));
     CHECK(hasIndex(u2b,a2));
-    CHECK_DIFF(u2b.real(l1(1),a2(1)),0,1E-10);
-    CHECK_DIFF(u2b.real(l1(2),a2(1)),1,1E-10);
+    CHECK_DIFF(u2b.elt(l1(1),a2(1)),0,1E-10);
+    CHECK_DIFF(u2b.elt(l1(2),a2(1)),1,1E-10);
     CHECK_DIFF(sumels(u2b),1,1E-10);
     CHECK_DIFF(norm(u2b),1,1E-10);
     }
@@ -502,14 +502,14 @@ SECTION("Rank 3")
     CHECK(hasIndex(t3,l1));
     CHECK(hasIndex(t3,l2));
     CHECK(hasIndex(t3,l3));
-    CHECK_DIFF(t3.real(l1(1),l3(1),l2(1)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(2),l3(1),l2(1)),1,1E-10);
-    CHECK_DIFF(t3.real(l1(1),l3(2),l2(1)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(1),l3(1),l2(2)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(2),l3(1),l2(2)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(1),l3(2),l2(2)),0,1E-10);
-    CHECK_DIFF(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(1),l3(1),l2(1)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(2),l3(1),l2(1)),1,1E-10);
+    CHECK_DIFF(t3.elt(l1(1),l3(2),l2(1)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(2),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(1),l3(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(2),l3(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(1),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.elt(l1(2),l3(2),l2(2)),0,1E-10);
     CHECK_DIFF(sumels(t3),1,1E-10);
     CHECK_DIFF(norm(t3),1,1E-10);
 
@@ -519,10 +519,10 @@ SECTION("Rank 3")
     CHECK(hasIndex(t4,a1));
     CHECK(hasIndex(t4,l2));
     CHECK(hasIndex(t4,l3));
-    CHECK_DIFF(t4.real(l3(1),l2(1),a1(1)),0,1E-10);
-    CHECK_DIFF(t4.real(l3(1),l2(2),a1(1)),0,1E-10);
-    CHECK_DIFF(t4.real(l3(2),l2(1),a1(1)),1,1E-10);
-    CHECK_DIFF(t4.real(l3(2),l2(2),a1(1)),0,1E-10);
+    CHECK_DIFF(t4.elt(l3(1),l2(1),a1(1)),0,1E-10);
+    CHECK_DIFF(t4.elt(l3(1),l2(2),a1(1)),0,1E-10);
+    CHECK_DIFF(t4.elt(l3(2),l2(1),a1(1)),1,1E-10);
+    CHECK_DIFF(t4.elt(l3(2),l2(2),a1(1)),0,1E-10);
     CHECK_DIFF(sumels(t4),1,1E-10);
     CHECK_DIFF(norm(t4),1,1E-10);
     }
@@ -536,7 +536,7 @@ SECTION("Rank 4")
     CHECK(hasIndex(r4,l2));
     CHECK(hasIndex(r4,l3));
     CHECK(hasIndex(r4,l4));
-    CHECK_DIFF(r4.real(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
+    CHECK_DIFF(r4.elt(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
     CHECK_DIFF(sumels(r4),1,1E-10);
     CHECK_DIFF(norm(r4),1,1E-10);
     }
@@ -555,7 +555,7 @@ SECTION("Rank 8")
     CHECK(hasIndex(t8,l7));
     CHECK(hasIndex(t8,l8));
 
-    CHECK_DIFF(t8.real(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
+    CHECK_DIFF(t8.elt(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
     CHECK_DIFF(norm(t8),1,1E-10);
     }
 }
@@ -619,23 +619,23 @@ SECTION("Real")
     {
     A *= -1;
     auto s1P = prime(s1);
-    CHECK_EQUAL(A.real(s1(1),s1P(1)),-11);
-    CHECK_EQUAL(A.real(s1(1),s1P(2)),-12);
-    CHECK_EQUAL(A.real(s1(2),s1P(1)),-21);
-    CHECK_EQUAL(A.real(s1(2),s1P(2)),-22);
+    CHECK_EQUAL(A.elt(s1(1),s1P(1)),-11);
+    CHECK_EQUAL(A.elt(s1(1),s1P(2)),-12);
+    CHECK_EQUAL(A.elt(s1(2),s1P(1)),-21);
+    CHECK_EQUAL(A.elt(s1(2),s1P(2)),-22);
 
     Real f = Global::random();
     A *= -f;
-    CHECK_DIFF(A.real(s1(1),s1P(1)),11*f,1E-10);
-    CHECK_DIFF(A.real(s1(1),s1P(2)),12*f,1E-10);
-    CHECK_DIFF(A.real(s1(2),s1P(1)),21*f,1E-10);
-    CHECK_DIFF(A.real(s1(2),s1P(2)),22*f,1E-10);
+    CHECK_DIFF(A.elt(s1(1),s1P(1)),11*f,1E-10);
+    CHECK_DIFF(A.elt(s1(1),s1P(2)),12*f,1E-10);
+    CHECK_DIFF(A.elt(s1(2),s1P(1)),21*f,1E-10);
+    CHECK_DIFF(A.elt(s1(2),s1P(2)),22*f,1E-10);
 
     B /= f;
-    CHECK_DIFF(B.real(s1(1),s2(1)),110/f,1E-10);
-    CHECK_DIFF(B.real(s1(1),s2(2)),120/f,1E-10);
-    CHECK_DIFF(B.real(s1(2),s2(1)),210/f,1E-10);
-    CHECK_DIFF(B.real(s1(2),s2(2)),220/f,1E-10);
+    CHECK_DIFF(B.elt(s1(1),s2(1)),110/f,1E-10);
+    CHECK_DIFF(B.elt(s1(1),s2(2)),120/f,1E-10);
+    CHECK_DIFF(B.elt(s1(2),s2(1)),210/f,1E-10);
+    CHECK_DIFF(B.elt(s1(2),s2(2)),220/f,1E-10);
     }
 SECTION("Complex Scalar Multiply")
     {
@@ -643,10 +643,10 @@ SECTION("Complex Scalar Multiply")
     A *= 1_i;
     CHECK(typeOf(A) == Type::DenseCplx);
     auto s1P = prime(s1);
-    CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
-    CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
-    CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
-    CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
+    CHECK_EQUAL(A.eltC(s1(1),s1P(1)),11_i);
+    CHECK_EQUAL(A.eltC(s1(1),s1P(2)),12_i);
+    CHECK_EQUAL(A.eltC(s1(2),s1P(1)),21_i);
+    CHECK_EQUAL(A.eltC(s1(2),s1P(2)),22_i);
 
     auto T = random(A);
     CHECK(typeOf(T) == Type::DenseReal);
@@ -658,10 +658,10 @@ SECTION("Complex Scalar Multiply")
     auto z = 2.2-3.1_i;
     auto cT = T;
     T *= z;
-    CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
-    CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
-    CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
-    CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
+    CHECK_CLOSE(T.eltC(s1(1),s1P(1)),z * cT.eltC(s1(1),s1P(1)));
+    CHECK_CLOSE(T.eltC(s1(1),s1P(2)),z * cT.eltC(s1(1),s1P(2)));
+    CHECK_CLOSE(T.eltC(s1(2),s1P(1)),z * cT.eltC(s1(2),s1P(1)));
+    CHECK_CLOSE(T.eltC(s1(2),s1P(2)),z * cT.eltC(s1(2),s1P(2)));
     }
 }
 
@@ -680,7 +680,7 @@ SECTION("Apply Function Obj")
     for(int n1 = 1; n1 <= s1.dim(); ++n1)
     for(int n2 = 1; n2 <= s1P.dim(); ++n2)
         {
-        CHECK_DIFF( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
+        CHECK_DIFF( f( A.elt(s1(n1),s1P(n2)) ), A1.elt(s1(n1),s1P(n2)) ,1E-10);
         }
     }
 
@@ -705,7 +705,7 @@ SECTION("Visit Real")
     for(auto i : range1(b4)) 
     for(auto j : range1(l2))
         {
-        prod_check *= T.real(b4(i),l2(j));
+        prod_check *= T.elt(b4(i),l2(j));
         }
     CHECK_CLOSE(prod,prod_check);
     }
@@ -784,9 +784,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
-                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
-               + w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
+    CHECK_CLOSE(elt(r,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                 f1*elt(v,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               + elt(w,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
     }
 
 ITensor d(v); 
@@ -796,8 +796,8 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(d.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
-                v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))-w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
+    CHECK_CLOSE(elt(d,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                elt(v,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))-elt(w,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
     }
 
 f1 = 1; f2 = 1;
@@ -809,9 +809,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
-                f1*yy.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
-               +f2*zz.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
+    CHECK_CLOSE(elt(r,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                f1*elt(yy,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               +f2*elt(zz,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
     }
 
 IndexSet reordered(l2,l1,b3,a4,a2,l4);
@@ -822,9 +822,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
-                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
-               + w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
+    CHECK_CLOSE(elt(r,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                 f1*elt(v,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               + elt(w,l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
     }
 
 SECTION("Reordered Case 2")
@@ -837,8 +837,8 @@ SECTION("Reordered Case 2")
     for(int k1 = 1; k1 <= s1.dim(); ++k1)
     for(int k2 = 1; k2 <= s2.dim(); ++k2)
         {
-        auto val = T1.real(b6(j6),s1(k1),b5(j5),s2(k2))+T2.real(b6(j6),s1(k1),b5(j5),s2(k2));
-        CHECK_CLOSE(R.real(b6(j6),s1(k1),b5(j5),s2(k2)),val);
+        auto val = elt(T1,b6(j6),s1(k1),b5(j5),s2(k2))+elt(T2,b6(j6),s1(k1),b5(j5),s2(k2));
+        CHECK_CLOSE(elt(R,b6(j6),s1(k1),b5(j5),s2(k2)),val);
         }
     }
 
@@ -852,8 +852,8 @@ SECTION("Add diag")
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
         {
-        //printfln("r.real(l6(%d),b4(%d)) = %.10f",j1,j2,r.real(l6(j1),b4(j2)));
-        CHECK_CLOSE(r.real(l6(j1),b4(j2)),v1.real(l6(j1),b4(j2))+v2.real(l6(j1),b4(j2)));
+        //printfln("elt(r,l6(%d),b4(%d)) = %.10f",j1,j2,elt(r,l6(j1),b4(j2)));
+        CHECK_CLOSE(elt(r,l6(j1),b4(j2)),elt(v1,l6(j1),b4(j2))+elt(v2,l6(j1),b4(j2)));
         }
     }
 
@@ -875,7 +875,7 @@ SECTION("Complex+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), T1.eltC(l2(i2),b2(j2),b4(j4))+T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -890,7 +890,7 @@ SECTION("Complex+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), T1.cplx(l2(i2),b2(j2),b4(j4))+T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), T1.eltC(l2(i2),b2(j2),b4(j4))+T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -907,7 +907,7 @@ SECTION("Complex+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))-f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))-f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
     }
@@ -928,7 +928,7 @@ SECTION("Real+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))+f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -942,7 +942,7 @@ SECTION("Real+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))+f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -956,7 +956,7 @@ SECTION("Real+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))+f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -970,7 +970,7 @@ SECTION("Real+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))+f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
 
@@ -984,7 +984,7 @@ SECTION("Real+-Complex")
         for(auto j2 : range1(b2.dim()))
         for(auto j4 : range1(b4.dim()))
             {
-            CHECK_CLOSE(R.cplx(l2(i2),b2(j2),b4(j4)), f1*T1.cplx(l2(i2),b2(j2),b4(j4))+f2*T2.cplx(l2(i2),b2(j2),b4(j4)));
+            CHECK_CLOSE(R.eltC(l2(i2),b2(j2),b4(j4)), f1*T1.eltC(l2(i2),b2(j2),b4(j4))+f2*T2.eltC(l2(i2),b2(j2),b4(j4)));
             }
         }
     }
@@ -994,7 +994,7 @@ SECTION("Real+-Complex")
 SECTION("ContractingProduct")
 {
 
-//Check for rank 0 ITensors
+//Check for order 0 ITensors
 SECTION("Rank 0")
     {
     Real f = Global::random();
@@ -1009,8 +1009,8 @@ SECTION("Rank 0")
     for(int j2 = 1; j2 <= 2; ++j2)
     for(int j4 = 1; j4 <= 4; ++j4)
         {
-        Real val = f * T.real(b2(j2),a1(1),b4(j4));
-        CHECK_CLOSE(res.real(b2(j2),a1(1),b4(j4)),val);
+        Real val = f * elt(T,b2(j2),a1(1),b4(j4));
+        CHECK_CLOSE(elt(res,b2(j2),a1(1),b4(j4)),val);
         }
     }
 
@@ -1042,9 +1042,9 @@ SECTION("Case 1")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
             {
-            val += L.real(a2(1),b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+            val += L.elt(a2(1),b2(j2),a1(1),b3(j3),b4(j4))*fL * R.elt(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
             }
-        CHECK_DIFF(res1.real(a2(1),b5(j5)),val,1E-10);
+        CHECK_DIFF(res1.elt(a2(1),b5(j5)),val,1E-10);
         }
     }
 
@@ -1068,9 +1068,9 @@ SECTION("Case 2")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
             {
-            val += L.real(a2(1),b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+            val += L.elt(a2(1),b2(j2),a1(1),b3(j3),b4(j4)) * R.elt(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
             }
-        CHECK_DIFF(res2.real(a2(1),b5(j5)),val,1E-10);
+        CHECK_DIFF(res2.elt(a2(1),b5(j5)),val,1E-10);
         }
     }
 
@@ -1097,8 +1097,8 @@ SECTION("Case 3")
     for(int j2 = 1; j2 <= b2.dim(); ++j2)
     for(int j4 = 1; j4 <= b4.dim(); ++j4)
         {
-        auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_DIFF(res3.real(a3(1),b4(j4),b2(j2)),val,1E-10);
+        auto val = Q.elt(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.elt(a2(1),a3(1),a1(1))*fP;
+        CHECK_DIFF(res3.elt(a3(1),b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -1117,8 +1117,8 @@ SECTION("Case 4")
     for(int j2 = 1; j2 <= 2; ++j2)
     for(int j4 = 1; j4 <= 4; ++j4)
         {
-        auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_DIFF(res4.real(a3(1),b4(j4),b2(j2)),val,1E-10);
+        auto val = Q.elt(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.elt(a2(1),a3(1),a1(1))*fP;
+        CHECK_DIFF(res4.elt(a3(1),b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -1152,9 +1152,9 @@ SECTION("Case 6")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int k6 = 1; k6 <= 2; ++k6)
             {
-            val += T1.real(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.real(a1(1),l6(k6),s4(i4),b3(j3));
+            val += T1.elt(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.elt(a1(1),l6(k6),s4(i4),b3(j3));
             }
-        CHECK_DIFF(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
+        CHECK_DIFF(R.elt(b5(j5),s3(i3),s4(i4)),val,1E-10);
         }
     }
 
@@ -1170,9 +1170,9 @@ SECTION("Scalar Result")
     for(long j3 = 1; j3 <= b3.dim(); ++j3)
     for(long j4 = 1; j4 <= b4.dim(); ++j4)
         {
-        val += T1.real(a1(1),b3(j3),b4(j4))*T2.real(a1(1),b3(j3),b4(j4));
+        val += T1.elt(a1(1),b3(j3),b4(j4))*T2.elt(a1(1),b3(j3),b4(j4));
         }
-    CHECK_CLOSE(val,R.real());
+    CHECK_CLOSE(val,elt(R));
     }
 }
 
@@ -1193,7 +1193,7 @@ SECTION("Scalar Result")
 //    for(auto kk : range1(k.dim()))
 //    for(auto ll : range1(l.dim()))
 //        {
-//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        diff += C.elt(i(ii),l(ll),j(jj),k(kk)) - A.elt(l(ll),i(ii),j(jj))*B.elt(j(jj),k(kk),l(ll));
 //        }
 //    CHECK(diff < 1E-13);
 //    }
@@ -1208,7 +1208,7 @@ SECTION("Scalar Result")
 //    for(auto kk : range1(k.dim()))
 //    for(auto ll : range1(l.dim()))
 //        {
-//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        diff += C.elt(i(ii),l(ll),j(jj),k(kk)) - A.elt(l(ll),i(ii),j(jj))*B.elt(j(jj),k(kk),l(ll));
 //        }
 //    CHECK(diff < 1E-11);
 //    }
@@ -1223,7 +1223,7 @@ SECTION("Scalar Result")
 //    for(auto kk : range1(k.dim()))
 //    for(auto ll : range1(l.dim()))
 //        {
-//        diff += C.real(i(ii),l(ll),j(jj),k(kk)) - A.real(l(ll),i(ii),j(jj))*B.real(j(jj),k(kk),l(ll));
+//        diff += C.elt(i(ii),l(ll),j(jj),k(kk)) - A.elt(l(ll),i(ii),j(jj))*B.elt(j(jj),k(kk),l(ll));
 //        }
 //    CHECK(diff < 1E-13);
 //    }
@@ -1236,7 +1236,7 @@ SECTION("Scalar Result")
 //    for(auto ii : range1(i.dim()))
 //    for(auto jj : range1(j.dim()))
 //        {
-//        diff += C.real(i(ii),j(jj)) - A.real(i(ii))*B.real(j(jj));
+//        diff += C.elt(i(ii),j(jj)) - A.elt(i(ii))*B.elt(j(jj));
 //        }
 //    CHECK(diff < 1E-13);
 //    }
@@ -1250,7 +1250,7 @@ SECTION("Scalar Result")
 //    for(auto jj : range1(j.dim()))
 //    for(auto kk : range1(k.dim()))
 //        {
-//        diff += C.real(k(kk),i(ii),j(jj)) - A.real(i(ii))*B.real(k(kk),j(jj));
+//        diff += C.elt(k(kk),i(ii),j(jj)) - A.elt(i(ii))*B.elt(k(kk),j(jj));
 //        }
 //    CHECK(diff < 1E-13);
 //    }
@@ -1272,9 +1272,9 @@ SECTION("Complex-Complex")
         for(auto l : range1(b3))
         for(auto m : range1(l6))
             {
-            val += T1.cplx(a1(1),b3(l),b5(i),l6(m),s3(j)) * T2.cplx(a1(1),l6(m),s4(k),b3(l));
+            val += T1.eltC(a1(1),b3(l),b5(i),l6(m),s3(j)) * T2.eltC(a1(1),l6(m),s4(k),b3(l));
             }
-        CHECK_CLOSE(R.cplx(b5(i),s3(j),s4(k)),val);
+        CHECK_CLOSE(R.eltC(b5(i),s3(j),s4(k)),val);
         }
     }
 
@@ -1293,9 +1293,9 @@ SECTION("Real-Complex")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int k6 = 1; k6 <= 2; ++k6)
             {
-            val += T1.cplx(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(a1(1),l6(k6),s4(i4),b3(j3));
+            val += T1.eltC(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.eltC(a1(1),l6(k6),s4(i4),b3(j3));
             }
-        CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
+        CHECK_CLOSE(R.eltC(b5(j5),s3(i3),s4(i4)),val);
         }
     }
 
@@ -1309,16 +1309,16 @@ SECTION("Real Times Scalar Complex")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(a1(1),b3(j3),b5(j5)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R1.cplx(a2(1),b5(j5),b3(j3)),val);
+        auto val = T1.eltC(a1(1),b3(j3),b5(j5)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R1.eltC(a2(1),b5(j5),b3(j3)),val);
         } 
 
     auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(a1(1),b3(j3),b5(j5)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R2.cplx(a2(1),b5(j5),b3(j3)),val);
+        auto val = T1.eltC(a1(1),b3(j3),b5(j5)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R2.eltC(a2(1),b5(j5),b3(j3)),val);
         } 
     }
 
@@ -1332,16 +1332,16 @@ SECTION("Complex Times Scalar Real")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R1.cplx(a2(1),b5(j5),b3(j3)),val);
+        auto val = T1.eltC(b3(j3),b5(j5),a1(1)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R1.eltC(a2(1),b5(j5),b3(j3)),val);
         }
 
     auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R2.cplx(a2(1),b5(j5),b3(j3)),val);
+        auto val = T1.eltC(b3(j3),b5(j5),a1(1)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R2.eltC(a2(1),b5(j5),b3(j3)),val);
         }
     }
 
@@ -1355,16 +1355,16 @@ SECTION("Complex Times Scalar Complex")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3),a2(1)),val);
+        auto val = T1.eltC(b3(j3),b5(j5),a1(1)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R1.eltC(b5(j5),b3(j3),a2(1)),val);
         }
 
     auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
-        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3),a2(1)),val);
+        auto val = T1.eltC(b3(j3),b5(j5),a1(1)) * T2.eltC(a1(1),a2(1));
+        CHECK_CLOSE(R2.eltC(b5(j5),b3(j3),a2(1)),val);
         }
     }
 }
@@ -1411,17 +1411,17 @@ SECTION("PrimeLevel")
 
 SECTION("SwapPrimeTest")
     {
-    CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
-    CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
-    CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
-    CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
+    CHECK_EQUAL(A.elt(s1(1),prime(s1)(1)),11);
+    CHECK_EQUAL(A.elt(s1(2),prime(s1)(1)),21);
+    CHECK_EQUAL(A.elt(s1(1),prime(s1)(2)),12);
+    CHECK_EQUAL(A.elt(s1(2),prime(s1)(2)),22);
 
     A = swapPrime(A,0,1);
 
-    CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
-    CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
-    CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
-    CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
+    CHECK_EQUAL(A.elt(prime(s1)(1),s1(1)),11);
+    CHECK_EQUAL(A.elt(prime(s1)(2),s1(1)),21);
+    CHECK_EQUAL(A.elt(prime(s1)(1),s1(2)),12);
+    CHECK_EQUAL(A.elt(prime(s1)(2),s1(2)),22);
     }
 
 SECTION("NoprimeTest")
@@ -1536,24 +1536,24 @@ SECTION("Tag functions")
         {
         auto T2 = setTags(T,"tag1,tag2");
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
-        CHECK(hasIndex(T2,u("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
-        CHECK(hasIndex(T2,d("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,s("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
         }
 
     SECTION("setTags (match tags)")
         {
         auto T2 = setTags(T,"tag1,tag2","x");
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,l("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,r("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,s));
@@ -1567,7 +1567,7 @@ SECTION("Tag functions")
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,s("tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
         }
 
     SECTION("replaceTags (all)")
@@ -1632,7 +1632,7 @@ SECTION("Tag functions")
 
     SECTION("Check error throws for duplicate indices")
         {
-        auto T2 = ITensor(l("Link"),l("Link,2"));
+        auto T2 = ITensor(setTags(l,"Link"),setTags(l,"Link,2"));
         //Check that remove the tag "2"
         //throws an exception since it would
         //lead to duplicate indices
@@ -1641,14 +1641,14 @@ SECTION("Tag functions")
 
     SECTION("Test contraction")
         {
-        auto ll = l("horiz,left,Link");
-        auto lr = l("horiz,right,Link");
-        auto lu = l("vert,up,Link");
-        auto ld = l("vert,down,Link");
+        auto ll = setTags(l,"horiz,left,Link");
+        auto lr = setTags(l,"horiz,right,Link");
+        auto lu = setTags(l,"vert,up,Link");
+        auto ld = setTags(l,"vert,down,Link");
         auto A = randomITensor(ll,lr,lu,ld,s);
         // Contract over l,r,s
         auto B = addTags(A,"bra","vert")*addTags(dag(A),"ket","vert");
-        CHECK(ord(B) == 4);
+        CHECK(order(B) == 4);
         CHECK(hasIndex(B,addTags(lu,"bra")));
         CHECK(hasIndex(B,addTags(lu,"ket")));
         CHECK(hasIndex(B,addTags(ld,"bra")));
@@ -1698,7 +1698,7 @@ SECTION("Diag All Same")
     CHECK(hasIndex(res1,prime(s1,2)));
     for(int j1 = 1; j1 <= s1.dim(); ++j1)
         {
-        CHECK_CLOSE(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
+        CHECK_CLOSE(res1.elt(prime(s1,2)(j1),a1(1)), r1.elt(prime(s1,2)(j1),s1(1)));
         }
     }
 
@@ -1716,7 +1716,7 @@ SECTION("Diag")
     for(int j2 = 1; j2 <= s2.dim(); ++j2)
     for(int d = 1; d <= diagm; ++d)
         {
-        CHECK_CLOSE(res2.real(s2(j2),b2(d)), v.at(d-1) * r2.real(s2(j2),s1(d)));
+        CHECK_CLOSE(res2.elt(s2(j2),b2(d)), v.at(d-1) * r2.elt(s2(j2),s1(d)));
         }
     }
 
@@ -1730,9 +1730,9 @@ SECTION("Trace")
         Real val = 0;
         for(auto i12 : range1(s1))
             {
-            val += T.real(s1(i12),s2(i12),s3(i3));
+            val += T.elt(s1(i12),s2(i12),s3(i3));
             }
-        CHECK_CLOSE(val,R.real(s3(i3)));
+        CHECK_CLOSE(val,R.elt(s3(i3)));
         }
     }
 
@@ -1746,7 +1746,7 @@ SECTION("Tie Indices with Diag Tensor")
     for(int t = 1; t <= tied1.dim(); ++t)
     for(int j4 = 1; j4 <= s4.dim(); ++j4)
         {
-        CHECK_CLOSE(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+        CHECK_CLOSE(T.elt(s1(t),s2(t),s3(t),s4(j4)), R1.elt(tied1(t),s4(j4)));
         }
 
     auto tied2 = Index(s1.dim(),"tied2");
@@ -1756,7 +1756,7 @@ SECTION("Tie Indices with Diag Tensor")
     for(int j2 = 1; j2 <= s2.dim(); ++j2)
     for(int j4 = 1; j4 <= s4.dim(); ++j4)
         {
-        CHECK_CLOSE(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+        CHECK_CLOSE(T.elt(s1(t),s2(j2),s3(t),s4(j4)), R2.elt(tied2(t),s2(j2),s4(j4)));
         }
     }
 
@@ -1770,8 +1770,8 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     Real val = 0;
     auto minjk = std::min(J.dim(),K.dim());
     for(long j = 1; j <= minjk; ++j)
-        val += T.real(J(j),K(j));
-    CHECK_CLOSE(R.real(),val);
+        val += T.elt(J(j),K(j));
+    CHECK_CLOSE(elt(R),val);
 
     auto data = randomData(minjk);
     auto d2 = diagITensor(data,J,K);
@@ -1779,8 +1779,8 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     CHECK(typeOf(R) == Type::DiagRealAllSame);
     val = 0;
     for(long j = 1; j <= minjk; ++j)
-        val += data.at(j-1)*T.real(J(j),K(j));
-    CHECK_CLOSE(R.real(),val);
+        val += data.at(j-1)*T.elt(J(j),K(j));
+    CHECK_CLOSE(elt(R),val);
     }
 
 SECTION("Contract All Dense Inds; Rank == 1 Diag result")
@@ -1793,7 +1793,7 @@ SECTION("Contract All Dense Inds; Rank == 1 Diag result")
     CHECK(hasIndex(R,L));
     auto minjkl = std::min(std::min(J.dim(),K.dim()),L.dim());
     for(long j = 1; j <= minjkl; ++j)
-        CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
+        CHECK_CLOSE(R.elt(L(j)), T.elt(J(j),K(j)));
     }
 
 SECTION("Contract All Dense Inds; Rank > 1 Diag result")
@@ -1807,7 +1807,7 @@ SECTION("Contract All Dense Inds; Rank > 1 Diag result")
     CHECK(hasIndex(R,M));
     auto minjkl = std::min(std::min(J.dim(),K.dim()),L.dim());
     for(long j = 1; j <= minjkl; ++j)
-        CHECK_CLOSE(R.real(L(j),M(j)), T.real(J(j),K(j)));
+        CHECK_CLOSE(R.elt(L(j),M(j)), T.elt(J(j),K(j)));
     }
 SECTION("Two-index delta Tensor as Index Replacer")
     {
@@ -1827,8 +1827,8 @@ SECTION("Two-index delta Tensor as Index Replacer")
     for(int i3 = 1; i3 <= s3.dim(); ++i3)
     for(int i12 = 1; i12 <= s1.dim(); ++i12)
         {
-        CHECK_CLOSE(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
-        CHECK_CLOSE(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
+        CHECK_CLOSE(T1.elt(s1(i12),s3(i3)), R1a.elt(s2(i12),s3(i3)));
+        CHECK_CLOSE(T1.elt(s1(i12),s3(i3)), R1b.elt(s2(i12),s3(i3)));
         }
 
     auto T2 = randomITensor(s2,s3);
@@ -1844,8 +1844,8 @@ SECTION("Two-index delta Tensor as Index Replacer")
     for(int i3 = 1; i3 <= s3.dim(); ++i3)
     for(int i12 = 1; i12 <= s1.dim(); ++i12)
         {
-        CHECK_CLOSE(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
-        CHECK_CLOSE(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
+        CHECK_CLOSE(T2.elt(s2(i12),s3(i3)), R2a.elt(s1(i12),s3(i3)));
+        CHECK_CLOSE(T2.elt(s2(i12),s3(i3)), R2b.elt(s1(i12),s3(i3)));
         }
 
     auto T3 = randomITensor(b8,s1,b6,a1);
@@ -1883,7 +1883,7 @@ SECTION("Combiner")
         for(int i3 = 1; i3 <= s3.dim(); ++i3)
             {
             auto j = i1+(i2-1)*s2.dim();
-            CHECK_CLOSE(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
+            CHECK_CLOSE(T1.elt(s1(i1),s2(i2),s3(i3)), R1.elt(ci(j),s3(i3)));
             }
 
         auto T2 = randomITensor(s1,s3,s2);
@@ -1897,7 +1897,7 @@ SECTION("Combiner")
         for(int i3 = 1; i3 <= s3.dim(); ++i3)
             {
             auto j = i1+(i2-1)*s2.dim();
-            CHECK_CLOSE(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
+            CHECK_CLOSE(T2.elt(s1(i1),s2(i2),s3(i3)), R2.elt(ci(j),s3(i3)));
             }
         }
 
@@ -1938,7 +1938,7 @@ SECTION("Combiner")
 
         CHECK(hasIndex(R,ci));
         CHECK(hasIndex(R,b));
-        CHECK_CLOSE(T.real(a(1),b(1),c(1)),R.real(ci(1),b(1)));
+        CHECK_CLOSE(T.elt(a(1),b(1),c(1)),R.elt(ci(1),b(1)));
         }
 
     SECTION("Three Index")
@@ -1962,7 +1962,7 @@ SECTION("Combiner")
             for(auto k_ : range1(k.dim()))
                 {
                 auto ci_ = i_ + i.dim()*(j_-1);
-                CHECK_CLOSE(R.real(ci(ci_),k(k_)), T.real(i(i_),j(j_),k(k_)));
+                CHECK_CLOSE(R.elt(ci(ci_),k(k_)), T.elt(i(i_),j(j_),k(k_)));
                 }
             }
 
@@ -1979,7 +1979,7 @@ SECTION("Combiner")
             for(auto k_ : range1(k.dim()))
                 {
                 auto ci_ = i_ + i.dim()*(k_-1);
-                CHECK_CLOSE(R.real(ci(ci_),j(j_)), T.real(i(i_),j(j_),k(k_)));
+                CHECK_CLOSE(R.elt(ci(ci_),j(j_)), T.elt(i(i_),j(j_),k(k_)));
                 }
             }
 
@@ -1996,7 +1996,7 @@ SECTION("Combiner")
             for(auto k_ : range1(k.dim()))
                 {
                 auto ci_ = k_ + k.dim()*(j_-1);
-                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                CHECK_CLOSE(R.elt(ci(ci_),i(i_)), T.elt(i(i_),j(j_),k(k_)));
                 }
             }
 
@@ -2013,7 +2013,7 @@ SECTION("Combiner")
             for(auto k_ : range1(k.dim()))
                 {
                 auto ci_ = k_ + k.dim()*(j_-1);
-                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                CHECK_CLOSE(R.elt(ci(ci_),i(i_)), T.elt(i(i_),j(j_),k(k_)));
                 }
             }
 
@@ -2030,7 +2030,7 @@ SECTION("Combiner")
             for(auto k_ : range1(k.dim()))
                 {
                 auto ci_ = k_ + k.dim()*(j_-1);
-                CHECK_CLOSE(R.real(ci(ci_),i(i_)), T.real(i(i_),j(j_),k(k_)));
+                CHECK_CLOSE(R.elt(ci(ci_),i(i_)), T.elt(i(i_),j(j_),k(k_)));
                 }
             }
         
@@ -2052,7 +2052,7 @@ SECTION("Combiner")
             for(int j1 = 1; j1 <= S1.dim(); ++j1)
             for(int j2 = 1; j2 <= S2.dim(); ++j2)
                 {
-                CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+                CHECK_CLOSE( T.elt(L1(i1),L2(i2),S1(j1),S2(j2)), R.elt(L1(i1),L2(i2),S1(j1),S2(j2)) );
                 }
             }
 
@@ -2074,7 +2074,7 @@ SECTION("Combiner")
             for(int j1 = 1; j1 <= S1.dim(); ++j1)
             for(int j2 = 1; j2 <= S2.dim(); ++j2)
                 {
-                CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+                CHECK_CLOSE( T.elt(L1(i1),L2(i2),S1(j1),S2(j2)), R.elt(L1(i1),L2(i2),S1(j1),S2(j2)) );
                 }
             }
 
@@ -2085,7 +2085,7 @@ SECTION("Combiner")
         //for(auto ij : range1(j.dim()))
         //for(auto ik : range1(k.dim()))
         //    {
-        //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik)), T.real(i(ii),j(ij),k(ik)));
+        //    CHECK_CLOSE(TT.elt(i(ii),j(ij),k(ik)), T.elt(i(ii),j(ij),k(ik)));
         //    }
         }
 
@@ -2114,7 +2114,7 @@ SECTION("Combiner")
             for(auto m_ : range1(m.dim()))
                 {
                 auto ci_ = i_+i.dim()*((k_-1)+k.dim()*(m_-1));
-                CHECK_CLOSE(R.real(ci(ci_),j(j_),l(l_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
+                CHECK_CLOSE(R.elt(ci(ci_),j(j_),l(l_)), T.elt(i(i_),j(j_),k(k_),l(l_),m(m_)));
                 }
             }
 
@@ -2133,7 +2133,7 @@ SECTION("Combiner")
             for(auto m_ : range1(m))
                 {
                 auto ci_ = k_+k.dim()*((j_-1)+j.dim()*(l_-1));
-                CHECK_CLOSE(R.real(ci(ci_),i(i_),m(m_)), T.real(i(i_),j(j_),k(k_),l(l_),m(m_)));
+                CHECK_CLOSE(R.elt(ci(ci_),i(i_),m(m_)), T.elt(i(i_),j(j_),k(k_),l(l_),m(m_)));
                 }
             }
 
@@ -2146,7 +2146,7 @@ SECTION("Combiner")
         //for(auto il : range1(l.dim()))
         //for(auto im : range1(m.dim()))
         //    {
-        //    CHECK_CLOSE(TT.real(i(ii),j(ij),k(ik),l(il),m(im)), T.real(i(ii),j(ij),k(ik),l(il),m(im)));
+        //    CHECK_CLOSE(TT.elt(i(ii),j(ij),k(ik),l(il),m(im)), T.elt(i(ii),j(ij),k(ik),l(il),m(im)));
         //    }
         }
 
@@ -2179,9 +2179,9 @@ for(auto j2 = 1; j2 <= b2.dim(); ++j2)
 for(auto j7 = 1; j7 <= b7.dim(); ++j7) 
     {
     //printfln("T1 val = %f, conj = %f, T2 val = %f",
-    //         T1.cplx(b2(j2),b7(j7)),std::conj(T1.cplx(b2(j2),b7(j7))), 
-    //         T2.cplx(b2(j2),b7(j7)));
-    CHECK_CLOSE(std::conj(T1.cplx(b2(j2),b7(j7))), T2.cplx(b2(j2),b7(j7)));
+    //         T1.eltC(b2(j2),b7(j7)),std::conj(T1.eltC(b2(j2),b7(j7))), 
+    //         T2.eltC(b2(j2),b7(j7)));
+    CHECK_CLOSE(std::conj(T1.eltC(b2(j2),b7(j7))), T2.eltC(b2(j2),b7(j7)));
     }
 }
 
@@ -2192,7 +2192,7 @@ Real r = 0;
 for(auto j2 = 1; j2 <= b2.dim(); ++j2) 
 for(auto j7 = 1; j7 <= b7.dim(); ++j7) 
     {
-    r += T.real(b2(j2),b7(j7));
+    r += T.elt(b2(j2),b7(j7));
     }
 CHECK_CLOSE(sumels(T),r);
 
@@ -2201,7 +2201,7 @@ Complex z = 0;
 for(auto j2 = 1; j2 <= b2.dim(); ++j2) 
 for(auto j7 = 1; j7 <= b7.dim(); ++j7) 
     {
-    z += T.cplx(b2(j2),b7(j7));
+    z += T.eltC(b2(j2),b7(j7));
     }
 CHECK_CLOSE(sumelsC(T),z);
 }
@@ -2214,10 +2214,10 @@ M(0,1) = 12;
 M(1,0) = 21;
 M(1,1) = 22;
 auto T = matrixITensor(move(M),l1,l2);
-CHECK_CLOSE(T.real(l1(1),l2(1)),11);
-CHECK_CLOSE(T.real(l1(1),l2(2)),12);
-CHECK_CLOSE(T.real(l1(2),l2(1)),21);
-CHECK_CLOSE(T.real(l1(2),l2(2)),22);
+CHECK_CLOSE(T.elt(l1(1),l2(1)),11);
+CHECK_CLOSE(T.elt(l1(1),l2(2)),12);
+CHECK_CLOSE(T.elt(l1(2),l2(1)),21);
+CHECK_CLOSE(T.elt(l1(2),l2(2)),22);
 }
 
 SECTION("Permute Test")
@@ -2249,7 +2249,7 @@ for(auto jj : range1(j.dim()))
 for(auto jjp : range1(jp.dim()))
 for(auto kk : range1(k.dim()))
     {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
+    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O1.elt(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
 auto O2 = permute(IT,j,i,k,jp);
@@ -2262,7 +2262,7 @@ for(auto jj : range1(j.dim()))
 for(auto jjp : range1(jp.dim()))
 for(auto kk : range1(k.dim()))
     {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
+    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O2.elt(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
 auto CIT = randomITensorC(i,j,jp,k);
@@ -2277,7 +2277,7 @@ for(auto jj : range1(j.dim()))
 for(auto jjp : range1(jp.dim()))
 for(auto kk : range1(k.dim()))
     {
-    CHECK_CLOSE(CIT.cplx(i(ii),j(jj),jp(jjp),k(kk)),O3.cplx(i(ii),j(jj),jp(jjp),k(kk)));
+    CHECK_CLOSE(CIT.eltC(i(ii),j(jj),jp(jjp),k(kk)),O3.eltC(i(ii),j(jj),jp(jjp),k(kk)));
     }
 
 auto data = randomData(i.dim());
@@ -2291,78 +2291,78 @@ for(auto ii : range1(i.dim()))
 for(auto jj : range1(j.dim()))
 for(auto kk : range1(k.dim()))
     {
-    CHECK_CLOSE(ITD.real(i(ii),j(jj),k(kk)),O4.real(i(ii),j(jj),k(kk)));
+    CHECK_CLOSE(ITD.elt(i(ii),j(jj),k(kk)),O4.elt(i(ii),j(jj),k(kk)));
     }
 
 }
 
-SECTION("Permute Test: Dots Syntax")
-{
-Index i(2,"i"),
-      j(3,"j"),
-      k(4,"k");
-auto jp = prime(j);
-
-auto IT = randomITensor(i,j,jp,k);
-
-auto O1 = permute(IT,"...",i);
-CHECK(O1.index(4) == i);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O1.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O2 = permute(IT,"...",j,i);
-CHECK(O2.inds().index(3) == j);
-CHECK(O2.inds().index(4) == i);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O2.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O3 = permute(IT,"...",jp,i,j);
-CHECK(O3.inds().index(1)==k);
-CHECK(O3.inds().index(2)==jp);
-CHECK(O3.inds().index(3)==i);
-CHECK(O3.inds().index(4)==j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O3.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O4 = permute(IT,j,"...");
-CHECK(O4.inds().index(1) == j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O4.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-auto O5 = permute(IT,jp,k,i,"...");
-CHECK(O5.inds().index(1) == jp);
-CHECK(O5.inds().index(2) == k);
-CHECK(O5.inds().index(3) == i);
-CHECK(O5.inds().index(4) == j);
-for(auto ii : range1(i.dim()))
-for(auto jj : range1(j.dim()))
-for(auto jjp : range1(jp.dim()))
-for(auto kk : range1(k.dim()))
-    {
-    CHECK_CLOSE(IT.real(i(ii),j(jj),jp(jjp),k(kk)),O5.real(i(ii),j(jj),jp(jjp),k(kk)));
-    }
-
-}
+//SECTION("Permute Test: Dots Syntax")
+//{
+//Index i(2,"i"),
+//      j(3,"j"),
+//      k(4,"k");
+//auto jp = prime(j);
+//
+//auto IT = randomITensor(i,j,jp,k);
+//
+//auto O1 = permute(IT,"...",i);
+//CHECK(O1.index(4) == i);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O1.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O2 = permute(IT,"...",j,i);
+//CHECK(O2.inds().index(3) == j);
+//CHECK(O2.inds().index(4) == i);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O2.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O3 = permute(IT,"...",jp,i,j);
+//CHECK(O3.inds().index(1)==k);
+//CHECK(O3.inds().index(2)==jp);
+//CHECK(O3.inds().index(3)==i);
+//CHECK(O3.inds().index(4)==j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O3.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O4 = permute(IT,j,"...");
+//CHECK(O4.inds().index(1) == j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O4.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//auto O5 = permute(IT,jp,k,i,"...");
+//CHECK(O5.inds().index(1) == jp);
+//CHECK(O5.inds().index(2) == k);
+//CHECK(O5.inds().index(3) == i);
+//CHECK(O5.inds().index(4) == j);
+//for(auto ii : range1(i.dim()))
+//for(auto jj : range1(j.dim()))
+//for(auto jjp : range1(jp.dim()))
+//for(auto kk : range1(k.dim()))
+//    {
+//    CHECK_CLOSE(IT.elt(i(ii),j(jj),jp(jjp),k(kk)),O5.elt(i(ii),j(jj),jp(jjp),k(kk)));
+//    }
+//
+//}
 
 SECTION("Index Test")
 {
@@ -2402,11 +2402,11 @@ SECTION("RealImagPart")
 SECTION("NormTest")
     {
     A = randomITensor(s1,prime(s1));
-    CHECK_CLOSE(norm(A),sqrt((A*A).real()));
+    CHECK_CLOSE(norm(A),sqrt(elt(A*A)));
 
     B = randomITensor(s1,prime(s1));
     auto C = A+1_i*B;
-    CHECK_CLOSE(norm(C),sqrt(realPart(dag(C)*C).real()));
+    CHECK_CLOSE(norm(C),sqrt(elt(realPart(dag(C)*C))));
     }
 
 
@@ -2418,12 +2418,12 @@ SECTION("NormTest")
 //    auto j = Index("j",3);
 //    auto T = i(2)*j(3);
 //
-//    CHECK_CLOSE(T.real(i(2),j(3)),1.0);
+//    CHECK_CLOSE(T.elt(i(2),j(3)),1.0);
 //    auto tot = 0.0;
 //    for(auto ni : range1(i))
 //    for(auto nj : range1(j))
 //        {
-//        tot += T.real(i(ni),j(nj));
+//        tot += T.elt(i(ni),j(nj));
 //        }
 //    CHECK_CLOSE(tot,1.0);
 //    }
@@ -2432,19 +2432,19 @@ SECTION("NormTest")
 //    {
 //    auto i = Index("i",4);
 //    auto R1 = i(2) * 7.;
-//    CHECK_CLOSE(R1.real(i(2)),7.0);
+//    CHECK_CLOSE(R1.elt(i(2)),7.0);
 //    CHECK(not isComplex(R1));
 //
 //    auto R2 = 7. * i(3);
-//    CHECK_CLOSE(R2.real(i(3)),7.0);
+//    CHECK_CLOSE(R2.elt(i(3)),7.0);
 //    CHECK(not isComplex(R2));
 //
 //    auto C1 = i(2) * (3.+4_i);
-//    CHECK_CLOSE(C1.cplx(i(2)),3.+4_i);
+//    CHECK_CLOSE(C1.eltC(i(2)),3.+4_i);
 //    CHECK(isComplex(C1));
 //
 //    auto C2 = (2.+1_i) * i(3);
-//    CHECK_CLOSE(C2.cplx(i(3)),2.+1_i);
+//    CHECK_CLOSE(C2.eltC(i(3)),2.+1_i);
 //    CHECK(isComplex(C2));
 //    }
 //
@@ -2857,32 +2857,32 @@ SECTION("NormTest")
 SECTION("Scalar Storage")
     {
     auto S1 = ITensor(1.);
-    CHECK_CLOSE(S1.real(),1.);
+    CHECK_CLOSE(elt(S1),1.);
 
     auto S2 = ITensor(1.)*2.;
-    CHECK_CLOSE(S2.real(),2.);
+    CHECK_CLOSE(elt(S2),2.);
 
     auto ZA = ITensor(1._i);
-    CHECK_CLOSE(ZA.cplx(),1._i);
+    CHECK_CLOSE(ZA.eltC(),1._i);
 
     auto ZB = ITensor(-1.+2._i);
-    CHECK_CLOSE(ZB.cplx(),-1+2._i);
+    CHECK_CLOSE(ZB.eltC(),-1+2._i);
 
     SECTION("Set")
         {
         S1.set(4.5);
-        CHECK_CLOSE(S1.real(),4.5);
+        CHECK_CLOSE(S1.elt(),4.5);
         S1.set(4);
-        CHECK_CLOSE(S1.real(),4);
+        CHECK_CLOSE(S1.elt(),4);
         S1.set(1.+3._i);
         CHECK(isComplex(S1));
-        CHECK_CLOSE(S1.cplx(),1.+3._i);
+        CHECK_CLOSE(S1.eltC(),1.+3._i);
 
         ZA.set(2.-3._i);
-        CHECK_CLOSE(ZA.cplx(),2.-3._i);
+        CHECK_CLOSE(ZA.eltC(),2.-3._i);
         ZA.set(3.0);
         CHECK(isReal(ZA));
-        CHECK_CLOSE(ZA.real(),3.);
+        CHECK_CLOSE(ZA.elt(),3.);
         }
 
     SECTION("Norm")
@@ -2892,7 +2892,7 @@ SECTION("Scalar Storage")
         auto Sn2 = ITensor(-2.);
         CHECK_CLOSE(norm(Sn2),2.);
 
-        CHECK_CLOSE(norm(ZA),std::norm(ZA.cplx()));
+        CHECK_CLOSE(norm(ZA),std::norm(ZA.eltC()));
         }
 
     auto i = Index(3,"i");
@@ -2911,9 +2911,9 @@ SECTION("Scalar Storage")
 
         R = T*ZA;
         CHECK(isComplex(R));
-        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+        CHECK(norm(R-ZA.eltC()*T) < 1E-12);
         R = TC*ZA;
-        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        CHECK(norm(R-ZA.eltC()*TC) < 1E-12);
         }
     SECTION("Multiply on left")
         {
@@ -2926,24 +2926,24 @@ SECTION("Scalar Storage")
 
         R = ZA*T;
         CHECK(isComplex(R));
-        CHECK(norm(R-ZA.cplx()*T) < 1E-12);
+        CHECK(norm(R-ZA.eltC()*T) < 1E-12);
 
         R = ZA*TC;
-        CHECK(norm(R-ZA.cplx()*TC) < 1E-12);
+        CHECK(norm(R-ZA.eltC()*TC) < 1E-12);
         }
     SECTION("Add & Subtract")
         {
         auto R = S1 + S2;
-        CHECK_CLOSE(R.real(),3.);
+        CHECK_CLOSE(R.elt(),3.);
 
         R = ZA+ZB;
-        CHECK_CLOSE(R.cplx(),ZA.cplx()+ZB.cplx());
+        CHECK_CLOSE(R.eltC(),ZA.eltC()+ZB.eltC());
 
         R = S1 - S2;
-        CHECK_CLOSE(R.real(),-1.);
+        CHECK_CLOSE(R.elt(),-1.);
 
         R = ZA-ZB;
-        CHECK_CLOSE(R.cplx(),ZA.cplx()-ZB.cplx());
+        CHECK_CLOSE(R.eltC(),ZA.eltC()-ZB.eltC());
         }
     }
 
@@ -2953,18 +2953,18 @@ SECTION("ITensor Negation")
     auto j = Index(2,"j");
     auto k = Index(2,"k");
     auto T = randomITensor(i,j,k);
-    //Print(T.real(i(1),j(1),k(1)));
+    //Print(T.elt(i(1),j(1),k(1)));
     auto oT = T;
     auto N = -T;
-    //Print(oT.real(i(1),j(1),k(1)));
-    //Print(T.real(i(1),j(1),k(1)));
-    //Print(N.real(i(1),j(1),k(1)));
+    //Print(oT.elt(i(1),j(1),k(1)));
+    //Print(T.elt(i(1),j(1),k(1)));
+    //Print(N.elt(i(1),j(1),k(1)));
     for(auto ii : range1(i))
     for(auto ij : range1(j))
     for(auto ik : range1(k))
         {
-        CHECK_CLOSE(oT.real(i(ii),j(ij),k(ik)),T.real(i(ii),j(ij),k(ik)));
-        CHECK_CLOSE(-oT.real(i(ii),j(ij),k(ik)),N.real(i(ii),j(ij),k(ik)));
+        CHECK_CLOSE(oT.elt(i(ii),j(ij),k(ik)),T.elt(i(ii),j(ij),k(ik)));
+        CHECK_CLOSE(-oT.elt(i(ii),j(ij),k(ik)),N.elt(i(ii),j(ij),k(ik)));
         }
     }
 

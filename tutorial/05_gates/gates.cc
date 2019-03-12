@@ -71,7 +71,7 @@ main()
             auto& G = gate.G;
 
             psi.position(b);
-            ITensor AA = psi.A(b)*psi.A(b+1);
+            ITensor AA = psi(b)*psi(b+1);
 
             //
             // TODO: ADD CODE here that applies 
@@ -98,11 +98,11 @@ main()
             AA /= norm(AA);
 
             //SVD AA to restore MPS form
-            auto U = psi.A(b);
+            auto U = psi(b);
             ITensor D,V;
             svd(AA,U,D,V,{"Cutoff",1E-10});
-            psi.setA(b,U);
-            psi.setA(b+1,D*V);
+            psi.set(b,U);
+            psi.set(b+1,D*V);
             }
 
         printfln("Step %d/%d",step,nt);

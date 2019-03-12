@@ -26,10 +26,10 @@ TEST_CASE("ITensor Times IndexVal (QN)")
     ITensor R = T * setElt(s(2));
 
     REQUIRE(hasIndex(R,s));
-    CHECK(R.real(l(1),s(1)) == 0);
-    CHECK(R.real(l(2),s(1)) == 0);
-    CHECK(R.real(l(3),s(1)) == 0);
-    CHECK(R.real(l(4),s(1)) == 0);
+    CHECK(R.elt(l(1),s(1)) == 0);
+    CHECK(R.elt(l(2),s(1)) == 0);
+    CHECK(R.elt(l(3),s(1)) == 0);
+    CHECK(R.elt(l(4),s(1)) == 0);
     }
 
 TEST_CASE("ITensor from IndexVal (QN)")
@@ -38,12 +38,12 @@ TEST_CASE("ITensor from IndexVal (QN)")
             QN(-1),1);
 
     auto T1 = setElt(s(1));
-    CHECK(T1.real(s(1)) == 1);
-    CHECK(T1.real(s(2)) == 0);
+    CHECK(T1.elt(s(1)) == 1);
+    CHECK(T1.elt(s(2)) == 0);
 
     auto T2 = setElt(s(2));
-    CHECK(T2.real(s(1)) == 0);
-    CHECK(T2.real(s(2)) == 1);
+    CHECK(T2.elt(s(1)) == 0);
+    CHECK(T2.elt(s(2)) == 1);
     }
 
 TEST_CASE("CombinerOrder")
@@ -171,10 +171,10 @@ TEST_CASE("ConvertQDenseToDenseITensor")
 
     auto t = removeQNs(T);
 
-    CHECK_CLOSE(1,t.real(L(1),S(1),prime(S)(1)));
-    CHECK_CLOSE(1,t.real(L(1),S(2),prime(S)(2)));
-    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
-    CHECK_CLOSE(0,t.real(L(1),S(2),prime(S)(1)));
+    CHECK_CLOSE(1,t.elt(L(1),S(1),prime(S)(1)));
+    CHECK_CLOSE(1,t.elt(L(1),S(2),prime(S)(2)));
+    CHECK_CLOSE(0,t.elt(L(1),S(2),prime(S)(1)));
+    CHECK_CLOSE(0,t.elt(L(1),S(2),prime(S)(1)));
     }
 
 //TEST_CASE("IndexOrder")

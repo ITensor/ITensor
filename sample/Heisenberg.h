@@ -75,7 +75,7 @@ init_()
 
     for(int n = 1; n <= N_; ++n)
         {
-        auto& W = H.Aref(n);
+        auto& W = H.ref(n);
         auto row = dag(links.at(n-1));
         auto col = (n==N_ ? last : links.at(n));
 
@@ -101,15 +101,15 @@ init_()
         {
         //Multiply first and last
         //MPO tensor by edge vectors
-        H.Aref(1) *= LH;
-        H.Aref(N_) *= RH;
+        H.ref(1) *= LH;
+        H.ref(N_) *= RH;
         }
     else
         {
         //Store edge vectors just before
         //and after first and last sites
-        H.Aref(0) = LH;
-        H.Aref(N_+1) = RH;
+        H.ref(0) = LH;
+        H.ref(N_+1) = RH;
         }
 
     initted_ = true;

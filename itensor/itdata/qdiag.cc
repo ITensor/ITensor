@@ -25,7 +25,7 @@ loopDiagBlocks(QDiag<T> const& D,
                IndexSet const& is,
                F const& callback)
     {
-    auto r = rank(is);
+    auto r = order(is);
     auto block = IntArray(r,0);
     auto blockMinM = IntArray(r,0);
     auto blockSize = [&block,&is](long i)->long
@@ -75,7 +75,7 @@ template<typename T>
 QN
 doTask(CalcDiv const& C, QDiag<T> const& D)
     {
-    if(rank(C.is)==0) return QN();
+    if(order(C.is)==0) return QN();
 
     auto d = QN();
     for(auto n : range(C.is))
@@ -107,7 +107,7 @@ template QN doTask(CalcDiv const& C, QDiag<Cplx> const& D);
 size_t
 computeLength(IndexSet const& is)
     {
-    if(rank(is)==0) return 1ul;
+    if(order(is)==0) return 1ul;
 
     auto length = dim(is[0]);
     for(auto& I : is)
@@ -148,11 +148,11 @@ template<typename T>
 Cplx
 doTask(GetElt& G, QDiag<T> const& D)
     {
-    auto r = G.is.r();
+    auto r = G.is.order();
 #ifdef DEBUG
-    if(G.is.r() != decltype(r)(G.inds.size())) 
+    if(G.is.order() != decltype(r)(G.inds.size())) 
         {
-        printfln("is.r() = %d, ind.size() = %d",G.is.r(),G.inds.size());
+        printfln("is.order() = %d, ind.size() = %d",G.is.order(),G.inds.size());
         Error("Wrong number of indices passed to .real or .cplx");
         }
 #endif
@@ -274,8 +274,8 @@ doTask(PrintIT& P, QDiag<T> const& d)
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
 
-    auto rank = P.is.r();
-    if(rank == 0) 
+    auto ord = P.is.order();
+    if(ord == 0) 
         {
         P.s << "  ";
         auto val = d.allSame() ? d.val : d.store.front();
@@ -284,13 +284,13 @@ doTask(PrintIT& P, QDiag<T> const& d)
         }
 
     //callback function to pass to loopDiagBlocks:
-    auto printBlock = [&P,&d,rank,scalefac]
+    auto printBlock = [&P,&d,ord,scalefac]
         (size_t nb, 
          size_t ne,
          IntArray const& block)
         {
         //print indices for this block
-        for(auto i : range(rank))
+        for(auto i : range(ord))
             {
             if(i > 0) P.s << ", ";
             P.s << P.is[i].blocksize0(block[i])
@@ -308,10 +308,10 @@ doTask(PrintIT& P, QDiag<T> const& d)
             if(std::norm(val) >= Global::printScale())
                 {
                 P.s << "(";
-                for(auto ii : range1(rank))
+                for(auto ii : range1(ord))
                     {
                     P.s << (1+j);
-                    if(ii < rank) P.s << ",";
+                    if(ii < ord) P.s << ",";
                     }
                 P.s << ") " << formatVal(val) << "\n";
                 }
@@ -352,7 +352,7 @@ blockDiagDense(QDiag<VD> const& D,
     {
     using VC = common_type<VT,VD>;
 #ifdef DEBUG
-    if(Dis.r() == 0) Error("QDiag rank 0 case not handled");
+    if(Dis.order() == 0) Error("QDiag order 0 case not handled");
 #endif
 
     bool T_has_uncontracted = false;
@@ -480,7 +480,7 @@ doTask(Contract& Con,
            BL,
            CL;
     bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),AL,BL);
+    computeLabels(Con.Lis,Con.Lis.order(),Con.Ris,Con.Ris.order(),AL,BL);
     contractIS(Con.Lis,AL,Con.Ris,BL,Con.Nis,CL,sortInds);
     blockDiagDense(A,Con.Lis,AL,
                    B,Con.Ris,BL,
@@ -502,7 +502,7 @@ doTask(Contract& Con,
            BL,
            CL;
     bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),AL,BL);
+    computeLabels(Con.Lis,Con.Lis.order(),Con.Ris,Con.Ris.order(),AL,BL);
     contractIS(Con.Lis,AL,Con.Ris,BL,Con.Nis,CL,sortInds);
     blockDiagDense(B,Con.Ris,BL,
                    A,Con.Lis,AL,

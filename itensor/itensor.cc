@@ -103,9 +103,9 @@ ITensor(Cplx val)
 Cplx ITensor::
 eltC() const
     {
-    if(inds().r() != 0)
+    if(inds().order() != 0)
         {
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().r()));
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -136,7 +136,7 @@ eltC(std::vector<IndexVal> const& ivs) const
     if(!store()) Error("tensor storage unallocated");
 
     auto size = ivs.size();
-    if(size != size_t(inds().r()))
+    if(size != size_t(inds().order()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -144,7 +144,7 @@ eltC(std::vector<IndexVal> const& ivs) const
         println("Indices provided = ");
         for(auto& iv : ivs) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().order(),size));
         }
 
     auto ints = IntArray(size);
@@ -178,7 +178,7 @@ set(std::vector<IndexVal> const& ivals,
     Cplx val)
     {
     auto size = ivals.size();
-    if(size != size_t(inds().r())) 
+    if(size != size_t(inds().order())) 
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -187,9 +187,9 @@ set(std::vector<IndexVal> const& ivals,
         for(auto& iv : ivals) println(iv.index);
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
-    auto inds = IntArray(is_.r(),0);
+    auto inds = IntArray(is_.order(),0);
     detail::permute_map(is_,ivals,inds,
                         [](IndexVal const& iv) { return iv.val-1; });
     if(!store_) detail::allocReal(*this,inds); 
@@ -207,10 +207,10 @@ set(std::vector<IndexVal> const& ivals,
 void ITensor::
 set(Cplx val)
     {
-    if(0 != size_t(inds().r())) 
+    if(0 != size_t(inds().order())) 
         {
         Error(format("Wrong number of IndexVals passed to set (expected %d, got 0)",
-                     inds().r()));
+                     inds().order()));
         }
     auto inds = IntArray(0,1);
     if(!store_) detail::allocReal(*this,inds); 
@@ -230,7 +230,7 @@ set(std::vector<int> const& ints,
     Cplx val)
     {
     auto size = ints.size();
-    if(size != size_t(inds().r())) 
+    if(size != size_t(inds().order())) 
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",inds(),"\n");
@@ -239,9 +239,9 @@ set(std::vector<int> const& ints,
         for(auto& iv : ints) println(iv);
         println("---------------------------------------------");
         Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
-                     inds().r(),size));
+                     inds().order(),size));
         }
-    auto inds = IntArray(is_.r(),0);
+    auto inds = IntArray(is_.order(),0);
     for(auto i : range(size))
         inds[i] = ints[i]-1;
     //TODO: if !store_ and !is_real, call allocCplx instead
@@ -341,14 +341,20 @@ swap(ITensor & other)
     IF_USESCALE(scale_.swap(other.scale_);)
     }
 
+IndexSet const&
+inds(ITensor const& A) { return A.inds(); }
+
+Index const&
+index(ITensor const& A, RangeT<Index>::size_type I) { return A.index(I); }
+
 Index
 commonIndex(ITensor const& A, 
             ITensor const& B, 
             TagSet const& ts)
     {
-    for(auto& I : A.inds())
+    for(auto& I : inds(A))
         if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && hasIndex(B.inds(),I) ) 
+         && hasIndex(inds(B),I) ) 
             {
             return I;
             }
@@ -360,9 +366,9 @@ uniqueIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& ts)
     {
-    for(auto& I : A.inds())
+    for(auto& I : inds(A))
         if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && !hasIndex(B.inds(),I) ) 
+         && !hasIndex(inds(B),I) ) 
             {
             return I;
             }
@@ -442,25 +448,25 @@ void
 allocReal(ITensor& T)
     {
     if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
-    T.store() = newITData<DenseReal>(area(T.inds()),0);
+    T.store() = newITData<DenseReal>(dim(inds(T)),0);
     }
 
 void
-allocReal(ITensor& T, IntArray const& inds)
+allocReal(ITensor& T, IntArray const& ints)
     {
     if(not hasQNs(T))
         {
-        T.store() = newITData<DenseReal>(area(T.inds()),0);
+        T.store() = newITData<DenseReal>(dim(inds(T)),0);
         }
     else
         {
         QN div;
-        for(auto i : range(T.inds()))
+        for(auto i : range(inds(T)))
             {
-            auto iv = (T.inds()[i])(1+inds[i]);
+            auto iv = (inds(T)[i])(1+ints[i]);
             div += iv.qn()*iv.index.dir();
             }
-        T.store() = newITData<QDenseReal>(T.inds(),div);
+        T.store() = newITData<QDenseReal>(inds(T),div);
         }
     }
 
@@ -468,7 +474,7 @@ void
 allocCplx(ITensor& T)
     {
     if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
-    T.store() = newITData<DenseCplx>(area(T.inds()),0);
+    T.store() = newITData<DenseCplx>(dim(inds(T)),0);
     }
 
 
@@ -524,13 +530,13 @@ operator*=(ITensor const& R)
 
     if(!L || !R) Error("Default constructed ITensor in product");
 
-    if(L.r() == 0)
+    if(L.order() == 0)
         {
         auto z = L.eltC();
         *this = R*z;
         return *this;
         }
-    else if(R.r()==0)
+    else if(R.order()==0)
         {
         auto z = R.eltC();
         *this *= z;
@@ -570,16 +576,16 @@ permute(IndexSet const& iset)
     {
     auto& A = *this;
     auto Ais = A.inds();
-    auto r = Ais.r();
+    auto r = Ais.order();
 
-    if(size_t(r) != size_t(iset.r()))
+    if(size_t(r) != size_t(iset.order()))
         {
         println("---------------------------------------------");
         println("Tensor indices = \n",Ais,"\n");
         println("---------------------------------------------");
         println("Indices provided = \n",iset,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.r()));
+        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
         }
 
     // Get permutation
@@ -632,8 +638,8 @@ ITensor
 removeQNs(ITensor T)
     {
     if(not hasQNs(T)) return T;
-    if(T.store()) doTask(RemoveQNs{T.inds()},T.store());
-    auto nis = T.inds();
+    if(T.store()) doTask(RemoveQNs{inds(T)},T.store());
+    auto nis = inds(T);
     nis.removeQNs();
     return ITensor{move(nis),move(T.store()),T.scale()};
     }
@@ -697,14 +703,14 @@ daxpy(ITensor & L,
       ITensor const& R,
       Real alpha)
     {
-    if(L.r() != R.r()) Error("ITensor::operator+=: different number of indices");
+    if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
 
     using permutation = typename PlusEQ::permutation;
 
-    auto P = permutation(L.inds().size());
+    auto P = permutation(inds(L).size());
 
     try {
-        calcPerm(R.inds(),L.inds(),P);
+        calcPerm(inds(R),inds(L),P);
         }
     catch(std::exception const& e)
         {
@@ -716,7 +722,7 @@ daxpy(ITensor & L,
     if(Global::checkArrows()) 
         {
         auto shouldMatch = true;
-        detail::checkArrows(L.inds(),R.inds(),shouldMatch);
+        detail::checkArrows(inds(L),inds(R),shouldMatch);
         }
 
     if(!L.store()) Error("L not initialized in daxpy");
@@ -736,7 +742,7 @@ daxpy(ITensor & L,
         }
 #endif
 
-    auto PEq = PlusEQ{P,L.inds(),R.inds(),alpha};
+    auto PEq = PlusEQ{P,inds(L),inds(R),alpha};
     doTask(PEq,L.store(),R.store());
     } 
 
@@ -780,7 +786,7 @@ multSiteOps(ITensor A, ITensor const& B)
 bool
 hasIndex(ITensor const& T, Index const& I)
     {
-    return detail::contains(T.inds(),I);
+    return detail::contains(inds(T),I);
     }
 
 bool
@@ -814,7 +820,7 @@ sumels(ITensor const& t)
 Cplx 
 sumelsC(ITensor const& t)
     {
-    auto z = doTask(SumEls{t.inds()},t.store());
+    auto z = doTask(SumEls{inds(t)},t.store());
 #ifndef USESCALE
     return z;
 #else
@@ -828,12 +834,12 @@ operator<<(ostream & s, ITensor const& t)
     s << "ITensor ord=" << order(t) << ": "; 
     if(hasQNs(t)) 
         {
-        if(t.r() > 0) s << "\n";
-        for(auto& I : t.inds()) s << I << "\n";
+        if(t.order() > 0) s << "\n";
+        for(auto& I : inds(t)) s << I << "\n";
         }
     else
         {
-        s << t.inds();
+        s << inds(t);
         }
     if(not hasQNs(t)) s << "\n";
     if(not t.store()) 
@@ -847,7 +853,7 @@ operator<<(ostream & s, ITensor const& t)
         //format string %f (or another float-related format string)
         bool ff_set = (std::ios::floatfield & s.flags()) != 0;
         bool print_data = (ff_set || Global::printdat());
-        doTask(PrintIT{s,t.scale(),t.inds(),print_data},t.store());
+        doTask(PrintIT{s,t.scale(),inds(t),print_data},t.store());
         }
     return s;
     }
@@ -943,7 +949,7 @@ combiner(IndexSet const& inds, Args const& args)
         //create combined index
         auto cind = Index(rm,itagset);
         //create new IndexSet with combined index in front
-        auto newind = IndexSetBuilder(1+inds.r());
+        auto newind = IndexSetBuilder(1+inds.order());
         newind.nextIndex(std::move(cind));
         for(auto& I : inds)
             newind.nextIndex(std::move(I));
@@ -1060,7 +1066,7 @@ combinedIndex(ITensor const& C)
         throw ITError("Called combinedIndex on ITensor that is not a combiner");
         }
 #endif
-    return C.inds().front();
+    return inds(C).front();
     }
 
 ITensor
@@ -1097,7 +1103,7 @@ div(ITensor const& T)
     { 
     if(not hasQNs(T)) Error("div(ITensor) not defined for non QN conserving ITensor");
     if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
-    return doTask(CalcDiv{T.inds()},T.store());
+    return doTask(CalcDiv{inds(T)},T.store());
     }
 
 QN
@@ -1111,8 +1117,8 @@ namespace detail {
 IndexSet
 moveToFront(IndexSet const& isf, IndexSet const& is)
     {
-    auto rf = isf.r();
-    auto r = is.r();
+    auto rf = isf.order();
+    auto r = is.order();
 
     if(rf >= r)
         {
@@ -1158,8 +1164,8 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
 IndexSet 
 moveToBack(IndexSet const& isb, IndexSet const& is)
     {
-    auto rb = isb.r();
-    auto r = is.r();
+    auto rb = isb.order();
+    auto r = is.order();
 
     if(rb >= r)
         {

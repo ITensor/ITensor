@@ -86,12 +86,12 @@ measure(Args const& args)
         {
         if(b < N && b > 0)
             {
-            auto wfb = psi_.A(b)*psi_.A(b+1);
+            auto wfb = psi_(b)*psi_(b+1);
             //for(const std::string& opname : default_ops_)
             //    {
             //    auto sb = IndexT(psi_.sites()(b));
-            //    auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).cplx();
-            //    //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).cplx();
+            //    auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).eltC();
+            //    //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).eltC();
             //    if(std::fabs(z.imag()) < 1E-14)
             //        printfln("<%s>(%d) = %.10E",opname,b,z.real());
             //    else

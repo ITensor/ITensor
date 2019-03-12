@@ -52,7 +52,7 @@ class ITensor
 
     ITensor(std::initializer_list<Index> inds);
 
-    //Construct rank 0 tensor (scalar), value set to val
+    //Construct order 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit
     ITensor(Cplx val);
@@ -61,9 +61,13 @@ class ITensor
     // Accessor Methods
     //
 
-    //Tensor rank (number of indices)
+    //Tensor order (number of indices)
     int 
-    r() const { return is_.r(); }
+    order() const { return is_.order(); }
+
+    // Deprecated
+    int 
+    r() const { return this->order(); }
 
     //Access index set
     IndexSet const&
@@ -155,6 +159,12 @@ class ITensor
     ITensor& 
     swapPrime(VarArgs&&... vargs)
         { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    // Deprecations
+    template<typename... VarArgs>
+    ITensor& 
+    noprime(VarArgs&&... vargs)
+        { Error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
 
     //
     // Index Tag Methods
@@ -286,23 +296,9 @@ class ITensor
     ITensor&
     operator/=(ITensor const& other);
 
-    //template<typename... Indxs>
-    //ITensor&
-    //permute(index_type const& ind1, Indxs const&... inds);
-
-    template<typename... Indxs>
-    auto 
-    permute(Index const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<not stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
-
     template <typename... Indxs>
-    auto 
-    permute(Index const& ind1, Indxs const&... inds)
-            -> stdx::enable_if_t<stdx::and_<std::is_same<Index, Indxs>...>::value,ITensor&>;
-
-    template<typename... Indxs>
     ITensor&
-    permute(std::string const& dots, Indxs const&... inds);
+    permute(Index const& ind1, Indxs const&... inds);
 
     ITensor&
     permute(IndexSet const& iset);
@@ -402,6 +398,24 @@ ITensor
 setElt(IVal  const& iv1, 
        IVals const&... rest);
 
+// Get ITensor values
+template <typename... VarArgs>
+Real
+elt(ITensor A,
+    VarArgs&&... vargs);
+
+template <typename... VarArgs>
+Cplx
+eltC(ITensor A,
+     VarArgs&&... vargs);
+
+// Get IndexSet
+IndexSet const& 
+inds(ITensor const& A);
+
+// Get Index
+Index const& 
+index(ITensor const& A, RangeT<Index>::size_type I);
 
 //
 // ITensor prime level functions
@@ -471,11 +485,6 @@ swapTags(ITensor A,
 bool
 hasIndex(ITensor const& T, Index const& I);
 
-//template<typename Cond>
-//Index
-//findIndex(ITensor const& T, 
-//          Cond && cond);
-
 Index
 findIndex(ITensor const& T,
           TagSet const& tsmatch, 
@@ -527,20 +536,16 @@ bool
 isReal(ITensor const& T);
 
 //return number of indices of T
-//(same as order)
+long
+order(ITensor const& T);
+
+// Deprecated, same as order
 long
 rank(ITensor const& T);
 
-//return number of indices of T
-//(same as rank)
-long
-order(ITensor const& T);
-long
-ord(ITensor const& T);
-
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
-//Result is equivalent to sqrt((T*T).real()) 
+//Result is equivalent to sqrt((T*T).elt()) 
 //(and similar for complex case) but computed more efficiently
 Real
 norm(ITensor const& T);

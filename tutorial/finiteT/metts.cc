@@ -32,7 +32,7 @@ collapse(MPS & psi,
             }
         else Error("Direction '" + direction + "' not recognized");
 
-        Real prob_up = (dag(prime(psi.A(j),Site))*PUp*psi.A(j)).real();
+        Real prob_up = (dag(prime(psi(j),Site))*PUp*psi(j)).elt();
 
         int st = 1;
         if(Global::random() > prob_up) st = 2;
@@ -59,12 +59,12 @@ collapse(MPS & psi,
         ITensor jstate = (st==1) ? upState : downState;
         if(j < N)
             {
-            auto newA = psi.A(j+1)*(dag(jstate)*psi.A(j));
+            auto newA = psi(j+1)*(dag(jstate)*psi(j));
             newA /= norm(newA);
-            psi.setA(j+1,newA);
+            psi.set(j+1,newA);
             }
         //Set site j tensor 
-        psi.setA(j,jstate);
+        psi.set(j,jstate);
         }
 
     return cps;
@@ -87,7 +87,7 @@ main(int argc, char* argv[])
     auto tau = input.getReal("tau",0.1);
 
     auto cutoff = input.getReal("cutoff");
-    auto maxm = input.getInt("maxm",5000);
+    auto maxdim = input.getInt("maxdim",5000);
 
     auto nmetts = input.getInt("nmetts",50000);
     auto nwarm = input.getInt("nwarm",5);
@@ -95,7 +95,7 @@ main(int argc, char* argv[])
     auto sites = SpinHalf(N);
         
     Args args;
-    args.add("Maxm",maxm);
+    args.add("MaxDim",maxdim);
     args.add("Cutoff",cutoff);
     args.add("Method","DensityMatrix");
 
@@ -128,8 +128,8 @@ main(int argc, char* argv[])
         
     Args targs;
     targs.add("Verbose",false);
-    targs.add("Maxm",maxm);
-    targs.add("Minm",6);
+    targs.add("MaxDim",maxdim);
+    targs.add("MinDim",6);
     targs.add("Cutoff",cutoff);
         
     auto ttotal = beta/2.;
@@ -156,15 +156,15 @@ main(int argc, char* argv[])
         for(int tt = 1; tt <= nt; ++tt)
             {
             psi = applyMPO(expH,psi,args);
-            psi.Aref(1) /= norm(psi.A(1));
+            psi.ref(1) /= norm(psi(1));
             }
 
         if(step > nwarm) println("Done making METTS ",step-nwarm);
-        int maxmm = 0;
+        int maxdimm = 0;
         for(int b = 0; b < psi.N(); ++b)
             {
             int m_b = dim(linkInd(psi,b));
-            maxmm = std::max(maxmm,m_b);
+            maxdimm = std::max(maxdimm,m_b);
             }
             
         if(step > nwarm)

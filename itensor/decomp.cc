@@ -73,7 +73,7 @@ vector<Ord2Block<T>>
 doTask(GetBlocks<T> const& G, 
        QDense<T> const& d)
     {
-    if(G.is.r() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
+    if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
     auto dblock = IntArray(2,0);
     size_t n = 0;
@@ -107,8 +107,8 @@ doTask(GetBlocks<Cplx> const& G, QDense<Cplx> const& d);
 
 std::tuple<Real,Real>
 truncate(Vector & P,
-         long maxm,
-         long minm,
+         long maxdim,
+         long mindim,
          Real cutoff,
          bool absoluteCutoff,
          bool doRelCutoff,
@@ -139,8 +139,8 @@ truncate(Vector & P,
         }
 
     Real truncerr = 0;
-    //Always truncate down to at least m==maxm (m==n+1)
-    while(n >= maxm)
+    //Always truncate down to at least m==maxdim (m==n+1)
+    while(n >= maxdim)
         {
         truncerr += P(n);
         --n;
@@ -150,7 +150,7 @@ truncate(Vector & P,
         {
         //Test if individual prob. weights fall below cutoff
         //rather than using *sum* of discarded weights
-        for(; P(n) < cutoff && n >= minm; --n) 
+        for(; P(n) < cutoff && n >= mindim; --n) 
             {
             truncerr += P(n);
             }
@@ -166,8 +166,8 @@ truncate(Vector & P,
             }
 
         //Continue truncating until *sum* of discarded probability 
-        //weight reaches cutoff reached (or m==minm)
-        while(truncerr+P(n) < cutoff*scale && n >= minm)
+        //weight reaches cutoff reached (or m==mindim)
+        while(truncerr+P(n) < cutoff*scale && n >= mindim)
             {
             truncerr += P(n);
             --n;
@@ -203,15 +203,20 @@ showEigs(Vector const& P,
          LogNum const& scale,
          Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in showEigs: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in showEigs: Arg Minm is deprecated in favor of MinDim.");
+
     auto do_truncate = args.getBool("Truncate",true);
     auto cutoff = args.getReal("Cutoff",0.);
-    auto maxm = args.getInt("Maxm",P.size());
-    auto minm = args.getInt("Minm",1);
+    auto maxdim = args.getInt("MaxDim",P.size());
+    auto mindim = args.getInt("MinDim",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
 
     println();
-    printfln("minm = %d, maxm = %d, cutoff = %.2E, truncate = %s",minm,maxm,cutoff,do_truncate);
+    printfln("mindim = %d, maxdim = %d, cutoff = %.2E, truncate = %s",mindim,maxdim,cutoff,do_truncate);
     printfln("Kept m=%d states, trunc. err. = %.3E", P.size(),truncerr);
     printfln("doRelCutoff = %s, absoluteCutoff = %s",doRelCutoff,absoluteCutoff);
     IF_USESCALE(printfln("Scale is = %sexp(%.2f)",scale.sign() > 0 ? "" : "-",scale.logNum());)
@@ -249,6 +254,11 @@ factor(ITensor const& T,
        ITensor      & B,
        Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in factor: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in factor: Arg Minm is deprecated in favor of MinDim.");
+
     //TODO: make a standard TagSet for factor()
     //auto name = args.getString("IndexName","c");
     auto itagset = getTagSet(args,"Tags","Link,FAC");
@@ -277,9 +287,9 @@ eigDecompImpl(ITensor T,
         {
         auto full = args.getBool("FullDecomp",false);
 
-        if(ord(T) != 2)
+        if(order(T) != 2)
             {
-            Print(ord(T));
+            Print(order(T));
             Print(T);
             Error("eig_decomp requires 2-index tensor as input");
             }
@@ -389,9 +399,9 @@ eigDecompImpl(ITensor T,
 //    bool cplx = T.isComplex();
 //
 //#ifdef DEBUG
-//    if(T.r() != 2)
+//    if(T.order() != 2)
 //        {
-//        Print(T.r());
+//        Print(T.order());
 //        Print(T);
 //        Error("eig_decomp requires 2-index tensor as input");
 //        }

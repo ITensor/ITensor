@@ -223,7 +223,7 @@ doTask(StorageType const& S, ScalarCplx const& d) ->StorageType::Type { return S
 
 //
 // These Contract implementations are correct, but currently
-// not used due to rank==0 case caught by ITensorT operator*= function
+// not used due to order==0 case caught by ITensorT operator*= function
 //
 //template<typename I, typename T, typename StoreType,
 //         class = typename stdx::enable_if_t<containsType<StorageTypes,stdx::decay_t<StoreType>>{}> >

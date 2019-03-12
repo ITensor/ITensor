@@ -285,7 +285,7 @@ diagBlockBounds(IndexSet const& is,
     {
     long nb = -1;
     long ne = std::numeric_limits<long>::max();
-    auto starts = IntArray(rank(is),0);
+    auto starts = IntArray(order(is),0);
     for(auto n : range(is))
         {
         for(auto j : range(block_ind[n])) starts[n] += is[n].blocksize0(j);
@@ -308,7 +308,7 @@ getBlock(QDiag<V> const& D,
     long nb = -1, ne = -1;
     auto starts = IntArray{};
 
-    if(block_ind.size()==0 && rank(is)==0)
+    if(block_ind.size()==0 && order(is)==0)
         {
         nb = 0;
         ne = 1;

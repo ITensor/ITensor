@@ -67,7 +67,7 @@ swapUnitCells(MPSType & psi)
     auto Nuc = length(psi)/2;
     for(auto n : range1(Nuc))
         {
-        psi.Aref(n).swap(psi.Aref(Nuc+n));
+        psi.ref(n).swap(psi.ref(Nuc+n));
         }
     }
 
@@ -101,6 +101,11 @@ idmrg(MPS & psi,
       DMRGObserver & obs,
       Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto olevel = args.getInt("OutputLevel",0);
     auto quiet = args.getBool("Quiet",olevel == 0);
     auto nucsweeps = args.getInt("NUCSweeps",1);
@@ -122,9 +127,9 @@ idmrg(MPS & psi,
     auto lastV = last_rval.V;
     ITensor D;
 
-    if(psi.A(0))
+    if(psi(0))
         {
-        lastV = dag(psi.A(0));
+        lastV = dag(psi(0));
         lastV /= norm(lastV);
         lastV.apply(detail::PseudoInvert(0));
         }
@@ -136,8 +141,8 @@ idmrg(MPS & psi,
 
     //If last_rval is trivial,
     //get edge tensors from MPO
-    if(not HL) HL = H.A(0);
-    if(not HR) HR = H.A(N0+1);
+    if(not HL) HL = H(0);
+    if(not HR) HR = H(N0+1);
 
     int sw = 1;
 
@@ -149,8 +154,8 @@ idmrg(MPS & psi,
             }
 
         auto ucsweeps = Sweeps(actual_nucsweeps);
-        ucsweeps.minm() = sweeps.minm(sw);
-        ucsweeps.maxm() = sweeps.maxm(sw);
+        ucsweeps.mindim() = sweeps.mindim(sw);
+        ucsweeps.maxdim() = sweeps.maxdim(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
@@ -166,7 +171,7 @@ idmrg(MPS & psi,
             println("Randomizing psi");
             for(int j = 1; j <= length(psi); ++j)
                 {
-                psi.Aref(j).randomize();
+                psi.ref(j).randomize();
                 }
             psi.normalize();
             }
@@ -180,22 +185,22 @@ idmrg(MPS & psi,
         args.add("Energy",energy);
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
-        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Aref(Nuc),D,psi.Aref(Nuc+1));
+        svd(psi(Nuc)*psi(Nuc+1),psi.ref(Nuc),D,psi.ref(Nuc+1));
         D /= norm(D);
         
         //Prepare MPO for next step
         for(int j = 1; j <= Nuc; ++j)
             {
-            HL *= psi.A(j);
-            HL *= H.A(j);
-            HL *= dag(prime(psi.A(j)));
-            IL *= psi.A(j);
-            IL *= H.A(j);
-            IL *= dag(prime(psi.A(j)));
+            HL *= psi(j);
+            HL *= H(j);
+            HL *= dag(prime(psi(j)));
+            IL *= psi(j);
+            IL *= H(j);
+            IL *= dag(prime(psi(j)));
 
-            HR *= psi.A(N0-j+1);
-            HR *= H.A(N0-j+1);
-            HR *= dag(prime(psi.A(N0-j+1)));
+            HR *= psi(N0-j+1);
+            HR *= H(N0-j+1);
+            HR *= dag(prime(psi(N0-j+1)));
             }
         //H = HG(sw);
         swapUnitCells(H);
@@ -204,9 +209,9 @@ idmrg(MPS & psi,
 
         //Prepare MPS for next step
         swapUnitCells(psi);
-        if(lastV) psi.Aref(Nuc+1) *= lastV;
-        psi.Aref(1) *= D;
-        psi.Aref(N0) *= D;
+        if(lastV) psi.ref(Nuc+1) *= lastV;
+        psi.ref(1) *= D;
+        psi.ref(N0) *= D;
         psi.position(1);
 
         ++sw;
@@ -217,12 +222,12 @@ idmrg(MPS & psi,
     for(; sw <= sweeps.nsweep(); ++sw)
         {
         auto ucsweeps = Sweeps(actual_nucsweeps);
-        ucsweeps.minm() = sweeps.minm(sw);
-        ucsweeps.maxm() = sweeps.maxm(sw);
+        ucsweeps.mindim() = sweeps.mindim(sw);
+        ucsweeps.maxdim() = sweeps.maxdim(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
-        args.add("Maxm",sweeps.maxm(sw));
+        args.add("MaxDim",sweeps.maxdim(sw));
 
         print(ucsweeps);
 
@@ -272,22 +277,22 @@ idmrg(MPS & psi,
         obs.measure(args+Args("AtCenter",true,"NoMeasure",true));
 
         D = ITensor();
-        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Aref(Nuc),D,psi.Aref(Nuc+1),args);
+        svd(psi(Nuc)*psi(Nuc+1),psi.ref(Nuc),D,psi.ref(Nuc+1),args);
         D /= norm(D);
 
         //Prepare MPO for next step
         for(int j = 1; j <= Nuc; ++j)
             {
-            HL *= psi.A(j);
-            HL *= H.A(j);
-            HL *= dag(prime(psi.A(j)));
-            IL *= psi.A(j);
-            IL *= H.A(j);
-            IL *= dag(prime(psi.A(j)));
+            HL *= psi(j);
+            HL *= H(j);
+            HL *= dag(prime(psi(j)));
+            IL *= psi(j);
+            IL *= H(j);
+            IL *= dag(prime(psi(j)));
 
-            HR *= psi.A(N0-j+1);
-            HR *= H.A(N0-j+1);
-            HR *= dag(prime(psi.A(N0-j+1)));
+            HR *= psi(N0-j+1);
+            HR *= H(N0-j+1);
+            HR *= dag(prime(psi(N0-j+1)));
             }
         swapUnitCells(H);
 
@@ -296,7 +301,7 @@ idmrg(MPS & psi,
         //Prepare MPS for next step
         swapUnitCells(psi);
 
-        psi.Aref(N0) *= D;
+        psi.ref(N0) *= D;
 
         if((obs.checkDone(args) && sw%2==0)
            || sw == sweeps.nsweep()) 
@@ -306,12 +311,12 @@ idmrg(MPS & psi,
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
                 ITensor d;
-                svd(psi.A(b)*psi.A(b+1),psi.Aref(b),d,psi.Aref(b+1));
-                psi.Aref(b) *= d;
+                svd(psi(b)*psi(b+1),psi.ref(b),d,psi.ref(b+1));
+                psi.ref(b) *= d;
                 }
-            psi.Aref(Nuc+1) *= lastV;
+            psi.ref(Nuc+1) *= lastV;
 
-            psi.Aref(0) = D;
+            psi.ref(0) = D;
 
             break;
             }
@@ -324,17 +329,17 @@ idmrg(MPS & psi,
             for(int b = N0-1; b >= Nuc+1; --b)
                 {
                 ITensor d;
-                svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Aref(b),d,wpsi.Aref(b+1));
-                wpsi.Aref(b) *= d;
+                svd(wpsi(b)*wpsi(b+1),wpsi.ref(b),d,wpsi.ref(b+1));
+                wpsi.ref(b) *= d;
                 }
-            wpsi.Aref(Nuc+1) *= lastV;
-            wpsi.Aref(0) = D;
+            wpsi.ref(Nuc+1) *= lastV;
+            wpsi.ref(0) = D;
             writeToFile(format("psi_%d",sw),wpsi);
             writeToFile("sites",wpsi.sites());
             }
 
-        psi.Aref(Nuc+1) *= lastV;
-        psi.Aref(1) *= D;
+        psi.ref(Nuc+1) *= lastV;
+        psi.ref(1) *= D;
 
         psi.orthogonalize();
         psi.normalize();
@@ -358,11 +363,16 @@ idmrg(MPS      & psi,
       DMRGObserver & obs,
       Args         const& args)
     {
-    //Assumes H.A(N+1) contains vector
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
+    //Assumes H(N+1) contains vector
     //picking out ending state of MPO
     //automaton:
     auto lval = idmrgRVal();
-    lval.IL = ITensor(dag(H.A(length(H)+1)));
+    lval.IL = ITensor(dag(H(length(H)+1)));
     return idmrg(psi,H,lval,sweeps,obs,args);
     }
 
@@ -372,6 +382,11 @@ idmrg(MPS      & psi,
       Sweeps       const& sweeps, 
       Args         const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto obs = DMRGObserver(psi);
     return idmrg(psi,H,sweeps,obs,args);
     }
@@ -383,6 +398,11 @@ idmrg(MPS      & psi,
       Sweeps       const& sweeps, 
       Args         const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in idmrg: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in idmrg: Arg Minm is deprecated in favor of MinDim.");
+
     auto obs = DMRGObserver(psi);
     return idmrg(psi,H,last_res,sweeps,obs,args);
     }

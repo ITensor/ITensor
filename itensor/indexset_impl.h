@@ -62,8 +62,8 @@ prime(int plinc, Index const& imatch1, Index const& imatch2, VarArgs&&... vargs)
     { 
     auto ismatch = IndexSet(imatch1,imatch2,vargs...);
     //Store the locations of the indices
-    auto iloc = IntArray(ismatch.r(),-1);
-    for(auto i : itensor::range(ismatch.r())) iloc[i] = indexPosition(*this,ismatch[i]);
+    auto iloc = IntArray(ismatch.order(),-1);
+    for(auto i : itensor::range(ismatch.order())) iloc[i] = indexPosition(*this,ismatch[i]);
     //Now prime them
     for(auto i : iloc) parent::index(i).prime(plinc);
     }
@@ -297,16 +297,16 @@ dir(const IndexSet& is, const Index& I)
     }
 
 
-Index inline
-findIndex(IndexSet const& iset, Arrow dir)
-    {
-    for(const auto& J : iset)
-        {
-        if(J.dir() == dir) return J;
-        }
-    throw ITError("Couldn't find index with specified dir");
-    return Index();
-    }
+//Index inline
+//findIndex(IndexSet const& iset, Arrow dir)
+//    {
+//    for(const auto& J : iset)
+//        {
+//        if(J.dir() == dir) return J;
+//        }
+//    throw ITError("Couldn't find index with specified dir");
+//    return Index();
+//    }
 
 //
 // Given IndexSet iset and Index I,
@@ -317,7 +317,7 @@ long inline
 indexPosition(const IndexSet& iset, 
               const Index& I)
     {
-    for(long j = 0; j < iset.r(); ++j)
+    for(long j = 0; j < iset.order(); ++j)
         {
         if(iset[j] == I) return j;
         }
@@ -335,10 +335,10 @@ indexPosition(const IndexSet& iset,
 //        const typename IndexSet::storage& oset, 
 //        Permutation& P)
 //	{
-//	for(int j = 0; j < iset.r(); ++j)
+//	for(int j = 0; j < iset.order(); ++j)
 //	    {
 //	    bool got_one = false;
-//	    for(int k = 0; k < iset.r(); ++k)
+//	    for(int k = 0; k < iset.order(); ++k)
 //            {
 //            if(oset[j] == iset[k])
 //                { 
@@ -351,15 +351,15 @@ indexPosition(const IndexSet& iset,
 //            {
 //            println("j = ",j);
 //            println("iset =");
-//            for(int j = 0; j < iset.r(); ++j)
+//            for(int j = 0; j < iset.order(); ++j)
 //                printfln("%d %s",j,iset[j]);
 //            println("\noset = ");
-//            for(int j = 0; j < iset.r(); ++j)
+//            for(int j = 0; j < iset.order(); ++j)
 //                printfln("%d %s",j,oset[j]);
 //            println();
 //            //printfln("iset uniqueReal = %.15E",iset.uniqueReal());
 //            //Real our = 0;
-//            //for(int i = 0; i < iset.r(); ++i)
+//            //for(int i = 0; i < iset.order(); ++i)
 //            //    {
 //            //    our += oset[i].uniqueReal();
 //            //    }
@@ -374,7 +374,7 @@ bool inline
 hasIndex(const IndexSet& iset, 
          const Index& I)
 	{
-    for(long j = 0; j < iset.r(); ++j)
+    for(long j = 0; j < iset.order(); ++j)
         {
         if(iset[j] == I) return true;
         }
@@ -386,7 +386,7 @@ minDim(const IndexSet& iset)
     {
     if(iset.empty()) return 1l;
     auto mm = dim(iset[0]);
-    for(long j = 1; j < iset.r(); ++j)
+    for(long j = 1; j < iset.order(); ++j)
         mm = std::min(mm,dim(iset[j]));
 
     return mm;
@@ -398,7 +398,7 @@ maxDim(const IndexSet& iset)
     if(iset.empty()) return 1l;
 
     auto mm = dim(iset[0]);
-    for(long j = 1; j < iset.r(); ++j)
+    for(long j = 1; j < iset.order(); ++j)
         mm = std::max(mm,dim(iset[j]));
 
     return mm;
@@ -424,7 +424,7 @@ contractIS(IndexSet const& Lis,
 
     long ncont = 0;
     for(auto& i : Lind) if(i < 0) ++ncont;
-    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    auto nuniq = Lis.order()+Ris.order()-2*ncont;
     auto newind = RangeBuilderT<IndexSet>(nuniq);
     //Below we are "cheating" and using the .str
     //field of each member of newind to hold the 
@@ -432,7 +432,7 @@ contractIS(IndexSet const& Lis,
     //be sorted along with the .ext members (the indices of Nis)
     //Later we will set them back to zero
     //IndexSetT constructor anyway
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+    for(decltype(Lis.order()) j = 0; j < Lis.order(); ++j)
         {
         if(Lind[j] > 0) //uncontracted
             {
@@ -440,7 +440,7 @@ contractIS(IndexSet const& Lis,
             else newind.nextIndStr(Lis[j],Lind[j]);
             }
         }
-    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
+    for(decltype(Ris.order()) j = 0; j < Ris.order(); ++j)
         {
         if(Rind[j] > 0) //uncontracted
             {
@@ -467,7 +467,7 @@ contractIS(IndexSet const& Lis,
     Labels Lind,
            Rind,
            Nind;
-    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+    computeLabels(Lis,Lis.order(),Ris,Ris.order(),Lind,Rind);
     contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
     }
 
@@ -482,12 +482,12 @@ ncprod(IndexSet const& Lis,
     {
     long nmerge = 0;
     for(auto& i : Lind) if(i < 0) ++nmerge;
-    auto nuniq = Lis.r()+Ris.r()-2*nmerge;
+    auto nuniq = Lis.order()+Ris.order()-2*nmerge;
     auto NisBuild = RangeBuilderT<IndexSet>(nmerge+nuniq);
     Nind.resize(nmerge+nuniq);
     long n = 0;
 
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+    for(decltype(Lis.order()) j = 0; j < Lis.order(); ++j)
         {
         if(Lind[j] < 0) //merged
             {
@@ -495,7 +495,7 @@ ncprod(IndexSet const& Lis,
             Nind[n++] = Lind[j];
             }
         }
-    for(decltype(Lis.r()) j = 0; j < Lis.r(); ++j)
+    for(decltype(Lis.order()) j = 0; j < Lis.order(); ++j)
         {
         if(Lind[j] > 0) //unmerged/unique
             {
@@ -503,7 +503,7 @@ ncprod(IndexSet const& Lis,
             Nind[n++] = Lind[j];
             }
         }
-    for(decltype(Ris.r()) j = 0; j < Ris.r(); ++j)
+    for(decltype(Ris.order()) j = 0; j < Ris.order(); ++j)
         {
         if(Rind[j] > 0) //unmerged/unique
             {
@@ -517,7 +517,7 @@ ncprod(IndexSet const& Lis,
 inline std::ostream&
 operator<<(std::ostream& s, IndexSet const& is)
     {
-    for(auto i : range1(is.r()))
+    for(auto i : range1(is.order()))
         { 
         if(hasQNs(is)) s << is.index(i) << std::endl;
         else s << is.index(i) << " ";
@@ -543,9 +543,9 @@ void inline
 checkQNConsistent(IndexSet const& is)
     {
 #ifdef DEBUG
-    if(is.r() > 0 && hasQNs(is.front()))
+    if(is.order() > 0 && hasQNs(is.front()))
         {
-        for(long n = 1; n < is.r(); n += 1)
+        for(long n = 1; n < is.order(); n += 1)
             {
             if(not hasQNs(is[n]))
                 {

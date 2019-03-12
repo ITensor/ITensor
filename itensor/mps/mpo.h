@@ -40,6 +40,11 @@ class MPO : private MPS
     using Parent::rightLim;
     using Parent::leftLim;
 
+    using Parent::operator();
+    using Parent::ref;
+    using Parent::set;
+
+    // Deprecated
     using Parent::A;
     using Parent::Aref;
     using Parent::setA;
@@ -63,12 +68,19 @@ class MPO : private MPS
     using Parent::noPrimeLink;
 
     void 
-    primeall()	// sites i,i' -> i',i'';  link:  l -> l'
+    prime()	// sites i,i' -> i',i'';  link:  l -> l'
         {
         for(int i = 1; i <= this->length(); i++)
             {
-            Aref(i).prime();
+            ref(i).prime();
             }
+        }
+
+    void 
+    primeall()
+        {
+        Global::warnDeprecated("MPO.primeall() is deprecated, use MPO.prime() instead");
+        prime();
         }
 
     void 
@@ -107,16 +119,16 @@ class MPO : private MPS
 
 
 inline MPO& 
-operator*=(MPO & W, Real a) { W.Aref(W.leftLim()+1) *= a; return W; }
+operator*=(MPO & W, Real a) { W.ref(W.leftLim()+1) *= a; return W; }
 
 inline MPO& 
-operator*=(MPO & W, Cplx a) { W.Aref(W.leftLim()+1) *= a; return W; }
+operator*=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) *= a; return W; }
 
 inline MPO& 
-operator/=(MPO & W, Real a) { W.Aref(W.leftLim()+1) /= a; return W; }
+operator/=(MPO & W, Real a) { W.ref(W.leftLim()+1) /= a; return W; }
 
 inline MPO& 
-operator/=(MPO & W, Cplx a) { W.Aref(W.leftLim()+1) /= a; return W; }
+operator/=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) /= a; return W; }
 
 MPO inline
 operator*(MPO W, Real r) { return W *= r; }
@@ -251,7 +263,7 @@ zipUpApplyMPO(MPS const& psi,
 //is at most the product of the bond dimension of K
 //and the bond dimension of x. The result can 
 //be controllably truncated further by providing
-//optional truncation args "Cutoff" and "Maxm"
+//optional truncation args "Cutoff" and "MaxDim"
 //
 MPS
 exactApplyMPO(MPO const& K,
@@ -266,8 +278,8 @@ exactApplyMPO(MPO const& K,
 //List of options recognized:
 //   Normalize (default: true) - normalize state to 1 after applying MPO
 //   Nsweep (default: 1) - number of sweeps to use
-//   Maxm (default: res.maxm()) - maximum number of states to keep
-//   Minm (default: res.minm()) - minimum number of states to keep
+//   MaxDim (default: res.maxdim()) - maximum number of states to keep
+//   MinDim (default: res.mindim()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
 MPS
 fitApplyMPO(MPS const& psi,
@@ -286,8 +298,8 @@ fitApplyMPO(MPS const& psi,
 //if the initial value of res is too different from the product fac*K|psi>.
 //   Normalize (default: true) - normalize state to 1 after applying MPO
 //   Nsweep (default: 1) - number of sweeps to use
-//   Maxm (default: res.maxm()) - maximum number of states to keep
-//   Minm (default: res.minm()) - minimum number of states to keep
+//   MaxDim (default: res.maxdim()) - maximum number of states to keep
+//   MinDim (default: res.mindim()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
 void
 fitApplyMPO(Real fac,
@@ -318,8 +330,8 @@ fitApplyMPO(Real fac,
 //Warning: this method can get stuck i.e. fail to converge
 //if the initial value of res is too different from desired exact result.
 //   Nsweep (default: 1) - number of sweeps to use
-//   Maxm (default: res.maxm()) - maximum number of states to keep
-//   Minm (default: res.minm()) - minimum number of states to keep
+//   MaxDim (default: res.maxdim()) - maximum number of states to keep
+//   MinDim (default: res.mindim()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
 Real
 fitApplyMPO(MPS const& psiA, 
@@ -334,8 +346,8 @@ fitApplyMPO(MPS const& psiA,
 //Warning: this method can get stuck i.e. fail to converge
 //if the initial value of res is too different from desired exact result.
 //   Nsweep (default: 1) - number of sweeps to use
-//   Maxm (default: res.maxm()) - maximum number of states to keep
-//   Minm (default: res.minm()) - minimum number of states to keep
+//   MaxDim (default: res.maxdim()) - maximum number of states to keep
+//   MinDim (default: res.mindim()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
 Real
 fitApplyMPO(Real mpsfac,
@@ -364,8 +376,8 @@ expH(MPO const& H,
 //List of named arguments recognized:
 //   "Order" : order of Taylor series expansion of exp(-tau*H)
 //   "Cutoff": maximum truncation error allowed
-//   "Maxm"  : maximum number of states after truncation
-//   "Minm"  : minimum number of states after truncation
+//   "MaxDim"  : maximum number of states after truncation
+//   "MinDim"  : minimum number of states after truncation
 //   "Nsweep": number of sweeps used to apply H MPO to intermediate MPS
 //
 void

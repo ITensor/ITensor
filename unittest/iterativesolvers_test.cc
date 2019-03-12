@@ -67,7 +67,7 @@ SECTION("FourSite")
     psi.position(2);
     PH.position(2,psi);
 
-    ITensor phi1 = psi.A(2) * psi.A(3);
+    ITensor phi1 = psi(2) * psi(3);
 
     Real En1 = davidson(PH,phi1,"MaxIter=9");
     CHECK_CLOSE(En1,-0.95710678118);
@@ -75,8 +75,8 @@ SECTION("FourSite")
     cout << endl << endl;
 
     //TODO: should this be put back in?
-    //ITensor mpoh = H.A(2)*H.A(3);
-    //ITensor phi2 = psi.A(2)*psi.A(3);
+    //ITensor mpoh = H(2)*H(3);
+    //ITensor phi2 = psi(2)*psi(3);
     //Real En2 = doDavidson(phi2,mpoh,PH.L(),PH.R(),9,2,1E-4);
     //cout << format("Energy from matrix Davidson (b=2) = %.20f")%En2 << endl;
 
@@ -89,14 +89,14 @@ SECTION("FourSite")
     //psi.doSVD(2,phi1,Fromleft);
     //psi.position(3);
     //PH.position(3,psi);
-    //ITensor phi3 = psi.A(3) * psi.A(4);
+    //ITensor phi3 = psi(3) * psi(4);
     //Real En3 = d.davidson(PH,phi3);
     //cout << format("Energy from tensor Davidson (b=3) = %.20f")%En3 << endl;
 
     //cout << endl << endl;
 
-    //mpoh = H.A(3)*H.A(4);
-    //ITensor phi3m = psi.A(3)*psi.A(4);
+    //mpoh = H(3)*H(4);
+    //ITensor phi3m = psi(3)*psi(4);
     //Real En3m = doDavidson(phi3m,mpoh,PH.L(),PH.R(),9,2,1E-4);
     //cout << format("Energy from matrix Davidson (b=3) = %.20f")%En3m << endl;
 
@@ -105,14 +105,14 @@ SECTION("FourSite")
     //psi.doSVD(3,phi3,Fromright);
     //psi.position(3);
     //PH.position(2,psi);
-    //ITensor phi4 = psi.A(2) * psi.A(3);
+    //ITensor phi4 = psi(2) * psi(3);
     //Real En4 = d.davidson(PH,phi4);
     //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En4 << endl;
 
     //cout << endl << endl;
 
-    //mpoh = H.A(2)*H.A(3);
-    //ITensor phi4m = psi.A(2)*psi.A(3);
+    //mpoh = H(2)*H(3);
+    //ITensor phi4m = psi(2)*psi(3);
     //Real En4m = doDavidson(phi4m,mpoh,PH.L(),PH.R(),9,2,1E-4);
     //cout << format("Energy from matrix Davidson (b=2) = %.20f")%En4m << endl;
 
@@ -123,20 +123,20 @@ SECTION("FourSite")
     //PH.position(1,psi);
 
     ////With doDavidson
-    //mpoh = H.A(1)*H.A(2);
-    //ITensor phi5 = psi.A(1) * psi.A(2);
+    //mpoh = H(1)*H(2);
+    //ITensor phi5 = psi(1) * psi(2);
     //Real En5 = doDavidson(phi5,mpoh,PH.L(),PH.R(),9,2,1E-4);
     //cout << format("Energy from matrix Davidson (b=1) = %.20f")%En5 << endl;
 
     //cout << endl << endl;
 
-    //ITensor phi6 = psi.A(1) * psi.A(2);
+    //ITensor phi6 = psi(1) * psi(2);
     ////Print(phi6);
     ////Print(PH.L());
     ////Print(PH.R());
     ////ITensor AB = phi6 * PH.R();
-    ////AB *= H.A(2);
-    ////AB *= H.A(1);
+    ////AB *= H(2);
+    ////AB *= H(1);
     ////AB.noprime();
     ////ITensor AB; PH.product(phi6,AB);
     ////Print(Dot(phi6,AB));
@@ -165,7 +165,7 @@ SECTION("IQFourSite")
     psi.position(2);
     PH.position(2,psi);
 
-    ITensor phi1 = psi.A(2) * psi.A(3);
+    ITensor phi1 = psi(2) * psi(3);
 
     Real En1 = davidson(PH,phi1,"MaxIter=9");
     //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;

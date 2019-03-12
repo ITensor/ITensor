@@ -71,21 +71,37 @@ class MPS
     int 
     leftLim() const { return l_orth_lim_; }
 
-    //Read-only access to i'th MPS tensor
-    ITensor const& 
-    A(int i) const;
+    // Read-only access to i'th MPS tensor
+    ITensor const&
+    operator()(int i) const;
+
+    //Returns reference to i'th MPS tensor
+    //which allows reading and writing
+    ITensor& 
+    ref(int i);
 
     void
-    setA(int i, ITensor const& nA) { Aref(i) = nA; }
+    set(int i, ITensor const& nA) { ref(i) = nA; }
 
     void
-    setA(int i, ITensor && nA) { Aref(i) = std::move(nA); }
+    set(int i, ITensor && nA) { ref(i) = std::move(nA); }
 
     Real
     normalize();
 
-    //Returns reference to i'th MPS tensor
-    //which allows reading and writing
+    // Deprecated version of set(int i, ITensor const& nA)
+    void
+    setA(int i, ITensor const& nA) { this->set(i,nA); }
+
+    // Deprecated version of set(int i, ITensor && nA)
+    void
+    setA(int i, ITensor && nA) { this->set(i,nA); }
+
+    // Deprecated version of operator()(int i)
+    ITensor const& 
+    A(int i) const;
+
+    // Deprecated version of ref(int i)
     ITensor& 
     Aref(int i);
 
@@ -217,15 +233,19 @@ addAssumeOrth(MPSType      & L,
               MPSType const& R, 
               Args const& args = Args::global());
 
+template <typename MPSType>
+SiteSet const&
+sites(MPSType const& psi) { return psi.sites(); }
+
 //void 
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
 //            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 inline MPS& 
-operator*=(MPS & psi, Real a) { psi.Aref(psi.leftLim()+1) *= a; return psi; }
+operator*=(MPS & psi, Real a) { psi.ref(psi.leftLim()+1) *= a; return psi; }
 
 inline MPS& 
-operator/=(MPS & psi, Real a) { psi.Aref(psi.leftLim()+1) /= a; return psi; }
+operator/=(MPS & psi, Real a) { psi.ref(psi.leftLim()+1) /= a; return psi; }
 
 MPS inline
 operator*(MPS psi, Real r) { psi *= r; return psi; }
@@ -234,10 +254,10 @@ MPS inline
 operator*(Real r, MPS psi) { psi *= r; return psi; }
 
 inline MPS& 
-operator*=(MPS & psi, Cplx z) { psi.Aref(psi.leftLim()+1) *= z; return psi; }
+operator*=(MPS & psi, Cplx z) { psi.ref(psi.leftLim()+1) *= z; return psi; }
 
 inline MPS& 
-operator/=(MPS & psi, Cplx z) { psi.Aref(psi.leftLim()+1) /= z; return psi; }
+operator/=(MPS & psi, Cplx z) { psi.ref(psi.leftLim()+1) /= z; return psi; }
 
 MPS inline
 operator*(MPS psi, Cplx z) { psi *= z; return psi; }
@@ -313,7 +333,7 @@ orthoCenter(MPS const& psi);
 Real
 norm(MPS const& psi);
 
-// TODO: make this a class function?
+// Deprecated in favor of psi.normalize()
 Real
 normalize(MPS & psi);
 
@@ -332,12 +352,14 @@ leftLinkInd(MPSType const& psi, int i);
 Real
 averageLinkDim(MPS const& psi);
 
+// Deprecated
 Real
 averageM(MPS const& psi);
 
 int
 maxLinkDim(MPS const& psi);
 
+// Deprecated
 int
 maxM(MPS const& psi);
 

@@ -295,9 +295,9 @@ operator==(IndexVal const& iv, Index const& I)
     }
 
 Index
-sim(Index const& I, int plev)
+sim(Index const& I)
     {
-    return Index(dim(I),tags(I)).prime(plev);
+    return Index(dim(I),tags(I)).prime(primeLevel(I));
     }
 
 string

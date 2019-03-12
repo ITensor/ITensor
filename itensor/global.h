@@ -48,7 +48,7 @@ getDirection(Args const& args,
     }
 
 const Real MIN_CUT = 1E-15;
-const int MAX_M = 5000;
+const int MAX_DIM = 5000;
 const int MAX_TAGS = 4;
 
 // The PAUSE macro is useful for debugging. 

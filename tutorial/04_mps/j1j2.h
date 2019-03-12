@@ -28,7 +28,7 @@ computeGroundState(SpinHalf const& sites,
     auto psi = MPS(sites);
 
     auto sweeps = Sweeps(5);
-    sweeps.maxm() = 50,50,100,100,200;
+    sweeps.maxdim() = 50,50,100,100,200;
     sweeps.cutoff() = 1E-9;
 
     println("Starting ground state calculation for J2 = ",J2);

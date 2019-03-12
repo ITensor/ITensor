@@ -67,7 +67,7 @@ contractDiagDense(Diag<T1>  const& d,
 
     if(t_has_uncontracted)
         {
-        auto nd = m.makeNewData<Dense<T3>>(area(Nis),0.);
+        auto nd = m.makeNewData<Dense<T3>>(dim(Nis),0.);
         auto Nref = makeTenRef(nd->data(),nd->size(),&Nis);
         if(d.allSame())
             {
@@ -111,7 +111,7 @@ contractDiagDense(Diag<T1>  const& d,
                              Tref,tind,
                              Nref,Nind);
             }
-        if(rank(Nis)==1)
+        if(order(Nis)==1)
             {
             m.makeNewData<Dense<T3>>(std::move(nstore));
             }
@@ -135,7 +135,7 @@ doTask(Contract & C,
     Labels Lind,
           Rind,
           Nind;
-    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
     bool sortIndices = false;
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
@@ -155,7 +155,7 @@ doTask(Contract & C,
     Labels Lind,
           Rind,
           Nind;
-    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
     bool sortIndices = false;
     contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
     contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
@@ -335,7 +335,7 @@ doTask(PrintIT& P, Diag<T> const& d)
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
               doTask(NormNoScale{},d));
 
-    auto r = P.is.r();
+    auto r = P.is.order();
 
     if(r == 0) 
         {

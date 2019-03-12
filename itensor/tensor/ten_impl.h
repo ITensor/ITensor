@@ -46,7 +46,7 @@ auto TenRefc<R,T>::
 operator()() const -> reference
     { 
 #ifdef DEBUG
-    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 TenRef");
+    if(r() != 0) throw std::runtime_error("No indices passed to order > 0 TenRef");
 #endif
     return d_[0];
     }
@@ -84,8 +84,8 @@ checkCompatible(TenRefc<R1,T1> const& A,
                 std::string methodName = "")
     {
     auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
-    if(A.r() != B.r()) Error(format("Mismatched tensor ranks %s",methodstr));
-    for(decltype(A.r()) n = 0; n < A.r(); ++n)
+    if(A.order() != B.order()) Error(format("Mismatched tensor orders %s",methodstr));
+    for(decltype(A.order()) n = 0; n < A.order(); ++n)
         if(A.extent(n) != B.extent(n))
             {
             printfln("A.extent(%d)=%d  B.extent(%d)=%d",n,A.extent(n),n,B.extent(n));
@@ -105,7 +105,7 @@ transform(TenRefc<R1,T1> const& from,
     checkCompatible(to,from,"transform");
 #endif 
     using size_type = decltype(from.extent(0));
-    auto r = to.r();
+    auto r = to.order();
     if(r == 0)
         {
         op(*(from.data()),*(to.data()));
@@ -197,7 +197,7 @@ auto inline Ten<R,T>::
 operator()() const -> value_type
     { 
 #ifdef DEBUG
-    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
+    if(r() != 0) throw std::runtime_error("No indices passed to order > 0 Ten");
     if(data_.empty()) throw std::runtime_error("Empty storage in tensor when calling operator()");
 #endif
     return data_.front();
@@ -216,7 +216,7 @@ auto inline Ten<R,T>::
 operator()() -> reference
     { 
 #ifdef DEBUG
-    if(r() != 0) throw std::runtime_error("No indices passed to rank > 0 Ten");
+    if(r() != 0) throw std::runtime_error("No indices passed to order > 0 Ten");
     if(data_.empty()) throw std::runtime_error("Empty storage in tensor when calling operator()");
 #endif
     return data_.front(); 
@@ -359,7 +359,7 @@ printTensor(std::ostream & s,
             const char* typestr)
     {
     if(not T) return s << "(empty " << typestr << ")";
-    if(T.r() == 0)
+    if(T.order() == 0)
         {
         s << typestr << "\n() " << T();
         return s;

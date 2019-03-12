@@ -75,7 +75,7 @@ gateTEvol(Iterable const& gatelist,
             {
             auto i1 = g->i1();
             auto i2 = g->i2();
-            auto AA = psi.A(i1)*psi.A(i2)*g->gate();
+            auto AA = psi(i1)*psi(i2)*g->gate();
             AA.mapPrime(1,0,"Site");
 
             ++g;

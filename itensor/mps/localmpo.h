@@ -352,7 +352,7 @@ product(ITensor const& phi,
         auto othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
         auto othrR = (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
         othr *= othrR;
-        auto z = (othr*phi).cplx();
+        auto z = (othr*phi).eltC();
 
         phip = dag(othr);
         phip *= z;
@@ -471,7 +471,7 @@ makeL(MPS const& psi, int k)
             while(LHlim_ < k)
                 {
                 auto ll = LHlim_;
-                PH_.at(ll+1) = (!PH_.at(ll) ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
+                PH_.at(ll+1) = (!PH_.at(ll) ? psi(ll+1) : PH_[ll]*psi(ll+1));
                 PH_[ll+1] *= dag(prime(Psi_->A(ll+1),"Link"));
                 setLHlim(ll+1);
                 }
@@ -483,14 +483,14 @@ makeL(MPS const& psi, int k)
                 auto ll = LHlim_;
                 if(PH_.at(ll))
                     {
-                    PH_.at(ll+1) = PH_.at(ll)*psi.A(ll+1);
+                    PH_.at(ll+1) = PH_.at(ll)*psi(ll+1);
                     }
                 else
                     {
-                    PH_.at(ll+1) = psi.A(ll+1);
+                    PH_.at(ll+1) = psi(ll+1);
                     }
                 PH_.at(ll+1) *= Op_->A(ll+1);
-                PH_.at(ll+1) *= dag(prime(psi.A(ll+1)));
+                PH_.at(ll+1) *= dag(prime(psi(ll+1)));
                 setLHlim(ll+1);
                 }
             }
@@ -507,7 +507,7 @@ makeR(MPS const& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                PH_.at(rl-1) = (!PH_.at(rl) ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
+                PH_.at(rl-1) = (!PH_.at(rl) ? psi(rl-1) : PH_[rl]*psi(rl-1));
                 PH_[rl-1] *= dag(prime(Psi_->A(rl-1),"Link"));
                 setRHlim(rl-1);
                 }
@@ -520,17 +520,17 @@ makeR(MPS const& psi, int k)
                 //printfln(" Making environment with rl=%d (using H[%d])",rl,rl-1);
                 //Print(PH_.at(rl));
                 //Print(Op_->A(rl-1));
-                //Print(psi.A(rl-1));
+                //Print(psi(rl-1));
                 if(PH_.at(rl))
                     {
-                    PH_.at(rl-1) = PH_.at(rl)*psi.A(rl-1);
+                    PH_.at(rl-1) = PH_.at(rl)*psi(rl-1);
                     }
                 else
                     {
-                    PH_.at(rl-1) = psi.A(rl-1);
+                    PH_.at(rl-1) = psi(rl-1);
                     }
                 PH_.at(rl-1) *= Op_->A(rl-1);
-                PH_.at(rl-1) *= dag(prime(psi.A(rl-1)));
+                PH_.at(rl-1) *= dag(prime(psi(rl-1)));
                 //printfln("PH[%d] = \n%s",rl-1,PH_.at(rl-1));
                 //PAUSE
                 setRHlim(rl-1);

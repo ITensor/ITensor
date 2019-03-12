@@ -35,7 +35,7 @@ class RangeIter
     RangeIter(range_type const& R) 
       : prange_(&R),
         off_(0),
-        ind_(R.r(),R.start())
+        ind_(R.order(),R.start())
         { }
 
 
@@ -96,9 +96,9 @@ class RangeIter
         {
         using rextent = decltype(range().extent(0));
 #ifdef DEBUG
-        if(range().r() == 0) Error("Can't increment RangeIter made from rank 0 range");
+        if(range().order() == 0) Error("Can't increment RangeIter made from order 0 range");
 #endif
-        auto r = range().r();
+        auto r = range().order();
         ind_[0] += 1;
         off_ += range().stride(0);
         if(rextent(ind_[0]-range().start()) == range().extent(0))
@@ -132,7 +132,7 @@ std::ostream&
 operator<<(std::ostream & s,
            RangeIter<R> const& it)
     {
-    auto r = it.range().r();
+    auto r = it.range().order();
     s << format("%*d",3,it.offset()) << " (";
     for(decltype(r) j = 0; j < r; ++j)
         {

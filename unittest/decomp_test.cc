@@ -43,8 +43,8 @@ SECTION("Truncate Test")
     p(4) = p(5);
     p /= sumels(p);
 
-    long maxm = 2*origm,
-         minm = 1;
+    long maxdim = 2*origm,
+         mindim = 1;
     Real cutoff = 0;
     //bool absoluteCutoff = false,
     //     doRelCutoff = false;
@@ -55,37 +55,37 @@ SECTION("Truncate Test")
         {
         //Check that with unrestrictive settings
         //nothing gets truncated
-        tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
+        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
         size_t m = p.size();
         CHECK(m==origm);
         }
 
     SECTION("Case 1")
         {
-        //Check that maxm is enforced
-        maxm = 10;
-        tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
+        //Check that maxdim is enforced
+        maxdim = 10;
+        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
-        CHECK(m==maxm);
+        CHECK(m==maxdim);
         }
 
     SECTION("Case 2")
         {
-        //Check that maxm is enforced
-        maxm = 8;
-        tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
+        //Check that maxdim is enforced
+        maxdim = 8;
+        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
-        CHECK(m==maxm);
+        CHECK(m==maxdim);
         }
 
     SECTION("Case 3")
         {
-        //Check that minm is enforced
-        minm = 10;
+        //Check that mindim is enforced
+        mindim = 10;
         cutoff = 0.01;
-        tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
+        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
-        CHECK(m==minm);
+        CHECK(m==mindim);
         }
 
     SECTION("Case 4")
@@ -94,7 +94,7 @@ SECTION("Truncate Test")
         //and truncerr is correct
         cutoff = 1E-5;
         auto origp = p;
-        tie(truncerr,docut) = truncate(p,maxm,minm,cutoff);
+        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
         Real te_check = 0.;
         for(auto n = m; n < long(origp.size()); ++n)

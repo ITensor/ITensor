@@ -53,7 +53,7 @@ permuteIQ(Permutation const& P,
 #ifdef DEBUG
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
 #endif
-    auto r = Ais.r();
+    auto r = Ais.order();
     auto bind = IndexSetBuilder(r);
     for(auto i : range(r))
         {
@@ -91,14 +91,14 @@ replaceInd(IndexSet const& is,
            long            loc,
            Index    const& replacement)
     {
-    auto newind = IndexSetBuilder(is.r());
+    auto newind = IndexSetBuilder(is.order());
     long i = 0;
     for(auto j : range(loc))
         {
         newind.setIndex(i++,is[j]);
         }
     newind.setIndex(i++,replacement);
-    for(decltype(is.r()) j = loc+1; j < is.r(); ++j)
+    for(decltype(is.order()) j = loc+1; j < is.order(); ++j)
         {
         newind.setIndex(i++,is[j]);
         }
@@ -115,7 +115,7 @@ combine(QDense<T> const& d,
         ManageStore    & m)
     {
 #ifdef DEBUG
-    for(auto i : range(1,Cis.r()))
+    for(auto i : range(1,Cis.order()))
         {
         auto jc = indexPosition(dis,Cis[i]);
         if(jc == -1)
@@ -127,9 +127,9 @@ combine(QDense<T> const& d,
         }
 #endif
 
-    using size_type = decltype(rank(dis));
-    auto dr = rank(dis);
-    auto ncomb = rank(Cis)-1;
+    using size_type = decltype(order(dis));
+    auto dr = order(dis);
+    auto ncomb = order(Cis)-1;
     auto nr = dr-ncomb+1;
 
     auto dperm = Labels(dr,-1);
@@ -210,10 +210,10 @@ uncombine(QDense<T> const& d,
           ManageStore    & m,
           bool              own_data)
     {
-    using size_type = decltype(rank(dis));
+    using size_type = decltype(order(dis));
     auto& cind = Cis[0];
-    auto dr = rank(dis);
-    auto cr = rank(Cis);
+    auto dr = order(dis);
+    auto cr = order(Cis);
     auto ncomb = cr-1;
     auto nr = dr-1+ncomb;
 

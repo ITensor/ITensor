@@ -46,7 +46,7 @@ MPO(const SiteSet& sites,
     //Set all tensors to identity ops
     for(int j = 1; j <= length(); ++j)
         {
-        Aref(j) = sites.op("Id",j);
+        ref(j) = sites.op("Id",j);
         }
     putMPOLinks(*this);
     }
@@ -194,8 +194,8 @@ findCenter(MPO const& psi)
     {
     for(int j = 1; j <= length(psi); ++j) 
         {
-        const auto& A = psi.A(j);
-        if(A.r() == 0) Error("Zero rank tensor in MPO");
+        const auto& A = psi(j);
+        if(A.order() == 0) Error("Zero order tensor in MPO");
         bool allOut = true;
         for(const auto& I : A.inds())
             {
@@ -232,15 +232,15 @@ checkQNs(MPO const& H)
     //including the ortho. center
     for(int i = 1; i <= N; ++i) 
         {
-        if(!H.A(i))
+        if(!H(i))
             {
             println("A(",i,") null, QNs not well defined");
             Error("QNs not well defined");
             }
-        if(div(H.A(i)) != Zero)
+        if(div(H(i)) != Zero)
             {
             cout << "At i = " << i << endl;
-            Print(H.A(i));
+            Print(H(i));
             Error("Non-zero div ITensor in MPO");
             }
         }
@@ -286,14 +286,14 @@ std::ostream&
 operator<<(std::ostream& s, MPO const& M)
     {
     s << "\n";
-    for(int i = 1; i <= length(M); ++i) s << M.A(i) << "\n";
+    for(int i = 1; i <= length(M); ++i) s << M(i) << "\n";
     return s;
     }
 
 void
 putMPOLinks(MPO& W, Args const& args)
     {
-    if(not hasQNs(W.A(1)))
+    if(not hasQNs(W(1)))
         {
         string pfix = args.getString("Prefix","MPO");
         auto links = vector<Index>(length(W));
@@ -301,13 +301,13 @@ putMPOLinks(MPO& W, Args const& args)
             {
             links.at(b) = Index(1,format("Link,%s,%d",pfix,b));
             }
-        W.Aref(1) *= setElt(links.at(1)(1));
+        W.ref(1) *= setElt(links.at(1)(1));
         for(int b = 2; b < length(W); ++b)
             {
-            W.Aref(b) *= setElt(links.at(b-1)(1));
-            W.Aref(b) *= setElt(links.at(b)(1));
+            W.ref(b) *= setElt(links.at(b-1)(1));
+            W.ref(b) *= setElt(links.at(b)(1));
             }
-        W.Aref(length(W)) *= setElt(links.at(length(W)-1)(1));
+        W.ref(length(W)) *= setElt(links.at(length(W)-1)(1));
         }
     else
         {
@@ -319,17 +319,17 @@ putMPOLinks(MPO& W, Args const& args)
         for(int b = 1; b < N; ++b)
             {
             string ts = format("%s,%d",pfix,b);
-            q += div(W.A(b));
+            q += div(W(b));
             links.at(b) = Index(q,1,Out,ts);
             }
 
-        W.Aref(1) *= setElt(links.at(1)(1));
+        W.ref(1) *= setElt(links.at(1)(1));
         for(int b = 2; b < N; ++b)
             {
-            W.Aref(b) *= setElt(dag(links.at(b-1)(1)));
-            W.Aref(b) *= setElt(links.at(b)(1));
+            W.ref(b) *= setElt(dag(links.at(b-1)(1)));
+            W.ref(b) *= setElt(links.at(b)(1));
             }
-        W.Aref(N) *= setElt(dag(links.at(N-1)(1)));
+        W.ref(N) *= setElt(dag(links.at(N-1)(1)));
         }
     }
 
@@ -344,7 +344,7 @@ putMPOLinks(MPO& W, Args const& args)
 //    res.logRefNorm(K.logRefNorm());
 //    for(int j = 0; j <= N+1; ++j)
 //        {
-//        res.Aref(j) = ITensor(K.A(j));
+//        res.ref(j) = ITensor(K(j));
 //        }
 //    res.leftLim(K.leftLim());
 //    res.rightLim(K.rightLim());
@@ -356,7 +356,7 @@ isComplex(MPO const& W)
     {
     for(auto j : range1(length(W)))
         {
-        if(itensor::isComplex(W.A(j))) return true;
+        if(itensor::isComplex(W(j))) return true;
         }
     return false;
     }
@@ -372,21 +372,21 @@ overlap(MPS const& psi,
     auto N = length(H);
     if(length(phi) != N || length(psi) != N) Error("psiHphi: mismatched N");
 
-    auto L = phi.A(1); 
-    //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
-    L *= (H.A(0) ? H.A(0)*H.A(1) : H.A(1));
-    L *= dag(prime(psi.A(1)));
+    auto L = phi(1); 
+    //Some Hamiltonians may store edge tensors in H(0) and H(N+1)
+    L *= (H(0) ? H(0)*H(1) : H(1));
+    L *= dag(prime(psi(1)));
     for(int i = 2; i < N; ++i) 
         { 
-        L *= phi.A(i); 
-        L *= H.A(i); 
-        L *= dag(prime(psi.A(i))); 
+        L *= phi(i); 
+        L *= H(i); 
+        L *= dag(prime(psi(i))); 
         }
-    L *= phi.A(N); 
-    L *= H.A(N);
-    if(H.A(N+1)) L *= H.A(N+1);
+    L *= phi(N); 
+    L *= H(N);
+    if(H(N+1)) L *= H(N+1);
 
-    auto z = (dag(prime(psi.A(N)))*L).cplx();
+    auto z = (dag(prime(psi(N)))*L).eltC();
     re = z.real();
     im = z.imag();
     }
@@ -428,19 +428,19 @@ overlap(MPS const& psi,
     auto N = length(psi);
     if(N != length(phi) || length(H) < N) Error("mismatched N in psiHphi");
 
-    auto L = (LB ? LB*phi.A(1) : phi.A(1));
-    L *= H.A(1); 
-    L *= dag(prime(psi.A(1)));
+    auto L = (LB ? LB*phi(1) : phi(1));
+    L *= H(1); 
+    L *= dag(prime(psi(1)));
     for(int i = 2; i <= N; ++i)
         { 
-        L *= phi.A(i); 
-        L *= H.A(i); 
-        L *= dag(prime(psi.A(i))); 
+        L *= phi(i); 
+        L *= H(i); 
+        L *= dag(prime(psi(i))); 
         }
 
     if(RB) L *= RB;
 
-    auto z = L.cplx();
+    auto z = eltC(L);
     re = z.real();
     im = z.imag();
     }
@@ -473,25 +473,25 @@ overlap(MPS const& psi,
     auto psidag = psi;
     for(int i = 1; i <= N; i++)
         {
-        psidag.Aref(i) = dag(prime(psi.A(i),2));
+        psidag.ref(i) = dag(prime(psi(i),2));
         }
     auto Hp = H;
     Hp.mapPrime(1,2);
     Hp.mapPrime(0,1);
 
     //scales as m^2 k^2 d
-    auto L = phi.A(1) * K.A(1) * Hp.A(1) * psidag.A(1);
+    auto L = phi(1) * K(1) * Hp(1) * psidag(1);
     //printfln("L%02d = %s",1,L);
     for(int i = 2; i < N; i++)
         {
         //scales as m^3 k^2 d + m^2 k^3 d^2
-        L = L * phi.A(i) * K.A(i) * Hp.A(i) * psidag.A(i);
+        L = L * phi(i) * K(i) * Hp(i) * psidag(i);
         //printfln("L%02d = %s",i,L);
         }
     //scales as m^2 k^2 d
-    L = L * phi.A(N) * K.A(N) * Hp.A(N) * psidag.A(N);
+    L = L * phi(N) * K(N) * Hp(N) * psidag(N);
     //PrintData(L);
-    auto z = L.cplx();
+    auto z = L.eltC();
     re = z.real();
     im = z.imag();
     }
@@ -533,7 +533,7 @@ errorMPOProd(MPS const& psi2,
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
+        Kd.ref(j) = dag(swapPrime(K(j),0,1,"Site"));
         }
     err /= overlap(psi1,Kd,K,psi1);
     err = std::sqrt(std::abs(1.0+err));
@@ -553,7 +553,7 @@ checkMPOProd(MPS const& psi2,
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.Aref(j) = dag(swapPrime(K.A(j),0,1,"Site"));
+        Kd.ref(j) = dag(swapPrime(K(j),0,1,"Site"));
         }
     res += overlap(psi1,Kd,K,psi1);
     return res;
@@ -579,13 +579,13 @@ checkMPOProd(MPS const& psi2,
 //    while(l_orth_lim_ < i-1)
 //        {
 //        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
-//        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+//        Tensor WF =(l_orth_lim_+1) *(l_orth_lim_+2);
 //        svdBond(l_orth_lim_+1,WF,Fromleft,args);
 //        }
 //    while(r_orth_lim_ > i+1)
 //        {
 //        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
-//        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+//        Tensor WF =(r_orth_lim_-2) *(r_orth_lim_-1);
 //        svdBond(r_orth_lim_-2,WF,Fromright,args);
 //        }
 //
@@ -604,11 +604,11 @@ checkMPOProd(MPS const& psi2,
 //    //but do not truncate since the basis to the right might not
 //    //be ortho (i.e. use the current m).
 //    //svd_.useOrigM(true);
-//    int orig_maxm = maxm();
+//    int orig_maxdim = maxdim();
 //    Real orig_cutoff = cutoff();
 //    for(Spectrum& spec : spectrum_)
 //        {
-//        spec.maxm(MAX_M);
+//        spec.maxdim(MAX_DIM);
 //        spec.cutoff(MIN_CUT);
 //        }
 //
@@ -619,7 +619,7 @@ checkMPOProd(MPS const& psi2,
 //    for(Spectrum& spec : spectrum_)
 //        {
 //        spec.useOrigM(false);
-//        spec.maxm(orig_maxm);
+//        spec.maxdim(orig_maxdim);
 //        spec.cutoff(orig_cutoff);
 //        }
 //    position(1);

@@ -92,7 +92,11 @@ class IndexSet : public RangeT<Index>
     stride(size_type i) const { return parent::stride(i); }
 
     long
-    r() const { return parent::r(); }
+    order() const { return parent::order(); }
+    
+    // Deprecated
+    long
+    r() const { return this->order(); }
     
     // 0-indexed access
     index_type &
@@ -415,13 +419,14 @@ Index
 findIndexExact(IndexSet const& is,
                TagSet const& tsmatch, 
                int plmatch = -1);
+
 //
 //
 // IndexSet Primelevel Methods
 //
 
 
-//Replace all indices of type t by 'similar' indices 
+//Replace all indices with tags t by 'similar' indices 
 //with same properties but which don't compare equal 
 //to the indices they replace (using sim(Index) function)
 void 
@@ -448,8 +453,8 @@ long
 indexPosition(IndexSet const& iset, 
               Index const& I);
 
-Index
-findIndex(IndexSet const& iset, Arrow dir);
+//Index
+//findIndex(IndexSet const& iset, Arrow dir);
 
 Arrow
 dir(IndexSet const& is, Index const& I);

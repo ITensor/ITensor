@@ -86,7 +86,7 @@ isComplex(MPS const& psi)
     {
     for(auto j : range1(length(psi)))
         {
-        if(itensor::isComplex(psi.A(j))) return true;
+        if(itensor::isComplex(psi(j))) return true;
         }
     return false;
     }
@@ -110,7 +110,7 @@ norm(MPS const& psi)
     if(not isOrtho(psi)) Error("\
 MPS must have well-defined ortho center to compute norm; \
 call .position(j) or .orthogonalize() to set ortho center");
-    return itensor::norm(psi.A(orthoCenter(psi)));
+    return itensor::norm(psi(orthoCenter(psi)));
     }
 
 Real inline
@@ -125,21 +125,21 @@ template<typename MPSType>
 Index 
 linkInd(MPSType const& psi, int b)
     { 
-    return commonIndex(psi.A(b),psi.A(b+1),"Link"); 
+    return commonIndex(psi(b),psi(b+1),"Link"); 
     }
 
 template<typename MPSType>
 Index
 rightLinkInd(MPSType const& psi, int i)
     { 
-    return commonIndex(psi.A(i),psi.A(i+1),"Link"); 
+    return commonIndex(psi(i),psi(i+1),"Link"); 
     }
 
 template<typename MPSType>
 Index
 leftLinkInd(MPSType const& psi, int i)
     { 
-    return commonIndex(psi.A(i),psi.A(i-1),"Link"); 
+    return commonIndex(psi(i),psi(i-1),"Link"); 
     }
 
 Real inline
@@ -167,7 +167,7 @@ maxLinkDim(MPS const& psi)
     int maxdim_ = 0;
     for(int b = 1; b < length(psi); ++b)
         {
-        int mb = dim(commonIndex(psi.A(b),psi.A(b+1)));
+        int mb = dim(commonIndex(psi(b),psi(b+1)));
         maxdim_ = std::max(mb,maxdim_);
         }
     return maxdim_;

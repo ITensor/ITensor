@@ -133,7 +133,7 @@ expHermitian(ITensor const& T, Cplx t = 1.);
 // T must be "square-matrix-like" in the sense that
 // T has only indices I,J,K,... and indices I',J',K',...
 //
-// D is a diagonal rank 2 tensor (matrix) containing the eigenvalues.
+// D is a diagonal order 2 tensor (matrix) containing the eigenvalues.
 // On return, V has the "column" indices of T and a new index shared with D
 // (the index labeled "C" below).
 //
@@ -182,6 +182,11 @@ svd(ITensor AA,
     ITensor & V, 
     Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svd: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svd: Arg Minm is deprecated in favor of MinDim.");
+
 #ifdef DEBUG
     if(!U && !V) 
         Error("U and V default-initialized in svd, must indicate at least one index on U or V");
@@ -198,11 +203,11 @@ svd(ITensor AA,
 
 
     //Combiners which transform AA
-    //into a rank 2 tensor
+    //into a order 2 tensor
     std::vector<Index> Uinds, 
                         Vinds;
-    Uinds.reserve(AA.r());
-    Vinds.reserve(AA.r());
+    Uinds.reserve(AA.order());
+    Vinds.reserve(AA.order());
     //Divide up indices based on U
     //If U is null, use V instead
     auto &L = (U ? U : V);
@@ -231,24 +236,24 @@ svd(ITensor AA,
     if(useOrigM)
         {
         //Try to determine current m,
-        //then set minm_ and maxm_ to this.
+        //then set mindim_ and maxdim_ to this.
         args.add("Cutoff",-1);
-        long minm = 1,
-             maxm = MAX_M;
-        if(D.r() == 0)
+        long mindim = 1,
+             maxdim = MAX_DIM;
+        if(D.order() == 0)
             {
             //auto mid = commonIndex(U,V,Link);
             //TODO: check this does the same thing
             auto mid = commonIndex(U,V,"Link");
-            if(mid) minm = maxm = dim(mid);
-            else    minm = maxm = 1;
+            if(mid) mindim = maxdim = dim(mid);
+            else    mindim = maxdim = 1;
             }
         else
             {
-            minm = maxm = dim(D.inds().front());
+            mindim = maxdim = dim(D.inds().front());
             }
-        args.add("Minm",minm);
-        args.add("Maxm",maxm);
+        args.add("MinDim",mindim);
+        args.add("MaxDim",maxdim);
         }
 
     auto ui = commonIndex(AA,Ucomb);
@@ -277,6 +282,11 @@ denmatDecomp(ITensor const& AA,
              BigMatrixT const& PH,
              Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in denmatDecomp: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in denmatDecomp: Arg Minm is deprecated in favor of MinDim.");
+
     auto noise = args.getReal("Noise",0.);
 
     //TODO: try to avoid using "Link" here
@@ -294,7 +304,7 @@ denmatDecomp(ITensor const& AA,
     
     auto& activeInds = (to_orth ? to_orth : AA).inds();
 
-    auto cinds = stdx::reserve_vector<Index>(activeInds.r());
+    auto cinds = stdx::reserve_vector<Index>(activeInds.order());
     for(auto& I : activeInds)
         {
         if(!hasIndex(newoc,I)) cinds.push_back(I);
@@ -320,7 +330,7 @@ denmatDecomp(ITensor const& AA,
         rho += noise*PH.deltaRho(AA,cmb,dir);
         //println("delta(dag(ci),prime(ci)) = ",delta(dag(ci),prime(ci)));
         //print("realPart(rho) = ",realPart(rho));
-        auto tr = (delta(dag(ci),prime(ci))*realPart(rho)).real();
+        auto tr = (delta(dag(ci),prime(ci))*realPart(rho)).elt();
         if(tr > 1E-16) rho *= 1./tr;
         }
 
@@ -329,8 +339,8 @@ denmatDecomp(ITensor const& AA,
     if(args.getBool("UseOrigM",false))
         {
         args.add("Cutoff",-1);
-        args.add("Minm",dim(mid));
-        args.add("Maxm",dim(mid));
+        args.add("MinDim",dim(mid));
+        args.add("MaxDim",dim(mid));
         }
 
     if(args.getBool("TraceReIm",false))
@@ -360,6 +370,11 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in diagHermitian: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in diagHermitian: Arg Minm is deprecated in favor of MinDim.");
+
     //TODO: create tag convention
     if(!args.defined("Tags")) args.add("Tags","Link");
 
@@ -368,7 +383,7 @@ diagHermitian(ITensor const& M,
     // on its prime level spacing
     //
     auto k = M.inds().front();
-    auto kps = stdx::reserve_vector<int>(ord(M));
+    auto kps = stdx::reserve_vector<int>(order(M));
     for(auto& i : M.inds()) if(equalsIgnorePrime(i,k)) kps.push_back(i.primeLevel());
     if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
         {
@@ -384,7 +399,7 @@ diagHermitian(ITensor const& M,
     //pdiff == spacing between lower and higher prime level index pairs
     auto pdiff = mdiff-idiff;
 
-    auto inds = stdx::reserve_vector<Index>(ord(M)/2);
+    auto inds = stdx::reserve_vector<Index>(order(M)/2);
     for(auto& i : M.inds())
     for(auto& j : M.inds())
         {
@@ -393,7 +408,7 @@ diagHermitian(ITensor const& M,
             inds.push_back(i);
             }
         }
-    if(inds.empty() || ord(M)/2 != (long)inds.size()) 
+    if(inds.empty() || order(M)/2 != (long)inds.size())
         {
         Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
@@ -422,8 +437,8 @@ diagHermitian(ITensor const& M,
 //Return value is: (trunc_error,docut)
 std::tuple<Real,Real>
 truncate(Vector & P,
-         long maxm,
-         long minm,
+         long maxdim,
+         long mindim,
          Real cutoff,
          bool absoluteCutoff = false,
          bool doRelCutoff = false,
@@ -447,7 +462,7 @@ struct GetBlocks
               Index const& i2_)
       : is(is_)
         { 
-        if(is.r() != 2) Error("GetBlocks only supports rank 2 currently");
+        if(is.order() != 2) Error("GetBlocks only supports order 2 currently");
         transpose = (i2_ == is.front());
         }
     };

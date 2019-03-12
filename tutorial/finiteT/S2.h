@@ -30,7 +30,7 @@ makeS2(SiteSet const& sites,
 
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
-        auto& W = S2.Aref(n);
+        auto& W = S2.ref(n);
         W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
 
         W += sites.op("Id",n) * row(1) * col(1);
@@ -65,8 +65,8 @@ makeS2(SiteSet const& sites,
         //W.scaleTo(1.);
         }
 
-    S2.Aref(1) *= setElt(links.at(0)(2));
-    S2.Aref(N) *= setElt(dag(links.at(N))(1));
+    S2.ref(1) *= setElt(links.at(0)(2));
+    S2.ref(N) *= setElt(dag(links.at(N))(1));
 
     return S2;
     }
@@ -94,7 +94,7 @@ makeTotSz2(SiteSet const& sites,
 
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
-        auto& W = Sz2.Aref(n);
+        auto& W = Sz2.ref(n);
         W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
 
         W += sites.op("Id",n) * row(1) * col(1);
@@ -115,8 +115,8 @@ makeTotSz2(SiteSet const& sites,
         //W.scaleTo(1.);
         }
 
-    Sz2.Aref(1) *= setElt(links.at(0)(2));
-    Sz2.Aref(N) *= setElt(dag(links.at(N))(1));
+    Sz2.ref(1) *= setElt(links.at(0)(2));
+    Sz2.ref(N) *= setElt(dag(links.at(N))(1));
 
     return Sz2;
     }
@@ -146,7 +146,7 @@ makeSxy2(SiteSet const& sites,
 
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
-        auto& W = Sxy2.Aref(n);
+        auto& W = Sxy2.ref(n);
         W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
 
         W += sites.op("Id",n) * row(1) * col(1);
@@ -181,8 +181,8 @@ makeSxy2(SiteSet const& sites,
         //W.scaleTo(1.);
         }
 
-    Sxy2.Aref(1) *= setElt(links.at(0)(2));
-    Sxy2.Aref(N) *= setElt(dag(links.at(N))(1));
+    Sxy2.ref(1) *= setElt(links.at(0)(2));
+    Sxy2.ref(N) *= setElt(dag(links.at(N))(1));
 
     return Sxy2;
     }

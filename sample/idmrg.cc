@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     MPO H = Heisenberg(sites,{"Infinite=",true});
 
     auto sweeps = Sweeps(20);
-    sweeps.maxm() = 20,80,140,200;
+    sweeps.maxdim() = 20,80,140,200;
     sweeps.cutoff() = 1E-10,Args("Repeat",10),1E-14;
     sweeps.niter() = 3,2;
 
@@ -42,10 +42,10 @@ int main(int argc, char* argv[])
     //Measure correlation function by repeating infinite MPS unit cell 
     //
 
-    //Multiply in psi.A(0) which holds singular values
-    auto wf1 = psi.A(0)*psi.A(1); 
-    //oi is the outer IQIndex "sticking out" of the left edge of psi.A(0)
-    auto oi = uniqueIndex(psi.A(0),psi.A(1),"Link");
+    //Multiply in psi(0) which holds singular values
+    auto wf1 = psi(0)*psi(1); 
+    //oi is the outer IQIndex "sticking out" of the left edge of psi(0)
+    auto oi = uniqueIndex(psi(0),psi(1),"Link");
     //lcorr is the left side of the correlation function tensor
     //which grows site by site below
     auto lcorr = prime(wf1,oi)*sites.op("Sz",1)*dag(prime(wf1));
@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
     for(int j = 2; j <= xrange; ++j)
         {
         int n = (j-1)%N+1; //translate from j to unit cell site number
-        //ui is the IQIndex "sticking out" of the right edge of psi.A(n)
-        auto ui = uniqueIndex(psi.A(n),lcorr,"Link");
-        //prime ui so it contracts with the "bra" tensor on top = dag(prime(psi.A(n)))
-        Real val = (dag(prime(psi.A(n)))*lcorr*prime(psi.A(n),ui)*sites.op("Sz",n)).real();
+        //ui is the IQIndex "sticking out" of the right edge of psi(n)
+        auto ui = uniqueIndex(psi(n),lcorr,"Link");
+        //prime ui so it contracts with the "bra" tensor on top = dag(prime(psi(n)))
+        Real val = (dag(prime(psi(n)))*lcorr*prime(psi(n),ui)*sites.op("Sz",n)).elt();
         printfln("%d %.20f",j,val);
-        lcorr *= psi.A(n);
-        lcorr *= dag(prime(psi.A(n),"Link"));
+        lcorr *= psi(n);
+        lcorr *= dag(prime(psi(n),"Link"));
         }
 
     return 0;

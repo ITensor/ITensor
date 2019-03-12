@@ -56,7 +56,7 @@ class QCombiner
         for(auto j : itensor::range(cinds))
             RB.nextIndex(cinds[j].nblock());
         R_ = RB.build();
-        store_.resize(area(R_));
+        store_.resize(dim(R_));
         }
 
     explicit

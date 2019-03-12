@@ -25,6 +25,10 @@ nmultMPO(MPO const& Aorig,
          MPO& res,
          Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in nmultMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in nmultMPO: Arg Minm is deprecated in favor of MinDim.");
 
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
 
@@ -48,9 +52,9 @@ nmultMPO(MPO const& Aorig,
     B.primeall();
 
     res=A;
-    auto siA = uniqueIndex(A.A(1),B.A(1),A.A(2));
-    auto siB = uniqueIndex(B.A(1),A.A(1),B.A(2));
-    res.Aref(1) = ITensor(siA,siB,linkInd(A,1));
+    auto siA = uniqueIndex(A(1),B(1),A(2));
+    auto siB = uniqueIndex(B(1),A(1),B(2));
+    res.ref(1) = ITensor(siA,siB,linkInd(A,1));
 
     //Print(A);
     //Print(B);
@@ -60,27 +64,27 @@ nmultMPO(MPO const& Aorig,
         {
         if(i == 1) 
             { 
-            clust = A.A(i) * B.A(i); 
+            clust = A(i) * B(i); 
             }
         else       
             { 
-            clust = nfork * A.A(i) * B.A(i); 
+            clust = nfork * A(i) * B(i); 
             }
 
         if(i == N-1) break;
 
         nfork = ITensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
 
-        denmatDecomp(clust,res.Aref(i),nfork,Fromleft,args);
+        denmatDecomp(clust,res.ref(i),nfork,Fromleft,args);
 
-        auto mid = commonIndex(res.A(i),nfork,"Link");
+        auto mid = commonIndex(res(i),nfork,"Link");
         mid.dag();
-        auto siA = uniqueIndex(A.A(i+1),A.A(i),A.A(i+2),B.A(i+1));
-        auto siB = uniqueIndex(B.A(i+1),B.A(i),B.A(i+2),A.A(i+1));
-        res.Aref(i+1) = ITensor(mid,siA,siB,rightLinkInd(res,i+1));
+        auto siA = uniqueIndex(A(i+1),A(i),A(i+2),B(i+1));
+        auto siB = uniqueIndex(B(i+1),B(i),B(i+2),A(i+1));
+        res.ref(i+1) = ITensor(mid,siA,siB,rightLinkInd(res,i+1));
         }
 
-    nfork = clust * A.A(N) * B.A(N);
+    nfork = clust * A(N) * B(N);
 
     res.svdBond(N-1,nfork,Fromright, args);
     for(auto i : range1(N))
@@ -88,10 +92,10 @@ nmultMPO(MPO const& Aorig,
         if(i < N)
             {
             auto l = linkInd(res,i);
-            res.Aref(i).noPrime(l);
-            res.Aref(i+1).noPrime(l);
+            res.ref(i).noPrime(l);
+            res.ref(i+1).noPrime(l);
             }
-        res.Aref(i).mapPrime(2,1);
+        res.ref(i).mapPrime(2,1);
         }
     res.orthogonalize();
 
@@ -103,8 +107,13 @@ applyMPO(MPO const& K,
          MPS const& x,
          Args const& args)
     {
-    if(not x.A(1).store()) Error("In applyMPO, MPS is uninitialized.");
-    if(not K.A(1).store()) Error("In applyMPO, MPO is uninitialized.");
+    if(args.defined("Maxm"))
+      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
+
+    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
+    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
     auto method = args.getString("Method","DensityMatrix");
 
     //This is done here because fitApplyMPO() has a different default behavior
@@ -131,9 +140,14 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args const& args)
     {
-    if(not x.A(1).store()) Error("In applyMPO, MPS is uninitialized.");
-    if(not K.A(1).store()) Error("In applyMPO, MPO is uninitialized.");
-    if(not x0.A(1).store()) Error("In applyMPO, guess MPS is uninitialized.");
+    if(args.defined("Maxm"))
+      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
+
+    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
+    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
+    if(not x0(1).store()) Error("Error in applyMPO, guess MPS is uninitialized.");
     auto method = args.getString("Method","Fit");
 
     //This is done here because fitApplyMPO() has a different default behavior
@@ -161,8 +175,8 @@ exactApplyMPO(MPO const& K,
     {
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
-    auto maxm_set = args.defined("Maxm");
-    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
+    auto maxdim_set = args.defined("MaxDim");
+    if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
     //auto siteType = getIndexType(args,"SiteType",Site);
@@ -170,7 +184,7 @@ exactApplyMPO(MPO const& K,
     auto siteTags = getTagSet(args,"SiteTags","Site");
     auto linkTags = getTagSet(args,"LinkTags","Link");
 
-    if(not commonIndex(K.A(1),psi.A(1),siteTags))
+    if(not commonIndex(K(1),psi(1),siteTags))
         Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
 
     int plev = 14741;
@@ -187,37 +201,37 @@ exactApplyMPO(MPO const& K,
         //Modify prime levels of psic and Kc
         if(j == 1)
             {
-            auto ci = commonIndex(psi.A(1),psi.A(2),linkTags);
-            //psic.Aref(j) = dag(mapPrime(psi.A(j),siteTags,0,2,ci,0,plev));
+            auto ci = commonIndex(psi(1),psi(2),linkTags);
+            //psic.ref(j) = dag(mapPrime(psi(j),siteTags,0,2,ci,0,plev));
             //TODO: check this does the same thing
-            psic.Aref(j) = dag(prime(mapPrime(psi.A(j),0,2,siteTags),plev,ci));
-            ci = commonIndex(Kc.A(1),Kc.A(2),linkTags);
+            psic.ref(j) = dag(prime(mapPrime(psi(j),0,2,siteTags),plev,ci));
+            ci = commonIndex(Kc(1),Kc(2),linkTags);
             //TODO: check this does the same thing as before
-            Kc.Aref(j) = dag(prime(mapPrime(K.A(j),0,2,siteTags),plev,ci));
+            Kc.ref(j) = dag(prime(mapPrime(K(j),0,2,siteTags),plev,ci));
             }
         else
             {
-            //psic.Aref(j) = dag(mapPrime(psi.A(j),siteTags,0,2,linkTags,0,plev));
-            //Kc.Aref(j) = dag(mapPrime(K.A(j),siteTags,0,2,linkTags,0,plev));
+            //psic.ref(j) = dag(mapPrime(psi(j),siteTags,0,2,linkTags,0,plev));
+            //Kc.ref(j) = dag(mapPrime(K(j),siteTags,0,2,linkTags,0,plev));
             //TODO: check this does the same thing as before
-            psic.Aref(j) = dag(mapPrime(mapPrime(psi.A(j),0,2,siteTags),0,plev,linkTags));
-            Kc.Aref(j) = dag(mapPrime(mapPrime(K.A(j),0,2,siteTags),0,plev,linkTags));
+            psic.ref(j) = dag(mapPrime(mapPrime(psi(j),0,2,siteTags),0,plev,linkTags));
+            Kc.ref(j) = dag(mapPrime(mapPrime(K(j),0,2,siteTags),0,plev,linkTags));
             }
         }
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
     auto E = std::vector<ITensor>(N+1);
-    E.at(1) = psi.A(1)*K.A(1)*Kc.A(1)*psic.A(1);
+    E.at(1) = psi(1)*K(1)*Kc(1)*psic(1);
     for(int j = 2; j < N; ++j)
         {
-        E.at(j) = E.at(j-1)*psi.A(j)*K.A(j)*Kc.A(j)*psic.A(j);
-        //assert(rank(E[j])==4);
+        E.at(j) = E.at(j-1)*psi(j)*K(j)*Kc(j)*psic(j);
+        //assert(order(E[j])==4);
         }
     if(verbose) println("done");
 
     //O is the representation of the product of K*psi in the new MPS basis
-    auto O = psi.A(N)*K.A(N);
+    auto O = psi(N)*K(N);
     O.noPrime(siteTags);
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
@@ -226,36 +240,36 @@ exactApplyMPO(MPO const& K,
     auto spec = diagHermitian(rho,U,D,dargs);
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
 
-    res.Aref(N) = dag(U);
+    res.ref(N) = dag(U);
 
-    O = O*U*psi.A(N-1)*K.A(N-1);
+    O = O*U*psi(N-1)*K(N-1);
     O.noPrime(siteTags);
 
     for(int j = N-1; j > 1; --j)
         {
-        if(not maxm_set)
+        if(not maxdim_set)
             {
-            //Infer maxm from bond dim of original MPS
+            //Infer maxdim from bond dim of original MPS
             //times bond dim of MPO
-            //i.e. upper bound on rank of rho
-            auto cip = commonIndex(psi.A(j),E.at(j-1));
-            auto ciw = commonIndex(K.A(j),E.at(j-1));
-            auto maxm = (cip) ? dim(cip) : 1l;
-            maxm *= (ciw) ? dim(ciw) : 1l;
-            dargs.add("Maxm",maxm);
+            //i.e. upper bound on order of rho
+            auto cip = commonIndex(psi(j),E.at(j-1));
+            auto ciw = commonIndex(K(j),E.at(j-1));
+            auto maxdim = (cip) ? dim(cip) : 1l;
+            maxdim *= (ciw) ? dim(ciw) : 1l;
+            dargs.add("MaxDim",maxdim);
             }
         rho = E.at(j-1) * O * dag(prime(O,plev));
         //TODO: make sure this tag convention is working
         dargs.add("Tags=",format("Link,l=%d",j-1));
         auto spec = diagHermitian(rho,U,D,dargs);
-        O = O*U*psi.A(j-1)*K.A(j-1);
+        O = O*U*psi(j-1)*K(j-1);
         O.noPrime(siteTags);
-        res.Aref(j) = dag(U);
+        res.ref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
         }
 
     if(normalize) O /= norm(O);
-    res.Aref(1) = O;
+    res.ref(1) = O;
     res.leftLim(0);
     res.rightLim(2);
 
@@ -314,8 +328,8 @@ fitApplyMPO(Real fac,
     Sweeps sweeps(nsweep);
     auto cutoff = args.getReal("Cutoff",-1);
     if(cutoff >= 0) sweeps.cutoff() = cutoff;
-    auto maxm = args.getInt("Maxm",-1);
-    if(maxm >= 1) sweeps.maxm() = maxm;
+    auto maxdim = args.getInt("MaxDim",-1);
+    if(maxdim >= 1) sweeps.maxdim() = maxdim;
     fitApplyMPO(fac,psi,K,res,sweeps,args);
     }
 
@@ -337,18 +351,18 @@ fitApplyMPO(Real fac,
     res.position(1);
 
     auto BK = vector<ITensor>(N+2);
-    BK.at(N) = origPsi.A(N)*K.A(N)*dag(prime(res.A(N)));
+    BK.at(N) = origPsi(N)*K(N)*dag(prime(res(N)));
     for(auto n = N-1; n > 2; --n)
         {
-        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*dag(prime(res.A(n)));
+        BK.at(n) = BK.at(n+1)*origPsi(n)*K(n)*dag(prime(res(n)));
         }
 
     for(auto sw : range1(sweeps.nsweep()))
         {
         args.add("Sweep",sw);
         args.add("Cutoff",sweeps.cutoff(sw));
-        args.add("Minm",sweeps.minm(sw));
-        args.add("Maxm",sweeps.maxm(sw));
+        args.add("MinDim",sweeps.mindim(sw));
+        args.add("MaxDim",sweeps.maxdim(sw));
         args.add("Noise",sweeps.noise(sw));
 
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
@@ -361,17 +375,17 @@ fitApplyMPO(Real fac,
             //TODO: does this tag the correct bond, independent of the sweep direction?
             args.add("Tags",format("Link,l=%d",b));
 
-            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
-            lwfK *= K.A(b);
-            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
-            rwfK *= K.A(b+1);
+            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi(b) : origPsi(b));
+            lwfK *= K(b);
+            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi(b+1) : origPsi(b+1));
+            rwfK *= K(b+1);
 
             auto wfK = lwfK*rwfK;
             wfK.noPrime();
             wfK *= fac;
 
             if(normalize) wfK /= norm(wfK);
-            auto PH = LocalOp(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
+            auto PH = LocalOp(K(b),K(b+1),BK.at(b-1),BK.at(b+2));
             auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
 
             if(verbose)
@@ -383,11 +397,11 @@ fitApplyMPO(Real fac,
 
             if(ha == 1)
                 {
-                BK.at(b) = lwfK * dag(prime(res.A(b)));
+                BK.at(b) = lwfK * dag(prime(res(b)));
                 }
             else
                 {
-                BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
+                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
                 }
             }
         }
@@ -427,12 +441,12 @@ fitApplyMPO(Real mpsfac,
     vector<ITensor> B(N+2),
                    BK(N+2);
 
-    B.at(N) = psiA.A(N)*dag(prime(res.A(N),"Link"));
-    BK.at(N) = psiB.A(N)*K.A(N)*dag(prime(res.A(N)));
+    B.at(N) = psiA(N)*dag(prime(res(N),"Link"));
+    BK.at(N) = psiB(N)*K(N)*dag(prime(res(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psiA.A(n)*dag(prime(res.A(n),"Link"));
-        BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*dag(prime(res.A(n)));
+        B.at(n) = B.at(n+1)*psiA(n)*dag(prime(res(n),"Link"));
+        BK.at(n) = BK.at(n+1)*psiB(n)*K(n)*dag(prime(res(n)));
         }
 
 
@@ -440,13 +454,13 @@ fitApplyMPO(Real mpsfac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA.A(b) : psiA.A(b));
-            ITensor rwf = (B.at(b+2) ? psiA.A(b+1)*B.at(b+2) : psiA.A(b+1));
+            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA(b) : psiA(b));
+            ITensor rwf = (B.at(b+2) ? psiA(b+1)*B.at(b+2) : psiA(b+1));
 
-            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB.A(b) : psiB.A(b));
-            lwfK *= K.A(b);
-            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
-            rwfK *= K.A(b+1);
+            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB(b) : psiB(b));
+            lwfK *= K(b);
+            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB(b+1) : psiB(b+1));
+            rwfK *= K(b+1);
 
             ITensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
             wf.noPrime();
@@ -455,24 +469,24 @@ fitApplyMPO(Real mpsfac,
 
             if(ha == 1)
                 {
-                B.at(b) = lwf * dag(prime(res.A(b),"Link"));
-                BK.at(b) = lwfK * dag(prime(res.A(b)));
+                B.at(b) = lwf * dag(prime(res(b),"Link"));
+                BK.at(b) = lwfK * dag(prime(res(b)));
                 }
             else
                 {
-                B.at(b+1) = rwf * dag(prime(res.A(b+1),"Link"));
-                BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
+                B.at(b+1) = rwf * dag(prime(res(b+1),"Link"));
+                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
                 }
             }
         }
 
     auto olp = B.at(3);
-    olp *= psiA.A(2);
-    olp *= dag(prime(res.A(2),"Link"));
-    olp *= psiA.A(1);
-    olp *= dag(prime(res.A(1),"Link"));
+    olp *= psiA(2);
+    olp *= dag(prime(res(2),"Link"));
+    olp *= psiA(1);
+    olp *= dag(prime(res(1),"Link"));
 
-    return olp.real();
+    return olp.elt();
     }
 
 void
@@ -495,12 +509,12 @@ applyExpH(MPS const& psi,
                    B(N+2),
                    BH(N+2);
 
-    B.at(N) = psi.A(N)*dag(prime(psi.A(N),"Link"));
-    BH.at(N) = psi.A(N)*H.A(N)*dag(prime(psi.A(N)));
+    B.at(N) = psi(N)*dag(prime(psi(N),"Link"));
+    BH.at(N) = psi(N)*H(N)*dag(prime(psi(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psi.A(n)*dag(prime(psi.A(n),"Link"));
-        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*dag(prime(psi.A(n)));
+        B.at(n) = B.at(n+1)*psi(n)*dag(prime(psi(n),"Link"));
+        BH.at(n) = BH.at(n+1)*psi(n)*H(n)*dag(prime(psi(n)));
         }
 
     lastB = B;
@@ -524,23 +538,23 @@ applyExpH(MPS const& psi,
 
                 if(up)
                     {
-                    lwf = (B.at(b-1) ? B.at(b-1)*psi.A(b) : psi.A(b) );
-                    rwf = (B.at(b+2) ? B.at(b+2)*psi.A(b+1) : psi.A(b+1));
+                    lwf = (B.at(b-1) ? B.at(b-1)*psi(b) : psi(b) );
+                    rwf = (B.at(b+2) ? B.at(b+2)*psi(b+1) : psi(b+1));
 
-                    lwfH = (BH.at(b-1) ? BH.at(b-1)*last.A(b) : last.A(b));
-                    lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2) ? BH.at(b+2)*last.A(b+1) : last.A(b+1));
-                    rwfH *= H.A(b+1);
+                    lwfH = (BH.at(b-1) ? BH.at(b-1)*last(b) : last(b));
+                    lwfH *= H(b);
+                    rwfH = (BH.at(b+2) ? BH.at(b+2)*last(b+1) : last(b+1));
+                    rwfH *= H(b+1);
                     }
                 else //dn
                     {
-                    lwf = (B.at(b-1) ? B.at(b-1)*dag(prime(psi.A(b),"Link")) : dag(prime(psi.A(b),"Link")));
-                    rwf = (B.at(b+2) ? B.at(b+2)*dag(prime(psi.A(b+1),"Link")) : dag(prime(psi.A(b+1),"Link")));
+                    lwf = (B.at(b-1) ? B.at(b-1)*dag(prime(psi(b),"Link")) : dag(prime(psi(b),"Link")));
+                    rwf = (B.at(b+2) ? B.at(b+2)*dag(prime(psi(b+1),"Link")) : dag(prime(psi(b+1),"Link")));
 
-                    lwfH = (BH.at(b-1) ? BH.at(b-1)*dag(prime(last.A(b))) : dag(prime(last.A(b))));
-                    lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2) ? BH.at(b+2)*dag(prime(last.A(b+1))) : dag(prime(last.A(b+1))));
-                    rwfH *= H.A(b+1);
+                    lwfH = (BH.at(b-1) ? BH.at(b-1)*dag(prime(last(b))) : dag(prime(last(b))));
+                    lwfH *= H(b);
+                    rwfH = (BH.at(b+2) ? BH.at(b+2)*dag(prime(last(b+1))) : dag(prime(last(b+1))));
+                    rwfH *= H(b+1);
                     }
 
                 auto wf = noPrime(lwf*rwf) + mpofac*noPrime(lwfH*rwfH);
@@ -552,26 +566,26 @@ applyExpH(MPS const& psi,
                     {
                     if(ha == 1)
                         {
-                        B.at(b) = lwf * dag(prime(res.A(b),"Link"));
-                        BH.at(b) = lwfH * dag(prime(res.A(b)));
+                        B.at(b) = lwf * dag(prime(res(b),"Link"));
+                        BH.at(b) = lwfH * dag(prime(res(b)));
                         }
                     else
                         {
-                        B.at(b+1) = rwf * dag(prime(res.A(b+1),"Link"));
-                        BH.at(b+1) = rwfH * dag(prime(res.A(b+1)));
+                        B.at(b+1) = rwf * dag(prime(res(b+1),"Link"));
+                        BH.at(b+1) = rwfH * dag(prime(res(b+1)));
                         }
                     }
                 else //dn
                     {
                     if(ha == 1)
                         {
-                        B.at(b) = lwf * res.A(b);
-                        BH.at(b) = lwfH * res.A(b);
+                        B.at(b) = lwf * res(b);
+                        BH.at(b) = lwfH * res(b);
                         }
                     else
                         {
-                        B.at(b+1) = rwf * res.A(b+1);
-                        BH.at(b+1) = rwfH * res.A(b+1);
+                        B.at(b+1) = rwf * res(b+1);
+                        BH.at(b+1) = rwfH * res(b+1);
                         }
                     }
                 }
@@ -601,7 +615,7 @@ zipUpApplyMPO(MPS const& psi,
         Error("psi and res must be different MPS instances");
 
     //Real cutoff = args.getReal("Cutoff",psi.cutoff());
-    //int maxm = args.getInt("Maxm",psi.maxm());
+    //int maxdim = args.getInt("MaxDim",psi.maxdim());
 
     auto N = length(psi);
     if(length(K) != N) 
@@ -619,9 +633,9 @@ zipUpApplyMPO(MPS const& psi,
     /*
     cout << "Checking divergence in zip" << endl;
     for(int i = 1; i <= N; i++)
-	div(psi.A(i));
+	div(psi(i));
     for(int i = 1; i <= N; i++)
-	div(K.A(i));
+	div(K(i));
     cout << "Done Checking divergence in zip" << endl;
     */
 #endif
@@ -635,24 +649,24 @@ zipUpApplyMPO(MPS const& psi,
     int maxdim = 1;
     for(int i = 1; i < N; i++)
         {
-        if(i == 1) { clust = psi.A(i) * K.A(i); }
-        else { clust = nfork * (psi.A(i) * K.A(i)); }
+        if(i == 1) { clust = psi(i) * K(i); }
+        else { clust = nfork * (psi(i) * K(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
         Index oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
         nfork = ITensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.Aref(i), nfork,Fromleft,args);
-        Index mid = commonIndex(res.A(i),nfork);
+        denmatDecomp(clust, res.ref(i), nfork,Fromleft,args);
+        Index mid = commonIndex(res(i),nfork);
         //assert(mid.dir() == In);
         mid.dag();
         midsize[i] = dim(mid);
         maxdim = std::max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
-        res.Aref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
+        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
         }
-    nfork = clust * psi.A(N) * K.A(N);
+    nfork = clust * psi(N) * K(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
 	//throw ResultIsZero("nfork.iten size == 0");
 
@@ -673,12 +687,12 @@ zipUpApplyMPO(MPS const& psi,
 ///    int ord = args.getInt("ExpHOrder",50);
 ///    bool verbose = args.getBool("Verbose",false);
 ///    args.add("Cutoff",MIN_CUT);
-///    args.add("Maxm",MAX_M);
+///    args.add("MaxDim",MAX_DIM);
 ///
 ///    MPO Hshift(H.sites());
-///    Hshift.Aref(1) *= -Etot;
+///    Hshift.ref(1) *= -Etot;
 ///    Hshift.plusEq(H,args);
-///    Hshift.Aref(1) *= -tau;
+///    Hshift.ref(1) *= -tau;
 ///
 ///    vector<MPO > xx(2);
 ///    xx.at(0) = MPO(H.sites());
@@ -697,7 +711,7 @@ zipUpApplyMPO(MPS const& psi,
 ///            cout << o << " "; 
 ///            cout.flush();
 ///            }
-///        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
+///        if(o > 1) xx[1].ref(1) *= 1.0 / o;
 ///
 ///        K = sum(xx,args);
 ///        if(o > 1)
@@ -739,7 +753,7 @@ zipUpApplyMPO(MPS const& psi,
 //        if(doub == ndoub)
 //            {
 //            cout << "step " << doub << ", K is " << endl;
-//            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
+//            cout << "K.cutoff, K.maxdim are " << K.cutoff SP K.maxdim << endl;
 //            for(int i = 1; i <= N; i++)
 //                cout << i SP K.A[i];
 //            }

@@ -237,7 +237,7 @@ expect(const ITensor& phi) const
     {
     ITensor phip;
     product(phi,phip);
-    return (dag(phip) * phi).real();
+    return (dag(phip) * phi).elt();
     }
 
 ITensor inline LocalOp::
