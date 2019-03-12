@@ -552,6 +552,78 @@ operator+(typename IndexSetIter<T>::difference_type d,
     return x += d;
     } 
 
+
+//
+// IndexValIter - helper for iterInds
+//
+
+namespace detail {
+
+template<typename IndexT>
+struct IndexValIter
+    {
+    using indexval_type = typename IndexT::indexval_type;
+
+    IndexSetT<IndexT> const& is;
+    detail::GCounter count;
+    bool done = false;
+    IndexValIter(IndexSetT<IndexT> const& is_) 
+      : is(is_),
+        count(is_.size())
+        { 
+        for(auto n : range(is.size()))
+            {
+            count.setRange(n,0,is[n].m()-1);
+            }
+        }
+
+    IndexValIter
+    begin() const { return *this; }
+
+    IndexValIter
+    end() const 
+        { 
+        auto eit = *this;
+        eit.done = true;
+        //for(auto n : range(is.size())) 
+        //    {
+        //    eit.count.setRange(n,is[n].m()-1,is[n].m()-1);
+        //    }
+        return eit;
+        }
+
+    bool
+    operator!=(IndexValIter const& other) { return done != other.done; }
+
+    std::vector<indexval_type>
+    operator*() 
+        { 
+        auto res = std::vector<indexval_type>(is.size());
+        for(auto n : range(is.size())) 
+            {
+            res.at(n) = is[n](1+count[n]);
+            }
+        return res;
+        }
+
+    IndexValIter&
+    operator++()
+        {
+        ++count;
+        done = !count.notDone();
+        return *this;
+        }
+    };
+
+} //namespace detail
+
+template<class I>
+detail::IndexValIter<I>
+iterInds(IndexSetT<I> const& is)
+    {
+    return detail::IndexValIter<I>(is);
+    }
+
 } //namespace itensor
 
 #include "itensor/indexset_impl.h"
