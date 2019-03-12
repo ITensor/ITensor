@@ -301,7 +301,11 @@ diagHImpl(IQTensor    H,
         //We need to check that the number of states doesn't
         //go above m, which can happen if there are degeneracies
         total_m += this_m;
-        if(total_m > m) this_m -= (total_m-m);
+        if(total_m > m)
+          {
+          this_m += (m-total_m);
+          total_m = m;
+          }
 
         if(this_m == 0) 
             { 

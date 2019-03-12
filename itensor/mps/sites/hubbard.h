@@ -37,13 +37,22 @@ class HubbardSite
             }
         else //don't conserve Nf, only fermion parity
             {
-            if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Hubbard sites");
-
-             s = IQIndex{nameint("site=",n),
+            if(conserveSz)
+              {
+              s = IQIndex{nameint("site=",n),
                     Index(nameint("Emp ",n),1,Site), QN("Sz=", 0,"Pf=",0),
                     Index(nameint("Up ",n),1,Site),  QN("Sz=",+1,"Pf=",1),
                     Index(nameint("Dn ",n),1,Site),  QN("Sz=",-1,"Pf=",1),
                     Index(nameint("UpDn ",n),1,Site),QN("Sz=", 0,"Pf=",0)};
+              }
+            else
+              {
+              s = IQIndex{nameint("site=",n),
+                    Index(nameint("Emp ",n),1,Site), QN("Pf=",0),
+                    Index(nameint("Up ",n),1,Site),  QN("Pf=",1),
+                    Index(nameint("Dn ",n),1,Site),  QN("Pf=",1),
+                    Index(nameint("UpDn ",n),1,Site),QN("Pf=",0)};
+              }
             }
         }
 

@@ -187,13 +187,15 @@ exactApplyMPO(MPOt<Tensor> const& K,
               Args const& args)
     {
     auto cutoff = args.getReal("Cutoff",1E-13);
-    auto dargs = Args{"Cutoff",cutoff};
+    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     auto maxm_set = args.defined("Maxm");
-    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
     auto siteType = getIndexType(args,"SiteType",Site);
     auto linkType = getIndexType(args,"LinkType",Link);
+
+    auto dargs = Args{"Cutoff",cutoff,"IgnoreDegeneracy",ignore_degeneracy,"Verbose",verbose};
+    if(maxm_set) dargs.add("Maxm",args.getInt("Maxm"));
 
     if(noprime(findtype(K.A(1),Site)) != findtype(psi.A(1),Site))
         {
