@@ -144,9 +144,9 @@ class IndexSetT : public RangeT<index_type_>
     range() const { return *this; }
 
     // ---------------------------------------------
-    // Indexset arithmetic
-    // Useful for higher-order tensors index manipulation
-
+    // Indexset arithmetic & tools
+    // Useful additions for higher-order tensors index manipulation
+    
     // Boolean union A+B
     // Returns a new IndexSet with all the indices of A and B together
     IndexSetT operator+(IndexSetT &other)
@@ -217,6 +217,30 @@ class IndexSetT : public RangeT<index_type_>
                 }
             }
         return IndexSetT(inds);
+        }
+    
+    // Select from IndexSet by type
+    // This generalizes findtype() to multiple indices
+    IndexSetT select(IndexType type)
+        {
+            std::vector< index_type > inds;
+            for (auto& J : (*this))
+                {
+                    if (J.type() == type) inds.push_back(J);
+                }
+            return IndexSetT(inds);
+        }
+    
+    // Filter IndexSet by type
+    // This generalizes the complement of findtype() to multiple indices
+    IndexSetT filter(IndexType type)
+        {
+            std::vector< index_type > inds;
+            for (auto& J : (*this))
+                {
+                    if (J.type() != type) inds.push_back(J);
+                }
+            return IndexSetT(inds);
         }
     
     // Utility function

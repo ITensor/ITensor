@@ -17,6 +17,7 @@ auto i7 = Index("i7",7);
 auto i8 = Index("i8",8);
 auto i9 = Index("i9",9);
 auto i10 = Index("i10",10);
+auto x1 = Index("x2",2,Xtype);
 auto v1 = Index("v1",2,Vtype);
 auto w1 = Index("w1",2,Wtype);
 
@@ -123,6 +124,22 @@ SECTION("IndexSet Arithmetic")
         CHECK(!hasindex(C,i6));
         CHECK(hasindex(C,prime(i3)));
         CHECK(!hasindex(C,prime(i4)));
+    }
+    SECTION("Select")
+    {
+        IndexSet A(x1,v1,w1);
+        IndexSet B = A.select(Xtype);
+        CHECK(hasindex(B,x1));
+        CHECK(!hasindex(B,v1));
+        CHECK(!hasindex(B,w1));
+    }
+    SECTION("Filter")
+    {
+        IndexSet A(x1,v1,w1);
+        IndexSet B = A.filter(Xtype);
+        CHECK(!hasindex(B,x1));
+        CHECK(hasindex(B,v1));
+        CHECK(hasindex(B,w1));
     }
 }
 
