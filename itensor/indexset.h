@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
+#include <unordered_map>
 #include "itensor/util/safe_ptr.h"
 #include "itensor/index.h"
 #include "itensor/iqindex.h"
@@ -141,6 +142,94 @@ class IndexSetT : public RangeT<index_type_>
 
     parent const&
     range() const { return *this; }
+
+    // ---------------------------------------------
+    // Indexset arithmetic
+    // Useful for higher-order tensors index manipulation
+
+    // Boolean union A+B
+    // Returns a new IndexSet with all the indices of A and B together
+    IndexSetT operator+(IndexSetT &other)
+        {
+        std::unordered_map<std::string, bool> umap;
+        std::vector< index_type > inds;
+        // Note: I'm not an expert C++ programmer, this can certainly be done better
+        char buffer[16];
+        for (index_type i : (*this))
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            umap[std::string(buffer)] = 1;
+            inds.push_back(i);
+            }
+        for (index_type i : other)
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            if (umap.find(std::string(buffer)) == umap.end())
+                {
+                inds.push_back(i);
+                }
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Boolean difference A-B
+    // Returns a new IndexSet with indices of A that are not in B 
+    IndexSetT operator-(IndexSetT &other)
+        {
+        std::unordered_map<std::string, bool> umap;
+        std::vector< index_type > inds;
+        char buffer[16];
+        for (index_type i : other)
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            umap[std::string(buffer)] = 1;
+            }
+        for (index_type i : (*this))
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            if (umap.find(std::string(buffer)) == umap.end())
+                {
+                inds.push_back(i);
+                }
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Boolean intersection A*B
+    // Returns a new IndexSet with ALL common indices between A and B
+    // In contrast, with commonIndex() we can only get ONE common index of a given type and prime level
+    IndexSetT operator*(IndexSetT &other)
+        {
+        std::unordered_map<std::string, bool> umap;
+        std::vector< index_type > inds;
+        char buffer[16];
+        for (index_type i : (*this))
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            umap[std::string(buffer)] = 1;
+            }
+        for (index_type i : other)
+            {
+            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
+            if (umap.find(std::string(buffer)) != umap.end())
+                {
+                inds.push_back(i);
+                }
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Utility function
+    // some ITensor functions seem to only accept Index vectors as input, but
+    // not IndexSets. Why not?
+    // This gives us a handy way to get all the indices as a vector
+    std::vector< index_type > vector()
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this)) inds.push_back(i);
+        return inds;
+        }
+    // ---------------------------------------------
 
     void
     dag() { for(auto& J : *this) J.dag(); }

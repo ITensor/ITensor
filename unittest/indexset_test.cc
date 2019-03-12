@@ -80,6 +80,52 @@ SECTION("Constructors")
 
     }
 
+SECTION("IndexSet Arithmetic")
+{
+    SECTION("Union A+B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A + B;
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(hasindex(C,i3));
+        CHECK(hasindex(C,i4));
+        CHECK(hasindex(C,i5));
+        CHECK(hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(hasindex(C,prime(i4)));
+    }
+    SECTION("Intersection A*B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A * B;
+        CHECK(!hasindex(C,i1));
+        CHECK(!hasindex(C,i2));
+        CHECK(hasindex(C,i3));
+        CHECK(hasindex(C,i4));
+        CHECK(!hasindex(C,i5));
+        CHECK(!hasindex(C,i6));
+        CHECK(!hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
+    SECTION("Difference A-B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A - B;
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(!hasindex(C,i3));
+        CHECK(!hasindex(C,i4));
+        CHECK(!hasindex(C,i5));
+        CHECK(!hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
+}
+
 SECTION("PrimeLevelMethods")
 {
 SECTION("Prime All")
