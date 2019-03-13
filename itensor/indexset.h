@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
-#include <unordered_map>
 #include "itensor/util/safe_ptr.h"
 #include "itensor/index.h"
 #include "itensor/iqindex.h"
@@ -142,86 +141,77 @@ class IndexSetT : public RangeT<index_type_>
 
     parent const&
     range() const { return *this; }
+    
+    void
+    dag() { for(auto& J : *this) J.dag(); }
 
-    // ---------------------------------------------
+    void
+    swap(IndexSetT & other) { parent::swap(other); }
+
     // Indexset arithmetic & tools
-    // Useful additions for higher-order tensors index manipulation
-    
-    // Boolean union A+B
+    // Useful additions for higher-order tensors index manipulation    
+    // Set union between A and B
     // Returns a new IndexSet with all the indices of A and B together
-    IndexSetT operator+(IndexSetT &other)
+    IndexSetT
+    setUnion(IndexSetT const& other)
         {
-        std::unordered_map<std::string, bool> umap;
         std::vector< index_type > inds;
-        // Note: I'm not an expert C++ programmer, this can certainly be done better
-        char buffer[16];
-        for (index_type i : (*this))
-            {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            umap[std::string(buffer)] = 1;
-            inds.push_back(i);
-            }
+        for (index_type i : (*this)) inds.push_back(i);
         for (index_type i : other)
             {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            if (umap.find(std::string(buffer)) == umap.end())
-                {
-                inds.push_back(i);
-                }
+            if (!hasindex(*this, i)) inds.push_back(i);
             }
         return IndexSetT(inds);
         }
     
-    // Boolean difference A-B
-    // Returns a new IndexSet with indices of A that are not in B 
-    IndexSetT operator-(IndexSetT &other)
+    // Set difference between A and B
+    // Returns a new IndexSet with indices of A that are not in B
+    IndexSetT
+    setDifference(IndexSetT const& other)
         {
-        std::unordered_map<std::string, bool> umap;
         std::vector< index_type > inds;
-        char buffer[16];
-        for (index_type i : other)
-            {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            umap[std::string(buffer)] = 1;
-            }
         for (index_type i : (*this))
             {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            if (umap.find(std::string(buffer)) == umap.end())
-                {
-                inds.push_back(i);
-                }
+            if (!hasindex(other, i)) inds.push_back(i);
+            } 
+        return IndexSetT(inds);
+        }
+    
+    // Set symmetric difference between A and B
+    // Returns a new IndexSet with indices which are exclusive to either A or B, but not in both
+    IndexSetT
+    setSymmetricDifference(IndexSetT const& other)
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this))
+            {
+            if (!hasindex(other, i)) inds.push_back(i);
+            }
+        for (index_type i : other)
+            {
+            if (!hasindex(*this, i)) inds.push_back(i);
             }
         return IndexSetT(inds);
         }
     
-    // Boolean intersection A*B
+    // Set intersection
     // Returns a new IndexSet with ALL common indices between A and B
-    // In contrast, with commonIndex() we can only get ONE common index of a given type and prime level
-    IndexSetT operator*(IndexSetT &other)
+    // In contrast, commonIndex() can only get ONE common index of a given type and prime level
+    IndexSetT
+    setIntersection(IndexSetT const& other)
         {
-        std::unordered_map<std::string, bool> umap;
         std::vector< index_type > inds;
-        char buffer[16];
         for (index_type i : (*this))
             {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            umap[std::string(buffer)] = 1;
-            }
-        for (index_type i : other)
-            {
-            sprintf(buffer, "%x-%d", i.id(), i.primeLevel());
-            if (umap.find(std::string(buffer)) != umap.end())
-                {
-                inds.push_back(i);
-                }
+            if (hasindex(other, i)) inds.push_back(i);
             }
         return IndexSetT(inds);
         }
     
     // Select from IndexSet by type
     // This generalizes findtype() to multiple indices
-    IndexSetT select(IndexType type)
+    IndexSetT
+    selectType(IndexType type)
         {
             std::vector< index_type > inds;
             for (auto& J : (*this))
@@ -233,7 +223,8 @@ class IndexSetT : public RangeT<index_type_>
     
     // Filter IndexSet by type
     // This generalizes the complement of findtype() to multiple indices
-    IndexSetT filter(IndexType type)
+    IndexSetT
+    filterType(IndexType type)
         {
             std::vector< index_type > inds;
             for (auto& J : (*this))
@@ -253,13 +244,6 @@ class IndexSetT : public RangeT<index_type_>
         for (index_type i : (*this)) inds.push_back(i);
         return inds;
         }
-    // ---------------------------------------------
-
-    void
-    dag() { for(auto& J : *this) J.dag(); }
-
-    void
-    swap(IndexSetT & other) { parent::swap(other); }
 
     index_type const&
     front() const { return parent::front().ind; }

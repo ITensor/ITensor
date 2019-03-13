@@ -83,11 +83,11 @@ SECTION("Constructors")
 
 SECTION("IndexSet Arithmetic")
 {
-    SECTION("Union A+B")
+    SECTION("A union B")
     {
         IndexSet A(i1,i2,i3,prime(i3),i4);
         IndexSet B(i3,i4,prime(i4),i5,i6);
-        IndexSet C = A + B;
+        IndexSet C = A.setUnion(B);
         CHECK(hasindex(C,i1));
         CHECK(hasindex(C,i2));
         CHECK(hasindex(C,i3));
@@ -97,11 +97,11 @@ SECTION("IndexSet Arithmetic")
         CHECK(hasindex(C,prime(i3)));
         CHECK(hasindex(C,prime(i4)));
     }
-    SECTION("Intersection A*B")
+    SECTION("A intersection B")
     {
         IndexSet A(i1,i2,i3,prime(i3),i4);
         IndexSet B(i3,i4,prime(i4),i5,i6);
-        IndexSet C = A * B;
+        IndexSet C = A.setIntersection(B);
         CHECK(!hasindex(C,i1));
         CHECK(!hasindex(C,i2));
         CHECK(hasindex(C,i3));
@@ -111,11 +111,11 @@ SECTION("IndexSet Arithmetic")
         CHECK(!hasindex(C,prime(i3)));
         CHECK(!hasindex(C,prime(i4)));
     }
-    SECTION("Difference A-B")
+    SECTION("A difference B")
     {
         IndexSet A(i1,i2,i3,prime(i3),i4);
         IndexSet B(i3,i4,prime(i4),i5,i6);
-        IndexSet C = A - B;
+        IndexSet C = A.setDifference(B);
         CHECK(hasindex(C,i1));
         CHECK(hasindex(C,i2));
         CHECK(!hasindex(C,i3));
@@ -125,10 +125,24 @@ SECTION("IndexSet Arithmetic")
         CHECK(hasindex(C,prime(i3)));
         CHECK(!hasindex(C,prime(i4)));
     }
+    SECTION("A symmetric difference B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4,prime(i4));
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A.setSymmetricDifference(B);
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(!hasindex(C,i3));
+        CHECK(!hasindex(C,i4));
+        CHECK(hasindex(C,i5));
+        CHECK(hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
     SECTION("Select")
     {
         IndexSet A(x1,v1,w1);
-        IndexSet B = A.select(Xtype);
+        IndexSet B = A.selectType(Xtype);
         CHECK(hasindex(B,x1));
         CHECK(!hasindex(B,v1));
         CHECK(!hasindex(B,w1));
@@ -136,7 +150,7 @@ SECTION("IndexSet Arithmetic")
     SECTION("Filter")
     {
         IndexSet A(x1,v1,w1);
-        IndexSet B = A.filter(Xtype);
+        IndexSet B = A.filterType(Xtype);
         CHECK(!hasindex(B,x1));
         CHECK(hasindex(B,v1));
         CHECK(hasindex(B,w1));
