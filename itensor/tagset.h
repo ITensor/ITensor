@@ -109,7 +109,7 @@ operator==(TagSet const& t1, TagSet const& t2);
 
 bool
 operator!=(TagSet const& t1, TagSet const& t2);
-
+    
 bool
 hasTags(TagSet const& T, TagSet const& ts);
 

@@ -213,13 +213,11 @@ replaceTags(TagSet const& tsremove, TagSet const& tsadd)
 std::ostream&
 operator<<(std::ostream & s, TagSet const& ts)
     {
-    s << "\"";
     for(auto i : range(size(ts)))
         {
         s << ts[i];
         if(i<size(ts)-1) s << ",";
         }
-    s << "\"";
     return s;
     }
 
