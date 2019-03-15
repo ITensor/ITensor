@@ -229,7 +229,7 @@ product(ITensor const& phi,
             phip *= R();
         }
 
-    phip.mapPrime(1,0);
+    phip.replaceTags("1","0");
     }
 
 Real inline LocalOp::
@@ -262,7 +262,7 @@ deltaRho(ITensor const& AA,
     drho *= dag(prime(drho,ci));
 
     //Expedient to ensure drho is Hermitian
-    drho = drho + dag(swapPrime(drho,0,1));
+    drho = drho + dag(swapTags(drho,"0","1"));
     drho /= 2.;
 
     return drho;
@@ -289,11 +289,11 @@ diag() const
         return Index();
         };
 
-    auto toTie = noPrime(findIndex(Op1,"Site",0));
+    auto toTie = noPrime(findIndex(Op1,"Site,0"));
     auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag.noPrime();
 
-    toTie = noPrime(findIndex(Op2,"Site",0));
+    toTie = noPrime(findIndex(Op2,"Site,0"));
     auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag *= noPrime(Diag2);
 
@@ -364,8 +364,8 @@ size() const
                 }
             }
 
-        size_ *= dim(findIndex(*Op1_,"Site",0));
-        size_ *= dim(findIndex(*Op2_,"Site",0));
+        size_ *= dim(findIndex(*Op1_,"Site,0"));
+        size_ *= dim(findIndex(*Op2_,"Site,0"));
         }
     return size_;
     }

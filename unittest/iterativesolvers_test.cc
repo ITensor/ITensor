@@ -24,7 +24,7 @@ class ITensorMap
     product(ITensor const& x, ITensor& b) const
         {
         b = *A_*x;
-        b.mapPrime(1,0);
+        b.replaceTags("1","0");
         }
 
     long
@@ -188,7 +188,7 @@ SECTION("GMRES (ITensor, Real)")
     // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
     gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).mapPrime(1,0)-b)/norm(b),0.0);
+    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
 
     }
 
@@ -204,7 +204,7 @@ SECTION("GMRES (ITensor, Complex)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).mapPrime(1,0)-b)/norm(b),0.0);
+    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
 
     }
 
@@ -225,7 +225,7 @@ SECTION("GMRES (ITensor, QN)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).mapPrime(1,0)-b)/norm(b),0.0);
+    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
 
     }
 

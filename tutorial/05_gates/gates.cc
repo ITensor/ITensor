@@ -118,7 +118,7 @@ main()
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     printfln("Energy = %.20f",overlap(psi,H,psi));
 

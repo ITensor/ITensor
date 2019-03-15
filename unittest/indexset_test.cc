@@ -25,13 +25,13 @@ SECTION("Constructors")
     SECTION("One")
         {
         auto is = IndexSet(i4);
-        CHECK(is.r() == 1);
+        CHECK(order(is) == 1);
         CHECK(dim(is) == 4);
         CHECK(is[0] == i4);
         CHECK(is[0] == is.index(1));
 
         is = IndexSet(i1);
-        CHECK(is.r() == 1);
+        CHECK(order(is) == 1);
         CHECK(dim(is) == 1);
         CHECK(is[0] == i1);
         CHECK(is[0] == is.index(1));
@@ -40,7 +40,7 @@ SECTION("Constructors")
     SECTION("Two")
         {
         auto is1 = IndexSet(i4,i3);
-        CHECK(is1.r() == 2);
+        CHECK(order(is1) == 2);
         CHECK(dim(is1) == 4*3);
         CHECK(is1[0] == i4);
         CHECK(is1[1] == i3);
@@ -374,40 +374,27 @@ SECTION("Map Prime")
     SECTION("Case 1")
         {
         auto is = IndexSet(i1,prime(i1));
-        is.mapPrime(0,2,i1);
+        is.setPrime(2,i1);
         CHECK(is[0] == prime(i1,2));
         CHECK(is[1] == prime(i1,1));
         }
     SECTION("Case 2")
         {
         auto is = IndexSet(i1,prime(i1));
-        is.mapPrime(1,2,i1);
+        is.setPrime(2,prime(i1));
         CHECK(is[0] == i1);
         CHECK(is[1] == prime(i1,2));
         }
     SECTION("Case 3")
         {
         auto is = IndexSet(i1,prime(i1),v1);
-        // TODO: allow listing a mix of TagSet and Index?
-        is.mapPrime(0,2,"Link");
-        is.mapPrime(0,4,v1);
+        is.replaceTags("0","2","Link");
+        is.setPrime(4,v1);
         CHECK(is[0] == prime(i1,2));
         CHECK(is[1] == prime(i1,1));
         CHECK(is[2] == prime(v1,4));
         }
     }
-
-// TODO: add back this functionality?
-// This should be called setPrime()
-//SECTION("PrimeLevel")
-//    {
-//    IndexSet is(i2,i3,prime(i2),i4);
-//    is.primeLevel(1,2,4,5);
-//    CHECK(is[0] == prime(i2,1));
-//    CHECK(is[1] == prime(i3,2));
-//    CHECK(is[2] == prime(i2,4));
-//    CHECK(is[3] == prime(i4,5));
-//    }
 
 } //PrimeLevelMethods
 

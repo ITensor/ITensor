@@ -33,8 +33,6 @@ class MPO : private MPS
     explicit operator bool() const { return Parent::operator bool(); }
 
     using Parent::length;
-    // Deprecate N()
-    using Parent::N;
     using Parent::sites;
 
     using Parent::rightLim;
@@ -43,11 +41,6 @@ class MPO : private MPS
     using Parent::operator();
     using Parent::ref;
     using Parent::set;
-
-    // Deprecated
-    using Parent::A;
-    using Parent::Aref;
-    using Parent::setA;
 
     using Parent::doWrite;
 
@@ -63,25 +56,13 @@ class MPO : private MPS
     plusEq(MPO const& R,
            Args const& args = Args::global());
 
-    using Parent::mapPrime;
-    using Parent::mapPrimeLink;
-    using Parent::noPrimeLink;
-
-    void 
-    prime()	// sites i,i' -> i',i'';  link:  l -> l'
-        {
-        for(int i = 1; i <= this->length(); i++)
-            {
-            ref(i).prime();
-            }
-        }
-
-    void 
-    primeall()
-        {
-        Global::warnDeprecated("MPO.primeall() is deprecated, use MPO.prime() instead");
-        prime();
-        }
+    using Parent::addTags;
+    using Parent::removeTags;
+    using Parent::replaceTags;
+    using Parent::swapTags;
+    using Parent::prime;
+    using Parent::setPrime;
+    using Parent::noPrime;
 
     void 
     svdBond(int b, 
@@ -106,6 +87,15 @@ class MPO : private MPS
         { 
         Parent::orthogonalize(args + Args("UseSVD")); 
         }
+
+    //
+    // Deprecations
+    //
+
+    using Parent::N;
+    using Parent::A;
+    using Parent::Aref;
+    using Parent::setA;
 
     }; //class MPO<Tensor>
 
@@ -145,6 +135,75 @@ operator*(Cplx z, MPO W) { return W *= z; }
 ////Convert an IQMPO to an MPO
 //MPO
 //toMPO(IQMPO const& K);
+
+template<typename... VarArgs>
+MPO
+addTags(MPO A,
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+    
+template<typename... VarArgs>
+MPO
+removeTags(MPO A,
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPO
+replaceTags(MPO A,
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPO
+swapTags(MPO A,
+         VarArgs&&... vargs)
+    {
+    A.swapTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPO
+prime(MPO A,
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A; 
+    }
+
+template<typename... VarArgs>
+MPO
+setPrime(MPO A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPO
+noPrime(MPO A,
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+Index inline
+siteIndex(MPO const& W, int b, TagSet const& tsmatch = TagSet("0"))
+    {
+    return uniqueIndex(W(b),{W(b-1),W(b+1)},tsmatch);
+    }
 
 inline int
 length(MPO const& W) { return W.length(); }

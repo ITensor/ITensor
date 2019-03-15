@@ -18,7 +18,7 @@ int main()
         ampo += 0.5,"S-",j,"S+",j+1;
         ampo +=     "Sz",j,"Sz",j+1;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     //Create MPS
     auto psi = MPS(sites); //random starting state

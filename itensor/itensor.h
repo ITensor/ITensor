@@ -132,41 +132,6 @@ class ITensor
     randomize(Args const& args = Args::global());
 
     //
-    // Index Prime Level Methods
-    //
-
-    template<typename... VarArgs>
-    ITensor& 
-    setPrime(VarArgs&&... vargs)
-        { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
-
-    template<typename... VarArgs>
-    ITensor& 
-    noPrime(VarArgs&&... vargs)
-        { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
-
-    template<typename... VarArgs>
-    ITensor& 
-    prime(VarArgs&&... vargs)
-        { is_.prime(std::forward<VarArgs>(vargs)...); return *this; }
-
-    template<typename... VarArgs>
-    ITensor& 
-    mapPrime(VarArgs&&... vargs)
-        { is_.mapPrime(std::forward<VarArgs>(vargs)...); return *this; }
-
-    template<typename... VarArgs>
-    ITensor& 
-    swapPrime(VarArgs&&... vargs)
-        { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
-
-    // Deprecations
-    template<typename... VarArgs>
-    ITensor& 
-    noprime(VarArgs&&... vargs)
-        { Error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
-
-    //
     // Index Tag Methods
     //
 
@@ -194,6 +159,25 @@ class ITensor
     ITensor&
     swapTags(VarArgs&&... vargs)
         { is_.swapTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    //
+    // Index Prime Level Methods
+    //
+
+    template<typename... VarArgs>
+    ITensor& 
+    setPrime(VarArgs&&... vargs)
+        { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor& 
+    noPrime(VarArgs&&... vargs)
+        { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    template<typename... VarArgs>
+    ITensor& 
+    prime(VarArgs&&... vargs)
+        { is_.prime(std::forward<VarArgs>(vargs)...); return *this; }
 
     //
     // Element Transformation Methods
@@ -385,6 +369,11 @@ class ITensor
     Cplx
     cplx(IndexVals&&... ivs) const;
 
+    template<typename... VarArgs>
+    ITensor& 
+    noprime(VarArgs&&... vargs)
+        { Error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
+
     }; // class ITensor
 
 //
@@ -418,49 +407,8 @@ Index const&
 index(ITensor const& A, RangeT<Index>::size_type I);
 
 //
-// ITensor prime level functions
-//
-
-template<typename... VarArgs>
-ITensor
-setPrime(ITensor A, 
-         VarArgs&&... vargs);
-
-template<typename... VarArgs>
-ITensor
-prime(ITensor A, 
-      VarArgs&&... vargs);
-
-template<typename... VarArgs>
-ITensor
-noPrime(ITensor A, 
-        VarArgs&&... vargs);
-
-template<typename... VarArgs>
-ITensor
-mapPrime(ITensor A, 
-         VarArgs&&... vargs);
-
-//
-//Return copy of a tensor with primeLevels plev1 and plev2 swapped
-//
-//For example, if T has indices i,i' (like a matrix or a site
-//operator) then swapPrime(T,0,1) will have indices i',i 
-//i.e. the transpose of T.
-//
-template<typename... VarArgs>
-ITensor
-swapPrime(ITensor A,
-          VarArgs&&... vargs);
-
-//
 // ITensor tag functions
 //
-
-template<typename... VarArgs>
-ITensor
-replaceTags(ITensor A,
-            VarArgs&&... vargs);
 
 template<typename... VarArgs>
 ITensor
@@ -479,43 +427,89 @@ removeTags(ITensor A,
 
 template<typename... VarArgs>
 ITensor
+replaceTags(ITensor A,
+            VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
 swapTags(ITensor A,
          VarArgs&&... vargs);
+
+//
+// ITensor prime level functions
+//
+
+template<typename... VarArgs>
+ITensor
+prime(ITensor A, 
+      VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+setPrime(ITensor A, 
+         VarArgs&&... vargs);
+
+template<typename... VarArgs>
+ITensor
+noPrime(ITensor A, 
+        VarArgs&&... vargs);
 
 bool
 hasIndex(ITensor const& T, Index const& I);
 
 Index
 findIndex(ITensor const& T,
-          TagSet const& tsmatch, 
-          int plmatch = -1);
-
-Index
-findIndexExact(ITensor const& T,
-               TagSet const& tsmatch, 
-               int plmatch = -1);
+          TagSet const& tsmatch);
 
 //Find index of tensor A (optionally having tags ts)
 //which is shared with tensor B
 Index
 commonIndex(ITensor const& A, 
+            ITensor const& B);
+
+Index
+commonIndex(ITensor const& A, 
             ITensor const& B, 
-            TagSet const& ts = TagSet(All));
+            TagSet const& tsmatch);
 
-
-//Find index of tensor A (of optional type t) 
+//Find index of tensor A
 //which is NOT shared by tensor B
 Index
 uniqueIndex(ITensor const& A, 
-            ITensor const& B, 
-            TagSet const& ts = TagSet(All));
+            ITensor const& B);
+
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& B,
+            TagSet const& tsmatch);
+
+Index
+uniqueIndex(ITensor const& A, 
+            std::vector<ITensor> const& B);
+
+Index
+uniqueIndex(ITensor const& A, 
+            std::vector<ITensor> const& B,
+            TagSet const& tsmatch);
+
+Index
+uniqueIndex(ITensor const& A,
+            std::initializer_list<ITensor> B);
+
+Index
+uniqueIndex(ITensor const& A,
+            std::initializer_list<ITensor> B,
+            TagSet const& tsmatch);
 
 template<typename... Tensors> 
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& T1,
             ITensor const& T2,
-            Tensors const&... Tens);
+            Tensors const&... Tens)
+    {
+    return uniqueIndex(A,std::vector<ITensor>({T1,T2,Tens...}));
+    }
 
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor

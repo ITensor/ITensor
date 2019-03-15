@@ -94,15 +94,16 @@ addAssumeOrth(MPSType      & L,
     auto N = length(L);
     if(length(R) != N) Error("Mismatched MPS sizes");
 
-    L.mapPrimeLink(0,4);
+    // TODO: implement this for MPS, MPO
+    L.replaceTags("0","4","Link");
 
     auto first = vector<ITensor>(N);
     auto second = vector<ITensor>(N);
 
     for(auto i : range1(N-1))
         {
-        auto l1 = rightLinkInd(L,i);
-        auto l2 = rightLinkInd(R,i);
+        auto l1 = rightLinkIndex(L,i);
+        auto l2 = rightLinkIndex(R,i);
         auto r = l1;
         plussers(l1,l2,r,first[i],second[i]);
         }
@@ -115,7 +116,7 @@ addAssumeOrth(MPSType      & L,
         }
     L.ref(N) = dag(first.at(N-1)) * L(N) + dag(second.at(N-1)) * R(N);
 
-    L.noPrimeLink();
+    L.noPrime("Link");
 
     L.orthogonalize(args);
 
@@ -189,14 +190,14 @@ checkQNs(MPS const& psi)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(rightLinkInd(psi,i).dir() != In) 
+        if(rightLinkIndex(psi,i).dir() != In) 
             {
             println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             return false;
             }
         if(i > 1)
             {
-            if(leftLinkInd(psi,i).dir() != Out) 
+            if(leftLinkIndex(psi,i).dir() != Out) 
                 {
                 println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 return false;
@@ -208,12 +209,12 @@ checkQNs(MPS const& psi)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(rightLinkInd(psi,i).dir() != Out) 
+        if(rightLinkIndex(psi,i).dir() != Out) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             return false;
             }
-        if(leftLinkInd(psi,i).dir() != In) 
+        if(leftLinkIndex(psi,i).dir() != In) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             return false;

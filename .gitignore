@@ -18,6 +18,7 @@ sample/exthubbard-g
 sample/idmrg
 sample/idmrg-g
 tutorial/trg/trg
+tutorial/trg/trg-g
 this_dir.mk
 options.mk
 .exrc

@@ -368,7 +368,7 @@ SECTION("toExpH ITensor (no QNs)")
         auto anrm2 = overlap(apsi,apsi);
         CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
         }
-    }
+  }
 
 SECTION("toExpH ITensor (QN conservation)")
     {

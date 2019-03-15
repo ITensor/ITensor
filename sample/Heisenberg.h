@@ -63,7 +63,7 @@ init_()
 
     for(int l = 0; l <= N_; ++l) 
         {
-        auto ts = format("Link,MPO,%d",l);
+        auto ts = format("Link,l=%d",l);
         links.at(l) = Index(QN({"Sz", 0}),3,
                             QN({"Sz",-2}),1,
                             QN({"Sz",+2}),1,

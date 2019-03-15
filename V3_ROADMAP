@@ -1,13 +1,11 @@
 (! means necessary / blocker for releasing v3)
 
 # Library code:
-o Priming and tagging functions for MPS and MPO
-  o primeall(MPO) -> prime(MPO)
-! Finalize tags interface
-  o Add access of prime level through the tag system
-  ? Remove whitespace from tags
+! Finalize tag and prime function interface
+    ! Add tests for tag and prime functions on ITensor, MPS, MPO
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
+o Remove support for zipUpApplyMPO, exactApplyMPO, fitApplyMPO
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)
@@ -20,10 +18,6 @@ o Add alternative to niter which starts at 1. Solver iterations? Eigen iteration
     X how to make QN ITensors
     - removeQNs ITensor function
     - removeQNs MPS function
-    - add permute(ITensor,...) function which takes "..." string
-      -> Matt: I think we can remove this functionality, it is complicated code
-         and I think tags replace the only use case I had, which we grabbing
-         an Index after an SVD
   o List of deprecrations/guide to update code
   o ITensor book
     - Update TRG to show use of Tags
@@ -51,6 +45,11 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation deprecations (for upgrade guide):
  - Index operations:
+  o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
+    -> `mapPrime(1,2,"0")` doesn't make sense, many uses of `mapPrime` are superseded
+        by `replaceInds`, `replaceTags`, `setPrime`, etc.
+  o Prime level can be accessed through TagSet, i.e. `findIndex(A,"Site,1")` means Index with
+    tag "Site" and prime level 1
   o `sim(Index)` now by default keeps the prime level of the Index instead of setting to zero
   o `Index.dir(Arrow)` -> `Index.setDir(Arrow)`
   o Added `dir(Index)` as preferred alternative to `Index.dir()`
@@ -61,10 +60,14 @@ Common operation deprecations (for upgrade guide):
   o Added `id(Index)` as preferred alternative to `Index.id()`
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
-  o Add findIndex(ITensor,TagSet,int) -> Index, which finds the Index in the ITensor 
-    containing certain tags and matching an optional prime level
+  o Add findIndex(ITensor,TagSet) -> Index, which finds the Index in the ITensor 
+    containing certain tags
   o Remove findType, use findIndex instead
  - ITensor operations:
+  o Added `uniqueIndex(A,{B,C}[,ts])` notation for getting the unique index under
+    a certain tag constraint
+  o Allow tag and prime functions to accept multiple indices for matching
+    o Also allow IndexSet for matching
   o Add `inds(ITensor)` as preferred alternative to `ITensor.inds()`
   o Add `index(ITensor,int)` as preferred alternative to `ITensor.index(int)`
   o New QN design:
@@ -89,6 +92,10 @@ Common operation deprecations (for upgrade guide):
   o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
   o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
  - MPS operations:
+  o Added `addTags(MPS,...)`, `replaceTags(MPS,...)`, `prime(MPS,...)`, etc.
+  o Add `linkIndex(MPS,int)` and `siteIndex(MPS,int)` to get link and site indices
+  o Add `sites(MPS)` as alterative to `MPS.sites()` to get SiteSet
+  o Deprecate `MPO.primeall()` in favor of `MPO.prime()`
   o psi.A(i) -> psi(i), psi.Aref(i) -> psi.ref(i), psi.setA(i,T) -> psi.set(i,T) (no warning or error)
   o psi.N() -> length(psi)
   o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
@@ -109,6 +116,9 @@ Common operation deprecations (for upgrade guide):
   o Add randomMPS(InitState) function for QNs and no QNs
   o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
  - MPO operations:
+  o Add `linkIndex(MPO,int)` and `siteIndex(MPO,int[,TagSet])` to get link and site indices
+    -> Since there are two site indices, one can use a TagSet like "0" or "1" to decide which site index to grab
+  o primeall(MPO) -> prime(MPO)
   o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
    o Add deprecation warning to MPO(AutoMPO), telling people to switch
      to toMPO(AutoMPO)
@@ -129,9 +139,7 @@ Recent commits to v2 (master branch):
 Optional (possibly post V3, because not breaking changes):
  --> TODO: add these as issues on Github
 o Remove "Link" and "Site" from MPS and MPO functions
-  o linkInd(psi,b)
-  o rightLinkInd(psi,b)
-  o leftLinkInd(psi,b)
+  -> Instead use uniqueIndex, commonIndex, siteIndex, linkIndex, etc.
   o DMRG, applyMPO, etc.
 o Implement randomMPS(InitState,m>1)
   o Make initial MPS from initstate, then apply a random unitary circuit
@@ -143,15 +151,11 @@ o Generalize the convention for diagHermitian to accept a general pair of indice
   {ia,ja,ka,...,ib,jb,kb...} where ia==replaceTags(ib,tags(ib),tags(ia)), etc.
 o Generalize the convention of DMRG and applyMPO to accept MPOs with more general
   tag conventions, not just {s1,s2,...,s1',s2',...}
-? Change how MPS and MPO tensors are accessed
-  o Make psi(b) get the MPS/MPO tensor at site b
-  o psi.A(b) or psi.Aref(b) gets a reference to the MPS/MPO tensor in order to modify
-  o Otherwise, we can just prefer psi.set(b,...) as the method for modifying an MPS tensor?
 ? Remove SiteSet from MPS class.
   o Matt: this would make it so that people can use MPS without SiteSet, if they
     want to do that, since SiteSet is a bit constrained and requires a lot of code
     to make an MPS on a set of sites that is not defined in ITensor.
-    One can define siteInd(psi,b) = uniqueIndex(psi.A(b),psi.A(b-1),psi.A(b+1))
+    One can define siteIndex(psi,b) = uniqueIndex(psi.A(b),psi.A(b-1),psi.A(b+1))
     to get a site index, and siteInds(psi) to extract the sites as a siteset
     to make another MPS with the same sites.
   o Note that the MPO class could also have SiteSet removed, and the sites could

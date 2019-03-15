@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
-#include "itensor/smallstring.h"
 #include "itensor/tagset.h"
 #include "itensor/arrow.h"
 #include "itensor/qn.h"
@@ -71,7 +70,6 @@ class Index
     using IDGenerator = detail::RandomID;
     using id_type = IDGenerator::result_type;
     using indexval_type = IndexVal;
-    using prime_type = int;
     using extent_type = int;
 
     using qnstorage = std::vector<QNInt>;
@@ -80,7 +78,6 @@ class Index
     private:
     id_type id_;
     extent_type dim_;
-    prime_type primelevel_; 
     Arrow dir_ = Out;
     qn_ptr pd;
     TagSet tags_;
@@ -90,8 +87,9 @@ class Index
 
     explicit
     Index(long dim, 
-          TagSet const& ts = TagSet());
+          TagSet const& ts = TagSet("0"));
 
+    // Deprecated
     explicit
     Index(std::string s,
           long m)
@@ -104,11 +102,11 @@ class Index
           QN_Sizes const&... qnsizes);
 
     Index(qnstorage && qns, 
-          TagSet const& ts = TagSet());
+          TagSet const& ts = TagSet("0"));
 
     Index(qnstorage && qns, 
           Arrow dir,
-          TagSet const& ts);
+          TagSet const& ts = TagSet("0"));
 
     // Returns the dimension of this Index
     long 
@@ -116,7 +114,7 @@ class Index
 
     // Returns the prime level
     int 
-    primeLevel() const { return primelevel_; }
+    primeLevel() const { return tags_.primeLevel(); }
 
     // Returns the TagSet
     TagSet
@@ -155,11 +153,11 @@ class Index
 
     // Set tags
     Index&
-    setTags(const TagSet& t) { tags_ = t; return *this; }
+    setTags(const TagSet& t) { tags_.setTags(t); return *this; }
 
     // Set tags
     Index&
-    replaceTags(const TagSet& tsold, const TagSet& tsnew) { tags_.removeTags(tsold); tags_.addTags(tsnew); return *this; }
+    replaceTags(const TagSet& tsold, const TagSet& tsnew) { tags_.replaceTags(tsold,tsnew); return *this; }
 
     //Return an IndexVal with specified value
     IndexVal
@@ -208,6 +206,14 @@ class Index
     qn_ptr const&
     store() const { return pd; }
 
+    Index&
+    sim(Index const& I)
+      {
+      *this = I;
+      id_ = generateID();
+      return *this;
+      }
+
     private:
 
     void
@@ -255,9 +261,6 @@ bool
 operator==(Index const& i1, Index const& i2);
 bool 
 operator!=(Index const& i1, Index const& i2);
-
-bool
-equalsIgnorePrime(Index const& i1, Index const& i2);
 
 // Useful for sorting Index objects
 bool 
@@ -357,26 +360,9 @@ tags(Index I, std::string st);
 
 //
 // Check if Index I contains the tags tsmatch.
-// If tsmatch==TagSet(All), return true
 //
 bool inline
-hasTags(Index I, const TagSet& tsmatch) { return tsmatch==TagSet(All) || hasTags(tags(I),tsmatch); }
-
-//
-// Return true if Index I contains tags tsmatch and has prime level plmatch
-// If tsmatch==TagSet(All), Index I can have any tags
-// If plmatch < 0, Index I can have any prime level
-//
-bool inline
-matchTagsPrime(Index I, TagSet const& tsmatch, int plmatch) { return hasTags(I,tsmatch) && (plmatch<0 || plmatch==primeLevel(I)); }
-
-//
-// Return true if Index I has tags tsmatch and has prime level plmatch
-// If tsmatch==TagSet(All), Index I can have any tags
-// If plmatch < 0, Index I can have any prime level
-//
-bool inline
-matchTagsPrimeExact(Index I, TagSet const& tsmatch, int plmatch) { return tags(I)==tsmatch && (plmatch<0 || plmatch==primeLevel(I)); }
+hasTags(Index I, const TagSet& tsmatch) { return hasTags(tags(I),tsmatch); }
 
 bool inline
 hasQNs(Index const& I) { return I.nblock()!=0; }

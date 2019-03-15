@@ -23,7 +23,7 @@ computeGroundState(SpinHalf const& sites,
         ampo += 0.5*J2,"S-",j,"S+",j+2;
         ampo +=     J2,"Sz",j,"Sz",j+2;
         }
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
     auto psi = MPS(sites);
 

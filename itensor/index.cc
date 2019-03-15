@@ -54,9 +54,9 @@ Index()
     : 
     id_(0),
     dim_(1),
-    primelevel_(0),
-    tags_(TagSet())
+    tags_(TagSet("0"))
     {
+    if(primeLevel() < 0) setPrime(0);
     }
 
 Index::
@@ -64,18 +64,18 @@ Index(long m,
       TagSet const& t)
   : id_(generateID()),
     dim_(m),
-    primelevel_(0),
     tags_(t)
     { 
+    if(primeLevel() < 0) setPrime(0);
     } 
 
 
 Index& Index::
 setPrime(int plev) 
     { 
-    primelevel_ = plev; 
+    tags_.setPrime(plev);
 #ifdef DEBUG
-    if(primelevel_ < 0)
+    if(this->primeLevel() < 0)
         Error("Negative primeLevel");
 #endif
     return *this;
@@ -85,7 +85,7 @@ setPrime(int plev)
 Index& Index::
 noPrime()  
     {
-    primelevel_ = 0;
+    tags_.setPrime(0);
     return *this;
     }
 
@@ -93,9 +93,9 @@ noPrime()
 Index& Index::
 prime(int inc) 
     { 
-    primelevel_ += inc; 
+    tags_.prime(inc);
 #ifdef DEBUG
-    if(primelevel_ < 0)
+    if(this->primeLevel() < 0)
         {
         Error("Negative primeLevel");
         }
@@ -122,7 +122,7 @@ operator=(long val) const
 bool 
 operator==(Index const& i1, Index const& i2)
     { 
-    return (id(i1) == id(i2)) && (tags(i1) == tags(i2)) && (primeLevel(i1) == primeLevel(i2)); 
+    return (id(i1) == id(i2)) && (tags(i1) == tags(i2));
     }
 
 bool 
@@ -131,12 +131,8 @@ operator!=(Index const& i1, Index const& i2)
     return not operator==(i1,i2);
     }
 
-bool
-equalsIgnorePrime(Index const& i1, Index const& i2)
-    { 
-    return (id(i1) == id(i2)) && (tags(i1) == tags(i2));
-    }
-
+//TODO: what is this for? It doesn't make as much sense with
+//tags, but I guess we can compare tags with inequalities
 bool
 operator>(Index const& i1, Index const& i2)
     { 
@@ -158,56 +154,6 @@ operator<(Index const& i1, Index const& i2)
         }
     return dim(i1) < dim(i2);
     }
-
-Index
-tags(Index I, std::string str)
-  {
-  // Remove spaces from input
-  str.erase(std::remove(str.begin(),str.end(),' '),str.end());
-
-  std::string swapstr = "<->";
-  size_t swapfound = str.find(swapstr);
-  if(swapfound==std::string::npos)
-    {
-    std::string repstr = "->";
-    size_t repfound = str.find(repstr);
-    if(repfound==std::string::npos)
-      throw std::runtime_error("String in tags(Index,std::string) must contain '->' or '<->'");
-    std::string oldtags = str.substr(0,repfound);
-    std::string newtags = str.substr(repfound+repstr.length(),str.length());
-    if(oldtags=="")
-      {
-      I.addTags(newtags);
-      }
-    else if(hasTags(I,oldtags))
-      {
-      I.replaceTags(oldtags,newtags);
-      }
-    }
-  else
-    {
-    std::string tags1 = str.substr(0,swapfound);
-    std::string tags2 = str.substr(swapfound+swapstr.length(),str.length());
-    //I.swapTags(tags1,tags2);
-    auto ts1 = TagSet(tags1);
-    auto ts2 = TagSet(tags2);
-    auto hasts1 = hasTags(I,ts1);
-    auto hasts2 = hasTags(I,ts2);
-    if(hasts1 && hasts2)
-      {
-      return I;
-      }
-    else if(hasts1)
-      {
-      I.replaceTags(ts1,ts2);
-      }
-    else if(hasts2)
-      {
-      I.replaceTags(ts2,ts1);
-      }
-    }
-  return I;
-  }
 
 std::ostream& 
 operator<<(std::ostream & s, Index const& I)
@@ -232,6 +178,10 @@ operator<<(std::ostream & s, Index const& I)
             for(int n = 1; n <= primeLevel(I); ++n)
                 s << "'";
             }
+        }
+    else if(primeLevel(I) < 0) 
+        {
+        s << "'" << primeLevel(I) << " (WARNING: prime level of Index is negative, not well defined)";
         }
     if(hasQNs(I))
         {
@@ -292,12 +242,6 @@ bool
 operator==(IndexVal const& iv, Index const& I)
     {
     return iv.index == I;
-    }
-
-Index
-sim(Index const& I)
-    {
-    return Index(dim(I),tags(I)).prime(primeLevel(I));
     }
 
 string
@@ -433,6 +377,14 @@ class IQIndexDat
 #define IQINDEX_CHECK_NULL
 #endif
 
+Index
+sim(Index const& I)
+    {
+    Index J;
+    J.sim(I);
+    return J;
+    }
+
 void
 write(std::ostream & s, QNInt const& q)
     {
@@ -537,6 +489,7 @@ Index(qnstorage && ind_qn,
     { 
     dir_ = Out;
     makeStorage(std::move(ind_qn));
+    if(primeLevel() < 0) setPrime(0);
     }
 
 Index::
@@ -547,6 +500,7 @@ Index(qnstorage && ind_qn,
     { 
     dir_ = dir;
     makeStorage(std::move(ind_qn));
+    if(primeLevel() < 0) setPrime(0);
     }
 
 long
@@ -576,7 +530,6 @@ void Index::
 write(std::ostream& s) const 
     { 
     if(!bool(*this)) Error("Index::write: Index is default initialized");
-    itensor::write(s,primelevel_);
     itensor::write(s,tags_);
     itensor::write(s,id_);
     itensor::write(s,dim_);
@@ -588,7 +541,6 @@ write(std::ostream& s) const
 Index& Index::
 read(std::istream& s)
     {
-    itensor::read(s,primelevel_);
     itensor::read(s,tags_);
     if(Global::read32BitIDs())
         {
@@ -609,7 +561,7 @@ read(std::istream& s)
         pd = std::make_shared<IQIndexDat>(std::move(dat.store()));
 
 #ifdef DEBUG
-    if(primelevel_ < 0) Error("Negative primeLevel");
+    if(tags_.primeLevel() < 0) Error("Negative primeLevel");
 #endif
 
     return *this;

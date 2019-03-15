@@ -47,7 +47,7 @@ SECTION("Orthogonalize")
         auto li = commonIndex(W(n),W(n-1),"Link");
         CHECK(li==findIndex(W(n),format("l=%d",n-1)));
         CHECK(li==findIndex(W(n-1),format("l=%d",n-1)));
-        CHECK(sites(n)==findIndex(W(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(W(n),format("n=%d,0",n)));
         auto rho = W(n) * dag(prime(W(n),li));
         auto id = ITensor(li,prime(li));
         for(auto l : range1(dim(li)))
@@ -105,7 +105,7 @@ SECTION("Add MPOs")
         auto ln = commonIndex(C(n),C(n+1),"Link");
         CHECK(ln==findIndex(C(n),format("l=%d",n)));
         CHECK(ln==findIndex(C(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(C(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(C(n),format("n=%d,0",n)));
         }
 
     auto AA = overlap(A,A);
@@ -184,7 +184,7 @@ SECTION("applyMPO (DensityMatrix)")
         auto ln = commonIndex(H(n),H(n+1),"Link");
         CHECK(ln==findIndex(H(n),format("l=%d",n)));
         CHECK(ln==findIndex(H(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(H(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(H(n),format("n=%d,0",n)));
         }
 
     // Apply K to psi to entangle psi
@@ -196,7 +196,7 @@ SECTION("applyMPO (DensityMatrix)")
         auto ln = commonIndex(psi(n),psi(n+1),"Link");
         CHECK(ln==findIndex(psi(n),format("l=%d",n)));
         CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
@@ -206,7 +206,7 @@ SECTION("applyMPO (DensityMatrix)")
         auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
         CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
         CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
@@ -252,7 +252,7 @@ SECTION("applyMPO (Fit)")
         auto ln = commonIndex(psi(n),psi(n+1),"Link");
         CHECK(ln==findIndex(psi(n),format("l=%d",n)));
         CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
@@ -262,7 +262,7 @@ SECTION("applyMPO (Fit)")
         auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
         CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
         CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
@@ -275,7 +275,7 @@ SECTION("applyMPO (Fit)")
         auto ln = commonIndex(Hpsi_2(n),Hpsi_2(n+1),"Link");
         CHECK(ln==findIndex(Hpsi_2(n),format("l=%d",n)));
         CHECK(ln==findIndex(Hpsi_2(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi_2(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(Hpsi_2(n),format("n=%d,0",n)));
         }
 
     CHECK_EQUAL(checkMPOProd(Hpsi_2,H,psi,1E-10),true);
@@ -321,7 +321,7 @@ SECTION("errorMPOProd Scaling")
         auto ln = commonIndex(psi(n),psi(n+1),"Link");
         CHECK(ln==findIndex(psi(n),format("l=%d",n)));
         CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
         }
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
@@ -331,7 +331,7 @@ SECTION("errorMPOProd Scaling")
         auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
         CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
         CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
         }
 
     //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
@@ -369,7 +369,7 @@ SECTION("Overlap <psi|HK|phi>")
         K.Aref(j).randomize();
         H.Aref(j) *= 0.2;
         K.Aref(j) *= 0.3;
-        Hdag.Aref(j) = dag(swapPrime(H(j),0,1,"Site"));
+        Hdag.Aref(j) = dag(swapTags(H(j),"0","1","Site"));
         }
 
     auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
@@ -421,7 +421,7 @@ SECTION("Remove QNs from MPO")
         auto ln = commonIndex(a(n),a(n+1),"Link");
         CHECK(ln==findIndex(a(n),format("l=%d",n)));
         CHECK(ln==findIndex(a(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(a(n),format("n=%d",n),0));
+        CHECK(sites(n)==findIndex(a(n),format("n=%d,0",n)));
         }
 
     for(auto n : range1(N))

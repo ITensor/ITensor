@@ -12,6 +12,11 @@ Spectrum MPS::
 svdBond(int b, ITensor const& AA, Direction dir, 
         BigMatrixT const& PH, Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in svdBond: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in svdBond: Arg Minm is deprecated in favor of MinDim.");
+
     setBond(b);
     if(dir == Fromleft && b-1 > leftLim())
         {
@@ -121,25 +126,31 @@ normalize(MPS & psi)
     return nrm;
     }
 
+Index inline
+siteIndex(MPS const& psi, int b)
+    { 
+    return uniqueIndex(psi(b),{psi(b-1),psi(b+1)}); 
+    }
+
 template<typename MPSType>
 Index 
-linkInd(MPSType const& psi, int b)
+linkIndex(MPSType const& psi, int b)
     { 
-    return commonIndex(psi(b),psi(b+1),"Link"); 
+    return commonIndex(psi(b),psi(b+1)); 
     }
 
 template<typename MPSType>
 Index
-rightLinkInd(MPSType const& psi, int i)
+rightLinkIndex(MPSType const& psi, int i)
     { 
-    return commonIndex(psi(i),psi(i+1),"Link"); 
+    return commonIndex(psi(i),psi(i+1)); 
     }
 
 template<typename MPSType>
 Index
-leftLinkInd(MPSType const& psi, int i)
+leftLinkIndex(MPSType const& psi, int i)
     { 
-    return commonIndex(psi(i),psi(i-1),"Link"); 
+    return commonIndex(psi(i),psi(i-1)); 
     }
 
 Real inline
@@ -148,7 +159,7 @@ averageLinkDim(MPS const& psi)
     Real avgdim = 0;
     for(int b = 1; b < length(psi); ++b)
         {
-        avgdim += dim(linkInd(psi,b));
+        avgdim += dim(linkIndex(psi,b));
         }
     avgdim /= (length(psi)-1);
     return avgdim;

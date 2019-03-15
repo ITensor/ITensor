@@ -74,7 +74,7 @@ TEST_CASE("IndexTest")
 
         auto i2 = sim(prime(i,3));
         CHECK(dim(i2) == dim(i));
-        CHECK(tags(i2) == tags(i));
+        CHECK(hasTags(i2,"i"));
         CHECK(primeLevel(i2) == 3);
         }
 
@@ -105,7 +105,7 @@ TEST_CASE("IndexTest")
         CHECK(removeTags(iab1,"b") == ia);
         CHECK(removeTags(iab1,"a") == ib);
 
-        auto ic = setTags(iab1,"c");
+        auto ic = setTags(iab1,"c,0");
         CHECK(hasTags(ic,"c"));
 
         CHECK(hasTags(replaceTags(ic,"c","a"),"a"));
@@ -115,27 +115,28 @@ TEST_CASE("IndexTest")
         CHECK(hasTags(addTags(ic,"a,b"),"a,b,c"));
         }
 
-    SECTION("Tag Function")
-        {
-        auto i0 = Index(2);
-        
-        auto i = tags(i0, " -> i");
-        CHECK(hasTags(i,"i"));
+    SECTION("Access Prime Level from TagSet")
+      {
+      auto s = Index(3);
 
-        i = tags(i, " -> site");
-        CHECK(hasTags(i,"i,site"));
+      auto i = addTags(s,"i");
+      CHECK(hasTags(i,"i"));
+      CHECK(hasTags(i,"0"));
+      CHECK(primeLevel(i)==0);
 
-        i = tags(i, "i -> j");
-        CHECK(hasTags(i,"j,site"));
+      auto ip = replaceTags(i,"0","1");
+      CHECK(hasTags(ip,"i"));
+      CHECK(hasTags(ip,"1"));
+      CHECK(primeLevel(ip)==1);
+      CHECK(ip == replaceTags(s,"0","i,1"));
 
-        i = tags(i, "site -> ");
-        CHECK(hasTags(i,"j"));
+      auto x = replaceTags(ip,"i,1","x,3");
+      CHECK(hasTags(x,"x"));
+      CHECK(hasTags(x,"x,3"));
+      CHECK(primeLevel(x)==3);
+      CHECK(x == replaceTags(s,"0","x,3"));
 
-        i = tags(i, "j -> j,temp");
-        CHECK(hasTags(i,"j,temp"));
 
-        i = tags(i, "j,temp -> ");
-        CHECK(i==i0);
+      }
 
-        }
     }

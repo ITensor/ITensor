@@ -51,18 +51,22 @@ for(auto scale : range1(topscale))
     // A tag keeping track of the current scale
     auto scale_tag = format("scale=%d",scale);
 
+    // Get the upper-left and lower-right tensors
     auto Fl = ITensor(r,d);
     auto Fr = ITensor(l,u);
     factor(A,Fl,Fr,{"MaxDim=",maxdim,"ShowEigs=",true,
                     "Tags=",scale_tag});
+
     // Add the proper tags to the new indices
     Fl = addTags(Fl,"left",scale_tag);
     Fr = addTags(Fr,"right",scale_tag);
-
+ 
+    // Get the upper-right and lower-left tensors
     auto Fu = ITensor(l,d);
     auto Fd = ITensor(u,r);
     factor(A,Fu,Fd,{"MaxDim=",maxdim,"ShowEigs=",true,
                     "Tags=",scale_tag});
+
     // Add the proper tags to the new indices
     Fu = addTags(Fu,"up",scale_tag);
     Fd = addTags(Fd,"down",scale_tag);
@@ -93,11 +97,16 @@ for(auto scale : range1(topscale))
     
     A = Fl * Fu * Fr * Fd;
 
-    // Update the indices
+    // Update the indices by finding them with tags
     l = findIndex(A,"left");
     r = findIndex(A,"right");
     u = findIndex(A,"up");
     d = findIndex(A,"down");
+
+    // Alternatively, we could use:
+    // l = commonIndex(A,Fl); 
+    // r = commonIndex(A,Fr); 
+    // etc.
 
     // Normalize the current tensor and keep track of
     // the total normalization

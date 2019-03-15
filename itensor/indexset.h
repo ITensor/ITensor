@@ -94,10 +94,6 @@ class IndexSet : public RangeT<Index>
     long
     order() const { return parent::order(); }
     
-    // Deprecated
-    long
-    r() const { return this->order(); }
-    
     // 0-indexed access
     index_type &
     operator[](size_type i)
@@ -172,204 +168,92 @@ class IndexSet : public RangeT<Index>
     cend() const;
 
     //
-    // Prime methods
-    //
-
-    //Increase prime level of all indices by plinc
-    //Optionally, prime only indices containing tags tsmatch
-    void
-    prime(int plinc,
-          TagSet const& tsmatch = TagSet("All"));
-
-    //Increase prime level of all indices by 1
-    //Optionally, prime only indices containing tags tsmatch
-    void
-    prime(TagSet const& tsmatch = TagSet("All"))
-        {
-        prime(1,tsmatch);
-        }
-
-    //Increase prime level of index imatch by plinc
-    void
-    prime(int plinc,
-          Index const& imatch);
-
-    void
-    prime(Index const& imatch,
-          int plinc)
-        {
-        Global::warnDeprecated("prime(ITensor,Index,int) is deprecated, use prime(ITensor,int,Index) instead.");
-        prime(plinc,imatch);
-        }
-
-    //Increase prime level of indices imatch1,imatch2,... by plinc
-    template<typename... VarArgs>
-    void
-    prime(int plinc,
-          Index const& imatch1,
-          Index const& imatch2,
-          VarArgs&&... vargs);
-    
-    //Increase prime level of indices imatch1,imatch2,... by plinc1,plinc2,...
-    //template<typename... VarArgs>
-    //void
-    //prime(int plinc1,
-    //      Index const& imatch1,
-    //      int plinc2,
-    //      Index const& imatch2,
-    //      VarArgs&&... vargs);
-
-    //Increase prime level of indices imatch1,imatch2,... by 1
-    template<typename... VarArgs>
-    void
-    prime(Index const& imatch1,
-          VarArgs&&... vargs)
-        {
-        prime(1,imatch1,vargs...);
-        }
-
-    //Set the prime level of all indices to plnew
-    //Optionally, only set the prime levels of indices containing tags tsmatch
-    void
-    setPrime(int plnew,
-             TagSet const& tsmatch = TagSet("All"));
-
-    //Set the prime level of Index imatch to plnew
-    void
-    setPrime(int plnew,
-             Index const& imatch);
-
-    template<typename... VarArgs>
-    void
-    setPrime(int plnew,
-             Index const& imatch1,
-             Index const& imatch2,
-             VarArgs&&... vargs);
-
-    //TODO: consider this version
-    //template<typename... VarArgs>
-    //void
-    //setPrime(int plnew1,
-    //         Index const& imatch1,
-    //         int plnew2,
-    //         Index const& imatch2,
-    //         VarArgs&&... vargs);
-
-    template<typename... VarArgs>
-    void
-    noPrime(VarArgs&&... vargs)
-        {
-        setPrime(0,vargs...);
-        }
-
-    void
-    mapPrime(int plold, int plnew,
-             TagSet const& tsmatch = TagSet("All"));
-
-    void
-    mapPrime(int plold, int plnew,
-             Index const& imatch);
-
-    void
-    mapprime(Index const& imatch,
-             int plold, int plnew)
-        {
-        Global::warnDeprecated("mapprime(Index,int,int) is deprecated, use mapPrime(int,int,Index) instead.");
-        mapPrime(plold,plnew,imatch);
-        }
-
-    //TODO: consider this version
-    //template<typename... VarArgs>
-    //void
-    //mapPrime(int plold, int plnew,
-    //         Index const& imatch1,
-    //         Index const& imatch2,
-    //         VarArgs&&... vargs);
-
-    //TODO: consider this version
-    //template<typename... VarArgs>
-    //void
-    //mapPrime(int plold1, int plnew1,
-    //         Index const& imatch1,
-    //         int plold2, int plnew2,
-    //         Index const& imatch2,
-    //         VarArgs&&... vargs);
-
-    template<typename... VarArgs>
-    void
-    swapPrime(int pl1, int pl2,
-              VarArgs&&... vargs);
-
-    //
     // Tag methods
     //
 
     void
-    replaceTags(TagSet const& tsold, 
-                TagSet const& tsnew, 
-                TagSet const& tsmatch = TagSet("All"),
-                int plmatch = -1);
-
-    void
-    replaceTags(TagSet const& tsold, 
-                TagSet const& tsnew, 
-                int plmatch)
-        {
-        replaceTags(tsold,tsnew,TagSet("All"),plmatch);
-        }
-
-    void
-    replaceTags(TagSet const& tsold, 
-                TagSet const& tsnew, 
-                Index const& imatch);
+    setTags(TagSet const& tsnew);
 
     void
     setTags(TagSet const& tsnew, 
-            TagSet const& tsmatch = TagSet("All"), 
-            int plmatch = -1);
+            IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    setTags(TagSet const& tsnew,
+            Index const& imatch1,
+            VarArgs&&... vargs)
+      {
+      setTags(tsnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
 
     void
     setTags(TagSet const& tsnew, 
-            int plmatch)
-        {
-        setTags(tsnew,TagSet("All"),plmatch);
-        }
+            TagSet const& tsmatch);
 
     void
-    setTags(TagSet const& tsnew, 
-            Index const& imatch);
+    addTags(TagSet const& tsadd);
 
     void
     addTags(TagSet const& tsadd, 
-            TagSet const& tsmatch = TagSet("All"), 
-            int plmatch = -1);
+            IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    addTags(TagSet const& tsadd,
+            Index const& imatch1,
+            VarArgs&&... vargs)
+      {
+      addTags(tsadd,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
 
     void
-    addTags(TagSet const& tsadd, 
-            int plmatch)
-        {
-        addTags(tsadd,TagSet("All"),plmatch);
-        }
+    addTags(TagSet const& tsadd,
+            TagSet const& tsmatch);
 
     void
-    addTags(TagSet const& tsadd, 
-            Index const& imatch);
-
-    void
-    removeTags(TagSet const& tsremove, 
-               TagSet const& tsmatch = TagSet("All"), 
-               int plmatch = -1);
-
-    void
-    removeTags(TagSet const& tsremove, 
-               int plmatch)
-        {
-        removeTags(tsremove,TagSet("All"),plmatch);
-        }
+    removeTags(TagSet const& tsremove);
 
     void
     removeTags(TagSet const& tsremove, 
-               Index const& imatch);
+               IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    removeTags(TagSet const& tsremove,
+               Index const& imatch1,
+               VarArgs&&... vargs)
+      {
+      removeTags(tsremove,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
+
+    void
+    removeTags(TagSet const& tsremove, 
+               TagSet const& tsmatch);
+
+    void
+    replaceTags(TagSet const& tsold, 
+                TagSet const& tsnew);
+
+    void
+    replaceTags(TagSet const& tsold, 
+                TagSet const& tsnew, 
+                IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    replaceTags(TagSet const& tsold,
+                TagSet const& tsnew,
+                Index const& imatch1,
+                VarArgs&&... vargs)
+      {
+      replaceTags(tsold,tsnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
+
+    void
+    replaceTags(TagSet const& tsold, 
+                TagSet const& tsnew,
+                TagSet const& tsmatch);
 
     template<typename... VarArgs>
     void
@@ -377,9 +261,110 @@ class IndexSet : public RangeT<Index>
              TagSet const& ts2,
              VarArgs&&... vargs);
 
+    //
+    // Integer tag convenience functions
+    //
+
+    //
+    // Set the integer tag of indices to plnew
+    //
+
+    void
+    setPrime(int plnew);
+
+    void
+    setPrime(int plnew,
+             IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    setPrime(int plnew,
+             Index const& imatch1,
+             VarArgs&&... vargs)
+      {
+      setPrime(plnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
+
+    void
+    setPrime(int plnew,
+             TagSet const& tsmatch);
+
+    template<typename... VarArgs>
+    void
+    noPrime(VarArgs&&... vargs)
+        {
+        setPrime(0,std::forward<VarArgs>(vargs)...);
+        }
+
+    //
+    // Increase the integer tag of indices by plinc
+    //
+
+    void
+    prime(int plinc);
+
+    void
+    prime()
+      {
+      prime(1);
+      }
+
+    template<typename... VarArgs>
+    void
+    prime(int plinc,
+          IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    prime(IndexSet const& ismatch)
+      {
+      prime(1,ismatch);
+      }
+
+    template<typename... VarArgs>
+    void
+    prime(int plinc,
+          Index const& imatch1,
+          VarArgs&&... vargs)
+      {
+      prime(plinc,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
+
+    template<typename... VarArgs>
+    void
+    prime(Index const& imatch1,
+          VarArgs&&... vargs)
+      {
+      prime(1,imatch1,std::forward<VarArgs>(vargs)...);
+      }
+
+    void
+    prime(int plinc,
+          TagSet const& tsmatch);
+
+    void
+    prime(TagSet const& tsmatch)
+      {
+      prime(1,tsmatch);
+      }
+ 
     // Remove QNs from all indices in the IndexSet
     void
     removeQNs();
+
+    //
+    // Deprecated
+    //
+
+    long
+    r() const { return this->order(); }
+    
+    void
+    prime(Index const& imatch,
+          int plinc)
+        {
+        Error("Error: .prime(Index,int) is no longer supported, use .prime(int,Index) instead.");
+        }
 
     };
 
@@ -409,16 +394,7 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
 // If none are found, return a default Index
 Index
 findIndex(IndexSet const& is,
-          TagSet const& tsmatch, 
-          int plmatch = -1);
-
-// Find the Index with a certain TagSet and prime level
-// If multiple indices are found, throw an error
-// If none are found, return a default Index
-Index
-findIndexExact(IndexSet const& is,
-               TagSet const& tsmatch, 
-               int plmatch = -1);
+          TagSet const& tsmatch);
 
 //
 //
@@ -449,12 +425,13 @@ sim(IndexSet & is,
 // return int j such that iset[j] == I.
 // If not found, returns -1
 //
-long
-indexPosition(IndexSet const& iset, 
-              Index const& I);
+int
+indexPosition(IndexSet const& is, 
+              Index const& imatch);
 
-//Index
-//findIndex(IndexSet const& iset, Arrow dir);
+std::vector<int>
+indexPositions(IndexSet const& is,
+               IndexSet const& ismatch);
 
 Arrow
 dir(IndexSet const& is, Index const& I);

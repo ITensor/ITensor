@@ -256,11 +256,6 @@ SECTION("Orthogonalize")
 
     auto opsi = psi;
 
-    //for(auto b : range1(length(psi)-1))
-    //    {
-    //    Print(linkInd(psi,b));
-    //    }
-
     psi.orthogonalize({"Cutoff",1E-16});
     CHECK_CLOSE(overlap(opsi,psi),1.0);
 
@@ -271,11 +266,6 @@ SECTION("Orthogonalize")
         CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
         CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
         }
-
-    //for(auto b : range1(length(psi)-1))
-    //    {
-    //    Print(linkInd(psi,b));
-    //    }
 
     for(int n = N; n > 1; --n)
         {
@@ -292,7 +282,7 @@ SECTION("Orthogonalize")
     psi.orthogonalize({"MaxDim=",10,"Cutoff=",1E-16});
     for(auto b : range1(length(psi)-1))
         {
-        CHECK(linkInd(psi,b).dim() <= 10);
+        CHECK(dim(linkIndex(psi,b)) <= 10);
         }
 
     for(int n = 1; n < N; ++n)

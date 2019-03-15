@@ -56,6 +56,11 @@ MPO& MPO::
 plusEq(MPO const& other_,
        Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in plusEq: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in plusEq: Arg Minm is deprecated in favor of MinDim.");
+
     if(doWrite())
         Error("operator+= not supported if doWrite(true)");
 
@@ -248,14 +253,14 @@ checkQNs(MPO const& H)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(rightLinkInd(H,i).dir() != In) 
+        if(rightLinkIndex(H,i).dir() != In) 
             {
             println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             Error("Incorrect Arrow in MPO");
             }
         if(i > 1)
             {
-            if(leftLinkInd(H,i).dir() != Out) 
+            if(leftLinkIndex(H,i).dir() != Out) 
                 {
                 println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 Error("Incorrect Arrow in MPO");
@@ -267,12 +272,12 @@ checkQNs(MPO const& H)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(rightLinkInd(H,i).dir() != Out) 
+        if(rightLinkIndex(H,i).dir() != Out) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             Error("Incorrect Arrow in MPO");
             }
-        if(leftLinkInd(H,i).dir() != In) 
+        if(leftLinkIndex(H,i).dir() != In) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             Error("Incorrect Arrow in MPO");
@@ -476,8 +481,8 @@ overlap(MPS const& psi,
         psidag.ref(i) = dag(prime(psi(i),2));
         }
     auto Hp = H;
-    Hp.mapPrime(1,2);
-    Hp.mapPrime(0,1);
+    Hp.replaceTags("1","2");
+    Hp.replaceTags("0","1");
 
     //scales as m^2 k^2 d
     auto L = phi(1) * K(1) * Hp(1) * psidag(1);
@@ -533,7 +538,7 @@ errorMPOProd(MPS const& psi2,
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.ref(j) = dag(swapPrime(K(j),0,1,"Site"));
+        Kd.ref(j) = dag(swapTags(K(j),"0","1","Site"));
         }
     err /= overlap(psi1,Kd,K,psi1);
     err = std::sqrt(std::abs(1.0+err));
@@ -553,7 +558,7 @@ checkMPOProd(MPS const& psi2,
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.ref(j) = dag(swapPrime(K(j),0,1,"Site"));
+        Kd.ref(j) = dag(swapTags(K(j),"0","1","Site"));
         }
     res += overlap(psi1,Kd,K,psi1);
     return res;

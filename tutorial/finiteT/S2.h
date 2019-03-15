@@ -17,7 +17,7 @@ makeS2(SiteSet const& sites,
     auto links = std::vector<IQIndex>(N+1);
     for(auto n : range(N+1))
         {
-        auto ts = format("Link,MPO,%d",n);
+        auto ts = format("Link,l=%d",n);
         links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0),
                               Index(1,ts),QN("Sz=",-2),
                               Index(1,ts),QN("Sz=",+2));

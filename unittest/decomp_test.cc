@@ -239,7 +239,7 @@ SECTION("ITensor diagHermitian")
         {
         auto i = Index(10);
         auto T = randomITensor(i,prime(i));
-        T += swapPrime(T,0,1);
+        T += swapTags(T,"0","1");
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,i));
@@ -252,7 +252,7 @@ SECTION("ITensor diagHermitian")
         auto i = Index(10);
         auto j = Index(4);
         auto T = randomITensor(i,prime(i),prime(j),j);
-        T += swapPrime(T,0,1);
+        T += swapTags(T,"0","1");
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,i));
@@ -266,7 +266,7 @@ SECTION("ITensor diagHermitian")
         {
         auto i = Index(10);
         auto T = randomITensorC(i,prime(i));
-        T += conj(swapPrime(T,0,1));
+        T += conj(swapTags(T,"0","1"));
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(norm(T-conj(U)*D*prime(U)) < 1E-12);
@@ -276,7 +276,7 @@ SECTION("ITensor diagHermitian")
         {
         auto i = Index(10);
         auto T = randomITensor(i,prime(i));
-        T += swapPrime(T,0,1);
+        T += swapTags(T,"0","1");
         //Raise prime level of T
         T.prime();
         ITensor U,D;
@@ -290,7 +290,7 @@ SECTION("ITensor diagHermitian")
         auto i = Index(3);
 
         auto T = randomITensor(prime(i),prime(i,2),prime(i,5),prime(i,6));
-        T += swapPrime(swapPrime(T,1,5),2,6);
+        T += swapTags(swapTags(T,"1","5"),"2","6");
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(norm(T-U*D*prime(U,4)) < 1E-12);
@@ -303,7 +303,7 @@ SECTION("IQTensor diagHermitian")
         {
         auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
-        T += dag(swapPrime(T,0,1));
+        T += dag(swapTags(T,"0","1"));
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
@@ -316,7 +316,7 @@ SECTION("IQTensor diagHermitian")
         auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensorC(QN(),dag(I),prime(I));
         CHECK(isComplex(T));
-        T += dag(swapPrime(T,0,1));
+        T += dag(swapTags(T,"0","1"));
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
@@ -334,8 +334,8 @@ SECTION("IQTensor diagHermitian")
         //auto T = randomITensorC(QN(),dag(I),prime(I),prime(J),dag(J));
         auto T = randomITensorC(QN(),dag(I),dag(J),prime(J),prime(I));
         CHECK(isComplex(T));
-        T += dag(swapPrime(T,0,1));
-        T = swapPrime(T,0,1);
+        T += dag(swapTags(T,"0","1"));
+        T = swapTags(T,"0","1");
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,I));
@@ -349,11 +349,11 @@ SECTION("IQTensor diagHermitian")
         {
         auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
-        T += dag(swapPrime(T,0,1));
+        T += dag(swapTags(T,"0","1"));
         //Raise prime level of T
         //and prime level spacing between inds
-        T.mapPrime(1,4);
-        T.mapPrime(0,1);
+        T.replaceTags("1","4");
+        T.replaceTags("0","1");
         ITensor U,D;
         diagHermitian(T,U,D);
         CHECK(hasIndex(U,prime(I)));

@@ -1,0 +1,250 @@
+//
+// Distributed under the ITensor Library License, Version 1.2
+//    (See accompanying LICENSE file.)
+//
+#include "itensor/tagset.h"
+#include "itensor/util/readwrite.h"
+
+namespace itensor {
+
+size_t
+size(TagSet const& ts)
+    {
+    return ts.size();
+    }
+
+int
+primeLevel(TagSet const& ts)
+    {
+    return ts.primeLevel();
+    }
+
+TagSet
+setPrime(TagSet ts, int plev)
+    {
+    ts.setPrime(plev);
+    return ts;
+    }
+
+std::string TagSet::
+toString() const
+    {
+    std::string str = "";
+    for(auto i : range(size_-1))
+        str = str+std::string(tags_[i])+",";
+    str = str+std::string(tags_[size_-1]);
+    return str;
+    }
+
+std::string
+toString(TagSet const& ts)
+    {
+    return ts.toString();
+    }
+
+bool
+operator==(TagSet const& t1, TagSet const& t2)
+    {
+    if(primeLevel(t1) != primeLevel(t2)) return false;
+    if(size(t1) != size(t2)) return false;
+    for(auto i : range(size(t1)))
+        {
+        if(t1[i] != t2[i]) return false;
+        }
+    return true;
+    }
+
+bool
+operator!=(TagSet const& t1, TagSet const& t2)
+    {
+    return !(t1==t2);
+    }
+
+TagSet::
+TagSet(const char* ts)
+    {
+    auto t = Tag();
+    auto j = size_t(0);
+    auto len = std::strlen(ts);
+    for(auto i : range(len))
+        {
+        if(ts[i] == ',') // If we hit a ',', add the tag and start with a new tag
+            {
+            this->addTag(t);
+            t = Tag();
+            j = 0;
+            }
+        else
+            {
+#ifdef DEBUG
+            if(j >= SmallString::size()) throw std::runtime_error("Tag name is too long");
+#endif
+            t.set(j,ts[i]);
+            ++j;
+            }
+        }
+    this->addTag(t);
+    }
+
+int TagSet::
+tagPosition(Tag const& t) const
+    {
+    for(auto i : range(size_))
+        {
+        if(t == tags_[i]) return i;
+        }
+    return -1;
+    }
+
+bool TagSet::
+hasTags(TagSet const& ts) const
+    {
+    if(ts.primeLevel() >= 0 && this->primeLevel() != ts.primeLevel()) return false;
+    for(auto i : range(ts.size()))
+        if(this->tagPosition(ts[i]) == -1) return false;
+    return true;
+    }
+
+bool
+hasTags(TagSet const& T, TagSet const& ts)
+    {
+    return T.hasTags(ts);
+    }
+
+// Adds a Tag to a TagSet. Does nothing if the tag already exists,
+// otherwise places the tag in a specified ordering
+void TagSet::
+addTag(Tag const& t)
+    {
+    int plev = toInt(t);
+    if(plev >= 0)
+      {
+      if(primelevel_>0) throw std::runtime_error("Cannot have more than one integer tag in a TagSet");
+      primelevel_ = plev;
+      }
+    else
+      {
+      if(size_ == MAX_TAGS) error("Too many tags already, cannot add more. If you want more, consider raising MAX_TAGS.");
+      if(this->tagPosition(t) == -1 && t != Tag())  // If Tag is not found and is not empty, add it
+          {
+          auto i = size_;
+          for(; i>0; --i)
+              {
+              if(t > tags_[i-1]) break;   // Tag comparison uses a cast to a long int
+              else               tags_[i] = tags_[i-1];
+              }
+          tags_[i] = t;
+          size_++;
+          }
+      }
+    }
+
+void TagSet::
+addTags(TagSet const& ts)
+    {
+    if(ts.primeLevel() >= 0) throw std::runtime_error("Cannot add integer tag to a TagSet");
+    for(auto i : range(ts.size()))
+        this->addTag(ts[i]);
+    }
+
+TagSet
+addTags(TagSet T, TagSet const& ts)
+    {
+    T.addTags(ts);
+    return T;
+    }
+
+void TagSet::
+removeTag(Tag const& t)
+    {
+    auto loc = this->tagPosition(t);
+    if(loc > -1)
+        {
+        for(size_t i = loc; i<size_; ++i)
+            tags_[i] = tags_[i+1];
+        size_--;
+        }
+    }
+
+void TagSet::
+removeTags(TagSet const& ts)
+    {
+    if(ts.primeLevel() >= 0) throw std::runtime_error("Cannot remove integer tag from a TagSet");
+    for(auto i : range(ts.size()))
+        this->removeTag(ts[i]);
+    }
+
+void TagSet::
+setTags(TagSet const& ts)
+    {
+    auto maxtags = std::max(size_,ts.size());
+    for(auto i : range(maxtags))
+      tags_[i] = ts[i];
+    size_ = ts.size();
+    if(ts.primeLevel() < 0) primelevel_ = 0;
+    else primelevel_ = ts.primeLevel();
+    }
+
+TagSet
+removeTags(TagSet T, TagSet const& ts)
+    {
+    T.removeTags(ts);
+    return T;
+    }
+
+void TagSet::
+replaceTags(TagSet const& tsremove, TagSet const& tsadd)
+    {
+    int plremove = tsremove.primeLevel();
+    int pladd = tsadd.primeLevel();
+    if((pladd >= 0 && plremove < 0) || (pladd < 0 && plremove >= 0))
+      throw std::runtime_error("Must replace integer tag with another integer tag");
+    // If the tags to be removed aren't in the tagset, do nothing
+    if(not this->hasTags(tsremove)) return;
+    // If there is a prime level to remove, replace it with the new one
+    if(plremove >= 0) primelevel_ = pladd;
+    // Remove and add the tags
+    for(auto i : range(tsremove.size()))
+        this->removeTag(tsremove[i]);
+    for(auto i : range(tsadd.size()))
+        this->addTag(tsadd[i]);
+    }
+
+std::ostream&
+operator<<(std::ostream & s, TagSet const& ts)
+    {
+    s << "\"";
+    for(auto i : range(size(ts)))
+        {
+        s << ts[i];
+        if(i<size(ts)-1) s << ",";
+        }
+    s << "\"";
+    return s;
+    }
+
+void
+write(std::ostream& s, TagSet const& ts)
+    {
+    for(auto i : range(MAX_TAGS))
+        itensor::write(s,ts[i]);
+    itensor::write(s,primeLevel(ts));
+    }
+
+void
+read(std::istream& s, TagSet & ts)
+    {
+    auto tag = Tag();
+    for(auto i : range(MAX_TAGS))
+        {
+        (void)i; // This is just to suppress warnings that i is unused
+        itensor::read(s,tag);
+        ts.addTag(tag);
+        }
+    int plev;
+    itensor::read(s,plev);
+    ts.setPrime(plev);
+    }
+
+} //namespace itensor
+

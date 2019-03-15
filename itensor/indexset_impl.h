@@ -8,18 +8,30 @@
 namespace itensor {
 
 namespace detail {
-    void inline
-    check(IndexSet const& is)
-        {
-        //Check if any duplicate indices
-        for(size_t j = 0; j < is.size(); ++j) 
-        for(size_t k = 0; k < is.size(); ++k)
-            if(k != j && is[j] == is[k])
-                {
-                println("index set = \n",is);
-                throw ITError("Duplicate indices in index set");
-                }
-        }
+
+void inline
+check(IndexSet const& is)
+    {
+    //Check if any duplicate indices
+    for(size_t j = 0; j < is.size(); ++j) 
+    for(size_t k = j+1; k < is.size(); ++k)
+        if( is[j] == is[k] )
+            {
+            println("index set = \n",is);
+            throw ITError("Duplicate indices in index set");
+            }
+    }
+
+void inline
+checkIndexPositions(std::vector<int> const& is)
+    {
+    //Check if there any duplicate index positions
+    //(it is ok if Indices are not found, they are just ignored)
+    for(size_t j = 0; j < is.size(); ++j) 
+    for(size_t k = j+1; k < is.size(); ++k)
+        if( (is[j] != -1) && (is[j] == is[k]) )
+            throw ITError("An Index was found more than once in the IndexSet");
+    }
 
 } //namespace detail
 
@@ -44,118 +56,128 @@ cbegin() const { return begin(); }
 IndexSet::const_iterator inline IndexSet::
 cend() const { return end(); }
 
-void inline IndexSet::
-prime(int plinc, TagSet const& tsmatch)
-    { 
-    for(auto& J : *this) if(hasTags(J,tsmatch)) J.prime(plinc);
-    }
+//
+// Tag functions
+//
 
 void inline IndexSet::
-prime(int plinc, Index const& imatch)
-    { 
-    for(auto& J : *this) if(J==imatch) J.prime(plinc);
-    }
-
-template<typename... VarArgs>
-void IndexSet::
-prime(int plinc, Index const& imatch1, Index const& imatch2, VarArgs&&... vargs)
-    { 
-    auto ismatch = IndexSet(imatch1,imatch2,vargs...);
-    //Store the locations of the indices
-    auto iloc = IntArray(ismatch.order(),-1);
-    for(auto i : itensor::range(ismatch.order())) iloc[i] = indexPosition(*this,ismatch[i]);
-    //Now prime them
-    for(auto i : iloc) parent::index(i).prime(plinc);
-    }
-
-void inline IndexSet::
-setPrime(int plnew, TagSet const& tsmatch)
-    { 
-    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setPrime(plnew); 
-#ifdef DEBUG
-    detail::check(*this);
-#endif
-    }
-
-void inline IndexSet::
-setPrime(int plnew, Index const& imatch)
-    { 
-    for(auto& J : *this) if(J==imatch) J.setPrime(plnew); 
-#ifdef DEBUG
-    detail::check(*this);
-#endif
-    }
-
-void inline IndexSet::
-mapPrime(int plold,
-         int plnew,
-         TagSet const& tsmatch)
-    { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plold)) J.setPrime(plnew); 
-#ifdef DEBUG
-    detail::check(*this);
-#endif
-    }
-
-void inline IndexSet::
-mapPrime(int plold,
-         int plnew,
-         Index const& imatch)
-    { 
-    for(auto& J : *this) if(J.primeLevel()==plold && equalsIgnorePrime(J,imatch)) J.setPrime(plnew); 
-#ifdef DEBUG
-    detail::check(*this);
-#endif
-    }
-
-template<typename... VarArgs>
-void IndexSet::
-swapPrime(int pl1,
-          int pl2,
-          VarArgs&&... vargs)
+setTags(TagSet const& tsnew)
     {
-    int tempLevel = 99999;
+    for(auto& J : *this) J.setTags(tsnew);
 #ifdef DEBUG
-    for(auto& I : *this)
-        {
-        if(I.primeLevel() == tempLevel)
-            {
-            println("tempLevel = ",tempLevel);
-            throw ITError("swapPrime fails if an index has primeLevel==tempLevel");
-            }
-        }
+    detail::check(*this);
 #endif
-    this->mapPrime(pl1,tempLevel,vargs...);
-    this->mapPrime(pl2,pl1,vargs...);
-    this->mapPrime(tempLevel,pl2,vargs...);
+    }
+
+void inline IndexSet::
+setTags(TagSet const& tsnew, 
+        IndexSet const& ismatch)
+    {
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).setTags(tsnew);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+setTags(TagSet const& tsnew, 
+        TagSet const& tsmatch)
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.setTags(tsnew); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+addTags(TagSet const& tsadd)
+    {
+    for(auto& J : *this) J.addTags(tsadd);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+addTags(TagSet const& tsadd, 
+        IndexSet const& ismatch) 
+    {
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).addTags(tsadd);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+addTags(TagSet const& tsadd, 
+        TagSet const& tsmatch)
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.addTags(tsadd); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove)
+    {
+    for(auto& J : *this) J.removeTags(tsremove);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove, 
+           IndexSet const& ismatch) 
+    { 
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).removeTags(tsremove);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+removeTags(TagSet const& tsremove, 
+           TagSet const& tsmatch)
+    { 
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.removeTags(tsremove); 
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+void inline IndexSet::
+replaceTags(TagSet const& tsold,
+            TagSet const& tsnew)
+    {
+    for(auto& J : *this) J.replaceTags(tsold,tsnew);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
     }
 
 void inline IndexSet::
 replaceTags(TagSet const& tsold, 
             TagSet const& tsnew, 
-            TagSet const& tsmatch, 
-            int plmatch)
+            IndexSet const& ismatch)
     {
-    for(auto& J : *this)
-        if(matchTagsPrime(J,tsmatch,plmatch) && hasTags(J,tsold))
-            {
-            J.replaceTags(tsold,tsnew);
-            }
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).replaceTags(tsold,tsnew);
 #ifdef DEBUG
     detail::check(*this);
 #endif
     }
 
 void inline IndexSet::
-replaceTags(TagSet const& tsold, 
-            TagSet const& tsnew, 
-            Index const& imatch)
+replaceTags(TagSet const& tsold,
+            TagSet const& tsnew,
+            TagSet const& tsmatch)
     {
-    for(auto& J : *this)
-        if(J==imatch && hasTags(J,tsold))
-            {
-            J.replaceTags(tsold,tsnew);
-            }
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.replaceTags(tsold,tsnew);
 #ifdef DEBUG
     detail::check(*this);
 #endif
@@ -167,7 +189,17 @@ swapTags(TagSet const& ts1,
          TagSet const& ts2, 
          VarArgs&&... vargs)
     {
-    auto tempTags = TagSet("df4sd32");
+    TagSet tempTags;
+    if(primeLevel(ts1) < 0)
+      {
+      if(primeLevel(ts2) >= 0) Error("Error in swapTags: cannot swap integer tag with non-integer tag");
+      tempTags = TagSet("df4sd32");
+      }
+    else
+      {
+      if(primeLevel(ts2) < 0) Error("Error in swapTags: cannot swap integer tag with non-integer tag");
+      tempTags = TagSet("df4sd32,431543");
+      }
 #ifdef DEBUG
     for(auto& I : *this)
         {
@@ -178,69 +210,67 @@ swapTags(TagSet const& ts1,
             }
         }
 #endif
-    this->replaceTags(ts1,tempTags,vargs...);
-    this->replaceTags(ts2,ts1,vargs...);
+    this->replaceTags(ts1,tempTags,std::forward<VarArgs>(vargs)...);
+    this->replaceTags(ts2,ts1,std::forward<VarArgs>(vargs)...);
     this->replaceTags(tempTags,ts2);
     }
 
+//
+// Integer tag convenience functions
+//
+
 void inline IndexSet::
-setTags(TagSet const& tsnew, 
-        TagSet const& tsmatch, 
-        int plmatch) 
+setPrime(int plnew)
     { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.setTags(tsnew); 
+    for(auto& J : *this) J.setPrime(plnew); 
 #ifdef DEBUG
     detail::check(*this);
 #endif
     }
 
 void inline IndexSet::
-setTags(TagSet const& tsnew, 
-        Index const& imatch)
-    { 
-    for(auto& J : *this) if(J==imatch) J.setTags(tsnew); 
+setPrime(int plnew, IndexSet const& ismatch)
+    {
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).setPrime(plnew);
 #ifdef DEBUG
     detail::check(*this);
 #endif
     }
 
 void inline IndexSet::
-addTags(TagSet const& tsadd, 
-        TagSet const& tsmatch,
-        int plmatch) 
+setPrime(int plnew, TagSet const& tsmatch)
     { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch)) J.addTags(tsadd); 
+    for(auto& J : *this) if( hasTags(J,tsmatch) ) J.setPrime(plnew); 
 #ifdef DEBUG
     detail::check(*this);
 #endif
     }
 
 void inline IndexSet::
-addTags(TagSet const& tsadd, 
-        Index const& imatch) 
+prime(int plinc)
     { 
-    for(auto& J : *this) if(J==imatch) J.addTags(tsadd);
+    for(auto& J : *this) J.prime(plinc);
+#ifdef DEBUG
+    detail::check(*this);
+#endif
+    }
+
+template<typename... VarArgs>
+void IndexSet::
+prime(int plinc, IndexSet const& ismatch)
+    { 
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).prime(plinc);
 #ifdef DEBUG
     detail::check(*this);
 #endif
     }
 
 void inline IndexSet::
-removeTags(TagSet const& tsremove, 
-           TagSet const& tsmatch,
-           int plmatch) 
+prime(int plinc, TagSet const& tsmatch)
     { 
-    for(auto& J : *this) if(matchTagsPrime(J,tsmatch,plmatch) || tsremove==TagSet("All")) J.removeTags(tsremove); 
-#ifdef DEBUG
-    detail::check(*this);
-#endif
-    }
-
-void inline IndexSet::
-removeTags(TagSet const& tsremove, 
-           Index const& imatch) 
-    { 
-    for(auto& J : *this) if(J==imatch || tsremove==TagSet("All")) J.removeTags(tsremove); 
+    for(auto& J : *this) if( hasTags(J,tsmatch) ) J.prime(plinc);
 #ifdef DEBUG
     detail::check(*this);
 #endif
@@ -253,7 +283,7 @@ removeQNs()
     }
 
 //
-// Methods for Manipulating IndexSetT
+// Methods for Manipulating IndexSet
 //
 
 void inline
@@ -297,88 +327,44 @@ dir(const IndexSet& is, const Index& I)
     }
 
 
-//Index inline
-//findIndex(IndexSet const& iset, Arrow dir)
-//    {
-//    for(const auto& J : iset)
-//        {
-//        if(J.dir() == dir) return J;
-//        }
-//    throw ITError("Couldn't find index with specified dir");
-//    return Index();
-//    }
-
 //
 // Given IndexSet iset and Index I,
 // return int j such that iset[j] == I.
 // If not found, returns -1
 //
-long inline
-indexPosition(const IndexSet& iset, 
-              const Index& I)
+int inline
+indexPosition(IndexSet const& is, 
+              Index const& imatch)
     {
-    for(long j = 0; j < iset.order(); ++j)
-        {
-        if(iset[j] == I) return j;
-        }
+    for(auto j : range(order(is))) 
+        if( is[j] == imatch ) return j;
     return -1;
     }
 
 
-////
-//// Compute the permutation P taking an IndexSetT iset
-//// to oset (of type IndexSetT or array<Index,NMAX>)
-////
-//template <class IndexT>
-//void
-//getperm(const IndexSet& iset, 
-//        const typename IndexSet::storage& oset, 
-//        Permutation& P)
-//	{
-//	for(int j = 0; j < iset.order(); ++j)
-//	    {
-//	    bool got_one = false;
-//	    for(int k = 0; k < iset.order(); ++k)
-//            {
-//            if(oset[j] == iset[k])
-//                { 
-//                P.setFromTo(j+1,k+1); 
-//                got_one = true; 
-//                break;
-//                }
-//            }
-//	    if(!got_one)
-//            {
-//            println("j = ",j);
-//            println("iset =");
-//            for(int j = 0; j < iset.order(); ++j)
-//                printfln("%d %s",j,iset[j]);
-//            println("\noset = ");
-//            for(int j = 0; j < iset.order(); ++j)
-//                printfln("%d %s",j,oset[j]);
-//            println();
-//            //printfln("iset uniqueReal = %.15E",iset.uniqueReal());
-//            //Real our = 0;
-//            //for(int i = 0; i < iset.order(); ++i)
-//            //    {
-//            //    our += oset[i].uniqueReal();
-//            //    }
-//            //printfln("oset uniqueReal = %.15E",our);
-//            //printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
-//            throw ITError("IndexSetT::getperm: no matching index");
-//            }
-//	    }
-//	}
+std::vector<int> inline
+indexPositions(IndexSet const& is,
+               IndexSet const& ismatch)
+    {
+    auto ilocs = std::vector<int>();
+    for(const auto& J : ismatch)
+        {
+        auto loc = indexPosition(is,J);
+        if( loc != -1 ) ilocs.push_back(loc);
+        }
+#ifdef DEBUG
+    detail::checkIndexPositions(ilocs);
+#endif
+    return ilocs;
+    }
 
 bool inline
 hasIndex(const IndexSet& iset, 
          const Index& I)
 	{
-    for(long j = 0; j < iset.order(); ++j)
-        {
-        if(iset[j] == I) return true;
-        }
-    return false;
+  for(long j = 0; j < iset.order(); ++j)
+      if(iset[j] == I) return true;
+  return false;
 	}
 
 long inline
@@ -559,46 +545,12 @@ checkQNConsistent(IndexSet const& is)
 
 Index inline
 findIndex(IndexSet const& is,
-          TagSet const& tsmatch, 
-          int plmatch)
+          TagSet const& tsmatch)
     {
-    auto j = Index();
-    for(auto& J : is)
-        {
-        if(matchTagsPrime(J,tsmatch,plmatch))
-            {
-#ifdef DEBUG
-            if(j) throw ITError("Multiple indices with those tags and prime level found");
-#endif
-            j = J;
-            }
-        }
-#ifdef DEBUG
-    if(!j) throw ITError("No index with those tags and prime level found");
-#endif
-    return j;
+    for(auto& J : is) if(hasTags(J,tsmatch))
+        return J;
+    return Index();
     }
-
-Index inline
-findIndexExact(IndexSet const& is,
-               TagSet const& tsmatch, 
-               int plmatch)
-    {
-    auto j = Index();
-    for(auto& J : is)
-        {
-        if(matchTagsPrimeExact(J,tsmatch,plmatch))
-            {
-            if(j) throw ITError("Multiple indices with those tags and prime level found");
-            j = J;
-            }
-        }
-#ifdef DEBUG
-    if(!j) throw ITError("No index with those tags and prime level found");
-#endif
-    return j;
-    }
-
 
 } //namespace itensor
 

@@ -49,12 +49,12 @@ nmultMPO(MPO const& Aorig,
         B.position(1);
         }
 
-    B.primeall();
+    B.prime();
 
     res=A;
     auto siA = uniqueIndex(A(1),B(1),A(2));
     auto siB = uniqueIndex(B(1),A(1),B(2));
-    res.ref(1) = ITensor(siA,siB,linkInd(A,1));
+    res.ref(1) = ITensor(siA,siB,linkIndex(A,1));
 
     //Print(A);
     //Print(B);
@@ -73,7 +73,7 @@ nmultMPO(MPO const& Aorig,
 
         if(i == N-1) break;
 
-        nfork = ITensor(linkInd(A,i),linkInd(B,i),linkInd(res,i));
+        nfork = ITensor(linkIndex(A,i),linkIndex(B,i),linkIndex(res,i));
 
         denmatDecomp(clust,res.ref(i),nfork,Fromleft,args);
 
@@ -81,7 +81,7 @@ nmultMPO(MPO const& Aorig,
         mid.dag();
         auto siA = uniqueIndex(A(i+1),A(i),A(i+2),B(i+1));
         auto siB = uniqueIndex(B(i+1),B(i),B(i+2),A(i+1));
-        res.ref(i+1) = ITensor(mid,siA,siB,rightLinkInd(res,i+1));
+        res.ref(i+1) = ITensor(mid,siA,siB,rightLinkIndex(res,i+1));
         }
 
     nfork = clust * A(N) * B(N);
@@ -91,11 +91,11 @@ nmultMPO(MPO const& Aorig,
         {
         if(i < N)
             {
-            auto l = linkInd(res,i);
+            auto l = linkIndex(res,i);
             res.ref(i).noPrime(l);
             res.ref(i+1).noPrime(l);
             }
-        res.ref(i).mapPrime(2,1);
+        res.ref(i).replaceTags("2","1");
         }
     res.orthogonalize();
 
@@ -173,6 +173,11 @@ exactApplyMPO(MPO const& K,
               MPS const& psi,
               Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in exactApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in exactApplyMPO: Arg Minm is deprecated in favor of MinDim.");
+
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
     auto maxdim_set = args.defined("MaxDim");
@@ -187,7 +192,8 @@ exactApplyMPO(MPO const& K,
     if(not commonIndex(K(1),psi(1),siteTags))
         Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
 
-    int plev = 14741;
+    auto plev = 14741;
+    auto plevtag = format("%d",plev);
 
     auto res = psi;
 
@@ -202,20 +208,14 @@ exactApplyMPO(MPO const& K,
         if(j == 1)
             {
             auto ci = commonIndex(psi(1),psi(2),linkTags);
-            //psic.ref(j) = dag(mapPrime(psi(j),siteTags,0,2,ci,0,plev));
-            //TODO: check this does the same thing
-            psic.ref(j) = dag(prime(mapPrime(psi(j),0,2,siteTags),plev,ci));
+            psic.ref(j) = dag(prime(replaceTags(psi(j),"0","2",siteTags),plev,ci));
             ci = commonIndex(Kc(1),Kc(2),linkTags);
-            //TODO: check this does the same thing as before
-            Kc.ref(j) = dag(prime(mapPrime(K(j),0,2,siteTags),plev,ci));
+            Kc.ref(j) = dag(prime(replaceTags(K(j),"0","2",siteTags),plev,ci));
             }
         else
             {
-            //psic.ref(j) = dag(mapPrime(psi(j),siteTags,0,2,linkTags,0,plev));
-            //Kc.ref(j) = dag(mapPrime(K(j),siteTags,0,2,linkTags,0,plev));
-            //TODO: check this does the same thing as before
-            psic.ref(j) = dag(mapPrime(mapPrime(psi(j),0,2,siteTags),0,plev,linkTags));
-            Kc.ref(j) = dag(mapPrime(mapPrime(K(j),0,2,siteTags),0,plev,linkTags));
+            psic.ref(j) = dag(replaceTags(replaceTags(psi(j),"0","2",siteTags),"0",plevtag,linkTags));
+            Kc.ref(j) = dag(replaceTags(replaceTags(K(j),"0","2",siteTags),"0",plevtag,linkTags));
             }
         }
 
@@ -341,6 +341,11 @@ fitApplyMPO(Real fac,
             Sweeps const& sweeps,
             Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in fitApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in fitApplyMPO: Arg Minm is deprecated in favor of MinDim.");
+
     auto N = length(psi);
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",true);
@@ -392,7 +397,7 @@ fitApplyMPO(Real fac,
                 {
                 printfln("    Trunc. err=%.1E, States kept=%s",
                          spec.truncerr(),
-                         showDim(linkInd(res,b)) );
+                         showDim(linkIndex(res,b)) );
                 }
 
             if(ha == 1)
@@ -429,6 +434,11 @@ fitApplyMPO(Real mpsfac,
             MPS& res,
             Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in fitApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in fitApplyMPO: Arg Minm is deprecated in favor of MinDim.");
+
     if(&psiA == &res || &psiB == &res)
         {
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
@@ -496,6 +506,11 @@ applyExpH(MPS const& psi,
           MPS& res, 
           Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in applyExpH: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in applyExpH: Arg Minm is deprecated in favor of MinDim.");
+
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
 
     const int order = args.getInt("Order",10);
@@ -608,6 +623,11 @@ zipUpApplyMPO(MPS const& psi,
               MPS& res, 
               Args const& args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in zipUpApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in zipUpApplyMPO: Arg Minm is deprecated in favor of MinDim.");
+
     const
     bool allow_arb_position = args.getBool("AllowArbPosition",false);
 
@@ -641,8 +661,8 @@ zipUpApplyMPO(MPS const& psi,
 #endif
 
     res = psi; 
-    res.mapPrimeLink(0,4);
-    res.mapPrime(0,1,"Site");
+    res.replaceTags("0","4","Link");
+    res.replaceTags("0","1","Site");
 
     ITensor clust,nfork;
     vector<int> midsize(N);
@@ -653,8 +673,8 @@ zipUpApplyMPO(MPS const& psi,
         else { clust = nfork * (psi(i) * K(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
-        Index oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
-        nfork = ITensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
+        Index oldmid = rightLinkIndex(res,i); assert(oldmid.dir() == Out);
+        nfork = ITensor(rightLinkIndex(psi,i),rightLinkIndex(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         denmatDecomp(clust, res.ref(i), nfork,Fromleft,args);
@@ -663,103 +683,17 @@ zipUpApplyMPO(MPS const& psi,
         mid.dag();
         midsize[i] = dim(mid);
         maxdim = std::max(midsize[i],maxdim);
-        assert(rightLinkInd(res,i+1).dir() == Out);
-        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
+        assert(rightLinkIndex(res,i+1).dir() == Out);
+        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkIndex(res,i+1));
         }
     nfork = clust * psi(N) * K(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
-	//throw ResultIsZero("nfork.iten size == 0");
+    //throw ResultIsZero("nfork.iten size == 0");
 
     res.svdBond(N-1,nfork,Fromright,args);
-    res.noPrimeLink();
-    res.mapPrime(1,0,"Site");
+    res.noPrime("Link");
+    res.replaceTags("1","0","Site");
     res.position(1);
     } //void zipUpApplyMPO
-
-///void 
-///expsmallH(MPO const& H, 
-///          MPO & K, 
-///          Real tau, 
-///          Real Etot, 
-///          Real Kcutoff,
-///          Args args)
-///    {
-///    int ord = args.getInt("ExpHOrder",50);
-///    bool verbose = args.getBool("Verbose",false);
-///    args.add("Cutoff",MIN_CUT);
-///    args.add("MaxDim",MAX_DIM);
-///
-///    MPO Hshift(H.sites());
-///    Hshift.ref(1) *= -Etot;
-///    Hshift.plusEq(H,args);
-///    Hshift.ref(1) *= -tau;
-///
-///    vector<MPO > xx(2);
-///    xx.at(0) = MPO(H.sites());
-///    xx.at(1) = Hshift;
-///
-///    //
-///    // Exponentiate by building up a Taylor series in reverse:
-///    //      o=1    o=2      o=3      o=4  
-///    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
-///    //
-///    if(verbose) cout << "Exponentiating H, order: " << endl;
-///    for(int o = ord; o >= 1; --o)
-///        {
-///        if(verbose) 
-///            {
-///            cout << o << " "; 
-///            cout.flush();
-///            }
-///        if(o > 1) xx[1].ref(1) *= 1.0 / o;
-///
-///        K = sum(xx,args);
-///        if(o > 1)
-///            nmultMPO(K,Hshift,xx[1],args);
-///        }
-///    if(verbose) cout << endl;
-///    }
-
-
-//void 
-//expH(MPO const& H, 
-//     MPO& K, 
-//     Real tau, 
-//     Real Etot,
-//     Real Kcutoff, 
-//     int ndoub, 
-//     Args args)
-//    {
-//    const bool verbose = args.getBool("Verbose",false);
-//    Real ttau = tau / pow(2.0,ndoub);
-//    //cout << "ttau in expH is " << ttau << endl;
-//
-//    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
-//    expsmallH(H, K, ttau,Etot,smallcut,args);
-//
-//    if(verbose) cout << "Starting doubling in expH" << endl;
-//    for(int doub = 1; doub <= ndoub; ++doub)
-//        {
-//        //cout << " Double step " << doub << endl;
-//        if(doub == ndoub) 
-//            args.add("Cutoff",Kcutoff);
-//        else
-//            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
-//        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
-//        MPO KK;
-//        nmultMPO(K,K,KK,args);
-//        K = KK;
-//        /*
-//        if(doub == ndoub)
-//            {
-//            cout << "step " << doub << ", K is " << endl;
-//            cout << "K.cutoff, K.maxdim are " << K.cutoff SP K.maxdim << endl;
-//            for(int i = 1; i <= N; i++)
-//                cout << i SP K.A[i];
-//            }
-//        */
-//        }
-//    }
-
 
 } //namespace itensor

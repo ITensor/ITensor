@@ -79,7 +79,7 @@ eltC(IV const& iv1, IVs&&... ivs) const
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -124,7 +124,7 @@ eltC(std::vector<Int> const& ints) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(format("Wrong number of ints passed to real/cplx (expected %d, got %d)",
+        Error(format("Wrong number of ints passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -517,60 +517,6 @@ eltC(ITensor A,
 
 template<typename... VarArgs>
 ITensor
-prime(ITensor A, 
-      VarArgs&&... vargs)
-    {
-    A.prime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
-setPrime(ITensor A,
-         VarArgs&&... vargs)
-    {
-    A.setPrime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
-noPrime(ITensor A, 
-        VarArgs&&... vargs)
-    {
-    A.noPrime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
-mapPrime(ITensor A, 
-         VarArgs&&... vargs)
-    {
-    A.mapPrime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
-swapPrime(ITensor A, 
-          VarArgs&&... vargs)
-    {
-    A.swapPrime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
-replaceTags(ITensor A,
-            VarArgs&&... vargs)
-    {
-    A.replaceTags(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename... VarArgs>
-ITensor
 setTags(ITensor A,
         VarArgs&&... vargs)
     {
@@ -598,6 +544,15 @@ removeTags(ITensor A,
 
 template<typename... VarArgs>
 ITensor
+replaceTags(ITensor A,
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
 swapTags(ITensor A,
          VarArgs&&... vargs)
     {
@@ -605,20 +560,38 @@ swapTags(ITensor A,
     return A;
     }
 
-Index inline
-findIndex(ITensor const& T,
-          TagSet const& tsmatch, 
-          int plmatch)
+template<typename... VarArgs>
+ITensor
+prime(ITensor A, 
+      VarArgs&&... vargs)
     {
-    return findIndex(inds(T),tsmatch,plmatch);
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+setPrime(ITensor A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+ITensor
+noPrime(ITensor A, 
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
     }
 
 Index inline
-findIndexExact(ITensor const& T,
-               TagSet const& tsmatch, 
-               int plmatch)
+findIndex(ITensor const& T,
+          TagSet const& tsmatch)
     {
-    return findIndexExact(inds(T),tsmatch,plmatch);
+    return findIndex(inds(T),tsmatch);
     }
 
 //Apply x = f(x) for each element x of T
@@ -634,14 +607,6 @@ apply(ITensor T, F&& f)
 
 long inline
 order(ITensor const& T) { return order(inds(T)); }
-
-// Deprecated
-long inline
-rank(ITensor const& T)
-  {
-  Global::warnDeprecated("rank(ITensor) is deprecated in favor of order(ITensor)");
-  return order(T);
-  }
 
 Real
 norm(ITensor const& T);
@@ -677,39 +642,6 @@ randomITensorC(QN q, Index const& i1, Inds&&... inds)
     return randomITensor(q,std::move(is),{"Complex=",true});
     }
 
-//Deprecated
-template <typename... Inds>
-ITensor
-randomTensor(Index const& i1, Inds&&... inds)
-    {
-    Global::warnDeprecated("randomTensor(Index,...) is deprecated in favor of randomITensor(Index,...)");
-    return randomITensor(i1,inds...);
-    }
-template <typename... Inds>
-ITensor
-randomTensorC(Index const& i1, Inds&&... inds)
-    {
-    Global::warnDeprecated("randomTensorC(Index,...) is deprecated in favor of randomITensorC(Index,...)");
-    return randomITensorC(i1,inds...);
-    }
-
-//Deprecated
-template <typename... Inds>
-ITensor
-randomTensor(QN q, Index const& i1, Inds&&... inds)
-    {
-    Global::warnDeprecated("randomTensor(QN,Index,...) is deprecated in favor of randomITensor(QN,Index,...)");
-    return randomITensor(q,i1,inds...);
-    }
-template <typename... Inds>
-ITensor
-randomTensorC(QN q, Index const& i1, Inds&&... inds)
-    {
-    Global::warnDeprecated("randomTensorC(QN,Index,...) is deprecated in favor of randomITensorC(QN,Index,...)");
-    return randomITensorC(q,i1,inds...);
-    }
-
-
 ITensor inline
 conj(ITensor T)
     {
@@ -723,7 +655,6 @@ dag(ITensor T)
     T.dag();
     return T;
     }
-
 
 template<typename... Inds>
 ITensor
@@ -753,7 +684,7 @@ replaceInds(ITensor const& cT,
                     printfln("New m would be = %d",dim(ipairs[ni]));
                     throw ITError("Mismatch of index dimension in reindex");
                     }
-                T *= delta(J,prime(ipairs[ni],tempLevel));
+                T *= delta(dag(J),prime(ipairs[ni],tempLevel));
                 break;
                 }
             }
@@ -765,7 +696,6 @@ replaceInds(ITensor const& cT,
 
     return T;
     }
-
 
 template <typename... Indxs>
 ITensor& ITensor::
@@ -854,17 +784,6 @@ diagITensor(Container const& C,
     return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
     }
 
-//Deprecated
-template<typename Container, typename... Inds, class>
-ITensor
-diagTensor(Container const& C, 
-           Index const& i1,
-           Inds &&... inds)
-    { 
-    Global::warnDeprecated("diagTensor(Container,Index,...) is deprecated in favor of diagITensor(Container,Index,...)");
-    return diagITensor(C,i1,inds...);
-    }
-
 bool inline
 hasQNs(ITensor const& T) { return hasQNs(inds(T)); }
 
@@ -890,28 +809,57 @@ getBlock(ITensor & T,
     return doTask(G,T.store());
     }
 
-template<typename... Tensors> 
-Index
-uniqueIndex(ITensor const& A, 
-            ITensor const& T1,
-            ITensor const& T2,
-            Tensors const&... Tens)
-    {
-    auto Ts = stdx::make_array(T1,T2,Tens...);
-    for(auto& I : inds(A))
-        {
-        bool found = false;
-        for(auto& T : Ts) if(hasIndex(T,I))
-            {
-            found = true;
-            break;
-            }
-        if(!found) return I;
-        }
-    return Index();
+//
+// Deprecated
+//
+
+long inline
+rank(ITensor const& T)
+  {
+  Global::warnDeprecated("rank(ITensor) is deprecated in favor of order(ITensor)");
+  return order(T);
+  }
+
+template<typename Container, typename... Inds, class>
+ITensor
+diagTensor(Container const& C, 
+           Index const& i1,
+           Inds &&... inds)
+    { 
+    Global::warnDeprecated("diagTensor(Container,Index,...) is deprecated in favor of diagITensor(Container,Index,...)");
+    return diagITensor(C,i1,inds...);
     }
 
-// Deprecated
+template <typename... Inds>
+ITensor
+randomTensor(Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensor(Index,...) is deprecated in favor of randomITensor(Index,...)");
+    return randomITensor(i1,inds...);
+    }
+template <typename... Inds>
+ITensor
+randomTensorC(Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensorC(Index,...) is deprecated in favor of randomITensorC(Index,...)");
+    return randomITensorC(i1,inds...);
+    }
+
+template <typename... Inds>
+ITensor
+randomTensor(QN q, Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensor(QN,Index,...) is deprecated in favor of randomITensor(QN,Index,...)");
+    return randomITensor(q,i1,inds...);
+    }
+template <typename... Inds>
+ITensor
+randomTensorC(QN q, Index const& i1, Inds&&... inds)
+    {
+    Global::warnDeprecated("randomTensorC(QN,Index,...) is deprecated in favor of randomITensorC(QN,Index,...)");
+    return randomITensorC(q,i1,inds...);
+    }
+
 template<typename... Inds>
 ITensor
 reindex(ITensor const& cT, 
@@ -919,35 +867,7 @@ reindex(ITensor const& cT,
         Inds... indxs)
     {
     Error("Error: reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
-    constexpr size_t size = 2+sizeof...(indxs);
-    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(indxs)...}};
-
-    auto T = cT;
-    auto is = inds(T);
-
-    for(auto j : range(is))
-        {
-        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
-            {
-            if(equalsIgnorePrime(is[j],ipairs[oi]))
-                {
-                if(dim(is[j]) != dim(ipairs[ni]))
-                    {
-                    printfln("Old m = %d",dim(is[j]));
-                    printfln("New m would be = %d",dim(ipairs[ni]));
-                    throw ITError("Mismatch of index dimension in reindex");
-                    }
-                auto plev = primeLevel(is[j]);
-                auto arrow_dir = is[j].dir();
-                is[j] = noPrime(ipairs[ni]);
-                is[j].setPrime(plev);
-                is[j].setDir(arrow_dir);
-                break;
-                }
-            }
-        }
-    auto nT = ITensor(is,std::move(T.store()),T.scale());
-    return nT;
+    return ITensor();
     }
 
 } // namespace itensor

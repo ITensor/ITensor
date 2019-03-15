@@ -87,10 +87,6 @@ Index s1(2,"Site");
 Index s2(2,"s2,Site");
 Index s3(2,"s3,Site");
 Index s4(2,"s4,Site");
-//Index s1P(prime(s1));
-//Index s2P(prime(s2));
-//Index s3P(prime(s3));
-//Index s4P(prime(s4));
 Index l1(2,"l1,Link");
 Index l2(2,"l2,Link");
 Index l3(2,"l3,Link");
@@ -1386,29 +1382,6 @@ SECTION("Prime")
     CHECK(T.inds()[3] == prime(x,2));
     }
 
-/*
-// TODO: add back this functionality?
-// Should be called setPrime()
-SECTION("PrimeLevel")
-    {
-    Index x(2,"x,Xtype"),
-          z(2,"z,Ztype"),
-          v(2,"v,Vtype");
-    ITensor T(x,z,v,prime(x));
-    T.primeLevel(2,4,3,5);
-    CHECK(T.inds()[0] == prime(x,2));
-    CHECK(T.inds()[1] == prime(z,4));
-    CHECK(T.inds()[2] == prime(v,3));
-    CHECK(T.inds()[3] == prime(x,5));
-
-    auto T2 = primeLevel(T,3,2,1,0);
-    CHECK(T2.inds()[0] == prime(x,3));
-    CHECK(T2.inds()[1] == prime(z,2));
-    CHECK(T2.inds()[2] == prime(v,1));
-    CHECK(T2.inds()[3] == prime(x,0));
-    }
-*/
-
 SECTION("SwapPrimeTest")
     {
     CHECK_EQUAL(A.elt(s1(1),prime(s1)(1)),11);
@@ -1416,7 +1389,7 @@ SECTION("SwapPrimeTest")
     CHECK_EQUAL(A.elt(s1(1),prime(s1)(2)),12);
     CHECK_EQUAL(A.elt(s1(2),prime(s1)(2)),22);
 
-    A = swapPrime(A,0,1);
+    A = swapTags(A,"0","1");
 
     CHECK_EQUAL(A.elt(prime(s1)(1),s1(1)),11);
     CHECK_EQUAL(A.elt(prime(s1)(2),s1(1)),21);
@@ -1534,26 +1507,26 @@ SECTION("Tag functions")
 
     SECTION("setTags (all)")
         {
-        auto T2 = setTags(T,"tag1,tag2");
-        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(d,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
+        auto T2 = setTags(T,"tag1,tag2,0");
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(d,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(d,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
         }
 
     SECTION("setTags (match tags)")
         {
-        auto T2 = setTags(T,"tag1,tag2","x");
-        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
+        auto T2 = setTags(T,"tag1,tag2,0","x");
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,s));
@@ -1561,13 +1534,13 @@ SECTION("Tag functions")
 
     SECTION("setTags (match index)")
         {
-        auto T2 = setTags(T,"tag1,tag2",s);
+        auto T2 = setTags(T,"tag1,tag2,0",s);
         CHECK(hasIndex(T2,l));
         CHECK(hasIndex(T2,r));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
         }
 
     SECTION("replaceTags (all)")
@@ -1632,19 +1605,19 @@ SECTION("Tag functions")
 
     SECTION("Check error throws for duplicate indices")
         {
-        auto T2 = ITensor(setTags(l,"Link"),setTags(l,"Link,2"));
+        auto T2 = ITensor(setTags(l,"Link,0"),setTags(l,"Link,n=2,0"));
         //Check that remove the tag "2"
         //throws an exception since it would
         //lead to duplicate indices
-        CHECK_THROWS_AS(T2.removeTags("2"),ITError);
+        CHECK_THROWS_AS(T2.removeTags("n=2"),ITError);
         }
 
     SECTION("Test contraction")
         {
-        auto ll = setTags(l,"horiz,left,Link");
-        auto lr = setTags(l,"horiz,right,Link");
-        auto lu = setTags(l,"vert,up,Link");
-        auto ld = setTags(l,"vert,down,Link");
+        auto ll = setTags(l,"horiz,left,Link,0");
+        auto lr = setTags(l,"horiz,right,Link,0");
+        auto lu = setTags(l,"vert,up,Link,0");
+        auto ld = setTags(l,"vert,down,Link,0");
         auto A = randomITensor(ll,lr,lu,ld,s);
         // Contract over l,r,s
         auto B = addTags(A,"bra","vert")*addTags(dag(A),"ket","vert");
@@ -1654,6 +1627,30 @@ SECTION("Tag functions")
         CHECK(hasIndex(B,addTags(ld,"bra")));
         CHECK(hasIndex(B,addTags(ld,"ket")));
         }
+    }
+
+SECTION("Access Primes Through TagSet")
+    {
+    auto s = Index(2);
+    auto l = addTags(s,"horiz");
+    auto r = replaceTags(l,"0","1");
+    auto u = replaceTags(l,"horiz","vert");
+    auto d = replaceTags(r,"horiz","vert");
+    auto A = randomITensor(l,r,u,d);
+
+    auto A1 = swapTags(A,"horiz","vert");
+    auto A2 = swapTags(A,"0","1");
+    auto A3 = swapTags(A,"horiz,0","vert,1");
+
+    for(auto ll : range1(dim(l)))
+    for(auto rr : range1(dim(r)))
+    for(auto uu : range1(dim(u)))
+    for(auto dd : range1(dim(d)))
+      {
+      CHECK(A.elt(l(ll),r(rr),u(uu),d(dd))==A1.elt(u(ll),d(rr),l(uu),r(dd)));
+      CHECK(A.elt(l(ll),r(rr),u(uu),d(dd))==A2.elt(r(ll),l(rr),d(uu),u(dd)));
+      CHECK(A.elt(l(ll),r(rr),u(uu),d(dd))==A3.elt(d(ll),r(rr),u(uu),l(dd)));
+      }
     }
 
 SECTION("CommonIndex")
@@ -1682,7 +1679,25 @@ SECTION("replaceInds")
     {
     auto A = randomITensor(s1,prime(s1),l1);
     auto B = replaceInds(A,s1,prime(s1),l1,l2,prime(s1),s1);
-    CHECK_CLOSE(norm(B-swapPrime(A*delta(l1,l2),0,1,s1)),0.0);
+    for(auto ss1 : range1(dim(s1)))
+    for(auto ss1p : range1(dim(prime(s1))))
+    for(auto ll1 : range1(dim(l1)))
+      {
+      CHECK(A.elt(s1(ss1),prime(s1)(ss1p),l1(ll1))==B.elt(prime(s1)(ss1),s1(ss1p),l2(ll1)));
+      }
+    }
+
+SECTION("replaceInds (QNs)")
+    {
+    auto A = randomITensor(QN(),S1,prime(S1),L1);
+    auto simL1 = sim(L1);
+    auto B = replaceInds(A,S1,prime(S1),L1,simL1,prime(S1),S1);
+    for(auto ss1 : range1(dim(S1)))
+    for(auto ss1p : range1(dim(prime(S1))))
+    for(auto ll1 : range1(dim(L1)))
+      {
+      CHECK(A.elt(S1(ss1),prime(S1)(ss1p),L1(ll1))==B.elt(prime(S1)(ss1),S1(ss1p),simL1(ll1)));
+      }
     }
 
 SECTION("Diag ITensor Contraction")

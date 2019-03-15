@@ -105,7 +105,7 @@ eltC() const
     {
     if(inds().order() != 0)
         {
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got 0)",inds().order()));
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got 0)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -144,7 +144,7 @@ eltC(std::vector<IndexVal> const& ivs) const
         println("Indices provided = ");
         for(auto& iv : ivs) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().order(),size));
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",inds().order(),size));
         }
 
     auto ints = IntArray(size);
@@ -349,12 +349,35 @@ index(ITensor const& A, RangeT<Index>::size_type I) { return A.index(I); }
 
 Index
 commonIndex(ITensor const& A, 
-            ITensor const& B, 
-            TagSet const& ts)
+            ITensor const& B)
     {
     for(auto& I : inds(A))
-        if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && hasIndex(inds(B),I) ) 
+        if( hasIndex(inds(B),I) ) 
+            {
+            return I;
+            }
+    return Index();
+    }
+
+Index
+commonIndex(ITensor const& A, 
+            ITensor const& B, 
+            TagSet const& tsmatch)
+    {
+    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
+        if( hasIndex(inds(B),I) ) 
+            {
+            return I;
+            }
+    return Index();
+    }
+
+Index
+uniqueIndex(ITensor const& A, 
+            ITensor const& B)
+    {
+    for(auto& I : inds(A))
+        if( !hasIndex(inds(B),I) )
             {
             return I;
             }
@@ -364,15 +387,64 @@ commonIndex(ITensor const& A,
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B, 
-            TagSet const& ts)
+            TagSet const& tsmatch)
     {
-    for(auto& I : inds(A))
-        if( (hasTags(ts,TagSet(All)) || hasTags(I,ts))
-         && !hasIndex(inds(B),I) ) 
+    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
+        if( !hasIndex(inds(B),I) ) 
             {
             return I;
             }
     return Index();
+    }
+
+Index
+uniqueIndex(ITensor const& A,
+            std::vector<ITensor> const& B)
+    {
+    for(auto& I : inds(A))
+        {
+        bool found = false;
+        for(auto& T : B) if( hasIndex(T,I) )
+            {
+            found = true;
+            break;
+            }
+        if(!found) return I;
+        }
+    return Index();
+    }
+
+Index
+uniqueIndex(ITensor const& A,
+            std::vector<ITensor> const& B,
+            TagSet const& tsmatch)
+    {
+    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
+         {
+         bool found = false;
+         for(auto& T : B) if(hasIndex(T,I))
+             {
+             found = true;
+             break;
+             }
+         if(!found) return I;
+         }
+    return Index();
+    }
+
+Index
+uniqueIndex(ITensor const& A,
+            std::initializer_list<ITensor> B)
+    {
+    return uniqueIndex(A,std::vector<ITensor>(B));
+    }
+
+Index
+uniqueIndex(ITensor const& A,
+            std::initializer_list<ITensor> B,
+            TagSet const& tsmatch)
+    {
+    return uniqueIndex(A,std::vector<ITensor>(B),tsmatch);
     }
 
 Real
@@ -779,7 +851,7 @@ multSiteOps(ITensor A, ITensor const& B)
     {
     A.prime("Site");
     A *= B;
-    A.mapPrime(2,1,"Site");
+    A.replaceTags("2","1","Site");
     return A;
     }
 
@@ -1056,6 +1128,7 @@ struct IsCombiner
     operator()(Combiner const& d) { return true; }
     };
 
+//TODO: this doesn't work if the combiner is permuted
 Index
 combinedIndex(ITensor const& C)
     {

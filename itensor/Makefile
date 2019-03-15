@@ -7,34 +7,35 @@ include ../options.mk
 
 ####################################
 
-SOURCES+= util/args.cc     
+SOURCES+= util/args.cc
 SOURCES+= util/input.cc
 SOURCES+= util/cputime.cc
-SOURCES+= tensor/lapack_wrap.cc 
-SOURCES+= tensor/vec.cc 
-SOURCES+= tensor/mat.cc 
-SOURCES+= tensor/gemm.cc 
-SOURCES+= tensor/algs.cc 
-SOURCES+= tensor/contract.cc 
-SOURCES+= itdata/dense.cc 
-SOURCES+= itdata/combiner.cc 
-SOURCES+= itdata/diag.cc 
+SOURCES+= tensor/lapack_wrap.cc
+SOURCES+= tensor/vec.cc
+SOURCES+= tensor/mat.cc
+SOURCES+= tensor/gemm.cc
+SOURCES+= tensor/algs.cc
+SOURCES+= tensor/contract.cc
+SOURCES+= itdata/dense.cc
+SOURCES+= itdata/combiner.cc
+SOURCES+= itdata/diag.cc
 SOURCES+= itdata/qdense.cc
-SOURCES+= itdata/qcombiner.cc 
+SOURCES+= itdata/qcombiner.cc
 SOURCES+= itdata/qdiag.cc
-SOURCES+= itdata/scalar.cc 
-SOURCES+= qn.cc 
-SOURCES+= index.cc 
-SOURCES+= itensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= decomp.cc 
-SOURCES+= hermitian.cc 
-SOURCES+= svd.cc 
+SOURCES+= itdata/scalar.cc
+SOURCES+= qn.cc
+SOURCES+= tagset.cc
+SOURCES+= index.cc
+SOURCES+= itensor.cc
+SOURCES+= spectrum.cc
+SOURCES+= decomp.cc
+SOURCES+= hermitian.cc
+SOURCES+= svd.cc
 SOURCES+= global.cc
-SOURCES+= mps/mps.cc 
-SOURCES+= mps/mpsalgs.cc 
-SOURCES+= mps/mpo.cc 
-SOURCES+= mps/mpoalgs.cc 
+SOURCES+= mps/mps.cc
+SOURCES+= mps/mpsalgs.cc
+SOURCES+= mps/mpo.cc
+SOURCES+= mps/mpoalgs.cc
 SOURCES+= mps/autompo.cc
 
 ####################################

@@ -67,6 +67,15 @@ struct SmallString
         }
     };
 
+int inline
+toInt(SmallString const& t)
+  {
+  if(not isdigit(t[0]) || t[0] == '\0') return -1;
+  //TODO: make into a while loop
+  for(size_t j = 1; j < SmallString::size(); ++j)
+    if(not isdigit(t[j]) && t[j] != '\0') return -1;
+  return strtol(t.c_str(),'\0',10);
+  }
 
 bool inline
 operator==(SmallString const& t1, SmallString const& t2)

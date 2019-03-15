@@ -109,26 +109,79 @@ class MPS
     plusEq(MPS const& R, 
            Args const& args = Args::global());
 
-    //void 
-    //prime(int plinc, TagSet const& ts = TagSet("All"));
+    //
+    //MPS Index Methods
+    //
 
-    //void 
-    //prime(TagSet const& ts = TagSet("All"))
-    //    {
-    //    prime(1,ts);
-    //    }
-
-    void 
-    mapPrime(int oldp, int newp, TagSet const& ts = TagSet("All"));
-
+    template<typename... VarArgs>
     void
-    mapPrimeLink(int oldp, int newp)
+    addTags(VarArgs&&... vargs)
         {
-        mapPrime(oldp,newp,"Link");
+        if(do_write_)
+            Error("addTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].addTags(std::forward<VarArgs>(vargs)...);
         }
 
-    void 
-    noPrimeLink();
+    template<typename... VarArgs>
+    void
+    removeTags(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("addTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].removeTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    template<typename... VarArgs>
+    void
+    replaceTags(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("replaceTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].replaceTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    template<typename... VarArgs>
+    void
+    swapTags(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("swapTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].swapTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    template<typename... VarArgs>
+    void
+    prime(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("prime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].prime(std::forward<VarArgs>(vargs)...);
+        }
+
+    template<typename... VarArgs>
+    void
+    setPrime(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("setPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].setPrime(std::forward<VarArgs>(vargs)...);
+        }
+
+    template<typename... VarArgs>
+    void
+    noPrime(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("noPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].noPrime(std::forward<VarArgs>(vargs)...);
+        }
 
     // Randomize the tensors of the MPS
     void
@@ -296,6 +349,72 @@ class InitState
     checkRange(int i) const;
     }; 
 
+//
+// MPS tag functions
+//
+
+template<typename... VarArgs>
+MPS
+addTags(MPS A,
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+    
+template<typename... VarArgs>
+MPS
+removeTags(MPS A,
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPS
+replaceTags(MPS A,
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPS
+swapTags(MPS A,
+         VarArgs&&... vargs)
+    {
+    A.swapTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPS
+prime(MPS A,
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A; 
+    }
+
+template<typename... VarArgs>
+MPS
+setPrime(MPS A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+MPS
+noPrime(MPS A,
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
 
 //
 // Other Methods Related to MPS
@@ -337,17 +456,20 @@ norm(MPS const& psi);
 Real
 normalize(MPS & psi);
 
-template<typename MPSType>
 Index
-linkInd(MPSType const& psi, int b);
+siteIndex(MPS const& psi, int b);
 
 template<typename MPSType>
 Index
-rightLinkInd(MPSType const& psi, int i);
+linkIndex(MPSType const& psi, int b);
 
 template<typename MPSType>
 Index
-leftLinkInd(MPSType const& psi, int i);
+rightLinkIndex(MPSType const& psi, int i);
+
+template<typename MPSType>
+Index
+leftLinkIndex(MPSType const& psi, int i);
 
 Real
 averageLinkDim(MPS const& psi);

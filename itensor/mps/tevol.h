@@ -50,6 +50,11 @@ gateTEvol(Iterable const& gatelist,
           Observer& obs,
           Args args)
     {
+    if(args.defined("Maxm"))
+      Error("Error in gateTEvol: Arg Maxm is deprecated in favor of MaxDim.");
+    if(args.defined("Minm"))
+      Error("Error in gateTEvol: Arg Minm is deprecated in favor of MinDim.");
+
     const bool verbose = args.getBool("Verbose",false);
     const bool do_normalize = args.getBool("Normalize",true);
 
@@ -76,7 +81,7 @@ gateTEvol(Iterable const& gatelist,
             auto i1 = g->i1();
             auto i2 = g->i2();
             auto AA = psi(i1)*psi(i2)*g->gate();
-            AA.mapPrime(1,0,"Site");
+            AA.replaceTags("Site,1","Site,0");
 
             ++g;
             if(g != gatelist.end())
