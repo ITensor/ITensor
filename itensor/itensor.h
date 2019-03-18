@@ -17,7 +17,6 @@ namespace itensor {
 class ITensor
     {
     public:
-    using index_type = Index;
     using range_type = RangeT<Index>;
     using size_type = typename range_type::size_type;
     using storage_ptr = PData;
@@ -36,21 +35,22 @@ class ITensor
     //Default constructed tensor will evaluate to false in boolean context
     ITensor() { }
 
+    explicit
+    ITensor(IndexSet const& inds);
+
+    explicit
+    ITensor(std::initializer_list<Index> inds);
+
     //Construct n-index tensor, all elements set to zero
     //Usage: ITensor(i1,i2,i3,...)
-    template <typename... Indices>
+    template <typename... Inds>
     explicit
-    ITensor(Index  const& i1,
-            Indices const&... i2etc);
+    ITensor(Index const& i1,
+            Inds const&... inds);
 
-    explicit
-    ITensor(std::vector<Index> const& inds);
-
-    template<size_t N> 
-    explicit
-    ITensor(std::array<Index,N> const& inds);
-
-    ITensor(std::initializer_list<Index> inds);
+    //template<size_t N> 
+    //explicit
+    //ITensor(std::array<Index,N> const& inds);
 
     //Construct order 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
@@ -64,10 +64,6 @@ class ITensor
     //Tensor order (number of indices)
     int 
     order() const { return is_.order(); }
-
-    // Deprecated
-    int 
-    r() const { return this->order(); }
 
     //Access index set
     IndexSet const&
@@ -280,10 +276,6 @@ class ITensor
     ITensor&
     operator/=(ITensor const& other);
 
-    template <typename... Indxs>
-    ITensor&
-    permute(Index const& ind1, Indxs const&... inds);
-
     ITensor&
     permute(IndexSet const& iset);
 
@@ -313,10 +305,6 @@ class ITensor
     ITensor(IndexSet iset,
             storage_ptr&& pstore,
             scale_type const& scale = LogNum{1.});
-
-    //Provide indices from IndexSet
-    explicit
-    ITensor(IndexSet const& is);
 
     storage_ptr&
     store() { return store_; }
@@ -360,6 +348,9 @@ class ITensor
     //
     // Deprecated methods
     //
+
+    int 
+    r() const { return this->order(); }
 
     template <typename... IndexVals>
     Real
@@ -466,41 +457,34 @@ findIndex(ITensor const& T,
 Index
 commonIndex(ITensor const& A, 
             ITensor const& B);
-
 Index
 commonIndex(ITensor const& A, 
             ITensor const& B, 
             TagSet const& tsmatch);
 
 //Find index of tensor A
-//which is NOT shared by tensor B
+//which is NOT shared by tensor(s) B
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B);
-
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B,
             TagSet const& tsmatch);
-
 Index
 uniqueIndex(ITensor const& A, 
             std::vector<ITensor> const& B);
-
 Index
 uniqueIndex(ITensor const& A, 
             std::vector<ITensor> const& B,
             TagSet const& tsmatch);
-
 Index
 uniqueIndex(ITensor const& A,
             std::initializer_list<ITensor> B);
-
 Index
 uniqueIndex(ITensor const& A,
             std::initializer_list<ITensor> B,
             TagSet const& tsmatch);
-
 template<typename... Tensors> 
 Index
 uniqueIndex(ITensor const& A, 
@@ -509,6 +493,20 @@ uniqueIndex(ITensor const& A,
             Tensors const&... Tens)
     {
     return uniqueIndex(A,std::vector<ITensor>({T1,T2,Tens...}));
+    }
+
+//permute function which returns a new ITensor 
+ITensor
+permute(ITensor A,
+        IndexSet const& is);
+
+template<typename... Inds>
+ITensor
+permute(ITensor A,
+        Index const& i1,
+        Inds&&... inds)
+    {
+    return permute(A, IndexSet(i1, std::forward<Inds>(inds)...));
     }
 
 //Apply x = f(x) for each element x of T
@@ -532,10 +530,6 @@ isReal(ITensor const& T);
 //return number of indices of T
 long
 order(ITensor const& T);
-
-// Deprecated, same as order
-long
-rank(ITensor const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
@@ -568,12 +562,6 @@ replaceInds(ITensor const& cT,
             Index o1, Index n1, 
             Inds... inds);
 
-//This is deprecated, use replaceInds() instead
-template<typename... Inds>
-ITensor
-reindex(ITensor const& cT, 
-        Index o1, Index n1, 
-        Inds... inds);
 
 
 //
@@ -595,44 +583,46 @@ reindex(ITensor const& cT,
 ITensor
 multSiteOps(ITensor A, ITensor const& B);
 
+//
+// Special ITensor constructors
+//
+
 ITensor
 combiner(IndexSet const& inds, Args const& args = Global::args());
-
-ITensor
-combiner(std::vector<Index> const& inds, Args const& args = Global::args());
-
-ITensor
-combiner(std::initializer_list<Index> inds, Args const& args = Global::args());
-
-template <size_t N>
-ITensor
-combiner(std::array<Index,N> inds, Args const& args = Global::args())
-    {
-    return combiner(IndexSet(inds),args);
-    }
-
 template<typename... Inds>
 ITensor
 combiner(Index const& i1, 
-         Inds const&... inds)
+         Inds&&... inds)
     {
-    return combiner(std::vector<Index>{i1,inds...});
+    return combiner(IndexSet(i1,std::forward<Inds>(inds)...));
     }
 
 Index
 combinedIndex(ITensor const& C);
 
-
 //Construct diagonal ITensor with diagonal 
 //elements set to 1.0
+ITensor
+delta(IndexSet const& is);
+
 template<typename... Inds>
 ITensor
 delta(Index const& i1,
-      Inds const&... inds);
+      Inds&&... inds)
+    {
+    return delta(IndexSet(i1,std::forward<Inds>(inds)...));
+    }
 
 //Construct diagonal ITensor,
 //diagonal elements given by container C
 //(Uses elements C.begin() up to C.end())
+template<typename Container, 
+         class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
+                                || stdx::containerOf<Cplx,Container>::value> >
+ITensor
+diagITensor(Container const& C,
+            IndexSet const& is);
+
 template<typename Container, 
          typename... Inds,
          class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
@@ -640,74 +630,69 @@ template<typename Container,
 ITensor
 diagITensor(Container const& C,
             Index const& i1,
-            Inds&&... inds);
+            Inds&&... inds)
+    {
+    return diagITensor(C,IndexSet(i1,std::forward<Inds>(inds)...));
+    }
 
-//Depecrated
-template<typename Container, 
-         typename... Inds,
-         class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
-                                || stdx::containerOf<Cplx,Container>::value> >
-ITensor
-diagTensor(Container const& C,
-           Index const& i1,
-           Inds&&... inds);
-
-template <typename... Inds>
-ITensor
-randomITensor(Index const& i1, Inds&&... inds);
-template <typename... Inds>
-ITensor
-randomITensorC(Index const& i1, Inds&&... inds);
+//Construct ITensors with random elements
 ITensor
 randomITensor(IndexSet const& inds);
-
-//Depecrated
-template <typename... Inds>
 ITensor
-randomTensor(Index const& i1, Inds&&... inds);
-template <typename... Inds>
+randomITensorC(IndexSet const& inds);
 ITensor
-randomTensorC(Index const& i1, Inds&&... inds);
+randomITensor(QN q, IndexSet const& inds);
 ITensor
-randomTensor(IndexSet const& inds);
+randomITensorC(QN q, IndexSet const& inds);
 
 template <typename... Inds>
 ITensor
-randomITensor(QN q, Index const& i1, Inds&&... inds);
+randomITensor(Index const& i1,
+              Inds&&... inds)
+  {
+  return randomITensor(IndexSet(i1,std::forward<Inds>(inds)...));
+  }
 template <typename... Inds>
 ITensor
-randomITensorC(QN q, Index const& i1, Inds&&... inds);
-ITensor
-randomITensor(QN q, IndexSet const& inds, Args const& args = Args::global());
-
-//Deprecated
+randomITensorC(Index const& i1,
+               Inds&&... inds)
+  {
+  return randomITensorC(IndexSet(i1,std::forward<Inds>(inds)...));
+  }
 template <typename... Inds>
 ITensor
-randomTensor(QN q, Index const& i1, Inds&&... inds);
+randomITensor(QN q, Index const& i1, Inds&&... inds)
+  {
+  return randomITensor(q,IndexSet(i1,std::forward<Inds>(inds)...));
+  }
 template <typename... Inds>
 ITensor
-randomTensorC(QN q, Index const& i1, Inds&&... inds);
-ITensor
-randomTensor(QN q, IndexSet const& inds, Args const& args = Args::global());
+randomITensorC(QN q, Index const& i1, Inds&&... inds)
+  {
+  return randomITensorC(q,IndexSet(i1,std::forward<Inds>(inds)...));
+  }
 
 ITensor
-matrixITensor(Matrix && M, Index const& i1, Index const& i2);
+matrixITensor(Matrix && M, IndexSet const& is);
 ITensor
-matrixITensor(Matrix const& M, Index const& i1, Index const& i2);
+matrixITensor(Matrix const& M, IndexSet const& is);
 ITensor
-matrixITensor(CMatrix && M, Index const& i1, Index const& i2);
+matrixITensor(CMatrix && M, IndexSet const& is);
 ITensor
-matrixITensor(CMatrix const& M, Index const& i1, Index const& i2);
+matrixITensor(CMatrix const& M, IndexSet const& is);
 
-//Deprecated
 ITensor
-matrixTensor(Matrix && M, Index const& i1, Index const& i2);
+matrixITensor(Matrix && M,
+              Index const& i1, Index const& i2);
 ITensor
-matrixTensor(Matrix const& M, Index const& i1, Index const& i2);
+matrixITensor(Matrix const& M,
+              Index const& i1, Index const& i2);
 ITensor
-matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
+matrixITensor(CMatrix && M,
+              Index const& i1, Index const& i2);
 ITensor
-matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
+matrixITensor(CMatrix const& M,
+              Index const& i1, Index const& i2);
 
 //
 // QN ITensor related functions
@@ -732,6 +717,55 @@ getBlock(ITensor & T, IntArray block_ind);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
+
+//
+// Depecrated
+//
+
+long
+rank(ITensor const& T);
+
+template<typename... Inds>
+ITensor
+reindex(ITensor const& cT, 
+        Index o1, Index n1, 
+        Inds... inds);
+
+template<typename Container, 
+         typename... Inds,
+         class = stdx::enable_if_t<stdx::containerOf<Real,Container>::value
+                                || stdx::containerOf<Cplx,Container>::value> >
+ITensor
+diagTensor(Container const& C,
+           Index const& i1,
+           Inds&&... inds);
+
+template <typename... Inds>
+ITensor
+randomTensor(Index const& i1, Inds&&... inds);
+template <typename... Inds>
+ITensor
+randomTensorC(Index const& i1, Inds&&... inds);
+ITensor
+randomTensor(IndexSet const& inds);
+
+template <typename... Inds>
+ITensor
+randomTensor(QN q, Index const& i1, Inds&&... inds);
+template <typename... Inds>
+ITensor
+randomTensorC(QN q, Index const& i1, Inds&&... inds);
+ITensor
+randomTensor(QN q, IndexSet const& inds, Args const& args = Args::global());
+
+ITensor
+matrixTensor(Matrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(Matrix const& M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
+ITensor
+matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
 } //namespace itensor
 

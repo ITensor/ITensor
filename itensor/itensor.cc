@@ -21,20 +21,6 @@ namespace itensor {
 //
 
 ITensor::
-ITensor(std::vector<Index> const& inds)
-  : is_(inds)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
-
-ITensor::
-ITensor(std::initializer_list<Index> inds)
-  : is_(inds)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
-
-ITensor::
 ITensor(IndexSet const& is)
   : is_(is)
     { 
@@ -52,6 +38,13 @@ ITensor(IndexSet iset,
     IF_USESCALE(scale_ = scale;)
     }
 
+ITensor::
+ITensor(std::initializer_list<Index> inds)
+  : is_(inds)
+    { 
+    IF_USESCALE(scale_ = LogNum(1.);)
+    }
+
     
 ITensor::
 ITensor(Cplx val) 
@@ -67,38 +60,6 @@ ITensor(Cplx val)
         }
     }
 
-
-//template<>
-//void ITensor::
-//scaleOutNorm()
-//    {
-//    auto nrm = doTask(NormNoScale<Index>{is_},store_);
-//    //If norm already 1 return so
-//    //we don't have to call MultReal
-//    if(fabs(nrm-1.) < 1E-12) return;
-//    if(nrm == 0)
-//        {
-//        scale_ = LogNumber(1.);
-//        return;
-//        }
-//    doTask(MultReal{1./nrm},store_);
-//    scale_ *= nrm;
-//    }
-
-//template<>
-//void ITensor::
-//equalizeScales(ITensor& other)
-//    {
-//    if(scale_.sign() != 0)
-//        {
-//        other.scaleTo(scale_);
-//        }
-//    else //*this is equivalent to zero
-//        {
-//        fill(0);
-//        scale_ = other.scale_;
-//        }
-//    }
 
 Cplx ITensor::
 eltC() const
@@ -447,6 +408,58 @@ uniqueIndex(ITensor const& A,
     return uniqueIndex(A,std::vector<ITensor>(B),tsmatch);
     }
 
+ITensor& ITensor::
+permute(IndexSet const& iset)
+    {
+    auto& A = *this;
+    auto Ais = A.inds();
+    auto r = Ais.order();
+
+    if(size_t(r) != size_t(iset.order()))
+        {
+        println("---------------------------------------------");
+        println("Tensor indices = \n",Ais,"\n");
+        println("---------------------------------------------");
+        println("Indices provided = \n",iset,"\n");
+        println("---------------------------------------------");
+        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
+        }
+
+    // Get permutation
+    auto P = Permutation(r);
+    calcPerm(Ais,iset,P);
+    if(isTrivial(P))
+        {
+        return A;
+        }
+    // If not trivial, use permutation to get new index set
+    // This is necessary to preserve the proper arrow direction of IQIndex
+    auto bind = RangeBuilderT<IndexSet>(r);
+    for(auto i : range(r))
+        {
+        bind.setIndex(P.dest(i),Ais[i]);
+        }
+    auto Bis = bind.build();
+
+    auto O = Order{P,Ais,Bis};
+    if(A.store())
+        {
+        doTask(O, A.store());
+        }
+
+    A.is_.swap(Bis);
+
+    return A;
+    }
+
+ITensor
+permute(ITensor A,
+        IndexSet const& is)
+    {
+    A.permute(is);
+    return A;
+    }
+
 Real
 norm(ITensor const& T)
     {
@@ -641,50 +654,6 @@ operator*=(ITensor const& R)
     L.is_.swap(C.Nis);
 
     return L;
-    }
-
-ITensor& ITensor::
-permute(IndexSet const& iset)
-    {
-    auto& A = *this;
-    auto Ais = A.inds();
-    auto r = Ais.order();
-
-    if(size_t(r) != size_t(iset.order()))
-        {
-        println("---------------------------------------------");
-        println("Tensor indices = \n",Ais,"\n");
-        println("---------------------------------------------");
-        println("Indices provided = \n",iset,"\n");
-        println("---------------------------------------------");
-        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
-        }
-
-    // Get permutation
-    auto P = Permutation(r);
-    calcPerm(Ais,iset,P);
-    if(isTrivial(P))
-        {
-        return A;
-        }
-    // If not trivial, use permutation to get new index set
-    // This is necessary to preserve the proper arrow direction of IQIndex
-    auto bind = RangeBuilderT<IndexSet>(r);
-    for(auto i : range(r))
-        {
-        bind.setIndex(P.dest(i),Ais[i]);
-        }
-    auto Bis = bind.build();
-
-    auto O = Order{P,Ais,Bis};
-    if(A.store())
-        {
-        doTask(O, A.store());
-        }
-
-    A.is_.swap(Bis);
-
-    return A;
     }
 
 #ifndef USESCALE
@@ -931,38 +900,33 @@ operator<<(ostream & s, ITensor const& t)
     }
 
 ITensor
-matrixITensor(Matrix&& M, Index const& i1, Index const& i2)
+matrixITensor(Matrix&& M,
+              IndexSet const& is)
     {
-    auto res = ITensor({i1,i2},DenseReal{std::move(M.storage())});
+#ifdef DEBUG
+    if( order(is) != 2 )
+        Error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
+#endif
+    auto res = ITensor(is,DenseReal{std::move(M.storage())});
     M.clear();
     return res;
     }
 
-//Deprecated
 ITensor
-matrixTensor(Matrix&& M, Index const& i1, Index const& i2)
+matrixITensor(Matrix const& M,
+              IndexSet const& is)
     {
-    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
-    return matrixITensor(M,i1,i2);
+    return matrixITensor(Matrix(M),is);
     }
 
 ITensor
-matrixITensor(Matrix const& M, Index const& i1, Index const& i2)
+matrixITensor(CMatrix&& M,
+              IndexSet const& is)
     {
-    return matrixITensor(Matrix(M),i1,i2);
-    }
-
-//Deprecated
-ITensor
-matrixTensor(Matrix const& M, Index const& i1, Index const& i2)
-    {
-    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
-    return matrixITensor(M,i1,i2);
-    }
-
-ITensor
-matrixITensor(CMatrix&& M, Index const& i1, Index const& i2)
-    {
+#ifdef DEBUG
+    if( order(is) != 2 )
+        Error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
+#endif
     bool isReal = true;
     for(auto& el : M)
     if(std::fabs(el.imag()) > 1E-14)
@@ -975,38 +939,47 @@ matrixITensor(CMatrix&& M, Index const& i1, Index const& i2)
         {
         auto store = vector<Real>(M.size());
         for(auto n : range(M.size())) store[n] = M.store()[n].real();
-        res = ITensor({i1,i2},DenseReal{std::move(store)});
+        res = ITensor(is,DenseReal{std::move(store)});
         }
     else
         {
-        res = ITensor({i1,i2},DenseCplx{std::move(M.storage())});
+        res = ITensor(is,DenseCplx{std::move(M.storage())});
         }
     M.clear();
     return res;
     }
 
-//Deprecated
 ITensor
-matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
+matrixITensor(CMatrix const& M,
+              IndexSet const& is)
     {
-    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
-    return matrixITensor(M,i1,i2);
+    return matrixITensor(CMatrix(M),is);
     }
 
 ITensor
-matrixITensor(CMatrix const& M, Index const& i1, Index const& i2)
-    {
-    return matrixITensor(CMatrix(M),i1,i2);
-    }
-
-//Deprecated
+matrixITensor(Matrix && M,
+              Index const& i1, Index const& i2)
+  {
+  return matrixITensor(M,IndexSet(i1,i2));
+  }
 ITensor
-matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
-    {
-    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
-    return matrixITensor(M,i1,i2);
-    }
-
+matrixITensor(Matrix const& M,
+              Index const& i1, Index const& i2)
+  {
+  return matrixITensor(M,IndexSet(i1,i2));
+  }
+ITensor
+matrixITensor(CMatrix && M,
+              Index const& i1, Index const& i2)
+  {
+  return matrixITensor(M,IndexSet(i1,i2));
+  }
+ITensor
+matrixITensor(CMatrix const& M,
+              Index const& i1, Index const& i2)
+  {
+  return matrixITensor(M,IndexSet(i1,i2));
+  }
 
 ITensor
 combiner(IndexSet const& inds, Args const& args)
@@ -1105,20 +1078,6 @@ combiner(IndexSet const& inds, Args const& args)
     return ITensor();
     }
 
-ITensor
-combiner(std::vector<Index> const& inds,
-         Args const& args)
-    {
-    return combiner(IndexSet(inds),args);
-    }
-
-ITensor
-combiner(std::initializer_list<Index> inds,
-         Args const& args)
-    {
-    return combiner(IndexSet(inds),args);
-    }
-
 struct IsCombiner
     {
     template<typename D>
@@ -1143,31 +1102,52 @@ combinedIndex(ITensor const& C)
     }
 
 ITensor
-randomITensor(IndexSet const& inds)
+delta(IndexSet const& is)
     {
-    return random(ITensor{inds});
+    if(hasQNs(is))
+        {
+        return ITensor(std::move(is),QDiagReal(is,1.));
+        }
+    auto len = minDim(is);
+    return ITensor(std::move(is),DiagReal(len,1.));
     }
 
 ITensor
-randomITensor(QN q, IndexSet const& is, Args const& args)
+randomITensor(IndexSet const& inds)
+    {
+    return random(ITensor(inds));
+    }
+ITensor
+randomITensorC(IndexSet const& inds)
+    {
+    return random(ITensor(inds),{"Complex=",true});
+    }
+
+ITensor
+randomITensor(QN q, IndexSet const& is)
     {
 #ifdef DEBUG
     if(not hasQNs(is)) 
         Error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
 #endif
     ITensor T;
-    if(args.getBool("Complex",false))
-        {
-        auto dat = QDenseCplx{is,q};
-        T = ITensor(std::move(is),std::move(dat));
-        T.generate(detail::quickranCplx);
-        }
-    else
-        {
-        auto dat = QDenseReal{is,q};
-        T = ITensor(std::move(is),std::move(dat));
-        T.generate(detail::quickran);
-        }
+    auto dat = QDenseReal{is,q};
+    T = ITensor(std::move(is),std::move(dat));
+    T.generate(detail::quickran);
+    return T;
+    }
+
+ITensor
+randomITensorC(QN q, IndexSet const& is)
+    {
+#ifdef DEBUG
+    if(not hasQNs(is)) 
+        Error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
+#endif
+    ITensor T;
+    auto dat = QDenseCplx{is,q};
+    T = ITensor(std::move(is),std::move(dat));
+    T.generate(detail::quickranCplx);
     return T;
     }
 
@@ -1279,6 +1259,38 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
         }
 
     return iso;
+    }
+
+//
+//Deprecated
+//
+
+ITensor
+matrixTensor(Matrix const& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
+    }
+
+ITensor
+matrixTensor(CMatrix&& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
+    }
+
+ITensor
+matrixTensor(Matrix&& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(Matrix,Index,Index) is deprecated in favor of matrixITensor(Matrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
+    }
+
+ITensor
+matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
+    {
+    Global::warnDeprecated("matrixTensor(CMatrix,Index,Index) is deprecated in favor of matrixITensor(CMatrix,Index,Index)");
+    return matrixITensor(M,i1,i2);
     }
 
 } //namespace detail

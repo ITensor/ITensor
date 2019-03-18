@@ -69,7 +69,6 @@ class Index
     public:
     using IDGenerator = detail::RandomID;
     using id_type = IDGenerator::result_type;
-    using indexval_type = IndexVal;
     using extent_type = int;
 
     using qnstorage = std::vector<QNInt>;
@@ -278,7 +277,6 @@ operator>(Index const& i1, Index const& i2);
 class IndexVal
     {
     public:
-    using index_type = Index;
 
     Index index;
     long val;

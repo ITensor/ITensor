@@ -46,6 +46,7 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation deprecations (for upgrade guide):
  - Index operations:
+  o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
   o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
     -> `mapPrime(1,2,"0")` doesn't make sense, many uses of `mapPrime` are superseded
         by `replaceInds`, `replaceTags`, `setPrime`, etc.
@@ -65,6 +66,9 @@ Common operation deprecations (for upgrade guide):
     containing certain tags
   o Remove findType, use findIndex instead
  - ITensor operations:
+  o All ITensor constructors like `ITensor(...)`, `randomITensor(...)`, `diag(...)`, etc. now accept
+    `std::initializer_list<Index>`,`std::array<Index,N>`, `std::vector<Index>`, and `IndexSet`
+    along with vararg lists of `Index,Index...`
   o Added `uniqueIndex(A,{B,C}[,ts])` notation for getting the unique index under
     a certain tag constraint
   o Allow tag and prime functions to accept multiple indices for matching

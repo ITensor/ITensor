@@ -29,26 +29,14 @@ allocCplx(ITensor& T);
 
 } //namespace detail
 
-template <typename... index_types>
+template <typename... Inds>
 ITensor::
 ITensor(Index  const& i1,
-        index_types const&... i2etc)
-  : is_(i1,i2etc...)
+        Inds const&... inds)
+  : is_(i1,inds...)
     { 
     IF_USESCALE(scale_ = LogNum(1.);)
     }
-
-
-template<size_t N> 
-ITensor::
-ITensor(std::array<Index,N> const& inds)
-  : is_(inds)
-    { 
-    IF_USESCALE(scale_ = LogNum(1.);)
-    }
-
-
-
 
 template <class DataType>
 ITensor::
@@ -431,16 +419,15 @@ void inline ITensor::
 scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
 #endif
 
-template <typename IVal, typename... IVals>
+template <typename... IVals>
 ITensor
-setElt(IVal const& iv1, 
+setElt(IndexVal const& iv1, 
        IVals const&... rest)
     {
-    using index_type = typename std::common_type<IVal,IVals...>::type::index_type;
     const constexpr auto size = 1+sizeof...(rest);
     auto ivs = stdx::make_array(iv1,rest...);
     //TODO: try directly making inds as iv1.index,(rest.index)...
-    auto inds = std::array<index_type,size>{};
+    auto inds = std::array<Index,size>{};
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     auto D = ITensor{IndexSet(inds)};
     D.set(iv1,rest...,1.);
@@ -614,34 +601,6 @@ norm(ITensor const& T);
 void
 randomize(ITensor & T, Args const& args);
 
-template <typename... Inds>
-ITensor
-randomITensor(Index const& i1, Inds&&... inds)
-    {
-    return random(ITensor(i1,std::forward<Inds>(inds)...));
-    }
-template <typename... Inds>
-ITensor
-randomITensorC(Index const& i1, Inds&&... inds)
-    {
-    return random(ITensor(i1,std::forward<Inds>(inds)...),{"Complex",true});
-    }
-
-template <typename... Inds>
-ITensor
-randomITensor(QN q, Index const& i1, Inds&&... inds)
-    {
-    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
-    return randomITensor(q,std::move(is));
-    }
-template <typename... Inds>
-ITensor
-randomITensorC(QN q, Index const& i1, Inds&&... inds)
-    {
-    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
-    return randomITensor(q,std::move(is),{"Complex=",true});
-    }
-
 ITensor inline
 conj(ITensor T)
     {
@@ -697,23 +656,6 @@ replaceInds(ITensor const& cT,
     return T;
     }
 
-template <typename... Indxs>
-ITensor& ITensor::
-permute(Index const& ind1, Indxs const&... inds)
-    {
-    permute(IndexSet(ind1, inds...));
-    return *this;
-    }
-
-//permute function which returns a new ITensor 
-template<typename... Indxs>
-ITensor
-permute(ITensor A, Indxs const&... inds)
-    {
-    A.permute(std::forward<Indxs const&>(inds)...);
-    return A;
-    }
-
 template<typename T, typename... CtrArgs>
 ITensor::storage_ptr
 readType(std::istream& s, CtrArgs&&... args)
@@ -741,36 +683,15 @@ doTask(Write & W, D const& d)
     write(W.s,d);
     }
 
-//template<typename I>
-//void
-//write(std::ostream& s, ITensor<I> const& T);
-
-
-template<typename... Inds>
-ITensor
-delta(Index const& i1,
-      Inds const&... inds)
-    { 
-    auto is = IndexSet(i1,inds...);
-    if(hasQNs(is))
-        {
-        return ITensor(std::move(is),QDiagReal(is,1.));
-        }
-    auto len = minDim(is);
-    return ITensor(std::move(is),DiagReal(len,1.));
-    }
-
-template<typename Container, typename... Inds, class>
+template<typename Container, class>
 ITensor
 diagITensor(Container const& C, 
-            Index const& i1,
-            Inds &&... inds)
+            IndexSet const& is)
     { 
-    auto is = IndexSet(i1,std::forward<Inds>(inds)...);
 #ifdef DEBUG
     using size_type = decltype(C.size());
     //Compute min of all index dimensions
-    auto mindim = dim(i1);
+    auto mindim = dim(is[0]);
     for(const auto& ind : is)
         if(dim(ind) < mindim) mindim = dim(ind);
     if(C.size() != size_type(mindim))
@@ -824,10 +745,10 @@ template<typename Container, typename... Inds, class>
 ITensor
 diagTensor(Container const& C, 
            Index const& i1,
-           Inds &&... inds)
+           Inds&&... inds)
     { 
     Global::warnDeprecated("diagTensor(Container,Index,...) is deprecated in favor of diagITensor(Container,Index,...)");
-    return diagITensor(C,i1,inds...);
+    return diagITensor(C,IndexSet(i1,std::forward<Inds>(inds)...));
     }
 
 template <typename... Inds>
@@ -835,14 +756,14 @@ ITensor
 randomTensor(Index const& i1, Inds&&... inds)
     {
     Global::warnDeprecated("randomTensor(Index,...) is deprecated in favor of randomITensor(Index,...)");
-    return randomITensor(i1,inds...);
+    return randomITensor(i1,std::forward<Inds>(inds)...);
     }
 template <typename... Inds>
 ITensor
 randomTensorC(Index const& i1, Inds&&... inds)
     {
     Global::warnDeprecated("randomTensorC(Index,...) is deprecated in favor of randomITensorC(Index,...)");
-    return randomITensorC(i1,inds...);
+    return randomITensorC(i1,std::forward<Inds>(inds)...);
     }
 
 template <typename... Inds>
@@ -850,14 +771,14 @@ ITensor
 randomTensor(QN q, Index const& i1, Inds&&... inds)
     {
     Global::warnDeprecated("randomTensor(QN,Index,...) is deprecated in favor of randomITensor(QN,Index,...)");
-    return randomITensor(q,i1,inds...);
+    return randomITensor(q,i1,std::forward<Inds>(inds)...);
     }
 template <typename... Inds>
 ITensor
 randomTensorC(QN q, Index const& i1, Inds&&... inds)
     {
     Global::warnDeprecated("randomTensorC(QN,Index,...) is deprecated in favor of randomITensorC(QN,Index,...)");
-    return randomITensorC(q,i1,inds...);
+    return randomITensorC(q,i1,std::forward<Inds>(inds)...);
     }
 
 template<typename... Inds>

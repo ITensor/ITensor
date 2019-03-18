@@ -38,16 +38,14 @@ checkQNConsistent(IndexSet const&);
 class IndexSet : public RangeT<Index>
     {
     public:
-    using index_type = Index;
     using extent_type = index_type;
-    using range_type = RangeT<index_type>;
-    using parent = RangeT<index_type>;
+    using range_type = RangeT<Index>;
+    using parent = RangeT<Index>;
     using size_type = typename range_type::size_type;
     using storage_type = typename range_type::storage_type;
-    using value_type = index_type;
-    using iterator = IndexSetIter<index_type>;
-    using const_iterator = IndexSetIter<const index_type>;
-    using indexval_type = typename index_type::indexval_type;
+    using value_type = Index;
+    using iterator = IndexSetIter<Index>;
+    using const_iterator = IndexSetIter<const Index>;
 
     public:
 
@@ -56,10 +54,29 @@ class IndexSet : public RangeT<Index>
     // construct from 1 or more indices
     template <typename... Inds>
     explicit
-    IndexSet(index_type const& i1, 
-             Inds&&... rest)
-      : parent(i1,std::forward<Inds>(rest)...)
+    IndexSet(Index const& i1, 
+             Inds&&... inds)
+      : parent(i1,std::forward<Inds>(inds)...)
         { 
+        checkQNConsistent(*this);
+        }
+
+    IndexSet(std::initializer_list<Index> const& ii)
+      : parent(ii) 
+        { 
+        checkQNConsistent(*this);
+        }
+
+    IndexSet(std::vector<Index> const& ii)
+      : parent(ii) 
+        { 
+        checkQNConsistent(*this);
+        }
+
+    template<size_t N>
+    IndexSet(std::array<Index,N> const& ii)
+      : parent(ii)
+        {
         checkQNConsistent(*this);
         }
 
@@ -67,11 +84,6 @@ class IndexSet : public RangeT<Index>
     explicit
     IndexSet(IndxContainer && ii) 
       : parent(std::forward<IndxContainer>(ii)) 
-        { 
-        checkQNConsistent(*this);
-        }
-
-    IndexSet(std::initializer_list<index_type> ii) : parent(ii) 
         { 
         checkQNConsistent(*this);
         }
@@ -95,7 +107,7 @@ class IndexSet : public RangeT<Index>
     order() const { return parent::order(); }
     
     // 0-indexed access
-    index_type &
+    Index &
     operator[](size_type i)
         { 
 #ifdef DEBUG
@@ -105,7 +117,7 @@ class IndexSet : public RangeT<Index>
         }
 
     // 1-indexed access
-    index_type &
+    Index &
     index(size_type I)
         { 
 #ifdef DEBUG
@@ -115,7 +127,7 @@ class IndexSet : public RangeT<Index>
         }
 
     // 0-indexed access
-    index_type const&
+    Index const&
     operator[](size_type i) const
         { 
 #ifdef DEBUG
@@ -125,7 +137,7 @@ class IndexSet : public RangeT<Index>
         }
 
     // 1-indexed access
-    index_type const&
+    Index const&
     index(size_type I) const
         { 
 #ifdef DEBUG
@@ -143,10 +155,10 @@ class IndexSet : public RangeT<Index>
     void
     swap(IndexSet & other) { parent::swap(other); }
 
-    index_type const&
+    Index const&
     front() const { return parent::front().ind; }
 
-    index_type const&
+    Index const&
     back() const { return parent::back().ind; }
 
     iterator
