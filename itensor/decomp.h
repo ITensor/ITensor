@@ -182,10 +182,31 @@ svd(ITensor AA,
     ITensor & V, 
     Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svd: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svd: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
 #ifdef DEBUG
     if(!U && !V) 
@@ -282,10 +303,31 @@ denmatDecomp(ITensor const& AA,
              BigMatrixT const& PH,
              Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in denmatDecomp: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in denmatDecomp: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto noise = args.getReal("Noise",0.);
 
@@ -370,11 +412,6 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in diagHermitian: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in diagHermitian: Arg Minm is deprecated in favor of MinDim.");
-
     //TODO: create tag convention
     if(!args.defined("Tags")) args.add("Tags","Link");
 
@@ -484,7 +521,7 @@ void
 showEigs(Vector const& P,
          Real truncerr,
          LogNum const& scale,
-         Args const& args);
+         Args args);
 
 struct EigQN
     {

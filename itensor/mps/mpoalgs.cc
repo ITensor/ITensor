@@ -25,11 +25,6 @@ nmultMPO(MPO const& Aorig,
          MPO& res,
          Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in nmultMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in nmultMPO: Arg Minm is deprecated in favor of MinDim.");
-
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
 
     if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
@@ -107,11 +102,6 @@ applyMPO(MPO const& K,
          MPS const& x,
          Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
-
     if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
     if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
     auto method = args.getString("Method","DensityMatrix");
@@ -140,11 +130,6 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in applyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in applyMPO: Arg Minm is deprecated in favor of MinDim.");
-
     if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
     if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
     if(not x0(1).store()) Error("Error in applyMPO, guess MPS is uninitialized.");
@@ -171,12 +156,20 @@ applyMPO(MPO const& K,
 MPS
 exactApplyMPO(MPO const& K,
               MPS const& psi,
-              Args const& args)
+              Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in exactApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in exactApplyMPO: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
@@ -322,8 +315,21 @@ fitApplyMPO(Real fac,
             MPS const& psi,
             MPO const& K,
             MPS& res,
-            Args const& args)
+            Args args)
     {
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
+
     auto nsweep = args.getInt("Nsweep",1);
     Sweeps sweeps(nsweep);
     auto cutoff = args.getReal("Cutoff",-1);
@@ -341,11 +347,6 @@ fitApplyMPO(Real fac,
             Sweeps const& sweeps,
             Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in fitApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in fitApplyMPO: Arg Minm is deprecated in favor of MinDim.");
-
     auto N = length(psi);
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",true);
@@ -434,11 +435,6 @@ fitApplyMPO(Real mpsfac,
             MPS& res,
             Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in fitApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in fitApplyMPO: Arg Minm is deprecated in favor of MinDim.");
-
     if(&psiA == &res || &psiB == &res)
         {
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
@@ -506,11 +502,6 @@ applyExpH(MPS const& psi,
           MPS& res, 
           Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in applyExpH: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in applyExpH: Arg Minm is deprecated in favor of MinDim.");
-
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
 
     const int order = args.getInt("Order",10);
@@ -623,19 +614,11 @@ zipUpApplyMPO(MPS const& psi,
               MPS& res, 
               Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in zipUpApplyMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in zipUpApplyMPO: Arg Minm is deprecated in favor of MinDim.");
-
     const
     bool allow_arb_position = args.getBool("AllowArbPosition",false);
 
     if(&psi == &res)
         Error("psi and res must be different MPS instances");
-
-    //Real cutoff = args.getReal("Cutoff",psi.cutoff());
-    //int maxdim = args.getInt("MaxDim",psi.maxdim());
 
     auto N = length(psi);
     if(length(K) != N) 

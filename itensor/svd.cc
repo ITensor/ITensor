@@ -34,12 +34,33 @@ svdImpl(ITensor const& A,
         ITensor & U, 
         ITensor & D, 
         ITensor & V,
-        Args const& args)
+        Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svdImpl: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svdImpl: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
@@ -377,10 +398,18 @@ svdOrd2(ITensor const& A,
          ITensor & V,
          Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svdOrd2: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svdOrd2: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto do_truncate = args.defined("Cutoff") 
                     || args.defined("MaxDim");

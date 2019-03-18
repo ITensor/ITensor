@@ -31,12 +31,33 @@ Spectrum
 diagHImpl(ITensor H, 
           ITensor& U, 
           ITensor& D,
-          Args const& args)
+          Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in diagHImpl: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in diagHImpl: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto itagset = getTagSet(args,"Tags","Link");
 
@@ -136,7 +157,7 @@ diagHImpl(ITensor H,
         {
         SCOPED_TIMER(7)
         auto cutoff = args.getReal("Cutoff",0.);
-        auto maxdim = args.getInt("MaxDim",MAX_INT);
+        auto maxdim = args.getInt("MaxDim",dim(H.inds().front()));
         auto mindim = args.getInt("MinDim",1);
         auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
         auto do_truncate = args.getBool("Truncate",def_do_trunc);
@@ -367,11 +388,6 @@ diag_hermitian(ITensor    H,
                ITensor  & D,
                Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in diag_hermitian: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in diag_hermitian: Arg Minm is deprecated in favor of MinDim.");
-
     if(isComplex(H))
         {
         return diagHImpl<Cplx>(H,U,D,args);

@@ -74,6 +74,10 @@ class Sweeps
     SweepSetter<int> 
     maxdim();
 
+    // Deprecated, use maxdim() instead
+    SweepSetter<int> 
+    maxm();
+
     Real 
     cutoff(int sw) const { return cutoff_.at(sw); }
     void 
@@ -116,7 +120,7 @@ class Sweeps
     private:
 
     void 
-    init(Args const& args);
+    init(Args args);
 
     void 
     tableInit(InputGroup& table);
@@ -328,6 +332,13 @@ mindim() { return SweepSetter<int>(mindim_); }
 SweepSetter<int> inline Sweeps::
 maxdim() { return SweepSetter<int>(maxdim_); }
 
+SweepSetter<int> inline Sweeps::
+maxm()
+  {
+  Global::warnDeprecated("maxm() is deprecated, use maxdim() instead.");
+  return SweepSetter<int>(maxdim_);
+  }
+
 SweepSetter<Real> inline Sweeps::
 cutoff() { return SweepSetter<Real>(cutoff_); }
 
@@ -347,12 +358,33 @@ nsweep(int val)
 
 
 void inline Sweeps::
-init(Args const& args)
+init(Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in Sweeps: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in Sweeps: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto min_dim = args.getInt("MinDim",1);
     auto max_dim = args.getInt("MaxDim");

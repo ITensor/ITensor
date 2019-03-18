@@ -201,12 +201,33 @@ void
 showEigs(Vector const& P,
          Real truncerr,
          LogNum const& scale,
-         Args const& args)
+         Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in showEigs: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in showEigs: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     auto do_truncate = args.getBool("Truncate",true);
     auto cutoff = args.getReal("Cutoff",0.);
@@ -254,11 +275,6 @@ factor(ITensor const& T,
        ITensor      & B,
        Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in factor: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in factor: Arg Minm is deprecated in favor of MinDim.");
-
     //TODO: make a standard TagSet for factor()
     //auto name = args.getString("IndexName","c");
     auto itagset = getTagSet(args,"Tags","Link,FAC");

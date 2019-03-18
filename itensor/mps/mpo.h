@@ -327,7 +327,7 @@ zipUpApplyMPO(MPS const& psi,
 MPS
 exactApplyMPO(MPO const& K,
               MPS const& x,
-              Args const& args = Args::global());
+              Args args = Args::global());
 
 
 
@@ -365,7 +365,7 @@ fitApplyMPO(Real fac,
             MPS const& psi,
             MPO const& K,
             MPS & res,
-            Args const& args = Args::global());
+            Args args = Args::global());
 
 //Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
 //using a sweeping/DMRG-like fitting approach. 

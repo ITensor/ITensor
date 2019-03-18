@@ -43,11 +43,6 @@ dmrg(MPS & psi,
      Sweeps const& sweeps,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
@@ -63,11 +58,6 @@ dmrg(MPS& psi,
      DMRGObserver & obs,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO PH(H,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
@@ -86,11 +76,6 @@ dmrg(MPS& psi,
      Sweeps const& sweeps,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
@@ -109,11 +94,6 @@ dmrg(MPS& psi,
      DMRGObserver& obs,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO PH(H,LH,RH,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
@@ -129,11 +109,6 @@ dmrg(MPS& psi,
      Sweeps const& sweeps,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
@@ -150,11 +125,6 @@ dmrg(MPS& psi,
      DMRGObserver& obs,
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPOSet PH(Hset,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
@@ -177,11 +147,6 @@ dmrg(MPS& psi,
      Sweeps const& sweeps, 
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
@@ -206,11 +171,6 @@ dmrg(MPS & psi,
      DMRGObserver& obs, 
      Args const& args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in dmrg: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in dmrg: Arg Minm is deprecated in favor of MinDim.");
-
     LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
@@ -229,11 +189,6 @@ DMRGWorker(MPS & psi,
            Sweeps const& sweeps,
            Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in DMRGWorker: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in DMRGWorker: Arg Minm is deprecated in favor of MinDim.");
-
     DMRGObserver obs(psi,args);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
@@ -247,11 +202,6 @@ DMRGWorker(MPS & psi,
            DMRGObserver & obs,
            Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in DMRGWorker: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in DMRGWorker: Arg Minm is deprecated in favor of MinDim.");
- 
     const bool quiet = args.getBool("Quiet",false);
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
 

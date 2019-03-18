@@ -207,7 +207,7 @@ class MPS
     position(int i, Args args = Args::global());
 
     void 
-    orthogonalize(Args const& args = Args::global());
+    orthogonalize(Args args = Args::global());
 
     void
     swap(MPS & other);

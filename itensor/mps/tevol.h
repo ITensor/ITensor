@@ -50,11 +50,6 @@ gateTEvol(Iterable const& gatelist,
           Observer& obs,
           Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in gateTEvol: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in gateTEvol: Arg Minm is deprecated in favor of MinDim.");
-
     const bool verbose = args.getBool("Verbose",false);
     const bool do_normalize = args.getBool("Normalize",true);
 

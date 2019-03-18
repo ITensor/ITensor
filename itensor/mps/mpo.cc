@@ -56,11 +56,6 @@ MPO& MPO::
 plusEq(MPO const& other_,
        Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in plusEq: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in plusEq: Arg Minm is deprecated in favor of MinDim.");
-
     if(doWrite())
         Error("operator+= not supported if doWrite(true)");
 

@@ -1139,12 +1139,33 @@ compressMPO(SiteSet const& sites,
             vector<Index> & links, 
             bool isExpH = false, 
             Complex tau = 0,
-            Args const& args = Args::global())
+            Args args = Args::global())
     {
-    if(args.defined("Maxm"))
-      Error("Error in compressMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in compressMPO: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     int N = length(sites);
     Real eps = 1E-14;
@@ -1405,11 +1426,6 @@ MPO
 svdMPO(AutoMPO const& am, 
        Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svdMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svdMPO: Arg Minm is deprecated in favor of MinDim.");
-
     bool isExpH = false;
     Cplx tau = 0.;
 
@@ -1469,11 +1485,6 @@ MPO
 toMPO(AutoMPO const& am, 
       Args const& args) 
     { 
-    if(args.defined("Maxm"))
-      Error("Error in toMPO: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in toMPO: Arg Minm is deprecated in favor of MinDim.");
-
     auto verbose = args.getBool("Verbose",false);
     if(args.getBool("Exact",false))
         {

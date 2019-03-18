@@ -450,11 +450,6 @@ MPS& MPS::
 plusEq(MPS const& R,
        Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in plusEq: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in plusEq: Arg Minm is deprecated in favor of MinDim.");
-
     //cout << "calling new orthog in sum" << endl;
     if(!itensor::isOrtho(*this))
         {
@@ -487,11 +482,6 @@ plusEq(MPS const& R,
 Spectrum MPS::
 svdBond(int b, ITensor const& AA, Direction dir, Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svdBond: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svdBond: Arg Minm is deprecated in favor of MinDim.");
-
     return svdBond(b,AA,dir,LocalOp(),args);
     }
 
@@ -514,11 +504,6 @@ struct Sqrt
 Spectrum
 orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in orthMPS: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in orthMPS: Arg Minm is deprecated in favor of MinDim.");
-
     ITensor& L = (dir == Fromleft ? A1 : A2);
     ITensor& R = (dir == Fromleft ? A2 : A1);
 
@@ -544,11 +529,6 @@ orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
 void MPS::
 position(int i, Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in position: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in position: Arg Minm is deprecated in favor of MinDim.");
-
     if(not *this) Error("position: MPS is default constructed");
 
     if(args.getBool("DoSVDBond",false))
@@ -607,12 +587,20 @@ position(int i, Args args)
 
 
 void MPS::
-orthogonalize(Args const& args)
+orthogonalize(Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in orthogonalize: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in orthogonalize: Arg Minm is deprecated in favor of MinDim.");
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
 
     if(doWrite()) Error("Cannot call orthogonalize when doWrite()==true");
 
@@ -725,11 +713,6 @@ applyGate(ITensor const& gate,
           MPS & psi,
           Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in applyGate: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in applyGate: Arg Minm is deprecated in favor of MinDim.");
-
     auto fromleft = args.getBool("Fromleft",true);
     const int c = orthoCenter(psi);
     ITensor AA = psi(c) * psi(c+1) * gate;
@@ -957,11 +940,6 @@ sum(MPSType const& L,
     MPSType const& R, 
     Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in sum: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in sum: Arg Minm is deprecated in favor of MinDim.");
-
     auto res = L;
     res.plusEq(R,args);
     return res;
@@ -974,11 +952,6 @@ MPSType
 sum(std::vector<MPSType> const& terms, 
     Args const& args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in sum: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in sum: Arg Minm is deprecated in favor of MinDim.");
-
     auto Nt = terms.size();
     if(Nt == 2)
         { 

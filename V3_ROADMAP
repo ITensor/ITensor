@@ -81,7 +81,7 @@ Common operation deprecations (for upgrade guide):
     backwards compatibility. Replaced throughout library.
   o Replace maxM(IndexSet) and minM(IndexSet) with maxDim(IndexSet) and minDim(IndexSet)
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
-    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
+    -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o Deprecate randomize(ITensor& T) in favor of T.randomize()
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
@@ -101,7 +101,7 @@ Common operation deprecations (for upgrade guide):
   o psi.N() -> length(psi)
   o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
-    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
+    -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o Deprecate normalize(MPS& psi) in favor of psi.normalize()
   o Better tag convention for labelling site index (i.e. "n=1" instead of "1" for site 1)
     o Site and Link IndexTypes removed in favor of tags
@@ -126,8 +126,8 @@ Common operation deprecations (for upgrade guide):
   o Added errMPOProd and deprecated checkMPOProd
  - DMRG operations:
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
-    -> Added error in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
-  o In Sweeps object, changed from .maxm() and .minm() to .maxdim() and .mindim(), is there a good way to deprecate?
+    -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
+  o In Sweeps object, added deprecation warning for .maxm() and .minm(), saying to use .maxdim() and .mindim()
 
 Recent commits to v2 (master branch):
   o errMPOProd and deprecation of checkMPOProd

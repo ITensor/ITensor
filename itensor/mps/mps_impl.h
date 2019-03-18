@@ -12,11 +12,6 @@ Spectrum MPS::
 svdBond(int b, ITensor const& AA, Direction dir, 
         BigMatrixT const& PH, Args args)
     {
-    if(args.defined("Maxm"))
-      Error("Error in svdBond: Arg Maxm is deprecated in favor of MaxDim.");
-    if(args.defined("Minm"))
-      Error("Error in svdBond: Arg Minm is deprecated in favor of MinDim.");
-
     setBond(b);
     if(dir == Fromleft && b-1 > leftLim())
         {
