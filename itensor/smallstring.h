@@ -74,7 +74,7 @@ toInt(SmallString const& t)
   //TODO: make into a while loop
   for(size_t j = 1; j < SmallString::size(); ++j)
     if(not isdigit(t[j]) && t[j] != '\0') return -1;
-  return strtol(t.c_str(),'\0',10);
+  return strtol(t.c_str(),NULL,10);
   }
 
 bool inline

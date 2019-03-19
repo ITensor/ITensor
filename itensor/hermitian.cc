@@ -12,7 +12,7 @@
 
 namespace itensor {
 
-const auto MAX_INT = std::numeric_limits<int>::max();
+//const auto MAX_INT = std::numeric_limits<int>::max();
 
 using std::swap;
 using std::istream;
