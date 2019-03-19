@@ -543,47 +543,6 @@ dag(ITensor T)
     return T;
     }
 
-template<typename... Inds>
-ITensor
-replaceInds(ITensor const& cT, 
-            Index o1, Index n1, 
-            Inds... indxs) 
-    {
-    constexpr size_t size = 2+sizeof...(indxs);
-    auto ipairs = std::array<Index,size>{{o1,n1,static_cast<Index>(indxs)...}};
-
-    auto T = cT;
-    auto is = inds(T);
-    
-    //This is a random prime level increase to 
-    //prevent clashing indices if there are prime level
-    //swaps
-    auto tempLevel = 43218;
-    for(auto J : is)
-        {
-        for(size_t oi = 0, ni = 1; ni <= size; oi += 2, ni += 2)
-            {
-            if(J==ipairs[oi])
-                {
-                if(dim(J) != dim(ipairs[ni]))
-                    {
-                    printfln("Old m = %d",dim(J));
-                    printfln("New m would be = %d",dim(ipairs[ni]));
-                    throw ITError("Mismatch of index dimension in reindex");
-                    }
-                T *= delta(dag(J),prime(ipairs[ni],tempLevel));
-                break;
-                }
-            }
-        }
-
-    //Bring the prime levels back down to the original
-    //desired ones
-    for(size_t ni = 1; ni <= size; ni += 2) T.prime(-tempLevel,prime(ipairs[ni],tempLevel));
-
-    return T;
-    }
-
 template<typename T, typename... CtrArgs>
 ITensor::storage_ptr
 readType(std::istream& s, CtrArgs&&... args)

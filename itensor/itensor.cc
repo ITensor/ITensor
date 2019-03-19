@@ -541,6 +541,45 @@ permute(ITensor A,
     return A;
     }
 
+ITensor
+replaceInds(ITensor T,
+            IndexSet const& is1,
+            IndexSet const& is2)
+    {
+#ifdef DEBUG
+    if( order(is1) != order(is2) ) Error("In replaceInds, must replace with equal number of Indices");
+#endif
+    // Add a random prime to account for possible
+    // Index swaps
+    auto plev_temp = 43218432;
+    auto is2p = is2;
+    is2p.prime(plev_temp);
+    auto isT = inds(T);
+    for(auto& J : isT)
+        {
+        for(auto i : range(order(is1)))
+            {
+            if( J == is1[i] )
+                {
+                if( dim(J) != dim(is2[i]) )
+                    {
+                    printfln("Old m = %d",dim(J));
+                    printfln("New m would be = %d",dim(is2[i]));
+                    throw ITError("Mismatch of index dimension in reindex");
+                    }
+                T *= delta(dag(J),is2p[i]);
+                break;
+                }
+            }
+        }
+
+    // Bring the prime levels back down to the original
+    // desired ones
+    T.prime(-plev_temp,is2p);
+
+    return T;
+    }
+
 Real
 norm(ITensor const& T)
     {

@@ -670,13 +670,10 @@ sumels(ITensor const& t);
 Cplx
 sumelsC(ITensor const& t);
 
-template<typename... Inds>
 ITensor
-replaceInds(ITensor const& cT, 
-            Index o1, Index n1, 
-            Inds... inds);
-
-
+replaceInds(ITensor T,
+            IndexSet const& is1,
+            IndexSet const& is2);
 
 //
 // Given Tensors which represent operator matrices

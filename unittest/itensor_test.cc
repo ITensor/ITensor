@@ -1678,12 +1678,13 @@ SECTION("CommonIndex")
 SECTION("replaceInds")
     {
     auto A = randomITensor(s1,prime(s1),l1);
-    auto B = replaceInds(A,s1,prime(s1),l1,l2,prime(s1),s1);
+    auto siml1 = sim(l1);
+    auto B = replaceInds(A,{s1,l1,prime(s1)},{prime(s1),siml1,s1}); 
     for(auto ss1 : range1(dim(s1)))
     for(auto ss1p : range1(dim(prime(s1))))
     for(auto ll1 : range1(dim(l1)))
       {
-      CHECK(A.elt(s1(ss1),prime(s1)(ss1p),l1(ll1))==B.elt(prime(s1)(ss1),s1(ss1p),l2(ll1)));
+      CHECK(A.elt(s1(ss1),prime(s1)(ss1p),l1(ll1))==B.elt(prime(s1)(ss1),s1(ss1p),siml1(ll1)));
       }
     }
 
@@ -1691,7 +1692,7 @@ SECTION("replaceInds (QNs)")
     {
     auto A = randomITensor(QN(),S1,prime(S1),L1);
     auto simL1 = sim(L1);
-    auto B = replaceInds(A,S1,prime(S1),L1,simL1,prime(S1),S1);
+    auto B = replaceInds(A,{S1,L1,prime(S1)},{prime(S1),simL1,S1});
     for(auto ss1 : range1(dim(S1)))
     for(auto ss1p : range1(dim(prime(S1))))
     for(auto ll1 : range1(dim(L1)))
