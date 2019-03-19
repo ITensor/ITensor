@@ -22,5 +22,6 @@
 #include "itensor/util/input.h"
 #include "itensor/util/autovector.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/util/str.h"
 
 #endif

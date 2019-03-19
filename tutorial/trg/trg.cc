@@ -18,11 +18,17 @@ int maxdim = 20;
 int topscale = 8;
 
 auto dim0 = 2;
-auto tmp = Index(dim0,"scale=0");
-auto l = addTags(tmp,"left");
-auto r = addTags(tmp,"right");
-auto u = addTags(tmp,"up");
-auto d = addTags(tmp,"down");
+
+// Define an initial Index making up
+// the Ising partition function
+auto s = Index(dim0,"scale=0");
+
+// Define the indices of one of the
+// Boltzmann weights
+auto l = addTags(s,"left");
+auto r = addTags(s,"right");
+auto u = addTags(s,"up");
+auto d = addTags(s,"down");
 
 auto A = ITensor(l,r,u,d);
 
@@ -48,28 +54,27 @@ for(auto scale : range1(topscale))
     {
     printfln("\n---------- Scale %d -> %d  ----------",scale-1,scale);
 
-    // A tag keeping track of the current scale
-    auto scale_tag = format("scale=%d",scale);
-
     // Get the upper-left and lower-right tensors
     auto Fl = ITensor(r,d);
     auto Fr = ITensor(l,u);
     factor(A,Fl,Fr,{"MaxDim=",maxdim,"ShowEigs=",true,
-                    "Tags=",scale_tag});
+                    "Tags=","scale="+str(scale)});
 
     // Add the proper tags to the new indices
-    Fl = addTags(Fl,"left",scale_tag);
-    Fr = addTags(Fr,"right",scale_tag);
+    // A.addTags("tags","matchtags") adds the tags
+    // "tags" to the indices in A with tags "matchtags"
+    Fl.addTags("left","scale="+str(scale));
+    Fr.addTags("right","scale="+str(scale));
  
     // Get the upper-right and lower-left tensors
     auto Fu = ITensor(l,d);
     auto Fd = ITensor(u,r);
     factor(A,Fu,Fd,{"MaxDim=",maxdim,"ShowEigs=",true,
-                    "Tags=",scale_tag});
+                    "Tags=","scale="+str(scale)});
 
     // Add the proper tags to the new indices
-    Fu = addTags(Fu,"up",scale_tag);
-    Fd = addTags(Fd,"down",scale_tag);
+    Fu = addTags(Fu,"up","scale="+str(scale));
+    Fd = addTags(Fd,"down","scale="+str(scale));
 
 
     // TODO:
@@ -96,6 +101,8 @@ for(auto scale : range1(topscale))
     Fd *= delta(u,d);
     
     A = Fl * Fu * Fr * Fd;
+
+    Print(A);
 
     // Update the indices by finding them with tags
     l = findIndex(A,"left");

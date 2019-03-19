@@ -29,18 +29,9 @@ putprimes(string s, int plev)
     return str.str();
     }
 
-// nameint() is a weird name without Index names, depecrate
-//string 
-//nameint(string const& f, int n)
-//    { 
-//    return format("%s%d",f,n);
-//    }
-
 //
 // class Index
 //
-
-
 
 Index::id_type Index::
 generateID()
