@@ -836,6 +836,69 @@ setAll(String const& state)
     return *this;
     }
 
+MPS
+setTags(MPS A, TagSet const& ts, IndexSet const& is)
+    {
+    A.setTags(ts,is);
+    return A;
+    }
+
+MPS
+addTags(MPS A, TagSet const& ts, IndexSet const& is)
+    {
+    A.addTags(ts,is);
+    return A;
+    }
+  
+MPS
+removeTags(MPS A, TagSet const& ts, IndexSet const& is)
+    {
+    A.removeTags(ts,is);
+    return A;
+    }
+
+MPS
+replaceTags(MPS A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+    {
+    A.replaceTags(ts1,ts2,is);
+    return A;
+    }
+
+MPS
+swapTags(MPS A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+    {
+    A.swapTags(ts1,ts2,is);
+    return A;
+    }
+
+MPS
+prime(MPS A, int plev, IndexSet const& is)
+    {
+    A.prime(plev,is);
+    return A;
+    }
+
+MPS
+prime(MPS A, IndexSet const& is)
+    {
+    A.prime(is);
+    return A;
+    }
+
+MPS
+setPrime(MPS A, int plev, IndexSet const& is)
+    {
+    A.setPrime(plev,is);
+    return A;
+    }
+
+MPS
+noPrime(MPS A, IndexSet const& is)
+    {
+    A.noPrime(is);
+    return A;
+    }
+
 void InitState::
 checkRange(int i) const
     {

@@ -56,6 +56,7 @@ class MPO : private MPS
     plusEq(MPO const& R,
            Args const& args = Args::global());
 
+    using Parent::setTags;
     using Parent::addTags;
     using Parent::removeTags;
     using Parent::replaceTags;
@@ -136,6 +137,25 @@ operator*(Cplx z, MPO W) { return W *= z; }
 //MPO
 //toMPO(IQMPO const& K);
 
+//
+// MPO tag functions
+//
+
+MPO
+setTags(MPO A, TagSet const& ts, IndexSet const& is);
+
+template<typename... VarArgs>
+MPO
+setTags(MPO A,
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPO
+addTags(MPO A, TagSet const& ts, IndexSet const& is);
+
 template<typename... VarArgs>
 MPO
 addTags(MPO A,
@@ -144,7 +164,10 @@ addTags(MPO A,
     A.addTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
-    
+   
+MPO
+removeTags(MPO A, TagSet const& ts, IndexSet const& is);
+
 template<typename... VarArgs>
 MPO
 removeTags(MPO A,
@@ -153,6 +176,9 @@ removeTags(MPO A,
     A.removeTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
+
+MPO
+replaceTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
 
 template<typename... VarArgs>
 MPO
@@ -163,6 +189,9 @@ replaceTags(MPO A,
     return A;
     }
 
+MPO
+swapTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
+
 template<typename... VarArgs>
 MPO
 swapTags(MPO A,
@@ -172,14 +201,23 @@ swapTags(MPO A,
     return A;
     }
 
+MPO
+prime(MPO A, int plev, IndexSet const& is);
+
+MPO
+prime(MPO A, IndexSet const& is);
+
 template<typename... VarArgs>
 MPO
 prime(MPO A,
       VarArgs&&... vargs)
     {
     A.prime(std::forward<VarArgs>(vargs)...);
-    return A; 
+    return A;
     }
+
+MPO
+setPrime(MPO A, int plev, IndexSet const& is);
 
 template<typename... VarArgs>
 MPO
@@ -189,6 +227,9 @@ setPrime(MPO A,
     A.setPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
+
+MPO
+noPrime(MPO A, IndexSet const& is);
 
 template<typename... VarArgs>
 MPO

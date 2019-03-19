@@ -25,16 +25,16 @@ SECTION("Orthogonalize")
         {
         links.at(n) = Index(m,format("Link,l=%d",n));
         }
-    W.Aref(1) = randomITensor(links.at(1),sites(1),prime(sites(1)));
+    W.ref(1) = randomITensor(links.at(1),sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
         {
-        W.Aref(n) = randomITensor(links.at(n-1),sites(n),prime(sites(n)),links.at(n));
+        W.ref(n) = randomITensor(links.at(n-1),sites(n),prime(sites(n)),links.at(n));
         }
-    W.Aref(N) = randomITensor(links.at(N-1),sites(N),prime(sites(N)));
+    W.ref(N) = randomITensor(links.at(N-1),sites(N),prime(sites(N)));
 
     //Normalize W
     auto n2 = overlap(W,W);
-    W.Aref(1) /= sqrt(n2);
+    W.ref(1) /= sqrt(n2);
 
     auto oW = W;
 
@@ -88,15 +88,15 @@ SECTION("Add MPOs")
 
     auto A = MPO(sites);
     auto B = MPO(sites);
-    A.Aref(1) = randomITensor(Z,sites(1),l1.at(1));
-    B.Aref(1) = randomITensor(Z,sites(1),l2.at(1));
+    A.ref(1) = randomITensor(Z,sites(1),l1.at(1));
+    B.ref(1) = randomITensor(Z,sites(1),l2.at(1));
     for(int n = 2; n < N; ++n)
         {
-        A.Aref(n) = randomITensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
-        B.Aref(n) = randomITensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
+        A.ref(n) = randomITensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
+        B.ref(n) = randomITensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
         }
-    A.Aref(N) = randomITensor(Z,sites(N),dag(l1.at(N-1)));
-    B.Aref(N) = randomITensor(Z,sites(N),dag(l2.at(N-1)));
+    A.ref(N) = randomITensor(Z,sites(N),dag(l1.at(N-1)));
+    B.ref(N) = randomITensor(Z,sites(N),dag(l2.at(N-1)));
 
     auto C = sum(A,B);
 
@@ -128,14 +128,14 @@ SECTION("Regression Test")
     auto A = MPO(sites);
     auto Ia = Index(QN({"Sz",1},{"Nf",-1,-1}),2,
                     QN({"Sz",-1},{"Nf",-1,-1}),1,"I");
-    A.Aref(1) = randomITensor(QN({"Sz",-1},{"Nf",1,-1}), prime(sites(1)), dag(Ia), dag(sites(1)));
-    A.Aref(2) = randomITensor(QN({"Sz",1},{"Nf",-1,}), Ia, dag(sites(2)), prime(sites(2)));
+    A.ref(1) = randomITensor(QN({"Sz",-1},{"Nf",1,-1}), prime(sites(1)), dag(Ia), dag(sites(1)));
+    A.ref(2) = randomITensor(QN({"Sz",1},{"Nf",-1,}), Ia, dag(sites(2)), prime(sites(2)));
 
     auto B = MPO(sites);
     auto Ib = Index(QN({"Sz",1},{"Nf",-1,-1}),2,
                     QN({"Sz",-1},{"Nf",-1,-1}),1,"I");
-    B.Aref(1) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(1)), dag(Ib), dag(sites(1)));
-    B.Aref(2) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(2)), Ib, dag(sites(2)));
+    B.ref(1) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(1)), dag(Ib), dag(sites(1)));
+    B.ref(2) = randomITensor(QN({"Sz",0},{"Nf",0,-1}), prime(sites(2)), Ib, dag(sites(2)));
 
     REQUIRE_NOTHROW(A.plusEq(B));
     }
@@ -173,10 +173,10 @@ SECTION("applyMPO (DensityMatrix)")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        H.Aref(j).randomize();
-        K.Aref(j).randomize();
-        H.Aref(j) *= 0.2;
-        K.Aref(j) *= 0.2;
+        H.ref(j).randomize();
+        K.ref(j).randomize();
+        H.ref(j) *= 0.2;
+        K.ref(j) *= 0.2;
         }
 
     for(int n = 1; n < N; ++n)
@@ -237,10 +237,10 @@ SECTION("applyMPO (Fit)")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        H.Aref(j).randomize();
-        K.Aref(j).randomize();
-        H.Aref(j) *= 0.2;
-        K.Aref(j) *= 0.2;
+        H.ref(j).randomize();
+        K.ref(j).randomize();
+        H.ref(j) *= 0.2;
+        K.ref(j) *= 0.2;
         }
 
     // Apply K to psi to entangle psi
@@ -306,10 +306,10 @@ SECTION("errorMPOProd Scaling")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        H.Aref(j).randomize();
-        K.Aref(j).randomize();
-        H.Aref(j) *= 10.0; //crazy large tensor
-        K.Aref(j) *= 10.0;
+        H.ref(j).randomize();
+        K.ref(j).randomize();
+        H.ref(j) *= 10.0; //crazy large tensor
+        K.ref(j) *= 10.0;
         }
 
     // Apply K to psi to entangle psi
@@ -365,11 +365,11 @@ SECTION("Overlap <psi|HK|phi>")
     //Randomize the MPOs to make sure they are non-Hermitian
     for(auto j : range1(N))
         {
-        H.Aref(j).randomize();
-        K.Aref(j).randomize();
-        H.Aref(j) *= 0.2;
-        K.Aref(j) *= 0.3;
-        Hdag.Aref(j) = dag(swapTags(H(j),"0","1","Site"));
+        H.ref(j).randomize();
+        K.ref(j).randomize();
+        H.ref(j) *= 0.2;
+        K.ref(j) *= 0.3;
+        Hdag.ref(j) = dag(swapTags(H(j),"0","1","Site"));
         }
 
     auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
@@ -407,12 +407,12 @@ SECTION("Remove QNs from MPO")
     auto Z = QN({"Sz",0},{"Nf",0,-1});
 
     auto A = MPO(sites);
-    A.Aref(1) = randomITensor(Z,sites(1),ll.at(1));
+    A.ref(1) = randomITensor(Z,sites(1),ll.at(1));
     for(int n = 2; n < N; ++n)
         {
-        A.Aref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
+        A.ref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
         }
-    A.Aref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
+    A.ref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
 
     auto a = removeQNs(A);
 

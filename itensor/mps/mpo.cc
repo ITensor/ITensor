@@ -351,6 +351,69 @@ putMPOLinks(MPO& W, Args const& args)
 //    return res;
 //    }
 
+MPO
+setTags(MPO A, TagSet const& ts, IndexSet const& is)
+    {
+    A.setTags(ts,is);
+    return A;
+    }
+
+MPO
+addTags(MPO A, TagSet const& ts, IndexSet const& is)
+    {
+    A.addTags(ts,is);
+    return A;
+    }
+
+MPO
+removeTags(MPO A, TagSet const& ts, IndexSet const& is)
+    {
+    A.removeTags(ts,is);
+    return A;
+    }
+
+MPO
+replaceTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+    {
+    A.replaceTags(ts1,ts2,is);
+    return A;
+    }
+
+MPO
+swapTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+    {
+    A.swapTags(ts1,ts2,is);
+    return A;
+    }
+
+MPO
+prime(MPO A, int plev, IndexSet const& is)
+    {
+    A.prime(plev,is);
+    return A;
+    }
+
+MPO
+prime(MPO A, IndexSet const& is)
+    {
+    A.prime(is);
+    return A;
+    }
+
+MPO
+setPrime(MPO A, int plev, IndexSet const& is)
+    {
+    A.setPrime(plev,is);
+    return A;
+    }
+
+MPO
+noPrime(MPO A, IndexSet const& is)
+    {
+    A.noPrime(is);
+    return A;
+    }
+
 bool
 isComplex(MPO const& W)
     {

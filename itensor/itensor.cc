@@ -408,6 +408,87 @@ uniqueIndex(ITensor const& A,
     return uniqueIndex(A,std::vector<ITensor>(B),tsmatch);
     }
 
+ITensor
+setTags(ITensor A,
+        TagSet const& ts,
+        IndexSet const& is)
+  {
+  A.setTags(ts,is);
+  return A;
+  }
+
+ITensor
+addTags(ITensor A,
+        TagSet const& ts,
+        IndexSet const& is)
+  {
+  A.addTags(ts,is);
+  return A;
+  }
+
+ITensor
+removeTags(ITensor A,
+           TagSet const& ts,
+           IndexSet const& is)
+  {
+  A.removeTags(ts,is);
+  return A;
+  }
+
+ITensor
+replaceTags(ITensor A,
+            TagSet const& ts1,
+            TagSet const& ts2,
+            IndexSet const& is)
+  {
+  A.replaceTags(ts1,ts2,is);
+  return A;
+  }
+
+ITensor
+swapTags(ITensor A,
+         TagSet const& ts1,
+         TagSet const& ts2,
+         IndexSet const& is)
+  {
+  A.swapTags(ts1,ts2,is);
+  return A;
+  }
+
+ITensor
+prime(ITensor A,
+      int plev,
+      IndexSet const& is)
+  {
+  A.prime(plev,is);
+  return A;
+  }
+
+ITensor
+prime(ITensor A,
+      IndexSet const& is)
+  {
+  A.prime(is);
+  return A;
+  }
+
+ITensor
+setPrime(ITensor A,
+         int plev,
+         IndexSet const& is)
+  {
+  A.setPrime(plev,is);
+  return A;
+  }
+
+ITensor
+noPrime(ITensor A,
+        IndexSet const& is)
+  {
+  A.noPrime(is);
+  return A;
+  }
+
 ITensor& ITensor::
 permute(IndexSet const& iset)
     {

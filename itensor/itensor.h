@@ -131,44 +131,85 @@ class ITensor
     // Index Tag Methods
     //
 
-    template<typename... VarArgs>
     ITensor&
-    replaceTags(VarArgs&&... vargs)
-        { is_.replaceTags(std::forward<VarArgs>(vargs)...); return *this; }
+    setTags(TagSet const& ts,
+            IndexSet const& is)
+        { is_.setTags(ts,is); return *this; }
 
     template<typename... VarArgs>
     ITensor&
     setTags(VarArgs&&... vargs)
         { is_.setTags(std::forward<VarArgs>(vargs)...); return *this; }
 
+    ITensor&
+    addTags(TagSet const& ts,
+            IndexSet const& is)
+        { is_.addTags(ts,is); return *this; }
+
     template<typename... VarArgs>
     ITensor&
     addTags(VarArgs&&... vargs)
         { is_.addTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
+    removeTags(TagSet const& ts,
+               IndexSet const& is)
+        { is_.removeTags(ts,is); return *this; }
 
     template<typename... VarArgs>
     ITensor&
     removeTags(VarArgs&&... vargs)
         { is_.removeTags(std::forward<VarArgs>(vargs)...); return *this; }
 
+    ITensor&
+    replaceTags(TagSet const& ts1,
+                TagSet const& ts2,
+                IndexSet const& is)
+        { is_.replaceTags(ts1,ts2,is); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    replaceTags(VarArgs&&... vargs)
+        { is_.replaceTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
+    swapTags(TagSet const& ts1,
+             TagSet const& ts2,
+             IndexSet const& is)
+        { is_.swapTags(ts1,ts2,is); return *this; }
+
     template<typename... VarArgs>
     ITensor&
     swapTags(VarArgs&&... vargs)
         { is_.swapTags(std::forward<VarArgs>(vargs)...); return *this; }
 
-    //
-    // Index Prime Level Methods
-    //
+    ITensor&
+    setPrime(int plev,
+             IndexSet const& is)
+        { is_.setPrime(plev,is); return *this; }
 
     template<typename... VarArgs>
     ITensor& 
     setPrime(VarArgs&&... vargs)
         { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
+    ITensor&
+    noPrime(IndexSet const& is)
+        { is_.noPrime(is); return *this; }
+
     template<typename... VarArgs>
     ITensor& 
     noPrime(VarArgs&&... vargs)
         { is_.noPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
+    prime(int plev,
+          IndexSet const& is)
+        { is_.prime(plev,is); return *this; }
+
+    ITensor&
+    prime(IndexSet const& is)
+        { is_.prime(is); return *this; }
 
     template<typename... VarArgs>
     ITensor& 
@@ -401,49 +442,122 @@ index(ITensor const& A, RangeT<Index>::size_type I);
 // ITensor tag functions
 //
 
+ITensor
+setTags(ITensor A,
+        TagSet const& ts,
+        IndexSet const& is);
+
 template<typename... VarArgs>
 ITensor
 setTags(ITensor A,
-        VarArgs&&... vargs);
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+addTags(ITensor A,
+        TagSet const& ts,
+        IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
 addTags(ITensor A,
-        VarArgs&&... vargs);
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+removeTags(ITensor A,
+           TagSet const& ts,
+           IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
 removeTags(ITensor A,
-           VarArgs&&... vargs);
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+replaceTags(ITensor A,
+            TagSet const& ts1,
+            TagSet const& ts2,
+            IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
 replaceTags(ITensor A,
-            VarArgs&&... vargs);
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+swapTags(ITensor A,
+         TagSet const& ts1,
+         TagSet const& ts2,
+         IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
 swapTags(ITensor A,
-         VarArgs&&... vargs);
+         VarArgs&&... vargs)
+    {
+    A.swapTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
 
-//
-// ITensor prime level functions
-//
+ITensor
+prime(ITensor A,
+      int plev,
+      IndexSet const& is);
+
+ITensor
+prime(ITensor A,
+      IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
-prime(ITensor A, 
-      VarArgs&&... vargs);
+prime(ITensor A,
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+setPrime(ITensor A,
+         int plev,
+         IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
-setPrime(ITensor A, 
-         VarArgs&&... vargs);
+setPrime(ITensor A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+noPrime(ITensor A,
+        IndexSet const& is);
 
 template<typename... VarArgs>
 ITensor
-noPrime(ITensor A, 
-        VarArgs&&... vargs);
+noPrime(ITensor A,
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
 
 bool
 hasIndex(ITensor const& T, Index const& I);

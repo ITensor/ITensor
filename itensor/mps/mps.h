@@ -113,6 +113,34 @@ class MPS
     //MPS Index Methods
     //
 
+    void
+    setTags(TagSet const& ts, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("setTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].setTags(ts,is);
+        }
+
+    template<typename... VarArgs>
+    void
+    setTags(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("setTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].setTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    void
+    addTags(TagSet const& ts, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("addTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].addTags(ts,is);
+        }
+
     template<typename... VarArgs>
     void
     addTags(VarArgs&&... vargs)
@@ -123,14 +151,32 @@ class MPS
             A_[i].addTags(std::forward<VarArgs>(vargs)...);
         }
 
+    void
+    removeTags(TagSet const& ts, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("removeTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].removeTags(ts,is);
+        }
+
     template<typename... VarArgs>
     void
     removeTags(VarArgs&&... vargs)
         {
         if(do_write_)
-            Error("addTags not supported if doWrite(true)");
+            Error("removeTags not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].removeTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    void
+    replaceTags(TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("replaceTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].replaceTags(ts1,ts2,is);
         }
 
     template<typename... VarArgs>
@@ -143,6 +189,15 @@ class MPS
             A_[i].replaceTags(std::forward<VarArgs>(vargs)...);
         }
 
+    void
+    swapTags(TagSet const& ts1, TagSet const& ts2, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("swapTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].swapTags(ts1,ts2,is);
+        }
+
     template<typename... VarArgs>
     void
     swapTags(VarArgs&&... vargs)
@@ -151,6 +206,24 @@ class MPS
             Error("swapTags not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].swapTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    void
+    prime(int plev, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("prime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].prime(plev,is);
+        }
+
+    void
+    prime(IndexSet const& is)
+        {
+        if(do_write_)
+            Error("prime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].prime(is);
         }
 
     template<typename... VarArgs>
@@ -163,6 +236,15 @@ class MPS
             A_[i].prime(std::forward<VarArgs>(vargs)...);
         }
 
+    void
+    setPrime(int plev, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("setPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].setPrime(plev,is);
+        }
+
     template<typename... VarArgs>
     void
     setPrime(VarArgs&&... vargs)
@@ -171,6 +253,15 @@ class MPS
             Error("setPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].setPrime(std::forward<VarArgs>(vargs)...);
+        }
+
+    void
+    noPrime(IndexSet const& is)
+        {
+        if(do_write_)
+            Error("noPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].noPrime(is);
         }
 
     template<typename... VarArgs>
@@ -353,6 +444,21 @@ class InitState
 // MPS tag functions
 //
 
+MPS
+setTags(MPS A, TagSet const& ts, IndexSet const& is);
+
+template<typename... VarArgs>
+MPS
+setTags(MPS A,
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPS
+addTags(MPS A, TagSet const& ts, IndexSet const& is);
+
 template<typename... VarArgs>
 MPS
 addTags(MPS A,
@@ -362,6 +468,9 @@ addTags(MPS A,
     return A;
     }
     
+MPS
+removeTags(MPS A, TagSet const& ts, IndexSet const& is);
+
 template<typename... VarArgs>
 MPS
 removeTags(MPS A,
@@ -370,6 +479,9 @@ removeTags(MPS A,
     A.removeTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
+
+MPS
+replaceTags(MPS A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
 
 template<typename... VarArgs>
 MPS
@@ -380,6 +492,9 @@ replaceTags(MPS A,
     return A;
     }
 
+MPS
+swapTags(MPS A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
+
 template<typename... VarArgs>
 MPS
 swapTags(MPS A,
@@ -388,6 +503,12 @@ swapTags(MPS A,
     A.swapTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
+
+MPS
+prime(MPS A, int plev, IndexSet const& is);
+
+MPS
+prime(MPS A, IndexSet const& is);
 
 template<typename... VarArgs>
 MPS
@@ -398,6 +519,9 @@ prime(MPS A,
     return A; 
     }
 
+MPS
+setPrime(MPS A, int plev, IndexSet const& is);
+
 template<typename... VarArgs>
 MPS
 setPrime(MPS A,
@@ -406,6 +530,9 @@ setPrime(MPS A,
     A.setPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
+
+MPS
+noPrime(MPS A, IndexSet const& is);
 
 template<typename... VarArgs>
 MPS
