@@ -46,6 +46,9 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation deprecations (for upgrade guide):
  - Index operations:
+  o Add `unionInds(IndexSet,IndexSet)->IndexSet` to make the union of the input IndexSets
+  o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices in an IndexSet with
+    similar indices
   o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
   o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
     -> `mapPrime(1,2,"0")` doesn't make sense, many uses of `mapPrime` are superseded
@@ -66,6 +69,7 @@ Common operation deprecations (for upgrade guide):
     containing certain tags
   o Remove findType, use findIndex instead
  - ITensor operations:
+  o Add `swapInds(A,{i,j,k},{a,b,c})` to swap the Indices i<->a, j<->b, etc.
   o All ITensor constructors like `ITensor(...)`, `randomITensor(...)`, `diag(...)`, etc. now accept
     `std::initializer_list<Index>`,`std::array<Index,N>`, `std::vector<Index>`, and `IndexSet`
     along with vararg lists of `Index,Index...`
@@ -78,7 +82,7 @@ Common operation deprecations (for upgrade guide):
   o New QN design:
     Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
     of triples name-val-modfac.
-  o `order(A,i,j,k)` -> `permute(A,i,j,k)` to permute the date of an ITensor
+  o `order(A,i,j,k)` -> `permute(A,i,j,k)` to permute the data of an ITensor
   o Removed `permute(A,i,"...")` syntax
   o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
   o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
@@ -89,7 +93,7 @@ Common operation deprecations (for upgrade guide):
   o Deprecate randomize(ITensor& T) in favor of T.randomize()
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
-  o Deprecate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,Index,Index,...)
+  o Deprecate reindex(ITensor,Index,Index,...), replace with replaceInds(ITensor,IndexSet,IndexSet)
     that does not ignore prime levels and internally calls delta() (deprecation error)
   o Deprecate randomTensor, matrixTensor, diagTensor in favor of randomITensor, matrixITensor, diagITensor (deprecation warnings)
   o Added .elt and .eltC accepting vector<int> (pull #194)

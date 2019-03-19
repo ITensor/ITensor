@@ -580,6 +580,19 @@ replaceInds(ITensor T,
     return T;
     }
 
+ITensor
+swapInds(ITensor T,
+         IndexSet const& is1,
+         IndexSet const& is2)
+    {
+#ifdef DEBUG
+    if( order(is1) != order(is2) ) Error("In swapInds, must swap equal numbers of Indices");
+#endif
+    auto is1r = unionInds(is1,is2);
+    auto is2r = unionInds(is2,is1);
+    return replaceInds(T,is1r,is2r);
+    }
+
 Real
 norm(ITensor const& T)
     {
@@ -768,7 +781,7 @@ operator*=(ITensor const& R)
 
 #ifdef DEBUG
     //Check for duplicate indices
-    detail::check(C.Nis);
+    checkIndexSet(C.Nis);
 #endif
 
     L.is_.swap(C.Nis);
@@ -851,7 +864,7 @@ operator/=(ITensor const& R)
 
 #ifdef DEBUG
     //Check for duplicate indices
-    detail::check(C.Nis);
+    checkIndexSet(C.Nis);
 #endif
 
     L.is_.swap(C.Nis);

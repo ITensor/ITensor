@@ -26,6 +26,7 @@ SOURCES+= itdata/scalar.cc
 SOURCES+= qn.cc
 SOURCES+= tagset.cc
 SOURCES+= index.cc
+SOURCES+= indexset.cc
 SOURCES+= itensor.cc
 SOURCES+= spectrum.cc
 SOURCES+= decomp.cc

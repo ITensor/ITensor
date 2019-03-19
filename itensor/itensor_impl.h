@@ -7,7 +7,6 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/tensor/contract.h"
-//#include "itensor/util/print_macro.h"
 
 //
 // Template Method Implementations

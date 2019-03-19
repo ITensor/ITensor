@@ -293,9 +293,9 @@ class IndexSet : public RangeT<Index>
     setPrime(int plnew,
              Index const& imatch1,
              VarArgs&&... vargs)
-      {
-      setPrime(plnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
-      }
+        {
+        setPrime(plnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+        }
 
     void
     setPrime(int plnew,
@@ -321,12 +321,10 @@ class IndexSet : public RangeT<Index>
       prime(1);
       }
 
-    template<typename... VarArgs>
     void
     prime(int plinc,
           IndexSet const& ismatch);
 
-    template<typename... VarArgs>
     void
     prime(IndexSet const& ismatch)
       {
@@ -347,7 +345,7 @@ class IndexSet : public RangeT<Index>
     prime(Index const& imatch1,
           VarArgs&&... vargs)
       {
-      prime(1,imatch1,std::forward<VarArgs>(vargs)...);
+      prime(IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
       }
 
     void
@@ -414,18 +412,18 @@ findIndex(IndexSet const& is,
 //
 
 
-//Replace all indices with tags t by 'similar' indices 
-//with same properties but which don't compare equal 
+//Replace all indices with 'similar' indices 
+//with the same properties but which don't compare equal 
 //to the indices they replace (using sim(Index) function)
-void 
-sim(IndexSet & is, 
-    TagSet const& t);
+IndexSet
+sim(IndexSet is);
+IndexSet
+sim(IndexSet is, 
+    IndexSet const& ismatch);
+IndexSet
+sim(IndexSet is, 
+    TagSet const& tsmatch);
 
-//Replace index I with a 'similar' index having same properties
-//but which does not compare equal to it (using sim(I) function)
-void 
-sim(IndexSet & is, 
-    Index const& I);
 
 //
 // IndexSet helper methods
@@ -621,8 +619,15 @@ operator+(typename IndexSetIter<T>::difference_type d,
 bool
 hasQNs(IndexSet const& is);
 
-bool
-hasQNs(std::vector<Index> const& inds);
+void
+checkIndexSet(IndexSet const& is);
+
+void
+checkIndexPositions(std::vector<int> const& is);
+
+IndexSet
+unionInds(IndexSet const& is1,
+          IndexSet const& is2);
 
 } //namespace itensor
 
