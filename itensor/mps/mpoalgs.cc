@@ -47,8 +47,8 @@ nmultMPO(MPO const& Aorig,
     B.prime();
 
     res=A;
-    auto siA = uniqueIndex(A(1),B(1),A(2));
-    auto siB = uniqueIndex(B(1),A(1),B(2));
+    auto siA = uniqueIndex(A(1),{B(1),A(2)});
+    auto siB = uniqueIndex(B(1),{A(1),B(2)});
     res.ref(1) = ITensor(siA,siB,linkIndex(A,1));
 
     //Print(A);
@@ -74,8 +74,8 @@ nmultMPO(MPO const& Aorig,
 
         auto mid = commonIndex(res(i),nfork,"Link");
         mid.dag();
-        auto siA = uniqueIndex(A(i+1),A(i),A(i+2),B(i+1));
-        auto siB = uniqueIndex(B(i+1),B(i),B(i+2),A(i+1));
+        auto siA = uniqueIndex(A(i+1),{A(i),A(i+2),B(i+1)});
+        auto siB = uniqueIndex(B(i+1),{B(i),B(i+2),A(i+1)});
         res.ref(i+1) = ITensor(mid,siA,siB,rightLinkIndex(res,i+1));
         }
 

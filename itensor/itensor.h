@@ -434,14 +434,53 @@ eltC(ITensor A,
 IndexSet const& 
 inds(ITensor const& A);
 
-// Get Index
+// Get a vector of IndexSets from a vector of ITensors
+std::vector<IndexSet> 
+inds(std::vector<ITensor> const& A);
+
+// Get Index at a certain position
+// in the ITensor's IndexSet, using 1-based indexing
 Index const& 
 index(ITensor const& A, RangeT<Index>::size_type I);
+
+ITensor
+operator*(ITensor A, ITensor const& B);
+ITensor
+operator*(ITensor const& A, ITensor&& B);
+ITensor
+operator*(ITensor T, Real fac);
+ITensor
+operator*(Real fac, ITensor T);
+ITensor
+operator*(ITensor T, Complex fac);
+ITensor
+operator*(Complex fac, ITensor T);
+ITensor
+operator/(ITensor T, Real fac);
+ITensor
+operator/(ITensor T, Complex fac);
+ITensor
+operator+(ITensor A, ITensor const& B);
+ITensor
+operator+(ITensor const& A, ITensor&& B);
+ITensor
+operator-(ITensor A, ITensor const& B);
+ITensor
+operator-(ITensor const& A, ITensor&& B);
+ITensor
+operator/(ITensor A, ITensor const& B);
+ITensor
+operator/(ITensor const& A, ITensor && B);
 
 //
 // ITensor tag functions
 //
 
+// Define versions that explicitly take
+// IndexSet for matching, so that other containers
+// of Index that can be converted to IndexSet
+// can be used (i.e. std::vector<Index>,
+// std::initializer_list<Index>, etc.)
 ITensor
 setTags(ITensor A,
         TagSet const& ts,
@@ -560,11 +599,20 @@ noPrime(ITensor A,
     }
 
 bool
-hasIndex(ITensor const& T, Index const& I);
+hasIndex(ITensor const& T,
+         Index const& imatch);
+
+bool
+hasInds(ITensor const& T,
+        IndexSet const& ismatch);
 
 Index
 findIndex(ITensor const& T,
           TagSet const& tsmatch);
+
+IndexSet
+findInds(ITensor const& T,
+         TagSet const& tsmatch);
 
 //Find index of tensor A (optionally having tags ts)
 //which is shared with tensor B
@@ -599,15 +647,6 @@ Index
 uniqueIndex(ITensor const& A,
             std::initializer_list<ITensor> B,
             TagSet const& tsmatch);
-template<typename... Tensors> 
-Index
-uniqueIndex(ITensor const& A, 
-            ITensor const& T1,
-            ITensor const& T2,
-            Tensors const&... Tens)
-    {
-    return uniqueIndex(A,std::vector<ITensor>({T1,T2,Tens...}));
-    }
 
 //permute function which returns a new ITensor 
 ITensor
@@ -837,6 +876,9 @@ operator<<(std::ostream & s, ITensor const& T);
 //
 // Depecrated
 //
+
+void
+randomize(ITensor & T, Args const& args);
 
 long
 rank(ITensor const& T);

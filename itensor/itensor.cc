@@ -302,22 +302,60 @@ swap(ITensor & other)
     IF_USESCALE(scale_.swap(other.scale_);)
     }
 
+ITensor
+conj(ITensor T)
+    {
+    T.conj();
+    return T;
+    }
+
+ITensor
+dag(ITensor T)
+    {
+    T.dag();
+    return T;
+    }
+
+bool
+hasQNs(ITensor const& T) { return hasQNs(inds(T)); }
+
+long
+order(ITensor const& T) { return order(inds(T)); }
+
 IndexSet const&
 inds(ITensor const& A) { return A.inds(); }
+
+std::vector<IndexSet>
+inds(std::vector<ITensor> const& A)
+  {
+  auto is = std::vector<IndexSet>(A.size());
+  for( auto i : range(A.size()) )
+      is[i] = inds(A[i]);
+  return is;
+  }
 
 Index const&
 index(ITensor const& A, RangeT<Index>::size_type I) { return A.index(I); }
 
 Index
+findIndex(ITensor const& T,
+          TagSet const& tsmatch)
+    {
+    return findIndex(inds(T),tsmatch);
+    }
+
+IndexSet
+findInds(ITensor const& T,
+         TagSet const& tsmatch)
+    {
+    return findInds(inds(T),tsmatch);
+    }
+
+Index
 commonIndex(ITensor const& A, 
             ITensor const& B)
     {
-    for(auto& I : inds(A))
-        if( hasIndex(inds(B),I) ) 
-            {
-            return I;
-            }
-    return Index();
+    return findIndex(commonInds(inds(A),inds(B)));
     }
 
 Index
@@ -325,24 +363,14 @@ commonIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& tsmatch)
     {
-    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
-        if( hasIndex(inds(B),I) ) 
-            {
-            return I;
-            }
-    return Index();
+    return findIndex(commonInds(inds(A),inds(B)),tsmatch);
     }
 
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B)
     {
-    for(auto& I : inds(A))
-        if( !hasIndex(inds(B),I) )
-            {
-            return I;
-            }
-    return Index();
+    return findIndex(uniqueInds(inds(A),inds(B)));
     }
 
 Index
@@ -350,29 +378,14 @@ uniqueIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& tsmatch)
     {
-    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
-        if( !hasIndex(inds(B),I) ) 
-            {
-            return I;
-            }
-    return Index();
+    return findIndex(uniqueInds(inds(A),inds(B)),tsmatch);
     }
 
 Index
 uniqueIndex(ITensor const& A,
             std::vector<ITensor> const& B)
     {
-    for(auto& I : inds(A))
-        {
-        bool found = false;
-        for(auto& T : B) if( hasIndex(T,I) )
-            {
-            found = true;
-            break;
-            }
-        if(!found) return I;
-        }
-    return Index();
+    return findIndex(uniqueInds(inds(A),inds(B)));
     }
 
 Index
@@ -380,17 +393,7 @@ uniqueIndex(ITensor const& A,
             std::vector<ITensor> const& B,
             TagSet const& tsmatch)
     {
-    for(auto& I : inds(A)) if( hasTags(I,tsmatch) )
-         {
-         bool found = false;
-         for(auto& T : B) if(hasIndex(T,I))
-             {
-             found = true;
-             break;
-             }
-         if(!found) return I;
-         }
-    return Index();
+    return findIndex(uniqueInds(inds(A),inds(B)),tsmatch);
     }
 
 Index
@@ -597,7 +600,7 @@ Real
 norm(ITensor const& T)
     {
 #ifdef DEBUG
-    if(!T) Error("Default initialized tensor in norm(ITensorT)");
+    if(!T) Error("Default initialized tensor in norm(ITensor)");
 #endif
 
 #ifndef USESCALE
@@ -606,13 +609,6 @@ norm(ITensor const& T)
     auto fac = std::fabs(T.scale().real0());
     return fac * doTask(NormNoScale{},T.store());
 #endif
-    }
-
-void
-randomize(ITensor & T, Args const& args)
-    {
-    Global::warnDeprecated("randomize(ITensor,args) is deprecated in favor of .randomize(args)");
-    T.randomize(args);
     }
 
 void ITensor::
@@ -872,6 +868,57 @@ operator/=(ITensor const& R)
     return L;
     }
 
+#ifndef USESCALE
+
+ITensor ITensor::
+operator-() const
+    {
+    auto res = *this;
+    doTask(Mult<Real>(-1.),res.store());
+    return res;
+    }
+
+#else
+
+ITensor ITensor::
+operator-() const
+    {
+    auto res = *this;
+    res.scale_.negate();
+    return res;
+    }
+
+#endif
+
+ITensor
+operator*(ITensor A, ITensor const& B) { A *= B; return A; }
+ITensor
+operator*(ITensor const& A, ITensor&& B) { B *= A; return B; }
+ITensor
+operator*(ITensor T, Real fac) { T *= fac; return T; }
+ITensor
+operator*(Real fac, ITensor T) { T *= fac; return T; }
+ITensor
+operator*(ITensor T, Complex fac) { T *= fac; return T; }
+ITensor
+operator*(Complex fac, ITensor T) { T *= fac; return T; }
+ITensor
+operator/(ITensor T, Real fac) { T /= fac; return T; }
+ITensor
+operator/(ITensor T, Complex fac) { T /= fac; return T; }
+ITensor
+operator+(ITensor A, ITensor const& B) { A += B; return A; }
+ITensor
+operator+(ITensor const& A, ITensor&& B) { B += A; return B; }
+ITensor
+operator-(ITensor A, ITensor const& B) { A -= B; return A; }
+ITensor
+operator-(ITensor const& A, ITensor&& B) { B -= A; B *= -1; return B; }
+ITensor
+operator/(ITensor A, ITensor const& B) { A /= B; return A; }
+ITensor
+operator/(ITensor const& A, ITensor && B) { B /= A; return B; }
+
 void
 daxpy(ITensor & L,
       ITensor const& R,
@@ -958,9 +1005,17 @@ multSiteOps(ITensor A, ITensor const& B)
     }
 
 bool
-hasIndex(ITensor const& T, Index const& I)
+hasIndex(ITensor const& T,
+         Index const& imatch)
     {
-    return detail::contains(inds(T),I);
+    return hasIndex(inds(T),imatch);
+    }
+
+bool
+hasInds(ITensor const& T,
+        IndexSet const& ismatch)
+    {
+    return hasInds(inds(T),ismatch);
     }
 
 bool
@@ -1397,6 +1452,35 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
 //
 //Deprecated
 //
+
+#ifdef USESCALE
+void ITensor::
+scaleTo(scale_type const& newscale)
+    {
+    if(scale_ == newscale) return;
+    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    scale_ /= newscale;
+    doTask(Mult<Real>{scale_.real0()},store_);
+    scale_ = newscale;
+    }
+
+void ITensor::
+scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
+#endif
+
+long
+rank(ITensor const& T)
+  {
+  Global::warnDeprecated("rank(ITensor) is deprecated in favor of order(ITensor)");
+  return order(T);
+  }
+
+void
+randomize(ITensor & T, Args const& args)
+    {
+    Global::warnDeprecated("randomize(ITensor,args) is deprecated in favor of .randomize(args)");
+    T.randomize(args);
+    }
 
 ITensor
 matrixTensor(Matrix const& M, Index const& i1, Index const& i2)

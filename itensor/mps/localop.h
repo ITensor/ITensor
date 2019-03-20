@@ -289,11 +289,11 @@ diag() const
         return Index();
         };
 
-    auto toTie = noPrime(findIndex(Op1,"Site,0"));
+    auto toTie = findIndex(Op1,"Site,0");
     auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag.noPrime();
 
-    toTie = noPrime(findIndex(Op2,"Site,0"));
+    toTie = findIndex(Op2,"Site,0");
     auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
     Diag *= noPrime(Diag2);
 

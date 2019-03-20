@@ -46,7 +46,15 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation deprecations (for upgrade guide):
  - Index operations:
-  o Add `unionInds(IndexSet,IndexSet)->IndexSet` to make the union of the input IndexSets
+  o More IndexSet set operations:
+    o Add `==(IndexSet,IndexSet)` to check if they are equal (subsets of one another)
+    o Add `hasInds(IndexSet,IndexSet)` to check if one is a subset of another
+    o Add `unionInds(IndexSet,IndexSet)->IndexSet` and `unionInds({IndexSet,IndexSet,...})` to get set union
+    o Add `uniqueInds(IndexSet,IndexSet)` and `uniqueInds(IndexSet,{IndexSet,...})` to get set difference
+    o Add `commonInds(IndexSet,IndexSet)` to get set intersection
+    o Add `noncommonInds(IndexSet,IndexSet)` to get set symmetric difference
+    o Add `findInds(IndexSet,TagSet)` to get a subset containing tags in the tagset
+    o Add `findIndsExcept(IndexSet,TagSet)` to get a subset not containing tags in the tagset
   o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices in an IndexSet with
     similar indices
   o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
@@ -69,6 +77,10 @@ Common operation deprecations (for upgrade guide):
     containing certain tags
   o Remove findType, use findIndex instead
  - ITensor operations:
+  o More Index operations:
+    o `findIndex(ITensor,TagSet)` to get the index that has tags in a TagSet (throws error if there are more than one)
+    o `findInds(ITensor,TagSet)` to get all indices that have the tags in a TagSet
+    o `hasInds(ITensor,IndexSet)` to see if the ITensor has the specified Indices
   o Add `swapInds(A,{i,j,k},{a,b,c})` to swap the Indices i<->a, j<->b, etc.
   o All ITensor constructors like `ITensor(...)`, `randomITensor(...)`, `diag(...)`, etc. now accept
     `std::initializer_list<Index>`,`std::array<Index,N>`, `std::vector<Index>`, and `IndexSet`

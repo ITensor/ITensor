@@ -402,22 +402,6 @@ visit(Func&& f) const
     return *this;
     }
 
-
-#ifdef USESCALE
-void inline ITensor::
-scaleTo(scale_type const& newscale)
-    {
-    if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
-    scale_ /= newscale;
-    doTask(Mult<Real>{scale_.real0()},store_);
-    scale_ = newscale;
-    }
-
-void inline ITensor::
-scaleTo(Real newscale) { scaleTo(LogNum{newscale}); }
-#endif
-
 template <typename... IVals>
 ITensor
 setElt(IndexVal const& iv1, 
@@ -432,58 +416,6 @@ setElt(IndexVal const& iv1,
     D.set(iv1,rest...,1.);
     return D;
     }
-
-#ifndef USESCALE
-
-ITensor inline ITensor::
-operator-() const
-    { 
-    auto res = *this;
-    doTask(Mult<Real>(-1.),res.store());
-    return res;
-    }
-
-#else
-
-ITensor inline ITensor::
-operator-() const
-    { 
-    auto res = *this;
-    res.scale_.negate();
-    return res;
-    }
-
-#endif
-
-ITensor inline
-operator*(ITensor A, ITensor const& B) { A *= B; return A; }
-
-ITensor inline
-operator*(ITensor const& A, ITensor&& B) { B *= A; return B; }
-ITensor inline
-operator*(ITensor T, Real fac) { T *= fac; return T; }
-ITensor inline
-operator*(Real fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator*(ITensor T, Complex fac) { T *= fac; return T; }
-ITensor inline
-operator*(Complex fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator/(ITensor T, Real fac) { T /= fac; return T; }
-ITensor inline
-operator/(ITensor T, Complex fac) { T /= fac; return T; }
-ITensor inline
-operator+(ITensor A, ITensor const& B) { A += B; return A; }
-ITensor inline
-operator+(ITensor const& A, ITensor&& B) { B += A; return B; }
-ITensor inline
-operator-(ITensor A, ITensor const& B) { A -= B; return A; }
-ITensor inline
-operator-(ITensor const& A, ITensor&& B) { B -= A; B *= -1; return B; }
-ITensor inline
-operator/(ITensor A, ITensor const& B) { A /= B; return A; }
-ITensor inline
-operator/(ITensor const& A, ITensor && B) { B /= A; return B; }
 
 template<typename... VarArgs>
 Real
@@ -501,13 +433,6 @@ eltC(ITensor A,
     return A.eltC(std::forward<VarArgs>(vargs)...);
     }
 
-Index inline
-findIndex(ITensor const& T,
-          TagSet const& tsmatch)
-    {
-    return findIndex(inds(T),tsmatch);
-    }
-
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
 template<typename F>
@@ -515,30 +440,6 @@ ITensor
 apply(ITensor T, F&& f)
     {
     T.apply(std::forward<F>(f));
-    return T;
-    }
-
-
-long inline
-order(ITensor const& T) { return order(inds(T)); }
-
-Real
-norm(ITensor const& T);
-
-void
-randomize(ITensor & T, Args const& args);
-
-ITensor inline
-conj(ITensor T)
-    {
-    T.conj();
-    return T;
-    }
-
-ITensor inline
-dag(ITensor T)
-    {
-    T.dag();
     return T;
     }
 
@@ -591,9 +492,6 @@ diagITensor(Container const& C,
     return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
     }
 
-bool inline
-hasQNs(ITensor const& T) { return hasQNs(inds(T)); }
-
 template<typename V>
 TenRef<Range,V>
 getBlock(ITensor & T,
@@ -619,13 +517,6 @@ getBlock(ITensor & T,
 //
 // Deprecated
 //
-
-long inline
-rank(ITensor const& T)
-  {
-  Global::warnDeprecated("rank(ITensor) is deprecated in favor of order(ITensor)");
-  return order(T);
-  }
 
 template<typename Container, typename... Inds, class>
 ITensor

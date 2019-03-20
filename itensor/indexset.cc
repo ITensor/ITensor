@@ -308,11 +308,29 @@ indexPositions(IndexSet const& is,
     }
 
 bool
-hasIndex(IndexSet const& iset,
-         Index const& I)
+hasIndex(IndexSet const& is,
+         Index const& imatch)
   {
-  for(long j = 0; j < iset.order(); ++j)
-      if(iset[j] == I) return true;
+  for( auto& I : is )
+    if( I == imatch ) return true;
+  return false;
+  }
+
+bool
+hasInds(IndexSet const& is,   
+        IndexSet const& ismatch)
+  {
+  for( auto& I : ismatch )
+    if( !hasIndex(is,I) ) return false;
+  return true;
+  }
+
+bool
+operator==(IndexSet const& is1,
+           IndexSet const& is2)
+  {
+  if( order(is1)==order(is2) )
+    if( hasInds(is1,is2) ) return true;
   return false;
   }
 
@@ -409,12 +427,57 @@ checkQNConsistent(IndexSet const& is)
     }
 
 Index
+index(IndexSet const& is, IndexSet::size_type I) 
+    {
+    return is.index(I);
+    }
+
+IndexSet
+findInds(IndexSet const& is,
+         TagSet const& tsmatch)
+    {
+    auto inds = std::vector<Index>();
+    for( auto& I : is )
+        if( hasTags(I,tsmatch) )
+            inds.push_back(I);
+    return IndexSet(inds);
+    }
+
+Index
+findIndex(IndexSet const& is)
+    {
+    if( order(is) > 1 ) Error("Error: More than one Index in the IndexSet");
+    else if( order(is) == 1 ) return index(is,1);
+    return Index();
+    }
+
+Index
 findIndex(IndexSet const& is,
           TagSet const& tsmatch)
     {
-    for(auto& J : is) if(hasTags(J,tsmatch))
-        return J;
-    return Index();
+    return findIndex(findInds(is,tsmatch));
+    }
+
+IndexSet
+findIndsExcept(IndexSet const& is,
+               TagSet const& tsmatch)
+    {
+    auto inds = std::vector<Index>();
+    for( auto& I : is )
+        if( !hasTags(I,tsmatch) )
+            inds.push_back(I);
+    return IndexSet(inds);
+    }
+
+IndexSet
+commonInds(IndexSet const& is1,
+           IndexSet const& is2)
+    {
+    auto inds = std::vector<Index>();
+    for( auto& I : is1 )
+        if( hasIndex(is2,I) )
+            inds.push_back(I);
+    return IndexSet(inds);
     }
 
 IndexSet
@@ -422,11 +485,47 @@ unionInds(IndexSet const& is1,
           IndexSet const& is2)
     {
     auto inds = std::vector<Index>();
-    for( auto J : is1 )
-        inds.push_back(J);
-    for( auto J : is2 ) if( !hasIndex(is1, J) )
-        inds.push_back(J);
+    for( auto& I : is1 )
+        inds.push_back(I);
+    for( auto I : is2 )
+        if( !hasIndex(is1, I) )
+            inds.push_back(I);
     return IndexSet(inds);
     }
+
+IndexSet
+unionInds(std::vector<IndexSet> const& iss)
+    {
+    auto is = IndexSet();
+    for(auto I : iss)
+      is = unionInds(is,I);
+    return is;
+    }
+
+IndexSet
+uniqueInds(IndexSet const& is1,
+           IndexSet const& is2)
+    {
+    auto inds = std::vector<Index>();
+    for( auto& I : is1 )
+        if( !hasIndex(is2,I) )
+            inds.push_back(I);
+    return IndexSet(inds);
+    }
+
+IndexSet
+uniqueInds(IndexSet const& is1,
+           std::vector<IndexSet> const& is2)
+    {
+    return uniqueInds(is1,unionInds(is2));
+    }
+
+IndexSet
+noncommonInds(IndexSet const& is1,
+              IndexSet const& is2)
+    {
+    return unionInds(uniqueInds(is1,is2),uniqueInds(is2,is1));
+    }
+
 
 } //namespace itensor

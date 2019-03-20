@@ -396,15 +396,10 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     return is.range().end();
     }
 
-// Find the Index containing tags in the specified TagSet 
-// and matching the specified prime level
-// This is useful if we know there is an Index
-// that contains Tags tsmatch, but don't know the other tags
-// If multiple indices are found, throw an error
-// If none are found, return a default Index
+// 1-indexed access
+// Return a copy of the Index at position I
 Index
-findIndex(IndexSet const& is,
-          TagSet const& tsmatch);
+index(IndexSet const& is, IndexSet::size_type I);
 
 //
 //
@@ -448,8 +443,16 @@ dir(IndexSet const& is, Index const& I);
 
 
 bool
-hasIndex(IndexSet const& iset, 
-         Index const& I);
+hasIndex(IndexSet const& is, 
+         Index const& imatch);
+
+bool
+hasInds(IndexSet const& is,
+        IndexSet const& ismatch);
+
+bool
+operator==(IndexSet const& is1,
+           IndexSet const& is2);
 
 long
 minDim(IndexSet const& iset);
@@ -625,9 +628,63 @@ checkIndexSet(IndexSet const& is);
 void
 checkIndexPositions(std::vector<int> const& is);
 
+//
+// IndexSet set operations
+//
+
+// Find the Indices containing tags in the specified TagSet 
+IndexSet
+findInds(IndexSet const& is,
+         TagSet const& tsmatch);
+
+// Convert an order one IndexSet into an Index
+// Throws an error if more than one Index is in the IndexSet
+// If no indices are found, returns a null Index
+Index
+findIndex(IndexSet const& is);
+
+// Find the Index containing tags in the specified TagSet 
+// Throws an error if more than one Index is found
+// If no indices are found, returns a null Index
+Index
+findIndex(IndexSet const& is,
+          TagSet const& tsmatch);
+
+// Find the Indices not containing tags in the specified TagSet 
+// Same as uniqueInds(is,findInds(is,tsmatch))
+IndexSet
+findIndsExcept(IndexSet const& is,
+               TagSet const& tsmatch);
+
+// Intersection of two IndexSets
+IndexSet
+commonInds(IndexSet const& is1,
+           IndexSet const& is2);
+
+// Union of two IndexSets (is1+is2)
 IndexSet
 unionInds(IndexSet const& is1,
           IndexSet const& is2);
+
+IndexSet
+unionInds(std::vector<IndexSet> const& is1);
+
+// Difference of two IndexSets (is1-is2)
+IndexSet
+uniqueInds(IndexSet const& is1,
+           IndexSet const& is2);
+
+// Difference of IndexSet from a set
+// of other IndexSets (is1-(is2+is3+...))
+IndexSet
+uniqueInds(IndexSet const& is1,
+           std::vector<IndexSet> const& is2);
+
+// Symmetric difference of two IndexSets
+// (union(is1-is2,is2-is1))
+IndexSet
+noncommonInds(IndexSet const& is1,
+              IndexSet const& is2);
 
 } //namespace itensor
 
