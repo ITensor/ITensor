@@ -893,7 +893,7 @@ operator-() const
 ITensor
 operator*(ITensor A, ITensor const& B) { A *= B; return A; }
 ITensor
-operator*(ITensor const& A, ITensor&& B) { B *= A; return B; }
+operator*(ITensor const& A, ITensor&& B) { B *= A; return std::move(B); }
 ITensor
 operator*(ITensor T, Real fac) { T *= fac; return T; }
 ITensor
@@ -909,15 +909,15 @@ operator/(ITensor T, Complex fac) { T /= fac; return T; }
 ITensor
 operator+(ITensor A, ITensor const& B) { A += B; return A; }
 ITensor
-operator+(ITensor const& A, ITensor&& B) { B += A; return B; }
+operator+(ITensor const& A, ITensor&& B) { B += A; return std::move(B); }
 ITensor
 operator-(ITensor A, ITensor const& B) { A -= B; return A; }
 ITensor
-operator-(ITensor const& A, ITensor&& B) { B -= A; B *= -1; return B; }
+operator-(ITensor const& A, ITensor&& B) { B -= A; B *= -1; return std::move(B); }
 ITensor
 operator/(ITensor A, ITensor const& B) { A /= B; return A; }
 ITensor
-operator/(ITensor const& A, ITensor && B) { B /= A; return B; }
+operator/(ITensor const& A, ITensor && B) { B /= A; return std::move(B); }
 
 void
 daxpy(ITensor & L,
