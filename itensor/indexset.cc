@@ -33,6 +33,13 @@ checkIndexPositions(std::vector<int> const& is)
 void IndexSet::
 dag() { for(auto& J : *this) J.dag(); }
 
+IndexSet
+dag(IndexSet is)
+  {
+  is.dag();
+  return is;
+  }
+
 IndexSet::iterator IndexSet::
 begin() { return iterator{*this}; }
 

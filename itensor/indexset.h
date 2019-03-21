@@ -401,11 +401,80 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
 Index
 index(IndexSet const& is, IndexSet::size_type I);
 
-//
-//
-// IndexSet Primelevel Methods
-//
+IndexSet
+dag(IndexSet is);
 
+template<typename... VarArgs>
+IndexSet
+setTags(IndexSet A,
+        VarArgs&&... vargs)
+    {
+    A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+addTags(IndexSet A,
+        VarArgs&&... vargs)
+    {
+    A.addTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+removeTags(IndexSet A,
+           VarArgs&&... vargs)
+    {
+    A.removeTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+replaceTags(IndexSet A,
+            VarArgs&&... vargs)
+    {
+    A.replaceTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+swapTags(IndexSet A,
+         VarArgs&&... vargs)
+    {
+    A.swapTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+prime(IndexSet A,
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+setPrime(IndexSet A,
+         VarArgs&&... vargs)
+    {
+    A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+noPrime(IndexSet A,
+        VarArgs&&... vargs)
+    {
+    A.noPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
 
 //Replace all indices with 'similar' indices 
 //with the same properties but which don't compare equal 

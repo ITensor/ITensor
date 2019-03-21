@@ -104,6 +104,137 @@ doTask(GetBlocks<Cplx> const& G, QDense<Cplx> const& d);
 
 ///////////////
 
+Spectrum
+svd(ITensor AA,
+    ITensor & U,
+    ITensor & D,
+    ITensor & V,
+    Args args)
+    {
+    if( args.defined("Minm") )
+      {
+      if( args.defined("MinDim") )
+        {
+        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
+        args.add("MinDim",args.getInt("Minm"));
+        }
+      }
+
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
+
+#ifdef DEBUG
+    if(!U && !V)
+        Error("U and V default-initialized in svd, must indicate at least one index on U or V");
+#endif
+
+    auto noise = args.getReal("Noise",0);
+    auto useOrigM = args.getBool("UseOrigM",false);
+
+    if(noise > 0)
+        Error("Noise term not implemented for svd");
+
+    //if(isZero(AA,Args("Fast"))) 
+    //    throw ResultIsZero("svd: AA is zero");
+
+
+    //Combiners which transform AA
+    //into a order 2 tensor
+    std::vector<Index> Uinds,
+                        Vinds;
+    Uinds.reserve(AA.order());
+    Vinds.reserve(AA.order());
+    //Divide up indices based on U
+    //If U is null, use V instead
+    auto &L = (U ? U : V);
+    auto &Linds = (U ? Uinds : Vinds),
+         &Rinds = (U ? Vinds : Uinds);
+    for(const auto& I : AA.inds())
+        {
+        if(hasIndex(L,I)) Linds.push_back(I);
+        else              Rinds.push_back(I);
+        }
+    ITensor Ucomb,
+            Vcomb;
+    if(!Uinds.empty())
+        {
+        //TODO: Add some tags here?
+        Ucomb = combiner(std::move(Uinds)); //,{"IndexName","uc"});
+        AA *= Ucomb;
+        }
+    if(!Vinds.empty())
+        {
+        //TODO: Add some tags here?
+        Vcomb = combiner(std::move(Vinds)); //,{"IndexName","vc"});
+        AA *= Vcomb;
+        }
+
+    if(useOrigM)
+        {
+        //Try to determine current m,
+        //then set mindim_ and maxdim_ to this.
+        args.add("Cutoff",-1);
+        long mindim = 1,
+             maxdim = MAX_DIM;
+        if(D.order() == 0)
+            {
+            //auto mid = commonIndex(U,V,Link);
+            //TODO: check this does the same thing
+            auto mid = commonIndex(U,V,"Link");
+            if(mid) mindim = maxdim = dim(mid);
+            else    mindim = maxdim = 1;
+            }
+        else
+            {
+            mindim = maxdim = dim(D.inds().front());
+            }
+        args.add("MinDim",mindim);
+        args.add("MaxDim",maxdim);
+        }
+
+    auto ui = commonIndex(AA,Ucomb);
+    auto vi = commonIndex(AA,Vcomb);
+
+    auto spec = svdOrd2(AA,ui,vi,U,D,V,args);
+
+    U = dag(Ucomb) * U;
+    V = V * dag(Vcomb);
+
+    return spec;
+    } //svd
+
+std::tuple<ITensor,ITensor,ITensor,Index,Index>
+svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
+    Args args)
+    {
+    ITensor U(Uis),S,V(Vis);
+    svd(AA,U,S,V,args);
+    auto u = commonIndex(U,S);
+    auto v = commonIndex(S,V);
+    return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
+    }
+
+std::tuple<ITensor,ITensor,ITensor,Index,Index>
+svd(ITensor AA, IndexSet const& Uis,
+    Args args)
+    {
+    auto Vis = uniqueInds(inds(AA),Uis);
+    return svd(AA,Uis,Vis,args);
+    }
 
 std::tuple<Real,Real>
 truncate(Vector & P,
@@ -267,8 +398,6 @@ showEigs(Vector const& P,
     println();
     } // showEigs
 
-
-
 Spectrum
 factor(ITensor const& T,
        ITensor      & A,
@@ -276,8 +405,7 @@ factor(ITensor const& T,
        Args const& args)
     {
     //TODO: make a standard TagSet for factor()
-    //auto name = args.getString("IndexName","c");
-    auto itagset = getTagSet(args,"Tags","Link,FAC");
+    auto itagset = getTagSet(args,"Tags","Link");
     ITensor D;
     auto spec = svd(T,A,D,B,{args,"LeftTags=",toString(itagset)});
     auto dl = commonIndex(A,D);
@@ -288,6 +416,27 @@ factor(ITensor const& T,
     //Replace index dl with dr
     A *= delta(dl,dr);
     return spec;
+    }
+
+std::tuple<ITensor,ITensor,Index>
+factor(ITensor const& T,
+       IndexSet const& Ais,
+       IndexSet const& Bis,
+       Args const& args)
+    {
+    ITensor A(Ais),B(Bis);
+    factor(T,A,B,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    }
+
+std::tuple<ITensor,ITensor,Index>
+factor(ITensor const& T,
+       IndexSet const& Ais,
+       Args const& args)
+    {
+    auto Bis = uniqueInds(inds(T),Ais);
+    return factor(T,Ais,Bis,args);
     }
 
 //TODO: create a tag convention
@@ -401,167 +550,127 @@ eigDecompImpl(ITensor T,
         Error("eigDecompImpl not implemented for QN ITensor");
         }
     }
-//
-//template<typename value_type>
-//void 
-//eigDecompImpl(IQTensor T, 
-//              IQTensor & L, 
-//              IQTensor & R, 
-//              IQTensor & D,
-//              Args const& args)
-//    {
-//    /*
-//    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-//    bool cplx = T.isComplex();
-//
-//#ifdef DEBUG
-//    if(T.order() != 2)
-//        {
-//        Print(T.order());
-//        Print(T);
-//        Error("eig_decomp requires 2-index tensor as input");
-//        }
-//#endif
-//
-//    const int nblocks = T.blocks().size();
-//
-//    vector<Matrix> rmatrix(nblocks),
-//                   imatrix(nblocks);
-//    vector<Vec> reigs(nblocks),
-//                   ieigs(nblocks);
-//
-//    if(T.empty())
-//        throw ResultIsZero("T has no blocks");
-//
-//    LogNum refNorm(1);
-//    if(doRelCutoff)
-//        {
-//        Real maxLogNum = -200;
-//        T.scaleOutNorm();
-//        for(const ITensor& t : T.blocks())
-//            {
-//            maxLogNum = std::max(maxLogNum,t.scale().logNum());
-//            }
-//        refNorm = LogNumber(maxLogNum,1);
-//        }
-//    T.scaleTo(refNorm);
-//
-//    //1. Diagonalize each ITensor within rho.
-//    //   Store results in mmatrix and mvector.
-//    int itenind = 0;
-//    for(const ITensor& t : T.blocks())
-//        {
-//        Index li = t.indices().front(),
-//              ri = t.indices().back();
-//
-//        if(!hasIndex(L,li))
-//            swap(li,ri);
-//
-//        Matrix &Ur = rmatrix.at(itenind),
-//               &Ui = imatrix.at(itenind);
-//        Vec &dr = reigs.at(itenind),
-//               &di = ieigs.at(itenind);
-//
-//        //Diag ITensors within rho
-//        if(!cplx)
-//            {
-//            Matrix M;
-//            t.toMatrix11NoScale(li,ri,M);
-//            GenEigenValues(M,dr,di,Ur,Ui);
-//            }
-//        else
-//            {
-//            ITensor ret = realPart(t),
-//                    imt = imagPart(t);
-//            ret.scaleTo(refNorm);
-//            imt.scaleTo(refNorm);
-//            Matrix Mr,Mi;
-//            ret.toMatrix11NoScale(li,ri,Mr);
-//            imt.toMatrix11NoScale(li,ri,Mi);
-//            ComplexEigenvalues(Mr,Mi,dr,di,Ur,Ui);
-//            }
-//
-//        ++itenind;
-//        }
-//
-//
-//    //Build blocks for unitary diagonalizing rho
-//    vector<ITensor> Vblocks,
-//                    Dblocks;
-//
-//    //Also form new Link IQIndex with appropriate m's for each block
-//    IQIndex::Storage iq;
-//    iq.reserve(T.blocks().size());
-//
-//    itenind = 0;
-//    for(const ITensor& t : T.blocks())
-//        {
-//        Vec &dr = reigs.at(itenind),
-//               &di = ieigs.at(itenind);
-//        Matrix &Ur = rmatrix.at(itenind),
-//               &Ui = imatrix.at(itenind);
-//
-//        Index nm("d",dr.Length());
-//
-//        Index act = t.indices().front();
-//        if(!hasIndex(R,act))
-//            act = t.indices().back();
-//
-//        iq.push_back(IndexQN(nm,qn(R,act)));
-//
-//        ITensor blk(act,nm,Ur);
-//        if(Norm(Ui.TreatAsVector()) > 1E-12)
-//            {
-//            blk += Complex_i*ITensor(act,nm,Ui);
-//            }
-//        Vblocks.push_back(blk);
-//
-//        ITensor Dblk(prime(nm),nm,dr);
-//        if(Norm(di) > 1E-12)
-//            {
-//            Dblk += Complex_i*ITensor(prime(nm),nm,di);
-//            }
-//        Dblocks.push_back(Dblk);
-//
-//        ++itenind;
-//        }
-//
-//    if(iq.size() == 0)
-//        {
-//        throw ResultIsZero("iq.size() == 0");
-//        }
-//
-//    IQIndex newmid("L",iq,-R.dir());
-//
-//    V = IQTensor(dag(R),dag(newmid));
-//    for(const ITensor& t : Vblocks)
-//        {
-//        V += t;
-//        }
-//
-//    D = IQTensor(prime(newmid),dag(newmid));
-//    for(const ITensor& t : Dblocks)
-//        {
-//        D += t;
-//        }
-//
-//    D *= refNorm;
-//
-//    */
-//    }
+
+Spectrum 
+denmatDecomp(ITensor const& AA,
+             ITensor & A,
+             ITensor & B,
+             Direction dir,
+             Args const& args)
+    {
+    return denmatDecomp(AA,A,B,dir,NoOp(),args);
+    }
+
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             IndexSet const& Bis,
+             Direction dir,
+             Args const& args)
+    {
+    ITensor A(Ais),B(Bis);
+    denmatDecomp(T,A,B,dir,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    }
+
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             Direction dir,
+             Args const& args)
+    {
+    auto Bis = uniqueInds(inds(T),Ais);
+    return denmatDecomp(T,Ais,Bis,dir,args);
+    }
+
+Spectrum
+diagHermitian(ITensor const& M,
+              ITensor      & U,
+              ITensor      & D,
+              Args args)
+    {
+    //TODO: create tag convention
+    if(!args.defined("Tags")) args.add("Tags","Link");
+
+    //
+    // Pick an arbitrary index and do some analysis
+    // on its prime level spacing
+    //
+    auto k = M.inds().front();
+    auto kps = stdx::reserve_vector<int>(order(M));
+    for(auto& i : M.inds()) if( noPrime(i)==noPrime(k) ) kps.push_back(i.primeLevel());
+    if(kps.size() <= 1ul || kps.size()%2 != 0ul)
+        {
+        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
+        }
+    auto nk = kps.size();
+    std::sort(kps.begin(),kps.end());
+    //idiff == "inner" difference between cluster of low-prime-level copies
+    //         of k, if more than one
+    auto idiff = kps.at(nk/2-1)-kps.front();
+    //mdiff == max prime-level difference of copies of k
+    auto mdiff = kps.back()-kps.front();
+    //pdiff == spacing between lower and higher prime level index pairs
+    auto pdiff = mdiff-idiff;
+
+    auto inds = stdx::reserve_vector<Index>(order(M)/2);
+    for(auto& i : M.inds())
+    for(auto& j : M.inds())
+        {
+        if( noPrime(i)==noPrime(j) && i.primeLevel()+pdiff == j.primeLevel() )
+            {
+            inds.push_back(i);
+            }
+        }
+    if(inds.empty() || order(M)/2 != (long)inds.size())
+        {
+        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
+        }
+
+    auto comb = combiner(std::move(inds),args);
+    auto Mc = M*comb;
+
+    auto combP = dag(prime(comb,pdiff));
+    try {
+        Mc = combP * Mc;
+        }
+    catch(ITError const& e)
+        {
+        println("Diagonalize expects opposite arrow directions for primed and unprimed indices.");
+        throw e;
+        }
+
+    auto spec = diag_hermitian(Mc,U,D,args);
+
+    U = comb * U;
+
+    return spec;
+    } //diagHermitian
+
+std::tuple<ITensor,ITensor,Index>
+diagHermitian(ITensor const& T,
+              Args const& args)
+    {
+    ITensor U,D;
+    diagHermitian(T,U,D,args);
+    auto l = commonIndex(U,D);
+    return std::tuple<ITensor,ITensor,Index>(U,D,l);
+    }
 
 void 
 eigen(ITensor const& T, 
       ITensor & V, 
       ITensor & D,
-      Args const& args)
+      Args args)
     {
+    if(!args.defined("Tags")) args.add("Tags","Link");
     auto colinds = std::vector<Index>{};
     for(auto& I : T.inds())
         { 
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
-    auto comb = combiner(std::move(colinds));
+    auto comb = combiner(std::move(colinds),args);
 
     auto Tc = prime(comb) * T * comb; 
 
@@ -576,6 +685,16 @@ eigen(ITensor const& T,
         }
 
     V = V * comb;
+    }
+
+std::tuple<ITensor,ITensor,Index>
+eigen(ITensor const& T,
+      Args const& args)
+    {
+    ITensor V,D;
+    eigen(T,V,D,args);
+    auto l = commonIndex(V,D);
+    return std::tuple<ITensor,ITensor,Index>(V,D,l);
     }
 
 void 

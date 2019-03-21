@@ -20,6 +20,13 @@ Spectrum
 svd(ITensor AA, ITensor& U, ITensor& D, ITensor& V, 
     Args args = Args::global());
 
+std::tuple<ITensor,ITensor,ITensor,Index,Index>
+svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis, 
+    Args args = Args::global());
+
+std::tuple<ITensor,ITensor,ITensor,Index,Index>
+svd(ITensor AA, IndexSet const& Uis,
+    Args args = Args::global());
 
 //
 // The "factor" decomposition is based on the SVD,
@@ -40,6 +47,17 @@ Spectrum
 factor(ITensor const& T,
        ITensor      & A,
        ITensor      & B,
+       Args const& args = Args::global());
+
+std::tuple<ITensor,ITensor,Index>
+factor(ITensor const& T,
+       IndexSet const& Ais,
+       IndexSet const& Bis,
+       Args const& args = Args::global());
+
+std::tuple<ITensor,ITensor,Index>
+factor(ITensor const& T,
+       IndexSet const& Ais,
        Args const& args = Args::global());
 
 //
@@ -92,17 +110,52 @@ denmatDecomp(ITensor const& AA,
              BigMatrixT const& PH,
              Args args = Args::global());
 
-Spectrum inline
+Spectrum
 denmatDecomp(ITensor const& AA, 
              ITensor & A, 
              ITensor & B, 
              Direction dir, 
-             Args const& args = Args::global())
+             Args const& args = Args::global());
+
+template<class BigMatrixT>
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             IndexSet const& Bis,
+             Direction dir,
+             BigMatrixT const& PH,
+             Args args = Args::global())
     {
-    return denmatDecomp(AA,A,B,dir,NoOp(),args);
+    ITensor A(Ais),B(Bis);
+    denmatDecomp(T,A,B,dir,PH,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
     }
 
+template<class BigMatrixT>
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             Direction dir,
+             BigMatrixT const& PH,
+             Args args = Args::global())
+    {
+    auto Bis = uniqueInds(inds(T),Ais);
+    return denmatDecomp(T,Ais,Bis,dir,PH,args);
+    }
 
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             IndexSet const& Bis,
+             Direction dir,
+             Args const& args = Args::global());
+
+std::tuple<ITensor,ITensor,Index>
+denmatDecomp(ITensor const& T,
+             IndexSet const& Ais,
+             Direction dir,
+             Args const& args = Args::global());
 
 //
 // Hermitian eigenvalue decomposition / diagonalization
@@ -120,6 +173,11 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args = Args::global());
 
+// TODO: allow specifying IndexSets, instead
+// of assuming inds(T) = unionInds(inds,prime(inds))
+std::tuple<ITensor,ITensor,Index>
+diagHermitian(ITensor const& T,
+              Args const& args = Args::global());
 
 ITensor
 expHermitian(ITensor const& T, Cplx t = 1.);
@@ -148,16 +206,11 @@ void
 eigen(ITensor const& T, 
       ITensor & V, 
       ITensor & D,
+      Args args = Args::global());
+
+std::tuple<ITensor,ITensor,Index>
+eigen(ITensor const& T,
       Args const& args = Args::global());
-
-//template<class I>
-//void 
-//eigDecomp(ITensorT<I> const& T, 
-//          ITensorT<I> & R, 
-//          ITensorT<I> & D,
-//          ITensorT<I> & Rinv, 
-//          Args const& args = Args::global());
-
 
 ///////////////////////////
 //
@@ -168,125 +221,12 @@ eigen(ITensor const& T,
 
 Spectrum 
 svdOrd2(ITensor const& A, 
-         Index const& ui, 
-         Index const& vi,
-         ITensor & U, 
-         ITensor & D, 
-         ITensor & V,
-         Args args = Args::global());
-
-Spectrum inline
-svd(ITensor AA, 
-    ITensor & U, 
-    ITensor & D, 
-    ITensor & V, 
-    Args args)
-    {
-    if( args.defined("Minm") )
-      {
-      if( args.defined("MinDim") )
-        {
-        Global::warnDeprecated("Args Minm and MinDim are both defined. Minm is deprecated in favor of MinDim, MinDim will be used.");
-        }
-      else
-        {
-        Global::warnDeprecated("Arg Minm is deprecated in favor of MinDim.");
-        args.add("MinDim",args.getInt("Minm"));
-        }
-      }
-
-    if( args.defined("Maxm") )
-      {
-      if( args.defined("MaxDim") )
-        {
-        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
-        }
-      else
-        {
-        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
-        args.add("MaxDim",args.getInt("Maxm"));
-        }
-      }
-
-#ifdef DEBUG
-    if(!U && !V) 
-        Error("U and V default-initialized in svd, must indicate at least one index on U or V");
-#endif
-
-    auto noise = args.getReal("Noise",0);
-    auto useOrigM = args.getBool("UseOrigM",false);
-
-    if(noise > 0)
-        Error("Noise term not implemented for svd");
-    
-    //if(isZero(AA,Args("Fast"))) 
-    //    throw ResultIsZero("svd: AA is zero");
-
-
-    //Combiners which transform AA
-    //into a order 2 tensor
-    std::vector<Index> Uinds, 
-                        Vinds;
-    Uinds.reserve(AA.order());
-    Vinds.reserve(AA.order());
-    //Divide up indices based on U
-    //If U is null, use V instead
-    auto &L = (U ? U : V);
-    auto &Linds = (U ? Uinds : Vinds),
-         &Rinds = (U ? Vinds : Uinds);
-    for(const auto& I : AA.inds())
-        { 
-        if(hasIndex(L,I)) Linds.push_back(I);
-        else              Rinds.push_back(I);
-        }
-    ITensor Ucomb,
-            Vcomb;
-    if(!Uinds.empty())
-        {
-        //TODO: Add some tags here?
-        Ucomb = combiner(std::move(Uinds)); //,{"IndexName","uc"});
-        AA *= Ucomb;
-        }
-    if(!Vinds.empty())
-        {
-        //TODO: Add some tags here?
-        Vcomb = combiner(std::move(Vinds)); //,{"IndexName","vc"});
-        AA *= Vcomb;
-        }
-
-    if(useOrigM)
-        {
-        //Try to determine current m,
-        //then set mindim_ and maxdim_ to this.
-        args.add("Cutoff",-1);
-        long mindim = 1,
-             maxdim = MAX_DIM;
-        if(D.order() == 0)
-            {
-            //auto mid = commonIndex(U,V,Link);
-            //TODO: check this does the same thing
-            auto mid = commonIndex(U,V,"Link");
-            if(mid) mindim = maxdim = dim(mid);
-            else    mindim = maxdim = 1;
-            }
-        else
-            {
-            mindim = maxdim = dim(D.inds().front());
-            }
-        args.add("MinDim",mindim);
-        args.add("MaxDim",maxdim);
-        }
-
-    auto ui = commonIndex(AA,Ucomb);
-    auto vi = commonIndex(AA,Vcomb);
-
-    auto spec = svdOrd2(AA,ui,vi,U,D,V,args);
-
-    U = dag(Ucomb) * U;
-    V = V * dag(Vcomb);
-
-    return spec;
-    } //svd
+        Index const& ui, 
+        Index const& vi,
+        ITensor & U, 
+        ITensor & D, 
+        ITensor & V,
+        Args args = Args::global());
 
 Spectrum
 diag_hermitian(ITensor  rho, 
@@ -402,74 +342,6 @@ denmatDecomp(ITensor const& AA,
     return spec;
 
     } //denmatDecomp
-
-
-
-
-Spectrum inline
-diagHermitian(ITensor const& M, 
-              ITensor      & U, 
-              ITensor      & D,
-              Args args)
-    {
-    //TODO: create tag convention
-    if(!args.defined("Tags")) args.add("Tags","Link");
-
-    //
-    // Pick an arbitrary index and do some analysis
-    // on its prime level spacing
-    //
-    auto k = M.inds().front();
-    auto kps = stdx::reserve_vector<int>(order(M));
-    for(auto& i : M.inds()) if( noPrime(i)==noPrime(k) ) kps.push_back(i.primeLevel());
-    if(kps.size() <= 1ul || kps.size()%2 != 0ul) 
-        {
-        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
-        }
-    auto nk = kps.size();
-    std::sort(kps.begin(),kps.end());
-    //idiff == "inner" difference between cluster of low-prime-level copies
-    //         of k, if more than one
-    auto idiff = kps.at(nk/2-1)-kps.front();
-    //mdiff == max prime-level difference of copies of k
-    auto mdiff = kps.back()-kps.front();
-    //pdiff == spacing between lower and higher prime level index pairs
-    auto pdiff = mdiff-idiff;
-
-    auto inds = stdx::reserve_vector<Index>(order(M)/2);
-    for(auto& i : M.inds())
-    for(auto& j : M.inds())
-        {
-        if( noPrime(i)==noPrime(j) && i.primeLevel()+pdiff == j.primeLevel() )
-            {
-            inds.push_back(i);
-            }
-        }
-    if(inds.empty() || order(M)/2 != (long)inds.size())
-        {
-        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
-        }
-
-    auto comb = combiner(std::move(inds),args);
-    auto Mc = M*comb;
-
-    auto combP = dag(prime(comb,pdiff));
-    try {
-        Mc = combP * Mc;
-        }
-    catch(ITError const& e)
-        {
-        println("Diagonalize expects opposite arrow directions for primed and unprimed indices.");
-        throw e;
-        }
-
-    auto spec = diag_hermitian(Mc,U,D,args);
-
-    U = comb * U;
-
-    return spec;
-    } //diagHermitian
-
 
 //Return value is: (trunc_error,docut)
 std::tuple<Real,Real>

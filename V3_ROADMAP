@@ -43,8 +43,10 @@ o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/supp
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
-Common operation deprecations (for upgrade guide):
+Common operation changes and deprecations (for upgrade guide):
+
  - Index operations:
+
   o More IndexSet set operations:
     o Add `==(IndexSet,IndexSet)` to check if they are equal (subsets of one another)
     o Add `hasInds(IndexSet,IndexSet)` to check if one is a subset of another
@@ -75,7 +77,15 @@ Common operation deprecations (for upgrade guide):
   o Add findIndex(ITensor,TagSet) -> Index, which finds the Index in the ITensor 
     containing certain tags
   o Remove findType, use findIndex instead
+
  - ITensor operations:
+
+  o Add versions of ITensor decompositions that return tuples of outputs:
+    o `svd(ITensor,IndexSet[,IndexSet]) -> tuple<ITensor,ITensor,Index,Index>`
+    o `factor(ITensor,IndexSet[,IndexSet]) -> tuple<ITensor,ITensor,Index>`
+    o `denmatDecomp(ITensor,IndexSet[,IndexSet]) -> tuple<ITensor,ITensor,Index>`
+    o `diagHermitian(ITensor) -> tuple<ITensor,ITensor,Index>`
+    o `eigen(ITensor) -> tuple<ITensor,ITensor,Index>`
   o More Index operations:
     o `findIndex(ITensor,TagSet)` to get the index that has tags in a TagSet (throws error if there are more than one)
     o `findInds(ITensor,TagSet)` to get all indices that have the tags in a TagSet

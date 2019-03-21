@@ -55,27 +55,26 @@ for(auto scale : range1(topscale))
     printfln("\n---------- Scale %d -> %d  ----------",scale-1,scale);
 
     // Get the upper-left and lower-right tensors
-    auto Fl = ITensor(r,d);
-    auto Fr = ITensor(l,u);
-    factor(A,Fl,Fr,{"MaxDim=",maxdim,"ShowEigs=",true,
-                    "Tags=","scale="+str(scale)});
+    auto [Fl,Fr,l_new] = factor(A,{r,d},{l,u},{"MaxDim=",maxdim,
+                                               "Tags=","left,scale="+str(scale),
+                                               "ShowEigs=",true});
 
-    // Add the proper tags to the new indices
-    // A.addTags("tags","matchtags") adds the tags
-    // "tags" to the indices in A with tags "matchtags"
-    Fl.addTags("left","scale="+str(scale));
-    Fr.addTags("right","scale="+str(scale));
+    // Make the new index of Fl distinct
+    // from the new index of Fr by changing
+    // the tag from "left" to "right"
+    auto r_new = replaceTags(l_new,"left","right");
+    Fr *= delta(l_new,r_new);
  
     // Get the upper-right and lower-left tensors
-    auto Fu = ITensor(l,d);
-    auto Fd = ITensor(u,r);
-    factor(A,Fu,Fd,{"MaxDim=",maxdim,"ShowEigs=",true,
-                    "Tags=","scale="+str(scale)});
+    auto [Fu,Fd,u_new] = factor(A,{l,d},{u,r},{"MaxDim=",maxdim,
+                                               "Tags=","up,scale="+str(scale),
+                                               "ShowEigs=",true});
 
-    // Add the proper tags to the new indices
-    Fu = addTags(Fu,"up","scale="+str(scale));
-    Fd = addTags(Fd,"down","scale="+str(scale));
-
+    // Make the new index of Fd distinct
+    // from the new index of Fu by changing the tag
+    // from "up" to "down"
+    auto d_new = replaceTags(u_new,"up","down");
+    Fd *= delta(u_new,d_new);
 
     // TODO:
     // Add code here combining Fl, Fr, Fu, Fd to
@@ -104,16 +103,11 @@ for(auto scale : range1(topscale))
 
     Print(A);
 
-    // Update the indices by finding them with tags
-    l = findIndex(A,"left");
-    r = findIndex(A,"right");
-    u = findIndex(A,"up");
-    d = findIndex(A,"down");
-
-    // Alternatively, we could use:
-    // l = commonIndex(A,Fl); 
-    // r = commonIndex(A,Fr); 
-    // etc.
+    // Update the indices
+    l = l_new;
+    r = r_new;
+    u = u_new;
+    d = d_new;
 
     // Normalize the current tensor and keep track of
     // the total normalization
