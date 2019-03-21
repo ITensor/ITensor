@@ -411,7 +411,7 @@ add(PlusEQ const& P,
         for(auto& aio : A.offsets)
             {
             computeBlockInd(aio.block,P.is1(),Ablock);
-            for(int i = 0; i < r; ++i)
+            for(auto i : range(r))
                 Bblock[i] = Ablock[P.perm().dest(i)];
             Arange.init(make_indexdim(P.is1(),Ablock));
             Brange.init(make_indexdim(P.is2(),Bblock));

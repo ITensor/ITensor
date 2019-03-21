@@ -1522,7 +1522,7 @@ namespace Catch {
                 expr; \
             __catchResult.captureResult( Catch::ResultWas::DidntThrowException ); \
         } \
-        catch( exceptionType ) { \
+        catch( exceptionType const& ) { \
             __catchResult.captureResult( Catch::ResultWas::Ok ); \
         } \
         catch( ... ) { \
@@ -2686,7 +2686,7 @@ namespace Catch {
                 for( std::vector<Ptr<Pattern> >::const_iterator it = m_patterns.begin(), itEnd = m_patterns.end(); it != itEnd; ++it )
                     if( !(*it)->matches( testCase ) )
                         return false;
-                    return true;
+                return true;
             }
         };
 

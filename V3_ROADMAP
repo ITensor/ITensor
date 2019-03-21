@@ -201,7 +201,5 @@ o Implement randomMPS(InitState,m>1)
   o Matt: I prefer randomMPS(...) since it is consistent with randomITensor(...),
     though we could make ITensor(...) accept {"Randomize=",true} args
 ? Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
-? Add some more tag functions
-  o A.addTags(tagset,imatch1,imatch2,...)
 ? In site sets, make all of the indices have the same ids but different tags
 
