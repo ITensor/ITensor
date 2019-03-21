@@ -1,8 +1,7 @@
 (! means necessary / blocker for releasing v3)
 
 # Library code:
-! Finalize tag and prime function interface
-    ! Add tests for tag and prime functions on ITensor, MPS, MPO
+! Add tests for tag and prime functions on ITensor, MPS, MPO
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
@@ -60,8 +59,7 @@ Common operation changes and deprecations (for upgrade guide):
     similar indices
   o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
   o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
-    -> `mapPrime(1,2,"0")` doesn't make sense, many uses of `mapPrime` are superseded
-        by `replaceInds`, `replaceTags`, `setPrime`, etc.
+    -> Uses of `mapPrime` are superseded by `replaceTags`, `setPrime`, `replaceInds`, etc.
   o Prime level can be accessed through TagSet, i.e. `findIndex(A,"Site,1")` means Index with
     tag "Site" and prime level 1
   o `sim(Index)` now by default keeps the prime level of the Index instead of setting to zero
@@ -69,14 +67,14 @@ Common operation changes and deprecations (for upgrade guide):
   o Added `dir(Index)` as preferred alternative to `Index.dir()`
   o Changed index constructor from `Index("i",2)` -> `Index(2,"i")` (deprecation error)
   o noprime -> noPrime (deprecation error)
-  o Added `dim(Index)` as preferred alternative to `Index.m()`, changed throughout library (deprecation warning?)
-  o Removed `findIndex(IndexSet const& iset, Arrow dir)`
+  o Added `dim(Index)` as preferred alternative to `Index.m()`, changed throughout library (TODO: add deprecation warning?)
+  o Removed `findIndex(IndexSet const& is, Arrow dir)` (use `findIndex(IndexSet,TagSet)` instead)
   o Added `id(Index)` as preferred alternative to `Index.id()`
   o Remove IQTensor and IQIndex types, merging with ITensor and Index (also
     removed IQIndexVal, IQMPS, IQMPO, etc)
-  o Add findIndex(ITensor,TagSet) -> Index, which finds the Index in the ITensor 
+  o Add `findIndex(ITensor,TagSet) -> Index`, which finds the Index in the ITensor 
     containing certain tags
-  o Remove findType, use findIndex instead
+  o Remove `findType`, use `findIndex` instead
 
  - ITensor operations:
 
@@ -104,7 +102,8 @@ Common operation changes and deprecations (for upgrade guide):
     Store a smallstring along with QN value and mod fac. Storage is an array (fixed-size)
     of triples name-val-modfac.
   o `order(A,i,j,k)` -> `permute(A,i,j,k)` to permute the data of an ITensor
-  o Removed `permute(A,i,"...")` syntax
+  o Removed `permute(A,i,j,"...")` syntax (it is confusing with TagSets, now can be done with 
+    `permute(A,unionInds({i,j},uniqueInds(inds(A),{i,j})))`
   o Add deprecation warning for prime(ITensor,Index,int) pointing towards prime(ITensor,int,Index)
   o Renamed ITensor .real and .cplx to .elt and .eltC; kept .real and .cplx just for
     backwards compatibility. Replaced throughout library.
@@ -121,7 +120,9 @@ Common operation changes and deprecations (for upgrade guide):
   o Added .elt(vector<IndexVal>), .eltC(vector<IndexVal>), etc.
   o Test removeQNs is working correctly for QDiag -> Diag case. Remove the toDense function.
   o Change name of findIndex(ITensor,Index) -> int to indexPosition(ITensor,Index) -> int
+
  - MPS operations:
+
   o Added `addTags(MPS,...)`, `replaceTags(MPS,...)`, `prime(MPS,...)`, etc.
   o Add `linkIndex(MPS,int)` and `siteIndex(MPS,int)` to get link and site indices
   o Add `sites(MPS)` as alterative to `MPS.sites()` to get SiteSet
@@ -145,7 +146,9 @@ Common operation changes and deprecations (for upgrade guide):
   o Add randomMPS(SiteSet,m=1) function with no QNs
   o Add randomMPS(InitState) function for QNs and no QNs
   o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
+
  - MPO operations:
+
   o Remove support for zipUpApplyMPO, exactApplyMPO, fitApplyMPO
   o Add `linkIndex(MPO,int)` and `siteIndex(MPO,int[,TagSet])` to get link and site indices
     -> Since there are two site indices, one can use a TagSet like "0" or "1" to decide which site index to grab
@@ -159,7 +162,7 @@ Common operation changes and deprecations (for upgrade guide):
     -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o In Sweeps object, added deprecation warning for .maxm() and .minm(), saying to use .maxdim() and .mindim()
 
-Recent commits to v2 (master branch):
+Recent commits to v2:
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
   o Bugfix for nmultMPO
