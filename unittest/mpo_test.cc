@@ -255,7 +255,7 @@ SECTION("applyMPO (Fit)")
         CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
         }
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
 
     for(int n = 1; n < N; ++n)
         {
@@ -265,10 +265,10 @@ SECTION("applyMPO (Fit)")
         CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
         }
 
-    CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
 
     // Now with a trial starting state
-    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Sweeps=",100});
+    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
 
     for(int n = 1; n < N; ++n)
         {
@@ -278,7 +278,7 @@ SECTION("applyMPO (Fit)")
         CHECK(sites(n)==findIndex(Hpsi_2(n),format("n=%d,0",n)));
         }
 
-    CHECK_EQUAL(checkMPOProd(Hpsi_2,H,psi,1E-10),true);
+    CHECK(checkMPOProd(Hpsi_2,H,psi,1E-10));
 
     }
 
@@ -375,8 +375,6 @@ SECTION("Overlap <psi|HK|phi>")
     auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
     auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
 
-    //Print(overlap(phi,H,K,psi));
-    //Print(overlap(Hdphi,Kpsi));
     CHECK_CLOSE(overlap(phi,H,K,psi),overlap(Hdphi,Kpsi));
     }
 

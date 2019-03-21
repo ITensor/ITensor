@@ -329,34 +329,8 @@ nmultMPO(MPO const& Aorig,
          MPO & res,
          Args args = Args::global());
 
-MPS
-applyMPO(MPO const& K,
-         MPS const& x,
-         Args const& args = Args::global());
-
-MPS
-applyMPO(MPO const& K,
-         MPS const& x,
-         MPS const& x0,
-         Args const& args = Args::global());
-
 //
-// Applies an MPO to an MPS using the zip-up method described
-// more fully in Stoudenmire and White, New. J. Phys. 12, 055026 (2010).
-//
-// This method applies the MPO to an MPS one site at a time,
-// with the new MPS being calculated at each step via an
-// SVD of the MPO-MPS product.
-//
-// Uses cutoff and max of MPS psi unless specified.
-//
-void 
-zipUpApplyMPO(MPS const& psi, 
-              MPO const& K, 
-              MPS & res, 
-              Args const& args = Args::global());
-
-//
+//{"Method=","DensityMatrix"}:
 //Applies an MPO K to an MPS x (K|x>) with no approximation
 //made in the application of K to x. Compresses
 //the result back into an MPS whose bond dimension
@@ -365,13 +339,7 @@ zipUpApplyMPO(MPS const& psi,
 //be controllably truncated further by providing
 //optional truncation args "Cutoff" and "MaxDim"
 //
-MPS
-exactApplyMPO(MPO const& K,
-              MPS const& x,
-              Args args = Args::global());
-
-
-
+//{"Method=","Fit"}
 //Applies an MPO K to an MPS psi (|res>=K|psi>) using a sweeping/DMRG-like
 //fitting approach. Warning: this method can get stuck i.e. fail to converge
 //if the initial value of res is too different from the product K|psi>.
@@ -381,82 +349,18 @@ exactApplyMPO(MPO const& K,
 //   MaxDim (default: res.maxdim()) - maximum number of states to keep
 //   MinDim (default: res.mindim()) - minimum number of states to keep
 //   Cutoff (default: res.cutoff()) - maximum truncation error goal
-MPS
-fitApplyMPO(MPS const& psi,
-            MPO const& K,
-            Args const& args = Args::global());
-
-void
-fitApplyMPO(MPS const& psi,
-            MPO const& K,
-            MPS & res,
-            Args const& args = Args::global());
-
-//Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
-//using a sweeping/DMRG-like fitting approach. 
-//Warning: this method can get stuck i.e. fail to converge
-//if the initial value of res is too different from the product fac*K|psi>.
-//   Normalize (default: true) - normalize state to 1 after applying MPO
-//   Nsweep (default: 1) - number of sweeps to use
-//   MaxDim (default: res.maxdim()) - maximum number of states to keep
-//   MinDim (default: res.mindim()) - minimum number of states to keep
-//   Cutoff (default: res.cutoff()) - maximum truncation error goal
-void
-fitApplyMPO(Real fac,
-            MPS const& psi,
-            MPO const& K,
-            MPS & res,
-            Args args = Args::global());
-
-//Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
-//using a sweeping/DMRG-like fitting approach. 
-//Warning: this method can get stuck i.e. fail to converge
-//if the initial value of res is too different from the product fac*K|psi>.
-//Try setting noise > 0 in the Sweeps argument to overcome this.
-//Arguments recognized:
-//   Verbose (default: false): print out extra information
-//   Normalize (default: true): normalize the state to 1 after applying MPO
 //
-void
-fitApplyMPO(Real fac,
-            MPS const& psi,
-            MPO const& K,
-            MPS & res,
-            Sweeps const& sweeps,
-            Args args);
+MPS
+applyMPO(MPO const& K,
+         MPS const& x,
+         Args const& args = Args::global());
 
-//Computes |res> = |psiA> + mpofac*H*|psiB>
-//using a sweeping/DMRG-like fitting approach. 
-//Warning: this method can get stuck i.e. fail to converge
-//if the initial value of res is too different from desired exact result.
-//   Nsweep (default: 1) - number of sweeps to use
-//   MaxDim (default: res.maxdim()) - maximum number of states to keep
-//   MinDim (default: res.mindim()) - minimum number of states to keep
-//   Cutoff (default: res.cutoff()) - maximum truncation error goal
-Real
-fitApplyMPO(MPS const& psiA, 
-            Real mpofac,
-            MPS const& psiB,
-            MPO const& H,
-            MPS & res,
-            Args const& args = Args::global());
-
-//Computes |res> = mpsfac*|psiA> + mpofac*H*|psiB>
-//using a sweeping/DMRG-like fitting approach. 
-//Warning: this method can get stuck i.e. fail to converge
-//if the initial value of res is too different from desired exact result.
-//   Nsweep (default: 1) - number of sweeps to use
-//   MaxDim (default: res.maxdim()) - maximum number of states to keep
-//   MinDim (default: res.mindim()) - minimum number of states to keep
-//   Cutoff (default: res.cutoff()) - maximum truncation error goal
-Real
-fitApplyMPO(Real mpsfac,
-            MPS const& psiA, 
-            Real mpofac,
-            MPS const& psiB,
-            MPO const& H,
-            MPS & res,
-            Args const& args = Args::global());
+//Takes a starting guess wavefunction (only for {"Method=","Fit"})
+MPS
+applyMPO(MPO const& K,
+         MPS const& x,
+         MPS const& x0,
+         Args const& args = Args::global());
 
 //Computes the exponential of the MPO H: K=exp(-tau*(H-Etot))
 void 
@@ -511,23 +415,6 @@ checkMPOProd(MPS const& psi2,
              MPO const& K, 
              MPS const& psi1,
              Real threshold);
-
-//
-// Deprecated interfaces - kept for backwards compatibility
-//
-
-//Older interface for exactApplyMPO with different ordering
-MPS
-exactApplyMPO(MPS const& x,
-              MPO const& K,
-              Args const& args = Args::global());
-
-//Older interface for exactApplyMPO with reference argument for result
-void 
-exactApplyMPO(MPS const& x, 
-              MPO const& K, 
-              MPS      & res,
-              Args const& args = Args::global());
 
 } //namespace itensor
 

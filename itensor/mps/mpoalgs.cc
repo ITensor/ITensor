@@ -51,9 +51,6 @@ nmultMPO(MPO const& Aorig,
     auto siB = uniqueIndex(B(1),{A(1),B(2)});
     res.ref(1) = ITensor(siA,siB,linkIndex(A,1));
 
-    //Print(A);
-    //Print(B);
-
     ITensor clust,nfork;
     for(int i = 1; i < N; ++i)
         {
@@ -96,29 +93,48 @@ nmultMPO(MPO const& Aorig,
 
     }
 
+//
+// Define specific applyMPO methods
+//
+
+MPS
+densityMatrixApplyMPOImpl(MPO const& K,
+                          MPS const& x,
+                          Args args = Args::global());
+
+void
+fitApplyMPOImpl(MPS const& psi,
+                MPO const& K,
+                MPS & res,
+                Args const& args = Args::global());
 
 MPS
 applyMPO(MPO const& K,
          MPS const& x,
          Args const& args)
     {
-    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
-    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
+    if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
+    if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
+
     auto method = args.getString("Method","DensityMatrix");
 
-    //This is done here because fitApplyMPO() has a different default behavior
-    //(for backwards compatability)
-    auto normalize = args.getBool("Normalize",false);
-    auto argsp = args;
-    argsp.add("Normalize=",normalize);
-
-    MPS res;
+    MPS res = x;
     if(method == "DensityMatrix")
-        res = exactApplyMPO(K,x,argsp);
+        {
+        res = densityMatrixApplyMPOImpl(K,x,args);
+        }
     else if(method == "Fit")
-        res = fitApplyMPO(x,K,argsp);
+        {
+        // Use the input MPS x to be applied as the
+        // default starting state
+        // TODO: consider using zipUpApplyMPOImpl as 
+        // a crude way to get a better starting state
+        fitApplyMPOImpl(x,K,res,args);
+        }
     else
-        Error("applyMPO currently supports the following methods: 'DensityMatrix' (previously called with exactApplyMPO), 'Fit' (previously called with fitApplyMPO)");
+        {
+        Error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
+        }
 
     return res;
     }
@@ -130,33 +146,32 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args const& args)
     {
-    if(not x(1).store()) Error("Error in applyMPO, MPS is uninitialized.");
-    if(not K(1).store()) Error("Error in applyMPO, MPO is uninitialized.");
-    if(not x0(1).store()) Error("Error in applyMPO, guess MPS is uninitialized.");
-    auto method = args.getString("Method","Fit");
+    if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
+    if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
+    if( !x0 ) Error("Error in applyMPO, guess MPS is uninitialized.");
 
-    //This is done here because fitApplyMPO() has a different default behavior
-    //(for backwards compatability)
-    auto normalize = args.getBool("Normalize",false);
-    auto argsp = args;
-    argsp.add("Normalize=",normalize);
+    auto method = args.getString("Method","Fit");
 
     MPS res = x0;
     if(method == "DensityMatrix")
         Error("applyMPO method 'DensityMatrix' does not accept an input MPS");
     else if(method == "Fit")
-        fitApplyMPO(x,K,res,argsp);
+        fitApplyMPOImpl(x,K,res,args);
     else
-        Error("applyMPO currently supports the following methods: 'DensityMatrix' (previously called with exactApplyMPO), 'Fit' (previously called with fitApplyMPO)");
+        Error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
 
     return res;
     }
 
+//
+// Implement specific applyMPO methods
+//
+
 
 MPS
-exactApplyMPO(MPO const& K,
-              MPS const& psi,
-              Args args)
+densityMatrixApplyMPOImpl(MPO const& K,
+                          MPS const& psi,
+                          Args args)
     {
     if( args.defined("Maxm") )
       {
@@ -269,98 +284,25 @@ exactApplyMPO(MPO const& K,
     return res;
     }
 
-
-MPS
-exactApplyMPO(MPS const& x,
-              MPO const& K,
-              Args const& args)
-    {
-    return exactApplyMPO(K,x,args);
-    }
-
-
-void 
-exactApplyMPO(MPS const& x, 
-              MPO const& K, 
-              MPS      & res,
-              Args const& args)
-    {
-    res = exactApplyMPO(K,x);
-    }
-
-
-MPS
-fitApplyMPO(MPS const& psi,
-            MPO const& K,
-            Args const& args)
-    {
-    MPS res;
-    fitApplyMPO(1.,psi,K,res,args);
-    return res;
-    }
-
-
 void
-fitApplyMPO(MPS const& psi,
-            MPO const& K,
-            MPS& res,
-            Args const& args)
-    {
-    fitApplyMPO(1.,psi,K,res,args);
-    }
-
-
-void
-fitApplyMPO(Real fac,
-            MPS const& psi,
-            MPO const& K,
-            MPS& res,
-            Args args)
-    {
-    if( args.defined("Maxm") )
-      {
-      if( args.defined("MaxDim") )
-        {
-        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
-        }
-      else
-        {
-        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
-        args.add("MaxDim",args.getInt("Maxm"));
-        }
-      }
-
-    auto nsweep = args.getInt("Nsweep",1);
-    Sweeps sweeps(nsweep);
-    auto cutoff = args.getReal("Cutoff",-1);
-    if(cutoff >= 0) sweeps.cutoff() = cutoff;
-    auto maxdim = args.getInt("MaxDim",-1);
-    if(maxdim >= 1) sweeps.maxdim() = maxdim;
-    fitApplyMPO(fac,psi,K,res,sweeps,args);
-    }
-
-void
-fitApplyMPO(Real fac,
-            MPS const& psi,
-            MPO const& K,
-            MPS& res,
-            Sweeps const& sweeps,
-            Args args)
+fitApplyMPOImpl(Real fac,
+                MPS const& psi,
+                MPO const& K,
+                MPS& res,
+                Sweeps const& sweeps,
+                Args args)
     {
     auto N = length(psi);
     auto verbose = args.getBool("Verbose",false);
-    auto normalize = args.getBool("Normalize",true);
+    auto normalize = args.getBool("Normalize",false);
 
-    const auto origPsi = psi;
-
-    if(not res) res = origPsi;
     res.position(1);
 
     auto BK = vector<ITensor>(N+2);
-    BK.at(N) = origPsi(N)*K(N)*dag(prime(res(N)));
+    BK.at(N) = psi(N)*K(N)*dag(prime(res(N)));
     for(auto n = N-1; n > 2; --n)
         {
-        BK.at(n) = BK.at(n+1)*origPsi(n)*K(n)*dag(prime(res(n)));
+        BK.at(n) = BK.at(n+1)*psi(n)*K(n)*dag(prime(res(n)));
         }
 
     for(auto sw : range1(sweeps.nsweep()))
@@ -381,9 +323,9 @@ fitApplyMPO(Real fac,
             //TODO: does this tag the correct bond, independent of the sweep direction?
             args.add("Tags",format("Link,l=%d",b));
 
-            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi(b) : origPsi(b));
+            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*psi(b) : psi(b));
             lwfK *= K(b);
-            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi(b+1) : origPsi(b+1));
+            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*psi(b+1) : psi(b+1));
             rwfK *= K(b+1);
 
             auto wfK = lwfK*rwfK;
@@ -393,7 +335,7 @@ fitApplyMPO(Real fac,
             if(normalize) wfK /= norm(wfK);
             auto PH = LocalOp(K(b),K(b+1),BK.at(b-1),BK.at(b+2));
             auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
-
+ 
             if(verbose)
                 {
                 printfln("    Trunc. err=%.1E, States kept=%s",
@@ -413,86 +355,42 @@ fitApplyMPO(Real fac,
         }
     }
 
-
-Real
-fitApplyMPO(MPS const& psiA, 
-            Real mpofac,
-            MPS const& psiB,
-            MPO const& K,
-            MPS& res,
-            Args const& args)
+void
+fitApplyMPOImpl(Real fac,
+                MPS const& psi,
+                MPO const& K,
+                MPS& res,
+                Args args)
     {
-    return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,args);
+    if( args.defined("Maxm") )
+      {
+      if( args.defined("MaxDim") )
+        {
+        Global::warnDeprecated("Args Maxm and MaxDim are both defined. Maxm is deprecated in favor of MaxDim, MaxDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg Maxm is deprecated in favor of MaxDim.");
+        args.add("MaxDim",args.getInt("Maxm"));
+        }
+      }
+
+    auto nsweep = args.getInt("Nsweep",1);
+    Sweeps sweeps(nsweep);
+    auto cutoff = args.getReal("Cutoff",-1);
+    if(cutoff >= 0) sweeps.cutoff() = cutoff;
+    auto maxdim = args.getInt("MaxDim",-1);
+    if(maxdim >= 1) sweeps.maxdim() = maxdim;
+    fitApplyMPOImpl(fac,psi,K,res,sweeps,args);
     }
 
-
-Real
-fitApplyMPO(Real mpsfac,
-            MPS const& psiA, 
-            Real mpofac,
-            MPS const& psiB,
-            MPO const& K,
-            MPS& res,
-            Args const& args)
+void
+fitApplyMPOImpl(MPS const& psi,
+                MPO const& K,
+                MPS& res,
+                Args const& args)
     {
-    if(&psiA == &res || &psiB == &res)
-        {
-        Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
-        }
-    auto N = length(psiA);
-    auto nsweep = args.getInt("Nsweep",1);
-
-    res.position(1);
-
-    vector<ITensor> B(N+2),
-                   BK(N+2);
-
-    B.at(N) = psiA(N)*dag(prime(res(N),"Link"));
-    BK.at(N) = psiB(N)*K(N)*dag(prime(res(N)));
-    for(int n = N-1; n > 2; --n)
-        {
-        B.at(n) = B.at(n+1)*psiA(n)*dag(prime(res(n),"Link"));
-        BK.at(n) = BK.at(n+1)*psiB(n)*K(n)*dag(prime(res(n)));
-        }
-
-
-    for(int sw = 1; sw <= nsweep; ++sw)
-        {
-        for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
-            {
-            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA(b) : psiA(b));
-            ITensor rwf = (B.at(b+2) ? psiA(b+1)*B.at(b+2) : psiA(b+1));
-
-            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB(b) : psiB(b));
-            lwfK *= K(b);
-            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB(b+1) : psiB(b+1));
-            rwfK *= K(b+1);
-
-            ITensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
-            wf.noPrime();
-
-            res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
-
-            if(ha == 1)
-                {
-                B.at(b) = lwf * dag(prime(res(b),"Link"));
-                BK.at(b) = lwfK * dag(prime(res(b)));
-                }
-            else
-                {
-                B.at(b+1) = rwf * dag(prime(res(b+1),"Link"));
-                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
-                }
-            }
-        }
-
-    auto olp = B.at(3);
-    olp *= psiA(2);
-    olp *= dag(prime(res(2),"Link"));
-    olp *= psiA(1);
-    olp *= dag(prime(res(1),"Link"));
-
-    return olp.elt();
+    fitApplyMPOImpl(1.,psi,K,res,args);
     }
 
 void
@@ -606,77 +504,170 @@ applyExpH(MPS const& psi,
     }
 
 //
-// For now this is unsupported
+// Deprecated
 //
-void 
-zipUpApplyMPO(MPS const& psi, 
-              MPO const& K, 
-              MPS& res, 
-              Args const& args)
-    {
-    const
-    bool allow_arb_position = args.getBool("AllowArbPosition",false);
 
-    if(&psi == &res)
-        Error("psi and res must be different MPS instances");
+//
+// For now this is unsupported
+// We can consider bringing it back for example
+// as a way to get a default starting MPS
+// for fitApplyMPOImpl
+//
 
-    auto N = length(psi);
-    if(length(K) != N) 
-        Error("Mismatched N in zipUpApplyMPO");
+//void 
+//zipUpApplyMPOImpl(MPS const& psi, 
+//                  MPO const& K, 
+//                  MPS& res, 
+//                  Args const& args)
+//    {
+//    const
+//    bool allow_arb_position = args.getBool("AllowArbPosition",false);
+//
+//    if(&psi == &res)
+//        Error("psi and res must be different MPS instances");
+//
+//    auto N = length(psi);
+//    if(length(K) != N) 
+//        Error("Mismatched N in ApplyMPO() ZipUp method");
+//
+//    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
+//        Error("Ortho center of psi must be site 1");
+//
+//    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
+//        Error("Ortho center of K must be site 1");
+//
+//#ifdef DEBUG
+//    checkQNs(psi);
+//    checkQNs(K);
+//    /*
+//    cout << "Checking divergence in zip" << endl;
+//    for(int i = 1; i <= N; i++)
+//	div(psi(i));
+//    for(int i = 1; i <= N; i++)
+//	div(K(i));
+//    cout << "Done Checking divergence in zip" << endl;
+//    */
+//#endif
+//
+//    res = psi; 
+//    res.replaceTags("0","4","Link");
+//    res.replaceTags("0","1","Site");
+//
+//    ITensor clust,nfork;
+//    vector<int> midsize(N);
+//    int maxdim = 1;
+//    for(int i = 1; i < N; i++)
+//        {
+//        if(i == 1) { clust = psi(i) * K(i); }
+//        else { clust = nfork * (psi(i) * K(i)); }
+//        if(i == N-1) break; //No need to SVD for i == N-1
+//
+//        Index oldmid = rightLinkIndex(res,i); assert(oldmid.dir() == Out);
+//        nfork = ITensor(rightLinkIndex(psi,i),rightLinkIndex(K,i),oldmid);
+//        //if(clust.iten_size() == 0)	// this product gives 0 !!
+//	    //throw ResultIsZero("clust.iten size == 0");
+//        denmatDecomp(clust, res.ref(i), nfork,Fromleft,args);
+//        Index mid = commonIndex(res(i),nfork);
+//        //assert(mid.dir() == In);
+//        mid.dag();
+//        midsize[i] = dim(mid);
+//        maxdim = std::max(midsize[i],maxdim);
+//        assert(rightLinkIndex(res,i+1).dir() == Out);
+//        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkIndex(res,i+1));
+//        }
+//    nfork = clust * psi(N) * K(N);
+//    //if(nfork.iten_size() == 0)	// this product gives 0 !!
+//    //throw ResultIsZero("nfork.iten size == 0");
+//
+//    res.svdBond(N-1,nfork,Fromright,args);
+//    res.noPrime("Link");
+//    res.replaceTags("1","0","Site");
+//    res.position(1);
+//    } //void zipUpApplyMPOImpl
 
-    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
-        Error("Ortho center of psi must be site 1");
+//
+// These versions calculate |res> = |psiA> + mpofac*H*|psiB>
+// Currently they are unsupported
 
-    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
-        Error("Ortho center of K must be site 1");
-
-#ifdef DEBUG
-    checkQNs(psi);
-    checkQNs(K);
-    /*
-    cout << "Checking divergence in zip" << endl;
-    for(int i = 1; i <= N; i++)
-	div(psi(i));
-    for(int i = 1; i <= N; i++)
-	div(K(i));
-    cout << "Done Checking divergence in zip" << endl;
-    */
-#endif
-
-    res = psi; 
-    res.replaceTags("0","4","Link");
-    res.replaceTags("0","1","Site");
-
-    ITensor clust,nfork;
-    vector<int> midsize(N);
-    int maxdim = 1;
-    for(int i = 1; i < N; i++)
-        {
-        if(i == 1) { clust = psi(i) * K(i); }
-        else { clust = nfork * (psi(i) * K(i)); }
-        if(i == N-1) break; //No need to SVD for i == N-1
-
-        Index oldmid = rightLinkIndex(res,i); assert(oldmid.dir() == Out);
-        nfork = ITensor(rightLinkIndex(psi,i),rightLinkIndex(K,i),oldmid);
-        //if(clust.iten_size() == 0)	// this product gives 0 !!
-	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.ref(i), nfork,Fromleft,args);
-        Index mid = commonIndex(res(i),nfork);
-        //assert(mid.dir() == In);
-        mid.dag();
-        midsize[i] = dim(mid);
-        maxdim = std::max(midsize[i],maxdim);
-        assert(rightLinkIndex(res,i+1).dir() == Out);
-        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkIndex(res,i+1));
-        }
-    nfork = clust * psi(N) * K(N);
-    //if(nfork.iten_size() == 0)	// this product gives 0 !!
-    //throw ResultIsZero("nfork.iten size == 0");
-
-    res.svdBond(N-1,nfork,Fromright,args);
-    res.noPrime("Link");
-    res.replaceTags("1","0","Site");
-    res.position(1);
-    } //void zipUpApplyMPO
+//Real
+//fitApplyMPOImpl(MPS const& psiA, 
+//                Real mpofac,
+//                MPS const& psiB,
+//                MPO const& K,
+//                MPS& res,
+//                Args const& args)
+//    {
+//    return fitApplyMPOImpl(1.,psiA,mpofac,psiB,K,res,args);
+//    }
+//
+//
+//Real
+//fitApplyMPOImpl(Real mpsfac,
+//                MPS const& psiA, 
+//                Real mpofac,
+//                MPS const& psiB,
+//                MPO const& K,
+//                MPS& res,
+//                Args const& args)
+//    {
+//    if(&psiA == &res || &psiB == &res)
+//        {
+//        Error("fitApplyMPOImpl: Result MPS cannot be same as an input MPS");
+//        }
+//    auto N = length(psiA);
+//    auto nsweep = args.getInt("Nsweep",1);
+//
+//    res.position(1);
+//
+//    vector<ITensor> B(N+2),
+//                   BK(N+2);
+//
+//    B.at(N) = psiA(N)*dag(prime(res(N),"Link"));
+//    BK.at(N) = psiB(N)*K(N)*dag(prime(res(N)));
+//    for(int n = N-1; n > 2; --n)
+//        {
+//        B.at(n) = B.at(n+1)*psiA(n)*dag(prime(res(n),"Link"));
+//        BK.at(n) = BK.at(n+1)*psiB(n)*K(n)*dag(prime(res(n)));
+//        }
+//
+//
+//    for(int sw = 1; sw <= nsweep; ++sw)
+//        {
+//        for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+//            {
+//            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA(b) : psiA(b));
+//            ITensor rwf = (B.at(b+2) ? psiA(b+1)*B.at(b+2) : psiA(b+1));
+//
+//            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB(b) : psiB(b));
+//            lwfK *= K(b);
+//            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB(b+1) : psiB(b+1));
+//            rwfK *= K(b+1);
+//
+//            ITensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
+//            wf.noPrime();
+//
+//            res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
+//
+//            if(ha == 1)
+//                {
+//                B.at(b) = lwf * dag(prime(res(b),"Link"));
+//                BK.at(b) = lwfK * dag(prime(res(b)));
+//                }
+//            else
+//                {
+//                B.at(b+1) = rwf * dag(prime(res(b+1),"Link"));
+//                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
+//                }
+//            }
+//        }
+//
+//    auto olp = B.at(3);
+//    olp *= psiA(2);
+//    olp *= dag(prime(res(2),"Link"));
+//    olp *= psiA(1);
+//    olp *= dag(prime(res(1),"Link"));
+//
+//    return olp.elt();
+//    }
 
 } //namespace itensor

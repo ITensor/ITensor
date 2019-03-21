@@ -5,7 +5,6 @@
     ! Add tests for tag and prime functions on ITensor, MPS, MPO
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
-o Remove support for zipUpApplyMPO, exactApplyMPO, fitApplyMPO
 o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
 
 # Github:
@@ -137,6 +136,7 @@ Common operation deprecations (for upgrade guide):
   o Add randomMPS(InitState) function for QNs and no QNs
   o Remove dependency of itensor/mps/localop.h in itensor/decomp.h (this seemed to be the only itensor/mps/ dependency left in itensor/)
  - MPO operations:
+  o Remove support for zipUpApplyMPO, exactApplyMPO, fitApplyMPO
   o Add `linkIndex(MPO,int)` and `siteIndex(MPO,int[,TagSet])` to get link and site indices
     -> Since there are two site indices, one can use a TagSet like "0" or "1" to decide which site index to grab
   o primeall(MPO) -> prime(MPO)

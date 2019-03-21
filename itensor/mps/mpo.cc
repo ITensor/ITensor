@@ -603,6 +603,20 @@ errorMPOProd(MPS const& psi2,
     return err;
     }
 
+bool
+checkMPOProd(MPS const& psi2,
+             MPO const& K, 
+             MPS const& psi1,
+             Real threshold)
+    {
+    Real err = errorMPOProd(psi2,K,psi1);
+    return (std::norm(err) < threshold);
+    }
+
+//
+// Deprecated
+//
+
 Real
 checkMPOProd(MPS const& psi2,
              MPO const& K, 
@@ -620,17 +634,6 @@ checkMPOProd(MPS const& psi2,
         }
     res += overlap(psi1,Kd,K,psi1);
     return res;
-    }
-
-bool
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1,
-             Real threshold)
-    {
-      Real err = errorMPOProd(psi2,K,psi1);
-
-      return (std::norm(err) < threshold);
     }
 
 //template<class Tensor> 
