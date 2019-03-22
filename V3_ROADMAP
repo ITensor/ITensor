@@ -78,6 +78,8 @@ Common operation changes and deprecations (for upgrade guide):
 
  - ITensor operations:
 
+  o Optimize `A*delta(i,j)` contraction so that if `A` has Index `i` or `j` (but not both), 
+    no contraction occurs and the Index is just replaced in the IndexSet
   o Add versions of ITensor decompositions that return tuples of outputs:
     o `svd(ITensor,IndexSet[,IndexSet]) -> tuple<ITensor,ITensor,Index,Index>`
     o `factor(ITensor,IndexSet[,IndexSet]) -> tuple<ITensor,ITensor,Index>`

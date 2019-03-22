@@ -547,6 +547,14 @@ contractIS(IndexSet const& Lis,
 
 template<class LabelT>
 void
+contractISReplaceIndex(IndexSet const& Lis,
+                       LabelT const& Lind,
+                       IndexSet const& Ris,
+                       LabelT const& Rind,
+                       IndexSet & Nis);
+
+template<class LabelT>
+void
 ncprod(IndexSet const& Lis,
        LabelT const& Lind,
        IndexSet const& Ris,

@@ -469,44 +469,85 @@ blockDiagDense(QDiag<VD> const& D,
         }
     }
 
-template<typename VA, typename VB>
+template<typename T>
+bool
+isReplaceDelta(QDiag<T> const& d, IndexSet const& dis, Labels const& l)
+    {
+    if( (order(dis) == 2) && d.allSame() 
+         && (d.val == 1.) && (dim(dis[0]) == dim(dis[1])) )
+        {
+        bool i1_is_contracted = (l[0] < 0);
+        bool i2_is_contracted = (l[1] < 0);
+        return (i1_is_contracted != i2_is_contracted);
+        }
+    return false;
+    }
+
+template<typename T1, typename T2>
 void
-doTask(Contract& Con,
-       QDiag<VA> const& A,
-       QDense<VB> const& B,
+doTask(Contract& C,
+       QDiag<T1> const& d,
+       QDense<T2> const& t,
        ManageStore& m)
     {
-    Labels AL,
-           BL,
-           CL;
-    bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.order(),Con.Ris,Con.Ris.order(),AL,BL);
-    contractIS(Con.Lis,AL,Con.Ris,BL,Con.Nis,CL,sortInds);
-    blockDiagDense(A,Con.Lis,AL,
-                   B,Con.Ris,BL,
-                   Con.Nis,CL,m);
+    Labels Lind,
+           Rind,
+           Nind;
+    computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
+    //TODO: add a case where there is a scaled delta function,
+    //so the data also gets scaled
+    if( isReplaceDelta(d,C.Lis,Lind) )
+        {
+        //println("doTask(Contract,Diag,Dense): isReplaceDelta = true");
+        // We are contracting with a delta function that is replacing
+        // a single index
+        contractISReplaceIndex(C.Ris,Rind,C.Lis,Lind,C.Nis);
+
+        // Output data is the dense storage
+        m.makeNewData<QDense<T2>>(t.offsets,t.begin(),t.end());
+        }
+    else
+        {
+        bool sortIndices = false;
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
+        blockDiagDense(d,C.Lis,Lind,
+                       t,C.Ris,Rind,
+                       C.Nis,Nind,m);
+        }
     }
 template void doTask(Contract& Con,QDiag<Real> const& A,QDense<Real> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDiag<Cplx> const& A,QDense<Real> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDiag<Real> const& A,QDense<Cplx> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDiag<Cplx> const& A,QDense<Cplx> const& B,ManageStore& m);
 
-template<typename VA, typename VB>
+template<typename T1, typename T2>
 void
-doTask(Contract& Con,
-       QDense<VA> const& A,
-       QDiag<VB> const& B,
+doTask(Contract& C,
+       QDense<T1> const& t,
+       QDiag<T2> const& d,
        ManageStore& m)
     {
-    Labels AL,
-           BL,
-           CL;
-    bool sortInds = false;
-    computeLabels(Con.Lis,Con.Lis.order(),Con.Ris,Con.Ris.order(),AL,BL);
-    contractIS(Con.Lis,AL,Con.Ris,BL,Con.Nis,CL,sortInds);
-    blockDiagDense(B,Con.Ris,BL,
-                   A,Con.Lis,AL,
-                   Con.Nis,CL,m);
+    Labels Lind,
+           Rind,
+           Nind;
+    computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
+    //TODO: add a case where there is a scaled delta function,
+    //so the data also gets scaled
+    if( isReplaceDelta(d,C.Ris,Rind) )
+        {
+        //println("doTask(Contract,QDense,QDiag): isReplaceDelta = true");
+        // We are contracting with a delta function that is replacing
+        // a single index
+        contractISReplaceIndex(C.Lis,Lind,C.Ris,Rind,C.Nis);
+        }
+    else
+        {
+        bool sortInds = false;
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortInds);
+        blockDiagDense(d,C.Ris,Rind,
+                       t,C.Lis,Lind,
+                       C.Nis,Nind,m);
+        }
     }
 template void doTask(Contract& Con,QDense<Real> const& A,QDiag<Real> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDense<Cplx> const& A,QDiag<Real> const& B,ManageStore& m);

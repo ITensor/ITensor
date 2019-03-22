@@ -52,15 +52,13 @@ contractIS(IndexSet const& Lis,
     //Don't allow mixing of Indices with and without QNs
     auto LhasQNs = hasQNs(Lis);
     auto RhasQNs = hasQNs(Ris);
-    auto LremoveQNs = false;
-    auto RremoveQNs = false;
-    if(LhasQNs && !RhasQNs) LremoveQNs = true;
-    else if(!LhasQNs && RhasQNs) RremoveQNs = true;
+    auto LremoveQNs = (LhasQNs && !RhasQNs);
+    auto RremoveQNs = (!LhasQNs && RhasQNs);
 
     long ncont = 0;
     for(auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.order()+Ris.order()-2*ncont;
-    auto newind = RangeBuilderT<IndexSet>(nuniq);
+    auto newind = IndexSetBuilder(nuniq);
     //Below we are "cheating" and using the .str
     //field of each member of newind to hold the 
     //labels which will go into Nind so they will
@@ -91,6 +89,30 @@ contractIS(IndexSet const& Lis,
         }
     Nis = newind.build();
     Nis.computeStrides();
+    }
+
+template<class LabelT>
+void
+contractISReplaceIndex(IndexSet const& Lis,
+                       LabelT const& Lind,
+                       IndexSet const& Ris,
+                       LabelT const& Rind,
+                       IndexSet & Nis)
+    {
+    auto newind = IndexSetBuilder(Lis.order());
+    for( auto i : range(Lis.order()) )
+        {
+        if( Lind[i] < 0 )
+            {
+            if( Rind[0] >= 0 ) newind.nextIndex(Ris[0]);
+            else newind.nextIndex(Ris[1]);
+            }
+        else
+            {
+            newind.nextIndex(Lis[i]);
+            }
+        }
+    Nis = newind.build();
     }
 
 template<class LabelT>

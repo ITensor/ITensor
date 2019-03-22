@@ -125,6 +125,20 @@ contractDiagDense(Diag<T1>  const& d,
         }
     }
 
+template<typename T>
+bool
+isReplaceDelta(Diag<T> const& d, IndexSet const& dis, Labels const& l)
+    {
+    if( (order(dis) == 2) && d.allSame() 
+         && (d.val == 1.) && (dim(dis[0]) == dim(dis[1])) )
+        {
+        bool i1_is_contracted = (l[0] < 0);
+        bool i2_is_contracted = (l[1] < 0);
+        return (i1_is_contracted != i2_is_contracted);
+        }
+    return false;
+    }
+
 template<typename T1, typename T2>
 void
 doTask(Contract & C,
@@ -133,12 +147,24 @@ doTask(Contract & C,
        ManageStore     & m)
     { 
     Labels Lind,
-          Rind,
-          Nind;
+           Rind,
+           Nind;
     computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
-    bool sortIndices = false;
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
-    contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
+    //TODO: add a case where there is a scaled delta function,
+    //so the data also gets scaled
+    if( isReplaceDelta(d,C.Ris,Rind) )
+        {
+        //println("doTask(Contract,Dense,Diag): isReplaceDelta = true");
+        // We are contracting with a delta function that is replacing
+        // a single index
+        contractISReplaceIndex(C.Lis,Lind,C.Ris,Rind,C.Nis);
+        }
+    else
+        {
+        bool sortIndices = false;
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
+        contractDiagDense(d,C.Ris,Rind,t,C.Lis,Lind,Nind,C.Nis,m);
+        }
     }
 template void doTask(Contract&, Dense<Real> const&, Diag<Real> const&, ManageStore&);
 template void doTask(Contract&, Dense<Real> const&, Diag<Cplx> const&, ManageStore&);
@@ -153,12 +179,27 @@ doTask(Contract & C,
        ManageStore     & m)
     {
     Labels Lind,
-          Rind,
-          Nind;
+           Rind,
+           Nind;
     computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
-    bool sortIndices = false;
-    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
-    contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
+    //TODO: add a case where there is a scaled delta function,
+    //so the data also gets scaled
+    if( isReplaceDelta(d,C.Lis,Lind) )
+        {
+        //println("doTask(Contract,Diag,Dense): isReplaceDelta = true");
+        // We are contracting with a delta function that is replacing
+        // a single index
+        contractISReplaceIndex(C.Ris,Rind,C.Lis,Lind,C.Nis);
+
+        // Output data is the dense storage
+        m.makeNewData<Dense<T2>>(t.begin(),t.end());
+        }
+    else
+        {
+        bool sortIndices = false;
+        contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,Nind,sortIndices);
+        contractDiagDense(d,C.Lis,Lind,t,C.Ris,Rind,Nind,C.Nis,m);
+        }
     }
 template void doTask(Contract&, Diag<Real> const&, Dense<Real> const&, ManageStore&);
 template void doTask(Contract&, Diag<Real> const&, Dense<Cplx> const&, ManageStore&);
