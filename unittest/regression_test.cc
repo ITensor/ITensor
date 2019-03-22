@@ -54,7 +54,7 @@ TEST_CASE("CombinerOrder")
     U.set(a(1),c(2),1);
     //PrintDat(U);
 
-    auto C = combiner(c,a);
+    auto [C,ci] = combiner(c,a);
     auto CU = C * U;
     //PrintDat(CU);
     auto UU = C * CU;
@@ -62,7 +62,7 @@ TEST_CASE("CombinerOrder")
 
     CHECK(norm(U-UU) < 1E-10);
 
-    auto D = combiner(a,c);
+    auto [D,di] = combiner(a,c);
     CU = D * U;
     //PrintDat(CU);
     UU = D * CU;

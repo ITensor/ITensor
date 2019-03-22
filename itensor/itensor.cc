@@ -1169,7 +1169,7 @@ matrixITensor(CMatrix const& M,
   return matrixITensor(M,IndexSet(i1,i2));
   }
 
-ITensor
+std::tuple<ITensor,Index>
 combiner(IndexSet const& inds, Args const& args)
     {
     auto itagset = getTagSet(args,"Tags","Link,CMB");
@@ -1186,7 +1186,7 @@ combiner(IndexSet const& inds, Args const& args)
         newind.nextIndex(std::move(cind));
         for(auto& I : inds)
             newind.nextIndex(std::move(I));
-        return ITensor(newind.build(),Combiner());
+        return std::tuple<ITensor,Index>(ITensor(newind.build(),Combiner()),cind);
         }
     else if(hasQNs(inds))
         {
@@ -1255,15 +1255,20 @@ combiner(IndexSet const& inds, Args const& args)
             }
         auto cind = Index(std::move(cstore),cdir,itagset);
 
+        // TODO: it seems like the next steps remove the QNs,
+        // why? Does std::move(cind) destroy the QN storage?
+        // To output the correct Index, we need to make a copy
+        auto c = cind;
+
         auto newind = IndexSetBuilder(1+inds.size());
         newind.nextIndex(std::move(cind));
         for(auto& I : inds) 
             {
             newind.nextIndex(dag(I));
             }
-        return ITensor(newind.build(),std::move(C));
+        return std::tuple<ITensor,Index>(ITensor(newind.build(),std::move(C)),c);
         }
-    return ITensor();
+    return std::tuple<ITensor,Index>(ITensor(),Index());
     }
 
 struct IsCombiner

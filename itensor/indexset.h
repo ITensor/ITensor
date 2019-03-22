@@ -731,9 +731,19 @@ commonInds(IndexSet const& is1,
            IndexSet const& is2);
 
 // Union of two IndexSets (is1+is2)
+// Preserves the ordering of the original
+// IndexSets
 IndexSet
 unionInds(IndexSet const& is1,
           IndexSet const& is2);
+
+IndexSet
+unionInds(Index const& i,
+          IndexSet const& is);
+
+IndexSet
+unionInds(IndexSet const& is,
+          Index const& i);
 
 IndexSet
 unionInds(std::vector<IndexSet> const& is1);

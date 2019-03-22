@@ -278,7 +278,7 @@ svdImpl(ITensor const& A,
                 }
 
             resize(d,this_m);
-
+            uI.qn(1+B.i1);
             Liq.emplace_back(uI.qn(1+B.i1),this_m);
             Riq.emplace_back(vI.qn(1+B.i2),this_m);
             }
@@ -391,12 +391,12 @@ svdImpl(ITensor const& A,
 
 Spectrum 
 svdOrd2(ITensor const& A, 
-         Index const& uI, 
-         Index const& vI,
-         ITensor & U, 
-         ITensor & D, 
-         ITensor & V,
-         Args args)
+        Index const& uI, 
+        Index const& vI,
+        ITensor & U, 
+        ITensor & D, 
+        ITensor & V,
+        Args args)
     {
     if( args.defined("Maxm") )
       {
@@ -420,7 +420,6 @@ svdOrd2(ITensor const& A,
 
     if(A.order() != 2) 
         {
-        Print(A);
         Error("A must be matrix-like (order 2)");
         }
     if(isComplex(A))

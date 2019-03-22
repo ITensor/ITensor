@@ -321,7 +321,7 @@ SECTION("Dense Cplx Storage")
     }
 SECTION("Combiner Storage")
     {
-    auto C = combiner(s1,s2);
+    auto [C,ci] = combiner(s1,s2);
     writeToFile(fname,C);
     auto nC = readFromFile<ITensor>(fname);
     CHECK(hasIndex(nC,s1));
@@ -1883,12 +1883,12 @@ SECTION("Combiner")
     {
     SECTION("Two Index")
         {
-        auto C = combiner(s1,s2);
+        auto [C,ci] = combiner(s1,s2);
         CHECK(typeOf(C) == Type::Combiner);
 
         auto T1 = randomITensor(s1,s2,s3);
         auto R1 = C*T1;
-        auto ci = commonIndex(C,R1);
+        //auto ci = commonIndex(C,R1);
         CHECK(ci);
         CHECK(ci.dim() == s1.dim()*s2.dim());
 
@@ -1921,7 +1921,7 @@ SECTION("Combiner")
         {
         auto T1 = randomITensor(s4,b5,s1,l2);
 
-        auto cs4 = combiner(s4);
+        auto [cs4,cs4ind] = combiner(s4);
         auto Rs4a = T1*cs4;
         CHECK(!hasIndex(Rs4a,s4));
         CHECK(commonIndex(cs4,Rs4a));
@@ -1929,7 +1929,7 @@ SECTION("Combiner")
         CHECK(!hasIndex(Rs4b,s4));
         CHECK(commonIndex(cs4,Rs4b));
 
-        auto cl2 = combiner(l2);
+        auto [cl2,cl2ind] = combiner(l2);
         auto Rl2a = T1*cl2;
         CHECK(!hasIndex(Rl2a,l2));
         CHECK(commonIndex(cl2,Rl2a));
@@ -1948,9 +1948,9 @@ SECTION("Combiner")
               c(1,"c");
 
         auto T = randomITensor(a,b,c);
-        auto C = combiner(a,c);
+        auto [C,ci] = combiner(a,c);
         auto R = T*C;
-        auto ci = commonIndex(C,R);
+        //auto ci = commonIndex(C,R);
 
         CHECK(hasIndex(R,ci));
         CHECK(hasIndex(R,b));
@@ -1967,9 +1967,9 @@ SECTION("Combiner")
 
         SECTION("Combine 1st,2nd")
             {
-            auto C = combiner(i,j);
+            auto [C,ci] = combiner(i,j);
             auto R = C * T;
-            auto ci = commonIndex(C,R);
+            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -1984,9 +1984,9 @@ SECTION("Combiner")
 
         SECTION("Combine 1st,3rd")
             {
-            auto C = combiner(i,k);
+            auto [C,ci] = combiner(i,k);
             auto R = C * T;
-            auto ci = commonIndex(C,R);
+            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2001,9 +2001,9 @@ SECTION("Combiner")
 
         SECTION("Combine 2nd,3rd")
             {
-            auto C = combiner(k,j);
+            auto [C,ci] = combiner(k,j);
             auto R = T * C;
-            auto ci = commonIndex(C,R);
+            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2018,9 +2018,9 @@ SECTION("Combiner")
 
          SECTION("Combine 2nd,3rd (initializer_list constructor)")
             {
-            auto C = combiner({k,j});
+            auto [C,ci] = combiner({k,j});
             auto R = T * C;
-            auto ci = commonIndex(C,R);
+            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2035,9 +2035,9 @@ SECTION("Combiner")
 
         SECTION("Combine 2nd,3rd (array constructor)")
             {
-            auto C = combiner(std::array<Index,2>({k,j}));
+            auto [C,ci] = combiner(std::array<Index,2>({k,j}));
             auto R = T * C;
-            auto ci = commonIndex(C,R);
+            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2053,9 +2053,9 @@ SECTION("Combiner")
          SECTION("Combine / Uncombine 4 - Permute (QN, initialize_list constructor)")
             {
             auto T = randomITensor(QN(),L1,L2,S1,S2);
-            auto C = combiner({L1,S1});
+            auto [C,ci] = combiner({L1,S1});
             auto R = T*C;
-            auto ci = commonIndex(R,C); //get combined index
+            //auto ci = commonIndex(R,C); //get combined index
             //check that ci exists
             CHECK(ci);
             CHECK_CLOSE(norm(T),norm(R));
@@ -2075,9 +2075,9 @@ SECTION("Combiner")
          SECTION("Combine / Uncombine 4 - Permute (QN, array constructor)")
             {
             auto T = randomITensor(QN(),L1,L2,S1,S2);
-            auto C = combiner(std::array<Index,2>({L1,S1}));
+            auto [C,ci] = combiner(std::array<Index,2>({L1,S1}));
             auto R = T*C;
-            auto ci = commonIndex(R,C); //get combined index
+            //auto ci = commonIndex(R,C); //get combined index
             //check that ci exists
             CHECK(ci);
             CHECK_CLOSE(norm(T),norm(R));
@@ -2117,9 +2117,9 @@ SECTION("Combiner")
 
         SECTION("Combine 1,3,5")
             {
-            auto C = combiner(i,k,m);
+            auto [C,ci] = combiner(i,k,m);
             auto R = C * T;
-            auto ci = commonIndex(R,C);
+            //auto ci = commonIndex(R,C);
 
             CHECK_CLOSE(norm(R),norm(T));
             
@@ -2136,9 +2136,9 @@ SECTION("Combiner")
 
         SECTION("Combine 2,3,4")
             {
-            auto C = combiner(k,j,l);
+            auto [C,ci] = combiner(k,j,l);
             auto R = C * T;
-            auto ci = commonIndex(R,C);
+            //auto ci = commonIndex(R,C);
 
             CHECK_CLOSE(norm(R),norm(T));
             

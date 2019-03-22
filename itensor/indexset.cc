@@ -446,7 +446,7 @@ findInds(IndexSet const& is,
     auto inds = std::vector<Index>();
     for( auto& I : is )
         if( hasTags(I,tsmatch) )
-            inds.push_back(I);
+            inds.push_back(std::move(I));
     return IndexSet(inds);
     }
 
@@ -472,7 +472,7 @@ findIndsExcept(IndexSet const& is,
     auto inds = std::vector<Index>();
     for( auto& I : is )
         if( !hasTags(I,tsmatch) )
-            inds.push_back(I);
+            inds.push_back(std::move(I));
     return IndexSet(inds);
     }
 
@@ -483,7 +483,7 @@ commonInds(IndexSet const& is1,
     auto inds = std::vector<Index>();
     for( auto& I : is1 )
         if( hasIndex(is2,I) )
-            inds.push_back(I);
+            inds.push_back(std::move(I));
     return IndexSet(inds);
     }
 
@@ -493,20 +493,45 @@ unionInds(IndexSet const& is1,
     {
     auto inds = std::vector<Index>();
     for( auto& I : is1 )
-        inds.push_back(I);
-    for( auto I : is2 )
+        inds.push_back(std::move(I));
+    for( auto& I : is2 )
         if( !hasIndex(is1, I) )
-            inds.push_back(I);
+            inds.push_back(std::move(I));
     return IndexSet(inds);
     }
 
 IndexSet
 unionInds(std::vector<IndexSet> const& iss)
     {
-    auto is = IndexSet();
-    for(auto I : iss)
-      is = unionInds(is,I);
-    return is;
+    auto inds = std::vector<Index>();
+    for( auto& is : iss )
+        for(auto& I : is)
+            inds.push_back(std::move(I));
+    return IndexSet(inds);
+    }
+
+IndexSet
+unionInds(Index const& i,
+          IndexSet const& is)
+    {
+    auto inds = std::vector<Index>();
+    inds.push_back(std::move(i));
+    for( auto& I : is )
+        if( I != i )
+            inds.push_back(std::move(I));
+    return IndexSet(inds);
+    }
+
+IndexSet
+unionInds(IndexSet const& is,
+          Index const& i)
+    {
+    auto inds = std::vector<Index>();
+    for( auto& I : is )
+        if( I != i )
+            inds.push_back(std::move(I));
+    inds.push_back(std::move(i));
+    return IndexSet(inds);
     }
 
 IndexSet
@@ -516,7 +541,7 @@ uniqueInds(IndexSet const& is1,
     auto inds = std::vector<Index>();
     for( auto& I : is1 )
         if( !hasIndex(is2,I) )
-            inds.push_back(I);
+            inds.push_back(std::move(I));
     return IndexSet(inds);
     }
 

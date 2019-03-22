@@ -742,10 +742,11 @@ multSiteOps(ITensor A, ITensor const& B);
 // Special ITensor constructors
 //
 
-ITensor
+std::tuple<ITensor,Index>
 combiner(IndexSet const& inds, Args const& args = Global::args());
+
 template<typename... Inds>
-ITensor
+std::tuple<ITensor,Index>
 combiner(Index const& i1, 
          Inds&&... inds)
     {

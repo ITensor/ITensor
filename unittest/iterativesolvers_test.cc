@@ -63,7 +63,6 @@ SECTION("FourSite")
 
     LocalMPO PH(H);
 
-    ITensor phip;
     psi.position(2);
     PH.position(2,psi);
 
@@ -161,7 +160,6 @@ SECTION("IQFourSite")
 
     LocalMPO PH(H);
 
-    ITensor phip;
     psi.position(2);
     PH.position(2,psi);
 

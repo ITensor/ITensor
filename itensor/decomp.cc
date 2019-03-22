@@ -155,7 +155,7 @@ svd(ITensor AA,
     //Combiners which transform AA
     //into a order 2 tensor
     std::vector<Index> Uinds,
-                        Vinds;
+                       Vinds;
     Uinds.reserve(AA.order());
     Vinds.reserve(AA.order());
     //Divide up indices based on U
@@ -170,16 +170,17 @@ svd(ITensor AA,
         }
     ITensor Ucomb,
             Vcomb;
+    Index ui,
+          vi;
+
     if(!Uinds.empty())
         {
-        //TODO: Add some tags here?
-        Ucomb = combiner(std::move(Uinds)); //,{"IndexName","uc"});
+        std::tie(Ucomb,ui) = combiner(std::move(Uinds));
         AA *= Ucomb;
         }
     if(!Vinds.empty())
         {
-        //TODO: Add some tags here?
-        Vcomb = combiner(std::move(Vinds)); //,{"IndexName","vc"});
+        std::tie(Vcomb,vi) = combiner(std::move(Vinds));
         AA *= Vcomb;
         }
 
@@ -206,8 +207,8 @@ svd(ITensor AA,
         args.add("MaxDim",maxdim);
         }
 
-    auto ui = commonIndex(AA,Ucomb);
-    auto vi = commonIndex(AA,Vcomb);
+    //auto ui = commonIndex(AA,Ucomb);
+    //auto vi = commonIndex(AA,Vcomb);
 
     auto spec = svdOrd2(AA,ui,vi,U,D,V,args);
 
@@ -628,7 +629,7 @@ diagHermitian(ITensor const& M,
         Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
 
-    auto comb = combiner(std::move(inds),args);
+    auto [comb,cind] = combiner(std::move(inds),args);
     auto Mc = M*comb;
 
     auto combP = dag(prime(comb,pdiff));
@@ -670,7 +671,7 @@ eigen(ITensor const& T,
         { 
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
-    auto comb = combiner(std::move(colinds),args);
+    auto [comb,cind] = combiner(std::move(colinds),args);
 
     auto Tc = prime(comb) * T * comb; 
 
@@ -709,7 +710,7 @@ eigDecomp(ITensor const& T,
         { 
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
-    auto comb = combiner(std::move(colinds));
+    auto [comb,cind] = combiner(std::move(colinds));
 
     auto Tc = prime(comb) * T * comb; 
 

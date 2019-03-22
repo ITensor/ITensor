@@ -269,6 +269,8 @@ denmatDecomp(ITensor const& AA,
         }
       }
 
+    //TODO: decide on a tag convention for denmatDecomp
+    if(!args.defined("Tags")) args.add("Tags","Link");
     auto noise = args.getReal("Noise",0.);
 
     //TODO: try to avoid using "Link" here
@@ -294,11 +296,8 @@ denmatDecomp(ITensor const& AA,
 
     //Apply combiner
     START_TIMER(8)
-    //TODO: decide on a tag convention for denmatDecomp
-    auto itagset = getTagSet(args,"Tags","Link");
-    args.add("Tags",toString(itagset));
-    auto cmb = combiner(std::move(cinds),{"Tags",toString(itagset)});
-    auto ci = cmb.inds().front();
+    auto [cmb,ci] = combiner(std::move(cinds),args);
+    //auto ci = cmb.inds().front();
 
     auto AAc = cmb * AA;
 
