@@ -32,32 +32,6 @@ Global::debug4()
     static bool debug4_ = false;
     return debug4_;
     }
-//Global named arguments
-Args&
-Global::args()
-    {
-    return Args::global();
-    }
-void
-Global::args(const Args::Name& name, bool bval)
-    {
-    Args::global().add(name,bval);
-    }
-void
-Global::args(const Args::Name& name, int ival)
-    {
-    Args::global().add(name,ival);
-    }
-void
-Global::args(const Args::Name& name, Real rval)
-    {
-    Args::global().add(name,rval);
-    }
-void
-Global::args(const Args::Name& name, const std::string& sval)
-    {
-    Args::global().add(name,sval);
-    }
 bool&
 Global::printdat()
     {
