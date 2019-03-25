@@ -62,7 +62,6 @@ MPS(SiteSet const& sites,
     A_(sites.length()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(sites.length()+1),
-    sites_(sites), 
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -77,7 +76,6 @@ MPS(InitState const& initState)
     A_(initState.sites().length()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
-    sites_(initState.sites()), 
     atb_(1),
     writedir_("./"),
     do_write_(false)
@@ -92,7 +90,6 @@ MPS(MPS const& other)
     A_(other.A_),
     l_orth_lim_(other.l_orth_lim_),
     r_orth_lim_(other.r_orth_lim_),
-    sites_(other.sites_),
     atb_(other.atb_),
     writedir_(other.writedir_),
     do_write_(other.do_write_)
@@ -107,7 +104,6 @@ operator=(MPS const& other)
     A_ = other.A_;
     l_orth_lim_ = other.l_orth_lim_;
     r_orth_lim_ = other.r_orth_lim_;
-    sites_ = other.sites_;
     atb_ = other.atb_;
     writedir_ = other.writedir_;
     do_write_ = other.do_write_;
@@ -198,14 +194,6 @@ Aref(int i)
     return this->ref(i);
     }
 
-// Deprecated
-SiteSet const& MPS::
-sites() const 
-    { 
-    if(not sites_) Error("MPS SiteSet is default-initialized");
-    return sites_; 
-    }
-
 void MPS::
 doWrite(bool val, Args const& args) 
     { 
@@ -231,17 +219,6 @@ read(std::istream & s)
     for(auto j : range(A_))
         {
         itensor::read(s,A_[j]);
-        }
-    //Check that tensors read from disk were constructed
-    //using the same sites
-    auto s1 = findIndex(A_.at(1),"Site");
-    s1.noPrime();
-    if(sites_ && s1 != sites_(1))
-        {
-        Print(A_.at(1).inds());
-        Print(s1);
-        Print(sites_(1));
-        Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
         }
     itensor::read(s,l_orth_lim_);
     itensor::read(s,r_orth_lim_);
@@ -751,8 +728,6 @@ initWrite(Args const& args)
                 }
             }
 
-        writeToFile(writedir_+"/sites",sites_);
-
         do_write_ = true;
         }
     }
@@ -791,7 +766,6 @@ swap(MPS& other)
     A_.swap(other.A_);
     std::swap(l_orth_lim_,other.l_orth_lim_);
     std::swap(r_orth_lim_,other.r_orth_lim_);
-    std::swap(sites_,other.sites_);
     std::swap(atb_,other.atb_);
     std::swap(writedir_,other.writedir_);
     std::swap(do_write_,other.do_write_);
@@ -991,8 +965,7 @@ removeQNs(MPSType const& psi)
     {
     int N = length(psi);
     MPSType res;
-    if(sites(psi)) res = MPSType(sites(psi));
-    else            res = MPSType(N);
+    res = MPSType(N);
     for(int j = 0; j <= N+1; ++j)
         {
         res.ref(j) = removeQNs(psi(j));

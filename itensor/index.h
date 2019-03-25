@@ -294,14 +294,37 @@ class IndexVal
 
     explicit operator bool() const { return bool(index); }
 
-    IndexVal& 
-    prime(int inc = 1) { index.prime(inc); return *this; }
-
+    // Add tags
     IndexVal&
-    setPrime(int n) { index.setPrime(n); return *this; }
+    addTags(const TagSet& t) { index.addTags(t); return *this; }
 
-    IndexVal& 
+    // Remove tags
+    IndexVal&
+    removeTags(const TagSet& t) { index.removeTags(t); return *this; }
+
+    // Set tags
+    IndexVal&
+    setTags(const TagSet& t) { index.setTags(t); return *this; }
+
+    // Remove all tags
+    IndexVal&
+    noTags() { index.noTags(); return *this; }
+
+    // Set tags
+    IndexVal&
+    replaceTags(const TagSet& tsold, const TagSet& tsnew) { index.replaceTags(tsold,tsnew); return *this; }
+
+    // Sets the prime level to a specified value.
+    IndexVal&
+    setPrime(int p) { index.setPrime(p); return *this; }
+
+    // Sets the prime level to 0.
+    IndexVal&
     noPrime() { index.noPrime(); return *this; }
+
+    // Increase primelevel by 1 (or by optional amount inc)
+    IndexVal&
+    prime(int inc = 1) { index.prime(inc); return *this; }
 
     IndexVal& 
     dag();
@@ -345,21 +368,6 @@ primeLevel(Index const& I);
 TagSet
 tags(const Index& I);
 
-Index
-addTags(Index I, const TagSet& t);
-
-Index
-removeTags(Index I, const TagSet& t);
-
-Index
-setTags(Index I, const TagSet& t);
-
-Index
-noTags(Index I);
-
-Index
-replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew);
-
 //
 // Check if Index I contains the tags tsmatch.
 //
@@ -384,30 +392,57 @@ dag(IndexVal res);
 Arrow
 dir(Index res);
 
-template<typename... VarArgs>
+//
+// Tag functions
+//
+
 Index
-prime(Index I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+addTags(Index I, TagSet const& t);
 
-template<typename... VarArgs>
 Index
-setPrime(Index I, VarArgs&&... vargs) { I.setPrime(std::forward<VarArgs>(vargs)...); return I; }
+removeTags(Index I, TagSet const& t);
 
-template<typename... VarArgs>
 Index
-noPrime(Index I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
+setTags(Index I, TagSet const& t);
 
-template<typename... VarArgs>
+Index
+noTags(Index I);
+
+Index
+replaceTags(Index I, TagSet const& tsold, TagSet const& tsnew);
+
+Index
+prime(Index I, int plinc = 1);
+
+Index
+setPrime(Index I, int plev);
+
+Index
+noPrime(Index I);
+
 IndexVal
-prime(IndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+addTags(IndexVal I, TagSet const& t);
 
-template<typename... VarArgs>
 IndexVal
-setPrime(IndexVal I, VarArgs&&... vargs) { I.setPrime(std::forward<VarArgs>(vargs)...); return I; }
+removeTags(IndexVal I, TagSet const& t);
 
-template<typename... VarArgs>
 IndexVal
-noPrime(IndexVal I, VarArgs&&... vargs) { I.noPrime(std::forward<VarArgs>(vargs)...); return I; }
+setTags(IndexVal I, TagSet const& t);
 
+IndexVal
+noTags(IndexVal I);
+
+IndexVal
+replaceTags(IndexVal I, TagSet const& tsold, TagSet const& tsnew);
+
+IndexVal
+prime(IndexVal I, int plinc = 1); 
+
+IndexVal
+setPrime(IndexVal I, int plev); 
+
+IndexVal
+noPrime(IndexVal I); 
 
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)

@@ -138,19 +138,52 @@ TagSet
 tags(const Index& I) { return I.tags(); }
 
 Index
-addTags(Index I, const TagSet& t) { I.addTags(t); return I; }
+addTags(Index I, TagSet const& t) { I.addTags(t); return I; }
 
 Index
-removeTags(Index I, const TagSet& t) { I.removeTags(t); return I; }
+removeTags(Index I, TagSet const& t) { I.removeTags(t); return I; }
 
 Index
-setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
+setTags(Index I, TagSet const& t) { I.setTags(t); return I; }
 
 Index
 noTags(Index I) { I.noTags(); return I; }
 
 Index
-replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew) { I.replaceTags(tsold,tsnew); return I; }
+replaceTags(Index I, TagSet const& tsold, TagSet const& tsnew) { I.replaceTags(tsold,tsnew); return I; }
+
+Index
+prime(Index I, int plinc) { I.prime(plinc); return I; }
+
+Index
+setPrime(Index I, int plev) { I.setPrime(plev); return I; }
+
+Index
+noPrime(Index I) { I.noPrime(); return I; }
+
+IndexVal
+addTags(IndexVal I, TagSet const& t) { I.addTags(t); return I; }
+
+IndexVal
+removeTags(IndexVal I, TagSet const& t) { I.removeTags(t); return I; }
+
+IndexVal
+setTags(IndexVal I, TagSet const& t) { I.setTags(t); return I; }
+
+IndexVal
+noTags(IndexVal I) { I.noTags(); return I; }
+
+IndexVal
+replaceTags(IndexVal I, TagSet const& tsold, TagSet const& tsnew) { I.replaceTags(tsold,tsnew); return I; }
+
+IndexVal
+prime(IndexVal I, int plinc) { I.prime(plinc); return I; }
+
+IndexVal
+setPrime(IndexVal I, int plev) { I.setPrime(plev); return I; }
+
+IndexVal
+noPrime(IndexVal I) { I.noPrime(); return I; }
 
 //
 // Check if Index I contains the tags tsmatch.

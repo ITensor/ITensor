@@ -19,7 +19,6 @@ class MPS
     std::vector<ITensor> A_;
     int l_orth_lim_,
         r_orth_lim_;
-    SiteSet sites_;
     mutable
     int atb_;
     std::string writedir_;
@@ -59,9 +58,6 @@ class MPS
         Global::warnDeprecated(".N() is deprecated in favor of length(MPS)");
         return this->length();
         }
-
-    SiteSet const& 
-    sites() const;
 
     explicit operator bool() const { return (not A_.empty()); }
 
@@ -395,10 +391,6 @@ MPSType&
 addAssumeOrth(MPSType      & L,
               MPSType const& R, 
               Args const& args = Args::global());
-
-template <typename MPSType>
-SiteSet const&
-sites(MPSType const& psi) { return psi.sites(); }
 
 //void 
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 

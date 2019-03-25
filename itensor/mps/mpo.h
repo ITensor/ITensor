@@ -19,7 +19,6 @@ class MPO : private MPS
     using Parent::A_;
     using Parent::l_orth_lim_;
     using Parent::r_orth_lim_;
-    using Parent::sites_;
     Real logrefNorm_;
     public:
 
@@ -33,7 +32,6 @@ class MPO : private MPS
     explicit operator bool() const { return Parent::operator bool(); }
 
     using Parent::length;
-    using Parent::sites;
 
     using Parent::rightLim;
     using Parent::leftLim;

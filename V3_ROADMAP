@@ -44,7 +44,7 @@ Completed (this is to help keep track of changes made, but we should make an off
 
 Common operation changes and deprecations (for upgrade guide):
 
- - Index operations:
+ - Index, IndexSet, IndexVal operations:
 
   o More IndexSet set operations:
     o Add `==(IndexSet,IndexSet)` to check if they are equal (subsets of one another)
@@ -57,7 +57,7 @@ Common operation changes and deprecations (for upgrade guide):
     o Add `findIndsExcept(IndexSet,TagSet)` to get a subset not containing tags in the tagset
   o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices in an IndexSet with
     similar indices
-  o Tagging functions:
+  o Tagging functions (added to Index and IndexVal):
     o setTags
     o noTags
     o addTags
