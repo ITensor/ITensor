@@ -389,6 +389,9 @@ dag(Index res);
 IndexVal
 dag(IndexVal res);
 
+QN
+qn(IndexVal iv);
+
 Arrow
 dir(Index res);
 

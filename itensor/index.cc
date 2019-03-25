@@ -206,6 +206,9 @@ dag(Index res) { res.dag(); return res; }
 IndexVal
 dag(IndexVal res) { res.dag(); return res; }
 
+QN
+qn(IndexVal iv) { return iv.qn(); }
+
 Arrow
 dir(Index res) { return res.dir(); }
 

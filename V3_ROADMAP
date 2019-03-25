@@ -226,17 +226,6 @@ o Generalize the convention for diagHermitian to accept a general pair of indice
   {ia,ja,ka,...,ib,jb,kb...} where ia==replaceTags(ib,tags(ib),tags(ia)), etc.
 o Generalize the convention of DMRG and applyMPO to accept MPOs with more general
   tag conventions, not just {s1,s2,...,s1',s2',...}
-? Remove SiteSet from MPS class.
-  o Matt: this would make it so that people can use MPS without SiteSet, if they
-    want to do that, since SiteSet is a bit constrained and requires a lot of code
-    to make an MPS on a set of sites that is not defined in ITensor.
-    One can define siteIndex(psi,b) = uniqueIndex(psi.A(b),psi.A(b-1),psi.A(b+1))
-    to get a site index, and siteInds(psi) to extract the sites as a siteset
-    to make another MPS with the same sites.
-  o Note that the MPO class could also have SiteSet removed, and the sites could
-    be defined by siteInds(H,b) = uniqueInds(H.A(b),H.A(b-1),H.A(b+1)) -> IndexSet to allow MPOs
-    with arbitrary Index conventions, i.e. {i1,i2,i3,...,j1,j2,j3,...}
-    Then, siteInds(H,b) can be used for tracing, for example H.A(b)*delta(siteInds(H,b))
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
