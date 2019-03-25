@@ -97,14 +97,6 @@ class Global
     static bool& debug2();
     static bool& debug3();
     static bool& debug4();
-
-    //Global named arguments
-    static Args& args();
-
-    void static args(const Args::Name& name, bool bval);
-    void static args(const Args::Name& name, int ival);
-    void static args(const Args::Name& name, Real rval);
-    void static args(const Args::Name& name, const std::string& sval);
     static bool& printdat();
     static Real& printScale();
     static bool& showIDs();

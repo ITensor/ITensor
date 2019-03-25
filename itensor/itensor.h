@@ -765,7 +765,7 @@ multSiteOps(ITensor A, ITensor const& B);
 //
 
 std::tuple<ITensor,Index>
-combiner(IndexSet const& inds, Args const& args = Global::args());
+combiner(IndexSet const& inds, Args const& args = Args::global());
 
 template<typename... Inds>
 std::tuple<ITensor,Index>
