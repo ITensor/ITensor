@@ -57,6 +57,7 @@ class MPO : private MPS
            Args const& args = Args::global());
 
     using Parent::setTags;
+    using Parent::noTags;
     using Parent::addTags;
     using Parent::removeTags;
     using Parent::replaceTags;
@@ -150,6 +151,18 @@ setTags(MPO A,
         VarArgs&&... vargs)
     {
     A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPO
+noTags(MPO A, IndexSet const& is);
+
+template<typename... VarArgs>
+MPO
+noTags(MPO A,
+       VarArgs&&... vargs)
+    {
+    A.noTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

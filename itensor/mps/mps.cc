@@ -844,6 +844,13 @@ setTags(MPS A, TagSet const& ts, IndexSet const& is)
     }
 
 MPS
+noTags(MPS A, IndexSet const& is)
+    {
+    A.noTags(is);
+    return A;
+    }
+
+MPS
 addTags(MPS A, TagSet const& ts, IndexSet const& is)
     {
     A.addTags(ts,is);

@@ -57,6 +57,15 @@ Common operation changes and deprecations (for upgrade guide):
     o Add `findIndsExcept(IndexSet,TagSet)` to get a subset not containing tags in the tagset
   o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices in an IndexSet with
     similar indices
+  o Tagging functions:
+    o setTags
+    o noTags
+    o addTags
+    o removeTags
+    o replaceTags
+    o prime
+    o setPrime
+    o noPrime
   o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
   o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
     -> Uses of `mapPrime` are superseded by `replaceTags`, `setPrime`, `replaceInds`, etc.
@@ -90,6 +99,16 @@ Common operation changes and deprecations (for upgrade guide):
     o `findIndex(ITensor,TagSet)` to get the index that has tags in a TagSet (throws error if there are more than one)
     o `findInds(ITensor,TagSet)` to get all indices that have the tags in a TagSet
     o `hasInds(ITensor,IndexSet)` to see if the ITensor has the specified Indices
+  o Tagging functions:
+    o setTags
+    o noTags
+    o addTags
+    o removeTags
+    o replaceTags
+    o swapTags
+    o prime
+    o setPrime
+    o noPrime
   o Add `swapInds(A,{i,j,k},{a,b,c})` to swap the Indices i<->a, j<->b, etc.
   o All ITensor constructors like `ITensor(...)`, `randomITensor(...)`, `diag(...)`, etc. now accept
     `std::initializer_list<Index>`,`std::array<Index,N>`, `std::vector<Index>`, and `IndexSet`
@@ -131,6 +150,16 @@ Common operation changes and deprecations (for upgrade guide):
   o Deprecate `MPO.primeall()` in favor of `MPO.prime()`
   o psi.A(i) -> psi(i), psi.Aref(i) -> psi.ref(i), psi.setA(i,T) -> psi.set(i,T) (no warning or error)
   o psi.N() -> length(psi)
+  o Tagging functions:
+    o setTags
+    o noTags
+    o addTags
+    o removeTags
+    o replaceTags
+    o swapTags
+    o prime
+    o setPrime
+    o noPrime
   o Replace maxM(MPS) and averageM(MPS) with maxLinkDim(MPS) and averageLinkDim(MPS)
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
     -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
@@ -155,6 +184,16 @@ Common operation changes and deprecations (for upgrade guide):
   o Add `linkIndex(MPO,int)` and `siteIndex(MPO,int[,TagSet])` to get link and site indices
     -> Since there are two site indices, one can use a TagSet like "0" or "1" to decide which site index to grab
   o primeall(MPO) -> prime(MPO)
+  o Tagging functions:
+    o setTags
+    o noTags
+    o addTags
+    o removeTags
+    o replaceTags
+    o swapTags
+    o prime
+    o setPrime
+    o noPrime
   o Restore conversion of AutoMPO to MPO (allowing code like MPO(ampo)).
    o Add deprecation warning to MPO(AutoMPO), telling people to switch
      to toMPO(AutoMPO)

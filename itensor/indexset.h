@@ -204,6 +204,23 @@ class IndexSet : public RangeT<Index>
             TagSet const& tsmatch);
 
     void
+    noTags();
+
+    void
+    noTags(IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    void
+    noTags(Index const& imatch1,
+           VarArgs&&... vargs)
+      {
+      noTags(IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      }
+
+    void
+    noTags(TagSet const& tsmatch);
+
+    void
     addTags(TagSet const& tsadd);
 
     void
@@ -410,6 +427,15 @@ setTags(IndexSet A,
         VarArgs&&... vargs)
     {
     A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+noTags(IndexSet A,
+       VarArgs&&... vargs)
+    {
+    A.noTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

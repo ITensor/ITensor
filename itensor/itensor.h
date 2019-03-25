@@ -142,6 +142,15 @@ class ITensor
         { is_.setTags(std::forward<VarArgs>(vargs)...); return *this; }
 
     ITensor&
+    noTags(IndexSet const& is)
+        { is_.noTags(is); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    noTags(VarArgs&&... vargs)
+        { is_.noTags(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
     addTags(TagSet const& ts,
             IndexSet const& is)
         { is_.addTags(ts,is); return *this; }
@@ -492,6 +501,19 @@ setTags(ITensor A,
         VarArgs&&... vargs)
     {
     A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+noTags(ITensor A,
+       IndexSet const& is);
+
+template<typename... VarArgs>
+ITensor
+noTags(ITensor A,
+       VarArgs&&... vargs)
+    {
+    A.noTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

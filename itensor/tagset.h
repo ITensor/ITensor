@@ -87,6 +87,9 @@ class TagSet
     setTags(TagSet const& ts);
 
     void
+    noTags();
+
+    void
     replaceTags(TagSet const& tsremove, TagSet const& tsadd);
 
     };

@@ -421,6 +421,14 @@ setTags(ITensor A,
   }
 
 ITensor
+noTags(ITensor A,
+       IndexSet const& is)
+  {
+  A.noTags(is);
+  return A;
+  }
+
+ITensor
 addTags(ITensor A,
         TagSet const& ts,
         IndexSet const& is)

@@ -359,6 +359,13 @@ setTags(MPO A, TagSet const& ts, IndexSet const& is)
     }
 
 MPO
+noTags(MPO A, IndexSet const& is)
+    {
+    A.noTags(is);
+    return A;
+    }
+
+MPO
 addTags(MPO A, TagSet const& ts, IndexSet const& is)
     {
     A.addTags(ts,is);

@@ -133,6 +133,25 @@ class MPS
         }
 
     void
+    noTags(IndexSet const& is)
+        {
+        if(do_write_)
+            Error("noTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].noTags(is);
+        }
+
+    template<typename... VarArgs>
+    void
+    noTags(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("noTags not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].noTags(std::forward<VarArgs>(vargs)...);
+        }
+
+    void
     addTags(TagSet const& ts, IndexSet const& is)
         {
         if(do_write_)
@@ -453,6 +472,18 @@ setTags(MPS A,
         VarArgs&&... vargs)
     {
     A.setTags(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPS
+noTags(MPS A, IndexSet const& is);
+
+template<typename... VarArgs>
+MPS
+noTags(MPS A,
+        VarArgs&&... vargs)
+    {
+    A.noTags(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

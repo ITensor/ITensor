@@ -108,6 +108,9 @@ TEST_CASE("IndexTest")
         auto ic = setTags(iab1,"c,0");
         CHECK(hasTags(ic,"c"));
 
+        CHECK(ic == setTags(iab1,"c"));
+        CHECK(i == noTags(ic));
+        CHECK(noTags(ia) == noTags(ic));
         CHECK(hasTags(replaceTags(ic,"c","a"),"a"));
         CHECK(hasTags(replaceTags(ic,"c","a,b"),"a,b"));
         CHECK(hasTags(replaceTags(ic,"","a,b"),"a,b"));

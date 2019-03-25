@@ -89,6 +89,34 @@ setTags(TagSet const& tsnew,
     }
 
 void IndexSet::
+noTags()
+    {
+    for(auto& J : *this) J.noTags();
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    }
+
+void IndexSet::
+noTags(IndexSet const& ismatch)
+    {
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs) parent::index(i).noTags();
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    }
+
+void IndexSet::
+noTags(TagSet const& tsmatch)
+    {
+    for(auto& J : *this) if(hasTags(J,tsmatch)) J.noTags();
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    }
+
+void IndexSet::
 addTags(TagSet const& tsadd)
     {
     for(auto& J : *this) J.addTags(tsadd);

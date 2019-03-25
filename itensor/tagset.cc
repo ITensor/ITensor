@@ -185,6 +185,13 @@ setTags(TagSet const& ts)
     else primelevel_ = ts.primeLevel();
     }
 
+void TagSet::
+noTags()
+    {
+    size_ = 0;
+    primelevel_ = 0;
+    }
+
 TagSet
 removeTags(TagSet T, TagSet const& ts)
     {

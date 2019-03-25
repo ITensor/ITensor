@@ -130,18 +130,6 @@ class Index
     explicit operator long() const { return dim(); }
     explicit operator size_t() const { return dim(); }
 
-    // Sets the prime level to a specified value.
-    Index& 
-    setPrime(int p);
-
-    // Sets the prime level to 0.
-    Index& 
-    noPrime();
-
-    // Increase primelevel by 1 (or by optional amount inc)
-    Index& 
-    prime(int inc = 1);
-
     // Add tags
     Index&
     addTags(const TagSet& t) { tags_.addTags(t); return *this; }
@@ -154,9 +142,25 @@ class Index
     Index&
     setTags(const TagSet& t) { tags_.setTags(t); return *this; }
 
+    // Remove all tags
+    Index&
+    noTags() { tags_.noTags(); return *this; }
+
     // Set tags
     Index&
     replaceTags(const TagSet& tsold, const TagSet& tsnew) { tags_.replaceTags(tsold,tsnew); return *this; }
+
+    // Sets the prime level to a specified value.
+    Index& 
+    setPrime(int p);
+
+    // Sets the prime level to 0.
+    Index& 
+    noPrime();
+
+    // Increase primelevel by 1 (or by optional amount inc)
+    Index& 
+    prime(int inc = 1);
 
     //Return an IndexVal with specified value
     IndexVal
@@ -326,59 +330,59 @@ operator==(IndexVal const& iv, Index const& I);
 bool
 operator==(Index const& I, IndexVal const& iv);
 
-Index::id_type inline
-id(Index const& I) { return I.id(); }
+Index::id_type
+id(Index const& I);
 
-long inline
-dim(Index const& I) { return I.dim(); }
+long
+dim(Index const& I);
 
-long inline
-dim(IndexVal const& I) { return I.dim(); }
+long
+dim(IndexVal const& I);
 
-int inline
-primeLevel(Index const& I) { return I.primeLevel(); }
+int
+primeLevel(Index const& I);
 
-TagSet inline
-tags(const Index& I) { return I.tags(); }
-
-Index inline
-addTags(Index I, const TagSet& t) { I.addTags(t); return I; }
-
-Index inline
-removeTags(Index I, const TagSet& t) { I.removeTags(t); return I; }
-
-Index inline
-setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
-
-Index inline
-replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew) { I.replaceTags(tsold,tsnew); return I; }
+TagSet
+tags(const Index& I);
 
 Index
-tags(Index I, std::string st);
+addTags(Index I, const TagSet& t);
+
+Index
+removeTags(Index I, const TagSet& t);
+
+Index
+setTags(Index I, const TagSet& t);
+
+Index
+noTags(Index I);
+
+Index
+replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew);
 
 //
 // Check if Index I contains the tags tsmatch.
 //
-bool inline
-hasTags(Index I, const TagSet& tsmatch) { return hasTags(tags(I),tsmatch); }
+bool
+hasTags(Index I, const TagSet& tsmatch);
 
-bool inline
-hasQNs(Index const& I) { return I.nblock()!=0; }
+bool
+hasQNs(Index const& I);
 
-Index inline
-removeQNs(Index I) { if(hasQNs(I)) I.removeQNs(); return I; }
+Index
+removeQNs(Index I);
 
-bool inline
-hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
+bool
+hasQNs(IndexVal const& iv);
   
-Index inline
-dag(Index res) { res.dag(); return res; }
+Index
+dag(Index res);
 
-IndexVal inline
-dag(IndexVal res) { res.dag(); return res; }
+IndexVal
+dag(IndexVal res);
 
-Arrow inline
-dir(Index res) { return res.dir(); }
+Arrow
+dir(Index res);
 
 template<typename... VarArgs>
 Index

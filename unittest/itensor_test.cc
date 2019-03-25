@@ -1511,12 +1511,12 @@ SECTION("Tag functions")
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(u,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(u,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(u,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(d,"tag2,tag1,0")));
         CHECK(hasIndex(T2,setTags(d,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
         }
 
@@ -1524,9 +1524,9 @@ SECTION("Tag functions")
         {
         auto T2 = setTags(T,"tag1,tag2,0","x");
         CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(l,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(l,"tag2,tag1")));
         CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(r,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(r,"tag2,tag1")));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,s));
@@ -1535,12 +1535,23 @@ SECTION("Tag functions")
     SECTION("setTags (match index)")
         {
         auto T2 = setTags(T,"tag1,tag2,0",s);
+        CHECK(inds(T2)==inds(setTags(T,"tag1,tag2",s)));
         CHECK(hasIndex(T2,l));
         CHECK(hasIndex(T2,r));
         CHECK(hasIndex(T2,u));
         CHECK(hasIndex(T2,d));
         CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
-        CHECK(hasIndex(T2,setTags(s,"tag2,tag1,0")));
+        CHECK(hasIndex(T2,setTags(s,"tag2,tag1")));
+        }
+
+    SECTION("noTags (match index)")
+        {
+        auto T2 = noTags(T,s);
+        CHECK(hasIndex(T2,l));
+        CHECK(hasIndex(T2,r));
+        CHECK(hasIndex(T2,u));
+        CHECK(hasIndex(T2,d));
+        CHECK(hasIndex(T2,noTags(s)));
         }
 
     SECTION("replaceTags (all)")

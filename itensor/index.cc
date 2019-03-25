@@ -122,6 +122,60 @@ operator!=(Index const& i1, Index const& i2)
     return not operator==(i1,i2);
     }
 
+Index::id_type
+id(Index const& I) { return I.id(); }
+
+long
+dim(Index const& I) { return I.dim(); }
+
+long
+dim(IndexVal const& I) { return I.dim(); }
+
+int
+primeLevel(Index const& I) { return I.primeLevel(); }
+
+TagSet
+tags(const Index& I) { return I.tags(); }
+
+Index
+addTags(Index I, const TagSet& t) { I.addTags(t); return I; }
+
+Index
+removeTags(Index I, const TagSet& t) { I.removeTags(t); return I; }
+
+Index
+setTags(Index I, const TagSet& t) { I.setTags(t); return I; }
+
+Index
+noTags(Index I) { I.noTags(); return I; }
+
+Index
+replaceTags(Index I, const TagSet& tsold, const TagSet& tsnew) { I.replaceTags(tsold,tsnew); return I; }
+
+//
+// Check if Index I contains the tags tsmatch.
+//
+bool
+hasTags(Index I, const TagSet& tsmatch) { return hasTags(tags(I),tsmatch); }
+
+bool
+hasQNs(Index const& I) { return I.nblock()!=0; }
+
+Index
+removeQNs(Index I) { if(hasQNs(I)) I.removeQNs(); return I; }
+
+bool
+hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
+
+Index
+dag(Index res) { res.dag(); return res; }
+
+IndexVal
+dag(IndexVal res) { res.dag(); return res; }
+
+Arrow
+dir(Index res) { return res.dir(); }
+
 //TODO: what is this for? It doesn't make as much sense with
 //tags, but I guess we can compare tags with inequalities
 bool
