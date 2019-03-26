@@ -246,7 +246,17 @@ operator<<(std::ostream & s, Index const& I)
         s << "|id=" << (id(I) % 1000);
         //s << "," << id(I);
         }
-    if(size(tags(I)) > 0) s << "|" << tags(I);
+    auto ts = tags(I);
+    if(size(ts) > 0)
+      {
+      s << "|";
+      auto ts = tags(I);
+      for(auto i : range(size(ts)))
+        {
+        s << ts[i];
+        if( i < (size(ts)-1) ) s << ",";
+        }
+      }
     s << ")"; 
     if(primeLevel(I) > 0) 
         {

@@ -31,8 +31,9 @@ toString() const
     {
     std::string str = "";
     for(auto i : range(size_-1))
-        str = str+std::string(tags_[i])+",";
+        str = str+std::string(tags_[i]) + ",";
     str = str+std::string(tags_[size_-1]);
+    if( primelevel_ >= 0 ) str = str + "," + std::to_string(primelevel_);
     return str;
     }
 
@@ -220,10 +221,28 @@ replaceTags(TagSet const& tsremove, TagSet const& tsadd)
 std::ostream&
 operator<<(std::ostream & s, TagSet const& ts)
     {
+    if( primeLevel(ts) != 0 ) s << "(";
     for(auto i : range(size(ts)))
+      {
+      s << ts[i];
+      if( i < (size(ts)-1) ) s << ",";
+      }
+    if( primeLevel(ts) != 0 ) s << ")";
+    if(primeLevel(ts) > 0)
         {
-        s << ts[i];
-        if(i<size(ts)-1) s << ",";
+        if(primeLevel(ts) > 3)
+            {
+            s << "'" << primeLevel(ts);
+            }
+        else
+            {
+            for(int n = 1; n <= primeLevel(ts); ++n)
+                s << "'";
+            }
+        }
+    else if(primeLevel(ts) < 0)
+        {
+        s << "'" << primeLevel(ts) << " (WARNING: integer tag of TagSet is negative. Interpreted as no integer tag.)";
         }
     return s;
     }
