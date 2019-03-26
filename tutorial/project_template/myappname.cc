@@ -20,11 +20,11 @@ main()
     //
     // Construct and print an ITensor
     //
-    auto a = Index("A",5);
-    auto b = Index("B",4);
+    auto a = Index(5,"A");
+    auto b = Index(4,"B");
 
     auto T = ITensor(a,b);
-    randomize(T);
+    T.randomize();
 
     //The PrintData macro prints "T ="
     //followed by information about T 
