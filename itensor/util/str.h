@@ -10,19 +10,19 @@ namespace itensor {
 using std::string;
 
 // Take an int and turn it into a string
-string 
+string  inline
 str(int n)
     { 
     return std::to_string(n);
     }
 
-string  
+string inline
 str(string s, int n)
     {  
     return s+str(n);
     }
 
-string  
+string inline
 str(int n, string s)
     {  
     return str(n)+s;

@@ -20,7 +20,7 @@ class ExpHeisenberg
 
     ExpHeisenberg(SiteSet const& sites, 
              Cplx tau,
-             Args const& args = Global::args());
+             Args const& args = Args::global());
 
     operator MPO() { init_(); return H_; }
 

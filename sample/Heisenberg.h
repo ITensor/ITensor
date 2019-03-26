@@ -14,7 +14,7 @@ class Heisenberg
     public:
 
     Heisenberg(SiteSet const& sites, 
-               Args const& args = Global::args());
+               Args const& args = Args::global());
 
     operator MPO() { init_(); return H; }
 
