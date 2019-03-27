@@ -122,9 +122,9 @@ normalize(MPS & psi)
     }
 
 Index inline
-siteIndex(MPS const& psi, int b)
+siteIndex(MPS const& psi, int j)
     { 
-    return uniqueIndex(psi(b),{psi(b-1),psi(b+1)}); 
+    return uniqueIndex(psi(j),{psi(j-1),psi(j+1)}); 
     }
 
 template<typename MPSType>

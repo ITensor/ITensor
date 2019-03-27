@@ -607,7 +607,7 @@ Real
 normalize(MPS & psi);
 
 Index
-siteIndex(MPS const& psi, int b);
+siteIndex(MPS const& psi, int j);
 
 template<typename MPSType>
 Index
