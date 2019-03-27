@@ -41,6 +41,9 @@ class SiteSet
     //Create SiteSet from vector of provided Indices (0-indexed)
     SiteSet(std::vector<Index> const& inds);
 
+    //Create SiteSet of length N (can be set using .set method)
+    SiteSet(int N);
+
     explicit operator bool() const { return bool(sites_); }
 
     int 
@@ -95,6 +98,10 @@ class SiteSet
     stP(int i, String const& state) const
         { return prime(operator()(i,state)); }
 
+
+    template<typename SiteType>
+    void
+    set(int i, SiteType && s);
 
     protected:
 
@@ -260,6 +267,12 @@ SiteSet(int N, int d)
     }
 
 inline SiteSet::
+SiteSet(int N)
+    {
+    SiteSet::init(SiteStore(N));
+    }
+
+inline SiteSet::
 SiteSet(std::vector<Index> const& inds)
     {
     auto sites = SiteStore(inds.size());
@@ -297,6 +310,13 @@ operator()(int i, String const& state) const
     {
     if(not *this) Error("Cannot retrieve state from default-initialized SiteSet");
     return sites_->state(i,state);
+    }
+
+template<typename SiteType>
+void SiteSet::
+set(int i, SiteType && s) 
+    {
+    sites_->set(i,std::move(s));
     }
 
 bool inline
