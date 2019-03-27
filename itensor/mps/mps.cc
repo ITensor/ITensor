@@ -399,13 +399,13 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     if(hasQNs(initState))
         {
         auto qa = std::vector<QN>(N_+1); //qn[i] = qn on i^th bond
-        for(auto i : range1(N_)) qa[0] -= initState(i).qn()*In;
+        for(auto i : range1(N_)) qa[0] -= qn(initState(i))*In;
         //Taking OC to be at the leftmost site,
         //compute the QuantumNumbers of all the Links.
         for(auto i : range1(N_))
             {
             //Taking the divergence to be zero,solve for qa[i]
-            qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
+            qa[i] = Out*(-qa[i-1]*In - qn(initState(i)));
             }
         for(auto i : range1(N_)) a[i] = Index(qa[i],1,format("Link,l=%d",i));
         }

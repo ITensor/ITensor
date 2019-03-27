@@ -118,13 +118,17 @@ class IndexSet : public RangeT<Index>
 
     // 1-indexed access
     Index &
-    index(size_type I)
+    operator()(size_type I)
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) throw ITError("IndexSet.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSet(i) arg out of range");
 #endif
         return operator[](I-1);
         }
+
+    // Deprecated
+    Index &
+    index(size_type I) { return operator()(I); }
 
     // 0-indexed access
     Index const&
@@ -138,13 +142,17 @@ class IndexSet : public RangeT<Index>
 
     // 1-indexed access
     Index const&
-    index(size_type I) const
+    operator()(size_type I) const
         { 
 #ifdef DEBUG
-        if(I < 1 || I > parent::size()) throw ITError("IndexSet.index(i) arg out of range");
+        if(I < 1 || I > parent::size()) throw ITError("IndexSet(i) arg out of range");
 #endif
         return operator[](I-1);
         }
+
+    // Deprecated
+    Index const&
+    index(size_type I) const { return operator()(I); }
 
     parent const&
     range() const { return *this; }
@@ -412,11 +420,6 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     {
     return is.range().end();
     }
-
-// 1-indexed access
-// Return a copy of the Index at position I
-Index
-index(IndexSet const& is, IndexSet::size_type I);
 
 IndexSet
 dag(IndexSet is);

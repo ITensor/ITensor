@@ -430,8 +430,8 @@ operator<<(std::ostream& s, IndexSet const& is)
     {
     for(auto i : range1(is.order()))
         {
-        if(hasQNs(is)) s << is.index(i) << std::endl;
-        else s << is.index(i) << " ";
+        if(hasQNs(is)) s << is(i) << std::endl;
+        else s << is(i) << " ";
         }
     return s;
     }
@@ -461,12 +461,6 @@ checkQNConsistent(IndexSet const& is)
 #endif
     }
 
-Index
-index(IndexSet const& is, IndexSet::size_type I) 
-    {
-    return is.index(I);
-    }
-
 IndexSet
 findInds(IndexSet const& is,
          TagSet const& tsmatch)
@@ -482,7 +476,7 @@ Index
 findIndex(IndexSet const& is)
     {
     if( order(is) > 1 ) Error("Error: More than one Index in the IndexSet");
-    else if( order(is) == 1 ) return index(is,1);
+    else if( order(is) == 1 ) return is(1);
     return Index();
     }
 

@@ -44,35 +44,35 @@ plussers(Index const& l1,
         }
     else
         {
-        auto siq = stdx::reserve_vector<QNInt>(l1.nblock()+l2.nblock());
-        for(auto n : range1(l1.nblock()))
+        auto siq = stdx::reserve_vector<QNInt>(nblock(l1)+nblock(l2));
+        for(auto n : range1(nblock(l1)))
             {
-            siq.emplace_back(l1.qn(n),l1.blocksize(n));
+            siq.emplace_back(qn(l1,n),blocksize(l1,n));
             }
-        for(auto n : range1(l2.nblock()))
+        for(auto n : range1(nblock(l2)))
             {
-            siq.emplace_back(l2.qn(n),l2.blocksize(n));
+            siq.emplace_back(qn(l2,n),blocksize(l2,n));
             }
 #ifdef DEBUG
         if(siq.empty()) Error("siq is empty in plussers");
 #endif
         sumind = Index(std::move(siq),
-                       sumind.dir(),
-                       sumind.tags()).prime(sumind.primeLevel());
+                       dir(sumind),
+                       tags(sumind));
         first = ITensor(dag(l1),sumind);
         int n = 1;
-        for(auto j : range1(l1.nblock()))
+        for(auto j : range1(nblock(l1)))
             {
-            auto D = Tensor(l1.blocksize(j),sumind.blocksize(n));
+            auto D = Tensor(blocksize(l1,j),blocksize(sumind,n));
             auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
             getBlock<Real>(first,{j,n}) &= D;
             ++n;
             }
         second = ITensor(dag(l2),sumind);
-        for(auto j : range1(l2.nblock()))
+        for(auto j : range1(nblock(l2)))
             {
-            auto D = Tensor(l2.blocksize(j),sumind.blocksize(n));
+            auto D = Tensor(blocksize(l2,j),blocksize(sumind,n));
             auto minsize = std::min(D.extent(0),D.extent(1));
             for(auto i : range(minsize)) D(i,i) = 1.0;
             getBlock<Real>(second,{j,n}) &= D;

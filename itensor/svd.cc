@@ -204,7 +204,7 @@ svdImpl(ITensor const& A,
             if(compute_qn)
                 {
                 auto bi = blocks[b].i1;
-                auto q = uI.qn(1+bi);
+                auto q = qn(uI,1+bi);
                 for(auto sval : d)
                     {
                     alleigqn.emplace_back(sqr(sval),q);
@@ -280,9 +280,9 @@ svdImpl(ITensor const& A,
                 }
 
             resize(d,this_m);
-            uI.qn(1+B.i1);
-            Liq.emplace_back(uI.qn(1+B.i1),this_m);
-            Riq.emplace_back(vI.qn(1+B.i2),this_m);
+            qn(uI,1+B.i1);
+            Liq.emplace_back(qn(uI,1+B.i1),this_m);
+            Riq.emplace_back(qn(vI,1+B.i2),this_m);
             }
         
 #ifdef DEBUG

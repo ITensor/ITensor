@@ -686,7 +686,7 @@ allocReal(ITensor& T, IntArray const& ints)
         for(auto i : range(inds(T)))
             {
             auto iv = (inds(T)[i])(1+ints[i]);
-            div += iv.qn()*iv.index.dir();
+            div += qn(iv)*dir(iv);
             }
         T.store() = newITData<QDenseReal>(inds(T),div);
         }

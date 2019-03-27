@@ -504,7 +504,7 @@ getBlock(ITensor & T,
         for(auto n : range(block_ind))
             {
             auto& I = inds(T)[n];
-            q += I.qn(block_ind[n])*dir(I);
+            q += qn(I,block_ind[n])*dir(I);
             }
         T = ITensor(inds(T),QDense<V>(inds(T),q));
         }

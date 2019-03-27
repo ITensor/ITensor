@@ -192,13 +192,19 @@ bool
 hasTags(Index I, const TagSet& tsmatch) { return hasTags(tags(I),tsmatch); }
 
 bool
-hasQNs(Index const& I) { return I.nblock()!=0; }
+hasQNs(Index const& I) { return nblock(I)!=0; }
 
 Index
 removeQNs(Index I) { if(hasQNs(I)) I.removeQNs(); return I; }
 
+Index const&
+index(IndexVal const& res) { return res.index; }
+
+long
+val(IndexVal const& res) { return res.val; }
+
 bool
-hasQNs(IndexVal const& iv) { return hasQNs(iv.index); }
+hasQNs(IndexVal const& iv) { return hasQNs(index(iv)); }
 
 Index
 dag(Index res) { res.dag(); return res; }
@@ -206,11 +212,14 @@ dag(Index res) { res.dag(); return res; }
 IndexVal
 dag(IndexVal res) { res.dag(); return res; }
 
-QN
-qn(IndexVal iv) { return iv.qn(); }
+QN const&
+qn(IndexVal const& iv) { return iv.qn(); }
 
 Arrow
-dir(Index res) { return res.dir(); }
+dir(Index const& res) { return res.dir(); }
+
+Arrow
+dir(IndexVal const& res) { return dir(index(res)); }
 
 //TODO: what is this for? It doesn't make as much sense with
 //tags, but I guess we can compare tags with inequalities
@@ -277,10 +286,10 @@ operator<<(std::ostream & s, Index const& I)
     if(hasQNs(I))
         {
         s << " <" << I.dir() << ">\n";
-        for(auto j : range1(I.nblock()))
+        for(auto j : range1(nblock(I)))
             {
-            s << "  " << j << ": " << I.blocksize(j) << " " <<  I.qn(j);
-            if(j != I.nblock()) s << "\n";
+            s << "  " << j << ": " << blocksize(I,j) << " " <<  qn(I,j);
+            if(j != nblock(I)) s << "\n";
             }
         }
     return s;
@@ -314,7 +323,7 @@ IndexVal(Index const& index_,
 bool
 operator==(IndexVal const& iv1, IndexVal const& iv2)
     {
-    return (iv1.index == iv2.index && iv1.val == iv2.val);
+    return (index(iv1) == index(iv2) && iv1.val == iv2.val);
     }
 
 bool
@@ -326,13 +335,13 @@ operator!=(IndexVal const& iv1, IndexVal const& iv2)
 bool
 operator==(Index const& I, IndexVal const& iv)
     {
-    return iv.index == I;
+    return index(iv) == I;
     }
 
 bool
 operator==(IndexVal const& iv, Index const& I)
     {
-    return iv.index == I;
+    return index(iv) == I;
     }
 
 string
@@ -342,7 +351,7 @@ std::ostream&
 operator<<(std::ostream& s, IndexVal const& iv)
     { 
     return s << "IndexVal: val = " << iv.val 
-             << ", ind = " << iv.index;
+             << ", ind = " << index(iv);
     }
 
 void
@@ -382,9 +391,9 @@ IndSector
 sectorInfo(IndexVal const& iv)
     {
     auto is = IndSector(1,iv.val);
-    while(is.sind > iv.index.blocksize(is.sector))
+    while(is.sind > blocksize(index(iv),is.sector))
         {
-        is.sind -= iv.index.blocksize(is.sector);
+        is.sind -= blocksize(index(iv),is.sector);
         is.sector += 1;
         }
     return is;
@@ -511,6 +520,9 @@ nblock() const
     return static_cast<long>(pd->size());
     }
 
+long
+nblock(Index const& i) { return i.nblock(); }
+
 QN const& Index::
 qn(long i) const 
     {
@@ -526,6 +538,9 @@ qn(long i) const
     return pd->qn(i);
     }
 
+QN const&
+qn(Index const& i, long b) { return i.qn(b); }
+
 long Index::
 blocksize(long i) const 
     {
@@ -540,6 +555,9 @@ blocksize(long i) const
 #endif
     return pd->blocksize(i);
     }
+
+long
+blocksize(Index const& i, long b) { return i.blocksize(b); }
 
 long Index::
 blocksize0(long i) const 
@@ -598,9 +616,9 @@ long
 QNblock(Index const& I,
         QN const& Q)
     {
-    for(auto n : range1(I.nblock()))
+    for(auto n : range1(nblock(I)))
         { 
-        if(I.qn(n) == Q) return n;
+        if(qn(I,n) == Q) return n;
         }
     if(not hasQNs(I)) Error("Index does not contain any QN blocks");
     println("I = ",I);
@@ -614,7 +632,7 @@ long
 QNblockSize(Index const& I, 
             QN const& Q)
     { 
-    return I.blocksize(QNblock(I,Q));
+    return blocksize(I,QNblock(I,Q));
     }
 
 void Index::

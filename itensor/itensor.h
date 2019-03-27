@@ -71,7 +71,7 @@ class ITensor
 
     //Access index
     Index const&
-    index(size_type I) const { return is_.index(I); }
+    index(size_type I) const { return is_(I); }
 
     //evaluates to false if default constructed
     explicit operator bool() const { return bool(is_) || bool(store_); }

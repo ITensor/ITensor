@@ -389,11 +389,29 @@ dag(Index res);
 IndexVal
 dag(IndexVal res);
 
-QN
-qn(IndexVal iv);
+QN const&
+qn(Index const& i, long b);
+
+QN const&
+qn(IndexVal const& iv);
 
 Arrow
-dir(Index res);
+dir(Index const& res);
+
+Arrow
+dir(IndexVal const& res);
+
+Index const&
+index(IndexVal const& res);
+
+long
+val(IndexVal const& res);
+
+long
+nblock(Index const& i);
+
+long
+blocksize(Index const& i, long b);
 
 //
 // Tag functions

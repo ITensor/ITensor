@@ -232,7 +232,7 @@ diagHImpl(ITensor H,
             if(compute_qns)
                 {
                 auto bi = blocks[b].i1;
-                auto q = ai.qn(1+bi);
+                auto q = qn(ai,1+bi);
                 for(auto eig : d)
                     {
                     alleigqn.emplace_back(eig,q);
@@ -314,14 +314,14 @@ diagHImpl(ITensor H,
             d = subVector(d,0,this_m);
             UU = columns(UU,0,this_m);
 
-            iq.emplace_back(ai.qn(1+B.i1),this_m);
+            iq.emplace_back(qn(ai,1+B.i1),this_m);
             }
 
         if(iq.empty())
             {
             if(blocks.empty()) Error("No blocks in IQTensor svd");
             auto& B = blocks.front();
-            iq.emplace_back(ai.qn(1+B.i1),1l);
+            iq.emplace_back(qn(ai,1+B.i1),1l);
             }
 
         auto d = Index(move(iq),-ai.dir(),itagset);
