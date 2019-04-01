@@ -7,7 +7,7 @@
 
 #include "itensor/tensor/vec.h"
 #include "itensor/util/args.h"
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/detail/gcounter.h"
 
 namespace itensor {

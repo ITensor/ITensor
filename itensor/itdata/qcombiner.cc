@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/tensor/sliceten.h"
 #include "itensor/itdata/qcombiner.h"
 #include "itensor/itdata/itdata.h"
