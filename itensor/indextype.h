@@ -29,6 +29,8 @@ ITStoreSize() { return 1+ITSize(); }
 struct IndexType
     {
     using storage_type = std::array<char,ITStoreSize()>;
+    using iterator = storage_type::iterator;
+    using const_iterator = storage_type::const_iterator;
     private:
     storage_type name_;
     public:
@@ -49,6 +51,11 @@ struct IndexType
 
     char&
     operator[](size_t i) { CHECK_IND(i) return name_[i]; }
+    iterator begin() {return name_.begin();};
+    iterator end()  {return name_.end();};
+    const_iterator begin() const {return name_.begin();};
+    const_iterator end() const { return name_.end();};
+      
 
     private:
     void
@@ -62,9 +69,7 @@ struct IndexType
 bool inline
 operator==(IndexType const& t1, IndexType const& t2)
     {
-    for(size_t j = 0; j < IndexType::size(); ++j)
-        if(t1[j] != t2[j]) return false;
-    return true;
+      return(std::equal(t1.begin(), t1.end(), t2.begin()));
     }
 
 bool inline
