@@ -1,6 +1,6 @@
 #include "test.h"
 #include "itensor/util/cputime.h"
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/util/args.h"

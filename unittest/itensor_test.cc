@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/itensor.h"
 #include "itensor/util/cplx_literal.h"
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/util/set_scoped.h"
 #include "itensor/util/print_macro.h"
 #include <cstdlib>

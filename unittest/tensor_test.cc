@@ -1,6 +1,6 @@
 #include "test.h"
 #include "itensor/util/print.h"
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/detail/algs.h"
 #include "itensor/tensor/permutation.h"
 #include "itensor/tensor/sliceten.h"
