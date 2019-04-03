@@ -2,12 +2,17 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_RANGE_H_
-#define __ITENSOR_RANGE_H_
+#ifndef __ITENSOR_ITERATE_H_
+#define __ITENSOR_ITERATE_H_
 
 #include <type_traits>
+#include "itensor/util/itertools.h"
 
 namespace itensor {
+
+using triqs::utility::enumerate;
+using triqs::utility::zip;
+using triqs::utility::product;
 
 namespace detail {
 

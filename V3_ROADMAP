@@ -45,7 +45,11 @@ o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/supp
 Completed (this is to help keep track of changes made, but we should make an official
            list for the website):
 
-Common operation changes and deprecations (for upgrade guide):
+# Miscellaneous
+
+ - Changed license to Apache 2.0 per Flatiron Institute policy
+
+# Common operation changes and deprecations (for upgrade guide):
 
  - Index, IndexSet, IndexVal operations:
 

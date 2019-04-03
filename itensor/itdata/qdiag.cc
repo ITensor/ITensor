@@ -7,7 +7,7 @@
 #include "itensor/detail/gcounter.h"
 #include "itensor/tensor/contract.h"
 #include "itensor/itdata/qutil.h"
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 
 using std::vector;
 using std::move;

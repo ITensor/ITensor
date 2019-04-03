@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_SLICETEN_H_
 #define __ITENSOR_SLICETEN_H_
 
-#include "itensor/util/range.h"
+#include "itensor/util/iterate.h"
 #include "itensor/tensor/ten.h"
 #include "itensor/tensor/slicemat.h"
 #include "itensor/tensor/slicerange.h"
