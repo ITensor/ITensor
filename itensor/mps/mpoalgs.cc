@@ -90,8 +90,74 @@ nmultMPO(MPO const& Aorig,
         res.ref(i).replaceTags("2","1");
         }
     res.orthogonalize();
-
     }
+
+//TODO: complete this version that is independent of tag convention
+//void 
+//nmultMPO(MPO const& Aorig, 
+//         MPO const& Borig, 
+//         MPO& C,
+//         Args args)
+//    {
+//    if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
+//
+//    if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
+//    const int N = length(Borig);
+//
+//    auto A = Aorig;
+//    A.position(1);
+//
+//    MPO B;
+//    if(&Borig == &Aorig)
+//        {
+//        B = A;
+//        }
+//    else
+//        {
+//        B = Borig;
+//        B.position(1);
+//        }
+//
+//    C = A;
+//
+//    auto siA = uniqueIndex(A(1),{B(1),A(2)});
+//    auto siB = uniqueIndex(B(1),{A(1),B(2)});
+//    auto liA = linkIndex(A,1);
+//    auto liB = linkIndex(B,1);
+//    auto center = A(1) * B(1); 
+//
+//    std::string tagsC;
+//    tagsC = toString(tags(liA));
+//
+//    ITensor nfork;
+//    Index liC;
+//    std::tie(C.ref(1),nfork,liC) = denmatDecomp(center,{siA,siB},{liA,liB},Fromleft,{args,"Tags=",tagsC});
+//
+//    for( auto i = 2; i < N; i++ )
+//        {
+//        // TODO: use siteInds(A,B,i);
+//        siA = uniqueIndex(A(i),{A(i-1),A(i+1),B(i)});
+//        siB = uniqueIndex(B(i),{B(i-1),B(i+1),A(i)});
+//        liA = linkIndex(A,i);
+//        liB = linkIndex(B,i);
+//
+//        center = nfork * A(i) * B(i); 
+//        tagsC = toString(tags(liA));
+//        std::tie(C.ref(i),nfork,liC) = denmatDecomp(center,{siA,siB,liC},{liA,liB},Fromleft,{args,"Tags=",tagsC});
+//        }
+//    C.ref(N) = nfork * A(N) * B(N);
+//    C.orthogonalize();
+//    }
+
+MPO
+nmultMPO(MPO const& A,
+         MPO const& B,
+         Args args)
+  {
+  MPO res;
+  nmultMPO(A,B,res,args);
+  return res;
+  }
 
 //
 // Define specific applyMPO methods
@@ -192,16 +258,14 @@ densityMatrixApplyMPOImpl(MPO const& K,
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
-    //auto siteType = getIndexType(args,"SiteType",Site);
-    //auto linkType = getIndexType(args,"LinkType",Link);
-    auto siteTags = getTagSet(args,"SiteTags","Site");
-    auto linkTags = getTagSet(args,"LinkTags","Link");
+    //auto siteTags = getTagSet(args,"SiteTags","Site");
+    //auto linkTags = getTagSet(args,"LinkTags","Link");
 
-    if(not commonIndex(K(1),psi(1),siteTags))
+    if( commonIndex(K(1),psi(1)) != siteIndex(psi,1) )
         Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
 
     auto plev = 14741;
-    auto plevtag = format("%d",plev);
+    //auto plevtag = format("%d",plev);
 
     auto res = psi;
 
@@ -210,22 +274,12 @@ densityMatrixApplyMPOImpl(MPO const& K,
     //Set up conjugate psi and K
     auto psic = psi;
     auto Kc = K;
-    for(auto j : range1(N)) 
-        {
-        //Modify prime levels of psic and Kc
-        if(j == 1)
-            {
-            auto ci = commonIndex(psi(1),psi(2),linkTags);
-            psic.ref(j) = dag(prime(replaceTags(psi(j),"0","2",siteTags),plev,ci));
-            ci = commonIndex(Kc(1),Kc(2),linkTags);
-            Kc.ref(j) = dag(prime(replaceTags(K(j),"0","2",siteTags),plev,ci));
-            }
-        else
-            {
-            psic.ref(j) = dag(replaceTags(replaceTags(psi(j),"0","2",siteTags),"0",plevtag,linkTags));
-            Kc.ref(j) = dag(replaceTags(replaceTags(K(j),"0","2",siteTags),"0",plevtag,linkTags));
-            }
-        }
+    psic.dag().prime(plev);
+    Kc.dag().prime(plev);
+
+    // Make sure the original and conjugates match
+    for(auto j : range1(N-1)) 
+        Kc.ref(j).prime(-plev,siteIndex(Kc,psic,j));
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
@@ -240,7 +294,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi(N)*K(N);
-    O.noPrime(siteTags);
+    O.noPrime(siteIndex(K,psi,N));
 
     auto rho = E.at(N-1) * O * dag(prime(O,plev));
     ITensor U,D;
@@ -251,7 +305,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     res.ref(N) = dag(U);
 
     O = O*U*psi(N-1)*K(N-1);
-    O.noPrime(siteTags);
+    O.noPrime(siteIndex(K,psi,N-1));
 
     for(int j = N-1; j > 1; --j)
         {
@@ -271,7 +325,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
         dargs.add("Tags=",format("Link,l=%d",j-1));
         auto spec = diagHermitian(rho,U,D,dargs);
         O = O*U*psi(j-1)*K(j-1);
-        O.noPrime(siteTags);
+        O.noPrime(siteIndex(K,psi,j-1));
         res.ref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
         }
@@ -562,8 +616,8 @@ applyExpH(MPS const& psi,
 //        else { clust = nfork * (psi(i) * K(i)); }
 //        if(i == N-1) break; //No need to SVD for i == N-1
 //
-//        Index oldmid = rightLinkIndex(res,i); assert(oldmid.dir() == Out);
-//        nfork = ITensor(rightLinkIndex(psi,i),rightLinkIndex(K,i),oldmid);
+//        Index oldmid = linkIndex(res,i); assert(oldmid.dir() == Out);
+//        nfork = ITensor(linkIndex(psi,i),linkIndex(K,i-1),oldmid);
 //        //if(clust.iten_size() == 0)	// this product gives 0 !!
 //	    //throw ResultIsZero("clust.iten size == 0");
 //        denmatDecomp(clust, res.ref(i), nfork,Fromleft,args);
@@ -572,8 +626,8 @@ applyExpH(MPS const& psi,
 //        mid.dag();
 //        midsize[i] = dim(mid);
 //        maxdim = std::max(midsize[i],maxdim);
-//        assert(rightLinkIndex(res,i+1).dir() == Out);
-//        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),rightLinkIndex(res,i+1));
+//        assert(linkIndex(res,i+1).dir() == Out);
+//        res.ref(i+1) = ITensor(mid,prime(res.sites()(i+1)),linkIndex(res,i+1));
 //        }
 //    nfork = clust * psi(N) * K(N);
 //    //if(nfork.iten_size() == 0)	// this product gives 0 !!

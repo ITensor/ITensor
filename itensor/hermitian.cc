@@ -165,7 +165,6 @@ diagHImpl(ITensor H,
         auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
         auto showeigs = args.getBool("ShowEigs",false);
         auto compute_qns = args.getBool("ComputeQNs",false);
-        auto iname = args.getString("IndexName","d");
 
         if(H.order() != 2)
             {

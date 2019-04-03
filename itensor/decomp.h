@@ -4,6 +4,7 @@
 //
 #ifndef __ITENSOR_DECOMP_H
 #define __ITENSOR_DECOMP_H
+#include "itensor/util/print_macro.h"
 #include "itensor/spectrum.h"
 #include "itensor/itensor.h"
 
@@ -274,7 +275,7 @@ denmatDecomp(ITensor const& AA,
     auto noise = args.getReal("Noise",0.);
 
     //TODO: try to avoid using "Link" here
-    auto mid = commonIndex(A,B,"Link");
+    auto mid = commonIndex(A,B);
 
     //If dir==NoDir, put the O.C. on the side
     //that keeps mid's arrow the same
@@ -336,6 +337,7 @@ denmatDecomp(ITensor const& AA,
     cmb.dag();
 
     to_orth = cmb * dag(U);
+
     newoc = U * AAc;
 
     return spec;

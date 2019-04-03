@@ -6,6 +6,7 @@
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -118,12 +119,13 @@ MPS::
     cleanupWrite();
     }
 
-void MPS::
-randomize()
+// TODO: Add note in error to call randomMPS(InitState,dim) instead, once it is implemented
+MPS& MPS::
+randomize(Args const& args)
     {
-    // TODO: \nTo create a random MPS with m>1, call randomMPS(InitState,m) instead.");
-    if(maxLinkDim(*this)>1) Error("Cannot call .randomize() on MPS with bond dimension greater than 1."); 
-    for(auto i : range1(N_)) A_[i].randomize();
+    if(maxLinkDim(*this)>1) Error(".randomize() not currently supported on MPS with bond dimension greater than 1."); 
+    for(auto i : range1(N_)) ref(i).randomize(args);
+    return *this;
     }
 
 Real MPS::
@@ -136,13 +138,13 @@ normalize()
     }
 
 MPS
-randomMPS(SiteSet const& sites, int m)
+randomMPS(SiteSet const& sites, int m, Args const& args)
     {
     if(not hasQNs(sites))
         {
         if(m>1) Error("randomMPS(SiteSet,m>1) not currently supported");
         auto psi = MPS(sites,m);
-        psi.randomize();
+        psi.randomize(args);
         return psi;
         }
     else
@@ -152,14 +154,26 @@ randomMPS(SiteSet const& sites, int m)
     return MPS();
     }
 
+MPS
+randomMPS(SiteSet const& sites, Args const& args)
+    {
+    return randomMPS(sites,1,args);
+    }
+
 //TODO: implement for m>1 in terms of random gates
 MPS
-randomMPS(InitState const& initstate, int m)
+randomMPS(InitState const& initstate, int m, Args const& args)
     {
     if(m>1) Error("randomMPS(InitState,m>1) not currently supported.");
     auto psi = MPS(initstate);
-    psi.randomize();
+    psi.randomize(args);
     return psi;
+    }
+
+MPS
+randomMPS(InitState const& initstate, Args const& args)
+    {
+    return randomMPS(initstate,1,args);
     }
 
 ITensor const& MPS::
@@ -417,9 +431,9 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
     A_[1] = setElt(initState(1),a[1](1));
     for(auto i : range(2,N_))
         {
-        A_[i] = setElt(dag(a[i-1])(1),initState(i),a[i](1));
+        A_[i] = setElt(itensor::dag(a[i-1])(1),initState(i),a[i](1));
         }
-    A_[N_] = setElt(dag(a[N_-1])(1),initState(N_));
+    A_[N_] = setElt(itensor::dag(a[N_-1])(1),initState(N_));
     }
 
 
@@ -484,12 +498,12 @@ orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
     ITensor& L = (dir == Fromleft ? A1 : A2);
     ITensor& R = (dir == Fromleft ? A2 : A1);
 
-    auto bnd = commonIndex(L,R,"Link");
+    auto bnd = commonIndex(L,R);
     if(!bnd) return Spectrum();
 
     if(args.getBool("Verbose",false))
         {
-        Print(L.inds());
+        Print(inds(L));
         }
 
     ITensor A,B(bnd);
@@ -503,7 +517,7 @@ orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
     }
 
 
-void MPS::
+MPS& MPS::
 position(int i, Args args)
     {
     if(not *this) Error("position: MPS is default constructed");
@@ -515,22 +529,16 @@ position(int i, Args args)
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
             auto WF = operator()(l_orth_lim_+1) * operator()(l_orth_lim_+2);
-            //TODO: allow custom tag convention
-            auto tagset = format("Link,l=%d",l_orth_lim_+1);
-            args.add("Tags",tagset);
-            args.add("LeftTags",tagset);
-            svdBond(l_orth_lim_+1,WF,Fromleft,args);
+            auto original_link_tags = tags(linkIndex(*this,l_orth_lim_+1));
+            svdBond(l_orth_lim_+1,WF,Fromleft,{args,"LeftTags=",toString(original_link_tags)});
             }
         while(r_orth_lim_ > i+1)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
             auto WF = operator()(r_orth_lim_-2) * operator()(r_orth_lim_-1);
-            //TODO: allow custom tag convention
-            auto tagset = format("Link,l=%d",r_orth_lim_-2);
-            args.add("Tags",tagset);
-            args.add("LeftTags",tagset);
-            svdBond(r_orth_lim_-2,WF,Fromright,args);
+            auto original_link_tags = tags(linkIndex(*this,r_orth_lim_-2));
+            svdBond(r_orth_lim_-2,WF,Fromright,{args,"RightTags=",toString(original_link_tags)});
             }
         }
     else //use orthMPS
@@ -539,11 +547,15 @@ position(int i, Args args)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            //TODO: allow custom tag convention
-            auto tagset = format("Link,l=%d",l_orth_lim_+1);
-            args.add("Tags",tagset);
-            args.add("LeftTags",tagset);
-            orthMPS(ref(l_orth_lim_+1),ref(l_orth_lim_+2),Fromleft,args);
+
+            // Current bond
+            auto b = l_orth_lim_+1;
+
+            // Store the original tags for link b so that it can
+            // be put back onto the newly introduced link index
+            auto original_link_tags = tags(linkIndex(*this,b));
+            orthMPS(ref(b),ref(b+1),Fromleft,{args,"LeftTags=",toString(original_link_tags)});
+
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
             }
@@ -551,19 +563,24 @@ position(int i, Args args)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            //TODO: allow custom tag convention
-            auto tagset = format("Link,l=%d",r_orth_lim_-2);
-            args.add("Tags",tagset);
-            args.add("LeftTags",tagset);
-            orthMPS(ref(r_orth_lim_-2),ref(r_orth_lim_-1),Fromright,args);
+
+            // Current bond
+            auto b = r_orth_lim_-2;
+
+            // Store the original tags for link b so that it can
+            // be put back onto the newly introduced link index
+            auto original_link_tags = tags(linkIndex(*this,b));
+            orthMPS(ref(b),ref(b+1),Fromright,{args,"LeftTags=",toString(original_link_tags)});
+
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
             }
         }
+    return *this;
     }
 
 
-void MPS::
+MPS& MPS::
 orthogonalize(Args args)
     {
     if( args.defined("Maxm") )
@@ -581,28 +598,35 @@ orthogonalize(Args args)
 
     if(doWrite()) Error("Cannot call orthogonalize when doWrite()==true");
 
+    auto& psi = *this;
+    auto N = N_;
+
     auto cutoff = args.getReal("Cutoff",1E-13);
     auto dargs = Args{"Cutoff",cutoff};
     auto maxdim_set = args.defined("MaxDim");
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
 
-    int plev = 14741;
+    int rand_plev = 14741;
 
     //Build environment tensors from the left
-    auto E = vector<ITensor>(N_+1);
-    auto ci = commonIndex(A_.at(1),A_.at(2));
-    E.at(1) = A_.at(1)*dag(itensor::prime(A_.at(1),plev,ci));
-    for(int j = 2; j < N_; ++j)
-        E.at(j) = E.at(j-1) * A_.at(j) * dag(itensor::prime(A_.at(j),plev,"Link"));
-    auto rho = E.at(N_-1) * A_.at(N_) * dag(itensor::prime(A_.at(N_),plev));
-    ITensor U,D;
-    diagHermitian(rho,U,D,{dargs,"Tags=",format("Link,l=%d",N_-1)});
+    auto E = vector<ITensor>(N+1);
+
+    auto psic = psi;
+    psic.dag().primeLinks(rand_plev);
+
+    E[1] = psi(1)*psic(1); 
+    for(int j = 2; j < N; ++j)
+        E[j] = E[j-1] * psi(j) * psic(j);
+    auto rho = E[N-1] * psi(N) * itensor::prime(psic(N),rand_plev,siteInds(psic,N));
+
+    auto original_tags = tags(linkIndex(psi,N-1));
+    auto [U,D,lj] = diagHermitian(rho,{dargs,"Tags=",toString(original_tags)});
 
     //O is partial overlap of previous and new MPS
-    auto O = U * A_.at(N_) * A_.at(N_-1);
-    A_.at(N_) = dag(U);
+    auto O = U * psi(N) * psi(N-1);
+    psi.ref(N) = itensor::dag(U);
 
-    for(int j = N_-1; j > 1; --j)
+    for(int j = N-1; j > 1; --j)
         {
         if(not maxdim_set)
             {
@@ -612,77 +636,18 @@ orthogonalize(Args args)
             auto maxdim = (ci) ? dim(ci) : 1l;
             dargs.add("MaxDim",maxdim);
             }
-        rho = E.at(j-1) * O * dag(itensor::prime(O,plev));
-        auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",format("Link,l=%d",j-1)});
+        rho = E.at(j-1) * O * itensor::dag(itensor::prime(O,rand_plev));
+        original_tags = tags(linkIndex(psi,j-1));
+        std::tie(U,D,lj) = diagHermitian(rho,{dargs,"Tags=",toString(original_tags)});
         O *= U;
-        O *= A_.at(j-1);
-        A_.at(j) = dag(U);
+        O *= psi(j-1);
+        psi.ref(j) = itensor::dag(U);
         }
-    A_.at(1) = O;
+    psi.ref(1) = O;
 
     l_orth_lim_ = 0;
     r_orth_lim_ = 2;
-    }
-
-int
-length(MPS const& psi)
-    {
-    return psi.length();
-    }
-
-//Methods for use internally by checkOrtho
-ITensor
-makeKroneckerDelta(Index const& i, int plev)
-    {
-    return delta(i,prime(i,plev));
-    }
-
-bool
-checkOrtho(MPS const& psi,
-           int i, 
-           bool left)
-    {
-    Index link = (left ? rightLinkIndex(psi,i) : leftLinkIndex(psi,i));
-    ITensor rho = psi(i) * dag(prime(psi(i),4,link));
-    ITensor Delta = delta(link, prime(link,4));
-    ITensor Diff = rho - Delta;
-
-    const
-    Real threshold = 1E-13;
-    if(norm(Diff) < threshold) 
-        {
-        return true;
-        }
-
-    //Print any helpful debugging info here:
-    println("checkOrtho: on line ",__LINE__," of mps.h,");
-    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
-    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
-    printfln("checkOrtho: Error threshold set to %E",threshold);
-    //-----------------------------
-
-    return false;
-    }
-
-bool
-checkOrtho(MPS const& psi)
-    {
-    for(int i = 1; i <= psi.leftLim(); ++i)
-    if(!checkOrtho(psi,i,true))
-        {
-        std::cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
-                  << i << std::endl;
-        return false;
-        }
-
-    for(int i = length(psi); i >= psi.rightLim(); --i)
-    if(!checkOrtho(psi,i,false))
-        {
-        std::cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
-                  << i << std::endl;
-        return false;
-        }
-    return true;
+    return *this;
     }
 
 void
@@ -694,8 +659,6 @@ applyGate(ITensor const& gate,
     const int c = orthoCenter(psi);
     ITensor AA = psi(c) * psi(c+1) * gate;
     AA.noPrime();
-    //TODO: add position tag to Link
-    //args.add("Tags",toString(getTagSet(args,"Tags",format("Link,l=%d",c))))
     if(fromleft) psi.svdBond(c,AA,Fromleft,args);
     else         psi.svdBond(c,AA,Fromright,args);
     }
@@ -1033,22 +996,16 @@ overlapC(MPSType const& psi,
     auto N = length(psi);
     if(N != length(phi)) Error("overlap: mismatched N");
 
-    auto l1 = linkIndex(psi,1);
-    auto L = phi(1);
-    if(l1) L *= dag(prime(psi(1),l1)); 
-    else   L *= dag(psi(1));
+    auto rand_plev = 4351345;
 
-    if(N == 1) return L.eltC();
+    auto psidag = psi;
+    psidag.dag().primeLinks(rand_plev);
 
-    for(decltype(N) i = 2; i < N; ++i) 
-        { 
-        L = L * phi(i) * dag(prime(psi(i),"Link")); 
-        }
-    L = L * phi(N);
-
-    auto lNm = linkIndex(psi,N-1);
-    if(lNm) return (dag(prime(psi(N),lNm))*L).eltC();
-    return (dag(psi(N))*L).eltC();
+    auto L = phi(1) * psidag(1);
+    if(N == 1) return eltC(L);
+    for(auto i : range1(2,N) ) 
+        L *= phi(i) * psidag(i);
+    return eltC(L);
     }
 template Cplx overlapC<MPS>(MPS const& psi, MPS const& phi);
 template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);

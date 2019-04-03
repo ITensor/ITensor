@@ -88,6 +88,30 @@ plusEq(MPO const& other_,
     return addAssumeOrth(*this,other_,args);
     }
 
+MPO&
+operator*=(MPO & W, Real a) { W.ref(W.leftLim()+1) *= a; return W; }
+
+MPO&
+operator*=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) *= a; return W; }
+
+MPO&
+operator/=(MPO & W, Real a) { W.ref(W.leftLim()+1) /= a; return W; }
+
+MPO&
+operator/=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) /= a; return W; }
+
+MPO
+operator*(MPO W, Real r) { return W *= r; }
+
+MPO
+operator*(Real r, MPO W) { return W *= r; }
+
+MPO
+operator*(MPO W, Cplx z) { return W *= z; }
+
+MPO
+operator*(Cplx z, MPO W) { return W *= z; }
+
 bool
 isOrtho(MPO const& W)
     {
@@ -101,91 +125,36 @@ orthoCenter(MPO const& W)
     return (W.leftLim() + 1);
     }
 
-//MPO
-//sum(MPO L, 
-//    MPO const& R, 
-//    Args const& args)
+Index
+siteIndex(MPO const& W, int b, TagSet const& tsmatch)
+    {
+    return findIndex(siteInds(W,b),tsmatch);
+    }
+
+// Get the site Index of the MPS W*A 
+// as if MPO W was applied to MPS A
+Index
+siteIndex(MPO const& W, MPS const& A, int b)
+    {
+    return uniqueIndex(W(b),{W(b-1),W(b+1),A(b)});
+    }
+
+// Get the site Indices of the MPO A*B 
+// as if MPO A and MPO B were contracted
+// TODO: implement
+//Index inline
+//siteInds(MPO const& A, MPO const& B, int b)
 //    {
-//    L.plusEq(R,args);
-//    return L;
+//    auto sA = uniqueIndex(A(b),{A(b-1),A(b+1),B(b)});
+//    auto sB = uniqueIndex(B(b),{B(b-1),B(b+1),A(b)});
+//    return IndexSet(sA,sB);
 //    }
 
-void 
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im)
-    {
-    overlap(psi,H,phi,re,im);
-    }
-
-Real 
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi) //Re[<psi|H|phi>]
-    {
-    return overlap(psi,H,phi);
-    }
-
-Complex 
-psiHphiC(MPS const& psi, 
-         MPO const& H, 
-         MPS const& phi) //Re[<psi|H|phi>]
-    {
-    return overlapC(psi,H,phi);
-    }
-
-void
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im) //<psi|H|phi>
-    {
-    overlap(psi,H,LB,RB,phi,re,im);
-    }
-
-Real
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi) //Re[<psi|H|phi>]
-    {
-    return overlap(psi,H,LB,RB,phi);
-    }
-
-void
-psiHKphi(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi, 
-         Real& re, 
-         Real& im) //<psi|H K|phi>
-    {
-    overlap(psi,H,K,phi,re,im);
-    }
-
-Real
-psiHKphi(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi) //<psi|H K|phi>
-    {
-    return overlap(psi,H,K,phi);
-    }
-
-Complex
-psiHKphiC(MPS const& psi, 
-          MPO const& H, 
-          MPO const& K,
-          MPS const& phi) //<psi|H K|phi>
-    {
-    return overlapC(psi,H,K,phi);
-    }
+//Index
+//siteIndex(MPO const& A, MPO const& B, int b, TagSet const& tsmatch = TagSet("0"))
+//    {
+//    return findIndex(siteInds(A,B,b),tsmatch);
+//    }
 
 
 
@@ -248,14 +217,14 @@ checkQNs(MPO const& H)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(rightLinkIndex(H,i).dir() != In) 
+        if(dir(linkIndex(H,i)) != In) 
             {
             println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             Error("Incorrect Arrow in MPO");
             }
         if(i > 1)
             {
-            if(leftLinkIndex(H,i).dir() != Out) 
+            if(dir(linkIndex(H,i-1)) != Out) 
                 {
                 println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 Error("Incorrect Arrow in MPO");
@@ -267,12 +236,12 @@ checkQNs(MPO const& H)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(rightLinkIndex(H,i).dir() != Out) 
+        if(dir(linkIndex(H,i)) != Out) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             Error("Incorrect Arrow in MPO");
             }
-        if(leftLinkIndex(H,i).dir() != In) 
+        if(dir(linkIndex(H,i-1)) != In) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             Error("Incorrect Arrow in MPO");
@@ -525,7 +494,7 @@ overlap(MPS const& psi,
     Real re,im; 
     overlap(psi,H,LB,RB,phi,re,im);
     if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-        printfln("Real psiHphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+        printfln("Real overlap: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }
 
@@ -538,16 +507,12 @@ overlap(MPS const& psi,
         Real& im)
     {
     //println("Running psiHKphi");
-    if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) Error("Mismatched N in psiHKphi");
+    if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) Error("Mismatched N in overlap");
     auto N = length(psi);
     auto psidag = psi;
-    for(int i = 1; i <= N; i++)
-        {
-        psidag.ref(i) = dag(prime(psi(i),2));
-        }
+    psidag.dag().prime(2);
     auto Hp = H;
-    Hp.replaceTags("1","2");
-    Hp.replaceTags("0","1");
+    Hp.replaceTags("1","2").replaceTags("0","1");
 
     //scales as m^2 k^2 d
     auto L = phi(1) * K(1) * Hp(1) * psidag(1);
@@ -568,22 +533,22 @@ overlap(MPS const& psi,
 
 Real
 overlap(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi) //<psi|H K|phi>
+        MPO const& H, 
+        MPO const& K,
+        MPS const& phi) //<psi|H K|phi>
     {
     Real re,im;
     overlap(psi,H,K,phi,re,im);
     if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-	Error("Non-zero imaginary part in psiHKphi");
+	Error("Non-zero imaginary part in overlap, use overlapC instead.");
     return re;
     }
 
 Cplx
 overlapC(MPS const& psi, 
-          MPO const& H, 
-          MPO const& K,
-          MPS const& phi) //<psi|H K|phi>
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi) //<psi|H K|phi>
     {
     Real re,im;
     overlap(psi,H,K,phi,re,im);
@@ -598,12 +563,13 @@ errorMPOProd(MPS const& psi2,
     //||p2> - K|p1>| / || K|p1> || = sqrt{(<p2|-<p1|Kd)(|p2>-K|p1>) / <p1|KdK|p1>}
     //                             = sqrt{1+ (<p2|p2>-2*Re[<p2|K|p1>]) / <p1|KdK|p1>}
     Real err = overlap(psi2,psi2);
-    err += -2.*overlapC(psi2,K,psi1).real();
+    err += -2.*real(overlapC(psi2,K,psi1));
     //Compute Kd, Hermitian conjugate of K
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.ref(j) = dag(swapTags(K(j),"0","1","Site"));
+        auto s = siteInds(Kd,j);
+        Kd.ref(j) = dag(swapInds(Kd(j),{s(1)},{s(2)}));
         }
     err /= overlap(psi1,Kd,K,psi1);
     err = std::sqrt(std::abs(1.0+err));
@@ -632,76 +598,101 @@ checkMPOProd(MPS const& psi2,
     Global::warnDeprecated("checkMPOProd is deprecated in favor of errorMPOProd");
     //||p2> - K|p1>|^2 = (<p2|-<p1|Kd)(|p2>-K|p1>) = <p2|p2>+<p1|Kd*K|p1>-2*Re[<p2|K|p1>]
     Real res = overlap(psi2,psi2);
-    res += -2.*overlapC(psi2,K,psi1).real();
+    res += -2.*real(overlapC(psi2,K,psi1));
     //Compute Kd, Hermitian conjugate of K
     auto Kd = K;
     for(auto j : range1(length(K)))
         {
-        Kd.ref(j) = dag(swapTags(K(j),"0","1","Site"));
+        auto s = siteInds(K,j);
+        Kd.ref(j) = dag(swapInds(K(j),{s(1)},{s(2)}));
         }
     res += overlap(psi1,Kd,K,psi1);
     return res;
     }
 
-//template<class Tensor> 
-//void MPO::
-//position(int i, const Args& args)
-//    {
-//    if(isNull()) Error("position: MPS is null");
-//
-//    while(l_orth_lim_ < i-1)
-//        {
-//        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
-//        Tensor WF =(l_orth_lim_+1) *(l_orth_lim_+2);
-//        svdBond(l_orth_lim_+1,WF,Fromleft,args);
-//        }
-//    while(r_orth_lim_ > i+1)
-//        {
-//        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
-//        Tensor WF =(r_orth_lim_-2) *(r_orth_lim_-1);
-//        svdBond(r_orth_lim_-2,WF,Fromright,args);
-//        }
-//
-//    is_ortho_ = true;
-//    }
-//template void MPO<ITensor>::
-//position(int b, const Args& args);
-//template void MPO<IQTensor>::
-//position(int b, const Args& args);
+void 
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        MPS const& phi, 
+        Real& re, 
+        Real& im)
+    {
+    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
+    overlap(psi,H,phi,re,im);
+    }
 
-//template <class Tensor>
-//void MPO::
-//orthogonalize(const Args& args)
-//    {
-//    //Do a half-sweep to the right, orthogonalizing each bond
-//    //but do not truncate since the basis to the right might not
-//    //be ortho (i.e. use the current m).
-//    //svd_.useOrigM(true);
-//    int orig_maxdim = maxdim();
-//    Real orig_cutoff = cutoff();
-//    for(Spectrum& spec : spectrum_)
-//        {
-//        spec.maxdim(MAX_DIM);
-//        spec.cutoff(MIN_CUT);
-//        }
-//
-//    position(1);
-//    position(N_);
-//
-//    //Now basis is ortho, ok to truncate
-//    for(Spectrum& spec : spectrum_)
-//        {
-//        spec.useOrigM(false);
-//        spec.maxdim(orig_maxdim);
-//        spec.cutoff(orig_cutoff);
-//        }
-//    position(1);
-//
-//    is_ortho_ = true;
-//    }
-//template
-//void MPO<ITensor>::orthogonalize(const Args& args);
-//template
-//void MPO<IQTensor>::orthogonalize(const Args& args);
+Real 
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        MPS const& phi) //Re[<psi|H|phi>]
+    {
+    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
+    return overlap(psi,H,phi);
+    }
+
+Complex 
+psiHphiC(MPS const& psi, 
+         MPO const& H, 
+         MPS const& phi) //Re[<psi|H|phi>]
+    {
+    Global::warnDeprecated("psiHphiC deprecated in favor of overlapC");
+    return overlapC(psi,H,phi);
+    }
+
+void
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        ITensor const& LB, 
+        ITensor const& RB, 
+        MPS const& phi, 
+        Real& re, 
+        Real& im) //<psi|H|phi>
+    {
+    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
+    overlap(psi,H,LB,RB,phi,re,im);
+    }
+
+Real
+psiHphi(MPS const& psi, 
+        MPO const& H, 
+        ITensor const& LB, 
+        ITensor const& RB, 
+        MPS const& phi) //Re[<psi|H|phi>]
+    {
+    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
+    return overlap(psi,H,LB,RB,phi);
+    }
+
+void
+psiHKphi(MPS const& psi, 
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi, 
+         Real& re, 
+         Real& im) //<psi|H K|phi>
+    {
+    Global::warnDeprecated("psiHKphi deprecated in favor of overlap");
+    overlap(psi,H,K,phi,re,im);
+    }
+
+Real
+psiHKphi(MPS const& psi, 
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi) //<psi|H K|phi>
+    {
+    Global::warnDeprecated("psiHKphi deprecated in favor of overlap");
+    return overlap(psi,H,K,phi);
+    }
+
+Complex
+psiHKphiC(MPS const& psi, 
+          MPO const& H, 
+          MPO const& K,
+          MPS const& phi) //<psi|H K|phi>
+    {
+    Global::warnDeprecated("psiHKphiC deprecated in favor of overlapC");
+    return overlapC(psi,H,K,phi);
+    }
 
 } //namespace itensor

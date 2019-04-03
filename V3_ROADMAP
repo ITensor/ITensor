@@ -2,6 +2,9 @@
 
 # Library code:
 ! Add tests for tag and prime functions on ITensor, MPS, MPO
+! Make a version of DMRG/IDMRG that is not in-place
+! In SVD, if "LeftTags" is defined but "RightTags" is not, make RightTags = prime(LeftTags) and vice versa
+! Make Args directly accept TagSet, not just string convertable to TagSet
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
@@ -87,6 +90,7 @@ Common operation changes and deprecations (for upgrade guide):
 
  - ITensor operations:
 
+  o Add `maxDim(ITensor)` and `minDim(ITensor)`
   o Optimize `A*delta(i,j)` contraction so that if `A` has Index `i` or `j` (but not both), 
     no contraction occurs and the Index is just replaced in the IndexSet
   o Add versions of ITensor decompositions that return tuples of outputs:
@@ -113,7 +117,7 @@ Common operation changes and deprecations (for upgrade guide):
   o All ITensor constructors like `ITensor(...)`, `randomITensor(...)`, `diag(...)`, etc. now accept
     `std::initializer_list<Index>`,`std::array<Index,N>`, `std::vector<Index>`, and `IndexSet`
     along with vararg lists of `Index,Index...`
-  o Added `uniqueIndex(A,{B,C}[,ts])` notation for getting the unique index under
+  o Added `uniqueInds(A,{B,C})` and `uniqueIndex(A,{B,C}[,ts])` notation for getting the unique indices/index under
     a certain tag constraint
   o Allow tag and prime functions to accept multiple indices for matching
     o Also allow IndexSet for matching
@@ -144,10 +148,15 @@ Common operation changes and deprecations (for upgrade guide):
 
  - MPS operations:
 
+  o `.position(int)`, `.orthogonalize()`, and `.svdBond()` accept inputs with any tag convention and keep the proper tags of
+    the input MPS/MPO
   o Added `addTags(MPS,...)`, `replaceTags(MPS,...)`, `prime(MPS,...)`, etc.
-  o Add `linkIndex(MPS,int)` and `siteIndex(MPS,int)` to get link and site indices
-  o Add `sites(MPS)` as alterative to `MPS.sites()` to get SiteSet
+  o Add `linkIndex(MPS,int) -> Index` and `siteIndex(MPS,int)` to get the right link index and site index of an MPS
+    o Add `linkInds(MPS/MPO,int) -> IndexSet` to get the link indices of an MPS/MPO tensor
+    o Add `leftLinkIndex(MPS/MPO,int) -> Index` and `rightLinkIndex(MPS/MPO,int)` to get the left/right link index of an MPS/MPO
+  o Remove SiteSet from MPS class (no more MPS.site())
   o Deprecate `MPO.primeall()` in favor of `MPO.prime()`
+  o Add MPS/MPO method `.primeLink(...)` to prime only the link indices
   o psi.A(i) -> psi(i), psi.Aref(i) -> psi.ref(i), psi.setA(i,T) -> psi.set(i,T) (no warning or error)
   o psi.N() -> length(psi)
   o Tagging functions:

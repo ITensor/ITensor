@@ -3,8 +3,10 @@
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/spinone.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/util/str.h"
 #include "itensor/mps/sites/hubbard.h"
 #include "itensor/mps/autompo.h"
+#include "mps_mpo_test_helper.h"
 
 using namespace itensor;
 using namespace std;
@@ -15,22 +17,22 @@ TEST_CASE("MPOTest")
 SECTION("Orthogonalize")
     {
     auto N = 10;
-    auto m = 4;
+    auto d = 4;
     auto sites = SpinHalf(10,{"ConserveQNs=",false});
-    auto W = MPO(sites);
+    auto W = MPO(N);
 
     //Make a random MPO of bond dim. m
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
-        {
-        links.at(n) = Index(m,format("Link,l=%d",n));
-        }
-    W.ref(1) = randomITensor(links.at(1),sites(1),prime(sites(1)));
+        links[n] = Index(d,format("MyLink,l=%d",n));
+    W.ref(1) = randomITensorC(links[1],sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
-        {
-        W.ref(n) = randomITensor(links.at(n-1),sites(n),prime(sites(n)),links.at(n));
-        }
-    W.ref(N) = randomITensor(links.at(N-1),sites(N),prime(sites(N)));
+        W.ref(n) = randomITensorC(links[n-1],sites(n),prime(sites(n)),links[n]);
+    W.ref(N) = randomITensorC(links[N-1],sites(N),prime(sites(N)));
+    W.replaceTags("Site,0","MySite,bra,0");
+    W.replaceTags("Site,1","MySite,ket,0");
+
+    CHECK(checkTags(W,"MySite,bra","MySite,ket","MyLink"));
 
     //Normalize W
     auto n2 = overlap(W,W);
@@ -38,31 +40,16 @@ SECTION("Orthogonalize")
 
     auto oW = W;
 
-    W.orthogonalize();
+    oW.orthogonalize();
 
     CHECK_CLOSE(overlap(oW,W),1.0);
-
-    for(int n = N; n > 1; --n)
-        {
-        auto li = commonIndex(W(n),W(n-1),"Link");
-        CHECK(li==findIndex(W(n),format("l=%d",n-1)));
-        CHECK(li==findIndex(W(n-1),format("l=%d",n-1)));
-        CHECK(sites(n)==findIndex(W(n),format("n=%d,0",n)));
-        auto rho = W(n) * dag(prime(W(n),li));
-        auto id = ITensor(li,prime(li));
-        for(auto l : range1(dim(li)))
-            {
-            id.set(li(l),prime(li)(l),1.0);
-            }
-        CHECK(norm(rho-id) < 1E-10);
-        }
+    CHECK(checkOrtho(oW));
     }
 
 SECTION("Add MPOs")
     {
     auto N = 50;
     auto sites = Hubbard(N);
-
 
     auto makeInds = [N](std::string name) -> vector<Index>
         {
@@ -88,37 +75,38 @@ SECTION("Add MPOs")
 
     auto A = MPO(sites);
     auto B = MPO(sites);
-    A.ref(1) = randomITensor(Z,sites(1),l1.at(1));
-    B.ref(1) = randomITensor(Z,sites(1),l2.at(1));
+    A.ref(1) = randomITensorC(Z,sites(1),prime(dag(sites(1))),l1.at(1));
+    A.ref(1) /= norm(A(1));
+    B.ref(1) = randomITensorC(Z,sites(1),prime(dag(sites(1))),l2.at(1));
+    B.ref(1) /= norm(B(1));
     for(int n = 2; n < N; ++n)
         {
-        A.ref(n) = randomITensor(Z,sites(n),dag(l1.at(n-1)),l1.at(n));
-        B.ref(n) = randomITensor(Z,sites(n),dag(l2.at(n-1)),l2.at(n));
+        A.ref(n) = randomITensorC(Z,sites(n),prime(dag(sites(n))),dag(l1.at(n-1)),l1.at(n));
+        A.ref(n) /= norm(A(n));
+        B.ref(n) = randomITensorC(Z,sites(n),prime(dag(sites(n))),dag(l2.at(n-1)),l2.at(n));
+        B.ref(n) /= norm(B(n));
         }
-    A.ref(N) = randomITensor(Z,sites(N),dag(l1.at(N-1)));
-    B.ref(N) = randomITensor(Z,sites(N),dag(l2.at(N-1)));
+    A.ref(N) = randomITensorC(Z,sites(N),prime(dag(sites(N))),dag(l1.at(N-1)));
+    A.ref(N) /= norm(A(N));
+    B.ref(N) = randomITensorC(Z,sites(N),prime(dag(sites(N))),dag(l2.at(N-1)));
+    B.ref(N) /= norm(B(N));
 
     auto C = sum(A,B);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(C(n),C(n+1),"Link");
-        CHECK(ln==findIndex(C(n),format("l=%d",n)));
-        CHECK(ln==findIndex(C(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(C(n),format("n=%d,0",n)));
-        }
+    // Check C gets the tags of A
+    CHECK(checkTags(C,"Site,0","Site,1","Link,I1"));
 
-    auto AA = overlap(A,A);
-    auto AB = overlap(A,B);
-    auto AC = overlap(A,C);
-    auto BB = overlap(B,B);
-    auto BC = overlap(B,C);
-    auto CC = overlap(C,C);
+    auto AA = overlapC(A,A);
+    auto AB = overlapC(A,B);
+    auto AC = overlapC(A,C);
+    auto BB = overlapC(B,B);
+    auto BC = overlapC(B,C);
+    auto CC = overlapC(C,C);
 
     // |(A+B)-C|^2 = (A+B-C)*(A+B-C) = A*A+2A*B-2A*C+B*B-2B*C+C*C
 
     auto diff2 = AA+2*AB-2*AC+BB-2*BC+CC;
-    CHECK(diff2 < 1E-12);
+    CHECK(std::abs(diff2) < 1E-12);
     }
 
 SECTION("Regression Test")
@@ -142,240 +130,132 @@ SECTION("Regression Test")
 
 SECTION("applyMPO (DensityMatrix)")
     {
-
     auto method = "DensityMatrix";
 
     auto N = 10;
-    auto sites = SpinHalf(N,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N);
 
-    auto psi = randomMPS(sites);
+    auto initstate = InitState(sites,"Up");
+    auto psi = randomMPS(initstate,{"Complex=",true});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(checkTags(psi));
 
-    //Use AutoMPO as a trick to get
-    //an MPO with bond dimension > 1
-    auto ampo = AutoMPO(sites);
-    for(auto j : range1(N-1))
-        {
-        ampo += "Sz",j,"Sz",j+1;
-        ampo += 0.5,"S+",j,"S-",j+1;
-        ampo += 0.5,"S-",j,"S+",j+1;
-        }
-    auto H = toMPO(ampo);
-    auto K = toMPO(ampo);
+    auto H = randomMPO(sites,{"Complex=",true});
+    auto K = randomMPO(sites,{"Complex=",true});
 
-    //Randomize the MPOs to make sure they are non-Hermitian
-    for(auto j : range1(N))
-        {
-        H.ref(j).randomize();
-        K.ref(j).randomize();
-        H.ref(j) *= 0.2;
-        K.ref(j) *= 0.2;
-        }
-
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(H(n),H(n+1),"Link");
-        CHECK(ln==findIndex(H(n),format("l=%d",n)));
-        CHECK(ln==findIndex(H(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(H(n),format("n=%d,0",n)));
-        }
+    CHECK(checkTags(H));
+    CHECK(checkTags(K));
 
     // Apply K to psi to entangle psi
     psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
-        }
+    CHECK(checkTags(psi));
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
-        }
-
+    CHECK(checkTags(Hpsi));
     CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
-
     }
 
 SECTION("applyMPO (Fit)")
     {
-
     auto method = "Fit";
 
     auto N = 10;
-    auto sites = SpinHalf(N,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N);
 
-    auto psi = randomMPS(sites);
+    auto initstate = InitState(sites,"Up");
+    auto psi = randomMPS(initstate,{"Complex=",true});
 
-    //Use AutoMPO as a trick to get
-    //an MPO with bond dimension > 1
-    auto ampo = AutoMPO(sites);
-    for(auto j : range1(N-1))
-        {
-        ampo += "Sz",j,"Sz",j+1;
-        ampo += 0.5,"S+",j,"S-",j+1;
-        ampo += 0.5,"S-",j,"S+",j+1;
-        }
-    auto H = toMPO(ampo);
-    auto K = toMPO(ampo);
-    //Randomize the MPOs to make sure they are non-Hermitian
-    for(auto j : range1(N))
-        {
-        H.ref(j).randomize();
-        K.ref(j).randomize();
-        H.ref(j) *= 0.2;
-        K.ref(j) *= 0.2;
-        }
+    CHECK(checkTags(psi));
+
+    auto H = randomMPO(sites,{"Complex=",true});
+    auto K = randomMPO(sites,{"Complex=",true});
+
+    CHECK(checkTags(H));
+    CHECK(checkTags(K));
 
     // Apply K to psi to entangle psi
     psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
-        }
+    CHECK(checkTags(psi));
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
-        }
-
+    CHECK(checkTags(Hpsi));
     CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
 
     // Now with a trial starting state
-    auto Hpsi_2 = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
+    Hpsi = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(Hpsi_2(n),Hpsi_2(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi_2(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi_2(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi_2(n),format("n=%d,0",n)));
-        }
-
-    CHECK(checkMPOProd(Hpsi_2,H,psi,1E-10));
-
+    CHECK(checkTags(Hpsi));
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
     }
 
 SECTION("errorMPOProd Scaling")
     {
-
     auto method = "DensityMatrix";
 
     auto N = 10;
-    auto sites = SpinHalf(N,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N);
 
-    auto psi = randomMPS(sites);
+    auto initstate = InitState(sites,"Up");
+    auto psi = randomMPS(initstate,{"Complex=",true});
+    auto H = randomMPO(sites,{"Complex=",true});
+    auto K = randomMPO(sites,{"Complex=",true});
 
-    //Use AutoMPO as a trick to get
-    //an MPO with bond dimension > 1
-    auto ampo = AutoMPO(sites);
-    for(auto j : range1(N-1))
+    // Scale the MPOs to make the norms very large
+    for( auto j : range1(N) )
         {
-        ampo += "Sz",j,"Sz",j+1;
-        ampo += 0.5,"S+",j,"S-",j+1;
-        ampo += 0.5,"S-",j,"S+",j+1;
-        }
-    auto H = toMPO(ampo);
-    auto K = toMPO(ampo);
-    //Randomize the MPOs to make sure they are non-Hermitian
-    for(auto j : range1(N))
-        {
-        H.ref(j).randomize();
-        K.ref(j).randomize();
-        H.ref(j) *= 10.0; //crazy large tensor
-        K.ref(j) *= 10.0;
+        H.ref(j) *= 20.0;
+        K.ref(j) *= 20.0;
         }
 
     // Apply K to psi to entangle psi
     psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
     psi /= norm(psi);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d,0",n)));
-        }
+    CHECK(checkTags(psi));
 
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(Hpsi(n),Hpsi(n+1),"Link");
-        CHECK(ln==findIndex(Hpsi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(Hpsi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(Hpsi(n),format("n=%d,0",n)));
-        }
+    CHECK(checkTags(Hpsi));
 
     //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
     CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.);
-
     }
 
-//TODO: test this without using applyMPO()?
 SECTION("Overlap <psi|HK|phi>")
     {
     detail::seed_quickran(1);
 
     auto N = 10;
-    auto sites = SpinHalf(N,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N);
 
-    auto psi = randomMPS(sites);
-    auto phi = randomMPS(sites);
+    auto initstate = InitState(sites,"Up");
+    auto psi = randomMPS(initstate,{"Complex=",true});
+    auto phi = randomMPS(initstate,{"Complex=",true});
+    auto H = randomMPO(sites,{"Complex=",true});
+    auto K = randomMPO(sites,{"Complex=",true});
 
-    //Use AutoMPO as a trick to get
-    //an MPO with bond dimension > 1
-    auto ampo = AutoMPO(sites);
-    for(auto j : range1(N-1))
-        {
-        ampo += "Sz",j,"Sz",j+1;
-        ampo += 0.5,"S+",j,"S-",j+1;
-        ampo += 0.5,"S-",j,"S+",j+1;
-        }
-    auto H = toMPO(ampo);
-    auto Hdag = H;
-    auto K = H;
-    //Randomize the MPOs to make sure they are non-Hermitian
+    CHECK(checkTags(H));
+    CHECK(checkTags(K));
+
+    auto Hd = H;
     for(auto j : range1(N))
         {
-        H.ref(j).randomize();
-        K.ref(j).randomize();
-        H.ref(j) *= 0.2;
-        K.ref(j) *= 0.3;
-        Hdag.ref(j) = dag(swapTags(H(j),"0","1","Site"));
+        auto s = siteInds(Hd,j);
+        Hd.ref(j) = dag(swapInds(H(j),{s(1)},{s(2)}));
         }
 
-    auto Hdphi = applyMPO(Hdag,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
+    auto Hdphi = applyMPO(Hd,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
     auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
 
-    CHECK_CLOSE(overlap(phi,H,K,psi),overlap(Hdphi,Kpsi));
+    CHECK(checkTags(Hdphi));
+    CHECK(checkTags(Kpsi));
+    CHECK_CLOSE(overlapC(phi,H,K,psi),overlapC(Hdphi,Kpsi));
     }
 
 SECTION("Remove QNs from MPO")
@@ -405,28 +285,79 @@ SECTION("Remove QNs from MPO")
     auto Z = QN({"Sz",0},{"Nf",0,-1});
 
     auto A = MPO(sites);
-    A.ref(1) = randomITensor(Z,sites(1),ll.at(1));
+    A.ref(1) = randomITensorC(Z,sites(1),prime(dag(sites(1))),ll.at(1));
     for(int n = 2; n < N; ++n)
-        {
-        A.ref(n) = randomITensor(Z,sites(n),dag(ll.at(n-1)),ll.at(n));
-        }
-    A.ref(N) = randomITensor(Z,sites(N),dag(ll.at(N-1)));
+        A.ref(n) = randomITensorC(Z,sites(n),prime(dag(sites(n))),dag(ll.at(n-1)),ll.at(n));
+    A.ref(N) = randomITensorC(Z,sites(N),prime(dag(sites(N))),dag(ll.at(N-1)));
+
+    CHECK(checkTags(A,"Site,0","Site,1","Link,I"));
 
     auto a = removeQNs(A);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(a(n),a(n+1),"Link");
-        CHECK(ln==findIndex(a(n),format("l=%d",n)));
-        CHECK(ln==findIndex(a(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(a(n),format("n=%d,0",n)));
-        }
-
+    CHECK(checkTags(a,"Site,0","Site,1","Link,I"));
     for(auto n : range1(N))
-        {
         CHECK(norm(a(n) - removeQNs(A(n))) < 1E-10);
-        }
-
     }
+
+SECTION("nmultMPO")
+  {
+  auto N = 4;
+  auto sites = SpinHalf(N);
+
+  auto A = randomMPO(sites,{"Complex=",true});
+  auto B = randomMPO(sites,{"Complex=",true});
+
+  // By default, C-links get the tags of A
+  auto C = nmultMPO(A,B);
+
+  // Check the product by calculating expectation values
+  auto initstate = InitState(sites,"Up");
+  auto V = randomMPS(initstate,{"Complex=",true});
+
+  CHECK_CLOSE(overlapC(V,C,V),overlapC(V,B,A,V));
+  }
+
+//SECTION("nmultMPO (custom tags)")
+//  {
+//  auto N = 4;
+//  auto sites = SpinHalf(N);
+//  auto A = randomMPO(sites,{"Complex=",true});
+//  auto B = randomMPO(sites,{"Complex=",true});
+//
+//  // Set up some custom tags
+//  A.replaceTags("Site,S=1/2,0","x,0");
+//  A.replaceTags("Site,S=1/2,1","y,0");
+//  A.replaceTags("Link","Alink");
+//  B.replaceTags("Site,S=1/2,0","y,0");
+//  B.replaceTags("Site,S=1/2,1","z,0");
+//  B.replaceTags("Link","Blink");
+//
+//  CHECK(checkTags(A,"x","y","Alink"));
+//  CHECK(checkTags(B,"y","z","Blink"));
+//
+//  auto C = nmultMPO(A,B);
+//
+//  CHECK(checkTags(C,"x","z","Alink"));
+//  CHECK(checkTags(Cr,"x","z","Blink"));
+//
+//  auto initstate = InitState(sites,"Up");
+//  auto V = randomMPS(initstate);
+//  V.replaceTags("Link","Vlink");
+//  V.replaceTags("Site,S=1/2","x");
+//
+//  CHECK(checkTags(V,"x","Vlink"));
+//
+//  auto Vc = V;
+//  Vc.dag().replaceTags("x","z").addTags("dag","Vlink");
+//
+//  CHECK(checkTags(Vc,"z","Vlink,dag"));
+//
+//  auto VcCV = V(1)*C(1)*Vc(1);
+//  for( auto i : range1(2,N) ) { VcCV *= V(i)*C(i)*Vc(i); }
+//  auto VcABV = V(1)*A(1)*B(1)*Vc(1);
+//  for( auto i : range1(2,N) ) { VcABV *= V(i)*A(i)*B(i)*Vc(i); }
+//
+//  CHECK_CLOSE(eltC(VcCV),eltC(VcABV));
+//  }
 
 }

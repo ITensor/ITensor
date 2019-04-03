@@ -157,7 +157,7 @@ class IndexSet : public RangeT<Index>
     parent const&
     range() const { return *this; }
 
-    void
+    IndexSet&
     dag();
 
     void
@@ -191,109 +191,114 @@ class IndexSet : public RangeT<Index>
     // Tag methods
     //
 
-    void
+    IndexSet&
     setTags(TagSet const& tsnew);
 
-    void
+    IndexSet&
     setTags(TagSet const& tsnew, 
             IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     setTags(TagSet const& tsnew,
             Index const& imatch1,
             VarArgs&&... vargs)
       {
       setTags(tsnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     setTags(TagSet const& tsnew, 
             TagSet const& tsmatch);
 
-    void
+    IndexSet&
     noTags();
 
-    void
+    IndexSet&
     noTags(IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     noTags(Index const& imatch1,
            VarArgs&&... vargs)
       {
       noTags(IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     noTags(TagSet const& tsmatch);
 
-    void
+    IndexSet&
     addTags(TagSet const& tsadd);
 
-    void
+    IndexSet&
     addTags(TagSet const& tsadd, 
             IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     addTags(TagSet const& tsadd,
             Index const& imatch1,
             VarArgs&&... vargs)
       {
       addTags(tsadd,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     addTags(TagSet const& tsadd,
             TagSet const& tsmatch);
 
-    void
+    IndexSet&
     removeTags(TagSet const& tsremove);
 
-    void
+    IndexSet&
     removeTags(TagSet const& tsremove, 
                IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     removeTags(TagSet const& tsremove,
                Index const& imatch1,
                VarArgs&&... vargs)
       {
       removeTags(tsremove,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     removeTags(TagSet const& tsremove, 
                TagSet const& tsmatch);
 
-    void
+    IndexSet&
     replaceTags(TagSet const& tsold, 
                 TagSet const& tsnew);
 
-    void
+    IndexSet&
     replaceTags(TagSet const& tsold, 
                 TagSet const& tsnew, 
                 IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     replaceTags(TagSet const& tsold,
                 TagSet const& tsnew,
                 Index const& imatch1,
                 VarArgs&&... vargs)
       {
       replaceTags(tsold,tsnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     replaceTags(TagSet const& tsold, 
                 TagSet const& tsnew,
                 TagSet const& tsmatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     swapTags(TagSet const& ts1,
              TagSet const& ts2,
              VarArgs&&... vargs);
@@ -306,85 +311,92 @@ class IndexSet : public RangeT<Index>
     // Set the integer tag of indices to plnew
     //
 
-    void
+    IndexSet&
     setPrime(int plnew);
 
-    void
+    IndexSet&
     setPrime(int plnew,
              IndexSet const& ismatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     setPrime(int plnew,
              Index const& imatch1,
              VarArgs&&... vargs)
         {
         setPrime(plnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+        return *this;
         }
 
-    void
+    IndexSet&
     setPrime(int plnew,
              TagSet const& tsmatch);
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     noPrime(VarArgs&&... vargs)
         {
         setPrime(0,std::forward<VarArgs>(vargs)...);
+        return *this;
         }
 
     //
     // Increase the integer tag of indices by plinc
     //
 
-    void
+    IndexSet&
     prime(int plinc);
 
-    void
+    IndexSet&
     prime()
       {
       prime(1);
+      return *this;
       }
 
-    void
+    IndexSet&
     prime(int plinc,
           IndexSet const& ismatch);
 
-    void
+    IndexSet&
     prime(IndexSet const& ismatch)
       {
       prime(1,ismatch);
+      return *this;
       }
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     prime(int plinc,
           Index const& imatch1,
           VarArgs&&... vargs)
       {
       prime(plinc,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
     template<typename... VarArgs>
-    void
+    IndexSet&
     prime(Index const& imatch1,
           VarArgs&&... vargs)
       {
       prime(IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+      return *this;
       }
 
-    void
+    IndexSet&
     prime(int plinc,
           TagSet const& tsmatch);
 
-    void
+    IndexSet&
     prime(TagSet const& tsmatch)
       {
       prime(1,tsmatch);
+      return *this;
       }
  
     // Remove QNs from all indices in the IndexSet
-    void
+    IndexSet&
     removeQNs();
 
     //

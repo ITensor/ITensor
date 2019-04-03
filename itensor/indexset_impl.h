@@ -8,7 +8,7 @@
 namespace itensor {
 
 template<typename... VarArgs>
-void IndexSet::
+IndexSet& IndexSet::
 swapTags(TagSet const& ts1, 
          TagSet const& ts2, 
          VarArgs&&... vargs)
@@ -34,9 +34,10 @@ swapTags(TagSet const& ts1,
             }
         }
 #endif
-    this->replaceTags(ts1,tempTags,std::forward<VarArgs>(vargs)...);
-    this->replaceTags(ts2,ts1,std::forward<VarArgs>(vargs)...);
-    this->replaceTags(tempTags,ts2);
+    replaceTags(ts1,tempTags,std::forward<VarArgs>(vargs)...);
+    replaceTags(ts2,ts1,std::forward<VarArgs>(vargs)...);
+    replaceTags(tempTags,ts2);
+    return *this;
     }
 
 template<class LabelT>

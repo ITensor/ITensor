@@ -94,7 +94,7 @@ doTask(CalcDiv const& C, QDiag<T> const& D)
             {
             q += C.is[n].qn(1+block[n])*C.is[n].dir();
             }
-        if(q != d) Error("Diagonal elements of QDiag IQTensor would have inconsistent divergence");
+        if(q != d) Error("Diagonal elements of QDiag ITensor would have inconsistent divergence");
         };
     loopDiagBlocks(D,C.is,checkBlock);
 #endif

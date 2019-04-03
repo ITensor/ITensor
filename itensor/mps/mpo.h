@@ -54,6 +54,7 @@ class MPO : private MPS
     plusEq(MPO const& R,
            Args const& args = Args::global());
 
+    using Parent::dag;
     using Parent::setTags;
     using Parent::noTags;
     using Parent::addTags;
@@ -61,6 +62,7 @@ class MPO : private MPS
     using Parent::replaceTags;
     using Parent::swapTags;
     using Parent::prime;
+    using Parent::primeLinks;
     using Parent::setPrime;
     using Parent::noPrime;
 
@@ -99,42 +101,51 @@ class MPO : private MPS
 
     }; //class MPO<Tensor>
 
-//template<typename T>
-//MPO<T>&
-//addAssumeOrth(MPO<T> & L, MPO<T> const& R, Args const& args = Args::global()) 
-//    { 
-//    MPS<T>::addAssumeOrth(L,R,{args,"UseSVD",true,"LogRefNorm",L.logRefNorm()}); 
-//    return L;
-//    }
+MPO& 
+operator*=(MPO & W, Real a);
 
+MPO& 
+operator*=(MPO & W, Cplx a);
 
-inline MPO& 
-operator*=(MPO & W, Real a) { W.ref(W.leftLim()+1) *= a; return W; }
+MPO& 
+operator/=(MPO & W, Real a);
 
-inline MPO& 
-operator*=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) *= a; return W; }
+MPO& 
+operator/=(MPO & W, Cplx a);
 
-inline MPO& 
-operator/=(MPO & W, Real a) { W.ref(W.leftLim()+1) /= a; return W; }
+MPO
+operator*(MPO W, Real r);
 
-inline MPO& 
-operator/=(MPO & W, Cplx a) { W.ref(W.leftLim()+1) /= a; return W; }
+MPO
+operator*(Real r, MPO W);
 
-MPO inline
-operator*(MPO W, Real r) { return W *= r; }
+MPO
+operator*(MPO W, Cplx z);
 
-MPO inline
-operator*(Real r, MPO W) { return W *= r; }
+MPO
+operator*(Cplx z, MPO W);
 
-MPO inline
-operator*(MPO W, Cplx z) { return W *= z; }
+//
+// MPO Index functions
+//
 
-MPO inline
-operator*(Cplx z, MPO W) { return W *= z; }
+// Find a site index of the MPO by matching the tag 'tsmatch'
+Index
+siteIndex(MPO const& A, int b, TagSet const& tsmatch = TagSet("0"));
 
-////Convert an IQMPO to an MPO
-//MPO
-//toMPO(IQMPO const& K);
+// Get the site Index of the MPS W*A 
+// as if MPO W was applied to MPS A
+Index
+siteIndex(MPO const& A, MPS const& V, int b);
+
+// Get the site Indices of the MPO A*B 
+// as if MPO A and MPO B were contracted
+// TODO: implement
+//Index inline
+//siteInds(MPO const& A, MPO const& B, int b);
+
+//Index
+//siteIndex(MPO const& A, MPO const& B, int b, TagSet const& tsmatch = TagSet("0"));
 
 //
 // MPO tag functions
@@ -143,7 +154,7 @@ operator*(Cplx z, MPO W) { return W *= z; }
 MPO
 setTags(MPO A, TagSet const& ts, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 setTags(MPO A,
         VarArgs&&... vargs)
@@ -155,7 +166,7 @@ setTags(MPO A,
 MPO
 noTags(MPO A, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 noTags(MPO A,
        VarArgs&&... vargs)
@@ -167,7 +178,7 @@ noTags(MPO A,
 MPO
 addTags(MPO A, TagSet const& ts, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 addTags(MPO A,
         VarArgs&&... vargs)
@@ -179,7 +190,7 @@ addTags(MPO A,
 MPO
 removeTags(MPO A, TagSet const& ts, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 removeTags(MPO A,
            VarArgs&&... vargs)
@@ -191,7 +202,7 @@ removeTags(MPO A,
 MPO
 replaceTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 replaceTags(MPO A,
             VarArgs&&... vargs)
@@ -203,7 +214,7 @@ replaceTags(MPO A,
 MPO
 swapTags(MPO A, TagSet const& ts1, TagSet const& ts2, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 swapTags(MPO A,
          VarArgs&&... vargs)
@@ -218,7 +229,7 @@ prime(MPO A, int plev, IndexSet const& is);
 MPO
 prime(MPO A, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 prime(MPO A,
       VarArgs&&... vargs)
@@ -230,7 +241,7 @@ prime(MPO A,
 MPO
 setPrime(MPO A, int plev, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 setPrime(MPO A,
          VarArgs&&... vargs)
@@ -242,7 +253,7 @@ setPrime(MPO A,
 MPO
 noPrime(MPO A, IndexSet const& is);
 
-template<typename... VarArgs>
+template <typename... VarArgs>
 MPO
 noPrime(MPO A,
         VarArgs&&... vargs)
@@ -250,15 +261,6 @@ noPrime(MPO A,
     A.noPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
-
-Index inline
-siteIndex(MPO const& W, int b, TagSet const& tsmatch = TagSet("0"))
-    {
-    return uniqueIndex(W(b),{W(b-1),W(b+1)},tsmatch);
-    }
-
-inline int
-length(MPO const& W) { return W.length(); }
 
 bool
 isComplex(MPO const& W);
@@ -274,11 +276,6 @@ findCenter(MPO const& psi);
 
 void
 checkQNs(MPO const& psi);
-
-//MPO
-//sum(MPO L, 
-//    MPO const& R, 
-//    Args const& args = Args::global());
 
 //<psi|H|phi>
 void 
@@ -338,6 +335,11 @@ void
 nmultMPO(MPO const& Aorig, 
          MPO const& Borig, 
          MPO & res,
+         Args args = Args::global());
+
+MPO
+nmultMPO(MPO const& A,
+         MPO const& B,
          Args args = Args::global());
 
 //

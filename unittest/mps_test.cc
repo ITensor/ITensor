@@ -3,6 +3,8 @@
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/spinless.h"
 #include "itensor/util/print_macro.h"
+#include "itensor/util/str.h"
+#include "mps_mpo_test_helper.h"
 
 using namespace itensor;
 using std::vector;
@@ -11,35 +13,33 @@ TEST_CASE("MPSTest")
 {
 
 static const int N = 10;
-SpinHalf shsites(N,{"ConserveQNs=",false});
-SpinHalf shsitesQNs(N,{"ConserveQNs=",true});
 
-InitState shFerro(shsites,"Up");
-InitState shFerroQNs(shsitesQNs,"Up");
-InitState shNeel(shsites);
-
-for(int j = 1; j <= N; ++j)
-    {
+// SiteSet with no QNs
+auto shsites = SpinHalf(N,{"ConserveQNs=",false});
+auto shFerro = InitState(shsites,"Up");
+auto shNeel = InitState(shsites);
+for(auto j : range1(N))
     shNeel.set(j,j%2==1 ? "Up" : "Dn");
-    }
 
-SECTION("Constructors")
+
+auto shsitesQNs = SpinHalf(N,{"ConserveQNs=",true});
+auto shFerroQNs = InitState(shsitesQNs,"Up");
+auto shNeelQNs = InitState(shsitesQNs);
+for(auto j : range1(N))
+    shNeelQNs.set(j,j%2==1 ? "Up" : "Dn");
+
+SECTION("QNCheck")
     {
+    auto psiNeelQNs = MPS(shNeelQNs);
+
+    CHECK(checkQNs(psiNeelQNs));
+    CHECK_EQUAL(totalQN(psiNeelQNs),QN({"Sz",0}));
+
+    auto psiFerroQNs = MPS(shFerroQNs);
+
+    CHECK(checkQNs(psiFerroQNs));
+    CHECK_EQUAL(totalQN(psiFerroQNs),QN({"Sz",10}));
     }
-
-
-//SECTION("QNCheck")
-//    {
-//    IQMPS psiNeel(shNeel);
-//    CHECK(checkQNs(psiNeel));
-//
-//    CHECK_EQUAL(totalQN(psiNeel),QN(0));
-//
-//    IQMPS psiFerro(shFerro);
-//    CHECK(checkQNs(psiFerro));
-//
-//    CHECK_EQUAL(totalQN(psiFerro),QN(10));
-//    }
 
 SECTION("hasQNs")
     {
@@ -50,144 +50,182 @@ SECTION("hasQNs")
 SECTION("Constructors (m==1)")
     {
     auto psi = MPS(shsitesQNs);
-    auto l2 = commonIndex(psi(2),psi(3));
-    CHECK(1==l2.dim());
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsitesQNs(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(1==dim(linkIndex(psi,2)));
+    CHECK(checkTags(psi));
     }
 
-SECTION("Constructors (m>1)")
+SECTION("Constructors (dim>1)")
     {
-    auto m = 4;
-    auto psi = MPS(shsites,m);
+    auto d = 4;
+    auto psi = MPS(shsites,d);
     auto l2 = commonIndex(psi(2),psi(3));
-    CHECK(m==l2.dim());
+    CHECK(d==dim(l2));
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(checkTags(psi));
 
     for(int n = 1; n <= N; ++n)
-      psi.ref(n).randomize();
+      psi.ref(n).randomize({"Complex=",true});
 
     psi.position(1);
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+
+    CHECK(checkTags(psi));
+    CHECK(isOrtho(psi));
 
     psi.position(N);
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+
+    CHECK(checkTags(psi));
+    CHECK(isOrtho(psi));
 
     psi.normalize();
-    CHECK(norm(psi)==1);
+
+    CHECK_CLOSE(norm(psi),1.);
 
     }
 
-SECTION("Random constructors (m==1)")
+SECTION("Random constructors (dim==1)")
     {
     auto psi = randomMPS(shsites);
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    psi.ref(1) *= Complex_i;
 
-    psi.position(1);
-    auto normpsi = norm(psi);
-    CHECK(normpsi>0);
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(checkTags(psi));
 
-    psi.position(N);
-    CHECK_CLOSE(normpsi,norm(psi));
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shsites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    auto psi1 = psi;
+    psi1.position(1);
+
+    CHECK_CLOSE(norm(psi1),std::sqrt(overlap(psi1,psi1)));
+    CHECK(checkTags(psi1));
+    CHECK_CLOSE(diff(psi,psi1),0.);
+
+    psi1.position(N);
+
+    CHECK_CLOSE(norm(psi1),std::sqrt(overlap(psi1,psi1)));
+    CHECK(checkTags(psi1));
+    CHECK_CLOSE(diff(psi,psi1),0.);
     }
 
-SECTION("Random constructors, QN conserved (m==1)")
+SECTION("Check .position() with custom tags")
+    {
+    auto psi = randomMPS(shNeelQNs);
+    psi.ref(1) *= Complex_i;
+
+    CHECK(checkTags(psi,"Site","Link"));
+
+    psi.replaceTags("Site","MySite");
+    psi.replaceTags("Link","MyLink");
+
+    CHECK(checkTags(psi,"MySite","MyLink"));
+
+    auto opsi = psi;
+
+    opsi.position(1);
+
+    CHECK(checkOrtho(opsi));
+    CHECK_CLOSE(norm(opsi),std::sqrt(overlap(opsi,opsi)));
+    CHECK_CLOSE(diff(opsi,psi),0.);
+    CHECK(checkTags(opsi,"MySite","MyLink"));
+
+    opsi.position(N);
+
+    CHECK_CLOSE(diff(opsi,psi),0.);
+    CHECK(checkTags(opsi,"MySite","MyLink"));
+    }
+
+SECTION("Check .orthogonalize() with custom tags")
+    {
+    auto psi = randomMPS(shNeelQNs);
+    psi.ref(1) *= Complex_i;
+
+    CHECK(checkTags(psi,"Site","Link"));
+
+    psi.replaceTags("Site","MySite");
+    psi.replaceTags("Link","MyLink");
+
+    CHECK(checkTags(psi,"MySite","MyLink"));
+
+    auto opsi = psi;
+
+    opsi.orthogonalize();
+
+    CHECK(checkOrtho(opsi));
+    CHECK_CLOSE(norm(opsi),std::sqrt(overlap(opsi,opsi)));
+    CHECK_CLOSE(diff(opsi,psi),0.);
+    CHECK(checkTags(opsi,"MySite","MyLink"));
+    }
+
+SECTION("Random constructors, QN conserved (dim==1)")
     {
     auto psi = randomMPS(shFerroQNs);
+    psi.ref(1) *= Complex_i;
+    psi.orthogonalize();
     CHECK(norm(psi)>0);
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(shFerroQNs(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(checkTags(psi));
     }
 
 SECTION("MPSAddition 1")
     {
-    Spinless sites(10,{"ConserveQNs=",true});
+    auto sites = Spinless(10,{"ConserveQNs=",true});
 
-    InitState i1(sites,"Emp"),
-              i2(sites,"Emp");
+    auto i1 = InitState(sites,"Emp");
+    auto i2 = i1;
 
     i1.set(1,"Occ");
     i2.set(2,"Occ");
 
     //"Valence bond" between sites 1 and 2
-    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
+    auto psi = ISqrt2*sum(MPS(i1),MPS(i2));
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
-
+    CHECK(checkTags(psi));
     CHECK_CLOSE(norm(psi),1);
     CHECK_EQUAL(totalQN(psi),QN({"Nf",1}));
+    }
+
+SECTION("MPSAddition Custom Tags")
+    {
+    auto sites = Spinless(10,{"ConserveQNs=",true});
+
+    auto i1 = InitState(sites,"Emp");
+    auto i2 = i1;
+
+    i1.set(1,"Occ");
+    i2.set(2,"Occ");
+
+    auto psi1 = MPS(i1);
+    psi1.ref(1) *= Complex_i;
+    auto psi2 = MPS(i2);
+    psi2.ref(1) *= Complex_i;
+
+    psi1.replaceTags("Site","MySite").replaceTags("Link","MyLink1");
+    psi2.replaceTags("Site","MySite").replaceTags("Link","MyLink2");
+
+    //"Valence bond" between sites 1 and 2
+    auto psi12 = ISqrt2*sum(psi1,psi2);
+
+    CHECK(checkTags(psi12,"MySite","MyLink1"));
+    CHECK_CLOSE(norm(psi12),1);
+    CHECK_EQUAL(totalQN(psi12),QN({"Nf",1}));
+
+    auto psi21 = ISqrt2*sum(psi2,psi1);
+    CHECK(checkTags(psi21,"MySite","MyLink2"));
+    CHECK_CLOSE(norm(psi21),1);
+    CHECK_EQUAL(totalQN(psi21),QN({"Nf",1}));
     }
 
 SECTION("MPSAddition 2")
     {
     auto sites = SiteSet(10,2);
     auto psi1 = randomMPS(sites);
+    psi1.ref(1) *= Complex_i;
     auto psi2 = randomMPS(sites);
+    psi2.ref(1) *= Complex_i;
     auto psi = sum(psi1,psi2);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    auto exact_overlap = overlap(psi1,psi2);
+    exact_overlap += overlap(psi2,psi1);
+    exact_overlap += overlap(psi1,psi1);
+    exact_overlap += overlap(psi2,psi2);
 
+    CHECK(checkTags(psi));
+    CHECK_CLOSE(exact_overlap,overlap(psi,psi));
     CHECK_EQUAL(order(psi(1)),2);
     CHECK_EQUAL(order(psi(2)),3);
     CHECK_EQUAL(order(psi(5)),3);
@@ -195,112 +233,66 @@ SECTION("MPSAddition 2")
     CHECK_EQUAL(order(psi(10)),2);
     }
 
-//SECTION("PositionTest")
-//    {
-//    Spinless sites(10);
-//
-//    InitState init(sites,"Emp");
-//    init.set(2,"Occ");
-//    init.set(4,"Occ");
-//    init.set(6,"Occ");
-//
-//    IQMPS psi(init);
-//    psi.Anc(1) *= Complex_i;
-//
-//    psi.position(1,"Cutoff=1E-8");
-//    CHECK_EQUAL(findCenter(psi),1);
-//
-//    psi.position(4,"Cutoff=1E-8");
-//    CHECK_EQUAL(findCenter(psi),4);
-//    }
+SECTION("PositionTest")
+    {
+    auto sites = Spinless(10);
+
+    auto init = InitState(sites,"Emp");
+    init.set(2,"Occ");
+    init.set(4,"Occ");
+    init.set(6,"Occ");
+
+    auto psi = MPS(init);
+    psi.ref(1) *= Complex_i;
+
+    psi.position(1,{"Cutoff=",1E-8});
+
+    CHECK(checkOrtho(psi));
+    CHECK_EQUAL(findCenter(psi),1);
+
+    psi.position(4,{"Cutoff=",1E-8});
+
+    CHECK_EQUAL(findCenter(psi),4);
+    }
 
 SECTION("Orthogonalize")
     {
     auto N = 10;
-    auto m = 20;
+    auto d = 20;
     auto sites = SpinHalf(10,{"ConserveQNs=",false});
-    auto psi = MPS(sites);
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
-
-    //Make a random MPS of bond dim. m
-    auto links = vector<Index>(N+1);
+    //Make a random MPS of bond dim. d
+    auto psi = MPS(sites,d);
     for(auto n : range1(N))
-        {
-        links.at(n) = Index(m,format("Link,l=%d",n));
-        }
-    psi.ref(1) = randomITensor(links.at(1),sites(1));
-    for(auto n : range1(2,N-1))
-        {
-        psi.ref(n) = randomITensor(links.at(n-1),sites(n),links.at(n));
-        }
-    psi.ref(N) = randomITensor(links.at(N-1),sites(N));
+        psi.ref(n).randomize({"Complex=",true});
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
+    CHECK(checkTags(psi));
 
     //Normalize psi
     auto n2 = overlap(psi,psi);
     psi.ref(1) /= sqrt(n2);
 
     auto opsi = psi;
+    opsi.orthogonalize({"Cutoff",1E-16});
 
-    psi.orthogonalize({"Cutoff",1E-16});
+    CHECK(checkOrtho(opsi));
     CHECK_CLOSE(overlap(opsi,psi),1.0);
-
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
-
-    for(int n = N; n > 1; --n)
-        {
-        auto li = commonIndex(psi(n),psi(n-1),"Link");
-        auto rho = psi(n) * dag(prime(psi(n),li));
-        auto id = ITensor(li,prime(li));
-        for(auto l : range1(li.dim()))
-            {
-            id.set(li(l),prime(li)(l),1.0);
-            }
-        CHECK(norm(rho-id) < 1E-10);
-        }
+    CHECK(checkTags(opsi));
 
     psi.orthogonalize({"MaxDim=",10,"Cutoff=",1E-16});
-    for(auto b : range1(length(psi)-1))
-        {
-        CHECK(dim(linkIndex(psi,b)) <= 10);
-        }
 
-    for(int n = 1; n < N; ++n)
-        {
-        auto ln = commonIndex(psi(n),psi(n+1),"Link");
-        CHECK(ln==findIndex(psi(n),format("l=%d",n)));
-        CHECK(ln==findIndex(psi(n+1),format("l=%d",n)));
-        CHECK(sites(n)==findIndex(psi(n),format("n=%d",n)));
-        }
-
+    CHECK(checkOrtho(psi));
+    CHECK(maxLinkDim(psi)==10);
+    CHECK(checkTags(psi));
     }
 
 SECTION("Overlap - 1 site")
     {
     auto psi = MPS(1);
     auto s = Index(2,"s");
-    psi.ref(1) = randomITensor(s);
-    CHECK_CLOSE(overlap(psi,psi),(psi(1)*psi(1)).elt());
+    psi.ref(1) = randomITensorC(s);
+
+    CHECK_CLOSE(overlap(psi,psi),elt(dag(psi(1))*psi(1)));
     }
 
 }

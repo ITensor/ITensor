@@ -30,8 +30,8 @@ checkIndexPositions(std::vector<int> const& is)
             throw ITError("An Index was found more than once in the IndexSet");
     }
 
-void IndexSet::
-dag() { for(auto& J : *this) J.dag(); }
+IndexSet& IndexSet::
+dag() { for(auto& J : *this) J.dag(); return *this; }
 
 IndexSet
 dag(IndexSet is)
@@ -58,16 +58,17 @@ cbegin() const { return begin(); }
 IndexSet::const_iterator IndexSet::
 cend() const { return end(); }
 
-void IndexSet::
+IndexSet& IndexSet::
 setTags(TagSet const& tsnew)
     {
     for(auto& J : *this) J.setTags(tsnew);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 setTags(TagSet const& tsnew,
         IndexSet const& ismatch)
     {
@@ -76,9 +77,10 @@ setTags(TagSet const& tsnew,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 setTags(TagSet const& tsnew,
         TagSet const& tsmatch)
     {
@@ -86,18 +88,20 @@ setTags(TagSet const& tsnew,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 noTags()
     {
     for(auto& J : *this) J.noTags();
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 noTags(IndexSet const& ismatch)
     {
     auto ilocs = indexPositions(*this,ismatch);
@@ -105,27 +109,30 @@ noTags(IndexSet const& ismatch)
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 noTags(TagSet const& tsmatch)
     {
     for(auto& J : *this) if(hasTags(J,tsmatch)) J.noTags();
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 addTags(TagSet const& tsadd)
     {
     for(auto& J : *this) J.addTags(tsadd);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 addTags(TagSet const& tsadd,
         IndexSet const& ismatch)
     {
@@ -134,9 +141,10 @@ addTags(TagSet const& tsadd,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 addTags(TagSet const& tsadd,
         TagSet const& tsmatch)
     {
@@ -144,18 +152,20 @@ addTags(TagSet const& tsadd,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 removeTags(TagSet const& tsremove)
     {
     for(auto& J : *this) J.removeTags(tsremove);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 removeTags(TagSet const& tsremove,
            IndexSet const& ismatch)
     {
@@ -164,9 +174,10 @@ removeTags(TagSet const& tsremove,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 removeTags(TagSet const& tsremove,
            TagSet const& tsmatch)
     {
@@ -174,9 +185,10 @@ removeTags(TagSet const& tsremove,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 replaceTags(TagSet const& tsold,
             TagSet const& tsnew)
     {
@@ -184,9 +196,10 @@ replaceTags(TagSet const& tsold,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 replaceTags(TagSet const& tsold,
             TagSet const& tsnew,
             IndexSet const& ismatch)
@@ -196,9 +209,10 @@ replaceTags(TagSet const& tsold,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 replaceTags(TagSet const& tsold,
             TagSet const& tsnew,
             TagSet const& tsmatch)
@@ -207,18 +221,20 @@ replaceTags(TagSet const& tsold,
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 setPrime(int plnew)
     {
     for(auto& J : *this) J.setPrime(plnew);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 setPrime(int plnew, IndexSet const& ismatch)
     {
     auto ilocs = indexPositions(*this,ismatch);
@@ -226,27 +242,30 @@ setPrime(int plnew, IndexSet const& ismatch)
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 setPrime(int plnew, TagSet const& tsmatch)
     {
     for(auto& J : *this) if( hasTags(J,tsmatch) ) J.setPrime(plnew);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 prime(int plinc)
     {
     for(auto& J : *this) J.prime(plinc);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 prime(int plinc, IndexSet const& ismatch)
     {
     auto ilocs = indexPositions(*this,ismatch);
@@ -254,15 +273,17 @@ prime(int plinc, IndexSet const& ismatch)
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 prime(int plinc, TagSet const& tsmatch)
     {
     for(auto& J : *this) if( hasTags(J,tsmatch) ) J.prime(plinc);
 #ifdef DEBUG
     checkIndexSet(*this);
 #endif
+    return *this;
     }
 
 IndexSet
@@ -273,10 +294,11 @@ sim(IndexSet is)
     return is;
     }
 
-void IndexSet::
+IndexSet& IndexSet::
 removeQNs()
     {
     for(auto& J : *this) J.removeQNs();
+    return *this;
     }
 
 //

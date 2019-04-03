@@ -32,7 +32,7 @@ plussers(Index const& l1,
         {
         auto m = dim(l1)+dim(l2);
         if(m <= 0) m = 1;
-        sumind = Index(m,"Link");
+        sumind = Index(m,tags(sumind));
 
         first = delta(l1,sumind);
         auto S = Matrix(dim(l2),dim(sumind));
@@ -94,16 +94,17 @@ addAssumeOrth(MPSType      & L,
     auto N = length(L);
     if(length(R) != N) Error("Mismatched MPS sizes");
 
-    // TODO: implement this for MPS, MPO
-    L.replaceTags("0","4","Link");
+    // Make sure there aren't link index clashes between L and R
+    auto rand_plev = 1254313;
+    L.primeLinks(rand_plev);
 
     auto first = vector<ITensor>(N);
     auto second = vector<ITensor>(N);
 
     for(auto i : range1(N-1))
         {
-        auto l1 = rightLinkIndex(L,i);
-        auto l2 = rightLinkIndex(R,i);
+        auto l1 = linkIndex(L,i);
+        auto l2 = linkIndex(R,i);
         auto r = l1;
         plussers(l1,l2,r,first[i],second[i]);
         }
@@ -116,7 +117,7 @@ addAssumeOrth(MPSType      & L,
         }
     L.ref(N) = dag(first.at(N-1)) * L(N) + dag(second.at(N-1)) * R(N);
 
-    L.noPrime("Link");
+    L.primeLinks(-rand_plev);
 
     L.orthogonalize(args);
 
@@ -182,7 +183,7 @@ checkQNs(MPS const& psi)
             {
             cout << "At i = " << i << "\n";
             Print(psi(i));
-            cout << "IQTensor other than the ortho center had non-zero divergence\n";
+            cout << "ITensor other than the ortho center had non-zero divergence\n";
             return false;
             }
         }
@@ -190,14 +191,14 @@ checkQNs(MPS const& psi)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(rightLinkIndex(psi,i).dir() != In) 
+        if(dir(rightLinkIndex(psi,i)) != In) 
             {
             println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             return false;
             }
         if(i > 1)
             {
-            if(leftLinkIndex(psi,i).dir() != Out) 
+            if(dir(leftLinkIndex(psi,i)) != Out) 
                 {
                 println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 return false;
@@ -209,12 +210,12 @@ checkQNs(MPS const& psi)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(rightLinkIndex(psi,i).dir() != Out) 
+        if(dir(rightLinkIndex(psi,i)) != Out) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             return false;
             }
-        if(leftLinkIndex(psi,i).dir() != In) 
+        if(dir(leftLinkIndex(psi,i)) != In) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             return false;

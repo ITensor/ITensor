@@ -325,6 +325,12 @@ order(ITensor const& T) { return order(inds(T)); }
 IndexSet const&
 inds(ITensor const& A) { return A.inds(); }
 
+long
+minDim(ITensor const& T) { return minDim(inds(T)); }
+
+long
+maxDim(ITensor const& T) { return maxDim(inds(T)); }
+
 std::vector<IndexSet>
 inds(std::vector<ITensor> const& A)
   {
@@ -366,11 +372,32 @@ commonIndex(ITensor const& A,
     return findIndex(commonInds(inds(A),inds(B)),tsmatch);
     }
 
+IndexSet
+uniqueInds(ITensor const& A,
+           ITensor const& B)
+    {
+    return uniqueInds(inds(A),inds(B));
+    }
+
+IndexSet
+uniqueInds(ITensor const& A,
+           std::vector<ITensor> const& B)
+    {
+    return uniqueInds(inds(A),inds(B));
+    }
+
+IndexSet
+uniqueInds(ITensor const& A,
+           std::initializer_list<ITensor> B)
+    {
+    return uniqueInds(A,std::vector<ITensor>(B));
+    }
+
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B)
     {
-    return findIndex(uniqueInds(inds(A),inds(B)));
+    return findIndex(uniqueInds(A,B));
     }
 
 Index
@@ -378,14 +405,14 @@ uniqueIndex(ITensor const& A,
             ITensor const& B, 
             TagSet const& tsmatch)
     {
-    return findIndex(uniqueInds(inds(A),inds(B)),tsmatch);
+    return findIndex(uniqueInds(A,B),tsmatch);
     }
 
 Index
 uniqueIndex(ITensor const& A,
             std::vector<ITensor> const& B)
     {
-    return findIndex(uniqueInds(inds(A),inds(B)));
+    return findIndex(uniqueInds(A,B));
     }
 
 Index
@@ -393,7 +420,7 @@ uniqueIndex(ITensor const& A,
             std::vector<ITensor> const& B,
             TagSet const& tsmatch)
     {
-    return findIndex(uniqueInds(inds(A),inds(B)),tsmatch);
+    return findIndex(uniqueInds(A,B),tsmatch);
     }
 
 Index
@@ -563,8 +590,7 @@ replaceInds(ITensor T,
     // Add a random prime to account for possible
     // Index swaps
     auto plev_temp = 43218432;
-    auto is2p = is2;
-    is2p.prime(plev_temp);
+    auto is2p = prime(is2,plev_temp);
     auto isT = inds(T);
     for(auto& J : isT)
         {
@@ -574,11 +600,15 @@ replaceInds(ITensor T,
                 {
                 if( dim(J) != dim(is2[i]) )
                     {
-                    printfln("Old m = %d",dim(J));
-                    printfln("New m would be = %d",dim(is2[i]));
-                    throw ITError("Mismatch of index dimension in reindex");
+                    printfln("Old dim = %d",dim(J));
+                    printfln("New dim would be = %d",dim(is2[i]));
+                    throw ITError("Mismatch of index dimension in replaceInds");
                     }
-                T *= delta(dag(J),is2p[i]);
+                // Make the arrow directions correct
+                J.dag();
+                auto& Jnew = is2p[i];
+                if( dir(J)==dir(Jnew) ) Jnew.dag();
+                T *= delta(J,Jnew);
                 break;
                 }
             }

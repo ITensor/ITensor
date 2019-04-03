@@ -7,7 +7,7 @@
 
 namespace itensor {
 
-template <class BigMatrixT>
+template <typename BigMatrixT>
 Spectrum MPS::
 svdBond(int b, ITensor const& AA, Direction dir, 
         BigMatrixT const& PH, Args args)
@@ -27,12 +27,12 @@ svdBond(int b, ITensor const& AA, Direction dir,
     auto noise = args.getReal("Noise",0.);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto usesvd = args.getBool("UseSVD",false);
-    auto tagset = getTagSet(args,"Tags",format("Link,l=%d",b));
-    args.add("Tags",toString(tagset));
-    if(dir == Fromleft) args.add("LeftTags",toString(tagset));
-    else                args.add("RightTags",toString(tagset));
 
     Spectrum res;
+
+    // Store the original tags for link b so that it can
+    // be put back onto the newly introduced link index
+    auto original_link_tags = tags(linkIndex(*this,b));
 
     if(usesvd || (noise == 0 && cutoff < 1E-12))
         {
@@ -66,6 +66,12 @@ svdBond(int b, ITensor const& AA, Direction dir,
             if(nrm > 1E-16) oc *= 1./nrm;
             }
         }
+
+    // Put the old tags back onto the new index
+    auto lb = commonIndex(A_[b],A_[b+1]);
+    A_[b].setTags(original_link_tags,lb);
+    A_[b+1].setTags(original_link_tags,lb);
+
 
     if(dir == Fromleft)
         {
@@ -121,31 +127,53 @@ normalize(MPS & psi)
     return nrm;
     }
 
+template <typename MPSType>
+IndexSet 
+siteInds(MPSType const& W, int b)
+    {
+    return uniqueInds(W(b),{W(b-1),W(b+1)});
+    }
+
 Index inline
 siteIndex(MPS const& psi, int j)
     { 
     return uniqueIndex(psi(j),{psi(j-1),psi(j+1)}); 
     }
 
-template<typename MPSType>
-Index 
-linkIndex(MPSType const& psi, int b)
-    { 
-    return commonIndex(psi(b),psi(b+1)); 
-    }
-
-template<typename MPSType>
+template <typename MPSType>
 Index
 rightLinkIndex(MPSType const& psi, int i)
-    { 
-    return commonIndex(psi(i),psi(i+1)); 
+    {
+    if( i == length(psi) ) return Index();
+    return commonIndex(psi(i),psi(i+1));
     }
 
-template<typename MPSType>
+// Note: for ITensors with QNs, this is different
+// from rightLinkIndex(psi,i-1) since indices 
+// evaluate equal even in arrow directions are different
+template <typename MPSType>
 Index
 leftLinkIndex(MPSType const& psi, int i)
-    { 
-    return commonIndex(psi(i),psi(i-1)); 
+    {
+    if( i == 1 ) return Index();
+    return commonIndex(psi(i),psi(i-1));
+    }
+
+// This is a shorthand for rightLinkIndex
+template <typename MPSType>
+Index 
+linkIndex(MPSType const& psi, int i)
+    {
+    return rightLinkIndex(psi,i);
+    }
+
+template <typename MPSType>
+IndexSet
+linkInds(MPSType const& psi, int i)
+    {
+    if( i == 1 ) return IndexSet(rightLinkIndex(psi,i));
+    else if( i == length(psi) ) return IndexSet(leftLinkIndex(psi,i));
+    return IndexSet(leftLinkIndex(psi,i),rightLinkIndex(psi,i));
     }
 
 Real inline
@@ -191,8 +219,8 @@ void
 overlap(MPSType const& psi, MPSType const& phi, Real& re, Real& im)
     {
     auto z = overlapC(psi,phi);
-    re = z.real();
-    im = z.imag();
+    re = real(z);
+    im = imag(z);
     }
 
 template <typename MPSType>
@@ -204,6 +232,77 @@ overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
     if(std::fabs(im) > (1E-12 * std::fabs(re)) )
         printfln("Real overlap: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
+    }
+
+namespace detail
+  {
+
+  ITensor inline
+  denseDelta(Index const& i, Index const& j)
+      {
+      auto del = ITensor(i,j);
+      for( auto ii : range1(minDim(del)) )
+        del.set(ii,ii,1);
+      return del;
+      }
+
+  }
+
+template <typename MPSType>
+bool
+checkOrtho(MPSType const& A,
+           int i,
+           Direction dir,
+           Real threshold)
+    {
+    auto left = (dir==Fromleft);
+
+    auto Adag = A;
+    Adag.dag().primeLinks(1);
+
+    auto lout_dag = (left ? leftLinkIndex(Adag,i) : rightLinkIndex(Adag,i));
+    auto rho = A(i) * prime(Adag(i),-1,lout_dag);
+
+    auto lin = (left ? rightLinkIndex(A,i) : leftLinkIndex(A,i));
+    auto lin_dag = (left ? rightLinkIndex(Adag,i) : leftLinkIndex(Adag,i));
+    auto Delta = detail::denseDelta(lin, lin_dag);
+
+    auto Diff = rho - Delta;
+
+    if(norm(Diff) < threshold)
+        return true;
+
+    //Print any helpful debugging info here:
+    println("checkOrtho: on line ",__LINE__," of mps.h,");
+    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
+    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
+    printfln("checkOrtho: Error threshold set to %E",threshold);
+    //-----------------------------
+
+    return false;
+    }
+
+template <typename MPSType>
+bool
+checkOrtho(MPSType const& A,
+           Real threshold)
+    {
+    for(int i = 1; i <= A.leftLim(); ++i)
+    if(!checkOrtho(A,i,Fromleft,threshold))
+        {
+        std::cout << "checkOrtho: A_[i] not left orthogonal at site i="
+                  << i << std::endl;
+        return false;
+        }
+
+    for(int i = length(A); i >= A.rightLim(); --i)
+    if(!checkOrtho(A,i,Fromright,threshold))
+        {
+        std::cout << "checkOrtho: A_[i] not right orthogonal at site i="
+                  << i << std::endl;
+        return false;
+        }
+    return true;
     }
 
 Complex inline

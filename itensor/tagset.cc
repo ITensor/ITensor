@@ -30,10 +30,12 @@ std::string TagSet::
 toString() const
     {
     std::string str = "";
-    for(auto i : range(size_-1))
-        str = str+std::string(tags_[i]) + ",";
-    str = str+std::string(tags_[size_-1]);
-    if( primelevel_ >= 0 ) str = str + "," + std::to_string(primelevel_);
+    for(auto i : range(size_))
+        {
+        str += std::string(tags_[i]);
+        if( i < size_-1 ) str += ",";
+        }
+    if( primelevel_ >= 0 ) str += "," + std::to_string(primelevel_);
     return str;
     }
 

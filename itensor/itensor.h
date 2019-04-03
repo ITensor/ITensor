@@ -443,6 +443,12 @@ eltC(ITensor A,
 IndexSet const& 
 inds(ITensor const& A);
 
+long
+minDim(ITensor const& A);
+
+long
+maxDim(ITensor const& A);
+
 // Get a vector of IndexSets from a vector of ITensors
 std::vector<IndexSet> 
 inds(std::vector<ITensor> const& A);
@@ -648,6 +654,16 @@ commonIndex(ITensor const& A,
 
 //Find index of tensor A
 //which is NOT shared by tensor(s) B
+IndexSet
+uniqueInds(ITensor const& A,
+           ITensor const& B);
+IndexSet
+uniqueInds(ITensor const& A,
+           std::vector<ITensor> const& B);
+IndexSet
+uniqueInds(ITensor const& A,
+           std::initializer_list<ITensor> B);
+
 Index
 uniqueIndex(ITensor const& A, 
             ITensor const& B);
