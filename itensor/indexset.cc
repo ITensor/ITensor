@@ -447,7 +447,7 @@ contractIS(IndexSet const& Lis,
     contractIS(Lis,Lind,Ris,Rind,Nis,Nind,sortResult);
     }
 
-inline std::ostream&
+std::ostream&
 operator<<(std::ostream& s, IndexSet const& is)
     {
     for(auto i : range1(is.order()))
