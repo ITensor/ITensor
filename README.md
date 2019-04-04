@@ -1,3 +1,5 @@
+_See our [pull request policy](https://itensor.org/about.html#pull_requests) if you are considering contributions to ITensor_
+
 Homepage: http://itensor.org/
 
 An efficient and flexible C++ library for performing tensor network calculations.
