@@ -91,6 +91,12 @@ class MPO : private MPS
         }
 
     //
+    // Developer level methods
+    //
+
+    using Parent::uref;
+
+    //
     // Deprecations
     //
 
@@ -125,6 +131,9 @@ operator*(MPO W, Cplx z);
 MPO
 operator*(Cplx z, MPO W);
 
+int
+length(MPO const& W);
+
 //
 // MPO Index functions
 //
@@ -137,6 +146,9 @@ siteIndex(MPO const& A, int b, TagSet const& tsmatch = TagSet("0"));
 // as if MPO W was applied to MPS A
 Index
 siteIndex(MPO const& A, MPS const& V, int b);
+
+IndexSet
+siteInds(MPO const& A, MPS const& x);
 
 // Get the site Indices of the MPO A*B 
 // as if MPO A and MPO B were contracted

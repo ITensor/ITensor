@@ -8,7 +8,7 @@ bool inline
 checkTags(MPO const& K,
           std::string const& siteTagsBra = "Site,0",
           std::string const& siteTagsKet = "Site,1",
-          std::string const& linkTags = "Link")
+          std::string const& linkTags = "Link,0")
   {
   auto N = length(K);
   for(auto n : range1(N))
@@ -27,8 +27,8 @@ checkTags(MPO const& K,
 
 bool inline
 checkTags(MPS const& psi,
-          std::string const& siteTags = "Site",
-          std::string const& linkTags = "Link")
+          std::string const& siteTags = "Site,0",
+          std::string const& linkTags = "Link,0")
   {
   auto N = length(psi);
   for(auto n : range1(N))

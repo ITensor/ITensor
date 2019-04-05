@@ -14,7 +14,7 @@ class InitState;
 
 template<typename MPSType>
 Index
-linkIndex(MPSType const& psi, int b);
+linkIndex(MPSType const& x, int b);
 
 class MPS
     {
@@ -450,29 +450,29 @@ addAssumeOrth(MPSType      & L,
 //convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
 //            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
-inline MPS& 
-operator*=(MPS & psi, Real a) { psi.ref(psi.leftLim()+1) *= a; return psi; }
+MPS& 
+operator*=(MPS & x, Real a);
 
-inline MPS& 
-operator/=(MPS & psi, Real a) { psi.ref(psi.leftLim()+1) /= a; return psi; }
+MPS& 
+operator/=(MPS & x, Real a);
 
-MPS inline
-operator*(MPS psi, Real r) { psi *= r; return psi; }
+MPS
+operator*(MPS x, Real r);
 
-MPS inline
-operator*(Real r, MPS psi) { psi *= r; return psi; }
+MPS
+operator*(Real r, MPS x);
 
-inline MPS& 
-operator*=(MPS & psi, Cplx z) { psi.ref(psi.leftLim()+1) *= z; return psi; }
+MPS& 
+operator*=(MPS & x, Cplx z);
 
-inline MPS& 
-operator/=(MPS & psi, Cplx z) { psi.ref(psi.leftLim()+1) /= z; return psi; }
+MPS& 
+operator/=(MPS & x, Cplx z);
 
-MPS inline
-operator*(MPS psi, Cplx z) { psi *= z; return psi; }
+MPS
+operator*(MPS x, Cplx z);
 
-MPS inline
-operator*(Cplx z, MPS psi) { psi *= z; return psi; }
+MPS
+operator*(Cplx z, MPS x);
 
 class InitState
     {
@@ -624,12 +624,8 @@ noPrime(MPS A,
 // Other Methods Related to MPS
 //
 
-template <class MPSType>
 int 
-length(MPSType const& W)
-    {
-    return W.length();
-    }
+length(MPS const& W);
 
 bool
 hasQNs(InitState const& initstate);
@@ -651,52 +647,58 @@ randomMPS(InitState const& initstate,
 //Remove the QNs of each tensor of the MPS
 template <class MPSType>
 MPSType
-removeQNs(MPSType const& psi);
+removeQNs(MPSType const& x);
 
 bool
-isComplex(MPS const& psi);
+isComplex(MPS const& x);
 
 bool
-isOrtho(MPS const& psi);
+isOrtho(MPS const& x);
 
 int
-orthoCenter(MPS const& psi);
+orthoCenter(MPS const& x);
 
 Real
-norm(MPS const& psi);
+norm(MPS const& x);
 
-// Deprecated in favor of psi.normalize()
+// Deprecated in favor of x.normalize()
 Real
-normalize(MPS & psi);
+normalize(MPS & x);
 
 template <class MPSType>
 IndexSet
 siteInds(MPSType const& W, int b);
 
+IndexSet
+siteInds(MPS const& x);
+
+MPS
+replaceSiteInds(MPS x, IndexSet const& sites);
+
 Index
-siteIndex(MPS const& psi, int j);
+siteIndex(MPS const& x, int j);
 
 template<typename MPSType>
 Index
-linkIndex(MPSType const& psi, int b);
+linkIndex(MPSType const& x, int b);
 
 template<typename MPSType>
 IndexSet
-linkInds(MPSType const& psi, int b);
+linkInds(MPSType const& x, int b);
 
 Real
-averageLinkDim(MPS const& psi);
+averageLinkDim(MPS const& x);
 
 // Deprecated
 Real
-averageM(MPS const& psi);
+averageM(MPS const& x);
 
 int
-maxLinkDim(MPS const& psi);
+maxLinkDim(MPS const& x);
 
 // Deprecated
 int
-maxM(MPS const& psi);
+maxM(MPS const& x);
 
 //
 // Applies a bond gate to the bond that is currently
@@ -712,7 +714,7 @@ maxM(MPS const& psi);
 // Args("DoNormalize",true) is included in args.
 void 
 applyGate(ITensor const& gate, 
-          MPS & psi,
+          MPS & x,
           Args const& args = Args::global());
 
 //Checks if A_[i] is left (left == true) 
@@ -730,37 +732,37 @@ checkOrtho(MPSType const& A,
            Real threshold = 1E-13);
 
 int 
-findCenter(MPS const& psi);
+findCenter(MPS const& x);
 
 bool 
-checkQNs(MPS const& psi);
+checkQNs(MPS const& x);
 
 QN
-totalQN(MPS const& psi);
+totalQN(MPS const& x);
 
-// Re[<psi|phi>]
+// Re[<x|y>]
 template <class MPSType>
 Real 
-overlap(MPSType const& psi, MPSType const& phi);
+overlap(MPSType const& x, MPSType const& y);
 
-// <psi|phi>
+// <x|y>
 template <class MPSType>
 Cplx 
-overlapC(MPSType const& psi, 
-         MPSType const& phi);
+overlapC(MPSType const& x, 
+         MPSType const& y);
 
-// <psi|phi>
+// <x|y>
 template <class MPSType>
 void 
-overlap(MPSType const& psi,
-        MPSType const& phi, 
+overlap(MPSType const& x,
+        MPSType const& y, 
         Real& re, Real& im);
 
-//Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
-//but which differs from psi_basis only on the first site, and has same index
-//structure as psi_basis. Result is stored to psi_to_fit on return.
+//Computes an MPS which has the same overlap with x_basis as x_to_fit,
+//but which differs from x_basis only on the first site, and has same index
+//structure as x_basis. Result is stored to x_to_fit on return.
 void 
-fitWF(MPS const& psi_basis, MPS & psi_to_fit);
+fitWF(MPS const& x_basis, MPS & x_to_fit);
 
 template <class MPSType>
 MPSType

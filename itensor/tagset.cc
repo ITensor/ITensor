@@ -26,25 +26,6 @@ setPrime(TagSet ts, int plev)
     return ts;
     }
 
-std::string TagSet::
-toString() const
-    {
-    std::string str = "";
-    for(auto i : range(size_))
-        {
-        str += std::string(tags_[i]);
-        if( i < size_-1 ) str += ",";
-        }
-    if( primelevel_ >= 0 ) str += "," + std::to_string(primelevel_);
-    return str;
-    }
-
-std::string
-toString(TagSet const& ts)
-    {
-    return ts.toString();
-    }
-
 bool
 operator==(TagSet const& t1, TagSet const& t2)
     {

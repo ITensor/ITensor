@@ -112,6 +112,12 @@ operator*(MPO W, Cplx z) { return W *= z; }
 MPO
 operator*(Cplx z, MPO W) { return W *= z; }
 
+int
+length(MPO const& W)
+    {
+    return W.length();
+    }
+
 bool
 isOrtho(MPO const& W)
     {
@@ -137,6 +143,19 @@ Index
 siteIndex(MPO const& W, MPS const& A, int b)
     {
     return uniqueIndex(W(b),{W(b-1),W(b+1),A(b)});
+    }
+
+IndexSet
+siteInds(MPO const& A, MPS const& x)
+    {
+    auto N = length(x);
+    auto inds = IndexSetBuilder(N);
+    for( auto n : range1(N) )
+      {
+      auto s = siteIndex(A,x,n);
+      inds.nextIndex(std::move(s));
+      }
+    return inds.build();
     }
 
 // Get the site Indices of the MPO A*B 

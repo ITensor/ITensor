@@ -103,8 +103,13 @@ class IndexSet : public RangeT<Index>
     size_type
     stride(size_type i) const { return parent::stride(i); }
 
+    // Get the number of indices
     long
     order() const { return parent::order(); }
+ 
+    // Get the number of indices (alternative)
+    long
+    length() const { return this->order(); }
     
     // 0-indexed access
     Index &
@@ -432,6 +437,12 @@ rangeEnd(IndexSet const& is) -> decltype(is.range().end())
     {
     return is.range().end();
     }
+
+long
+order(IndexSet const& is);
+
+long
+length(IndexSet const& is);
 
 IndexSet
 dag(IndexSet is);

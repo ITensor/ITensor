@@ -295,4 +295,53 @@ SECTION("Overlap - 1 site")
     CHECK_CLOSE(overlap(psi,psi),elt(dag(psi(1))*psi(1)));
     }
 
+SECTION("siteInds")
+    {
+    auto N = 10;
+    auto sites = SpinHalf(10);
+    auto initstate = InitState(sites,"Up");
+    auto psi = randomMPS(initstate);
+
+    CHECK(checkTags(psi));
+
+    auto s = siteInds(psi);
+
+    for( auto n : range1(N) )
+      {
+      CHECK( siteIndex(psi,n)==s(n) );
+      CHECK( sites(n)==s(n) );
+      }
+    }
+
+SECTION("replaceSiteInds")
+    {
+    auto N = 10;
+
+    auto sites1 = SpinHalf(N);
+    auto initstate1 = InitState(sites1,"Up");
+    auto psi1 = randomMPS(initstate1);
+    psi1.position(1);
+    psi1 /= norm(psi1);
+
+    CHECK(checkTags(psi1));
+
+    auto sites2 = SpinHalf(N);
+    auto initstate2 = InitState(sites2,"Up");
+    auto psi2 = randomMPS(initstate2);
+    psi2.position(1);
+    psi2 /= norm(psi2);
+    psi2.replaceTags("Site","MySite");
+
+    CHECK(checkTags(psi2,"MySite","Link"));
+
+    auto s1 = siteInds(psi1);
+    auto s2 = siteInds(psi2);
+
+    auto psi1_new = replaceSiteInds(psi1,s2);
+
+    CHECK(checkTags(psi1_new,"MySite","Link"));
+    for( auto n : range1(N) )
+      CHECK( siteIndex(psi1_new,n)==siteIndex(psi2,n) );
+    }
+
 }

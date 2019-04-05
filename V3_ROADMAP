@@ -2,7 +2,13 @@
 
 # Library code:
 ! Add tests for tag and prime functions on ITensor, MPS, MPO
+! MPS/MPO functions with tags:
+  ! Make nmultMPO tag-friendly
+  ! Make overlap -> inner, make new overlap function tag-friendly
+  ! Make DMRG tag-friendly
+  ! Make applyExpH tag-friendly
 ! Make a version of DMRG/IDMRG that is not in-place
+  -> How do we do the output? `auto [psi,E] = dmrg(H,psi0,args)`
 ! In SVD, if "LeftTags" is defined but "RightTags" is not, make RightTags = prime(LeftTags) and vice versa
 ! Make Args directly accept TagSet, not just string convertable to TagSet
 o Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
@@ -152,6 +158,8 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - MPS operations:
 
+  o Add `siteInds(MPS) -> IndexSet` to get an ordered IndexSet of the site indices
+  o Add `replaceSiteInds(MPS,IndexSet) -> MPS` to make a new MPS with site indices replaces by those in the IndexSet
   o `.position(int)`, `.orthogonalize()`, and `.svdBond()` accept inputs with any tag convention and keep the proper tags of
     the input MPS/MPO
   o Added `addTags(MPS,...)`, `replaceTags(MPS,...)`, `prime(MPS,...)`, etc.

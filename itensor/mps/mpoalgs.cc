@@ -126,8 +126,7 @@ nmultMPO(MPO const& Aorig,
 //    auto liB = linkIndex(B,1);
 //    auto center = A(1) * B(1); 
 //
-//    std::string tagsC;
-//    tagsC = toString(tags(liA));
+//    auto tagsC = tags(liA);
 //
 //    ITensor nfork;
 //    Index liC;
@@ -142,7 +141,7 @@ nmultMPO(MPO const& Aorig,
 //        liB = linkIndex(B,i);
 //
 //        center = nfork * A(i) * B(i); 
-//        tagsC = toString(tags(liA));
+//        tagsC = tags(liA);
 //        std::tie(C.ref(i),nfork,liC) = denmatDecomp(center,{siA,siB,liC},{liA,liB},Fromleft,{args,"Tags=",tagsC});
 //        }
 //    C.ref(N) = nfork * A(N) * B(N);
@@ -184,7 +183,7 @@ applyMPO(MPO const& K,
 
     auto method = args.getString("Method","DensityMatrix");
 
-    MPS res = x;
+    MPS res;
     if(method == "DensityMatrix")
         {
         res = densityMatrixApplyMPOImpl(K,x,args);
@@ -194,7 +193,10 @@ applyMPO(MPO const& K,
         // Use the input MPS x to be applied as the
         // default starting state
         // TODO: consider using zipUpApplyMPOImpl as 
-        // a crude way to get a better starting state
+        // a way to get a better starting state
+        auto sites = siteInds(K,x);
+        res = replaceSiteInds(x,sites);
+        //res = x;
         fitApplyMPOImpl(x,K,res,args);
         }
     else
@@ -258,18 +260,18 @@ densityMatrixApplyMPOImpl(MPO const& K,
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
-    //auto siteTags = getTagSet(args,"SiteTags","Site");
-    //auto linkTags = getTagSet(args,"LinkTags","Link");
-
-    if( commonIndex(K(1),psi(1)) != siteIndex(psi,1) )
-        Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
-
-    auto plev = 14741;
-    //auto plevtag = format("%d",plev);
-
-    auto res = psi;
 
     auto N = length(psi);
+
+    for( auto n : range1(N) )
+      {
+      if( commonIndex(psi(n),K(n)) != siteIndex(psi,n) )
+          Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
+      }
+
+    auto plev = 14741;
+
+    auto res = psi;
 
     //Set up conjugate psi and K
     auto psic = psi;
@@ -284,28 +286,28 @@ densityMatrixApplyMPOImpl(MPO const& K,
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
     auto E = std::vector<ITensor>(N+1);
-    E.at(1) = psi(1)*K(1)*Kc(1)*psic(1);
+    E[1] = psi(1)*K(1)*Kc(1)*psic(1);
     for(int j = 2; j < N; ++j)
         {
-        E.at(j) = E.at(j-1)*psi(j)*K(j)*Kc(j)*psic(j);
+        E[j] = E[j-1]*psi(j)*K(j)*Kc(j)*psic(j);
         //assert(order(E[j])==4);
         }
     if(verbose) println("done");
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi(N)*K(N);
-    O.noPrime(siteIndex(K,psi,N));
 
-    auto rho = E.at(N-1) * O * dag(prime(O,plev));
+    auto rho = E[N-1] * O * dag(prime(O,plev));
+
     ITensor U,D;
-    dargs.add("Tags=",format("Link,l=%d",N-1));
-    auto spec = diagHermitian(rho,U,D,dargs);
+    auto ts = tags(linkIndex(psi,N-1));
+    auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
+
     if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
 
     res.ref(N) = dag(U);
 
     O = O*U*psi(N-1)*K(N-1);
-    O.noPrime(siteIndex(K,psi,N-1));
 
     for(int j = N-1; j > 1; --j)
         {
@@ -314,18 +316,16 @@ densityMatrixApplyMPOImpl(MPO const& K,
             //Infer maxdim from bond dim of original MPS
             //times bond dim of MPO
             //i.e. upper bound on order of rho
-            auto cip = commonIndex(psi(j),E.at(j-1));
-            auto ciw = commonIndex(K(j),E.at(j-1));
+            auto cip = commonIndex(psi(j),E[j-1]);
+            auto ciw = commonIndex(K(j),E[j-1]);
             auto maxdim = (cip) ? dim(cip) : 1l;
             maxdim *= (ciw) ? dim(ciw) : 1l;
             dargs.add("MaxDim",maxdim);
             }
-        rho = E.at(j-1) * O * dag(prime(O,plev));
-        //TODO: make sure this tag convention is working
-        dargs.add("Tags=",format("Link,l=%d",j-1));
-        auto spec = diagHermitian(rho,U,D,dargs);
+        rho = E[j-1] * O * dag(prime(O,plev));
+        ts = tags(linkIndex(psi,j-1));
+        auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
         O = O*U*psi(j-1)*K(j-1);
-        O.noPrime(siteIndex(K,psi,j-1));
         res.ref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
         }
@@ -340,24 +340,28 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
 void
 fitApplyMPOImpl(Real fac,
-                MPS const& psi,
+                MPS const& x,
                 MPO const& K,
-                MPS& res,
+                MPS& Kx,
                 Sweeps const& sweeps,
                 Args args)
     {
-    auto N = length(psi);
+    auto N = length(x);
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
 
-    res.position(1);
+    for( auto n : range1(N) )
+        if( siteIndex(Kx,n)!=siteIndex(K,x,n) )
+            Error("In applyMPO with Method=Fit, guess MPS must have the same sites that the result of MPO*MPS would have");
 
-    auto BK = vector<ITensor>(N+2);
-    BK.at(N) = psi(N)*K(N)*dag(prime(res(N)));
+    auto rand_plev = 43154353;
+    Kx.dag().primeLinks(rand_plev);
+    Kx.position(1);
+
+    auto E = vector<ITensor>(N+2);
+    E[N] = x(N)*K(N)*Kx(N);
     for(auto n = N-1; n > 2; --n)
-        {
-        BK.at(n) = BK.at(n+1)*psi(n)*K(n)*dag(prime(res(n)));
-        }
+        E[n] = E[n+1]*x(n)*K(n)*Kx(n);
 
     for(auto sw : range1(sweeps.nsweep()))
         {
@@ -370,43 +374,36 @@ fitApplyMPOImpl(Real fac,
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
             if(verbose)
-                {
                 printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
-                }
 
-            //TODO: does this tag the correct bond, independent of the sweep direction?
-            args.add("Tags",format("Link,l=%d",b));
-
-            auto lwfK = (BK.at(b-1) ? BK.at(b-1)*psi(b) : psi(b));
+            auto lwfK = (E[b-1] ? E[b-1]*x(b) : x(b));
             lwfK *= K(b);
-            auto rwfK = (BK.at(b+2) ? BK.at(b+2)*psi(b+1) : psi(b+1));
+            auto rwfK = (E[b+2] ? E[b+2]*x(b+1) : x(b+1));
             rwfK *= K(b+1);
 
             auto wfK = lwfK*rwfK;
-            wfK.noPrime();
             wfK *= fac;
 
             if(normalize) wfK /= norm(wfK);
-            auto PH = LocalOp(K(b),K(b+1),BK.at(b-1),BK.at(b+2));
-            auto spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
+            auto PH = LocalOp(K(b),K(b+1),E[b-1],E[b+2]);
+
+            wfK.dag();
+            auto spec = Kx.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
  
             if(verbose)
                 {
                 printfln("    Trunc. err=%.1E, States kept=%s",
                          spec.truncerr(),
-                         showDim(linkIndex(res,b)) );
+                         showDim(linkIndex(Kx,b)) );
                 }
 
             if(ha == 1)
-                {
-                BK.at(b) = lwfK * dag(prime(res(b)));
-                }
+                E[b] = lwfK * Kx(b);
             else
-                {
-                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
-                }
+                E[b+1] = rwfK * Kx(b+1);
             }
         }
+    Kx.dag().primeLinks(-rand_plev);
     }
 
 void
@@ -674,14 +671,14 @@ applyExpH(MPS const& psi,
 //    res.position(1);
 //
 //    vector<ITensor> B(N+2),
-//                   BK(N+2);
+//                   E(N+2);
 //
 //    B.at(N) = psiA(N)*dag(prime(res(N),"Link"));
-//    BK.at(N) = psiB(N)*K(N)*dag(prime(res(N)));
+//    E.at(N) = psiB(N)*K(N)*dag(prime(res(N)));
 //    for(int n = N-1; n > 2; --n)
 //        {
 //        B.at(n) = B.at(n+1)*psiA(n)*dag(prime(res(n),"Link"));
-//        BK.at(n) = BK.at(n+1)*psiB(n)*K(n)*dag(prime(res(n)));
+//        E.at(n) = E.at(n+1)*psiB(n)*K(n)*dag(prime(res(n)));
 //        }
 //
 //
@@ -692,9 +689,9 @@ applyExpH(MPS const& psi,
 //            ITensor lwf = (B.at(b-1) ? B.at(b-1)*psiA(b) : psiA(b));
 //            ITensor rwf = (B.at(b+2) ? psiA(b+1)*B.at(b+2) : psiA(b+1));
 //
-//            ITensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB(b) : psiB(b));
+//            ITensor lwfK = (E.at(b-1) ? E.at(b-1)*psiB(b) : psiB(b));
 //            lwfK *= K(b);
-//            ITensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB(b+1) : psiB(b+1));
+//            ITensor rwfK = (E.at(b+2) ? E.at(b+2)*psiB(b+1) : psiB(b+1));
 //            rwfK *= K(b+1);
 //
 //            ITensor wf = mpsfac*noPrime(lwf*rwf) + mpofac*noPrime(lwfK*rwfK);
@@ -705,12 +702,12 @@ applyExpH(MPS const& psi,
 //            if(ha == 1)
 //                {
 //                B.at(b) = lwf * dag(prime(res(b),"Link"));
-//                BK.at(b) = lwfK * dag(prime(res(b)));
+//                E.at(b) = lwfK * dag(prime(res(b)));
 //                }
 //            else
 //                {
 //                B.at(b+1) = rwf * dag(prime(res(b+1),"Link"));
-//                BK.at(b+1) = rwfK * dag(prime(res(b+1)));
+//                E.at(b+1) = rwfK * dag(prime(res(b+1)));
 //                }
 //            }
 //        }

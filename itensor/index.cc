@@ -359,7 +359,7 @@ add(Args            & args,
     Args::Name const& name, 
     TagSet     const& ts) 
     { 
-    args.add(name,toString(ts)); 
+    args.add(name,ts); 
     }
 
 TagSet

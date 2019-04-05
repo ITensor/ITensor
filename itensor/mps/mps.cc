@@ -137,6 +137,36 @@ normalize()
     return nrm;
     }
 
+MPS&
+operator*=(MPS & x, Real a) { x.ref(x.leftLim()+1) *= a; return x; }
+
+MPS&
+operator/=(MPS & x, Real a) { x.ref(x.leftLim()+1) /= a; return x; }
+
+MPS
+operator*(MPS x, Real r) { x *= r; return x; }
+
+MPS
+operator*(Real r, MPS x) { x *= r; return x; }
+
+MPS&
+operator*=(MPS & x, Cplx z) { x.ref(x.leftLim()+1) *= z; return x; }
+
+MPS&
+operator/=(MPS & x, Cplx z) { x.ref(x.leftLim()+1) /= z; return x; }
+
+MPS
+operator*(MPS x, Cplx z) { x *= z; return x; }
+
+MPS
+operator*(Cplx z, MPS x) { x *= z; return x; }
+
+int
+length(MPS const& W)
+    {
+    return W.length();
+    }
+
 MPS
 randomMPS(SiteSet const& sites, int m, Args const& args)
     {
@@ -192,6 +222,14 @@ ref(int i)
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
     return A_.at(i); 
+    }
+
+ITensor& MPS::
+uref(int i)
+    {
+    if(do_write_)
+        Error("replaceTags not supported if doWrite(true)");
+    return A_.at(i);
     }
 
 // Deprecated
@@ -530,7 +568,7 @@ position(int i, Args args)
             setBond(l_orth_lim_+1);
             auto WF = operator()(l_orth_lim_+1) * operator()(l_orth_lim_+2);
             auto original_link_tags = tags(linkIndex(*this,l_orth_lim_+1));
-            svdBond(l_orth_lim_+1,WF,Fromleft,{args,"LeftTags=",toString(original_link_tags)});
+            svdBond(l_orth_lim_+1,WF,Fromleft,{args,"LeftTags=",original_link_tags});
             }
         while(r_orth_lim_ > i+1)
             {
@@ -538,7 +576,7 @@ position(int i, Args args)
             setBond(r_orth_lim_-2);
             auto WF = operator()(r_orth_lim_-2) * operator()(r_orth_lim_-1);
             auto original_link_tags = tags(linkIndex(*this,r_orth_lim_-2));
-            svdBond(r_orth_lim_-2,WF,Fromright,{args,"RightTags=",toString(original_link_tags)});
+            svdBond(r_orth_lim_-2,WF,Fromright,{args,"RightTags=",original_link_tags});
             }
         }
     else //use orthMPS
@@ -554,7 +592,7 @@ position(int i, Args args)
             // Store the original tags for link b so that it can
             // be put back onto the newly introduced link index
             auto original_link_tags = tags(linkIndex(*this,b));
-            orthMPS(ref(b),ref(b+1),Fromleft,{args,"LeftTags=",toString(original_link_tags)});
+            orthMPS(ref(b),ref(b+1),Fromleft,{args,"LeftTags=",original_link_tags});
 
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
@@ -570,7 +608,7 @@ position(int i, Args args)
             // Store the original tags for link b so that it can
             // be put back onto the newly introduced link index
             auto original_link_tags = tags(linkIndex(*this,b));
-            orthMPS(ref(b),ref(b+1),Fromright,{args,"LeftTags=",toString(original_link_tags)});
+            orthMPS(ref(b),ref(b+1),Fromright,{args,"LeftTags=",original_link_tags});
 
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
@@ -620,7 +658,7 @@ orthogonalize(Args args)
     auto rho = E[N-1] * psi(N) * itensor::prime(psic(N),rand_plev,siteInds(psic,N));
 
     auto original_tags = tags(linkIndex(psi,N-1));
-    auto [U,D,lj] = diagHermitian(rho,{dargs,"Tags=",toString(original_tags)});
+    auto [U,D,lj] = diagHermitian(rho,{dargs,"Tags=",original_tags});
 
     //O is partial overlap of previous and new MPS
     auto O = U * psi(N) * psi(N-1);
@@ -638,7 +676,7 @@ orthogonalize(Args args)
             }
         rho = E.at(j-1) * O * itensor::dag(itensor::prime(O,rand_plev));
         original_tags = tags(linkIndex(psi,j-1));
-        std::tie(U,D,lj) = diagHermitian(rho,{dargs,"Tags=",toString(original_tags)});
+        std::tie(U,D,lj) = diagHermitian(rho,{dargs,"Tags=",original_tags});
         O *= U;
         O *= psi(j-1);
         psi.ref(j) = itensor::dag(U);
@@ -841,6 +879,34 @@ noPrime(MPS A, IndexSet const& is)
     {
     A.noPrime(is);
     return A;
+    }
+
+IndexSet
+siteInds(MPS const& x)
+    {
+    auto N = length(x);
+    auto inds = IndexSetBuilder(N);
+    for( auto n : range1(N) )
+      {
+      auto s = siteIndex(x,n);
+      inds.nextIndex(std::move(s));
+      }
+    return inds.build();
+    }
+
+MPS
+replaceSiteInds(MPS x, IndexSet const& sites)
+    {
+    auto N = length(x);
+    if( length(sites)!=N ) Error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
+    for( auto n : range1(N) )
+      {
+      auto sxn = siteIndex(x,n);
+      auto sn = sites(n);
+      if( dir(sxn)!=dir(sn) ) sn.dag();
+      x.uref(n) *= delta(dag(sxn),sn);
+      }
+    return x;
     }
 
 void InitState::

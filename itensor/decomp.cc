@@ -408,7 +408,7 @@ factor(ITensor const& T,
     //TODO: make a standard TagSet for factor()
     auto itagset = getTagSet(args,"Tags","Link");
     ITensor D;
-    auto spec = svd(T,A,D,B,{args,"LeftTags=",toString(itagset)});
+    auto spec = svd(T,A,D,B,{args,"LeftTags=",itagset});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
     D.apply([](Real x){ return std::sqrt(std::fabs(x)); });

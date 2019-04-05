@@ -40,6 +40,18 @@ dag(IndexSet is)
   return is;
   }
 
+long
+order(IndexSet const& is)
+    {
+    return is.order();
+    }
+
+long
+length(IndexSet const& is)
+    {
+    return order(is);
+    }
+
 IndexSet::iterator IndexSet::
 begin() { return iterator{*this}; }
 

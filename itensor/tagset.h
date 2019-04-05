@@ -57,13 +57,17 @@ class TagSet
     size_t
     size() const {return size_;}
 
-    // Get a comma seperated string of the tags
-    std::string
-    toString() const;
-
-    // Get a comma seperated character array of the tags
-    const char*
-    c_str() { return this->toString().c_str(); }
+    operator std::string () const
+      {
+      std::string str = "";
+      for(auto i : range(size_))
+          {
+          str += std::string(tags_[i]);
+          if( i < size_-1 ) str += ",";
+          }
+      if( primelevel_ >= 0 ) str += "," + std::to_string(primelevel_);
+      return str;
+      }
 
     bool
     hasTags(TagSet const& ts) const;
@@ -103,9 +107,6 @@ primeLevel(TagSet const& ts);
 
 TagSet
 setPrime(TagSet ts, int plev);
-
-std::string
-toString(TagSet const& ts);
 
 bool
 operator==(TagSet const& t1, TagSet const& t2);
