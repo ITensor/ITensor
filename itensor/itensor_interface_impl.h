@@ -734,7 +734,7 @@ ITensorT<I>
 operator*(ITensorT<I> A, ITensorT<I> const& B) { A *= B; return A; }
 template<typename I>
 ITensorT<I>
-operator*(ITensorT<I> const& A, ITensorT<I>&& B) { B *= A; return B; }
+operator*(ITensorT<I> const& A, ITensorT<I>&& B) { B *= A; return std::move(B); }
 template<typename I>
 ITensorT<I> 
 operator*(ITensorT<I> T, Real fac) { T *= fac; return T; }
@@ -759,21 +759,21 @@ ITensorT<I>
 operator+(ITensorT<I> A, const ITensorT<I>& B) { A += B; return A; }
 template<typename I>
 ITensorT<I> 
-operator+(ITensorT<I> const& A, ITensorT<I>&& B) { B += A; return B; }
+operator+(ITensorT<I> const& A, ITensorT<I>&& B) { B += A; return std::move(B); }
 
 template<typename I>
 ITensorT<I> 
 operator-(ITensorT<I> A, const ITensorT<I>& B) { A -= B; return A; }
 template<typename I>
 ITensorT<I> 
-operator-(ITensorT<I> const& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
+operator-(ITensorT<I> const& A, ITensorT<I>&& B) { B -= A; B *= -1; return std::move(B); }
 
 template<typename I>
 ITensorT<I> 
 operator/(ITensorT<I> A, ITensorT<I> const& B) { A /= B; return A; }
 template<typename I>
 ITensorT<I>
-operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return B; }
+operator/(ITensorT<I> const& A, ITensorT<I> && B) { B /= A; return std::move(B); }
 
 
 template<typename IndexT, typename... VarArgs>
