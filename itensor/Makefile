@@ -14,6 +14,7 @@ SOURCES+= tensor/lapack_wrap.cc
 SOURCES+= tensor/vec.cc 
 SOURCES+= tensor/mat.cc 
 SOURCES+= tensor/gemm.cc 
+SOURCES+= tensor/extra-svds.cc
 SOURCES+= tensor/algs.cc 
 SOURCES+= tensor/contract.cc 
 SOURCES+= itdata/dense.cc 
@@ -92,7 +93,7 @@ endif
 endif
 
 touch_all_headers:
-	@touch all.h
+	@touch all.h extra-svds.h
 	@touch all_basic.h
 	@touch all_mps.h
 
@@ -123,7 +124,10 @@ tensor/mat.o: $(GDEPHEADERS)
 .debug_objs/tensor/mat.o: $(GDEPHEADERS)
 tensor/gemm.o: $(GDEPHEADERS)
 .debug_objs/tensor/gemm.o: $(GDEPHEADERS)
-GDEPHEADERS+= tensor/slicemat.h tensor/algs.h tensor/algs_impl.h
+GDEPHEADERS+= tensor/slicemat.h tensor/extra-svds.h
+tensor/extra-svds.o: $(GDEPHEADERS)
+.debug_objs/tensor/extra-svds.o: $(GDEPHEADERS)
+GDEPHEADERS+= tensor/slicemat.h tensor/algs.h tensor/algs_impl.h 
 tensor/algs.o: $(GDEPHEADERS)
 .debug_objs/tensor/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= tensor/permutation.h tensor/slicerange.h tensor/sliceten.h \

@@ -7,6 +7,7 @@
 #include <tuple>
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/tensor/algs.h"
+#include "itensor/tensor/extra-svds.h"
 #include "itensor/util/range.h"
 #include "itensor/global.h"
 
@@ -557,7 +558,8 @@ SVDRefImpl(MatRefc<T> const& M,
     auto d = subVector(D,start,Mr);
     Mat<T> bu(n,n),
            bv(n,n);
-    SVDRef(makeRef(b),makeRef(bu),d,makeRef(bv),thresh);
+    // SVDRef(makeRef(b),makeRef(bu),d,makeRef(bv),thresh);
+    SVDRefImpl(makeRef(b),makeRef(bu),d,makeRef(bv),thresh);
 
     //reuse mv's storage to avoid allocation
     auto W = move(mv);
@@ -580,12 +582,22 @@ SVDRef(MatRefc<T> const& M,
        MatRef<T>  const& U, 
        VectorRef  const& D, 
        MatRef<T>  const& V,
-       Real thresh)
+       Args const& args)
     {
-    SVDRefImpl(M,U,D,V,thresh);
+        auto svd_method = args.getString("SVDMethod","default");
+        if (not args.defined("SVDMethod") || svd_method=="default") {
+            auto thresh = args.getReal("SVDThreshold",1E-3);
+            SVDRefImpl(M,U,D,V,thresh);
+        } 
+        else if (svd_method == "gesdd") {
+            SVD_gesdd_impl(M,U,D,V);
+        }
+        else {
+            throw std::runtime_error("Unsupportes SVD method: "+svd_method);
+        }
     }
-template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,Real);
-template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&,Real);
+template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,Args const& args);
+template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&,Args const& args);
 
 
 

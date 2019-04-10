@@ -349,30 +349,61 @@ dscal_wrapper(LAPACK_INT N,
     }
 
 void 
-zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
+zgesdd_wrapper(char jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
-               LAPACK_INT *m,        //number of rows of input matrix *A
-               LAPACK_INT *n,        //number of cols of input matrix *A
-               LAPACK_COMPLEX *A,    //contents of input matrix A
+               LAPACK_INT m,        //number of rows of input matrix *A
+               LAPACK_INT n,        //number of cols of input matrix *A
+               Cplx *A,    //contents of input matrix A
                LAPACK_REAL *s,       //on return, singular values of A
-               LAPACK_COMPLEX *u,    //on return, unitary matrix U
-               LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
+               Cplx *u,    //on return, unitary matrix U
+               Cplx *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
+    // auto ncA = const_cast<Cplx*>(A); 
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
+    auto pU = reinterpret_cast<LAPACK_COMPLEX*>(u);
+    auto pVt = reinterpret_cast<LAPACK_COMPLEX*>(vt);
     std::vector<LAPACK_COMPLEX> work;
     std::vector<LAPACK_REAL> rwork;
     std::vector<LAPACK_INT> iwork;
-    LAPACK_INT l = std::min(*m,*n),
-               g = std::max(*m,*n);
+    LAPACK_INT l = std::min(m,n),
+               g = std::max(m,n);
     LAPACK_INT lwork = l*l+2*l+g+100;
     work.resize(lwork);
     rwork.resize(5*l*(1+l));
     iwork.resize(8*l);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
+    F77NAME(zgesdd)(&jobz,&m,&n,pA,&m,s,pU,&m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
 #else
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work.data(),&lwork,rwork.data(),iwork.data(),info);
+    F77NAME(zgesdd)(&jobz,&m,&n,pA,&m,s,pU,&m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info);
+#endif
+    }
+
+void 
+dgesdd_wrapper(char jobz,           //char* specifying how much of U, V to compute
+                                    //choosing *jobz=='S' computes min(m,n) cols of U, V
+               LAPACK_INT m,        //number of rows of input matrix *A
+               LAPACK_INT n,        //number of cols of input matrix *A
+               LAPACK_REAL *A,      //contents of input matrix A
+               LAPACK_REAL *s,      //on return, singular values of A
+               LAPACK_REAL *u,           //on return, unitary matrix U
+               LAPACK_REAL *vt,          //on return, unitary matrix V transpose
+               LAPACK_INT *info)
+    {
+    auto pA = reinterpret_cast<LAPACK_REAL*>(A);
+    std::vector<LAPACK_REAL> work;
+    std::vector<LAPACK_INT> iwork;
+    LAPACK_INT l = std::min(m,n),
+               g = std::max(m,n);
+    LAPACK_INT lwork = l*(6 + 4*l) + g;
+    work.resize(lwork);
+    iwork.resize(8*l);
+#ifdef PLATFORM_acml
+    LAPACK_INT jobz_len = 1;
+    F77NAME(dgesdd)(&jobz,&m,&n,pA,&m,s,u,&m,vt,&l,work.data(),&lwork,iwork.data(),info,jobz_len);
+#else
+    F77NAME(dgesdd)(&jobz,&m,&n,pA,&m,s,u,&m,vt,&l,work.data(),&lwork,iwork.data(),info);
 #endif
     }
 

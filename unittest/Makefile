@@ -24,6 +24,7 @@ SOURCES+= qn_test.cc
 SOURCES+= iqindex_test.cc
 SOURCES+= iqtensor_test.cc
 SOURCES+= decomp_test.cc
+SOURCES+= extra-svds_test.cc
 SOURCES+= mps_test.cc
 SOURCES+= mpo_test.cc
 SOURCES+= autompo_test.cc

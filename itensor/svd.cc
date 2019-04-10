@@ -58,7 +58,7 @@ svdImpl(ITensor const& A,
     Vector DD;
 
     TIMER_START(6)
-    SVD(M,UU,DD,VV,thresh);
+    SVD(M,UU,DD,VV,args);
     TIMER_STOP(6)
 
     //conjugate VV so later we can just do
@@ -210,7 +210,7 @@ svdImpl(IQTensor A,
         auto& VV = Vmats.at(b);
         auto& d =  dvecs.at(b);
 
-        SVD(M,UU,d,VV,thresh);
+        SVD(M,UU,d,VV,args);
 
         //conjugate VV so later we can just do
         //U*D*V to reconstruct ITensor A:
