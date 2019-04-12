@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
     auto psi = MPS(state);
 
-    printfln("Initial energy = %.5f",overlap(psi,H,psi));
+    printfln("Initial energy = %.5f",inner(psi,H,psi));
 
     auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
 

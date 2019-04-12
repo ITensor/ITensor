@@ -16,9 +16,9 @@ TEST_CASE("MPOTest")
 
 SECTION("Orthogonalize")
     {
-    auto N = 10;
+    auto N = 20;
     auto d = 4;
-    auto sites = SpinHalf(10,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
     auto W = MPO(N);
 
     //Make a random MPO of bond dim. m
@@ -35,14 +35,14 @@ SECTION("Orthogonalize")
     CHECK(checkTags(W,"MySite,bra","MySite,ket","MyLink"));
 
     //Normalize W
-    auto n2 = overlap(W,W);
+    auto n2 = trace(dag(W),W);
     W.ref(1) /= sqrt(n2);
 
     auto oW = W;
 
     oW.orthogonalize();
 
-    CHECK_CLOSE(overlap(oW,W),1.0);
+    CHECK_CLOSE(trace(dag(oW),W),1.0);
     CHECK(checkOrtho(oW));
     }
 
@@ -96,12 +96,12 @@ SECTION("Add MPOs")
     // Check C gets the tags of A
     CHECK(checkTags(C,"Site,0","Site,1","Link,I1"));
 
-    auto AA = overlapC(A,A);
-    auto AB = overlapC(A,B);
-    auto AC = overlapC(A,C);
-    auto BB = overlapC(B,B);
-    auto BC = overlapC(B,C);
-    auto CC = overlapC(C,C);
+    auto AA = traceC(dag(A),A);
+    auto AB = traceC(dag(A),B);
+    auto AC = traceC(dag(A),C);
+    auto BB = traceC(dag(B),B);
+    auto BC = traceC(dag(B),C);
+    auto CC = traceC(dag(C),C);
 
     // |(A+B)-C|^2 = (A+B-C)*(A+B-C) = A*A+2A*B-2A*C+B*B-2B*C+C*C
 
@@ -132,10 +132,12 @@ SECTION("applyMPO (DensityMatrix)")
     {
     auto method = "DensityMatrix";
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
-
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
 
     CHECK(checkTags(psi));
@@ -147,7 +149,8 @@ SECTION("applyMPO (DensityMatrix)")
     CHECK(checkTags(K));
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",200});
+
     psi /= norm(psi);
 
     CHECK(checkTags(psi,"Site,1","Link,0"));
@@ -156,13 +159,9 @@ SECTION("applyMPO (DensityMatrix)")
 
     CHECK(checkTags(psi));
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",200});
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
-
-    Hpsi.noPrime("Site");
-
-    CHECK(checkTags(Hpsi));
 
     CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
     }
@@ -171,10 +170,12 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
     {
     auto method = "DensityMatrix";
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
-
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
 
     CHECK(checkTags(psi));
@@ -214,7 +215,7 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
 
     CHECK(checkTags(psi,"MySite,bra","MyLink,psi"));
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",200});
 
     CHECK(checkTags(Hpsi,"MySite,ket","MyLink,psi"));
 
@@ -222,8 +223,8 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
 
     CHECK(checkTags(Hpsi,"MySite,ket","MyLink,Hpsi"));
 
-    auto psik = psi;
-    psik.dag().replaceTags("bra","ket").addTags("ket","MyLink");
+    auto psik = dag(psi);
+    psik.replaceTags("bra","ket").addTags("ket","MyLink");
 
     CHECK(checkTags(psik,"MySite,ket","MyLink,psi,ket"));
 
@@ -231,24 +232,26 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
     auto O2 = Hpsi(1)*psik(1);
     for( auto n : range1(2,N) )
       {
-      O1 *= psi(n)*H(n)*psik(n);
-      O2 *= Hpsi(n)*psik(n);
+      O1 = O1*psi(n)*H(n)*psik(n);
+      O2 = O2*Hpsi(n)*psik(n);
       }
 
     CHECK_CLOSE(norm(O1-O2),0);
 
-    //TODO: make this work with arbitrary tags:
-    //CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
     }
 
 SECTION("applyMPO (Fit)")
     {
     auto method = "Fit";
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
 
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
 
     CHECK(checkTags(psi));
@@ -260,7 +263,8 @@ SECTION("applyMPO (Fit)")
     CHECK(checkTags(K));
 
     // Apply K to psi to entangle psi
-    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",100});
+    auto maxdim = 200;
+    psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",maxdim});
     psi /= norm(psi);
 
     CHECK(checkTags(psi,"Site,1","Link,0"));
@@ -269,26 +273,35 @@ SECTION("applyMPO (Fit)")
 
     CHECK(checkTags(psi));
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
+    CHECK( maxLinkDim(psi) <= maxdim );
+
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",maxdim,"Nsweep=",10});
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
-    CHECK(checkMPOProd(noPrime(Hpsi,"Site"),H,psi,1E-10));
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+
+    CHECK( maxLinkDim(Hpsi) <= maxdim );
 
     // Now with a trial starting state
-    Hpsi = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000,"Nsweep=",100});
+    Hpsi = applyMPO(H,psi,Hpsi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",maxdim,"Nsweep=",5});
+
+    CHECK( maxLinkDim(Hpsi) <= maxdim );
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
-    CHECK(checkMPOProd(noPrime(Hpsi,"Site"),H,psi,1E-10));
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
     }
 
 SECTION("errorMPOProd Scaling")
     {
     auto method = "DensityMatrix";
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
 
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
     auto H = randomMPO(sites,{"Complex=",true});
     auto K = randomMPO(sites,{"Complex=",true});
@@ -307,10 +320,9 @@ SECTION("errorMPOProd Scaling")
 
     CHECK(checkTags(psi));
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
-    Hpsi.noPrime("Site");
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",200});
 
-    CHECK(checkTags(Hpsi));
+    CHECK(checkTags(Hpsi,"Site,1","Link,0"));
 
     //<Hpsi|Hpsi> is ~ 1E20, but normalization should take care of that
     CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.);
@@ -320,10 +332,13 @@ SECTION("applyMPO (Fit) with custom tags")
     {
     auto method = "Fit";
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
 
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
 
     CHECK(checkTags(psi));
@@ -363,7 +378,7 @@ SECTION("applyMPO (Fit) with custom tags")
 
     CHECK(checkTags(psi,"MySite,bra","MyLink,psi"));
 
-    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",5000});
+    auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",200});
 
     CHECK(checkTags(Hpsi,"MySite,ket","MyLink,psi"));
 
@@ -371,8 +386,8 @@ SECTION("applyMPO (Fit) with custom tags")
 
     CHECK(checkTags(Hpsi,"MySite,ket","MyLink,Hpsi"));
 
-    auto psik = psi;
-    psik.dag().replaceTags("bra","ket").addTags("ket","MyLink");
+    auto psik = dag(psi);
+    psik.replaceTags("bra","ket").addTags("ket","MyLink");
 
     CHECK(checkTags(psik,"MySite,ket","MyLink,psi,ket"));
 
@@ -380,24 +395,26 @@ SECTION("applyMPO (Fit) with custom tags")
     auto O2 = Hpsi(1)*psik(1);
     for( auto n : range1(2,N) )
       {
-      O1 *= psi(n)*H(n)*psik(n);
-      O2 *= Hpsi(n)*psik(n);
+      O1 = O1*psi(n)*H(n)*psik(n);
+      O2 = O2*Hpsi(n)*psik(n);
       }
 
     CHECK_CLOSE(norm(O1-O2),0);
 
-    //TODO: make this check work with arbitrary tags
-    //CHECK_EQUAL(checkMPOProd(Hpsi,H,psi,1E-10),true);
+    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
     }
 
-SECTION("Overlap <psi|HK|phi>")
+SECTION("Inner <Hpsi|Kphi> and <psi|H^{d}K|phi>")
     {
     detail::seed_quickran(1);
 
-    auto N = 10;
+    auto N = 20;
     auto sites = SpinHalf(N);
 
     auto initstate = InitState(sites,"Up");
+    for( auto j : range1(N) ) if( j%2 == 1 )
+      initstate.set(j,"Dn");
+
     auto psi = randomMPS(initstate,{"Complex=",true});
     auto phi = randomMPS(initstate,{"Complex=",true});
     auto H = randomMPO(sites,{"Complex=",true});
@@ -406,21 +423,19 @@ SECTION("Overlap <psi|HK|phi>")
     CHECK(checkTags(H));
     CHECK(checkTags(K));
 
-    auto Hd = H;
-    for(auto j : range1(N))
-        {
-        auto s = siteInds(Hd,j);
-        Hd.ref(j) = dag(swapInds(H(j),{s(1)},{s(2)}));
-        }
+    auto Hphi = applyMPO(H,phi,{"Cutoff=",1E-13,"MaxDim=",200,"Method=","DensityMatrix"});
+    auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"MaxDim=",200,"Method=","DensityMatrix"});
 
-    auto Hdphi = applyMPO(Hd,phi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
-    Hdphi.noPrime("Site");
-    auto Kpsi = applyMPO(K,psi,{"Cutoff=",1E-13,"MaxDim=",5000,"Method=","DensityMatrix"});
-    Kpsi.noPrime("Site");
+    CHECK(checkTags(Hphi,"Site,1","Link,0"));
+    CHECK(checkTags(Kpsi,"Site,1","Link,0"));
 
-    CHECK(checkTags(Hdphi));
-    CHECK(checkTags(Kpsi));
-    CHECK_CLOSE(overlapC(phi,H,K,psi),overlapC(Hdphi,Kpsi));
+    // Check inner(A,x,B,y) = <Ax|By>
+    CHECK_CLOSE(innerC(H,phi,K,psi),innerC(Hphi,Kpsi));
+    CHECK_CLOSE(innerC(Hphi,K,psi),innerC(Hphi,Kpsi));
+
+    // Check inner(x,A,B,y) = <x|AB|y>
+    CHECK_CLOSE(innerC(phi,dag(H),K,psi),innerC(Hphi,Kpsi));
+    CHECK_CLOSE(innerC(phi,dag(H),Kpsi),innerC(Hphi,Kpsi));
     }
 
 SECTION("Remove QNs from MPO")
@@ -482,13 +497,18 @@ SECTION("nmultMPO")
   //CHECK(checkTags(C,"Site,0","Site,2","Link,0"));
   //CHECK(checkTags(C));
 
+  // Check the product by calculating the trace
+  CHECK_CLOSE(traceC(prime(A),B),traceC(C));
+
   // Check the product by calculating expectation values
+  auto initstate = InitState(sites,"Up");
+  for( auto j : range1(N) ) if( j%2 == 1 )
+    initstate.set(j,"Dn");
   auto Ncheck = 20;
   for( [[maybe_unused]] auto n : range1(Ncheck) )
     {
-    auto initstate = InitState(sites,"Up");
     auto V = randomMPS(initstate,{"Complex=",true});
-    CHECK_CLOSE(overlapC(V,C,V),overlapC(V,B,A,V));
+    CHECK_CLOSE(innerC(V,C,V),innerC(V,prime(B),A,V));
     }
   }
 
@@ -517,6 +537,9 @@ SECTION("nmultMPO")
 //  CHECK(checkTags(Cr,"x","z","Blink"));
 //
 //  auto initstate = InitState(sites,"Up");
+//  for( auto j : range1(N) ) if( j%2 == 1 )
+//    initstate.set(j,"Dn");
+//
 //  auto V = randomMPS(initstate);
 //  V.replaceTags("Link","Vlink");
 //  V.replaceTags("Site,S=1/2","x");

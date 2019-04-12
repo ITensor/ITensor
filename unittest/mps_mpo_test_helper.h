@@ -47,9 +47,9 @@ checkTags(MPS const& psi,
 Real inline
 diff(MPS const& psi, MPS const& phi)
   {
-  auto norm_psi = overlap(psi,psi);
-  auto norm_phi = overlap(phi,phi);
-  auto psi_phi = overlapC(psi,phi);
+  auto norm_psi = inner(psi,psi);
+  auto norm_phi = inner(phi,phi);
+  auto psi_phi = innerC(psi,phi);
   return std::sqrt(std::abs(norm_psi/norm_phi+1.-2.*real(psi_phi)/norm_phi));
   }
 

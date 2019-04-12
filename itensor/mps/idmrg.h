@@ -238,7 +238,11 @@ idmrg(MPS & psi,
 
         if(olevel >= 1)
             {
-            auto ien = overlap(psi,H,HL,HR,psi);
+            auto E = HL;
+            for( auto n : range1(length(psi)) )
+              E = E*dag(prime(psi(n)))*H(n)*psi(n);
+            E *= HR;
+            auto ien = real(eltC(E));
             printfln("Initial energy = %.20f",ien);
             }
         
@@ -247,8 +251,10 @@ idmrg(MPS & psi,
 
         if(show_overlap || olevel >= 1)
             {
-            Real ovrlap, im;
-            overlap(initPsi,psi,ovrlap,im);
+            auto O = dag(initPsi(1))*psi(1);
+            for( auto n : range1(2,length(psi)) )
+              O = O*dag(initPsi(n))*psi(n);
+            auto ovrlap = real(eltC(O));
             print("\n    Overlap of initial and final psi = ");
             printfln((std::fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),std::fabs(ovrlap));
             print("\n    1-Overlap of initial and final psi = ");

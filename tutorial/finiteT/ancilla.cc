@@ -106,14 +106,14 @@ main(int argc, char* argv[])
         //
         // Measure Energy
         //
-        auto en = overlap(psi,H,psi);
+        auto en = inner(psi,H,psi);
         printfln("\nEnergy/N %.4f %.20f",bb,en/N);
         En(tt-1) = en/N;
 
         //
         // Measure Susceptibility
         //
-        auto s2val = overlap(psi,S2,psi);
+        auto s2val = inner(psi,S2,psi);
         Sus(tt-1) = (s2val*bb/3.)/N;
 
         println();

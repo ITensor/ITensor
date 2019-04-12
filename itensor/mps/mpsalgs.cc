@@ -95,8 +95,10 @@ addAssumeOrth(MPSType      & L,
     if(length(R) != N) Error("Mismatched MPS sizes");
 
     // Make sure there aren't link index clashes between L and R
+    // by priming by a random amount
     auto rand_plev = 1254313;
-    L.primeLinks(rand_plev);
+    auto l = linkInds(L);
+    L.replaceLinkInds(prime(linkInds(L),rand_plev));
 
     auto first = vector<ITensor>(N);
     auto second = vector<ITensor>(N);
@@ -116,11 +118,8 @@ addAssumeOrth(MPSType      & L,
                      + dag(second.at(i-1)) * R(i) * second.at(i);
         }
     L.ref(N) = dag(first.at(N-1)) * L(N) + dag(second.at(N-1)) * R(N);
-
-    L.primeLinks(-rand_plev);
-
+    L.replaceLinkInds(prime(linkInds(L),-rand_plev));
     L.orthogonalize(args);
-
     return L;
     }
 template MPS& addAssumeOrth<MPS>(MPS & L,MPS const& R, Args const& args);
@@ -148,7 +147,7 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     A.noPrime();
 
     auto nrm = norm(A);
-    if(nrm == 0) Error("Zero overlap of psi_to_fit and psi_basis");
+    if(nrm == 0) Error("Zero inner of psi_to_fit and psi_basis");
     A /= nrm;
 
     psi_to_fit = psi_basis;

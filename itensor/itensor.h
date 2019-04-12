@@ -127,6 +127,14 @@ class ITensor
     ITensor&
     randomize(Args const& args = Args::global());
 
+    ITensor&
+    replaceInds(IndexSet const& is1,
+                IndexSet const& is2);
+
+    ITensor&
+    swapInds(IndexSet const& is1,
+             IndexSet const& is2);
+
     //
     // Index Tag Methods
     //

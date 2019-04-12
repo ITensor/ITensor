@@ -12,10 +12,6 @@ namespace itensor {
 // Some forward definitions
 class InitState;
 
-template<typename MPSType>
-Index
-linkIndex(MPSType const& x, int b);
-
 class MPS
     {
     protected:
@@ -102,6 +98,12 @@ class MPS
           A_[i].dag();
       return *this;
       }
+
+    MPS&
+    replaceSiteInds(IndexSet const& sites);
+
+    MPS&
+    replaceLinkInds(IndexSet const& links);
 
     //
     //MPS Index Methods
@@ -261,20 +263,6 @@ class MPS
             Error("prime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].prime(std::forward<VarArgs>(vargs)...);
-        return *this;
-        }
-
-    MPS&
-    primeLinks(int plev = 1)
-        {
-        if(do_write_)
-            Error("primeLinks not supported if doWrite(true)");
-        for( auto n : range1(N_) )
-            {
-            auto l = linkIndex(*this,n);
-            A_[n].prime(plev,l);
-            A_[n+1].prime(plev,l);
-            }
         return *this;
         }
 
@@ -446,10 +434,6 @@ addAssumeOrth(MPSType      & L,
               MPSType const& R, 
               Args const& args = Args::global());
 
-//void 
-//convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
-//            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
-
 MPS& 
 operator*=(MPS & x, Real a);
 
@@ -505,6 +489,9 @@ class InitState
     checkRange(int i) const;
     }; 
 
+MPS
+dag(MPS A);
+
 //
 // MPS tag functions
 //
@@ -527,7 +514,7 @@ noTags(MPS A, IndexSet const& is);
 template<typename... VarArgs>
 MPS
 noTags(MPS A,
-        VarArgs&&... vargs)
+       VarArgs&&... vargs)
     {
     A.noTags(std::forward<VarArgs>(vargs)...);
     return A;
@@ -630,6 +617,10 @@ length(MPS const& W);
 bool
 hasQNs(InitState const& initstate);
 
+template <class MPSType>
+bool
+hasQNs(MPSType const& x);
+
 //Create a random MPS
 MPS
 randomMPS(SiteSet const& sites,
@@ -665,6 +656,9 @@ norm(MPS const& x);
 Real
 normalize(MPS & x);
 
+bool
+hasSiteInds(MPS const& x, IndexSet const& sites);
+
 template <class MPSType>
 IndexSet
 siteInds(MPSType const& W, int b);
@@ -680,21 +674,35 @@ siteIndex(MPS const& x, int j);
 
 template<typename MPSType>
 Index
+leftLinkIndex(MPSType const& x, int b);
+
+template<typename MPSType>
+Index
+rightLinkIndex(MPSType const& x, int b);
+
+template<typename MPSType>
+Index
 linkIndex(MPSType const& x, int b);
 
 template<typename MPSType>
 IndexSet
 linkInds(MPSType const& x, int b);
 
+template<typename MPSType>
+IndexSet
+linkInds(MPSType const& x);
+
+template<typename MPSType>
 Real
-averageLinkDim(MPS const& x);
+averageLinkDim(MPSType const& x);
 
 // Deprecated
 Real
 averageM(MPS const& x);
 
+template<typename MPSType>
 int
-maxLinkDim(MPS const& x);
+maxLinkDim(MPSType const& x);
 
 // Deprecated
 int
@@ -741,22 +749,19 @@ QN
 totalQN(MPS const& x);
 
 // Re[<x|y>]
-template <class MPSType>
 Real 
-overlap(MPSType const& x, MPSType const& y);
+inner(MPS const& x, MPS const& y);
 
 // <x|y>
-template <class MPSType>
 Cplx 
-overlapC(MPSType const& x, 
-         MPSType const& y);
+innerC(MPS const& x, 
+       MPS const& y);
 
 // <x|y>
-template <class MPSType>
 void 
-overlap(MPSType const& x,
-        MPSType const& y, 
-        Real& re, Real& im);
+inner(MPS const& x,
+      MPS const& y, 
+      Real& re, Real& im);
 
 //Computes an MPS which has the same overlap with x_basis as x_to_fit,
 //but which differs from x_basis only on the first site, and has same index
@@ -789,6 +794,25 @@ operator<<(std::ostream& s, MPS const& M);
 
 std::ostream& 
 operator<<(std::ostream& s, InitState const& state);
+
+//
+// Deprecated
+//
+
+template <class MPSType>
+Real 
+overlap(MPSType const& psi, MPSType const& phi);
+
+template <class MPSType>
+Cplx 
+overlapC(MPSType const& psi, 
+         MPSType const& phi);
+
+template <class MPSType>
+void 
+overlap(MPSType const& psi,
+        MPSType const& phi, 
+        Real& re, Real& im);
 
 } //namespace itensor
 

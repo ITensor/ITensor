@@ -76,12 +76,12 @@ SECTION("Hubbard")
         R = Vac;
         L.set(n,"Up");
         R.set(n+1,"Up");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
         L = Vac;
         R = Vac;
         L.set(n,"Dn");
         R.set(n+1,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
         }
     for(int n = 1; n < N; ++n)
         {
@@ -89,12 +89,12 @@ SECTION("Hubbard")
         R = Vac;
         L.set(n+1,"Up");
         R.set(n,"Up");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
         L = Vac;
         R = Vac;
         L.set(n+1,"Dn");
         R.set(n,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
         }
     //
     // Check periodic t1
@@ -103,22 +103,22 @@ SECTION("Hubbard")
     R = Vac;
     L.set(1,"Up");
     R.set(N,"Up");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
     L = Vac;
     R = Vac;
     L.set(N,"Up");
     R.set(1,"Up");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
     L = Vac;
     R = Vac;
     L.set(1,"Dn");
     R.set(N,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
     L = Vac;
     R = Vac;
     L.set(N,"Dn");
     R.set(1,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t1);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t1);
 
     //
     // Check that periodic t1 is fermionic
@@ -132,7 +132,7 @@ SECTION("Hubbard")
     L.set(2,"Up");
     R.set(2,"Up");
     //Should change the sign of resulting matrix element:
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),+t1);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),+t1);
 
     //
     // Check t2
@@ -143,7 +143,7 @@ SECTION("Hubbard")
         R = Vac;
         L.set(n,"Up");
         R.set(n+2,"Up");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
         }
     for(int n = 1; n < N-1; ++n)
         {
@@ -151,7 +151,7 @@ SECTION("Hubbard")
         R = Vac;
         L.set(n+2,"Up");
         R.set(n,"Up");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
         }
     //
     // Check periodic t2
@@ -160,22 +160,22 @@ SECTION("Hubbard")
     R = Vac;
     L.set(2,"Up");
     R.set(N,"Up");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
     L = Vac;
     R = Vac;
     L.set(N,"Up");
     R.set(2,"Up");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
     L = Vac;
     R = Vac;
     L.set(2,"Dn");
     R.set(N,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
     L = Vac;
     R = Vac;
     L.set(N,"Dn");
     R.set(2,"Dn");
-    CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),-t2);
+    CHECK_CLOSE(inner(MPS(L),H,MPS(R)),-t2);
 
     //
     // Check U
@@ -186,7 +186,7 @@ SECTION("Hubbard")
         R = Vac;
         L.set(n,"UpDn");
         R.set(n,"UpDn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),U);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),U);
         }
 
     //
@@ -200,14 +200,14 @@ SECTION("Hubbard")
         L.set(n+1,"Up");
         R.set(n,"Up");
         R.set(n+1,"Up");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),V1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),V1);
         L = Vac;
         R = Vac;
         L.set(n,"Up");
         L.set(n+1,"Dn");
         R.set(n,"Up");
         R.set(n+1,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),V1);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),V1);
         }
 
     }
@@ -234,25 +234,25 @@ SECTION("No QN MPO")
         auto AllUp = InitState(sites,"Up");
         auto L = AllUp;
         auto R = AllUp;
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),N*h/2.);
 
         L = AllUp;
         R = AllUp;
         L.set(1,"Dn");
         R.set(1,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),(N-2)*h/2.);
 
         L = AllUp;
         R = AllUp;
         L.set(1,"Dn");
         L.set(2,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),1./4.);
 
         L = AllUp;
         R = AllUp;
         L.set(3,"Dn");
         R.set(4,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),1./4.);
         }
 
     SECTION("Approx version")
@@ -262,25 +262,25 @@ SECTION("No QN MPO")
         auto AllUp = InitState(sites,"Up");
         auto L = AllUp;
         auto R = AllUp;
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),N*h/2.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),N*h/2.);
 
         L = AllUp;
         R = AllUp;
         L.set(1,"Dn");
         R.set(1,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),(N-2)*h/2.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),(N-2)*h/2.);
 
         L = AllUp;
         R = AllUp;
         L.set(1,"Dn");
         L.set(2,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),1./4.);
 
         L = AllUp;
         R = AllUp;
         L.set(3,"Dn");
         R.set(4,"Dn");
-        CHECK_CLOSE(overlap(MPS(L),H,MPS(R)),1./4.);
+        CHECK_CLOSE(inner(MPS(L),H,MPS(R)),1./4.);
         }
     }
 
@@ -300,7 +300,7 @@ SECTION("Single Site Ops")
             auto state = InitState(sites,"Emp");
             state.set(i,"Up");
             auto psi = MPS(state);
-            auto x = overlap(psi,Op,psi);
+            auto x = inner(psi,Op,psi);
             if(i == n) CHECK_CLOSE(x,1.);
             else       CHECK_CLOSE(x,0.);
             }
@@ -321,7 +321,7 @@ SECTION("Single Site Ops")
     //        auto vac = MPS(state);
     //        state.set(i,"Up");
     //        auto psi = MPS(state);
-    //        auto x = overlap(psi,Op,vac);
+    //        auto x = inner(psi,Op,vac);
     //        if(i == n) CHECK_CLOSE(x,1.);
     //        else       CHECK_CLOSE(x,0.);
     //        }
@@ -352,10 +352,10 @@ SECTION("toExpH ITensor (no QNs)")
         auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
         auto psi = randomMPS(sites);
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = overlap(xpsi,xpsi);
+        auto xnrm2 = inner(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = overlap(apsi,apsi);
-        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        auto anrm2 = inner(apsi,apsi);
+        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
       }
     SECTION("Imaginary time")
         {
@@ -363,10 +363,10 @@ SECTION("toExpH ITensor (no QNs)")
         auto expHexact = MPO(ExpIsing(sites,tau,{"h",h}));
         auto psi = randomMPS(sites);
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = overlap(xpsi,xpsi);
+        auto xnrm2 = inner(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = overlap(apsi,apsi);
-        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        auto anrm2 = inner(apsi,apsi);
+        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
         }
   }
 
@@ -394,20 +394,20 @@ SECTION("toExpH ITensor (QN conservation)")
         auto expH = toExpH(ampo,tau*1_i);
         auto expHexact = MPO(ExpHeisenberg(sites,tau*1_i));
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = overlap(xpsi,xpsi);
+        auto xnrm2 = inner(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = overlap(xpsi,xpsi);
-        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        auto anrm2 = inner(xpsi,xpsi);
+        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
     SECTION("Imaginary time")
         {
         auto expH = toExpH(ampo,tau);
         auto expHexact = MPO(ExpHeisenberg(sites,tau));
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = overlap(xpsi,xpsi);
+        auto xnrm2 = inner(xpsi,xpsi);
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = overlap(xpsi,xpsi);
-        CHECK_CLOSE(overlap(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        auto anrm2 = inner(xpsi,xpsi);
+        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
     }
 
@@ -437,7 +437,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2u.set(b+1,"Up");
         auto rpsi1u = MPS(rstate1u);
         auto rpsi2u = MPS(rstate2u);
-        CHECK_CLOSE(overlapC(rpsi2u,H,rpsi1u),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(innerC(rpsi2u,H,rpsi1u),-t*std::polar(1.,+phi/4.));
 
         auto rstate1d = InitState(sites,"Emp");
         rstate1d.set(b,"Dn");
@@ -445,7 +445,7 @@ SECTION("Hubbard, Complex Hopping")
         rstate2d.set(b+1,"Dn");
         auto rpsi1d = MPS(rstate1d);
         auto rpsi2d = MPS(rstate2d);
-        CHECK_CLOSE(overlapC(rpsi2d,H,rpsi1d),-t*std::polar(1.,+phi/4.));
+        CHECK_CLOSE(innerC(rpsi2d,H,rpsi1d),-t*std::polar(1.,+phi/4.));
         }
 
     for(auto c : range1(2,N))
@@ -456,7 +456,7 @@ SECTION("Hubbard, Complex Hopping")
         lstate2u.set(c-1,"Up");
         auto lpsi1u = MPS(lstate1u);
         auto lpsi2u = MPS(lstate2u);
-        CHECK_CLOSE(overlapC(lpsi2u,H,lpsi1u),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(innerC(lpsi2u,H,lpsi1u),-t*std::polar(1.,-phi/4.));
 
         auto lstate1d = InitState(sites,"Emp");
         lstate1d.set(c,"Up");
@@ -464,7 +464,7 @@ SECTION("Hubbard, Complex Hopping")
         lstate2d.set(c-1,"Up");
         auto lpsi1d = MPS(lstate1d);
         auto lpsi2d = MPS(lstate2d);
-        CHECK_CLOSE(overlapC(lpsi2d,H,lpsi1d),-t*std::polar(1.,-phi/4.));
+        CHECK_CLOSE(innerC(lpsi2d,H,lpsi1d),-t*std::polar(1.,-phi/4.));
         }
     }
 
@@ -520,8 +520,8 @@ SECTION("Ladder with Complex Hopping")
             s2.set(j+2,"Up");
             auto p1 = MPS(s1);
             auto p2 = MPS(s2);
-            CHECK_CLOSE(overlapC(p2,Hx,p1),-(tpara)*std::polar(1.,+phi/2.));
-            CHECK_CLOSE(overlapC(p2,Ha,p1),-(tpara)*std::polar(1.,+phi/2.));
+            CHECK_CLOSE(innerC(p2,Hx,p1),-(tpara)*std::polar(1.,+phi/2.));
+            CHECK_CLOSE(innerC(p2,Ha,p1),-(tpara)*std::polar(1.,+phi/2.));
             }
 
             //Left hop
@@ -532,8 +532,8 @@ SECTION("Ladder with Complex Hopping")
             s2.set(j,"Up");
             auto p1 = MPS(s1);
             auto p2 = MPS(s2);
-            CHECK_CLOSE(overlapC(p2,Hx,p1),-(tpara)*std::polar(1.,-phi/2.));
-            CHECK_CLOSE(overlapC(p2,Ha,p1),-(tpara)*std::polar(1.,-phi/2.));
+            CHECK_CLOSE(innerC(p2,Hx,p1),-(tpara)*std::polar(1.,-phi/2.));
+            CHECK_CLOSE(innerC(p2,Ha,p1),-(tpara)*std::polar(1.,-phi/2.));
             }
 
             }
@@ -547,8 +547,8 @@ SECTION("Ladder with Complex Hopping")
             s2.set(j+1,"Up");
             auto p1 = MPS(s1);
             auto p2 = MPS(s2);
-            CHECK_CLOSE(overlapC(p2,Hx,p1),-tperp);
-            CHECK_CLOSE(overlapC(p2,Ha,p1),-tperp);
+            CHECK_CLOSE(innerC(p2,Hx,p1),-tperp);
+            CHECK_CLOSE(innerC(p2,Ha,p1),-tperp);
             }
 
             //Left hop
@@ -559,8 +559,8 @@ SECTION("Ladder with Complex Hopping")
             s2.set(j,"Up");
             auto p1 = MPS(s1);
             auto p2 = MPS(s2);
-            CHECK_CLOSE(overlapC(p2,Hx,p1),-tperp);
-            CHECK_CLOSE(overlapC(p2,Ha,p1),-tperp);
+            CHECK_CLOSE(innerC(p2,Hx,p1),-tperp);
+            CHECK_CLOSE(innerC(p2,Ha,p1),-tperp);
             }
             }
         }
@@ -595,8 +595,8 @@ SECTION("Spinless")
         rstate2.set(b+1,"Occ");
         auto rpsi1 = MPS(rstate1);
         auto rpsi2 = MPS(rstate2);
-        CHECK_CLOSE(overlap(rpsi2,Hx,rpsi1),-t);
-        CHECK_CLOSE(overlap(rpsi2,Ha,rpsi1),-t);
+        CHECK_CLOSE(inner(rpsi2,Hx,rpsi1),-t);
+        CHECK_CLOSE(inner(rpsi2,Ha,rpsi1),-t);
         }
 
     for(auto b : range1(2,N))
@@ -607,8 +607,8 @@ SECTION("Spinless")
         lstate2.set(b-1,"Occ");
         auto lpsi1 = MPS(lstate1);
         auto lpsi2 = MPS(lstate2);
-        CHECK_CLOSE(overlap(lpsi2,Hx,lpsi1),-t);
-        CHECK_CLOSE(overlap(lpsi2,Ha,lpsi1),-t);
+        CHECK_CLOSE(inner(lpsi2,Hx,lpsi1),-t);
+        CHECK_CLOSE(inner(lpsi2,Ha,lpsi1),-t);
         }
     }
 

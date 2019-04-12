@@ -55,6 +55,7 @@ class MPO : private MPS
            Args const& args = Args::global());
 
     using Parent::dag;
+    using Parent::replaceLinkInds;
     using Parent::setTags;
     using Parent::noTags;
     using Parent::addTags;
@@ -62,9 +63,17 @@ class MPO : private MPS
     using Parent::replaceTags;
     using Parent::swapTags;
     using Parent::prime;
-    using Parent::primeLinks;
     using Parent::setPrime;
     using Parent::noPrime;
+
+    // Replace the site indices of MPO A from sites_old
+    // to sites_new (replaces one site index per MPO tensor)
+    MPO&
+    replaceSiteInds(IndexSet const& sites_old, IndexSet const& sites_new);
+
+    // Swap the bra and ket indices of the MPO (i.e. transpose the MPO)
+    MPO&
+    swapSiteInds();
 
     void 
     svdBond(int b, 
@@ -134,30 +143,64 @@ operator*(Cplx z, MPO W);
 int
 length(MPO const& W);
 
+MPO
+dag(MPO W);
+
 //
 // MPO Index functions
 //
+
+// Check if the MPO A has the site indices
+// sites
+bool
+hasSiteInds(MPO const& A, IndexSet const& sites);
 
 // Find a site index of the MPO by matching the tag 'tsmatch'
 Index
 siteIndex(MPO const& A, int b, TagSet const& tsmatch = TagSet("0"));
 
-// Get the site Index of the MPS W*A 
-// as if MPO W was applied to MPS A
+// Get the site Index of the MPS A|x>
+// as if MPO A was applied to MPS x
 Index
-siteIndex(MPO const& A, MPS const& V, int b);
+siteIndex(MPO const& A, MPS const& x, int b);
 
+// Find the site Index of the bth MPO tensor of W
+// that is not the input site Index s
+Index
+siteIndex(MPO const& W, Index const& s, int b);
+
+// Get the site Indices that are unique to A
 IndexSet
 siteInds(MPO const& A, MPS const& x);
 
-// Get the site Indices of the MPO A*B 
-// as if MPO A and MPO B were contracted
-// TODO: implement
-//Index inline
-//siteInds(MPO const& A, MPO const& B, int b);
+// Get the site Indices that are unique to A
+// (not in the IndexSet of site indices sites)
+IndexSet
+siteInds(MPO const& A, IndexSet const& sites);
 
-//Index
-//siteIndex(MPO const& A, MPO const& B, int b, TagSet const& tsmatch = TagSet("0"));
+// Get the site Indices of the MPO A*B at site b
+// as if MPO A and MPO B were contracted
+IndexSet
+siteInds(MPO const& A, MPO const& B, int b);
+
+// Replace the site indices of MPO A from sites_old
+// to sites_new (replaces one site index per MPO tensor)
+MPO
+replaceSiteInds(MPO A, IndexSet const& sites_old, IndexSet const& sites_new);
+
+// Swap the bra and ket indices of the MPO (i.e. transpose the MPO)
+MPO
+swapSiteInds(MPO A);
+
+// Get the site Index that is unique to A
+Index
+siteIndex(MPO const& A, MPO const& B, int b);
+
+// Get the site Indices that are unique to the MPO A
+// If both indices are shared by A and B, they will 
+// be default valued indices (Index())
+IndexSet
+siteInds(MPO const& A, MPO const& B);
 
 //
 // MPO tag functions
@@ -289,66 +332,109 @@ findCenter(MPO const& psi);
 void
 checkQNs(MPO const& psi);
 
-//<psi|H|phi>
+// Re[Tr(A)]
+Real
+trace(MPO const& A);
+
+// Tr(A)
+Cplx
+traceC(MPO const& A);
+
+// Tr(A)
+void
+trace(MPO const& A,
+      Real& re, Real& im);
+
+// Re[Tr(AB)]
+Real
+trace(MPO const& A,
+      MPO const& B);
+
+// Tr(AB)
+Cplx
+traceC(MPO const& A,
+       MPO const& B);
+
+// Tr(AB)
+void
+trace(MPO const& A,
+      MPO const& B,
+      Real& re, Real& im);
+
+// Calculate <x|A|y>
 void 
-overlap(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im);
+inner(MPS const& x,
+      MPO const& A, 
+      MPS const& y, 
+      Real& re, 
+      Real& im);
 
+// Calculate <x|A|y>
 Real 
-overlap(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi);
+inner(MPS const& x, 
+      MPO const& A, 
+      MPS const& y);
 
+// Calculate <x|A|y>
 Complex 
-overlapC(MPS const& psi, 
-         MPO const& H, 
-         MPS const& phi);
+innerC(MPS const& x,
+       MPO const& A, 
+       MPS const& y);
 
+// Calculate <Ax|By>
 void
-overlap(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im);
+inner(MPO const& A, 
+      MPS const& x,
+      MPO const& B,
+      MPS const& y, 
+      Real& re, 
+      Real& im);
 
+// Calculate <Ax|By>
 Real
-overlap(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi);
+inner(MPO const& A, 
+      MPS const& x, 
+      MPO const& B,
+      MPS const& y);
 
-void
-overlap(MPS const& psi, 
-        MPO const& H, 
-        MPO const& K,
-        MPS const& phi, 
-        Real& re, 
-        Real& im);
-
-Real
-overlap(MPS const& psi, 
-        MPO const& H, 
-        MPO const& K,
-        MPS const& phi);
-
+// Calculate <Ax|By>
 Complex
-overlapC(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi);
+innerC(MPO const& A,
+       MPS const& x, 
+       MPO const& B,
+       MPS const& y);
 
+// Calculate <x|AB|y>
+void
+inner(MPS const& x,
+      MPO const& A,
+      MPO const& B,
+      MPS const& y,
+      Real& re,
+      Real& im);
+
+// Calculate <x|AB|y>
+Real
+inner(MPS const& x,
+      MPO const& A,
+      MPO const& B,
+      MPS const& y);
+
+// Calculate <x|AB|y>
+Complex
+innerC(MPS const& x,
+       MPO const& A,
+       MPO const& B,
+       MPS const& y);
+
+// Calculate AB
 void 
 nmultMPO(MPO const& Aorig, 
          MPO const& Borig, 
          MPO & res,
          Args args = Args::global());
 
+// Calculate AB
 MPO
 nmultMPO(MPO const& A,
          MPO const& B,
@@ -440,6 +526,57 @@ checkMPOProd(MPS const& psi2,
              MPO const& K, 
              MPS const& psi1,
              Real threshold);
+
+//
+// Deprecated
+//
+
+
+Real 
+overlap(MPS const& psi, 
+        MPO const& H, 
+        MPS const& phi);
+
+Complex 
+overlapC(MPS const& psi, 
+         MPO const& H, 
+         MPS const& phi);
+
+void
+overlap(MPS const& psi, 
+        MPO const& H, 
+        ITensor const& LB, 
+        ITensor const& RB, 
+        MPS const& phi, 
+        Real& re, 
+        Real& im);
+
+Real
+overlap(MPS const& psi, 
+        MPO const& H, 
+        ITensor const& LB, 
+        ITensor const& RB, 
+        MPS const& phi);
+
+void
+overlap(MPS const& psi, 
+        MPO const& H, 
+        MPO const& K,
+        MPS const& phi, 
+        Real& re, 
+        Real& im);
+
+Real
+overlap(MPS const& psi, 
+        MPO const& H, 
+        MPO const& K,
+        MPS const& phi);
+
+Complex
+overlapC(MPS const& psi, 
+         MPO const& H, 
+         MPO const& K,
+         MPS const& phi);
 
 } //namespace itensor
 

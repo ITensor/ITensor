@@ -269,19 +269,20 @@ densityMatrixApplyMPOImpl(MPO const& K,
           Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
       }
 
-    auto plev = 14741;
+    auto rand_plev = 14741;
 
     auto res = psi;
 
     //Set up conjugate psi and K
     auto psic = psi;
     auto Kc = K;
-    psic.dag().prime(plev);
-    Kc.dag().prime(plev);
+    //TODO: use sim(linkInds), sim(siteInds)
+    psic.dag().prime(rand_plev);
+    Kc.dag().prime(rand_plev);
 
     // Make sure the original and conjugates match
     for(auto j : range1(N-1)) 
-        Kc.ref(j).prime(-plev,siteIndex(Kc,psic,j));
+        Kc.ref(j).prime(-rand_plev,siteIndex(Kc,psic,j));
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
@@ -290,20 +291,19 @@ densityMatrixApplyMPOImpl(MPO const& K,
     for(int j = 2; j < N; ++j)
         {
         E[j] = E[j-1]*psi(j)*K(j)*Kc(j)*psic(j);
-        //assert(order(E[j])==4);
         }
     if(verbose) println("done");
 
     //O is the representation of the product of K*psi in the new MPS basis
     auto O = psi(N)*K(N);
 
-    auto rho = E[N-1] * O * dag(prime(O,plev));
+    auto rho = E[N-1] * O * dag(prime(O,rand_plev));
 
     ITensor U,D;
     auto ts = tags(linkIndex(psi,N-1));
     auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
 
-    if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
+    if(verbose) printfln("  j=%02d truncerr=%.2E dim=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
 
     res.ref(N) = dag(U);
 
@@ -322,12 +322,12 @@ densityMatrixApplyMPOImpl(MPO const& K,
             maxdim *= (ciw) ? dim(ciw) : 1l;
             dargs.add("MaxDim",maxdim);
             }
-        rho = E[j-1] * O * dag(prime(O,plev));
+        rho = E[j-1] * O * dag(prime(O,rand_plev));
         ts = tags(linkIndex(psi,j-1));
         auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
         O = O*U*psi(j-1)*K(j-1);
         res.ref(j) = dag(U);
-        if(verbose) printfln("  j=%02d truncerr=%.2E m=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
+        if(verbose) printfln("  j=%02d truncerr=%.2E dim=%d",j,spec.truncerr(),dim(commonIndex(U,D)));
         }
 
     if(normalize) O /= norm(O);
@@ -355,7 +355,9 @@ fitApplyMPOImpl(Real fac,
             Error("In applyMPO with Method=Fit, guess MPS must have the same sites that the result of MPO*MPS would have");
 
     auto rand_plev = 43154353;
-    Kx.dag().primeLinks(rand_plev);
+    Kx.dag();
+    //TODO: use sim(linkInds)
+    Kx.replaceLinkInds(prime(linkInds(Kx),rand_plev));
     Kx.position(1);
 
     auto E = vector<ITensor>(N+2);
@@ -403,7 +405,8 @@ fitApplyMPOImpl(Real fac,
                 E[b+1] = rwfK * Kx(b+1);
             }
         }
-    Kx.dag().primeLinks(-rand_plev);
+    Kx.dag();
+    Kx.replaceLinkInds(prime(linkInds(Kx),-rand_plev));
     }
 
 void

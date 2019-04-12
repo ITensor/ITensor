@@ -49,7 +49,7 @@ int main()
     //    using the * operator and elt(...) method
     //
     // 3. Try normalizing |phi> before computing
-    //    the overlap: phi /= norm(phi);
+    //    the inner: phi /= norm(phi);
     //
 
 

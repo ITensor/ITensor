@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor/util/print_macro.h"
+#include "itensor/util/str.h"
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
 
@@ -112,6 +113,13 @@ operator*(MPO W, Cplx z) { return W *= z; }
 MPO
 operator*(Cplx z, MPO W) { return W *= z; }
 
+MPO
+dag(MPO W)
+    {
+    W.dag();
+    return W;
+    }
+
 int
 length(MPO const& W)
     {
@@ -131,10 +139,32 @@ orthoCenter(MPO const& W)
     return (W.leftLim() + 1);
     }
 
+bool
+hasSiteInds(MPO const& A, IndexSet const& sites)
+    {
+    auto N = length(A);
+    if( N!=length(sites) ) Error("In hasSiteInds(MPO,IndexSet), lengths of MPO and IndexSet of site indices don't match");
+    for( auto n : range1(N) )
+      {
+      if( !hasIndex(A(n),sites(n)) ) return false;
+      }
+    return true;
+    }
+
+// Find the site Index of the bth MPO tensor of W
+// having the tags tsmatch
 Index
 siteIndex(MPO const& W, int b, TagSet const& tsmatch)
     {
     return findIndex(siteInds(W,b),tsmatch);
+    }
+
+// Find the site Index of the bth MPO tensor of W
+// that is not the input site Index s
+Index
+siteIndex(MPO const& W, Index const& s, int b)
+    {
+    return findIndex(uniqueInds(siteInds(W,b),{s}));
     }
 
 // Get the site Index of the MPS W*A 
@@ -145,10 +175,18 @@ siteIndex(MPO const& W, MPS const& A, int b)
     return uniqueIndex(W(b),{W(b-1),W(b+1),A(b)});
     }
 
+// Get the site Index that is unique to A
+Index
+siteIndex(MPO const& A, MPO const& B, int b)
+    {
+    return uniqueIndex(A(b),{A(b-1),A(b+1),B(b)});
+    }
+
 IndexSet
 siteInds(MPO const& A, MPS const& x)
     {
     auto N = length(x);
+    if( N!=length(x) ) Error("In siteInds(MPO,MPS), lengths of MPO and MPS do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
@@ -160,22 +198,83 @@ siteInds(MPO const& A, MPS const& x)
 
 // Get the site Indices of the MPO A*B 
 // as if MPO A and MPO B were contracted
-// TODO: implement
-//Index inline
-//siteInds(MPO const& A, MPO const& B, int b)
-//    {
-//    auto sA = uniqueIndex(A(b),{A(b-1),A(b+1),B(b)});
-//    auto sB = uniqueIndex(B(b),{B(b-1),B(b+1),A(b)});
-//    return IndexSet(sA,sB);
-//    }
+IndexSet
+siteInds(MPO const& A, MPO const& B, int b)
+    {
+    auto sA = siteIndex(A,B,b);
+    auto sB = siteIndex(B,A,b);
+    return IndexSet(sA,sB);
+    }
 
-//Index
-//siteIndex(MPO const& A, MPO const& B, int b, TagSet const& tsmatch = TagSet("0"))
-//    {
-//    return findIndex(siteInds(A,B,b),tsmatch);
-//    }
+// Get the site Indices that are unique to A
+IndexSet
+siteInds(MPO const& A, MPO const& B)
+    {
+    auto N = length(A);
+    if( N!=length(B) ) Error("In siteInds(MPO,MPO), lengths of MPO and MPS do not match");
+    auto inds = IndexSetBuilder(N);
+    for( auto n : range1(N) )
+      {
+      auto s = siteIndex(A,B,n);
+      inds.nextIndex(std::move(s));
+      }
+    return inds.build();
+    }
 
+// Get the site Indices that are unique to A
+// (on A but not in the input IndexSet of site indices)
+IndexSet
+siteInds(MPO const& A, IndexSet const& sites)
+    {
+    auto N = length(A);
+    if( N!=length(sites) ) Error("In siteInds(MPO,IndexSet), lengths of MPO and IndexSet do not match");
+    auto inds = IndexSetBuilder(N);
+    for( auto n : range1(N) )
+      {
+      auto sn = siteIndex(A,sites(n),n);
+      inds.nextIndex(std::move(sn));
+      }
+    return inds.build();
+    }
 
+MPO& MPO::
+replaceSiteInds(IndexSet const& sites_old, IndexSet const& sites_new)
+    {
+    auto& A = *this;
+    auto N = itensor::length(A);
+    if( itensor::length(sites_new)!=N ) Error("In replaceSiteInds(MPO,IndexSet,IndexSet), number of new sites must be equal length of MPO");
+    if( itensor::hasSiteInds(A,sites_new) ) return A;
+    for( auto n : range1(N) )
+        A_[n].replaceInds({sites_old(n)},{sites_new(n)});
+    return A;
+    }
+
+MPO
+replaceSiteInds(MPO A, IndexSet const& sites_old, IndexSet const& sites_new)
+    {
+    A.replaceSiteInds(sites_old,sites_new);
+    return A;
+    }
+
+MPO& MPO::
+swapSiteInds()
+    {
+    auto& A = *this;
+    auto N = itensor::length(A);
+    for( auto n : range1(N) )
+        {
+        auto s = itensor::siteInds(A,n);
+        A_[n].swapInds({s(1)},{s(2)});
+        }
+    return A;
+    }
+
+MPO
+swapSiteInds(MPO A)
+    {
+    A.swapSiteInds();
+    return A;
+    }
 
 int 
 findCenter(MPO const& psi)
@@ -281,13 +380,14 @@ operator<<(std::ostream& s, MPO const& M)
 void
 putMPOLinks(MPO& W, Args const& args)
     {
-    if(not hasQNs(W(1)))
+    string pfix = args.getString("Prefix","l=");
+    if(not hasQNs(W))
         {
-        string pfix = args.getString("Prefix","MPO");
         auto links = vector<Index>(length(W));
         for(int b = 1; b < length(W); ++b)
             {
-            links.at(b) = Index(1,format("Link,%s,%d",pfix,b));
+            string ts = "Link,"+pfix+str(b);
+            links.at(b) = Index(1,ts);
             }
         W.ref(1) *= setElt(links.at(1)(1));
         for(int b = 2; b < length(W); ++b)
@@ -301,13 +401,12 @@ putMPOLinks(MPO& W, Args const& args)
         {
         QN q;
         auto N = length(W);
-        auto pfix = args.getString("Prefix","l");
 
         auto links = vector<Index>(N);
         for(int b = 1; b < N; ++b)
             {
-            string ts = format("%s,%d",pfix,b);
             q += div(W(b));
+            string ts = "Link,"+pfix+str(b);
             links.at(b) = Index(q,1,Out,ts);
             }
 
@@ -419,7 +518,294 @@ isComplex(MPO const& W)
     return false;
     }
 
-//<psi|H|phi>
+Cplx
+traceC(MPO const& A)
+    {
+    auto N = length(A);
+    auto trA_n = A(1) * delta(dag(siteInds(A,1)));
+    auto L = trA_n;
+    if(N == 1) return eltC(L);
+    for(auto n : range1(2,N) )
+        {
+        trA_n = A(n) * delta(dag(siteInds(A,n)));
+        L *= trA_n;
+        }
+    return eltC(L);
+    }
+
+void
+trace(MPO const& A,
+      Real& re, Real& im)
+    {
+    auto z = traceC(A);
+    re = real(z);
+    im = imag(z);
+    }
+
+Real
+trace(MPO const& A)
+    {
+    Real re, im;
+    trace(A,re,im);
+    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
+        printfln("Real inner: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+    return re;
+    }
+
+Cplx
+traceC(MPO const& A,
+       MPO const& B)
+    {
+    auto N = length(A);
+    if(N != length(B)) Error("traceC(MPO,MPO): mismatched N");
+
+    // Make the site indices of the MPOs match
+    // and the links not match
+    auto sA = siteInds(A,B);
+    auto sB = siteInds(B,A);
+    auto Bp = replaceSiteInds(B,sB,sA);
+    Bp.replaceLinkInds(sim(linkInds(Bp)));
+
+    auto L = A(1) * Bp(1);
+    if(N == 1) return eltC(L);
+    for(auto i : range1(2,N) )
+        L = L * A(i) * Bp(i);
+    return eltC(L);
+    }
+
+void
+trace(MPO const& A,
+      MPO const& B,
+      Real& re, Real& im)
+    {
+    auto z = traceC(A,B);
+    re = real(z);
+    im = imag(z);
+    }
+
+Real
+trace(MPO const& A, MPO const& B) //Re[<psi|phi>]
+    {
+    Real re, im;
+    trace(A,B,re,im);
+    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
+        printfln("Real inner: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+    return re;
+    }
+
+//<x|A|y>
+void 
+inner(MPS const& x, 
+      MPO const& A, 
+      MPS const& y, 
+      Real& re, 
+      Real& im)
+    {
+    auto N = length(A);
+    if( length(y) != N || length(x) != N ) Error("inner: mismatched N");
+
+    // Make the indices of |x> and A|y> match
+    auto sAy = siteInds(A,y);
+    auto xp = replaceSiteInds(x,sAy);
+
+    // Dagger x, since it is the ket
+    auto xdag = dag(xp);
+    xdag.replaceLinkInds(sim(linkInds(xdag)));
+
+    auto L = y(1) * A(1) * xdag(1);
+
+    // TODO: some MPOs may store edge tensors
+    // in A(0) and A(N+1). Add this back?
+    //L *= (A(0) ? A(0)*A(1) : A(1));
+
+    for( auto n : range1(2,N) ) 
+        L = L * y(n) * A(n) * xdag(n); 
+
+    // TODO: some MPOs may store edge tensors
+    // in A(0) and A(N+1). Add this back?
+    //if(A(N+1)) L *= A(N+1);
+
+    auto z = eltC(L);
+    re = real(z);
+    im = imag(z);
+    }
+
+Real 
+inner(MPS const& psi, 
+      MPO const& H, 
+      MPS const& phi) //Re[<psi|H|phi>]
+    {
+    Real re, im;
+    inner(psi,H,phi,re,im);
+    if(std::fabs(im) > 1E-5 * std::fabs(re) || std::fabs(im) > 1E-9)
+        {
+        printfln("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.",im);
+        }
+    return re;
+    }
+
+
+Cplx 
+innerC(MPS const& psi, 
+       MPO const& H, 
+       MPS const& phi) //Re[<psi|H|phi>]
+    {
+    Real re, im;
+    inner(psi,H,phi,re,im);
+    return Cplx(re,im);
+    }
+
+// Calculate <Ax|By>
+void
+inner(MPO const& A,
+      MPS const& x,
+      MPO const& B,
+      MPS const& y,
+      Real& re,
+      Real& im)
+  {
+  if(length(x) != length(y) || length(x) != length(A) || length(y) != length(B)) Error("Mismatched N in inner");
+  auto N = length(y);
+
+  // Automatically match site indices
+  auto Ap = replaceSiteInds(A,siteInds(A,x),siteInds(B,y));
+
+  // Prime the links to avoid clashes
+  auto Adag = dag(A);
+  Adag.replaceLinkInds(sim(linkInds(Adag)));
+  auto xdag = dag(x);
+  xdag.replaceLinkInds(sim(linkInds(xdag)));
+
+  //scales as m^2 k^2 d
+  auto L = y(1) * B(1) * Adag(1) * xdag(1);
+  for(int i = 2; i < N; i++)
+      {
+      //scales as m^3 k^2 d + m^2 k^3 d^2
+      L = L * y(i) * B(i) * Adag(i) * xdag(i);
+      }
+  //scales as m^2 k^2 d
+  L = L * y(N) * B(N) * Adag(N) * xdag(N);
+  auto z = eltC(L);
+  re = real(z);
+  im = imag(z);
+  }
+
+// Calculate <Ax|By>
+Real
+inner(MPO const& A,
+      MPS const& x,
+      MPO const& B,
+      MPS const& y)
+    {
+    Real re,im;
+    inner(A,x,B,y,re,im);
+    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
+  Error("Non-zero imaginary part in inner, use innerC instead.");
+    return re;
+    }
+
+// Calculate <Ax|By>
+Complex
+innerC(MPO const& A,
+       MPS const& x,
+       MPO const& B,
+       MPS const& y)
+    {
+    Real re,im;
+    inner(A,x,B,y,re,im);
+    return Cplx(re,im);
+    }
+
+void
+inner(MPS const& x, 
+      MPO const& A, 
+      MPO const& B,
+      MPS const& y, 
+      Real& re, 
+      Real& im)
+    {
+    if(length(x) != length(y) || length(x) != length(A) || length(x) != length(B)) Error("Mismatched N in inner");
+    auto N = length(x);
+
+    // Assume order of operations A(B|y>), use replaceInds
+    // to handle the case where A and B share all indices
+    auto sABy = siteInds(A,siteInds(B,y)); 
+    auto sAByp = sim(sABy);
+    auto Ap = replaceSiteInds(A,sABy,sAByp);
+    Ap.replaceLinkInds(sim(linkInds(Ap)));
+    auto xp = replaceSiteInds(x,sAByp);
+    auto xdag = dag(xp);
+    xdag.replaceLinkInds(sim(linkInds(xdag)));
+
+    //scales as m^2 k^2 d
+    auto L = y(1) * B(1) * Ap(1) * xdag(1);
+    for(int i = 2; i < N; i++)
+        {
+        //scales as m^3 k^2 d + m^2 k^3 d^2
+        L = L * y(i) * B(i) * Ap(i) * xdag(i);
+        }
+    //scales as m^2 k^2 d
+    L = L * y(N) * B(N) * Ap(N) * xdag(N);
+    auto z = eltC(L);
+    re = real(z);
+    im = imag(z);
+    }
+
+Real
+inner(MPS const& psi, 
+      MPO const& H, 
+      MPO const& K,
+      MPS const& phi) //<psi|H K|phi>
+    {
+    Real re,im;
+    inner(psi,H,K,phi,re,im);
+    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
+	Error("Non-zero imaginary part in inner, use innerC instead.");
+    return re;
+    }
+
+Cplx
+innerC(MPS const& psi, 
+       MPO const& H, 
+       MPO const& K,
+       MPS const& phi) //<psi|H K|phi>
+    {
+    Real re,im;
+    inner(psi,H,K,phi,re,im);
+    return Cplx(re,im);
+    }
+
+// Check how close and approximation to A|x>, called |y>,
+// is to the exact A|x>
+//||y> - A|x>| / || A|x> || = sqrt{(<y|-<x|Ad)(|y>-A|x>) / <x|AdA|x>}
+//                             = sqrt{1 + (<y|y>-2*Re[<y|A|x>]) / <x|AdA|x>}
+Real
+errorMPOProd(MPS const& y,
+             MPO const& A, 
+             MPS const& x)
+    {
+    if( siteInds(A,x) != siteInds(y) ) Error("errorMPOProd(y,A,x): Index mismatch. MPS y, the approximation to A|x>, must have the same site indices that A|x> would have.");
+    auto err = inner(y,y);
+    err += -2.*real(innerC(y,A,x));
+    err /= real(innerC(A,x,A,x));
+    err = std::sqrt(std::abs(1.0+err));
+    return err;
+    }
+
+bool
+checkMPOProd(MPS const& psi2,
+             MPO const& K, 
+             MPS const& psi1,
+             Real threshold)
+    {
+    Real err = errorMPOProd(psi2,K,psi1);
+    return (std::norm(err) < threshold);
+    }
+
+//
+// Deprecated
+//
+
 void 
 overlap(MPS const& psi, 
         MPO const& H, 
@@ -427,6 +813,7 @@ overlap(MPS const& psi,
         Real& re, 
         Real& im)
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(H);
     if(length(phi) != N || length(psi) != N) Error("psiHphi: mismatched N");
 
@@ -454,6 +841,7 @@ overlap(MPS const& psi,
         MPO const& H, 
         MPS const& phi) //Re[<psi|H|phi>]
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     Real re, im;
     overlap(psi,H,phi,re,im);
     if(std::fabs(im) > 1E-5 * std::fabs(re) || std::fabs(im) > 1E-9)
@@ -469,6 +857,7 @@ overlapC(MPS const& psi,
          MPO const& H, 
          MPS const& phi) //Re[<psi|H|phi>]
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     Real re, im;
     overlap(psi,H,phi,re,im);
     return Cplx(re,im);
@@ -483,6 +872,7 @@ overlap(MPS const& psi,
         Real& re, 
         Real& im) //<psi|H|phi>
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(psi);
     if(N != length(phi) || length(H) < N) Error("mismatched N in psiHphi");
 
@@ -510,6 +900,7 @@ overlap(MPS const& psi,
         ITensor const& RB, 
         MPS const& phi) //Re[<psi|H|phi>]
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     Real re,im; 
     overlap(psi,H,LB,RB,phi,re,im);
     if(std::fabs(im) > 1.0e-12 * std::fabs(re))
@@ -525,6 +916,7 @@ overlap(MPS const& psi,
         Real& re, 
         Real& im)
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     //println("Running psiHKphi");
     if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) Error("Mismatched N in overlap");
     auto N = length(psi);
@@ -556,10 +948,11 @@ overlap(MPS const& psi,
         MPO const& K,
         MPS const& phi) //<psi|H K|phi>
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     Real re,im;
     overlap(psi,H,K,phi,re,im);
     if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-	Error("Non-zero imaginary part in overlap, use overlapC instead.");
+        Error("Non-zero imaginary part in overlap, use overlapC instead.");
     return re;
     }
 
@@ -569,149 +962,10 @@ overlapC(MPS const& psi,
          MPO const& K,
          MPS const& phi) //<psi|H K|phi>
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     Real re,im;
     overlap(psi,H,K,phi,re,im);
     return Cplx(re,im);
-    }
-
-Real
-errorMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1)
-    {
-    //||p2> - K|p1>| / || K|p1> || = sqrt{(<p2|-<p1|Kd)(|p2>-K|p1>) / <p1|KdK|p1>}
-    //                             = sqrt{1+ (<p2|p2>-2*Re[<p2|K|p1>]) / <p1|KdK|p1>}
-    Real err = overlap(psi2,psi2);
-    err += -2.*real(overlapC(psi2,K,psi1));
-    //Compute Kd, Hermitian conjugate of K
-    auto Kd = K;
-    for(auto j : range1(length(K)))
-        {
-        auto s = siteInds(Kd,j);
-        Kd.ref(j) = dag(swapInds(Kd(j),{s(1)},{s(2)}));
-        }
-    err /= overlap(psi1,Kd,K,psi1);
-    err = std::sqrt(std::abs(1.0+err));
-    return err;
-    }
-
-bool
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1,
-             Real threshold)
-    {
-    Real err = errorMPOProd(psi2,K,psi1);
-    return (std::norm(err) < threshold);
-    }
-
-//
-// Deprecated
-//
-
-Real
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1)
-    {
-    Global::warnDeprecated("checkMPOProd is deprecated in favor of errorMPOProd");
-    //||p2> - K|p1>|^2 = (<p2|-<p1|Kd)(|p2>-K|p1>) = <p2|p2>+<p1|Kd*K|p1>-2*Re[<p2|K|p1>]
-    Real res = overlap(psi2,psi2);
-    res += -2.*real(overlapC(psi2,K,psi1));
-    //Compute Kd, Hermitian conjugate of K
-    auto Kd = K;
-    for(auto j : range1(length(K)))
-        {
-        auto s = siteInds(K,j);
-        Kd.ref(j) = dag(swapInds(K(j),{s(1)},{s(2)}));
-        }
-    res += overlap(psi1,Kd,K,psi1);
-    return res;
-    }
-
-void 
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im)
-    {
-    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
-    overlap(psi,H,phi,re,im);
-    }
-
-Real 
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        MPS const& phi) //Re[<psi|H|phi>]
-    {
-    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
-    return overlap(psi,H,phi);
-    }
-
-Complex 
-psiHphiC(MPS const& psi, 
-         MPO const& H, 
-         MPS const& phi) //Re[<psi|H|phi>]
-    {
-    Global::warnDeprecated("psiHphiC deprecated in favor of overlapC");
-    return overlapC(psi,H,phi);
-    }
-
-void
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi, 
-        Real& re, 
-        Real& im) //<psi|H|phi>
-    {
-    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
-    overlap(psi,H,LB,RB,phi,re,im);
-    }
-
-Real
-psiHphi(MPS const& psi, 
-        MPO const& H, 
-        ITensor const& LB, 
-        ITensor const& RB, 
-        MPS const& phi) //Re[<psi|H|phi>]
-    {
-    Global::warnDeprecated("psiHphi deprecated in favor of overlap");
-    return overlap(psi,H,LB,RB,phi);
-    }
-
-void
-psiHKphi(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi, 
-         Real& re, 
-         Real& im) //<psi|H K|phi>
-    {
-    Global::warnDeprecated("psiHKphi deprecated in favor of overlap");
-    overlap(psi,H,K,phi,re,im);
-    }
-
-Real
-psiHKphi(MPS const& psi, 
-         MPO const& H, 
-         MPO const& K,
-         MPS const& phi) //<psi|H K|phi>
-    {
-    Global::warnDeprecated("psiHKphi deprecated in favor of overlap");
-    return overlap(psi,H,K,phi);
-    }
-
-Complex
-psiHKphiC(MPS const& psi, 
-          MPO const& H, 
-          MPO const& K,
-          MPS const& phi) //<psi|H K|phi>
-    {
-    Global::warnDeprecated("psiHKphiC deprecated in favor of overlapC");
-    return overlapC(psi,H,K,phi);
     }
 
 } //namespace itensor

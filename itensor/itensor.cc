@@ -579,24 +579,24 @@ permute(ITensor A,
     return A;
     }
 
-ITensor
-replaceInds(ITensor T,
-            IndexSet const& is1,
+ITensor& ITensor::
+replaceInds(IndexSet const& is1,
             IndexSet const& is2)
     {
 #ifdef DEBUG
-    if( order(is1) != order(is2) ) Error("In replaceInds, must replace with equal number of Indices");
+    if( itensor::order(is1) != itensor::order(is2) ) Error("In replaceInds, must replace with equal number of Indices");
 #endif
+    auto& T = *this;
     // Add a random prime to account for possible
     // Index swaps
     auto plev_temp = 43218432;
-    auto is2p = prime(is2,plev_temp);
-    auto isT = inds(T);
+    auto is2p = itensor::prime(is2,plev_temp);
+    auto isT = itensor::inds(T);
     for(auto& J : isT)
         {
-        for(auto i : range(order(is1)))
+        for(auto i : range(itensor::order(is1)))
             {
-            if( J == is1[i] )
+            if( is1[i] && (J == is1[i]) )
                 {
                 if( dim(J) != dim(is2[i]) )
                     {
@@ -622,16 +622,35 @@ replaceInds(ITensor T,
     }
 
 ITensor
+replaceInds(ITensor T,
+            IndexSet const& is1,
+            IndexSet const& is2)
+    {
+    T.replaceInds(is1,is2);
+    return T;
+    }
+
+ITensor& ITensor::
+swapInds(IndexSet const& is1,
+         IndexSet const& is2)
+    {
+#ifdef DEBUG
+    if( itensor::order(is1) != itensor::order(is2) ) Error("In swapInds, must swap equal numbers of Indices");
+#endif
+    auto& T = *this;
+    auto is1r = itensor::unionInds(is1,is2);
+    auto is2r = itensor::unionInds(is2,is1);
+    T.replaceInds(is1r,is2r);
+    return T;
+    }
+
+ITensor
 swapInds(ITensor T,
          IndexSet const& is1,
          IndexSet const& is2)
     {
-#ifdef DEBUG
-    if( order(is1) != order(is2) ) Error("In swapInds, must swap equal numbers of Indices");
-#endif
-    auto is1r = unionInds(is1,is2);
-    auto is2r = unionInds(is2,is1);
-    return replaceInds(T,is1r,is2r);
+    T.swapInds(is1,is2);
+    return T;
     }
 
 Real

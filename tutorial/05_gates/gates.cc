@@ -120,7 +120,7 @@ main()
         }
     auto H = toMPO(ampo);
 
-    printfln("Energy = %.20f",overlap(psi,H,psi));
+    printfln("Energy = %.20f",inner(psi,H,psi));
 
     //
     // Exact ground state energy of N=20

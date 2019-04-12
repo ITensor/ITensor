@@ -398,9 +398,18 @@ bool
 operator==(IndexSet const& is1,
            IndexSet const& is2)
   {
-  if( order(is1)==order(is2) )
-    if( hasInds(is1,is2) ) return true;
-  return false;
+  auto N = order(is1);
+  if( order(is2)!= N ) return false;
+  for( auto n : range1(N) )
+    if( is1(n)!=is2(n) ) return false;
+  return true;
+  }
+
+bool
+operator!=(IndexSet const& is1,
+           IndexSet const& is2)
+  {
+  return !(is1==is2);
   }
 
 long
@@ -509,7 +518,7 @@ findInds(IndexSet const& is,
 Index
 findIndex(IndexSet const& is)
     {
-    if( order(is) > 1 ) Error("Error: More than one Index in the IndexSet");
+    if( order(is) > 1 ) Error("In findIndex: more than one Index found, consider using findInds instead");
     else if( order(is) == 1 ) return is(1);
     return Index();
     }

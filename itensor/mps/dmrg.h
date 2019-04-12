@@ -253,7 +253,6 @@ DMRGWorker(MPS & psi,
             
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
 
-
             if(!quiet)
                 { 
                 printfln("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d",

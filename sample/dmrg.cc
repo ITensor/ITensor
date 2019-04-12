@@ -40,10 +40,10 @@ main()
     auto psi = MPS(state);
 
     //
-    // overlap calculates matrix elements of MPO's with respect to MPS's
-    // overlap(psi,H,psi) = <psi|H|psi>
+    // inner calculates matrix elements of MPO's with respect to MPS's
+    // inner(psi,H,psi) = <psi|H|psi>
     //
-    printfln("Initial energy = %.5f", overlap(psi,H,psi) );
+    printfln("Initial energy = %.5f", inner(psi,H,psi) );
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -67,7 +67,7 @@ main()
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",energy);
-    printfln("\nUsing overlap = %.10f", overlap(psi,H,psi) );
+    printfln("\nUsing inner = %.10f", inner(psi,H,psi) );
 
     return 0;
     }

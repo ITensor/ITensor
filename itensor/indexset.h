@@ -571,8 +571,18 @@ bool
 hasInds(IndexSet const& is,
         IndexSet const& ismatch);
 
+// IndexSets are equal if they are the
+// same size and contain equal indices
+// in equal ordering (i.e. {i,j}=={i,j}
+// but {i,j}!={j,i}).
+// For set equality, you can use:
+// hasInds(is1,is2) && (order(is1)==order(is2))
 bool
 operator==(IndexSet const& is1,
+           IndexSet const& is2);
+
+bool
+operator!=(IndexSet const& is1,
            IndexSet const& is2);
 
 long

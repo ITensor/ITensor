@@ -106,6 +106,12 @@ measure(Args const& args)
             {
             println();
             auto center_eigs = last_spec_.eigsKept();
+            // Normalize eigs
+            Real norm_eigs = 0;
+            for(auto& p : center_eigs)
+              norm_eigs += p;
+            center_eigs /= norm_eigs;
+            // Calculate entropy
             Real S = 0;
             for(auto& p : center_eigs)
                 {
@@ -132,7 +138,7 @@ measure(Args const& args)
         if(!printeigs) println();
         auto swstr = (nsweep>0) ? format("%d/%d",sw,nsweep) 
                                 : format("%d",sw);
-        println("    Largest m during sweep ",swstr," was ",(max_eigs > 1 ? max_eigs : 1));
+        println("    Largest link dim during sweep ",swstr," was ",(max_eigs > 1 ? max_eigs : 1));
         max_eigs = -1;
         println("    Largest truncation error: ",(max_te > 0 ? max_te : 0.));
         max_te = -1;

@@ -649,8 +649,11 @@ orthogonalize(Args args)
     //Build environment tensors from the left
     auto E = vector<ITensor>(N+1);
 
-    auto psic = psi;
-    psic.dag().primeLinks(rand_plev);
+    auto psic = itensor::dag(psi);
+    //TODO: use sim(linkInds)
+    //That would require changing the requirements of diagHermitian to
+    //allow more general ITensors
+    psic.replaceLinkInds(itensor::prime(itensor::linkInds(psic),rand_plev));
 
     E[1] = psi(1)*psic(1); 
     for(int j = 2; j < N; ++j)
@@ -660,7 +663,7 @@ orthogonalize(Args args)
     auto original_tags = tags(linkIndex(psi,N-1));
     auto [U,D,lj] = diagHermitian(rho,{dargs,"Tags=",original_tags});
 
-    //O is partial overlap of previous and new MPS
+    //O is partial inner of previous and new MPS
     auto O = U * psi(N) * psi(N-1);
     psi.ref(N) = itensor::dag(U);
 
@@ -687,6 +690,80 @@ orthogonalize(Args args)
     r_orth_lim_ = 2;
     return *this;
     }
+
+namespace detail
+  {
+  // Make an order-2 delta tensor with dense storage
+  ITensor
+  denseDelta(Index const& i, Index const& j)
+      {
+      auto del = ITensor(i,j);
+      for( auto ii : range1(minDim(del)) )
+        del.set(ii,ii,1);
+      return del;
+      }
+  }
+
+template <typename MPSType>
+bool
+checkOrtho(MPSType const& A,
+           int i,
+           Direction dir,
+           Real threshold)
+    {
+    auto left = (dir==Fromleft);
+
+    auto Adag = dag(A);
+    Adag.replaceLinkInds(prime(linkInds(Adag)));
+
+    auto lout_dag = (left ? leftLinkIndex(Adag,i) : rightLinkIndex(Adag,i));
+    auto rho = A(i) * prime(Adag(i),-1,lout_dag);
+
+    auto lin = (left ? rightLinkIndex(A,i) : leftLinkIndex(A,i));
+    auto lin_dag = (left ? rightLinkIndex(Adag,i) : leftLinkIndex(Adag,i));
+    auto Delta = detail::denseDelta(lin, lin_dag);
+
+    auto Diff = rho - Delta;
+
+    if(norm(Diff) < threshold)
+        return true;
+
+    //Print any helpful debugging info here:
+    println("checkOrtho: on line ",__LINE__," of mps.h,");
+    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
+    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
+    printfln("checkOrtho: Error threshold set to %E",threshold);
+    //-----------------------------
+
+    return false;
+    }
+template bool checkOrtho<MPS>(MPS const& A, int i, Direction dir, Real threshold);
+template bool checkOrtho<MPO>(MPO const& A, int i, Direction dir, Real threshold);
+
+template <typename MPSType>
+bool
+checkOrtho(MPSType const& A,
+           Real threshold)
+    {
+    for(int i = 1; i <= A.leftLim(); ++i)
+    if(!checkOrtho(A,i,Fromleft,threshold))
+        {
+        std::cout << "checkOrtho: A_[i] not left orthogonal at site i="
+                  << i << std::endl;
+        return false;
+        }
+
+    for(int i = length(A); i >= A.rightLim(); --i)
+    if(!checkOrtho(A,i,Fromright,threshold))
+        {
+        std::cout << "checkOrtho: A_[i] not right orthogonal at site i="
+                  << i << std::endl;
+        return false;
+        }
+    return true;
+    }
+template bool checkOrtho<MPS>(MPS const& A, Real threshold);
+template bool checkOrtho<MPO>(MPO const& A, Real threshold);
 
 void
 applyGate(ITensor const& gate, 
@@ -811,6 +888,98 @@ setAll(String const& state)
     return *this;
     }
 
+bool
+isComplex(MPS const& psi)
+    {
+    for(auto j : range1(length(psi)))
+        {
+        if(itensor::isComplex(psi(j))) return true;
+        }
+    return false;
+    }
+
+bool
+isOrtho(MPS const& psi)
+    {
+    return psi.leftLim()+1 == psi.rightLim()-1;
+    }
+
+int
+orthoCenter(MPS const& psi)
+    {
+    if(!isOrtho(psi)) Error("orthogonality center not well defined.");
+    return (psi.leftLim() + 1);
+    }
+
+Real
+norm(MPS const& psi)
+    {
+    if(not isOrtho(psi)) Error("\
+MPS must have well-defined ortho center to compute norm; \
+call .position(j) or .orthogonalize() to set ortho center");
+    return itensor::norm(psi(orthoCenter(psi)));
+    }
+
+template<typename MPSType>
+Real
+averageLinkDim(MPSType const& x)
+    {
+    Real avgdim = 0.;
+    auto N = length(x);
+    for( auto b : range1(N-1) )
+        {
+        avgdim += dim(linkIndex(x,b));
+        }
+    avgdim /= (N-1);
+    return avgdim;
+    }
+template Real averageLinkDim<MPS>(MPS const& x);
+template Real averageLinkDim<MPO>(MPO const& x);
+
+Real
+averageM(MPS const& psi)
+    {
+    Global::warnDeprecated("averageM(MPS) is deprecated in favor of averageLinkDim(MPS)");
+    return averageLinkDim(psi);
+    }
+
+template<typename MPSType>
+int
+maxLinkDim(MPSType const& x)
+    {
+    int maxdim = 0;
+    for( auto b : range1(length(x)-1) )
+        {
+        int mb = dim(linkIndex(x,b));
+        maxdim = std::max(mb,maxdim);
+        }
+    return maxdim;
+    }
+template int maxLinkDim<MPS>(MPS const& x);
+template int maxLinkDim<MPO>(MPO const& x);
+
+int
+maxM(MPS const& psi)
+    {
+    Global::warnDeprecated("maxM(MPS) is deprecated in favor of maxLinkDim(MPS)");
+    return maxLinkDim(psi);
+    }
+
+Real
+normalize(MPS & psi)
+    {
+    Global::warnDeprecated("normalize(MPS) is deprecated in favor of .normalize()");
+    auto nrm = psi.normalize();
+    return nrm;
+    }
+
+MPS
+dag(MPS A)
+    {
+    A.dag();
+    return A;
+    }
+
 MPS
 setTags(MPS A, TagSet const& ts, IndexSet const& is)
     {
@@ -881,6 +1050,104 @@ noPrime(MPS A, IndexSet const& is)
     return A;
     }
 
+bool
+hasSiteInds(MPS const& x, IndexSet const& sites)
+    {
+    auto N = length(x);
+    if( N!=length(sites) ) Error("In hasSiteInds(MPS,IndexSet), lengths of MPS and IndexSet of site indices don't match");
+    for( auto n : range1(N) )
+      {
+      if( !hasIndex(x(n),sites(n)) ) return false;
+      }
+    return true;
+    }
+
+template <typename MPSType>
+IndexSet
+siteInds(MPSType const& W, int b)
+    {
+    return uniqueInds(W(b),{W(b-1),W(b+1)});
+    }
+template IndexSet siteInds<MPS>(MPS const& W, int b);
+template IndexSet siteInds<MPO>(MPO const& W, int b);
+
+Index
+siteIndex(MPS const& psi, int j)
+    {
+    return uniqueIndex(psi(j),{psi(j-1),psi(j+1)});
+    }
+
+template <typename MPSType>
+Index
+rightLinkIndex(MPSType const& psi, int i)
+    {
+    if( i == length(psi) ) return Index();
+    return commonIndex(psi(i),psi(i+1));
+    }
+template Index rightLinkIndex<MPS>(MPS const& W, int i);
+template Index rightLinkIndex<MPO>(MPO const& W, int i);
+
+// Note: for ITensors with QNs, this is different
+// from rightLinkIndex(psi,i-1) since indices 
+// evaluate equal even in arrow directions are different
+template <typename MPSType>
+Index
+leftLinkIndex(MPSType const& psi, int i)
+    {
+    if( i == 1 ) return Index();
+    return commonIndex(psi(i),psi(i-1));
+    }
+template Index leftLinkIndex<MPS>(MPS const& W, int i);
+template Index leftLinkIndex<MPO>(MPO const& W, int i);
+
+// This is a shorthand for rightLinkIndex
+template <typename MPSType>
+Index
+linkIndex(MPSType const& psi, int i)
+    {
+    return rightLinkIndex(psi,i);
+    }
+template Index linkIndex<MPS>(MPS const& W, int i);
+template Index linkIndex<MPO>(MPO const& W, int i);
+
+template <typename MPSType>
+IndexSet
+linkInds(MPSType const& x, int i)
+    {
+    if( i == 1 ) return IndexSet(rightLinkIndex(x,i));
+    else if( i == length(x) ) return IndexSet(leftLinkIndex(x,i));
+    return IndexSet(leftLinkIndex(x,i),rightLinkIndex(x,i));
+    }
+template IndexSet linkInds<MPS>(MPS const& x, int i);
+template IndexSet linkInds<MPO>(MPO const& x, int i);
+
+template <typename MPSType>
+IndexSet
+linkInds(MPSType const& x)
+    {
+    auto N = length(x);
+    auto inds = IndexSetBuilder(N-1);
+    for( auto n : range1(N-1) )
+      {
+      auto s = linkIndex(x,n);
+      inds.nextIndex(std::move(s));
+      }
+    return inds.build();
+    }
+template IndexSet linkInds<MPS>(MPS const& x);
+template IndexSet linkInds<MPO>(MPO const& x);
+
+template <class MPSType>
+bool
+hasQNs(MPSType const& x)
+    {
+    for(auto i : range1(length(x)))
+        if(not hasQNs(x(i))) return false;
+    return true;
+    }
+template bool hasQNs<MPS>(MPS const& x);
+template bool hasQNs<MPO>(MPO const& x);
+
 IndexSet
 siteInds(MPS const& x)
     {
@@ -894,18 +1161,44 @@ siteInds(MPS const& x)
     return inds.build();
     }
 
+MPS& MPS::
+replaceSiteInds(IndexSet const& sites)
+    {
+    auto& x = *this;
+    auto N = itensor::length(x);
+    if( itensor::length(sites)!=N ) Error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
+    auto sx = itensor::siteInds(x);
+    if( sx==sites ) return x;
+    for( auto n : range1(N) )
+      {
+      auto sn = sites(n);
+      A_[n].replaceInds({sx(n)},{sn});
+      }
+    return x;
+    }
+
 MPS
 replaceSiteInds(MPS x, IndexSet const& sites)
     {
-    auto N = length(x);
-    if( length(sites)!=N ) Error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
-    for( auto n : range1(N) )
+    x.replaceSiteInds(sites);
+    return x;
+    }
+
+MPS& MPS::
+replaceLinkInds(IndexSet const& links)
+    {
+    auto& x = *this;
+    auto N = itensor::length(x);
+    if( N==1 ) return x;
+    if( itensor::length(links)!=(N-1) ) Error("In replaceLinkInds(MPS,IndexSet), number of link indices input is not equal to the number of links of the MPS");
+    auto lx = itensor::linkInds(x);
+    if( lx==links ) return x;
+    for( auto n : range1(N-1) )
       {
-      auto sxn = siteIndex(x,n);
-      auto sn = sites(n);
-      if( dir(sxn)!=dir(sn) ) sn.dag();
-      x.uref(n) *= delta(dag(sxn),sn);
+      if( n == 1 ) A_[n].replaceInds({lx(n)},{links(n)});
+      else A_[n].replaceInds({lx(n-1),lx(n)},{links(n-1),links(n)});
       }
+    A_[N].replaceInds({lx(N-1)},{links(N-1)});
     return x;
     }
 
@@ -1054,26 +1347,97 @@ sum(std::vector<MPSType> const& terms,
 template MPS sum<MPS>(std::vector<MPS> const& terms, Args const& args);
 template MPO sum<MPO>(std::vector<MPO> const& terms, Args const& args);
 
+Cplx
+innerC(MPS const& psi, 
+       MPS const& phi)
+    {
+    auto N = length(psi);
+    if(N != length(phi)) Error("inner: mismatched N");
+
+    auto psidag = dag(psi);
+    psidag.replaceSiteInds(siteInds(phi));
+    psidag.replaceLinkInds(sim(linkInds(psidag)));
+
+    auto L = phi(1) * psidag(1);
+    if(N == 1) return eltC(L);
+    for(auto i : range1(2,N) ) 
+        L = L * phi(i) * psidag(i);
+    return eltC(L);
+    }
+
+void
+inner(MPS const& psi, MPS const& phi, Real& re, Real& im)
+    {
+    auto z = innerC(psi,phi);
+    re = real(z);
+    im = imag(z);
+    }
+
+Real
+inner(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
+    {
+    Real re, im;
+    inner(psi,phi,re,im);
+    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
+        printfln("Real inner: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+    return re;
+    }
+
+//
+// Deprecated
+//
+
+
 template <class MPSType>
 Cplx
 overlapC(MPSType const& psi, 
          MPSType const& phi)
     {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(psi);
     if(N != length(phi)) Error("overlap: mismatched N");
 
     auto rand_plev = 4351345;
 
     auto psidag = psi;
-    psidag.dag().primeLinks(rand_plev);
+    //psidag.dag().primeLinks(rand_plev);
+    psidag.dag();
+    psidag.replaceLinkInds(prime(linkInds(psidag),rand_plev));
 
     auto L = phi(1) * psidag(1);
     if(N == 1) return eltC(L);
     for(auto i : range1(2,N) ) 
-        L *= phi(i) * psidag(i);
+        L = L * phi(i) * psidag(i);
     return eltC(L);
     }
 template Cplx overlapC<MPS>(MPS const& psi, MPS const& phi);
 template Cplx overlapC<MPO>(MPO const& psi, MPO const& phi);
+
+
+template <typename MPSType>
+void
+overlap(MPSType const& psi, MPSType const& phi, Real& re, Real& im)
+    {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
+    auto z = overlapC(psi,phi);
+    re = real(z);
+    im = imag(z);
+    }
+template void overlap<MPS>(MPS const& psi, MPS const& phi, Real& re, Real& im);
+template void overlap<MPO>(MPO const& psi, MPO const& phi, Real& re, Real& im);
+
+template <typename MPSType>
+Real
+overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
+    {
+    Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
+    Real re, im;
+    overlap(psi,phi,re,im);
+    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
+        printfln("Real overlap: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
+    return re;
+    }
+template Real overlap<MPS>(MPS const& psi, MPS const& phi);
+template Real overlap<MPO>(MPO const& psi, MPO const& phi);
 
 } //namespace itensor

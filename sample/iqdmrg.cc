@@ -51,9 +51,9 @@ main()
     auto psi = MPS(state);
 
     //
-    // overlap(psi,H,psi) = <psi|H|psi>
+    // inner(psi,H,psi) = <psi|H|psi>
     //
-    printfln("Initial energy = %.5f", overlap(psi,H,psi) );
+    printfln("Initial energy = %.5f", inner(psi,H,psi) );
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -77,7 +77,7 @@ main()
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",energy);
-    printfln("\nUsing overlap = %.10f", overlap(psi,H,psi) );
+    printfln("\nUsing inner = %.10f", inner(psi,H,psi) );
 
     println("\nTotal QN of Ground State = ",totalQN(psi));
 

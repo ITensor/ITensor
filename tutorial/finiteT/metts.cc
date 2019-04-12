@@ -172,7 +172,7 @@ main(int argc, char* argv[])
             //
             //Measure Energy
             //
-            const auto en = overlap(psi,H,psi);
+            const auto en = inner(psi,H,psi);
             en_stat.putin(en);
             auto avgEn = en_stat.avg();
             printfln("Energy of METTS %d = %.14f",step-nwarm,en);
@@ -182,7 +182,7 @@ main(int argc, char* argv[])
             //
             //Measure Susceptibility
             //
-            auto s2val = overlap(psi,S2,psi);
+            auto s2val = inner(psi,S2,psi);
             s2_stat.putin(s2val);
             auto asus = (s2_stat.avg()*beta/3);
             auto esus = (s2_stat.err()*beta/3);
