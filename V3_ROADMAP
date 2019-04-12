@@ -5,6 +5,9 @@
   o Make DMRG tag-friendly
   o Make applyExpH tag-friendly
   o Make diagHermitian tag-friendly
+! Changes to SiteSet
+  o Rename `HubbardSite` -> `ElectronSite`
+  o Rename `SpinlessSite` -> `FermionSite`
 ! Make a version of DMRG/IDMRG that is not in-place
   -> How do we do the output? `auto [psi,E] = dmrg(H,psi0,args)`
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
