@@ -19,9 +19,9 @@ using std::pair;
 using std::make_pair;
 using std::string;
 
-void 
-nmultMPO(MPO const& Aorig, 
-         MPO const& Borig, 
+void
+nmultMPO(MPO const& Aorig,
+         MPO const& Borig,
          MPO& res,
          Args args)
     {
@@ -44,109 +44,42 @@ nmultMPO(MPO const& Aorig,
         B.position(1);
         }
 
-    B.prime();
+    auto lA = linkInds(A);
+    auto lB = linkInds(A);
+    auto sA = siteInds(A,B);
+    auto sB = siteInds(B,A);
 
     res=A;
-    auto siA = uniqueIndex(A(1),{B(1),A(2)});
-    auto siB = uniqueIndex(B(1),{A(1),B(2)});
-    res.ref(1) = ITensor(siA,siB,linkIndex(A,1));
+    res.ref(1) = ITensor(sA(1),sB(1),lA(1));
 
     ITensor clust,nfork;
     for(int i = 1; i < N; ++i)
         {
-        if(i == 1) 
-            { 
-            clust = A(i) * B(i); 
+        if(i == 1)
+            {
+            clust = A(i) * B(i);
             }
-        else       
-            { 
-            clust = nfork * A(i) * B(i); 
+        else
+            {
+            clust = nfork * A(i) * B(i);
             }
 
         if(i == N-1) break;
 
-        nfork = ITensor(linkIndex(A,i),linkIndex(B,i),linkIndex(res,i));
+        nfork = ITensor(lA(i),lB(i),linkIndex(res,i));
 
-        denmatDecomp(clust,res.ref(i),nfork,Fromleft,args);
+        denmatDecomp(clust,res.ref(i),nfork,Fromleft,{args,"Tags=",tags(lA(i))});
 
-        auto mid = commonIndex(res(i),nfork,"Link");
+        auto mid = commonIndex(res(i),nfork);
         mid.dag();
-        auto siA = uniqueIndex(A(i+1),{A(i),A(i+2),B(i+1)});
-        auto siB = uniqueIndex(B(i+1),{B(i),B(i+2),A(i+1)});
-        res.ref(i+1) = ITensor(mid,siA,siB,rightLinkIndex(res,i+1));
+        res.ref(i+1) = ITensor(mid,sA(i+1),sB(i+1),rightLinkIndex(res,i+1));
         }
 
     nfork = clust * A(N) * B(N);
 
     res.svdBond(N-1,nfork,Fromright, args);
-    for(auto i : range1(N))
-        {
-        if(i < N)
-            {
-            auto l = linkIndex(res,i);
-            res.ref(i).noPrime(l);
-            res.ref(i+1).noPrime(l);
-            }
-        res.ref(i).replaceTags("2","1");
-        }
     res.orthogonalize();
     }
-
-//TODO: complete this version that is independent of tag convention
-//void 
-//nmultMPO(MPO const& Aorig, 
-//         MPO const& Borig, 
-//         MPO& C,
-//         Args args)
-//    {
-//    if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
-//
-//    if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
-//    const int N = length(Borig);
-//
-//    auto A = Aorig;
-//    A.position(1);
-//
-//    MPO B;
-//    if(&Borig == &Aorig)
-//        {
-//        B = A;
-//        }
-//    else
-//        {
-//        B = Borig;
-//        B.position(1);
-//        }
-//
-//    C = A;
-//
-//    auto siA = uniqueIndex(A(1),{B(1),A(2)});
-//    auto siB = uniqueIndex(B(1),{A(1),B(2)});
-//    auto liA = linkIndex(A,1);
-//    auto liB = linkIndex(B,1);
-//    auto center = A(1) * B(1); 
-//
-//    auto tagsC = tags(liA);
-//
-//    ITensor nfork;
-//    Index liC;
-//    std::tie(C.ref(1),nfork,liC) = denmatDecomp(center,{siA,siB},{liA,liB},Fromleft,{args,"Tags=",tagsC});
-//
-//    for( auto i = 2; i < N; i++ )
-//        {
-//        // TODO: use siteInds(A,B,i);
-//        siA = uniqueIndex(A(i),{A(i-1),A(i+1),B(i)});
-//        siB = uniqueIndex(B(i),{B(i-1),B(i+1),A(i)});
-//        liA = linkIndex(A,i);
-//        liB = linkIndex(B,i);
-//
-//        center = nfork * A(i) * B(i); 
-//        tagsC = tags(liA);
-//        std::tie(C.ref(i),nfork,liC) = denmatDecomp(center,{siA,siB,liC},{liA,liB},Fromleft,{args,"Tags=",tagsC});
-//        }
-//    C.ref(N) = nfork * A(N) * B(N);
-//    C.orthogonalize();
-//    }
 
 MPO
 nmultMPO(MPO const& A,

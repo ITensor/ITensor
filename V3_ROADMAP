@@ -2,7 +2,6 @@
 
 # Library code:
 ! Make ITensor/MPS/MPO functions tag-friendly
-  o Make nmultMPO tag-friendly
   o Make DMRG tag-friendly
   o Make applyExpH tag-friendly
   o Make diagHermitian tag-friendly
@@ -11,7 +10,6 @@
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
-? In SVD, if "LeftTags" is defined but "RightTags" is not, make RightTags = prime(LeftTags) and vice versa
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)

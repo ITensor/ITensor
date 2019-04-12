@@ -491,14 +491,12 @@ SECTION("nmultMPO")
   CHECK(checkTags(B));
 
   // By default, C-links get the tags of A
-  auto C = nmultMPO(A,B);
+  auto C = nmultMPO(A,prime(B));
 
-  // TODO: make this "Site,2"
-  //CHECK(checkTags(C,"Site,0","Site,2","Link,0"));
-  //CHECK(checkTags(C));
+  CHECK(checkTags(C,"Site,0","Site,2","Link,0"));
 
   // Check the product by calculating the trace
-  CHECK_CLOSE(traceC(prime(A),B),traceC(C));
+  CHECK_CLOSE(traceC(A,prime(B)),traceC(C));
 
   // Check the product by calculating expectation values
   auto initstate = InitState(sites,"Up");
@@ -512,51 +510,29 @@ SECTION("nmultMPO")
     }
   }
 
-//TODO: need to edit nmultMPO to make this work
-//SECTION("nmultMPO (custom tags)")
-//  {
-//  auto N = 4;
-//  auto sites = SpinHalf(N);
-//  auto A = randomMPO(sites,{"Complex=",true});
-//  auto B = randomMPO(sites,{"Complex=",true});
-//
-//  // Set up some custom tags
-//  A.replaceTags("Site,S=1/2,0","x,0");
-//  A.replaceTags("Site,S=1/2,1","y,0");
-//  A.replaceTags("Link","Alink");
-//  B.replaceTags("Site,S=1/2,0","y,0");
-//  B.replaceTags("Site,S=1/2,1","z,0");
-//  B.replaceTags("Link","Blink");
-//
-//  CHECK(checkTags(A,"x","y","Alink"));
-//  CHECK(checkTags(B,"y","z","Blink"));
-//
-//  auto C = nmultMPO(A,B);
-//
-//  CHECK(checkTags(C,"x","z","Alink"));
-//  CHECK(checkTags(Cr,"x","z","Blink"));
-//
-//  auto initstate = InitState(sites,"Up");
-//  for( auto j : range1(N) ) if( j%2 == 1 )
-//    initstate.set(j,"Dn");
-//
-//  auto V = randomMPS(initstate);
-//  V.replaceTags("Link","Vlink");
-//  V.replaceTags("Site,S=1/2","x");
-//
-//  CHECK(checkTags(V,"x","Vlink"));
-//
-//  auto Vc = V;
-//  Vc.dag().replaceTags("x","z").addTags("dag","Vlink");
-//
-//  CHECK(checkTags(Vc,"z","Vlink,dag"));
-//
-//  auto VcCV = V(1)*C(1)*Vc(1);
-//  for( auto i : range1(2,N) ) { VcCV *= V(i)*C(i)*Vc(i); }
-//  auto VcABV = V(1)*A(1)*B(1)*Vc(1);
-//  for( auto i : range1(2,N) ) { VcABV *= V(i)*A(i)*B(i)*Vc(i); }
-//
-//  CHECK_CLOSE(eltC(VcCV),eltC(VcABV));
-//  }
+SECTION("nmultMPO (custom tags)")
+  {
+  auto N = 4;
+  auto sites = SpinHalf(N);
+  auto A = randomMPO(sites,{"Complex=",true});
+  auto B = randomMPO(sites,{"Complex=",true});
+
+  // Set up some custom tags
+  A.replaceTags("Site,S=1/2,0","x,0");
+  A.replaceTags("Site,S=1/2,1","y,0");
+  A.replaceTags("Link","Alink");
+  B.replaceTags("Site,S=1/2,0","y,0");
+  B.replaceTags("Site,S=1/2,1","z,0");
+  B.replaceTags("Link","Blink");
+
+  CHECK(checkTags(A,"x","y","Alink"));
+  CHECK(checkTags(B,"y","z","Blink"));
+
+  auto C = nmultMPO(A,B);
+
+  CHECK(checkTags(C,"x","z","Alink"));
+
+  CHECK_CLOSE(traceC(A,B),traceC(C));
+  }
 
 }
