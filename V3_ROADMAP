@@ -1,18 +1,32 @@
 (! means necessary / blocker for releasing v3)
 
-# Library code:
-! Make ITensor/MPS/MPO functions tag-friendly
-  o Make DMRG tag-friendly
-  o Make applyExpH tag-friendly
-  o Make diagHermitian tag-friendly
+# Breaking changes to library code:
 ! Changes to SiteSet
   o Rename `HubbardSite` -> `ElectronSite`
   o Rename `SpinlessSite` -> `FermionSite`
-! Make a version of DMRG/IDMRG that is not in-place
-  -> How do we do the output? `auto [psi,E] = dmrg(H,psi0,args)`
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
-o Bring over new "iterInds" feature from v2 (just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
+! Bondgate class improvements
+? Move idmrg into a seperate code
+
+# Non-breaking, but nice to have for V3:
+o Improvements to SiteSet:
+  o IndexSet -> SiteSet conversion
+  o Make `op()`, a free version of `.op()`
+o Bring over new "iterInds" feature from v2
+  -> Just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
+o Make diagHermitian tag-friendly
+  -> Generalize to `diagHermitian(H,{i,j},{k,l})`, where `H==swapInds(dag(H),{i,j},{k,l})`
+o Make MPS/MPO functions tag-friendly:
+  o Make DMRG tag-friendly
+    -> Output MPS has tags of input MPS
+    -> Don't require input MPS to have tags "Site" and "Link"
+    -> Allow MPO that don't have site indices that are primes of each other
+  o Make applyExpH tag-friendly
+    -> Output MPS has tags of input MPS
+    -> Don't require input MPS to have tags "Site" and "Link"
+o Make a version of DMRG that is not in-place:
+  -> `auto [psi,E] = dmrg(H,psi0,args)`
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)
@@ -254,14 +268,11 @@ o Remove "Link" and "Site" from MPS and MPO functions
   o DMRG, applyMPO, etc.
 o Implement randomMPS(InitState,m>1)
   o Make initial MPS from initstate, then apply a random unitary circuit
+  o Requires adding QR decomposition to make a random unitary
 o Define QDense * Dense contraction directly
 o Make modifying functions member functions and all other functions free
   (at least for externally-facing functions)
 o Add MPS(std::vector<ITensor>) constructor
-o Generalize the convention for diagHermitian to accept a general pair of indices
-  {ia,ja,ka,...,ib,jb,kb...} where ia==replaceTags(ib,tags(ib),tags(ia)), etc.
-o Generalize the convention of DMRG and applyMPO to accept MPOs with more general
-  tag conventions, not just {s1,s2,...,s1',s2',...}
 ? PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
