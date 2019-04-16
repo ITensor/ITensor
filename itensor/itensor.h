@@ -356,10 +356,12 @@ class ITensor
     //
 
     template <class StorageType>
+    explicit
     ITensor(IndexSet iset,
             StorageType&& store,
             scale_type const& scale = LogNum{1.});
 
+    explicit
     ITensor(IndexSet iset,
             storage_ptr&& pstore,
             scale_type const& scale = LogNum{1.});
@@ -732,13 +734,10 @@ order(ITensor const& T);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
-//Result is equivalent to sqrt((T*T).elt()) 
+//Result is equivalent to sqrt(elt(T*T)) 
 //(and similar for complex case) but computed more efficiently
 Real
 norm(ITensor const& T);
-
-void
-randomize(ITensor & T, Args const& args = Args::global());
 
 ITensor
 random(ITensor T, Args const& args = Args::global());
@@ -925,7 +924,7 @@ operator<<(std::ostream & s, ITensor const& T);
 //
 
 void
-randomize(ITensor & T, Args const& args);
+randomize(ITensor & T, Args const& args = Args::global());
 
 long
 rank(ITensor const& T);

@@ -1168,7 +1168,7 @@ replaceSiteInds(IndexSet const& sites)
     auto N = itensor::length(x);
     if( itensor::length(sites)!=N ) Error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
     auto sx = itensor::siteInds(x);
-    if( sx==sites ) return x;
+    if( equals(sx,sites) ) return x;
     for( auto n : range1(N) )
       {
       auto sn = sites(n);
@@ -1192,7 +1192,7 @@ replaceLinkInds(IndexSet const& links)
     if( N==1 ) return x;
     if( itensor::length(links)!=(N-1) ) Error("In replaceLinkInds(MPS,IndexSet), number of link indices input is not equal to the number of links of the MPS");
     auto lx = itensor::linkInds(x);
-    if( lx==links ) return x;
+    if( equals(lx,links) ) return x;
     for( auto n : range1(N-1) )
       {
       if( n == 1 ) A_[n].replaceInds({lx(n)},{links(n)});

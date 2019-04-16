@@ -1,6 +1,8 @@
 (! means necessary / blocker for releasing v3)
 
 # Breaking changes to library code:
+! Make `elt(T,i=1,j=2)` for complex storage throw an error, require using
+  `eltC(T,i=1,j=2)`.
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 ! Bondgate class improvements
@@ -70,7 +72,8 @@ Completed (this is to help keep track of changes made, but we should make an off
  - Index, IndexSet, IndexVal operations:
 
   o More IndexSet set operations:
-    o Add `==(IndexSet,IndexSet)` to check if they are equal (subsets of one another)
+    o Add `equals(IndexSet,IndexSet)` to check if they are equal (subsets of one another)
+    o Add `hasSameInds(IndexSet,IndexSet)` for set equality
     o Add `hasInds(IndexSet,IndexSet)` to check if one is a subset of another
     o Add `unionInds(IndexSet,IndexSet)->IndexSet` and `unionInds({IndexSet,IndexSet,...})` to get set union
     o Add `uniqueInds(IndexSet,IndexSet)` and `uniqueInds(IndexSet,{IndexSet,...})` to get set difference
@@ -78,8 +81,8 @@ Completed (this is to help keep track of changes made, but we should make an off
     o Add `noncommonInds(IndexSet,IndexSet)` to get set symmetric difference
     o Add `findInds(IndexSet,TagSet)` to get a subset containing tags in the tagset
     o Add `findIndsExcept(IndexSet,TagSet)` to get a subset not containing tags in the tagset
-  o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices in an IndexSet with
-    similar indices
+  o Add `sim(IndexSet)`, `sim(IndexSet,IndexSet)`, `sim(IndexSet,TagSet)` to replace indices 
+    in an IndexSet with similar indices
   o Tagging functions (added to Index and IndexVal):
     o setTags
     o noTags
@@ -89,7 +92,13 @@ Completed (this is to help keep track of changes made, but we should make an off
     o prime
     o setPrime
     o noPrime
-  o Add conversion of `std::initializer_list<Index>`,`std::array<Index,N>`, and `std::vector<Index>` to `IndexSet`
+  o Add conversion of the following to IndexSet: 
+    o `std::initializer_list<Index>`
+    o `std::array<Index,N>`
+    o `std::vector<Index>`
+    o `IndexSet`,`IndexSet`
+    o `Index`,`IndexSet`
+    o `IndexSet`,`Index`
   o Removed `mapPrime(1,2,...)`, use `replaceTags("1","2",...)` instead
     -> Uses of `mapPrime` are superseded by `replaceTags`, `setPrime`, `replaceInds`, etc.
   o Prime level can be accessed through TagSet, i.e. `findIndex(A,"Site,1")` means Index with
@@ -224,7 +233,7 @@ Completed (this is to help keep track of changes made, but we should make an off
   o Deprecate overlap(x,A[,B],y) in favor of inner(x,A[,B],y) (overlap is deprecated with a warning)
     o inner(x,A,y) = <x|A|y>, where the site indices of A|y> are matched to the site indices of <x|
     o inner(x,A,B,y) = <x|AB|y>, where the site indices of AB|y> are matched to the site indices of <x|
-    o Also add inner(A,x,B,y) which does <Ax|By> (this helps to get the norm of A|x> with sqrt(innner(A,x,A,x))
+    o Also add inner(A,x,B,y) which does <Ax|By> (this helps to get the norm of A|x> with sqrt(inner(A,x,A,x))
   o Deprecate overlap(A,B) in favor of trace(A,B) (overlap is deprecated with a warning)
   o Add trace(A) to get the trace of an MPO
   o applyMPO(A,x) -> y, y now has the exact site indices of A|x> and the link tags of x (to allow more general tag conventions)

@@ -395,21 +395,21 @@ hasInds(IndexSet const& is,
   }
 
 bool
-operator==(IndexSet const& is1,
-           IndexSet const& is2)
+hasSameInds(IndexSet const& is1,
+            IndexSet const& is2)
+  {
+  return (order(is1)==order(is2)) && hasInds(is1,is2);
+  }
+
+bool
+equals(IndexSet const& is1,
+       IndexSet const& is2)
   {
   auto N = order(is1);
   if( order(is2)!= N ) return false;
   for( auto n : range1(N) )
     if( is1(n)!=is2(n) ) return false;
   return true;
-  }
-
-bool
-operator!=(IndexSet const& is1,
-           IndexSet const& is2)
-  {
-  return !(is1==is2);
   }
 
 long

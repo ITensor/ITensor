@@ -1535,7 +1535,7 @@ SECTION("Tag functions")
     SECTION("setTags (match index)")
         {
         auto T2 = setTags(T,"tag1,tag2,0",s);
-        CHECK(inds(T2)==inds(setTags(T,"tag1,tag2",s)));
+        CHECK(equals(inds(T2),inds(setTags(T,"tag1,tag2",s))));
         CHECK(hasIndex(T2,l));
         CHECK(hasIndex(T2,r));
         CHECK(hasIndex(T2,u));

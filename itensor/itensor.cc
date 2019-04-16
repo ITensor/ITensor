@@ -638,9 +638,7 @@ swapInds(IndexSet const& is1,
     if( itensor::order(is1) != itensor::order(is2) ) Error("In swapInds, must swap equal numbers of Indices");
 #endif
     auto& T = *this;
-    auto is1r = itensor::unionInds(is1,is2);
-    auto is2r = itensor::unionInds(is2,is1);
-    T.replaceInds(is1r,is2r);
+    T.replaceInds({is1,is2},{is2,is1});
     return T;
     }
 

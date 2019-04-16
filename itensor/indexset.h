@@ -95,6 +95,48 @@ class IndexSet : public RangeT<Index>
         checkQNConsistent(*this);
         }
 
+    // construct from 2 IndexSets
+    IndexSet(IndexSet const& is1,
+             IndexSet const& is2)
+        {
+        auto N1 = is1.order();
+        auto N2 = is2.order();
+        auto N = N1+N2;
+        auto inds = IndexSetBuilder(N);
+        for( auto n1 : range1(N1) )
+          inds.nextIndex(std::move(is1(n1)));
+        for( auto n2 : range1(N2) )
+          inds.nextIndex(std::move(is2(n2)));
+        *this = inds.build();
+        checkQNConsistent(*this);
+        }
+
+    // construct from an Index and IndexSet
+    IndexSet(Index const& i,
+             IndexSet const& is)
+        {
+        auto N = is.order();
+        auto inds = IndexSetBuilder(N+1);
+        inds.nextIndex(std::move(i));
+        for( auto n : range1(N) )
+          inds.nextIndex(std::move(is(n)));
+        *this = inds.build();
+        checkQNConsistent(*this);
+        }
+
+    // construct from an Index and IndexSet
+    IndexSet(IndexSet const& is,
+             Index const& i)
+        {
+        auto N = is.order();
+        auto inds = IndexSetBuilder(N+1);
+        for( auto n : range1(N) )
+          inds.nextIndex(std::move(is(n)));
+        inds.nextIndex(std::move(i));
+        *this = inds.build();
+        checkQNConsistent(*this);
+        }
+
     explicit operator bool() const { return !parent::empty(); }
 
     long
@@ -562,28 +604,32 @@ indexPositions(IndexSet const& is,
 Arrow
 dir(IndexSet const& is, Index const& I);
 
-
+// Return true if the Index `imatch` is in
+// `is`
 bool
 hasIndex(IndexSet const& is, 
          Index const& imatch);
 
+// Return true if all indices of `ismatch`
+// are in `is`
 bool
 hasInds(IndexSet const& is,
         IndexSet const& ismatch);
 
+// Return true if IndexSet `is1` and `is2` have 
+// the same indices
+bool
+hasSameInds(IndexSet const& is1,
+            IndexSet const& is2);
+
 // IndexSets are equal if they are the
 // same size and contain equal indices
-// in equal ordering (i.e. {i,j}=={i,j}
-// but {i,j}!={j,i}).
-// For set equality, you can use:
-// hasInds(is1,is2) && (order(is1)==order(is2))
+// in equal ordering (i.e. equals({i,j},{i,j}) -> true)
+// but equals({i,j},{j,i}) -> false).
+// For set equality, you can use hasSameInds(is1,is2).
 bool
-operator==(IndexSet const& is1,
-           IndexSet const& is2);
-
-bool
-operator!=(IndexSet const& is1,
-           IndexSet const& is2);
+equals(IndexSet const& is1,
+       IndexSet const& is2);
 
 long
 minDim(IndexSet const& iset);
