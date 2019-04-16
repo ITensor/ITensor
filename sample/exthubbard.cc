@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     //
     // Create the Hamiltonian using AutoMPO

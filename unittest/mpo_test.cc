@@ -4,7 +4,7 @@
 #include "itensor/mps/sites/spinone.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
-#include "itensor/mps/sites/hubbard.h"
+#include "itensor/mps/sites/electron.h"
 #include "itensor/mps/autompo.h"
 #include "mps_mpo_test_helper.h"
 
@@ -49,7 +49,7 @@ SECTION("Orthogonalize")
 SECTION("Add MPOs")
     {
     auto N = 50;
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     auto makeInds = [N](std::string name) -> vector<Index>
         {
@@ -111,7 +111,7 @@ SECTION("Add MPOs")
 
 SECTION("Regression Test")
     {
-    auto sites = Hubbard(2);
+    auto sites = Electron(2);
 
     auto A = MPO(sites);
     auto Ia = Index(QN({"Sz",1},{"Nf",-1,-1}),2,
@@ -441,7 +441,7 @@ SECTION("Inner <Hpsi|Kphi> and <psi|H^{d}K|phi>")
 SECTION("Remove QNs from MPO")
     {
     auto N = 50;
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     auto makeInds = [N](std::string name) -> vector<Index>
         {

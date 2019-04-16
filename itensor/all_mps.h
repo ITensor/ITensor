@@ -34,8 +34,8 @@
 
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/sites/hubbard.h"
-#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/electron.h"
+#include "itensor/mps/sites/fermion.h"
 #include "itensor/mps/sites/tj.h"
 #include "itensor/mps/sites/Z3.h"
 

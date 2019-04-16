@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/mps/autompo.h"
-#include "itensor/mps/sites/hubbard.h"
-#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/electron.h"
+#include "itensor/mps/sites/fermion.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/print_macro.h"
 
@@ -13,10 +13,10 @@ using namespace itensor;
 TEST_CASE("AutoMPO Test")
 {
 
-SECTION("Hubbard")
+SECTION("Electron")
     {
     auto N = 10;
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     auto U = 0.1;
     auto t1 = 0.7;
@@ -287,7 +287,7 @@ SECTION("No QN MPO")
 SECTION("Single Site Ops")
     {
     int L = 10;
-    auto sites = Hubbard(L);
+    auto sites = Electron(L);
     auto ampo = AutoMPO(sites);
 
     SECTION("Diagonal op")
@@ -411,10 +411,10 @@ SECTION("toExpH ITensor (QN conservation)")
         }
     }
 
-SECTION("Hubbard, Complex Hopping")
+SECTION("Electron, Complex Hopping")
     {
     auto N = 10;
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     auto t = 0.5;
     auto phi = 0.123;
@@ -471,7 +471,7 @@ SECTION("Hubbard, Complex Hopping")
 SECTION("Ladder with Complex Hopping")
     {
     auto N = 8;
-    auto sites = Hubbard(N);
+    auto sites = Electron(N);
 
     auto tpara = 0.5;
     auto tperp = 0.2;
@@ -566,10 +566,10 @@ SECTION("Ladder with Complex Hopping")
         }
     }
 
-SECTION("Spinless")
+SECTION("Fermion")
     {
     auto N = 4;
-    auto sites = Spinless(N);
+    auto sites = Fermion(N);
     auto ampo = AutoMPO(sites);
     auto t = 0.5;
     for(auto b : range1(N-1))

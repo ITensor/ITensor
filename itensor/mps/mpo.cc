@@ -41,7 +41,7 @@ MPO(const SiteSet& sites,
     { 
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
-    // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
+    // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Electron, etc
     if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = sites.length();
 
     //Set all tensors to identity ops

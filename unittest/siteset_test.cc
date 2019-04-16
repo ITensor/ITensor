@@ -1,8 +1,8 @@
 #include "test.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/sites/hubbard.h"
-#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/electron.h"
+#include "itensor/mps/sites/fermion.h"
 #include "itensor/mps/sites/tj.h"
 #include "itensor/util/print_macro.h"
 
@@ -89,9 +89,9 @@ SECTION("SpinOne")
     sites.op("ISy",2); 
     }
 
-SECTION("Hubbard")
+SECTION("Electron")
     {
-    auto sites = Hubbard(N,{"ConserveQNs=",true});
+    auto sites = Electron(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(dim(sites(i)) == 4);
@@ -110,9 +110,9 @@ SECTION("Hubbard")
     sites.op("F",2); 
     }
 
-SECTION("Spinless")
+SECTION("Fermion")
     {
-    auto sites = Spinless(N,{"ConserveQNs=",true});
+    auto sites = Fermion(N,{"ConserveQNs=",true});
     for(auto i : range1(N))
         {
         CHECK(sites(i).dim() == 2);

@@ -255,7 +255,7 @@ DMRGWorker(MPS & psi,
 
             if(!quiet)
                 { 
-                printfln("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d",
+                printfln("    Truncated to Cutoff=%.1E, Min_dim=%d, Max_dim=%d",
                           sweeps.cutoff(sw),
                           sweeps.mindim(sw), 
                           sweeps.maxdim(sw) );

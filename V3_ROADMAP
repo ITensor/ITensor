@@ -1,9 +1,6 @@
 (! means necessary / blocker for releasing v3)
 
 # Breaking changes to library code:
-! Changes to SiteSet
-  o Rename `HubbardSite` -> `ElectronSite`
-  o Rename `SpinlessSite` -> `FermionSite`
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 ! Bondgate class improvements
@@ -171,6 +168,8 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - MPS operations:
 
+  o Rename `HubbardSite` -> `ElectronSite` (deprecated with a typedef)
+  o Rename `SpinlessSite` -> `FermionSite` (deprecated with a typedef)
   o Add hasQNs(MPS)
   o Deprecate overlap(x,y) in favor of inner(x,y) (overlap is deprecated with a warning)
     o Right now, inner(x,y) conjugates x and then matches the indices of dag(x) and y
@@ -263,17 +262,12 @@ Recent commits to v2:
 
 Optional (possibly post V3, because not breaking changes):
  --> TODO: add these as issues on Github
-o Remove "Link" and "Site" from MPS and MPO functions
-  -> Instead use uniqueIndex, commonIndex, siteIndex, linkIndex, etc.
-  o DMRG, applyMPO, etc.
 o Implement randomMPS(InitState,m>1)
   o Make initial MPS from initstate, then apply a random unitary circuit
   o Requires adding QR decomposition to make a random unitary
 o Define QDense * Dense contraction directly
-o Make modifying functions member functions and all other functions free
-  (at least for externally-facing functions)
 o Add MPS(std::vector<ITensor>) constructor
-? PrintMatrix(ITensor,{Index,...},{Index,...}) function
+o PrintMatrix(ITensor,{Index,...},{Index,...}) function
   o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
     as one big list, but instead print it in a grid that makes it look like a matrix. For example,
     for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j})
@@ -281,15 +275,7 @@ o Add MPS(std::vector<ITensor>) constructor
     the columns run over the combined index (l,j). I think this is especially useful
     for QN conserving ITensors, where it could make it easier to visualize
     blocks of the ITensor.
-o Implement randomMPS(InitState,m>1)
-? Add back some prime functions:
-  o A.primeExcept(plinc=1,index1,index2,...)
-  o A.primeExcept(plinc=1,tagset)
-  o A.mapPrime(pold1,pnew1,index1,pold2,pnew2,index2,...)
-? Add {"Randomize=",true} args for MPS(SiteSet)
-  o Right now, just call randomMPS(siteset)
-  o Matt: I prefer randomMPS(...) since it is consistent with randomITensor(...),
-    though we could make ITensor(...) accept {"Randomize=",true} args
-? Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
-? In site sets, make all of the indices have the same ids but different tags
+o Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
+? In SiteSet, make all of the indices of the same type have the same ids but different tags
+  -> Could make things like shifting gates easier
 

@@ -1,7 +1,7 @@
 #include "test.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinless.h"
+#include "itensor/mps/sites/fermion.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
 #include "mps_mpo_test_helper.h"
@@ -163,7 +163,7 @@ SECTION("Random constructors, QN conserved (dim==1)")
 
 SECTION("MPSAddition 1")
     {
-    auto sites = Spinless(10,{"ConserveQNs=",true});
+    auto sites = Fermion(10,{"ConserveQNs=",true});
 
     auto i1 = InitState(sites,"Emp");
     auto i2 = i1;
@@ -181,7 +181,7 @@ SECTION("MPSAddition 1")
 
 SECTION("MPSAddition Custom Tags")
     {
-    auto sites = Spinless(10,{"ConserveQNs=",true});
+    auto sites = Fermion(10,{"ConserveQNs=",true});
 
     auto i1 = InitState(sites,"Emp");
     auto i2 = i1;
@@ -235,7 +235,7 @@ SECTION("MPSAddition 2")
 
 SECTION("PositionTest")
     {
-    auto sites = Spinless(10);
+    auto sites = Fermion(10);
 
     auto init = InitState(sites,"Emp");
     init.set(2,"Occ");

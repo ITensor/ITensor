@@ -2,26 +2,26 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_SPINLESS_H
-#define __ITENSOR_SPINLESS_H
+#ifndef __ITENSOR_FERMION_H
+#define __ITENSOR_FERMION_H
 #include "itensor/mps/siteset.h"
 
 namespace itensor {
 
-class SpinlessSite;
+class FermionSite;
 
-using Spinless = BasicSiteSet<SpinlessSite>;
+using Fermion = BasicSiteSet<FermionSite>;
 
-class SpinlessSite
+class FermionSite
     {
     Index s;
     public:
 
-    SpinlessSite() { }
+    FermionSite() { }
 
-    SpinlessSite(Index I) : s(I) { }
+    FermionSite(Index I) : s(I) { }
 
-    SpinlessSite(int n, Args const& args = Args::global())
+    FermionSite(int n, Args const& args = Args::global())
         {
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
@@ -32,17 +32,16 @@ class SpinlessSite
             {
             auto q_occ = QN({"Nf",1});
             if(not conserve_Nf) q_occ = QN({"Pf",1,-2});
-            // TODO: should this have Tag("Spinless")?
-            s = Index{QN(),1,
-                      q_occ,1,Out,ts};
+            s = Index(QN(),1,
+                      q_occ,1,Out,ts);
             }
         else
             {
             QN q_occ;
             if(n%2==1) q_occ = QN({"Sz",+1},{"Nf",1,-1});
             else       q_occ = QN({"Sz",-1},{"Nf",1,-1});
-            s = Index{QN(),1,
-                      q_occ,1,Out,ts};
+            s = Index(QN(),1,
+                      q_occ,1,Out,ts);
             }
         }
 
@@ -129,6 +128,14 @@ class SpinlessSite
         return Op;
         }
     };
+
+//
+// Deprecated, for backwards compatability
+//
+
+using SpinlessSite = FermionSite;
+
+using Spinless = BasicSiteSet<SpinlessSite>;
 
 } //namespace itensor
 
