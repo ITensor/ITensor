@@ -61,10 +61,16 @@ idmrg: idmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 idmrg-g: mkdebugdir .debug_objs/idmrg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/idmrg.o -o idmrg-g $(LIBGFLAGS)
 
+trg: trg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) trg.o -o trg $(LIBFLAGS)
+
+trg-g: mkdebugdir .debug_objs/trg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/trg.o -o trg-g $(LIBGFLAGS)
+
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
 	@rm -fr *.o .debug_objs dmrg dmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
-    idmrg idmrg-g mixedspin mixedspin-g
+    idmrg idmrg-g mixedspin mixedspin-g trg trg-g
