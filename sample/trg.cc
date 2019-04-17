@@ -49,16 +49,16 @@ for(auto scale : range1(topscale))
                                                "Tags=","left,scale="+str(scale),
                                                "ShowEigs=",true});
 
+    // Get the upper-right and lower-left tensors
+    auto [Fu,Fd,u_new] = factor(A,{l,d},{u,r},{"MaxDim=",maxdim,
+                                               "Tags=","up,scale="+str(scale),
+                                               "ShowEigs=",true});
+
     // Make the new index of Fl distinct
     // from the new index of Fr by changing
     // the tag from "left" to "right"
     auto r_new = replaceTags(l_new,"left","right");
     Fr *= delta(l_new,r_new);
- 
-    // Get the upper-right and lower-left tensors
-    auto [Fu,Fd,u_new] = factor(A,{l,d},{u,r},{"MaxDim=",maxdim,
-                                               "Tags=","up,scale="+str(scale),
-                                               "ShowEigs=",true});
 
     // Make the new index of Fd distinct
     // from the new index of Fu by changing the tag
@@ -70,9 +70,8 @@ for(auto scale : range1(topscale))
     Fu *= delta(d,u);
     Fr *= delta(l,r);
     Fd *= delta(u,d);
-    
     A = Fl * Fu * Fr * Fd;
-
+    
     Print(A);
 
     // Update the indices
