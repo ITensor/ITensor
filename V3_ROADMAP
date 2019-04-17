@@ -5,8 +5,9 @@
   `eltC(T,i=1,j=2)`.
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
-! Bondgate class improvements
-? Move idmrg into a seperate code
+! Port IgnoreDegeneracy flag from V2
+! Move idmrg into a seperate code
+? Move arnoldi, gmres seperate code
 
 # Non-breaking, but nice to have for V3:
 o Improvements to SiteSet:
@@ -58,6 +59,25 @@ o Make a version of DMRG that is not in-place:
     tests. Maybe for the DMRG one just do one sweep.
     Or perhaps better, Dylan can config Jenkins to 
     compile the sample codes.
+
+# Probably post-V3 (TODO: add as issues on Github)
+o Bondgate class improvements
+o Implement randomMPS(InitState,m>1)
+  o Make initial MPS from initstate, then apply a random unitary circuit
+  o Requires adding QR decomposition to make a random unitary
+o Define QDense * Dense contraction directly
+o Add MPS(std::vector<ITensor>) constructor
+o PrintMatrix(ITensor,{Index,...},{Index,...}) function
+  o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
+    as one big list, but instead print it in a grid that makes it look like a matrix. For example,
+    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j})
+    prints A as if it were a matrix where the rows run over the combined Index (i,j) and
+    the columns run over the combined index (l,j). I think this is especially useful
+    for QN conserving ITensors, where it could make it easier to visualize
+    blocks of the ITensor.
+o Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
+? In SiteSet, make all of the indices of the same type have the same ids but different tags
+  -> Could make things like shifting gates easier
 
 #################################################################################################
 Completed (this is to help keep track of changes made, but we should make an official
@@ -262,29 +282,9 @@ Completed (this is to help keep track of changes made, but we should make an off
   o In Sweeps object, added deprecation warning for .maxm() and .minm(), saying to use .maxdim() and .mindim()
 
 Recent commits to v2:
+  o IgnoreDegeneracy flag in SVD truncation
   o errMPOProd and deprecation of checkMPOProd
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
   o Bugfix for nmultMPO
   o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
-
------------------------------------------------
-
-Optional (possibly post V3, because not breaking changes):
- --> TODO: add these as issues on Github
-o Implement randomMPS(InitState,m>1)
-  o Make initial MPS from initstate, then apply a random unitary circuit
-  o Requires adding QR decomposition to make a random unitary
-o Define QDense * Dense contraction directly
-o Add MPS(std::vector<ITensor>) constructor
-o PrintMatrix(ITensor,{Index,...},{Index,...}) function
-  o Matt: the idea is to make a print function that doesn't just print the data of the ITensor
-    as one big list, but instead print it in a grid that makes it look like a matrix. For example,
-    for ITensor A with Index's i,j,k,l, PrintMatrix(A,{i,k},{l,j})
-    prints A as if it were a matrix where the rows run over the combined Index (i,j) and
-    the columns run over the combined index (l,j). I think this is especially useful
-    for QN conserving ITensors, where it could make it easier to visualize
-    blocks of the ITensor.
-o Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
-? In SiteSet, make all of the indices of the same type have the same ids but different tags
-  -> Could make things like shifting gates easier
 

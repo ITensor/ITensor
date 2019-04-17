@@ -127,10 +127,9 @@ denmatDecomp(ITensor const& T,
              BigMatrixT const& PH,
              Args args = Args::global())
     {
-    ITensor A(Ais),B(Bis);
-    denmatDecomp(T,A,B,dir,PH,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
+            Error("In svd, A indices and B indices must match the indices of the input ITensor");
+    return denmatDecomp(T,Ais,dir,PH,args);
     }
 
 template<class BigMatrixT>
@@ -141,8 +140,10 @@ denmatDecomp(ITensor const& T,
              BigMatrixT const& PH,
              Args args = Args::global())
     {
-    auto Bis = uniqueInds(inds(T),Ais);
-    return denmatDecomp(T,Ais,Bis,dir,PH,args);
+    ITensor A(Ais),B;
+    denmatDecomp(T,A,B,dir,PH,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
     }
 
 std::tuple<ITensor,ITensor,Index>
