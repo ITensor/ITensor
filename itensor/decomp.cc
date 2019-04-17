@@ -222,19 +222,20 @@ std::tuple<ITensor,ITensor,ITensor,Index,Index>
 svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
     Args args)
     {
-    ITensor U(Uis),S,V(Vis);
-    svd(AA,U,S,V,args);
-    auto u = commonIndex(U,S);
-    auto v = commonIndex(S,V);
-    return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
+    if( !hasSameInds(Vis,uniqueInds(inds(AA),Uis)) )
+      Error("In svd, U indices and V indices must match the indices of the input ITensor");
+    return svd(AA,Uis,args);
     }
 
 std::tuple<ITensor,ITensor,ITensor,Index,Index>
 svd(ITensor AA, IndexSet const& Uis,
     Args args)
     {
-    auto Vis = uniqueInds(inds(AA),Uis);
-    return svd(AA,Uis,Vis,args);
+    ITensor U(Uis),S,V;
+    svd(AA,U,S,V,args);
+    auto u = commonIndex(U,S);
+    auto v = commonIndex(S,V);
+    return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
     }
 
 std::tuple<Real,Real>
