@@ -137,13 +137,26 @@ svd(ITensor AA,
         }
       }
 
+    if( args.defined("UseOrigM") )
+      {
+      if( args.defined("UseOrigDim") )
+        {
+        Global::warnDeprecated("Args UseOrigM and UseOrigDim are both defined. UseOrigM is deprecated in favor of UseOrigDim, UseOrigDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg UseOrigDim is deprecated in favor of MaxDim.");
+        args.add("UseOrigDim",args.getBool("UseOrigM"));
+        }
+      }
+
 #ifdef DEBUG
     if(!U && !V)
         Error("U and V default-initialized in svd, must indicate at least one index on U or V");
 #endif
 
     auto noise = args.getReal("Noise",0);
-    auto useOrigM = args.getBool("UseOrigM",false);
+    auto useOrigDim = args.getBool("UseOrigDim",false);
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
@@ -184,7 +197,7 @@ svd(ITensor AA,
         AA *= Vcomb;
         }
 
-    if(useOrigM)
+    if(useOrigDim)
         {
         //Try to determine current m,
         //then set mindim_ and maxdim_ to this.
@@ -195,7 +208,7 @@ svd(ITensor AA,
             {
             //auto mid = commonIndex(U,V,Link);
             //TODO: check this does the same thing
-            auto mid = commonIndex(U,V,"Link");
+            auto mid = commonIndex(U,V);
             if(mid) mindim = maxdim = dim(mid);
             else    mindim = maxdim = 1;
             }
@@ -222,7 +235,7 @@ std::tuple<ITensor,ITensor,ITensor,Index,Index>
 svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
     Args args)
     {
-    if( !hasSameInds(Vis,uniqueInds(inds(AA),Uis)) )
+    if( !hasSameInds(inds(AA),IndexSet(Uis,Vis)) )
       Error("In svd, U indices and V indices must match the indices of the input ITensor");
     return svd(AA,Uis,args);
     }
@@ -406,7 +419,6 @@ factor(ITensor const& T,
        ITensor      & B,
        Args const& args)
     {
-    //TODO: make a standard TagSet for factor()
     auto itagset = getTagSet(args,"Tags","Link");
     ITensor D;
     auto spec = svd(T,A,D,B,{args,"LeftTags=",itagset});
@@ -426,10 +438,9 @@ factor(ITensor const& T,
        IndexSet const& Bis,
        Args const& args)
     {
-    ITensor A(Ais),B(Bis);
-    factor(T,A,B,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
+      Error("In factor, A indices and B indices must match the indices of the input ITensor");
+    return factor(T,Ais,args);
     }
 
 std::tuple<ITensor,ITensor,Index>
@@ -437,8 +448,10 @@ factor(ITensor const& T,
        IndexSet const& Ais,
        Args const& args)
     {
-    auto Bis = uniqueInds(inds(T),Ais);
-    return factor(T,Ais,Bis,args);
+    ITensor A(Ais),B;
+    factor(T,A,B,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
     }
 
 //TODO: create a tag convention
@@ -570,10 +583,9 @@ denmatDecomp(ITensor const& T,
              Direction dir,
              Args const& args)
     {
-    ITensor A(Ais),B(Bis);
-    denmatDecomp(T,A,B,dir,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
+      Error("In svd, A indices and B indices must match the indices of the input ITensor");
+    return denmatDecomp(T,Ais,dir,args);
     }
 
 std::tuple<ITensor,ITensor,Index>
@@ -582,8 +594,10 @@ denmatDecomp(ITensor const& T,
              Direction dir,
              Args const& args)
     {
-    auto Bis = uniqueInds(inds(T),Ais);
-    return denmatDecomp(T,Ais,Bis,dir,args);
+    ITensor A(Ais),B;
+    denmatDecomp(T,A,B,dir,args);
+    auto l = commonIndex(A,B);
+    return std::tuple<ITensor,ITensor,Index>(A,B,l);
     }
 
 Spectrum
@@ -592,7 +606,6 @@ diagHermitian(ITensor const& M,
               ITensor      & D,
               Args args)
     {
-    //TODO: create tag convention
     if(!args.defined("Tags")) args.add("Tags","Link");
 
     //
