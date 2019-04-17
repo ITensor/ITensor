@@ -2,15 +2,6 @@
 
 using namespace itensor;
 
-
-//
-// Tutorial instructions:
-//
-// Look for two places in the code below
-// where there are comments with a TODO.
-// Read the task and insert the missing code.
-//
-
 int main()
 {
 Real T = 3.0;
@@ -23,8 +14,8 @@ auto dim0 = 2;
 // the Ising partition function
 auto s = Index(dim0,"scale=0");
 
-// Define the indices of one of the
-// Boltzmann weights
+// Define the indices of the scale-0
+// Boltzmann weight tensor "A"
 auto l = addTags(s,"left");
 auto r = addTags(s,"right");
 auto u = addTags(s,"up");
@@ -32,10 +23,9 @@ auto d = addTags(s,"down");
 
 auto A = ITensor(l,r,u,d);
 
+// Fill the A tensor with correct Boltzmann weights:
 auto Sig = [](int s) { return 1.-2.*(s-1); };
-
 auto E0 = -4.;
-
 for(auto sl : range1(dim0))
 for(auto sd : range1(dim0))
 for(auto sr : range1(dim0))
@@ -75,24 +65,6 @@ for(auto scale : range1(topscale))
     // from "up" to "down"
     auto d_new = replaceTags(u_new,"up","down");
     Fd *= delta(u_new,d_new);
-
-    // TODO:
-    // Add code here combining Fl, Fr, Fu, Fd to
-    // correctly make new "A" tensor at the next scale
-    //
-    // Hint: use delta tensors to ensure the proper
-    // indices contract with each other, for example:
-    //
-    // Fl *= delta(r,l);
-    // Fu *= ...
-    //
-    // Then, contract them to get the new A tensor:
-    //
-    // A = Fl * ...
-    //
-    // Use the Print(...) command to print and inspect 
-    // each intermediate tensor.
-    //
 
     Fl *= delta(r,l);
     Fu *= delta(d,u);
