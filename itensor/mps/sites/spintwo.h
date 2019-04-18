@@ -6,6 +6,7 @@
 #define __ITENSOR_SPINTWO_H
 #include "itensor/mps/siteset.h"
 #include "itensor/mps/sites/spinhalf.h"
+#include "itensor/util/str.h"
 
 // Code written by Samuel Gozel
 
@@ -28,16 +29,18 @@ class SpinTwo : public SiteSet
 
 class SpinTwoSite
 	{
-    Index s;
+  Index s;
 	public:
 
     SpinTwoSite() { }
 
     SpinTwoSite(Index I) : s(I) { }
 
-    SpinTwoSite(int n, Args const& args = Args::global())
-		{
-        auto ts = format("Site,S=2,n=%d",n);
+    SpinTwoSite(Args const& args = Args::global())
+        {
+        auto ts = TagSet("Site,S=2");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         if(conserveSz)
@@ -52,7 +55,7 @@ class SpinTwoSite
             {
             s = Index{5,ts};
             }
-		}
+        }
 
     Index
     index() const { return s; }
@@ -90,7 +93,7 @@ class SpinTwoSite
     ITensor
     op(std::string const& opname,
        Args const& args) const
-		{
+        {
         const Real val1 = std::sqrt(6.0)/2.0;
         const Real val2 = std::sqrt(6.0);
 
@@ -232,8 +235,18 @@ class SpinTwoSite
             }
 
         return Op;
-		}
-	}; //SpinTwoSite
+        }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    SpinTwoSite(int n, Args const& args = Args::global())
+        {
+        *this = SpinTwoSite({args,"SiteNumber=",n});
+        }
+
+    }; //SpinTwoSite
 
 inline SpinTwo::
 SpinTwo(int N, 
@@ -248,23 +261,23 @@ SpinTwo(int N,
     if(shedge || Lshedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
-        sites.set(1,SpinHalfSite(1));
+        sites.set(1,SpinHalfSite({args,"SiteNumber=",1}));
         start = 2;
         }
 
     for(int j = start; j < N; ++j)
         {
-        sites.set(j,SpinTwoSite(j));
+        sites.set(j,SpinTwoSite({args,"SiteNumber=",j}));
         }
 
     if(shedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
-        sites.set(N,SpinHalfSite(N));
+        sites.set(N,SpinHalfSite({args,"SiteNumber=",N}));
         }
     else
         {
-        sites.set(N,SpinTwoSite(N));
+        sites.set(N,SpinTwoSite({args,"SiteNumber=",N}));
         }
 
     SiteSet::init(std::move(sites));

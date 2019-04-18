@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_SITESET_H
 #define __ITENSOR_SITESET_H
 #include "itensor/itensor.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -264,7 +265,7 @@ SiteSet(int N, int d)
     auto sites = SiteStore(N);
     for(int j = 1; j <= N; ++j)
         {
-        auto I = Index(d,format("Site,n=%d",j));
+        auto I = Index(d,"Site,n="+str(j));
         sites.set(j,GenericSite(I));
         }
     SiteSet::init(std::move(sites));
@@ -464,7 +465,7 @@ class BasicSiteSet : public SiteSet
         auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
-            sites.set(j,SiteType(j,args));
+            sites.set(j,SiteType({args,"SiteNumber=",j}));
             }
         SiteSet::init(std::move(sites));
         }
@@ -499,8 +500,8 @@ class MixedSiteSet : public SiteSet
         auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
-            if(j%2 == 1) sites.set(j,ASiteType(j,args));
-            else         sites.set(j,BSiteType(j,args));
+            if(j%2 == 1) sites.set(j,ASiteType({args,"SiteNumber=",j}));
+            else         sites.set(j,BSiteType({args,"SiteNumber=",j}));
             }
         SiteSet::init(std::move(sites));
         }
@@ -575,6 +576,36 @@ merge(SiteSetT const& sites1,
         ++i;
         }
     return SiteSetT{inds};
+    }
+
+//
+// For site types that define member
+// functions .index(), .state(), and .op(),
+// these are the free function versions
+//
+
+template <typename SiteType>
+Index
+index(SiteType const& s)
+    {
+    return s.index();
+    }
+
+template <typename SiteType>
+IndexVal
+state(SiteType const& s,
+      std::string const& st)
+    {
+    return s.state(st);
+    }
+
+template <typename SiteType>
+ITensor
+op(SiteType const& s,
+   std::string const& opname,
+   Args const& args = Args::global())
+    {
+    return s.op(opname,args);
     }
 
 } //namespace itensor

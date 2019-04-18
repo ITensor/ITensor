@@ -6,6 +6,7 @@
 #define __ITENSOR_SPINONE_H
 #include "itensor/mps/siteset.h"
 #include "itensor/mps/sites/spinhalf.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -35,20 +36,22 @@ class SpinOneSite
 
     SpinOneSite(Index I) : s(I) { }
 
-    SpinOneSite(int n, Args const& args = Args::global())
+    SpinOneSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1,n=%d",n);
+        auto ts = TagSet("Site,S=1");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN({"Sz",+2}),1,
+            s = Index(QN({"Sz",+2}),1,
                       QN({"Sz", 0}),1,
-                      QN({"Sz",-2}),1,Out,ts};
+                      QN({"Sz",-2}),1,Out,ts);
             }
         else
             {
-            s = Index{3,ts};
+            s = Index(3,ts);
             }
         }
 
@@ -216,6 +219,16 @@ class SpinOneSite
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    SpinOneSite(int n, Args const& args = Args::global())
+        {
+        *this = SpinOneSite({args,"SiteNumber=",n});
+        }
+
     };
 
 inline SpinOne::

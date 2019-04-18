@@ -2,9 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_HUBBARD_H
-#define __ITENSOR_HUBBARD_H
+#ifndef __ITENSOR_ELECTRON_H
+#define __ITENSOR_ELECTRON_H
 #include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -17,32 +18,32 @@ class ElectronSite
     Index s;
     public:
 
-    ElectronSite() { }
-
     ElectronSite(Index I) : s(I) { }
 
-    ElectronSite(int n, Args const& args = Args::global())
+    ElectronSite(Args const& args = Args::global())
         {
+        auto ts = TagSet("Site,Elec");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveNf = args.getBool("ConserveNf",conserveQNs);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
-        auto ts = format("Site,Elec,n=%d",n);
         if(conserveNf)
             {
-            s = Index{QN({"Sz", 0},{"Nf",0,-1}),1,
+            s = Index(QN({"Sz", 0},{"Nf",0,-1}),1,
                       QN({"Sz",Up},{"Nf",1,-1}),1,
                       QN({"Sz",Dn},{"Nf",1,-1}),1,
-                      QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts};
+                      QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts);
             }
         else //don't conserve Nf, only fermion parity
             {
             if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Electron sites");
-            s = Index{QN({"Sz", 0},{"Pf",0,-1}),1,
+            s = Index(QN({"Sz", 0},{"Pf",0,-1}),1,
                       QN({"Sz",+1},{"Pf",1,-1}),1,
                       QN({"Sz",-1},{"Pf",1,-1}),1,
-                      QN({"Sz", 0},{"Pf",0,-1}),1,Out,ts};
+                      QN({"Sz", 0},{"Pf",0,-1}),1,Out,ts);
             }
         }
 
@@ -220,6 +221,16 @@ class ElectronSite
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    ElectronSite(int n, Args const& args = Args::global())
+        {
+        *this = ElectronSite({args,"SiteNumber=",n});
+        }
+
     };
 
 //

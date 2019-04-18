@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_FERMION_H
 #define __ITENSOR_FERMION_H
 #include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -21,13 +22,18 @@ class FermionSite
 
     FermionSite(Index I) : s(I) { }
 
-    FermionSite(int n, Args const& args = Args::global())
+    FermionSite(Args const& args = Args::global())
         {
+        auto ts = TagSet("Site,Fermion");
+        auto n = 1;
+        if( args.defined("SiteNumber") )
+          {
+          n = args.getInt("SiteNumber");
+          ts.addTags("n="+str(n));
+          }
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
         auto oddevenupdown = args.getBool("OddEvenUpDown",false);
-        auto ts = format("Site,NoSpin,n=%d",n);
-
         if(not oddevenupdown) //usual case
             {
             auto q_occ = QN({"Nf",1});
@@ -127,6 +133,16 @@ class FermionSite
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    FermionSite(int n, Args const& args = Args::global())
+        {
+        *this = FermionSite({args,"SiteNumber=",n});
+        }
+
     };
 
 //

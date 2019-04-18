@@ -12,6 +12,7 @@
 # Non-breaking, but nice to have for V3:
 o Bring over new "iterInds" feature from v2
   -> Just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
+o Add option to conserve only parity for ElectronSite
 o Make diagHermitian tag-friendly
   -> Generalize to `diagHermitian(H,{i,j},{k,l})`, where `H==swapInds(dag(H),{i,j},{k,l})`
 o Make MPS/MPO functions tag-friendly:
@@ -133,6 +134,12 @@ Completed (this is to help keep track of changes made, but we should make an off
   o Add `findIndex(ITensor,TagSet) -> Index`, which finds the Index in the ITensor 
     containing certain tags
   o Remove `findType`, use `findIndex` instead
+
+ - Changes to SiteTypes
+
+  o Default constructors SpinHalf(), SpinOne(), etc. now make a site, but without an `"n="+str(n)` tag (before made an empty Index)
+  o Specify the site number with {"SiteNumber=",n} arg, instead of SpinHalf(int n, Args args) (old version kept for backwards compatibility)
+  o index(SiteType) -> Index, op(SiteType,string) -> ITensor, state(SiteType,string) -> IndexVal
 
  - ITensor operations:
 

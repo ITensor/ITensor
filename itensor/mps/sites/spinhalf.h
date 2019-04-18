@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_SPINHALF_H
 #define __ITENSOR_SPINHALF_H
 #include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -17,23 +18,23 @@ class SpinHalfSite
     Index s;
     public:
 
-    SpinHalfSite() { }
-
     SpinHalfSite(Index const& I) : s(I) { }
 
-    SpinHalfSite(int n, Args const& args = Args::global())
+    SpinHalfSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,S=1/2,n=%d",n);
+        auto ts = TagSet("Site,S=1/2");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
         if(conserveSz)
             {
-            s = Index{QN({"Sz",+1}),1,
-                      QN({"Sz",-1}),1,Out,ts};
+            s = Index(QN({"Sz",+1}),1,
+                      QN({"Sz",-1}),1,Out,ts);
             }
         else
             {
-            s = Index{2,ts};
+            s = Index(2,ts);
             }
         }
 
@@ -61,7 +62,7 @@ class SpinHalfSite
 
 	ITensor
 	op(std::string const& opname,
-	   Args const& args) const
+	   Args const& args = Args::global()) const
         {
         auto sP = prime(s);
 
@@ -149,8 +150,17 @@ class SpinHalfSite
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    SpinHalfSite(int n, Args const& args = Args::global())
+        {
+        *this = SpinHalfSite({args,"SiteNumber=",n});
+        }
+
     };
 
 } //namespace itensor
-
 #endif

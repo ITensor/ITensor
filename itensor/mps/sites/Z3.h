@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_Z3_H
 #define __ITENSOR_Z3_H
 #include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -21,9 +22,11 @@ class Z3Site
 
     Z3Site(Index I) : s(I) { }
 
-    Z3Site(int n, Args const& args = Args::global())
+    Z3Site(Args const& args = Args::global())
         {
-        auto ts = format("Site,Z3,n=%d",n);
+        auto ts = TagSet("Site,Z3");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         s = Index{QN({"T",0,3}),1,
                   QN({"T",1,3}),1,
                   QN({"T",2,3}),1,Out,ts};
@@ -117,6 +120,16 @@ class Z3Site
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    Z3Site(int n, Args const& args = Args::global())
+        {
+        *this = Z3Site({args,"SiteNumber=",n});
+        }
+
     };
 
 } //namespace itensor

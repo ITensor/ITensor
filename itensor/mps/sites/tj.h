@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_TJ_H
 #define __ITENSOR_TJ_H
 #include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
 
 namespace itensor {
 
@@ -21,9 +22,11 @@ class tJSite
 
     tJSite(Index I) : s(I) { }
 
-    tJSite(int n, Args const& args = Args::global())
+    tJSite(Args const& args = Args::global())
         {
-        auto ts = format("Site,tJ,n=%d",n);
+        auto ts = TagSet("Site,tJ");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
         s = Index{QN({"Sz", 0},{"Nf",0}),1,
                   QN({"Sz",+1},{"Nf",1}),1,
                   QN({"Sz",-1},{"Nf",1}),1,Out,ts};
@@ -176,6 +179,16 @@ class tJSite
 
         return Op;
         }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    tJSite(int n, Args const& args = Args::global())
+        {
+        *this = tJSite({args,"SiteNumber=",n});
+        }
+
     };
 
 } //namespace itensor
