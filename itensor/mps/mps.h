@@ -673,6 +673,9 @@ siteInds(MPS const& x);
 MPS
 replaceSiteInds(MPS x, IndexSet const& sites);
 
+MPS
+replaceLinkInds(MPS x, IndexSet const& links);
+
 Index
 siteIndex(MPS const& x, int j);
 
