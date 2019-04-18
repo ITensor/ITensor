@@ -36,6 +36,8 @@ class MPS
 
     MPS(SiteSet const& sites, int m = 1);
 
+    MPS(IndexSet const& sites, int m = 1);
+
     MPS(InitState const& initState);
 
     MPS(MPS const& other);
@@ -649,12 +651,14 @@ isOrtho(MPS const& x);
 int
 orthoCenter(MPS const& x);
 
+int
+rightLim(MPS const& x);
+
+int
+leftLim(MPS const& x);
+
 Real
 norm(MPS const& x);
-
-// Deprecated in favor of x.normalize()
-Real
-normalize(MPS & x);
 
 bool
 hasSiteInds(MPS const& x, IndexSet const& sites);
@@ -696,17 +700,9 @@ template<typename MPSType>
 Real
 averageLinkDim(MPSType const& x);
 
-// Deprecated
-Real
-averageM(MPS const& x);
-
 template<typename MPSType>
 int
 maxLinkDim(MPSType const& x);
-
-// Deprecated
-int
-maxM(MPS const& x);
 
 //
 // Applies a bond gate to the bond that is currently
@@ -798,6 +794,16 @@ operator<<(std::ostream& s, InitState const& state);
 //
 // Deprecated
 //
+
+int
+maxM(MPS const& x);
+
+Real
+averageM(MPS const& x);
+
+// Deprecated in favor of x.normalize()
+Real
+normalize(MPS & x);
 
 template <class MPSType>
 Real 

@@ -46,8 +46,8 @@ nmultMPO(MPO const& Aorig,
 
     auto lA = linkInds(A);
     auto lB = linkInds(A);
-    auto sA = siteInds(A,B);
-    auto sB = siteInds(B,A);
+    auto sA = uniqueSiteInds(A,B);
+    auto sB = uniqueSiteInds(B,A);
 
     res=A;
     res.ref(1) = ITensor(sA(1),sB(1),lA(1));
@@ -127,7 +127,7 @@ applyMPO(MPO const& K,
         // default starting state
         // TODO: consider using zipUpApplyMPOImpl as 
         // a way to get a better starting state
-        auto sites = siteInds(K,x);
+        auto sites = uniqueSiteInds(K,x);
         res = replaceSiteInds(x,sites);
         //res = x;
         fitApplyMPOImpl(x,K,res,args);
@@ -215,7 +215,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     // Make sure the original and conjugates match
     for(auto j : range1(N-1)) 
-        Kc.ref(j).prime(-rand_plev,siteIndex(Kc,psic,j));
+        Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
@@ -284,7 +284,7 @@ fitApplyMPOImpl(Real fac,
     auto normalize = args.getBool("Normalize",false);
 
     for( auto n : range1(N) )
-        if( siteIndex(Kx,n)!=siteIndex(K,x,n) )
+        if( siteIndex(Kx,n)!=uniqueSiteIndex(K,x,n) )
             Error("In applyMPO with Method=Fit, guess MPS must have the same sites that the result of MPO*MPS would have");
 
     auto rand_plev = 43154353;

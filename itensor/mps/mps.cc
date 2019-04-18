@@ -25,6 +25,11 @@ new_tensors(std::vector<ITensor>& A,
             SiteSet const& sites,
             int m = 1);
 
+void
+new_tensors(std::vector<ITensor>& A,
+            IndexSet const& sites,
+            int m = 1);
+
 //
 // class MPS
 //
@@ -67,6 +72,21 @@ MPS(SiteSet const& sites,
     writedir_("./"),
     do_write_(false)
     { 
+    new_tensors(A_,sites,m);
+    }
+
+MPS::
+MPS(IndexSet const& sites,
+    int m)
+    :
+    N_(sites.length()),
+    A_(sites.length()+2), //idmrg may use A_[0] and A[N+1]
+    l_orth_lim_(0),
+    r_orth_lim_(sites.length()+1),
+    atb_(1),
+    writedir_("./"),
+    do_write_(false)
+    {
     new_tensors(A_,sites,m);
     }
 
@@ -440,6 +460,30 @@ new_tensors(std::vector<ITensor>& A,
     for(int i = 2; i < N; i++)
         { 
         A[i] = ITensor(dag(a[i-1]),sites(i),a[i]); 
+        }
+    A[N] = ITensor(dag(a[N-1]),sites(N));
+    }
+
+void
+new_tensors(std::vector<ITensor>& A,
+            IndexSet const& sites,
+            int m)
+    {
+    auto N = length(sites);
+    auto a = std::vector<Index>(N+1);
+    if(hasQNs(sites))
+        {
+        if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,format("Link,l=%d",i));
+        else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from an IndexSet");
+        }
+    else
+        {
+        for(auto i : range1(N)) a[i] = Index(m,format("Link,l=%d",i));
+        }
+    A[1] = ITensor(sites(1),a[1]);
+    for(int i = 2; i < N; i++)
+        {
+        A[i] = ITensor(dag(a[i-1]),sites(i),a[i]);
         }
     A[N] = ITensor(dag(a[N-1]),sites(N));
     }
@@ -911,6 +955,18 @@ orthoCenter(MPS const& psi)
     return (psi.leftLim() + 1);
     }
 
+int
+rightLim(MPS const& x)
+    {
+    return x.rightLim();
+    }
+
+int
+leftLim(MPS const& x)
+    {
+    return x.leftLim();
+    }
+
 Real
 norm(MPS const& psi)
     {
@@ -1199,6 +1255,13 @@ replaceLinkInds(IndexSet const& links)
       else A_[n].replaceInds({lx(n-1),lx(n)},{links(n-1),links(n)});
       }
     A_[N].replaceInds({lx(N-1)},{links(N-1)});
+    return x;
+    }
+
+MPS
+replaceLinkInds(MPS x, IndexSet const& links)
+    {
+    x.replaceLinkInds(links);
     return x;
     }
 

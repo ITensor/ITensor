@@ -160,37 +160,37 @@ siteIndex(MPO const& W, int b, TagSet const& tsmatch)
     }
 
 // Find the site Index of the bth MPO tensor of W
-// that is not the input site Index s
+// that is not in the IndexSet is
 Index
-siteIndex(MPO const& W, Index const& s, int b)
+uniqueSiteIndex(MPO const& W, IndexSet const& is, int b)
     {
-    return findIndex(uniqueInds(siteInds(W,b),{s}));
+    return findIndex(uniqueInds(siteInds(W,b),is));
     }
 
 // Get the site Index of the MPS W*A 
 // as if MPO W was applied to MPS A
 Index
-siteIndex(MPO const& W, MPS const& A, int b)
+uniqueSiteIndex(MPO const& W, MPS const& A, int b)
     {
     return uniqueIndex(W(b),{W(b-1),W(b+1),A(b)});
     }
 
 // Get the site Index that is unique to A
 Index
-siteIndex(MPO const& A, MPO const& B, int b)
+uniqueSiteIndex(MPO const& A, MPO const& B, int b)
     {
     return uniqueIndex(A(b),{A(b-1),A(b+1),B(b)});
     }
 
 IndexSet
-siteInds(MPO const& A, MPS const& x)
+uniqueSiteInds(MPO const& A, MPS const& x)
     {
     auto N = length(x);
-    if( N!=length(x) ) Error("In siteInds(MPO,MPS), lengths of MPO and MPS do not match");
+    if( N!=length(x) ) Error("In uniqueSiteInds(MPO,MPS), lengths of MPO and MPS do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
-      auto s = siteIndex(A,x,n);
+      auto s = uniqueSiteIndex(A,x,n);
       inds.nextIndex(std::move(s));
       }
     return inds.build();
@@ -201,21 +201,21 @@ siteInds(MPO const& A, MPS const& x)
 IndexSet
 siteInds(MPO const& A, MPO const& B, int b)
     {
-    auto sA = siteIndex(A,B,b);
-    auto sB = siteIndex(B,A,b);
+    auto sA = uniqueSiteIndex(A,B,b);
+    auto sB = uniqueSiteIndex(B,A,b);
     return IndexSet(sA,sB);
     }
 
 // Get the site Indices that are unique to A
 IndexSet
-siteInds(MPO const& A, MPO const& B)
+uniqueSiteInds(MPO const& A, MPO const& B)
     {
     auto N = length(A);
-    if( N!=length(B) ) Error("In siteInds(MPO,MPO), lengths of MPO and MPS do not match");
+    if( N!=length(B) ) Error("In uniqueSiteInds(MPO,MPO), lengths of MPO and MPS do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
-      auto s = siteIndex(A,B,n);
+      auto s = uniqueSiteIndex(A,B,n);
       inds.nextIndex(std::move(s));
       }
     return inds.build();
@@ -224,14 +224,14 @@ siteInds(MPO const& A, MPO const& B)
 // Get the site Indices that are unique to A
 // (on A but not in the input IndexSet of site indices)
 IndexSet
-siteInds(MPO const& A, IndexSet const& sites)
+uniqueSiteInds(MPO const& A, IndexSet const& sites)
     {
     auto N = length(A);
-    if( N!=length(sites) ) Error("In siteInds(MPO,IndexSet), lengths of MPO and IndexSet do not match");
+    if( N!=length(sites) ) Error("In uniqueSiteInds(MPO,IndexSet), lengths of MPO and IndexSet do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
-      auto sn = siteIndex(A,sites(n),n);
+      auto sn = uniqueSiteIndex(A,{sites(n)},n);
       inds.nextIndex(std::move(sn));
       }
     return inds.build();
@@ -561,8 +561,8 @@ traceC(MPO const& A,
 
     // Make the site indices of the MPOs match
     // and the links not match
-    auto sA = siteInds(A,B);
-    auto sB = siteInds(B,A);
+    auto sA = uniqueSiteInds(A,B);
+    auto sB = uniqueSiteInds(B,A);
     auto Bp = replaceSiteInds(B,sB,sA);
     Bp.replaceLinkInds(sim(linkInds(Bp)));
 
@@ -605,7 +605,7 @@ inner(MPS const& x,
     if( length(y) != N || length(x) != N ) Error("inner: mismatched N");
 
     // Make the indices of |x> and A|y> match
-    auto sAy = siteInds(A,y);
+    auto sAy = uniqueSiteInds(A,y);
     auto xp = replaceSiteInds(x,sAy);
 
     // Dagger x, since it is the ket
@@ -668,7 +668,7 @@ inner(MPO const& A,
   auto N = length(y);
 
   // Automatically match site indices
-  auto Ap = replaceSiteInds(A,siteInds(A,x),siteInds(B,y));
+  auto Ap = replaceSiteInds(A,uniqueSiteInds(A,x),uniqueSiteInds(B,y));
 
   // Prime the links to avoid clashes
   auto Adag = dag(A);
@@ -729,7 +729,7 @@ inner(MPS const& x,
 
     // Assume order of operations A(B|y>), use replaceInds
     // to handle the case where A and B share all indices
-    auto sABy = siteInds(A,siteInds(B,y)); 
+    auto sABy = uniqueSiteInds(A,uniqueSiteInds(B,y)); 
     auto sAByp = sim(sABy);
     auto Ap = replaceSiteInds(A,sABy,sAByp);
     Ap.replaceLinkInds(sim(linkInds(Ap)));
@@ -784,7 +784,7 @@ errorMPOProd(MPS const& y,
              MPO const& A, 
              MPS const& x)
     {
-    if( !equals(siteInds(A,x),siteInds(y)) ) Error("errorMPOProd(y,A,x): Index mismatch. MPS y, the approximation to A|x>, must have the same site indices that A|x> would have.");
+    if( !equals(uniqueSiteInds(A,x),siteInds(y)) ) Error("errorMPOProd(y,A,x): Index mismatch. MPS y, the approximation to A|x>, must have the same site indices that A|x> would have.");
     auto err = inner(y,y);
     err += -2.*real(innerC(y,A,x));
     err /= real(innerC(A,x,A,x));

@@ -155,33 +155,51 @@ dag(MPO W);
 bool
 hasSiteInds(MPO const& A, IndexSet const& sites);
 
+//
+// Find site indices
+//
+
 // Find a site index of the MPO by matching the tag 'tsmatch'
 Index
 siteIndex(MPO const& A, int b, TagSet const& tsmatch = TagSet("0"));
-
-// Get the site Index of the MPS A|x>
-// as if MPO A was applied to MPS x
-Index
-siteIndex(MPO const& A, MPS const& x, int b);
-
-// Find the site Index of the bth MPO tensor of W
-// that is not the input site Index s
-Index
-siteIndex(MPO const& W, Index const& s, int b);
-
-// Get the site Indices that are unique to A
-IndexSet
-siteInds(MPO const& A, MPS const& x);
-
-// Get the site Indices that are unique to A
-// (not in the IndexSet of site indices sites)
-IndexSet
-siteInds(MPO const& A, IndexSet const& sites);
 
 // Get the site Indices of the MPO A*B at site b
 // as if MPO A and MPO B were contracted
 IndexSet
 siteInds(MPO const& A, MPO const& B, int b);
+
+// Get the site Index of the MPS A|x>
+// as if MPO A was applied to MPS x
+Index
+uniqueSiteIndex(MPO const& A, MPS const& x, int b);
+
+// Find the site Index of the bth MPO tensor of W
+// that is not the input site Index s
+Index
+uniqueSiteIndex(MPO const& W, IndexSet const& s, int b);
+
+// Get the site Indices that are unique to A
+IndexSet
+uniqueSiteInds(MPO const& A, MPS const& x);
+
+// Get the site Indices that are unique to A
+// (not in the IndexSet of site indices sites)
+IndexSet
+uniqueSiteInds(MPO const& A, IndexSet const& sites);
+
+// Get the site Index that is unique to A
+Index
+uniqueSiteIndex(MPO const& A, MPO const& B, int b);
+
+// Get the site Indices that are unique to the MPO A
+// If both indices are shared by A and B, they will 
+// be default valued indices (Index())
+IndexSet
+uniqueSiteInds(MPO const& A, MPO const& B);
+
+//
+// Modify site indices
+//
 
 // Replace the site indices of MPO A from sites_old
 // to sites_new (replaces one site index per MPO tensor)
@@ -191,16 +209,6 @@ replaceSiteInds(MPO A, IndexSet const& sites_old, IndexSet const& sites_new);
 // Swap the bra and ket indices of the MPO (i.e. transpose the MPO)
 MPO
 swapSiteInds(MPO A);
-
-// Get the site Index that is unique to A
-Index
-siteIndex(MPO const& A, MPO const& B, int b);
-
-// Get the site Indices that are unique to the MPO A
-// If both indices are shared by A and B, they will 
-// be default valued indices (Index())
-IndexSet
-siteInds(MPO const& A, MPO const& B);
 
 //
 // MPO tag functions
