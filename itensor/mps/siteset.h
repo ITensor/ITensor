@@ -39,7 +39,7 @@ class SiteSet
     SiteSet(int N, int d);
 
     //Create SiteSet from vector of provided Indices (0-indexed)
-    SiteSet(std::vector<Index> const& inds);
+    SiteSet(IndexSet const& is);
 
     //Create SiteSet of length N (can be set using .set method)
     SiteSet(int N);
@@ -56,6 +56,10 @@ class SiteSet
     //Index at Site i
     Index
     operator()(int i) const;
+
+    //Return an IndexSet of the indices of the SiteSet
+    IndexSet
+    inds() const;
 
     //Index at site i set to a certain state
     //indicated by the string "state"
@@ -273,13 +277,12 @@ SiteSet(int N)
     }
 
 inline SiteSet::
-SiteSet(std::vector<Index> const& inds)
+SiteSet(IndexSet const& is)
     {
-    auto sites = SiteStore(inds.size());
-    for(auto j : range(inds))
-        {
-        sites.set(1+j,GenericSite(inds.at(j)));
-        }
+    auto N = is.length();
+    auto sites = SiteStore(N);
+    for(auto j : range1(N))
+        sites.set(j,GenericSite(is(j)));
     SiteSet::init(std::move(sites));
     }
 
@@ -290,6 +293,9 @@ length() const { return sites_ ? sites_->length() : 0; }
 int inline
 length(SiteSet const& sites) { return sites.length(); }
 
+IndexSet inline
+inds(SiteSet const& sites) { return sites.inds(); }
+
 // Deprecated in favor of .length()
 int inline SiteSet::
 N() const 
@@ -298,11 +304,25 @@ N() const
     return this->length();
     }
 
-inline Index SiteSet::
+Index inline SiteSet::
 operator()(int i) const
     {
     if(not *this) Error("Cannot retrieve site from default-initialized SiteSet");
     return sites_->si(i);
+    }
+
+IndexSet inline SiteSet::
+inds() const
+    {
+    if(not *this) Error("Cannot retrieve sites from default-initialized SiteSet");
+    auto N = length();
+    auto is = IndexSetBuilder(N);
+    for( auto n : range1(N) )
+        {
+        auto I = sites_->si(n);
+        is.nextIndex(std::move(I));
+        }
+    return is.build();
     }
 
 IndexVal inline SiteSet::
@@ -327,7 +347,7 @@ hasQNs(SiteSet const& sites)
     return true;
     }
 
-inline ITensor SiteSet::
+ITensor inline SiteSet::
 op(String const& opname, 
    int i, 
    Args const& args) const
@@ -372,6 +392,15 @@ op(String const& opname,
             }
         return sites_->op(i,opname,args);
         }
+    }
+
+ITensor inline
+op(SiteSet const& sites,
+   std::string const& opname,
+   int i,
+   Args const& args = Args::global())
+    {
+    return sites.op(opname,i,args);
     }
 
 void inline SiteSet::
@@ -440,15 +469,12 @@ class BasicSiteSet : public SiteSet
         SiteSet::init(std::move(sites));
         }
 
-    BasicSiteSet(std::vector<Index> const& inds)
+    BasicSiteSet(IndexSet const& is)
         {
-        int N = inds.size();
+        int N = is.length();
         auto sites = SiteStore(N);
-        for(int j = 1, i = 0; j <= N; ++j, ++i)
-            {
-            auto& Ii = inds.at(i);
-            sites.set(j,SiteType(Ii));
-            }
+        for(auto j : range1(N))
+            sites.set(j,SiteType(is(j)));
         SiteSet::init(std::move(sites));
         }
 
@@ -479,15 +505,14 @@ class MixedSiteSet : public SiteSet
         SiteSet::init(std::move(sites));
         }
 
-    MixedSiteSet(std::vector<Index> const& inds)
+    MixedSiteSet(IndexSet const& is)
         {
-        int N = inds.size();
+        int N = is.length();
         auto sites = SiteStore(N);
-        for(int j = 1, i = 0; j <= N; ++j, ++i)
+        for(auto j : range1(N))
             {
-            auto& Ii = inds.at(i);
-            if(j%2 == 1) sites.set(j,ASiteType(Ii));
-            else         sites.set(j,BSiteType(Ii));
+            if(j%2 == 1) sites.set(j,ASiteType(is(j)));
+            else         sites.set(j,BSiteType(is(j)));
             }
         SiteSet::init(std::move(sites));
         }

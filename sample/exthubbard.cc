@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
     for(int j = 1; j <= N; ++j)
         {
         psi.position(j);
-        upd(j-1) = (dag(prime(psi(j),"Site"))*sites.op("Nup",j)*psi(j)).elt();
-        dnd(j-1) = (dag(prime(psi(j),"Site"))*sites.op("Ndn",j)*psi(j)).elt();
+        upd(j-1) = elt(dag(prime(psi(j),"Site"))*op(sites,"Nup",j)*psi(j));
+        dnd(j-1) = elt(dag(prime(psi(j),"Site"))*op(sites,"Ndn",j)*psi(j));
         }
 
     println("Up Density:");

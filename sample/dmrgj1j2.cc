@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
     for(int b = 1; b < N; ++b)
         {
         psi.position(b);
-        auto ketzz = psi(b)*psi(b+1)*sites.op("Sz",b)*sites.op("Sz",b+1);
-        auto ketpm = psi(b)*psi(b+1)*sites.op("Sp",b)*sites.op("Sm",b+1)*0.5;
-        auto ketmp = psi(b)*psi(b+1)*sites.op("Sm",b)*sites.op("Sp",b+1)*0.5;
+        auto ketzz = psi(b)*psi(b+1)*op(sites,"Sz",b)*op(sites,"Sz",b+1);
+        auto ketpm = psi(b)*psi(b+1)*op(sites,"Sp",b)*op(sites,"Sm",b+1)*0.5;
+        auto ketmp = psi(b)*psi(b+1)*op(sites,"Sm",b)*op(sites,"Sp",b+1)*0.5;
         auto bra = dag(psi(b)*psi(b+1));
         bra.prime("Site");
-        auto SdS = (bra*ketzz).elt() + (bra*ketpm).elt() + (bra*ketmp).elt();
+        auto SdS = elt(bra*ketzz) + elt(bra*ketpm) + elt(bra*ketmp);
         printfln("S.S b %d = %.10f",b,SdS);
         }
 

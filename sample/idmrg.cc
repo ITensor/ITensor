@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     auto oi = uniqueIndex(psi(0),psi(1),"Link");
     //lcorr is the left side of the correlation function tensor
     //which grows site by site below
-    auto lcorr = prime(wf1,oi)*sites.op("Sz",1)*dag(prime(wf1));
+    auto lcorr = prime(wf1,oi)*op(sites,"Sz",1)*dag(prime(wf1));
 
     println("\nj <psi|Sz_1 Sz_j|psi> = ");
     //xrange is how far to go in measuring <Sz_1 Sz_j>, 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
         //ui is the IQIndex "sticking out" of the right edge of psi(n)
         auto ui = uniqueIndex(psi(n),lcorr,"Link");
         //prime ui so it contracts with the "bra" tensor on top = dag(prime(psi(n)))
-        Real val = (dag(prime(psi(n)))*lcorr*prime(psi(n),ui)*sites.op("Sz",n)).elt();
+        auto val = elt(dag(prime(psi(n)))*lcorr*prime(psi(n),ui)*op(sites,"Sz",n));
         printfln("%d %.20f",j,val);
         lcorr *= psi(n);
         lcorr *= dag(prime(psi(n),"Link"));

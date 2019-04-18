@@ -6,13 +6,10 @@
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 ! Port IgnoreDegeneracy flag from V2
-! Move idmrg into a seperate code
-? Move arnoldi, gmres seperate code
+! Move idmrg into a seperate code/sample code
+? Move arnoldi, gmres into seperate code while we work out the args
 
 # Non-breaking, but nice to have for V3:
-o Improvements to SiteSet:
-  o IndexSet -> SiteSet conversion
-  o Make `op()`, a free version of `.op()`
 o Bring over new "iterInds" feature from v2
   -> Just added: http://itensor.org/support/1361/iterating-over-non-zero-elements-of-a-sparse-itensor)
 o Make diagHermitian tag-friendly
@@ -197,6 +194,9 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - MPS operations:
 
+  o Make `op` a free function
+  o Add SiteSet(IndexSet) constructor
+  o Add inds(SiteSet) -> IndexSet function
   o Rename `HubbardSite` -> `ElectronSite` (deprecated with a typedef)
   o Rename `SpinlessSite` -> `FermionSite` (deprecated with a typedef)
   o Add hasQNs(MPS)

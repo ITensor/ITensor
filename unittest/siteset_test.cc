@@ -32,15 +32,15 @@ SECTION("SpinHalf (QNs)")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("Sz",2); 
-    sites.op("S+",2); 
-    sites.op("S-",2); 
-    sites.op("Sp",2); 
-    sites.op("Sm",2); 
+    op(sites,"Sz",2); 
+    op(sites,"S+",2); 
+    op(sites,"S-",2); 
+    op(sites,"Sp",2); 
+    op(sites,"Sm",2); 
     //TODO: test these throw the correct error
-    //sites.op("Sx",2); 
-    //sites.op("Sy",2); 
-    //sites.op("ISy",2); 
+    //op(sites,"Sx",2); 
+    //op(sites,"Sy",2); 
+    //op(sites,"ISy",2); 
     }
 
 SECTION("hasQNs")
@@ -60,14 +60,14 @@ SECTION("SpinHalf (no QNs)")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("Sz",2); 
-    sites.op("S+",2); 
-    sites.op("S-",2); 
-    sites.op("Sp",2); 
-    sites.op("Sm",2); 
-    sites.op("Sx",2); 
-    sites.op("Sy",2); 
-    sites.op("ISy",2); 
+    op(sites,"Sz",2); 
+    op(sites,"S+",2); 
+    op(sites,"S-",2); 
+    op(sites,"Sp",2); 
+    op(sites,"Sm",2); 
+    op(sites,"Sx",2); 
+    op(sites,"Sy",2); 
+    op(sites,"ISy",2); 
     }
 
 SECTION("SpinOne")
@@ -79,14 +79,14 @@ SECTION("SpinOne")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("Sz",2); 
-    sites.op("S+",2); 
-    sites.op("S-",2); 
-    sites.op("Sp",2); 
-    sites.op("Sm",2); 
-    sites.op("Sx",2); 
-    sites.op("Sy",2); 
-    sites.op("ISy",2); 
+    op(sites,"Sz",2); 
+    op(sites,"S+",2); 
+    op(sites,"S-",2); 
+    op(sites,"Sp",2); 
+    op(sites,"Sm",2); 
+    op(sites,"Sx",2); 
+    op(sites,"Sy",2); 
+    op(sites,"ISy",2); 
     }
 
 SECTION("Electron")
@@ -98,16 +98,16 @@ SECTION("Electron")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("Nup",2); 
-    sites.op("Ndn",2); 
-    sites.op("Nupdn",2); 
-    sites.op("Ntot",2); 
-    sites.op("Sz",2); 
-    sites.op("Cup",2); 
-    sites.op("Cdn",2); 
-    sites.op("Aup",2); 
-    sites.op("Adn",2); 
-    sites.op("F",2); 
+    op(sites,"Nup",2); 
+    op(sites,"Ndn",2); 
+    op(sites,"Nupdn",2); 
+    op(sites,"Ntot",2); 
+    op(sites,"Sz",2); 
+    op(sites,"Cup",2); 
+    op(sites,"Cdn",2); 
+    op(sites,"Aup",2); 
+    op(sites,"Adn",2); 
+    op(sites,"F",2); 
     }
 
 SECTION("Fermion")
@@ -119,10 +119,10 @@ SECTION("Fermion")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("N",2); 
-    sites.op("A",2); 
-    sites.op("Adag",2); 
-    sites.op("F",2); 
+    op(sites,"N",2); 
+    op(sites,"A",2); 
+    op(sites,"Adag",2); 
+    op(sites,"F",2); 
     }
 
 SECTION("tJ")
@@ -134,11 +134,11 @@ SECTION("tJ")
         CHECK(hasTags(sites(i),"Site"));
         }
 
-    sites.op("Nup",2); 
-    sites.op("Ndn",2); 
-    sites.op("Aup",2); 
-    sites.op("Adn",2); 
-    sites.op("F",2); 
+    op(sites,"Nup",2); 
+    op(sites,"Ndn",2); 
+    op(sites,"Aup",2); 
+    op(sites,"Adn",2); 
+    op(sites,"F",2); 
     }
 }
 

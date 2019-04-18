@@ -693,10 +693,10 @@ toMPOImpl(AutoMPO const& am,
                 //if(Global::debug1())
                 //    {
                 //    println("\nAttempting to add the following");
-                //    PrintData(sites.op(op,n));
+                //    PrintData(op(sites,op,n));
                 //    printfln("cst.coef = %f",cst.coef);
-                //    PrintData(cst.coef * sites.op(op,n));
-                //    auto tmp = cst.coef * sites.op(op,n) * rc;
+                //    PrintData(cst.coef * op(sites,op,n));
+                //    auto tmp = cst.coef * op(sites,op,n) * rc;
                 //    PrintData(tmp);
                 //    PrintData(W);
                 //    EXIT
@@ -726,7 +726,7 @@ toMPOImpl(AutoMPO const& am,
 #ifdef SHOW_AUTOMPO
                             ws[r][c] = format("%.2f %s",st.coef,st.op);
 #endif
-                            W += st.coef * sites.op(st.op,n) * rc;
+                            W += st.coef * op(sites,st.op,n) * rc;
                             }
                         }
                     }
@@ -788,7 +788,7 @@ toMPOImpl(AutoMPO const& am,
                     else
                         ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
 #endif
-                    W += ht.coef * convert_tensor(sites.op(ht.first().op,n)) * rc;
+                    W += ht.coef * convert_tensor(op(sites,ht.first().op,n)) * rc;
                     }
                 }
 
@@ -999,7 +999,7 @@ partitionHTerms(SiteSet const& sites,
     //            }
     //        else
     //            {
-    //            auto Op = sites.op(st.op,st.i);
+    //            auto Op = op(sites,st.op,st.i);
     //            auto OpQN = -div(Op);
     //            qnmap[st.op] = OpQN;
     //            qn += OpQN;
@@ -1013,7 +1013,7 @@ partitionHTerms(SiteSet const& sites,
         QN qn;
         for(auto& st : prod)
             {
-            auto Op = sites.op(st.op,st.i);
+            auto Op = op(sites,st.op,st.i);
             //if(not hasQNs(Op)) return QN();
             auto OpQN = -div(Op);
             qn += OpQN;
@@ -1538,7 +1538,7 @@ toExpH_ZW1(AutoMPO const& am,
             {
             if(checkqns)
                 {
-                auto Op = sites.op(ht.first().op,ht.first().i);
+                auto Op = op(sites,ht.first().op,ht.first().i);
                 bn.emplace_back(ht.first(),-div(Op));
                 }
             else
