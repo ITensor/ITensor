@@ -190,10 +190,11 @@ class AutoMPO
 
     public:
 
-    AutoMPO() { }
+    AutoMPO(): concatAccumulator(nullptr) 
+        { }
 
     AutoMPO(SiteSet const& sites) 
-      : sites_(sites)
+      : sites_(sites), concatAccumulator(nullptr)
         { }
 
     SiteSet const&
@@ -213,11 +214,52 @@ class AutoMPO
     Accumulator
     operator+=(T x) { return Accumulator(this,x); }
 
+    template <typename T>
+    AutoMPO&
+    concat(T x)
+      {
+      if (concatAccumulator==nullptr)
+        {
+        concatAccumulator = new Accumulator(this,x); 
+        }
+      else { (*concatAccumulator),x; }
+      
+      return *this;
+      }
+
+    template <typename T, typename... VarArgs>
+    AutoMPO&
+    concat(T first, VarArgs... vargs) 
+      { 
+      if (concatAccumulator==nullptr) 
+        { 
+        concatAccumulator = new Accumulator(this,first); 
+        return concat(vargs...);
+        }
+      else 
+        {
+        (*concatAccumulator),first;
+        return concat(vargs...);
+        }
+      }
+    
+    //this calls add with the completed accumulator
+    void combine() 
+      { 
+      delete concatAccumulator; 
+      concatAccumulator=nullptr; 
+      } 
+
     void
     add(HTerm const& t);
 
     void
     reset() { terms_.clear(); }
+
+    private:
+
+    //temporary accumulator for concat
+    Accumulator* concatAccumulator;
     };
 
 std::ostream& 

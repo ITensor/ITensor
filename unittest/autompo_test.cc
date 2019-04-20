@@ -328,6 +328,78 @@ SECTION("Single Site Ops")
     //    }
     }
 
+SECTION("Concat")
+    {
+    int L = 10;
+    auto sites = Hubbard(L);
+
+    SECTION("Diagonal op")
+        {
+        auto ampo = AutoMPO(sites);
+        auto n = 4;
+        //ampo += "Nup",n;
+        ampo.concat("Nup",n).combine();
+        auto Op = IQMPO(ampo);
+        for(auto i : range1(L))
+            {
+            auto state = InitState(sites,"Emp");
+            state.set(i,"Up");
+            auto psi = IQMPS(state);
+            auto x = overlap(psi,Op,psi);
+            if(i == n) CHECK_CLOSE(x,1.);
+            else       CHECK_CLOSE(x,0.);
+            }
+        }
+    SECTION("Concat MPO For Loop")
+      {
+      auto ampo = AutoMPO(sites);
+      ampo += 0.5,"Nup",1,"Nup",2,"Nup",3,"Nup",4;
+      auto correct = MPO(ampo);
+      auto norm = overlap(correct,correct);
+
+      auto ampoC = AutoMPO(sites);
+      ampoC.concat(0.5);
+      for(auto i : range1(4))
+        {
+        ampoC.concat("Nup",i);
+        }
+      ampoC.combine();
+      auto C = MPO(ampoC);
+      CHECK_CLOSE(overlap(correct,C),norm);
+      
+      auto state = InitState(sites,"Up");
+      auto psi = MPS(state);
+
+      CHECK_CLOSE(overlap(psi,C,psi),overlap(psi,correct,psi));
+      }
+      
+    SECTION("Concat IQMPO chained")
+      {
+      auto ampo = AutoMPO(sites);
+      ampo += 1.0,"Nup",1,"Sz",2,"Nup",3,"Sz",4;
+      ampo += 1.0,"Sz",1,"Nup",2,"Sz",3,"Nup",4;
+      auto correct = IQMPO(ampo);
+      auto norm = overlap(correct,correct);
+
+      auto ampoC = AutoMPO(sites);
+      ampoC.concat(1.0,"Nup",1)
+           .concat("Sz",2,"Nup",3)
+           .concat("Sz",4)
+           .combine();
+      ampoC.concat(1.0,"Sz",1)
+           .concat("Nup",2,"Sz",3)
+           .concat("Nup",4)
+           .combine();
+      auto C = IQMPO(ampoC);
+      CHECK_CLOSE(overlap(correct,C),norm);
+
+      auto state = InitState(sites,"Up");
+      auto psi = IQMPS(state);
+
+      CHECK_CLOSE(overlap(psi,C,psi),overlap(psi,correct,psi));
+      }
+    }
+
 SECTION("toExpH ITensor")
     {
     int N = 10;
