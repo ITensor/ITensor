@@ -123,9 +123,9 @@ dmrg(MPS& psi,
 //
 std::tuple<Real,MPS> inline
 dmrg(MPO const& H,
-     MPS const& psi0,
      ITensor const& LH,
      ITensor const& RH,
+     MPS const& psi0,
      Sweeps const& sweeps,
      Args const& args = Args::global())
     {
@@ -154,9 +154,9 @@ dmrg(MPS& psi,
 
 std::tuple<Real,MPS> inline
 dmrg(MPO const& H,
-     MPS const& psi0,
      ITensor const& LH,
      ITensor const& RH,
+     MPS const& psi0,
      Sweeps const& sweeps,
      DMRGObserver& obs,
      Args const& args = Args::global())
@@ -244,8 +244,8 @@ dmrg(MPS& psi,
 
 std::tuple<Real,MPS> inline
 dmrg(MPO const& H,
-     MPS const& psi0,
      std::vector<MPS> const& psis,
+     MPS const& psi0,
      Sweeps const& sweeps,
      Args const& args = Args::global())
     {
@@ -280,8 +280,8 @@ dmrg(MPS & psi,
 
 std::tuple<Real,MPS> inline
 dmrg(MPO const& H,
-     MPS const& psi0,
      std::vector<MPS> const& psis,
+     MPS const& psi0,
      Sweeps const& sweeps,
      DMRGObserver& obs, 
      Args const& args = Args::global())
