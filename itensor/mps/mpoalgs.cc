@@ -283,14 +283,12 @@ fitApplyMPOImpl(Real fac,
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
 
-    for( auto n : range1(N) )
-        if( siteIndex(Kx,n)!=uniqueSiteIndex(K,x,n) )
-            Error("In applyMPO with Method=Fit, guess MPS must have the same sites that the result of MPO*MPS would have");
-
-    auto rand_plev = 43154353;
     Kx.dag();
-    //TODO: use sim(linkInds)
-    Kx.replaceLinkInds(prime(linkInds(Kx),rand_plev));
+    // Make the indices of |Kx> and K|x> match
+    Kx.replaceSiteInds(uniqueSiteInds(K,x));
+    // Replace the link indices of |Kx> with similar ones
+    // so they don't clash with the links of |x>
+    Kx.replaceLinkInds(sim(linkInds(Kx)));
     Kx.position(1);
 
     auto E = vector<ITensor>(N+2);
@@ -339,7 +337,6 @@ fitApplyMPOImpl(Real fac,
             }
         }
     Kx.dag();
-    Kx.replaceLinkInds(prime(linkInds(Kx),-rand_plev));
     }
 
 void
