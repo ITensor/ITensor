@@ -62,11 +62,11 @@ int main(int argc, char* argv[])
         else         state.set(i,"Dn");
         }
 
-    auto psi = MPS(state);
+    auto psi0 = MPS(state);
 
-    printfln("Initial energy = %.5f",inner(psi,H,psi));
+    printfln("Initial energy = %.5f",inner(psi0,H,psi0));
 
-    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
+    auto [energy,psi] = dmrg(H,psi0,sweeps,{"Quiet",quiet});
 
     printfln("\nGround State Energy = %.10f",energy);
 

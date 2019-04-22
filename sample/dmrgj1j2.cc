@@ -43,13 +43,13 @@ int main(int argc, char* argv[])
     for(int i = 1; i <= N; ++i) 
         state.set(i,(i%2==1 ? "Up" : "Dn"));
 
-    auto psi = MPS(state);
+    auto psi0 = MPS(state);
 
     //
     // inner calculates matrix elements of MPO's with respect to MPS's
-    // inner(psi,H,psi) = <psi|H|psi>
+    // inner(psi0,H,psi0) = <psi0|H|psi0>
     //
-    printfln("Initial energy = %.5f",inner(psi,H,psi));
+    printfln("Initial energy = %.5f",inner(psi0,H,psi0));
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    auto energy = dmrg(psi,H,sweeps,"Quiet");
+    auto [energy,psi] = dmrg(H,psi0,sweeps,"Quiet");
 
     //
     // Print the final energy reported by DMRG

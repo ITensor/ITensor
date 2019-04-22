@@ -22,8 +22,6 @@ o Make MPS/MPO functions tag-friendly:
   o Make applyExpH tag-friendly
     -> Output MPS has tags of input MPS
     -> Don't require input MPS to have tags "Site" and "Link"
-o Make a version of DMRG that is not in-place:
-  -> `auto [E,psi] = dmrg(H,psi0,args)`
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)
@@ -253,6 +251,7 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - MPO operations:
 
+  o Make DMRG return the optimized MPS: `auto [E,psi] = dmrg(H,psi0,args)`
   o Add hasQNs(MPO)
   o Add `replaceSiteInds(MPO,IndexSet,IndexSet) -> MPO` to make a new MPO with specified site indices replaces by those in the IndexSet
   o Add `swapSiteInds(MPO) -> MPO` to "transpose" an MPO (swap the site indices, site by site)

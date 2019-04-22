@@ -79,14 +79,14 @@ int main(int argc, char* argv[])
             }
         }
 
-    auto psi = MPS(state);
+    auto psi0 = MPS(state);
 
-    Print(totalQN(psi));
+    Print(totalQN(psi0));
 
     //
     // Begin the DMRG calculation
     //
-    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
+    auto [energy,psi] = dmrg(H,psi0,sweeps,{"Quiet",quiet});
 
     //
     // Measure spin densities
