@@ -202,6 +202,19 @@ DMRGWorker(MPS & psi,
            DMRGObserver & obs,
            Args args)
     {
+    if( args.defined("WriteM") )
+      {
+      if( args.defined("WriteDim") )
+        {
+        Global::warnDeprecated("Args WirteM and WriteDim are both defined. WriteM is deprecated in favor of WriteDim, WriteDim will be used.");
+        }
+      else
+        {
+        Global::warnDeprecated("Arg WriteM is deprecated in favor of WriteDim.");
+        args.add("WriteDim",args.getInt("WriteM"));
+        }
+      }
+
     const bool quiet = args.getBool("Quiet",false);
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
 
@@ -225,8 +238,8 @@ DMRGWorker(MPS & psi,
         args.add("MaxIter",sweeps.niter(sw));
 
         if(!PH.doWrite()
-           && args.defined("WriteM")
-           && sweeps.maxdim(sw) >= args.getInt("WriteM"))
+           && args.defined("WriteDim")
+           && sweeps.maxdim(sw) >= args.getInt("WriteDim"))
             {
             if(!quiet)
                 {

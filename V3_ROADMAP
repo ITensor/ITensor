@@ -5,9 +5,8 @@
   `eltC(T,i=1,j=2)`.
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
-! Port IgnoreDegeneracy flag from V2
+! Port IgnoreDegeneracy flag from V2 (rename TruncateDegenerate?)
 ! Move idmrg into a seperate code/sample code
-? Move arnoldi, gmres into seperate code while we work out the args
 
 # Non-breaking, but nice to have for V3:
 o Bring over new "iterInds" feature from v2
@@ -24,7 +23,7 @@ o Make MPS/MPO functions tag-friendly:
     -> Output MPS has tags of input MPS
     -> Don't require input MPS to have tags "Site" and "Link"
 o Make a version of DMRG that is not in-place:
-  -> `auto [psi,E] = dmrg(H,psi0,args)`
+  -> `auto [E,psi] = dmrg(H,psi0,args)`
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)

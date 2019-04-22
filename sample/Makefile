@@ -19,11 +19,11 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg dmrg_table dmrgj1j2 exthubbard idmrg
+build: dmrg dmrg_table dmrgj1j2 exthubbard idmrg trg
 
-debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g idmrg-g
+debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g idmrg-g trg-g
 
-all: dmrg dmrg_table dmrgj1j2 exthubbard idmrg
+all: dmrg dmrg_table dmrgj1j2 exthubbard idmrg trg
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)

@@ -17,8 +17,8 @@ sample/exthubbard
 sample/exthubbard-g
 sample/idmrg
 sample/idmrg-g
-tutorial/trg/trg
-tutorial/trg/trg-g
+sample/trg
+sample/trg-g
 tutorial/project_template/myappname-g
 this_dir.mk
 options.mk
