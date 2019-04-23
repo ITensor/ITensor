@@ -329,6 +329,14 @@ DMRGWorker(MPS & psi,
         }
       }
 
+    const bool silent = args.getBool("Silent",false);
+    if(silent)
+        {
+        args.add("Quiet",true);
+        args.add("PrintEigs",false);
+        args.add("NoMeasure",true);
+        args.add("DebugLevel",0);
+        }
     const bool quiet = args.getBool("Quiet",false);
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
 
@@ -402,9 +410,12 @@ DMRGWorker(MPS & psi,
 
             } //for loop over b
 
-        auto sm = sw_time.sincemark();
-        printfln("    Sweep %d/%d CPU time = %s (Wall time = %s)",
-                  sw,sweeps.nsweep(),showtime(sm.time),showtime(sm.wall));
+        if(!silent)
+            {
+            auto sm = sw_time.sincemark();
+            printfln("    Sweep %d/%d CPU time = %s (Wall time = %s)",
+                      sw,sweeps.nsweep(),showtime(sm.time),showtime(sm.wall));
+            }
 
         if(obs.checkDone(args)) break;
     

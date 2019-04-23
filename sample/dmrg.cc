@@ -12,8 +12,8 @@ main()
     // carry Sz quantum numbers and will lead to 
     // block-sparse MPO and MPS tensors
     //
-    //auto sites = SpinHalf(N,{"ConserveQNs=",true}); //make a chain of N spin 1/2's
-    auto sites = SpinOne(N,{"ConserveQNs=",true}); //make a chain of N spin 1's
+    //auto sites = SpinHalf(N); //make a chain of N spin 1/2's
+    auto sites = SpinOne(N); //make a chain of N spin 1's
 
     //
     // Use the AutoMPO feature to create the 

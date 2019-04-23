@@ -81,6 +81,7 @@ measure(Args const& args)
     auto nsweep = args.getInt("NSweep",0);
     auto ha = args.getInt("HalfSweep",0);
     auto energy = args.getReal("Energy",0);
+    auto silent = args.getBool("Silent",false);
 
     if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
         {
@@ -100,7 +101,7 @@ measure(Args const& args)
             }
         }
 
-    if(printeigs)
+    if(!silent && printeigs)
         {
         if(b == N/2 && ha == 2)
             {
@@ -133,16 +134,19 @@ measure(Args const& args)
 
     max_eigs = std::max(max_eigs,last_spec_.numEigsKept());
     max_te = std::max(max_te,last_spec_.truncerr());
-    if(b == 1 && ha == 2) 
+    if(!silent)
         {
-        if(!printeigs) println();
-        auto swstr = (nsweep>0) ? format("%d/%d",sw,nsweep) 
-                                : format("%d",sw);
-        println("    Largest link dim during sweep ",swstr," was ",(max_eigs > 1 ? max_eigs : 1));
-        max_eigs = -1;
-        println("    Largest truncation error: ",(max_te > 0 ? max_te : 0.));
-        max_te = -1;
-        printfln("    Energy after sweep %s is %.12f",swstr,energy);
+        if(b == 1 && ha == 2) 
+            {
+            if(!printeigs) println();
+            auto swstr = (nsweep>0) ? format("%d/%d",sw,nsweep) 
+                                    : format("%d",sw);
+            println("    Largest link dim during sweep ",swstr," was ",(max_eigs > 1 ? max_eigs : 1));
+            max_eigs = -1;
+            println("    Largest truncation error: ",(max_te > 0 ? max_te : 0.));
+            max_te = -1;
+            printfln("    Energy after sweep %s is %.12f",swstr,energy);
+            }
         }
 
     }
