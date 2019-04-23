@@ -366,13 +366,13 @@ int
 primeLevel(Index const& I);
 
 TagSet
-tags(const Index& I);
+tags(Index const& I);
 
 //
 // Check if Index I contains the tags tsmatch.
 //
 bool
-hasTags(Index I, const TagSet& tsmatch);
+hasTags(Index I, TagSet const& tsmatch);
 
 bool
 hasQNs(Index const& I);
