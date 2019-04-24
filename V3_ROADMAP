@@ -1,8 +1,6 @@
 (! means necessary / blocker for releasing v3)
 
 # Breaking changes to library code:
-! Make `elt(T,i=1,j=2)` for complex storage throw an error, require using
-  `eltC(T,i=1,j=2)`.
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
 ! Port IgnoreDegeneracy flag from V2 (rename TruncateDegenerate?)
@@ -140,6 +138,8 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - ITensor operations:
 
+  o Make `elt(T,i=1,j=2)` for complex storage throw an error, require using
+    `eltC(T,i=1,j=2)`.
   o Add `maxDim(ITensor)` and `minDim(ITensor)`
   o Optimize `A*delta(i,j)` contraction so that if `A` has Index `i` or `j` (but not both), 
     no contraction occurs and the Index is just replaced in the IndexSet
@@ -251,6 +251,7 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - MPO operations:
 
+  o Add "Silent" arg in DMRG to suppress all output
   o Make DMRG return the optimized MPS: `auto [E,psi] = dmrg(H,psi0,args)`
   o Add hasQNs(MPO)
   o Add `replaceSiteInds(MPO,IndexSet,IndexSet) -> MPO` to make a new MPO with specified site indices replaces by those in the IndexSet
@@ -285,11 +286,4 @@ Completed (this is to help keep track of changes made, but we should make an off
   o Deprecate "Maxm", "Minm" args in favor of "MaxDim", "MinDim" in svd(), diagHermitian(), factorize(), dmrg(), idmrg(), etc.
     -> Added warning in all functions that use "Maxm" and "Minm", saying to use "MaxDim" and "MinDim"
   o In Sweeps object, added deprecation warning for .maxm() and .minm(), saying to use .maxdim() and .mindim()
-
-Recent commits to v2:
-  o IgnoreDegeneracy flag in SVD truncation
-  o errMPOProd and deprecation of checkMPOProd
-  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
-  o Bugfix for nmultMPO
-  o More combiner constructors (combiner(IndexSet), combiner(initializer_list), etc.)
 

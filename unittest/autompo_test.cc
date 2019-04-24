@@ -352,10 +352,10 @@ SECTION("toExpH ITensor (no QNs)")
         auto expHexact = MPO(ExpIsing(sites,tau*1_i,{"h",h}));
         auto psi = randomMPS(sites);
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = inner(xpsi,xpsi);
+        auto xnrm2 = real(innerC(xpsi,xpsi));
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = inner(apsi,apsi);
-        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
+        auto anrm2 = real(innerC(apsi,apsi));
+        CHECK_CLOSE(innerC(xpsi,apsi)/sqrt(xnrm2*anrm2),1.);
       }
     SECTION("Imaginary time")
         {
@@ -394,10 +394,10 @@ SECTION("toExpH ITensor (QN conservation)")
         auto expH = toExpH(ampo,tau*1_i);
         auto expHexact = MPO(ExpHeisenberg(sites,tau*1_i));
         auto xpsi = applyMPO(expHexact,psi,{"Method","DensityMatrix"});
-        auto xnrm2 = inner(xpsi,xpsi);
+        auto xnrm2 = real(innerC(xpsi,xpsi));
         auto apsi = applyMPO(expH,psi,{"Method","DensityMatrix"});
-        auto anrm2 = inner(xpsi,xpsi);
-        CHECK_CLOSE(inner(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
+        auto anrm2 = real(innerC(apsi,apsi));
+        CHECK_CLOSE(innerC(xpsi,apsi)/sqrt(xnrm2*anrm2),1.0);
         }
     SECTION("Imaginary time")
         {

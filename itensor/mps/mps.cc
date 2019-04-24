@@ -1439,10 +1439,9 @@ inner(MPS const& psi, MPS const& phi, Real& re, Real& im)
 Real
 inner(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
     {
+    if(isComplex(psi) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re, im;
     inner(psi,phi,re,im);
-    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
-        printfln("Real inner: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }
 

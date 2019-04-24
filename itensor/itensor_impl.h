@@ -152,13 +152,15 @@ template <typename... IVals>
 Real ITensor::
 elt(IVals&&... ivs) const
     {
+    if(itensor::isComplex(*this)) Error("Cannot call .elt(...) on an ITensor with complex storage. Please use .eltC(...) instead");
+    //TODO: make a specialized elt(...) version
     auto z = eltC(std::forward<IVals>(ivs)...);
-    if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
-        {
-        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        //Error("tensor is Complex valued, use .eltC(...) method");
-        throw ITError("tensor is complex valued, use .eltC(...) method");
-        }
+    //if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
+    //    {
+    //    printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+    //    //Error("tensor is Complex valued, use .eltC(...) method");
+    //    throw ITError("tensor is complex valued, use .eltC(...) method");
+    //    }
     return z.real();
     }
 

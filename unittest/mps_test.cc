@@ -92,13 +92,19 @@ SECTION("Random constructors (dim==1)")
     auto psi1 = psi;
     psi1.position(1);
 
-    CHECK_CLOSE(norm(psi1),std::sqrt(inner(psi1,psi1)));
+    auto norm2 = innerC(psi1,psi1);
+
+    CHECK_CLOSE(norm(psi1),std::sqrt(real(norm2)));
+    CHECK_CLOSE(imag(norm2),0.);
     CHECK(checkTags(psi1));
     CHECK_CLOSE(diff(psi,psi1),0.);
 
     psi1.position(N);
 
-    CHECK_CLOSE(norm(psi1),std::sqrt(inner(psi1,psi1)));
+    norm2 = innerC(psi1,psi1);
+
+    CHECK_CLOSE(norm(psi1),std::sqrt(real(norm2)));
+    CHECK_CLOSE(imag(norm2),0.);
     CHECK(checkTags(psi1));
     CHECK_CLOSE(diff(psi,psi1),0.);
     }
@@ -119,8 +125,10 @@ SECTION("Check .position() with custom tags")
 
     opsi.position(1);
 
+    auto norm_opsi = std::sqrt(real(innerC(opsi,opsi)));
+
     CHECK(checkOrtho(opsi));
-    CHECK_CLOSE(norm(opsi),std::sqrt(inner(opsi,opsi)));
+    CHECK_CLOSE(norm(opsi),norm_opsi);
     CHECK_CLOSE(diff(opsi,psi),0.);
     CHECK(checkTags(opsi,"MySite","MyLink"));
 
@@ -147,7 +155,7 @@ SECTION("Check .orthogonalize() with custom tags")
     opsi.orthogonalize();
 
     CHECK(checkOrtho(opsi));
-    CHECK_CLOSE(norm(opsi),std::sqrt(inner(opsi,opsi)));
+    CHECK_CLOSE(norm(opsi),std::sqrt(real(innerC(opsi,opsi))));
     CHECK_CLOSE(diff(opsi,psi),0.);
     CHECK(checkTags(opsi,"MySite","MyLink"));
     }
@@ -219,13 +227,13 @@ SECTION("MPSAddition 2")
     psi2.ref(1) *= Complex_i;
     auto psi = sum(psi1,psi2);
 
-    auto exact_inner = inner(psi1,psi2);
-    exact_inner += inner(psi2,psi1);
-    exact_inner += inner(psi1,psi1);
-    exact_inner += inner(psi2,psi2);
+    auto exact_inner = innerC(psi1,psi2);
+    exact_inner += innerC(psi2,psi1);
+    exact_inner += innerC(psi1,psi1);
+    exact_inner += innerC(psi2,psi2);
 
     CHECK(checkTags(psi));
-    CHECK_CLOSE(exact_inner,inner(psi,psi));
+    CHECK_CLOSE(exact_inner,innerC(psi,psi));
     CHECK_EQUAL(order(psi(1)),2);
     CHECK_EQUAL(order(psi(2)),3);
     CHECK_EQUAL(order(psi(5)),3);
@@ -269,14 +277,14 @@ SECTION("Orthogonalize")
     CHECK(checkTags(psi));
 
     //Normalize psi
-    auto n2 = inner(psi,psi);
+    auto n2 = real(innerC(psi,psi));
     psi.ref(1) /= sqrt(n2);
 
     auto opsi = psi;
     opsi.orthogonalize({"Cutoff",1E-16});
 
     CHECK(checkOrtho(opsi));
-    CHECK_CLOSE(inner(opsi,psi),1.0);
+    CHECK_CLOSE(innerC(opsi,psi),1.0);
     CHECK(checkTags(opsi));
 
     psi.orthogonalize({"MaxDim=",10,"Cutoff=",1E-16});
@@ -292,7 +300,7 @@ SECTION("Overlap - 1 site")
     auto s = Index(2,"s");
     psi.ref(1) = randomITensorC(s);
 
-    CHECK_CLOSE(inner(psi,psi),elt(dag(psi(1))*psi(1)));
+    CHECK_CLOSE(innerC(psi,psi),eltC(dag(psi(1))*psi(1)));
     }
 
 SECTION("siteInds")

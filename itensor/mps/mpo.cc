@@ -635,12 +635,9 @@ inner(MPS const& psi,
       MPO const& H, 
       MPS const& phi) //Re[<psi|H|phi>]
     {
+    if(isComplex(psi) || isComplex(H) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re, im;
     inner(psi,H,phi,re,im);
-    if(std::fabs(im) > 1E-5 * std::fabs(re) || std::fabs(im) > 1E-9)
-        {
-        printfln("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.",im);
-        }
     return re;
     }
 
@@ -697,10 +694,9 @@ inner(MPO const& A,
       MPO const& B,
       MPS const& y)
     {
+    if(isComplex(A) || isComplex(x) || isComplex(B) || isComplex(y)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re,im;
     inner(A,x,B,y,re,im);
-    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-  Error("Non-zero imaginary part in inner, use innerC instead.");
     return re;
     }
 
@@ -757,10 +753,9 @@ inner(MPS const& psi,
       MPO const& K,
       MPS const& phi) //<psi|H K|phi>
     {
+    if(isComplex(psi) || isComplex(H) || isComplex(K) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re,im;
     inner(psi,H,K,phi,re,im);
-    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-	Error("Non-zero imaginary part in inner, use innerC instead.");
     return re;
     }
 
@@ -785,7 +780,7 @@ errorMPOProd(MPS const& y,
              MPS const& x)
     {
     if( !equals(uniqueSiteInds(A,x),siteInds(y)) ) Error("errorMPOProd(y,A,x): Index mismatch. MPS y, the approximation to A|x>, must have the same site indices that A|x> would have.");
-    auto err = inner(y,y);
+    auto err = real(innerC(y,y));
     err += -2.*real(innerC(y,A,x));
     err /= real(innerC(A,x,A,x));
     err = std::sqrt(std::abs(1.0+err));
