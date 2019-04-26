@@ -472,10 +472,10 @@ operator<<(std::ostream & s, QN const& q)
         s << "{";
         if(v.name() != QNName()) s << "\"" << v.name() << "\",";
         s << v.val();
-        //if(v.mod() != 1)
-        //    {
-        //    s << "," << v.mod();
-        //    }
+        if(v.mod() != 1)
+            {
+            s << "," << v.mod();
+            }
         s << "}";
         }
     s << ")";
