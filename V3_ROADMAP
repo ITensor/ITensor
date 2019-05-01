@@ -61,7 +61,6 @@ END OF DRAFT CHANGELOG
 # Breaking changes to library code:
 ! Add alternative to niter which starts at 1. Solver iterations? Eigen iterations?
   --> Matt: see https://github.com/ITensor/ITensor/issues/209
-! Port IgnoreDegeneracy flag from V2 (rename TruncateDegenerate?)
 ! Move idmrg into a seperate code/sample code
 
 # Non-breaking, but nice to have for V3:
@@ -196,6 +195,8 @@ Completed (this is to help keep track of changes made, but we should make an off
 
  - ITensor operations:
 
+  o Add "TruncateDegenerate" flag in truncate() function to switch on and off whether
+    degenerate subspaces will be truncated.
   o Make `elt(T,i=1,j=2)` for complex storage throw an error, require using
     `eltC(T,i=1,j=2)`.
   o Add `maxDim(ITensor)` and `minDim(ITensor)`
