@@ -153,33 +153,6 @@ SECTION("ITensor SVD")
 
     }
 
-SECTION("ITensor SVD (degeneracy test)")
-    {
-    Index i("i",3);
-    auto T = ITensor(i,prime(i));
-    T.set(1,1,1.0);
-    T.set(2,2,1.0);
-    T.set(3,3,2.0);
-
-    SECTION("Case 1: Ignore degeneracy")
-        {
-        ITensor U(i),D,V;
-        //IgnoreDegeneracy=true is the default
-        svd(T,U,D,V,{"Maxm=",2,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==2);
-        }
-
-    SECTION("Case 2: Don't ignore degeneracy")
-        {
-        ITensor U(i),D,V;
-        svd(T,U,D,V,{"Maxm=",2,"IgnoreDegeneracy=",false,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==1);
-        }
-
-    }
-
 SECTION("IQTensor SVD")
     {
 
@@ -218,33 +191,6 @@ SECTION("IQTensor SVD")
 		IQTensor A(s1),D,B;
 		svd(psi,A,D,B);
         CHECK(norm(psi-A*D*B) < 1E-12);
-        }
-
-    }
-
-SECTION("IQTensor SVD (degeneracy test)")
-    {
-    auto i = IQIndex("i",Index("i0",3),QN(0),Index("i1",2),QN(1));
-    auto A = IQTensor(i,dag(prime(i)));
-    A.set(2,2,2.0);
-    A.set(4,4,1.0);
-    A.set(5,5,1.0);
-
-    SECTION("Case 1: Ignore degeneracy")
-        {
-        IQTensor U(i),D,V;
-        // Degeneracy ignored by default
-        svd(A,U,D,V,{"Maxm=",2,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==2);
-        }
-
-    SECTION("Case 2: Don't ignore degeneracy")
-        {
-        IQTensor U(i),D,V;
-        svd(A,U,D,V,{"Maxm=",2,"IgnoreDegeneracy=",false,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==1);
         }
 
     }
@@ -350,33 +296,6 @@ SECTION("ITensor diagHermitian")
         CHECK(norm(T-U*D*prime(U,4)) < 1E-12);
         }
 
-    SECTION("Ignore degeneracy")
-        {
-        Index i("i",3);
-        auto T = ITensor(i,prime(i));
-        T.set(1,1,1.0);
-        T.set(2,2,1.0);
-        T.set(3,3,2.0);
-        ITensor U(i),D;
-        //IgnoreDegeneracy=true is the default
-        diagHermitian(T,U,D,{"Maxm=",2,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==2);
-        }
-
-    SECTION("Don't ignore degeneracy")
-        {
-        Index i("i",3);
-        auto T = ITensor(i,prime(i));
-        T.set(1,1,1.0);
-        T.set(2,2,1.0);
-        T.set(3,3,2.0);
-        ITensor U(i),D;
-        diagHermitian(T,U,D,{"Maxm=",2,"IgnoreDegeneracy=",false,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==1);
-        }
-
     }
 
 SECTION("IQTensor diagHermitian")
@@ -440,33 +359,6 @@ SECTION("IQTensor diagHermitian")
         diagHermitian(T,U,D);
         CHECK(hasindex(U,prime(I)));
         CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
-        }
-
-    SECTION("Ignore degeneracy")
-        {
-        auto i = IQIndex("i",Index("i0",3),QN(0),Index("i1",2),QN(1));
-        auto A = IQTensor(i,dag(prime(i)));
-        A.set(2,2,2.0);
-        A.set(4,4,1.0);
-        A.set(5,5,1.0);
-        IQTensor U(i),D;
-        // Degeneracy ignored by default
-        diagHermitian(A,U,D,{"Maxm=",2,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==2);
-        }
-
-    SECTION("Don't ignore degeneracy")
-        {
-        auto i = IQIndex("i",Index("i0",3),QN(0),Index("i1",2),QN(1));
-        auto A = IQTensor(i,dag(prime(i)));
-        A.set(2,2,2.0);
-        A.set(4,4,1.0);
-        A.set(5,5,1.0);
-        IQTensor U(i),D;
-        diagHermitian(A,U,D,{"Maxm=",2,"IgnoreDegeneracy=",false,"Cutoff=",0.0});
-        auto l = commonIndex(U,D);
-        CHECK(l.m()==1);
         }
 
     }

@@ -44,7 +44,6 @@ svdImpl(ITensor const& A,
     auto minm = args.getInt("Minm",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     auto lname = args.getString("LeftIndexName","ul");
     auto rname = args.getString("RightIndexName","vl");
     auto itype = getIndexType(args,"IndexType",Link);
@@ -82,23 +81,7 @@ svdImpl(ITensor const& A,
         {
         tie(truncerr,docut) = truncate(probs,maxm,minm,cutoff,
                                        absoluteCutoff,doRelCutoff,args);
-        if(ignore_degeneracy)
-            {
-            m = probs.size();
-            }
-        else
-            {
-            long total_m = 0;
-            for(decltype(probs.size()) n = 0; n < probs.size() && probs(n) > docut; ++n)
-                {
-                total_m += 1;
-                }
-            m = total_m;
-            }
-
-#ifdef DEBUG
-        if(m==0) throw std::runtime_error("Index of S after SVD is empty. Consider raising Maxm or Cutoff, or making IgnoreDegeneracy true");
-#endif
+        m = probs.size();
         resize(DD,m);
         reduceCols(UU,m);
         reduceCols(VV,m);
@@ -157,7 +140,7 @@ svdImpl(IQTensor A,
         IQTensor & U, 
         IQTensor & D, 
         IQTensor & V,
-        Args       args)
+        Args const& args)
     {
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
@@ -166,7 +149,6 @@ svdImpl(IQTensor A,
     auto minm = args.getInt("Minm",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     auto show_eigs = args.getBool("ShowEigs",false);
     auto lname = args.getString("LeftIndexName","ul");
     auto rname = args.getString("RightIndexName","vl");
@@ -174,8 +156,6 @@ svdImpl(IQTensor A,
     auto litype = getIndexType(args,"LeftIndexType",itype);
     auto ritype = getIndexType(args,"RightIndexType",itype);
     auto compute_qn = args.getBool("ComputeQNs",false);
-
-    args.add("IgnoreDegeneracy",ignore_degeneracy);
 
     auto blocks = doTask(GetBlocks<T>{A.inds(),uI,vI},A.store());
 
@@ -268,7 +248,6 @@ svdImpl(IQTensor A,
     Liq.reserve(Nblock);
     Riq.reserve(Nblock);
 
-    long total_m = 0;
     for(auto b : range(Nblock))
         {
         auto& d = dvecs.at(b);
@@ -278,13 +257,7 @@ svdImpl(IQTensor A,
         long this_m = 0;
         for(decltype(d.size()) n = 0; n < d.size() && sqr(d(n)) > docut; ++n)
             {
-            //We need to check that the number of states doesn't
-            //go above m, which can happen if there are degeneracies
-            if(m > total_m)
-                {
-                total_m += 1;
-                this_m += 1;
-                }
+            this_m += 1;
             if(d(n) < 0) d(n) = 0;
             }
 
@@ -310,7 +283,7 @@ svdImpl(IQTensor A,
         }
 
 #ifdef DEBUG
-    if(Liq.empty() || Riq.empty()) throw std::runtime_error("IQIndex of S after SVD is empty. Consider raising Maxm or Cutoff, or making IgnoreDegeneracy true");
+    if(Liq.empty() || Riq.empty()) throw std::runtime_error("IQIndex of S after SVD is empty. Consider lowering Cutoff");
 #endif
 
     auto L = IQIndex(lname,move(Liq),uI.dir());

@@ -197,7 +197,6 @@ DMRGWorker(MPSt<Tensor>& psi,
     const bool quiet = silent || args.getBool("Quiet",false); // silent overrules quiet
     
     const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
-    const bool ignore_degeneracy = args.getBool("IgnoreDegeneracy",false);
 
     const int N = psi.N();
     Real energy = NAN;
@@ -205,7 +204,6 @@ DMRGWorker(MPSt<Tensor>& psi,
     psi.position(1);
 
     args.add("DebugLevel",debug_level);
-    args.add("IgnoreDegeneracy",ignore_degeneracy);
     args.add("DoNormalize",true);
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)

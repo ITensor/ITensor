@@ -713,7 +713,7 @@ arnoldi(const BigMatrixT& A,
 
     const int maxsize = A.size();
 
-    if(phi.size() > maxsize)
+    if(phi.size() > size_t(maxsize))
         Error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
 
     if(maxsize == 1)
@@ -734,7 +734,7 @@ arnoldi(const BigMatrixT& A,
                  (maxsize-1),     maxiter_ ,    actual_maxiter );
         }
 
-    if(area(phi.front().inds()) != maxsize)
+    if(area(phi.front().inds()) != size_t(maxsize))
         {
         Error("arnoldi: size of initial vector should match linear matrix size");
         }
@@ -749,7 +749,7 @@ arnoldi(const BigMatrixT& A,
 
     std::vector<Tensor> V(actual_maxiter+2);
 
-    for(int w = 0; w < nget; ++w)
+    for(size_t w = 0; w < nget; ++w)
     {
 
     for(int r = 0; r <= maxrestart_; ++r)
@@ -770,7 +770,7 @@ arnoldi(const BigMatrixT& A,
             const int j = it;
             A.product(V.at(j),V.at(j+1)); // V[j+1] = A*V[j]
             // "Deflate" previous eigenpairs:
-            for(int o = 0; o < w; ++o)
+            for(size_t o = 0; o < w; ++o)
                 {
                 //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j+1]));
                 Complex overlap_;
@@ -822,8 +822,8 @@ arnoldi(const BigMatrixT& A,
             auto Hnrows = nrows(HrefR);
             auto Hncols = ncols(HrefR);
             CMatrix Href(Hnrows,Hncols);
-            for(auto irows = 0; irows < Hnrows; irows++)
-              for(auto icols = 0; icols < Hncols; icols++)
+            for(size_t irows = 0; irows < Hnrows; irows++)
+              for(size_t icols = 0; icols < Hncols; icols++)
                 Href(irows,icols) = Complex(HrefR(irows,icols),HrefI(irows,icols));
 
             eigen(Href,YR,YI,D,DI);
@@ -838,7 +838,7 @@ arnoldi(const BigMatrixT& A,
 
             //Estimate error || (A-l_j*I)*p_j || = h_{j+1,j}*[last entry of Y_j]
             //See http://web.eecs.utk.edu/~dongarra/etemplates/node216.html
-            assert(nrows(YR) == 1+j);
+            assert(nrows(YR) == size_t(1+j));
             err = nh*abs(Complex(YR(j,n),YI(j,n)));
             assert(err >= 0);
 
@@ -849,7 +849,7 @@ arnoldi(const BigMatrixT& A,
                 else
                     printf("R %d I %d e %.0E E",r,(1+j),err);
 
-                for(int j = 0; j <= w; ++j)
+                for(size_t j = 0; j <= w; ++j)
                     {
                     if(fabs(eigs[j].real()) > 1E-6)
                         {

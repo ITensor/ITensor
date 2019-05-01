@@ -114,7 +114,6 @@ truncate(Vector & P,
          bool doRelCutoff,
          Args const& args)
     {
-    auto ignore_degeneracy = args.getBool("IgnoreDegeneracy",true);
     long origm = P.size();
     long n = origm-1;
     Real docut = 0;
@@ -189,14 +188,7 @@ truncate(Vector & P,
         //Check for a degeneracy:
         if(std::fabs(P(n+1)-P(n)) < 1E-3*P(n))
             {
-            if(ignore_degeneracy)
-                {
-                docut -= 1E-3*P(n);
-                }
-            else
-                {
-                docut += 1E-3*P(n);
-                }
+            docut += 1E-3*P(n);
             }
         }
 
