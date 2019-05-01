@@ -18,8 +18,6 @@ class tJSite
     Index s;
     public:
 
-    tJSite() { }
-
     tJSite(Index I) : s(I) { }
 
     tJSite(Args const& args = Args::global())
@@ -27,9 +25,16 @@ class tJSite
         auto ts = TagSet("Site,tJ");
         if( args.defined("SiteNumber") )
           ts.addTags("n="+str(args.getInt("SiteNumber")));
-        s = Index{QN({"Sz", 0},{"Nf",0}),1,
-                  QN({"Sz",+1},{"Nf",1}),1,
-                  QN({"Sz",-1},{"Nf",1}),1,Out,ts};
+        if(args.getBool("ConserveQNs",true))
+          {
+          s = Index(QN({"Sz", 0},{"Nf",0}),1,
+                    QN({"Sz",+1},{"Nf",1}),1,
+                    QN({"Sz",-1},{"Nf",1}),1,Out,ts);
+          }
+        else
+          {
+          s = Index(3,ts);
+          }
         }
 
     Index

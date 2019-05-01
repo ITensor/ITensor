@@ -37,13 +37,16 @@ class ElectronSite
                       QN({"Sz",Dn},{"Nf",1,-1}),1,
                       QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts);
             }
-        else //don't conserve Nf, only fermion parity
+        else if(conserveSz) //don't conserve Nf, only fermion parity
             {
-            if(!conserveSz) Error("One of ConserveSz or ConserveNf must be true for Electron sites");
             s = Index(QN({"Sz", 0},{"Pf",0,-1}),1,
                       QN({"Sz",+1},{"Pf",1,-1}),1,
                       QN({"Sz",-1},{"Pf",1,-1}),1,
                       QN({"Sz", 0},{"Pf",0,-1}),1,Out,ts);
+            }
+        else
+            {
+            s = Index(4,ts);
             }
         }
 

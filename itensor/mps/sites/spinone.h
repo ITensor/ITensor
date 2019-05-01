@@ -32,8 +32,6 @@ class SpinOneSite
     Index s;
     public:
 
-    SpinOneSite() { }
-
     SpinOneSite(Index I) : s(I) { }
 
     SpinOneSite(Args const& args = Args::global())

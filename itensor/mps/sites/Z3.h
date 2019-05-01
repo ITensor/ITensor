@@ -18,8 +18,6 @@ class Z3Site
     Index s;
     public:
 
-    Z3Site() { }
-
     Z3Site(Index I) : s(I) { }
 
     Z3Site(Args const& args = Args::global())
@@ -27,9 +25,16 @@ class Z3Site
         auto ts = TagSet("Site,Z3");
         if( args.defined("SiteNumber") )
           ts.addTags("n="+str(args.getInt("SiteNumber")));
-        s = Index{QN({"T",0,3}),1,
-                  QN({"T",1,3}),1,
-                  QN({"T",2,3}),1,Out,ts};
+        if(args.getBool("ConserveQNs",true))
+          {
+          s = Index(QN({"T",0,3}),1,
+                    QN({"T",1,3}),1,
+                    QN({"T",2,3}),1,Out,ts);
+          }
+        else
+          {
+          s = Index(3,ts);
+          }
         }
 
     Index

@@ -18,8 +18,6 @@ class FermionSite
     Index s;
     public:
 
-    FermionSite() { }
-
     FermionSite(Index I) : s(I) { }
 
     FermionSite(Args const& args = Args::global())
@@ -34,7 +32,11 @@ class FermionSite
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserve_Nf = args.getBool("ConserveNf",conserveQNs);
         auto oddevenupdown = args.getBool("OddEvenUpDown",false);
-        if(not oddevenupdown) //usual case
+        if(not conserveQNs)
+            {
+            s = Index(2,ts);
+            }
+        else if(not oddevenupdown) //usual case
             {
             auto q_occ = QN({"Nf",1});
             if(not conserve_Nf) q_occ = QN({"Pf",1,-2});

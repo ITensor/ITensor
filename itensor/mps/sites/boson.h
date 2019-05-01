@@ -18,8 +18,6 @@ class BosonSite
     Index s;
     public:
 
-    BosonSite() { }
-
     BosonSite(Index I) : s(I) { }
 
     BosonSite(Args const& args = Args::global())
