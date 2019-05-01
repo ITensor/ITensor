@@ -258,7 +258,7 @@ uncombine(QDense<T> const& d,
             //Only loop over subblocks of combined
             //indices compatible with current sector (==n)
             //of combined index cind (==dis[jc])
-            if(br.block != size_type(n)) continue;
+            if(size_type(br.block) != size_type(n)) continue;
 
             //"invert" offset o into 
             //indices of nblock corresponding to

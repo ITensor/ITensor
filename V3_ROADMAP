@@ -1,3 +1,61 @@
+
+BEGINNING OF DRAFT CHANGELOG
+----------------------------------------------------
+
+Version 3.0.0 (April __, 2019)
+
+This major update to ITensor features a number of changes to the design.
+
+Index objects now carry up to four "tag" strings instead of a name or
+IndexType as in version 2. These tags are useful for many tasks, including
+selecting a particular Index from a set, or preventing two Index objects
+with the same ID from being contracted.
+
+The IQIndex and IQTensor classes have been removed, and are now just 
+Index or ITensor objects which carry extra quantum number block information.
+Similarly IQMPS and IQMPO have been removed, and one can use just MPS and MPO
+instead. This change streamlines much of the design, letting us turn many
+template functions into regular functions. Importantly, it fixes a number
+of issues and awkward design aspects of site set objects.
+
+QN objects now carry small strings naming each of their sectors, allowing
+QNs with different sectors to still be sensibly combined. This allows 
+one to define different QNs locally and still use them together globally
+within the same algorithm or code.
+
+Finally, the move to version 3.0.0 brings a raft of many other small redesigns,
+such as deprecating many class methods in favor of free functions; better
+and more general names for various functions; more consistent interfaces across similar functions;
+improvements to MPO and MPS algorithms to make them work for a broader range of inputs;
+and many other similar improvements.
+
+For help upgrading an existing code to version 3, see the [[upgrade guide|upgrade2to3]].
+
+## Major Breaking Changes
+
+- C++17 is required to compile ITensor version 3. To upgrade your options.mk file, either
+  create a new one from options.mk.sample, or replace `-std=c++11` with `-std=c++17`.
+
+- Index objects now only require a dimension to be constructed. They optionally accept
+  up to four "tag" strings. Two Index objects must have the same tags (regardless of ordering)
+  to compare equal.
+
+- The IQIndex, IQTensor, IQMPS, and IMPO types have been removed, in favor of adding
+  the same functionality as special storage types of Index, ITensor, MPS, and MPO.
+
+- QN objects now store string labels, or names, for each of their sectors. A missing
+  or undefined sector is treated as having a value of zero for the purpose of combining
+  two QNs with different sector definitions.
+
+- Getting an tensor element as a real number immediately throws an error if the tensor
+  has complex storage, even if that element has zero imaginary part.
+
+--------------------------------------------------------------------------
+END OF DRAFT CHANGELOG
+
+
+
+
 (! means necessary / blocker for releasing v3)
 
 # Breaking changes to library code:
@@ -74,7 +132,7 @@ o Error for calls like Index(0,"i"), Index(QN(0),0,"j"), etc.
 
 #################################################################################################
 Completed (this is to help keep track of changes made, but we should make an official
-           list for the website):
+           list for the website - see draft Changelog above):
 
 # Miscellaneous
 
