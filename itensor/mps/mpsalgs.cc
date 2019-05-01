@@ -96,6 +96,7 @@ addAssumeOrth(MPSType      & L,
 
     // Make sure there aren't link index clashes between L and R
     // by priming by a random amount
+    // TODO: use L.simLinkInds() to avoid clashing insteda of priming
     auto rand_plev = 1254313;
     auto l = linkInds(L);
     L.replaceLinkInds(prime(linkInds(L),rand_plev));

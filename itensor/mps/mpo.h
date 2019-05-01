@@ -472,14 +472,14 @@ nmultMPO(MPO const& A,
 MPS
 applyMPO(MPO const& K,
          MPS const& x,
-         Args const& args = Args::global());
+         Args args = Args::global());
 
 //Takes a starting guess wavefunction (only for {"Method=","Fit"})
 MPS
 applyMPO(MPO const& K,
          MPS const& x,
          MPS const& x0,
-         Args const& args = Args::global());
+         Args args = Args::global());
 
 //Computes the exponential of the MPO H: K=exp(-tau*(H-Etot))
 void 
@@ -523,17 +523,6 @@ Real
 errorMPOProd(MPS const& psi2,
              MPO const& K, 
              MPS const& psi1);
-
-Real
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1);
-
-bool
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1,
-             Real threshold);
 
 //
 // Deprecated

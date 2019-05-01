@@ -27,6 +27,8 @@ svdBond(int b, ITensor const& AA, Direction dir,
     auto noise = args.getReal("Noise",0.);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto usesvd = args.getBool("UseSVD",false);
+    // Truncate blocks of degenerate singular values
+    args.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
 
     Spectrum res;
 
@@ -40,7 +42,6 @@ svdBond(int b, ITensor const& AA, Direction dir,
         //accurate SVD method in the MatrixRef library
         ITensor D;
         res = svd(AA,A_[b],D,A_[b+1],args);
-
         //Normalize the ortho center if requested
         if(args.getBool("DoNormalize",false))
             {
@@ -57,7 +58,6 @@ svdBond(int b, ITensor const& AA, Direction dir,
         //or need to use noise term
         //use density matrix approach
         res = denmatDecomp(AA,A_[b],A_[b+1],dir,PH,args);
-
         //Normalize the ortho center if requested
         if(args.getBool("DoNormalize",false))
             {

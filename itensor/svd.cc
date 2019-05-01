@@ -71,7 +71,6 @@ svdImpl(ITensor const& A,
     auto show_eigs = args.getBool("ShowEigs",false);
     auto litagset = getTagSet(args,"LeftTags","Link,U");
     auto ritagset = getTagSet(args,"RightTags","Link,V");
-
     if( litagset == ritagset ) Error("In SVD, must specify different tags for the new left and right indices (with Args 'LeftTags' and 'RightTags')");
 
     if(not hasQNs(A))
@@ -102,12 +101,14 @@ svdImpl(ITensor const& A,
             }
 
         Real truncerr = 0;
-        Real docut = -1;
+        Real docut_lower = -1;
+        Real docut_upper = -1;
+        int ndegen = 1;
         long m = DD.size();
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
-                                           absoluteCutoff,doRelCutoff,args);
+            tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(probs,maxdim,mindim,cutoff,
+                                                                    absoluteCutoff,doRelCutoff,args);
             m = probs.size();
             resize(DD,m);
             reduceCols(UU,m);
@@ -224,11 +225,13 @@ svdImpl(ITensor const& A,
 
         long m = probs.size();
         Real truncerr = 0;
-        Real docut = -1;
+        Real docut_lower = -1;
+        Real docut_upper = -1;
+        int ndegen = 1;
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
-                                           absoluteCutoff,doRelCutoff,args);
+            tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(probs,maxdim,mindim,cutoff,
+                                                                    absoluteCutoff,doRelCutoff,args);
             m = probs.size();
             alleigqn.resize(m);
             }
@@ -250,24 +253,41 @@ svdImpl(ITensor const& A,
         Liq.reserve(Nblock);
         Riq.reserve(Nblock);
 
+        auto total_m = 0;
         for(auto b : range(Nblock))
             {
             auto& d = dvecs.at(b);
             auto& B = blocks[b];
 
-            //Count number of eigenvalues in the sector above docut
             long this_m = 0;
-            for(decltype(d.size()) n = 0; n < d.size() && sqr(d(n)) > docut; ++n)
+            if(do_truncate)
                 {
-                this_m += 1;
-                if(d(n) < 0) d(n) = 0;
+                //Keep all eigenvalues above docut_upper
+                while(this_m < d.size() &&
+                      total_m < m &&
+                      sqr(d(this_m)) > docut_upper)
+                    {
+                    if(d(this_m) < 0) d(this_m) = 0;
+                    ++this_m;
+                    ++total_m;
+                    }
+                //Now check if there are any degenerate eigenvalues to keep
+                //(ones above docut_lower)
+                while(ndegen > 0 &&
+                      this_m < d.size() &&
+                      total_m < m &&
+                      sqr(d(this_m)) > docut_lower)
+                    {
+                    if(d(this_m) < 0) d(this_m) = 0;
+                    ++this_m;
+                    ++total_m;
+                    --ndegen;
+                    }
                 }
-
-            if(m == 0 && d.size() >= 1) // zero mps, just keep one arb state
-                { 
-                this_m = 1; 
-                m = 1; 
-                docut = 1; 
+            else
+                {
+                this_m = d.size();
+                total_m += this_m;
                 }
 
             if(this_m == 0) 

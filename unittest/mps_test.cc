@@ -171,7 +171,7 @@ SECTION("Random constructors, QN conserved (dim==1)")
 
 SECTION("MPSAddition 1")
     {
-    auto sites = Fermion(10,{"ConserveQNs=",true});
+    auto sites = Fermion(10);
 
     auto i1 = InitState(sites,"Emp");
     auto i2 = i1;

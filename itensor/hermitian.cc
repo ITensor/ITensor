@@ -59,19 +59,30 @@ diagHImpl(ITensor H,
         }
       }
 
+    auto origdim = dim(H.inds().front());
+    auto cutoff = args.getReal("Cutoff",0.);
+    auto maxdim = args.getInt("MaxDim",origdim);
+    auto mindim = args.getInt("MinDim",1);
+    auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
+    auto do_truncate = args.getBool("Truncate",def_do_trunc);
+    auto doRelCutoff = args.getBool("DoRelCutoff",true);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto showeigs = args.getBool("ShowEigs",false);
     auto itagset = getTagSet(args,"Tags","Link");
+
+    // If no truncation is occuring, reset MaxDim
+    // to the full matrix dimension
+    if(!do_truncate)
+        {
+        if(args.defined("MaxDim"))
+            {
+            args.add("MaxDim",origdim);
+            maxdim = origdim;
+            }
+        }
 
     if(not hasQNs(H))
         {
-        auto cutoff = args.getReal("Cutoff",0.);
-        auto maxdim = args.getInt("MaxDim",dim(H.inds().front()));
-        auto mindim = args.getInt("MinDim",1);
-        auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
-        auto do_truncate = args.getBool("Truncate",def_do_trunc);
-        auto doRelCutoff = args.getBool("DoRelCutoff",true);
-        auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-        auto showeigs = args.getBool("ShowEigs",false);
-
         if(order(H) != 2)
             {
             Print(order(H));
@@ -106,11 +117,13 @@ diagHImpl(ITensor H,
         //Truncate
         Real truncerr = 0.0;
         long m = DD.size();
-        Real docut = -1;
+        Real docut_lower = -1;
+        Real docut_upper = -1;
+        int ndegen = 1;
         if(do_truncate)
             {
             //if(DD(1) < 0) DD *= -1; //DEBUG
-            tie(truncerr,docut) = truncate(DD,maxdim,mindim,cutoff,absoluteCutoff,doRelCutoff,args);
+            tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(DD,maxdim,mindim,cutoff,absoluteCutoff,doRelCutoff,args);
             m = DD.size();
             reduceCols(UU,m);
             }
@@ -153,17 +166,9 @@ diagHImpl(ITensor H,
 
         return Spectrum{move(DD),{"Truncerr",truncerr}};
         }
-    else
+    else  // With QNs
         {
         SCOPED_TIMER(7)
-        auto cutoff = args.getReal("Cutoff",0.);
-        auto maxdim = args.getInt("MaxDim",dim(H.inds().front()));
-        auto mindim = args.getInt("MinDim",1);
-        auto def_do_trunc = args.defined("Cutoff") || args.defined("MaxDim");
-        auto do_truncate = args.getBool("Truncate",def_do_trunc);
-        auto doRelCutoff = args.getBool("DoRelCutoff",true);
-        auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-        auto showeigs = args.getBool("ShowEigs",false);
         auto compute_qns = args.getBool("ComputeQNs",false);
 
         if(H.order() != 2)
@@ -252,11 +257,14 @@ diagHImpl(ITensor H,
         //Determine number of states to keep m
         long m = probs.size();
         Real truncerr = 0;
-        Real docut = -1;
+        Real docut_lower = -1;
+        Real docut_upper = -1;
+        int ndegen = 0;
         if(do_truncate)
             {
-            tie(truncerr,docut) = truncate(probs,maxdim,mindim,cutoff,
-                                           absoluteCutoff,doRelCutoff,args);
+            tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(probs,maxdim,mindim,cutoff,
+                                                                    absoluteCutoff,doRelCutoff,args);
+
             m = probs.size();
             alleigqn.resize(m);
             }
@@ -289,17 +297,40 @@ diagHImpl(ITensor H,
         Index::qnstorage iq;
         iq.reserve(Nblock);
 
+        auto total_m = 0;
         for(auto b : range(Nblock))
             {
             auto& UU = Umats.at(b);
             auto& d = dvecs.at(b);
             auto& B = blocks[b];
 
-            long this_m = d.size();
+            long this_m = 0;
             if(do_truncate)
                 {
-                //Truncate all elems of d falling below docut
-                while(this_m > 0 && d(this_m-1) <= docut) --this_m;
+                //Keep all eigenvalues above docut_upper
+                while(this_m < d.size() && 
+                      total_m < m && 
+                      d(this_m) > docut_upper)
+                    {
+                    ++this_m;
+                    ++total_m;
+                    }
+                //Now check if there are any degenerate eigenvalues to keep
+                //(ones above docut_upper)
+                while(ndegen > 0 && 
+                      this_m < d.size() && 
+                      total_m < m && 
+                      d(this_m) > docut_lower)
+                    {
+                    ++this_m;
+                    ++total_m;
+                    --ndegen;
+                    }
+                }
+            else
+                {
+                this_m = d.size();
+                total_m += this_m;
                 }
 
             if(this_m == 0) 

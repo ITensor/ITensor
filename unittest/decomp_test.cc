@@ -49,13 +49,15 @@ SECTION("Truncate Test")
     //bool absoluteCutoff = false,
     //     doRelCutoff = false;
     Real truncerr = 0,
-         docut = 0;
+         docut_lower = 0,
+         docut_upper = 0;
+    int ndegen = 0;
 
     SECTION("Case 0")
         {
         //Check that with unrestrictive settings
         //nothing gets truncated
-        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
+        tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(p,maxdim,mindim,cutoff);
         size_t m = p.size();
         CHECK(m==origm);
         }
@@ -64,7 +66,7 @@ SECTION("Truncate Test")
         {
         //Check that maxdim is enforced
         maxdim = 10;
-        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
+        tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
         CHECK(m==maxdim);
         }
@@ -73,7 +75,7 @@ SECTION("Truncate Test")
         {
         //Check that maxdim is enforced
         maxdim = 8;
-        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
+        tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
         CHECK(m==maxdim);
         }
@@ -83,7 +85,7 @@ SECTION("Truncate Test")
         //Check that mindim is enforced
         mindim = 10;
         cutoff = 0.01;
-        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
+        tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
         CHECK(m==mindim);
         }
@@ -94,7 +96,7 @@ SECTION("Truncate Test")
         //and truncerr is correct
         cutoff = 1E-5;
         auto origp = p;
-        tie(truncerr,docut) = truncate(p,maxdim,mindim,cutoff);
+        tie(truncerr,docut_lower,docut_upper,ndegen) = truncate(p,maxdim,mindim,cutoff);
         long m = p.size();
         Real te_check = 0.;
         for(auto n = m; n < long(origp.size()); ++n)
@@ -223,7 +225,7 @@ SECTION("QN ITensor denmatDecomp")
         auto AA = A1*A2;
         AA *= -1./norm(AA);
         auto spec = denmatDecomp(AA,A1,A2,Fromleft);
-
+ 
         CHECK(norm(AA-A1*A2) < 1E-11);
 
         for(auto eig : spec.eigsKept())
@@ -297,15 +299,14 @@ SECTION("ITensor diagHermitian")
         }
     }
 
-SECTION("IQTensor diagHermitian")
+SECTION("ITensor diagHermitian (with QNs)")
     {
     SECTION("Rank 2")
         {
         auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
-        T += dag(swapTags(T,"0","1"));
-        ITensor U,D;
-        diagHermitian(T,U,D);
+        T += swapTags(dag(T),"0","1");
+        auto [U,D,d] = diagHermitian(T);
         CHECK(hasIndex(U,I));
         CHECK(not hasIndex(U,prime(I)));
         CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
@@ -360,6 +361,168 @@ SECTION("IQTensor diagHermitian")
         CHECK(norm(T-dag(U)*D*prime(U,3)) < 1E-12);
         }
     }
+
+SECTION("Truncating Degenerate Values")
+  {
+  // Make a test Index
+  auto v = vector<Real>({2.0,1.0,1.0,1.0});
+  auto blockdim = v.size();
+  auto nblck = 4;
+  auto qns = vector<QNInt>(nblck);
+  for( auto b : range(nblck) )
+    qns[b] = QNInt(QN(b),blockdim);
+  auto iqn = Index(std::move(qns),"i");
+
+  // Make a test ITensor with degeneracies
+  auto iqnp = prime(iqn);
+  auto Aqn = ITensor(iqn,dag(iqnp));
+  auto blocksize_sum = 0;
+  for( auto b : range1(nblck) )
+    {
+    auto blocksize_b = blocksize(iqn,b);
+    for( auto ii : range1(1,blocksize_b) )
+      Aqn.set(blocksize_sum+ii,blocksize_sum+ii,v[ii-1]);
+    blocksize_sum += blocksize_b;
+    }
+  Aqn /= norm(Aqn);
+
+  auto i = removeQNs(iqn);
+  auto A = removeQNs(Aqn);
+
+  // Value used for truncation
+  auto cutoff_dim = 9;
+
+  SECTION("diagPosSemiDef")
+    {
+    SECTION("MaxDim")
+      {
+      auto cutoff = 0.0;
+      SECTION("No QNs, don't truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(A,{"MaxDim=",cutoff_dim,
+                                         "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("No QNs, truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(A,{"TruncateDegenerate=",true,
+                                         "MaxDim=",cutoff_dim,
+                                         "Cutoff=",cutoff});
+        CHECK(dim(u)==nblck);
+        }
+      SECTION("QNs, don't truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(Aqn,{"MaxDim=",cutoff_dim,
+                                           "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("QNs, truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(Aqn,{"TruncateDegenerate=",true,
+                                           "MaxDim=",cutoff_dim,
+                                           "Cutoff=",cutoff});
+        CHECK(dim(u)==nblck);
+        }
+      }
+
+    SECTION("MinDim")
+      {
+      auto cutoff = 1.0;
+      SECTION("No QNs, don't truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(A,{"MinDim=",cutoff_dim,
+                                         "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("No QNs, truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(A,{"TruncateDegenerate=",true,
+                                         "MinDim=",cutoff_dim,
+                                         "Cutoff=",cutoff});
+        CHECK(dim(u)==dim(i));
+        }
+      SECTION("QNs, don't truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(Aqn,{"MinDim=",cutoff_dim,
+                                           "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("QNs, truncate degenerate")
+        {
+        auto [U,D,u] = diagPosSemiDef(Aqn,{"TruncateDegenerate=",true,
+                                           "MinDim=",cutoff_dim,
+                                           "Cutoff=",cutoff});
+        CHECK(dim(u)==dim(i));
+        }
+      }
+    }
+
+  SECTION("svd")
+    {
+    SECTION("MaxDim")
+      {
+      auto cutoff = 0.0;
+      SECTION("No QNs, don't truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(A,{i},{"MaxDim=",cutoff_dim,
+                                      "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("No QNs, truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(A,{i},{"TruncateDegenerate=",true,
+                                      "MaxDim=",cutoff_dim,
+                                      "Cutoff=",cutoff});
+        CHECK(dim(u)==nblck);
+        }
+      SECTION("QNs, don't truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(Aqn,{i},{"MaxDim=",cutoff_dim,
+                                        "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("QNs, truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(Aqn,{i},{"TruncateDegenerate=",true,
+                                        "MaxDim=",cutoff_dim,
+                                        "Cutoff=",cutoff});
+        CHECK(dim(u)==nblck);
+        }
+      }
+
+    SECTION("MinDim")
+      {
+      auto cutoff = 1.0;
+      SECTION("No QNs, don't truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(A,{i},{"MinDim=",cutoff_dim,
+                                      "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("No QNs, truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(A,{i},{"TruncateDegenerate=",true,
+                                      "MinDim=",cutoff_dim,
+                                      "Cutoff=",cutoff});
+        CHECK(dim(u)==dim(i));
+        }
+      SECTION("QNs, don't truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(Aqn,{i},{"MinDim=",cutoff_dim,
+                                        "Cutoff=",cutoff});
+        CHECK(dim(u)==cutoff_dim);
+        }
+      SECTION("QNs, truncate degenerate")
+        {
+        auto [U,S,V,u,v] = svd(Aqn,{i},{"TruncateDegenerate=",true,
+                                        "MinDim=",cutoff_dim,
+                                        "Cutoff=",cutoff});
+        CHECK(dim(u)==dim(i));
+        }
+      }
+
+    }
+  }
 
 SECTION("Exp Hermitian")
     {

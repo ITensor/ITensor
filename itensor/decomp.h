@@ -48,7 +48,7 @@ Spectrum
 factor(ITensor const& T,
        ITensor      & A,
        ITensor      & B,
-       Args const& args = Args::global());
+       Args args = Args::global());
 
 std::tuple<ITensor,ITensor,Index>
 factor(ITensor const& T,
@@ -180,6 +180,16 @@ diagHermitian(ITensor const& M,
 std::tuple<ITensor,ITensor,Index>
 diagHermitian(ITensor const& T,
               Args const& args = Args::global());
+
+Spectrum
+diagPosSemiDef(ITensor const& M,
+               ITensor      & U,
+               ITensor      & D,
+               Args args = Args::global());
+
+std::tuple<ITensor,ITensor,Index>
+diagPosSemiDef(ITensor const& T,
+               Args const& args = Args::global());
 
 ITensor
 expHermitian(ITensor const& T, Cplx t = 1.);
@@ -345,8 +355,8 @@ denmatDecomp(ITensor const& AA,
 
     } //denmatDecomp
 
-//Return value is: (trunc_error,docut)
-std::tuple<Real,Real>
+//Return value is: (trunc_error,docut_lower,docut_upper,ndegen)
+std::tuple<Real,Real,Real,int>
 truncate(Vector & P,
          long maxdim,
          long mindim,

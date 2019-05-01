@@ -26,6 +26,7 @@ nmultMPO(MPO const& Aorig,
          Args args)
     {
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
+    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
 
     if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
     const int N = length(Borig);
@@ -109,12 +110,13 @@ fitApplyMPOImpl(MPS const& psi,
 MPS
 applyMPO(MPO const& K,
          MPS const& x,
-         Args const& args)
+         Args args)
     {
     if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
     if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
 
     auto method = args.getString("Method","DensityMatrix");
+    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
 
     MPS res;
     if(method == "DensityMatrix")
@@ -145,13 +147,14 @@ MPS
 applyMPO(MPO const& K,
          MPS const& x,
          MPS const& x0,
-         Args const& args)
+         Args args)
     {
     if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
     if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
     if( !x0 ) Error("Error in applyMPO, guess MPS is uninitialized.");
 
     auto method = args.getString("Method","Fit");
+    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
 
     MPS res = x0;
     if(method == "DensityMatrix")
@@ -191,6 +194,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     auto dargs = Args{"Cutoff",cutoff};
     auto maxdim_set = args.defined("MaxDim");
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
+    dargs.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
 
@@ -234,8 +238,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     ITensor U,D;
     auto ts = tags(linkIndex(psi,N-1));
-    auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
-
+    auto spec = diagPosSemiDef(rho,U,D,{dargs,"Tags=",ts});
     if(verbose) printfln("  j=%02d truncerr=%.2E dim=%d",N-1,spec.truncerr(),dim(commonIndex(U,D)));
 
     res.ref(N) = dag(U);
@@ -257,7 +260,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
             }
         rho = E[j-1] * O * dag(prime(O,rand_plev));
         ts = tags(linkIndex(psi,j-1));
-        auto spec = diagHermitian(rho,U,D,{dargs,"Tags=",ts});
+        auto spec = diagPosSemiDef(rho,U,D,{dargs,"Tags=",ts});
         O = O*U*psi(j-1)*K(j-1);
         res.ref(j) = dag(U);
         if(verbose) printfln("  j=%02d truncerr=%.2E dim=%d",j,spec.truncerr(),dim(commonIndex(U,D)));

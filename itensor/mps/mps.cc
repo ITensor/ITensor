@@ -688,6 +688,9 @@ orthogonalize(Args args)
     auto maxdim_set = args.defined("MaxDim");
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
 
+    // Truncate blocks of degenerate singular values
+    dargs.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
+
     int rand_plev = 14741;
 
     //Build environment tensors from the left
@@ -695,7 +698,7 @@ orthogonalize(Args args)
 
     auto psic = itensor::dag(psi);
     //TODO: use sim(linkInds)
-    //That would require changing the requirements of diagHermitian to
+    //That would require changing the requirements of diagPosSemiDef to
     //allow more general ITensors
     psic.replaceLinkInds(itensor::prime(itensor::linkInds(psic),rand_plev));
 
@@ -705,7 +708,7 @@ orthogonalize(Args args)
     auto rho = E[N-1] * psi(N) * itensor::prime(psic(N),rand_plev,siteInds(psic,N));
 
     auto original_tags = tags(linkIndex(psi,N-1));
-    auto [U,D,lj] = diagHermitian(rho,{dargs,"Tags=",original_tags});
+    auto [U,D,lj] = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
 
     //O is partial inner of previous and new MPS
     auto O = U * psi(N) * psi(N-1);
@@ -723,7 +726,7 @@ orthogonalize(Args args)
             }
         rho = E.at(j-1) * O * itensor::dag(itensor::prime(O,rand_plev));
         original_tags = tags(linkIndex(psi,j-1));
-        std::tie(U,D,lj) = diagHermitian(rho,{dargs,"Tags=",original_tags});
+        std::tie(U,D,lj) = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
         O *= U;
         O *= psi(j-1);
         psi.ref(j) = itensor::dag(U);

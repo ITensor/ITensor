@@ -54,26 +54,24 @@ diff(MPS const& psi, MPS const& phi)
   }
 
 MPO inline
-randomMPO(SiteSet const& sites, Args const& args = Args::global())
+randomUnitaryMPO(SiteSet const& sites, Args const& args = Args::global())
   {
+  auto tau = args.getReal("Timestep",0.1);
   auto N = length(sites);
   //Use AutoMPO as a trick to get
   //an MPO with bond dimension > 1
   auto ampo = AutoMPO(sites);
+  auto J1 = detail::quickran();
+  auto J2 = detail::quickran();
+  auto J3 = detail::quickran();
   for(auto j : range1(N-1))
       {
-      ampo += "Sz",j,"Sz",j+1;
-      ampo += 0.5,"S+",j,"S-",j+1;
-      ampo += 0.5,"S-",j,"S+",j+1;
+      ampo += J1,"Sz",j,"Sz",j+1;
+      ampo += 0.5*J2,"S+",j,"S-",j+1;
+      ampo += 0.5*J3,"S-",j,"S+",j+1;
       }
-  auto H = toMPO(ampo);
-  //Randomize the MPO
-  for(auto j : range1(N))
-      {
-      H.ref(j).randomize(args);
-      H.ref(j) /= norm(H(j));
-      }
-  return H;
+  auto U = toExpH(ampo,tau*Cplx_i);
+  return U;
   }
 
 }

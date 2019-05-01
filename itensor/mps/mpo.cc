@@ -779,22 +779,11 @@ errorMPOProd(MPS const& y,
              MPO const& A, 
              MPS const& x)
     {
-    if( !equals(uniqueSiteInds(A,x),siteInds(y)) ) Error("errorMPOProd(y,A,x): Index mismatch. MPS y, the approximation to A|x>, must have the same site indices that A|x> would have.");
     auto err = real(innerC(y,y));
     err += -2.*real(innerC(y,A,x));
     err /= real(innerC(A,x,A,x));
     err = std::sqrt(std::abs(1.0+err));
     return err;
-    }
-
-bool
-checkMPOProd(MPS const& psi2,
-             MPO const& K, 
-             MPS const& psi1,
-             Real threshold)
-    {
-    Real err = errorMPOProd(psi2,K,psi1);
-    return (std::norm(err) < threshold);
     }
 
 //

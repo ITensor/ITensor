@@ -142,16 +142,14 @@ SECTION("applyMPO (DensityMatrix)")
 
     CHECK(checkTags(psi));
 
-    auto H = randomMPO(sites,{"Complex=",true});
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
+    auto K = randomUnitaryMPO(sites);
 
     CHECK(checkTags(H));
     CHECK(checkTags(K));
 
     // Apply K to psi to entangle psi
     psi = applyMPO(K,psi,{"Cutoff=",0.,"MaxDim=",200});
-
-    psi /= norm(psi);
 
     CHECK(checkTags(psi,"Site,1","Link,0"));
 
@@ -163,7 +161,7 @@ SECTION("applyMPO (DensityMatrix)")
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
 
-    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.0);
     }
 
 SECTION("applyMPO (DensityMatrix) with custom tags")
@@ -185,7 +183,7 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
 
     CHECK(checkTags(psi,"MySite,bra","MyLink,psi"));
 
-    auto H = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
 
     CHECK(checkTags(H));
 
@@ -195,7 +193,7 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
 
     CHECK(checkTags(H,"MySite,bra","MySite,ket","MyLink,H"));
 
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto K = randomUnitaryMPO(sites);
 
     CHECK(checkTags(K));
 
@@ -238,7 +236,7 @@ SECTION("applyMPO (DensityMatrix) with custom tags")
 
     CHECK_CLOSE(norm(O1-O2),0);
 
-    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.0);
     }
 
 SECTION("applyMPO (Fit)")
@@ -256,8 +254,8 @@ SECTION("applyMPO (Fit)")
 
     CHECK(checkTags(psi));
 
-    auto H = randomMPO(sites,{"Complex=",true});
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
+    auto K = randomUnitaryMPO(sites);
 
     CHECK(checkTags(H));
     CHECK(checkTags(K));
@@ -278,7 +276,7 @@ SECTION("applyMPO (Fit)")
     auto Hpsi = applyMPO(H,psi,{"Method=",method,"Cutoff=",1E-13,"MaxDim=",maxdim,"Nsweep=",10});
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
-    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.0);
 
     CHECK( maxLinkDim(Hpsi) <= maxdim );
 
@@ -288,7 +286,7 @@ SECTION("applyMPO (Fit)")
     CHECK( maxLinkDim(Hpsi) <= maxdim );
 
     CHECK(checkTags(Hpsi,"Site,1","Link,0"));
-    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.0);
     }
 
 SECTION("errorMPOProd Scaling")
@@ -303,8 +301,8 @@ SECTION("errorMPOProd Scaling")
       initstate.set(j,"Dn");
 
     auto psi = randomMPS(initstate,{"Complex=",true});
-    auto H = randomMPO(sites,{"Complex=",true});
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
+    auto K = randomUnitaryMPO(sites);
 
     // Scale the MPOs to make the norms very large
     for( auto j : range1(N) )
@@ -348,7 +346,7 @@ SECTION("applyMPO (Fit) with custom tags")
 
     CHECK(checkTags(psi,"MySite,bra","MyLink,psi"));
 
-    auto H = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
 
     CHECK(checkTags(H));
 
@@ -358,7 +356,7 @@ SECTION("applyMPO (Fit) with custom tags")
 
     CHECK(checkTags(H,"MySite,bra","MySite,ket","MyLink,H"));
 
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto K = randomUnitaryMPO(sites);
 
     CHECK(checkTags(K));
 
@@ -401,7 +399,7 @@ SECTION("applyMPO (Fit) with custom tags")
 
     CHECK_CLOSE(norm(O1-O2),0);
 
-    CHECK(checkMPOProd(Hpsi,H,psi,1E-10));
+    CHECK_CLOSE(errorMPOProd(Hpsi,H,psi),0.0);
     }
 
 SECTION("Inner <Hpsi|Kphi> and <psi|H^{d}K|phi>")
@@ -417,8 +415,8 @@ SECTION("Inner <Hpsi|Kphi> and <psi|H^{d}K|phi>")
 
     auto psi = randomMPS(initstate,{"Complex=",true});
     auto phi = randomMPS(initstate,{"Complex=",true});
-    auto H = randomMPO(sites,{"Complex=",true});
-    auto K = randomMPO(sites,{"Complex=",true});
+    auto H = randomUnitaryMPO(sites);
+    auto K = randomUnitaryMPO(sites);
 
     CHECK(checkTags(H));
     CHECK(checkTags(K));
@@ -484,8 +482,8 @@ SECTION("nmultMPO")
   auto N = 4;
   auto sites = SpinHalf(N);
 
-  auto A = randomMPO(sites,{"Complex=",true});
-  auto B = randomMPO(sites,{"Complex=",true});
+  auto A = randomUnitaryMPO(sites);
+  auto B = randomUnitaryMPO(sites);
 
   CHECK(checkTags(A));
   CHECK(checkTags(B));
@@ -514,8 +512,8 @@ SECTION("nmultMPO (custom tags)")
   {
   auto N = 4;
   auto sites = SpinHalf(N);
-  auto A = randomMPO(sites,{"Complex=",true});
-  auto B = randomMPO(sites,{"Complex=",true});
+  auto A = randomUnitaryMPO(sites);
+  auto B = randomUnitaryMPO(sites);
 
   // Set up some custom tags
   A.replaceTags("Site,S=1/2,0","x,0");

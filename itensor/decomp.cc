@@ -4,6 +4,7 @@
 //
 #include <algorithm>
 #include <tuple>
+#include <limits>
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/decomp.h"
@@ -13,6 +14,7 @@
 namespace itensor {
 
 //const auto MAX_INT = std::numeric_limits<int>::max();
+const auto REAL_EPSILON = std::numeric_limits<Real>::epsilon();
 
 using std::swap;
 using std::istream;
@@ -158,6 +160,9 @@ svd(ITensor AA,
     auto noise = args.getReal("Noise",0);
     auto useOrigDim = args.getBool("UseOrigDim",false);
 
+    // Set the cutoff to 0 by default
+    args.add("Cutoff",args.getReal("Cutoff",0.0));
+
     if(noise > 0)
         Error("Noise term not implemented for svd");
 
@@ -251,7 +256,7 @@ svd(ITensor AA, IndexSet const& Uis,
     return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
     }
 
-std::tuple<Real,Real>
+std::tuple<Real,Real,Real,int>
 truncate(Vector & P,
          long maxdim,
          long mindim,
@@ -260,22 +265,38 @@ truncate(Vector & P,
          bool doRelCutoff,
          Args const& args)
     {
+    auto truncateDegenerate = args.getBool("TruncateDegenerate",false);
+
     long origm = P.size();
     long n = origm-1;
-    Real docut = 0;
+    Real docut_lower = 0;
+    Real docut_upper = 0;
 
     //Special case if P's are zero
     if(P(0) == 0.0)
         {
         resize(P,1); 
-        return std::make_tuple(0.,0.);
+        return std::make_tuple(0.,0.,0.,0);
         }
     
     if(origm == 1) 
         {
-        docut = P(0)/2.;
-        return std::make_tuple(0,0);
+        docut_lower = P(0)/2.;
+        docut_upper = P(0)/2.;
+        return std::make_tuple(0.,0.,0.,0);
         }
+
+    // TODO: check this is correct
+    // First normalize P by the largest value to scale things properly
+    // We will undo this at the end
+    auto P0 = P(0);
+    P /= P0;
+    // If we are not using a relative cutoff,
+    // also normalize the cutoff value
+    if(absoluteCutoff || !doRelCutoff)
+      {
+      cutoff /= P0;
+      }
 
     //Zero out any negative weight
     for(auto zn = n; zn >= 0; --zn)
@@ -321,26 +342,65 @@ truncate(Vector & P,
         truncerr = (scale == 0 ? 0 : truncerr/scale);
         }
 
-
     if(n < 0) n = 0;
 
     //P is 0-indexed, so add 1 to n to 
     //get correct state count m
     auto m = n+1;
 
+    auto degen_cutoff = 1E-3*P(n);
+    if(P(n) == 0.0)
+        degen_cutoff = REAL_EPSILON;
+
+    docut_lower = P(n)-degen_cutoff;
+    docut_upper = P(n)+degen_cutoff;
+
+    //Check for a degeneracy:
+    auto ndegen_below = 1;
+    if(n > 0)
+        {
+        while( (n-ndegen_below >= 0) && 
+               (std::abs(P(n-ndegen_below)-P(n)) < degen_cutoff) )
+            {
+            ++ndegen_below;
+            }
+        }
+
+    auto ndegen_above = 0;
     if(n+1 < origm) 
         {
-        docut = (P(n+1) + P(n))/2.;
-        //Check for a degeneracy:
-        if(std::fabs(P(n+1)-P(n)) < 1E-3*P(n)) 
+        while( (n+1+ndegen_above < origm) && 
+               (std::abs(P(n+1+ndegen_above)-P(n)) < degen_cutoff) )
             {
-            docut += 1E-3*P(n);
+            ++ndegen_above;
+            }
+        }
+
+    if( truncateDegenerate && (ndegen_below + ndegen_above > 1) )
+        {
+        if( m+ndegen_above <= maxdim && m-ndegen_below < mindim )
+            {
+            m += ndegen_above;
+            ndegen_below += ndegen_above;
+            ndegen_above = 0;
+            }
+        else
+            {
+            m -= ndegen_below;
+            ndegen_above += ndegen_below;
+            ndegen_below = 0;
             }
         }
 
     resize(P,m); 
 
-    return std::make_tuple(truncerr,docut);
+    // Put back the normalization factor
+    P *= P0;
+    truncerr *= P0;
+    docut_lower *= P0;
+    docut_upper *= P0;
+
+    return std::make_tuple(truncerr,docut_lower,docut_upper,ndegen_below);
     } // truncate
 
 void
@@ -417,7 +477,7 @@ Spectrum
 factor(ITensor const& T,
        ITensor      & A,
        ITensor      & B,
-       Args const& args)
+       Args args)
     {
     auto itagset = getTagSet(args,"Tags","Link");
     ITensor D;
@@ -601,10 +661,10 @@ denmatDecomp(ITensor const& T,
     }
 
 Spectrum
-diagHermitian(ITensor const& M,
-              ITensor      & U,
-              ITensor      & D,
-              Args args)
+diagPosSemiDef(ITensor const& M,
+               ITensor      & U,
+               ITensor      & D,
+               Args args)
     {
     if(!args.defined("Tags")) args.add("Tags","Link");
 
@@ -662,6 +722,26 @@ diagHermitian(ITensor const& M,
 
     return spec;
     } //diagHermitian
+
+std::tuple<ITensor,ITensor,Index>
+diagPosSemiDef(ITensor const& T,
+               Args const& args)
+    {
+    ITensor U,D;
+    diagPosSemiDef(T,U,D,args);
+    auto l = commonIndex(U,D);
+    return std::tuple<ITensor,ITensor,Index>(U,D,l);
+    }
+
+Spectrum
+diagHermitian(ITensor const& M,
+              ITensor      & U,
+              ITensor      & D,
+              Args args)
+    {
+    args.add("Truncate",false);
+    return diagPosSemiDef(M,U,D,args);
+    }
 
 std::tuple<ITensor,ITensor,Index>
 diagHermitian(ITensor const& T,
