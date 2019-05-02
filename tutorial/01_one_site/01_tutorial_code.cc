@@ -43,7 +43,7 @@ int main()
     // Product Sx * phi 
     //
 
-    ITensor phi = Sx * psi;
+    auto phi = Sx * psi;
 
     phi.noPrime();
 
@@ -53,7 +53,7 @@ int main()
     // 45* angle spin
     //
 
-    Real theta = Pi/4;
+    auto theta = Pi/4;
 
     //Extra factors of two come from S=1/2 representation
     psi.set(s=1,cos(theta/2));
@@ -65,10 +65,10 @@ int main()
     // Expectation values
     //
 
-    auto cpsi = dag(prime(psi));
+    auto psidag = dag(prime(psi));
 
-    Real zz = elt(cpsi * Sz * psi);
-    Real xx = elt(cpsi * Sx * psi);
+    auto zz = elt(psidag * Sz * psi);
+    auto xx = elt(psidag * Sx * psi);
 
     println("<Sz> = ", zz);
     println("<Sx> = ", xx);

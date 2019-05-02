@@ -6,9 +6,9 @@ using namespace itensor;
 ITensor
 makeB(SiteSet const& sites, int b)
     {
-    ITensor B_ = sites.op("Sz",b)*sites.op("Sz",b+1)
-              + 0.5*sites.op("Sp",b)*sites.op("Sm",b+1)
-              + 0.5*sites.op("Sm",b)*sites.op("Sp",b+1);
+    auto B_ =     op(sites,"Sz",b)*op(sites,"Sz",b+1) +
+              0.5*op(sites,"Sp",b)*op(sites,"Sm",b+1) +
+              0.5*op(sites,"Sm",b)*op(sites,"Sp",b+1);
     return B_;
     }
 
@@ -16,7 +16,7 @@ int main()
     {
     int N = 20;
 
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     auto J2s = vector<Real>();
     auto dimer = vector<Real>();
@@ -27,7 +27,7 @@ int main()
         // Compute ground state using
         // "black box" routine (or have a look at j1j2.h)
         //
-        MPS psi = computeGroundState(sites,J2);
+        auto psi = computeGroundState(sites,J2);
 
         Real D = 0.;
         //
@@ -48,7 +48,7 @@ int main()
         auto B1 = makeB(sites,i1);
         auto wf1 = psi(i1)*psi(i1+1);
         // compute <wf1|B1|wf1>
-        D +=  (dag(prime(wf1,Site)) * B1 * wf1).elt();
+        D +=  elt(dag(prime(wf1,"Site")) * B1 * wf1);
 
         //
         // Compute: -1/2 <B_(N/2-1)>

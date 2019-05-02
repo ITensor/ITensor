@@ -38,9 +38,9 @@ main()
 
     for(int b = 1; b < N; ++b)
         {
-        ITensor hh = sites.op("Sz",b)*sites.op("Sz",b+1);
-        hh += 0.5*sites.op("Sp",b)*sites.op("Sm",b+1);
-        hh += 0.5*sites.op("Sm",b)*sites.op("Sp",b+1);
+        auto hh = op(sites,"Sz",b)*op(sites,"Sz",b+1);
+        hh += 0.5*op(sites,"Sp",b)*op(sites,"Sm",b+1);
+        hh += 0.5*op(sites,"Sm",b)*op(sites,"Sp",b+1);
 
         auto G = expHermitian(hh,-tstep/2.);
 
@@ -48,9 +48,9 @@ main()
         }
     for(int b = N-1; b >= 1; --b)
         {
-        ITensor hh = sites.op("Sz",b)*sites.op("Sz",b+1);
-        hh += 0.5*sites.op("Sp",b)*sites.op("Sm",b+1);
-        hh += 0.5*sites.op("Sm",b)*sites.op("Sp",b+1);
+        ITensor hh = op(sites,"Sz",b)*op(sites,"Sz",b+1);
+        hh += 0.5*op(sites,"Sp",b)*op(sites,"Sm",b+1);
+        hh += 0.5*op(sites,"Sm",b)*op(sites,"Sp",b+1);
 
         auto G = expHermitian(hh,-tstep/2.);
 
@@ -71,7 +71,7 @@ main()
             auto& G = gate.G;
 
             psi.position(b);
-            ITensor AA = psi(b)*psi(b+1);
+            auto AA = psi(b)*psi(b+1);
 
             //
             // TODO: ADD CODE here that applies 
@@ -98,9 +98,7 @@ main()
             AA /= norm(AA);
 
             //SVD AA to restore MPS form
-            auto U = psi(b);
-            ITensor D,V;
-            svd(AA,U,D,V,{"Cutoff",1E-10});
+            auto [U,D,V,u,v] = svd(AA,inds(psi(b)),{"Cutoff",1E-10});
             psi.set(b,U);
             psi.set(b+1,D*V);
             }
@@ -114,9 +112,9 @@ main()
     auto ampo = AutoMPO(sites);
     for(auto j : range1(N-1))
         {
-        ampo += "Sz",j,"Sz",j+1;
         ampo += 0.5,"S+",j,"S-",j+1;
         ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
         }
     auto H = toMPO(ampo);
 

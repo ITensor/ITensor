@@ -49,18 +49,18 @@ int main()
     // SVD of two-site wavefunction
     //
     
-    auto s1 = Index("s1",2,Site);
-    auto s2 = Index("s2",2,Site);
+    auto s1 = Index(2,"s1");
+    auto s2 = Index(2,"s2");
 
     auto sing = ITensor(s1,s2);
     auto prod = ITensor(s1,s2);
 
     //Make sing a singlet
-    sing.set(s1(1),s2(2), 1./sqrt(2));
-    sing.set(s1(2),s2(1),-1./sqrt(2));
+    sing.set(s1=1,s2=2, 1./sqrt(2));
+    sing.set(s1=2,s2=1,-1./sqrt(2));
 
     //Make prod a product state
-    prod.set(s1(1),s2(2),1.);
+    prod.set(s1=1,s2=2,1.);
 
     for(Real mix = 0; mix <= 1.; mix += 0.1)
         {

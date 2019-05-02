@@ -12,7 +12,7 @@ int main()
 
     auto psi = ITensor(s); //initialized to zero
 
-    psi.set(s=1,1.);
+    psi.set(s=1,1);
 
     // TODO try changing above wavefunction
     //      to be Sx eigenstate

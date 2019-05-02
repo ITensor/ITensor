@@ -25,3 +25,13 @@ options.mk
 .exrc
 unittest/test-g
 unittest/test
+tutorial/01_one_site/one
+tutorial/02_two_site/two
+tutorial/03_svd/svd
+tutorial/04_mps/j1j2
+tutorial/05_gates/gates
+tutorial/06_DMRG/dmrg
+tutorial/finiteT/ancilla
+tutorial/finiteT/en.dat
+tutorial/finiteT/metts
+tutorial/finiteT/sus.dat

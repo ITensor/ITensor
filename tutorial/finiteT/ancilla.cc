@@ -32,7 +32,7 @@ main(int argc, char* argv[])
     args.add("Verbose",verbose);
     args.add("Method","DensityMatrix");
 
-    auto sites = SpinHalf(2*N);
+    auto sites = SpinHalf(2*N,{"ConserveQNs=",false});
 
     auto ampo = AutoMPO(sites);
     for(auto j : range1(N-1))
@@ -44,11 +44,11 @@ main(int argc, char* argv[])
         ampo +=     "Sz",s1,"Sz",s2;
         }
 
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
-    auto expH = toExpH<ITensor>(ampo,tau);
+    auto expH = toExpH(ampo,tau);
 
-    auto S2 = toMPO(makeS2(sites,{"SkipAncilla=",true}));
+    auto S2 = makeS2(sites,{"SkipAncilla=",true});
 
     //
     // Make initial 'wavefunction' which is a product
@@ -69,7 +69,7 @@ main(int argc, char* argv[])
         psi.ref(n) *= D;
         }
 
-    auto obs = TStateObserver<ITensor>(psi);
+    auto obs = TStateObserver(psi);
 
     auto ttotal = beta/2.;
     const int nt = int(ttotal/tau+(1e-9*(ttotal/tau)));

@@ -15,20 +15,17 @@
 
 namespace itensor {
 
-template<class Tensor>
 class TStateObserver : public TEvolObserver
     {
     public:
 
-    using MPST = MPSt<Tensor>;
-    
-    TStateObserver(const MPST& psi,
-                   const Args& args = Global::args());
+    TStateObserver(const MPS& psi,
+                   const Args& args = Args::global());
 
     virtual ~TStateObserver() { }
 
     void virtual
-    measure(const Args& args = Global::args());
+    measure(const Args& args = Args::global());
     
     private:
 
@@ -36,7 +33,7 @@ class TStateObserver : public TEvolObserver
     //
     // Data Members
 
-    const MPST& psi_;
+    const MPS& psi_;
     bool show_maxdim_;
 
     //
@@ -44,9 +41,8 @@ class TStateObserver : public TEvolObserver
 
     }; // class TStateObserver
 
-template<class Tensor>
-inline TStateObserver<Tensor>::
-TStateObserver(const MPST& psi,
+inline TStateObserver::
+TStateObserver(const MPS& psi,
                const Args& args) 
     :
     psi_(psi)
@@ -55,8 +51,7 @@ TStateObserver(const MPST& psi,
     }
 
 
-template<class Tensor>
-void inline TStateObserver<Tensor>::
+void inline TStateObserver::
 measure(const Args& args)
     {
     const auto t = args.getReal("Time");
@@ -65,9 +60,9 @@ measure(const Args& args)
         const auto ttotal = args.getReal("TotalTime");
         const Real percentdone = (100.*t)/ttotal;
         long maxdim = 0;
-        for(int b = 1; b < psi_.N(); ++b)
+        for(int b = 1; b < psi_.length(); ++b)
             {
-            maxdim = std::max(maxdim,dim(linkInd(psi_,b)));
+            maxdim = std::max(maxdim,dim(linkIndex(psi_,b)));
             }
         printfln("%2.f%%:%d ",percentdone,maxdim);
         }

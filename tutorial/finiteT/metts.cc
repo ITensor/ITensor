@@ -6,10 +6,10 @@ using namespace itensor;
 
 vector<int>
 collapse(MPS & psi,
-         Args const& args = Global::args())
+         Args const& args = Args::global())
     {
-    auto sites = psi.sites();
-    auto N = psi.N();
+    auto sites = siteInds(psi);
+    auto N = length(psi);
     auto direction = args.getString("Direction");
 
     auto cps = vector<int>(N+1);
@@ -32,7 +32,7 @@ collapse(MPS & psi,
             }
         else Error("Direction '" + direction + "' not recognized");
 
-        Real prob_up = (dag(prime(psi(j),Site))*PUp*psi(j)).elt();
+        Real prob_up = elt(dag(prime(psi(j),"Site"))*PUp*psi(j));
 
         int st = 1;
         if(Global::random() > prob_up) st = 2;
@@ -92,7 +92,7 @@ main(int argc, char* argv[])
     auto nmetts = input.getInt("nmetts",50000);
     auto nwarm = input.getInt("nwarm",5);
     
-    auto sites = SpinHalf(N);
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
         
     Args args;
     args.add("MaxDim",maxdim);
@@ -107,11 +107,11 @@ main(int argc, char* argv[])
         ampo +=     "Sz",j,"Sz",j+1;
         }
     
-    auto H = MPO(ampo);
+    auto H = toMPO(ampo);
 
-    auto expH = toExpH<ITensor>(ampo,tau);
+    auto expH = toExpH(ampo,tau);
 
-    auto S2 = toMPO(makeS2(sites));
+    auto S2 = makeS2(sites);
     
     auto state = InitState(sites,"Up");
     for(int j : range1(N))
@@ -163,7 +163,7 @@ main(int argc, char* argv[])
         int maxdimm = 0;
         for(int b = 0; b < psi.N(); ++b)
             {
-            int m_b = dim(linkInd(psi,b));
+            int m_b = dim(linkIndex(psi,b));
             maxdimm = std::max(maxdimm,m_b);
             }
             

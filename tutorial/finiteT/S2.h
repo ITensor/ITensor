@@ -5,22 +5,22 @@
 
 namespace itensor {
 
-IQMPO
+MPO
 makeS2(SiteSet const& sites,
        Args const& args = Args::global())
     {
     auto skip_ancilla = args.getBool("SkipAncilla",false);
-    auto N = sites.N();
+    auto N = length(sites);
 
-    auto S2 = IQMPO(sites);
+    auto S2 = MPO(sites);
 
-    auto links = std::vector<IQIndex>(N+1);
+    auto links = std::vector<Index>(N+1);
     for(auto n : range(N+1))
         {
         auto ts = format("Link,l=%d",n);
-        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0),
-                              Index(1,ts),QN("Sz=",-2),
-                              Index(1,ts),QN("Sz=",+2));
+        links.at(n) = Index(QN({"Sz",0}),3,
+                            QN({"Sz",-2}),1,
+                            QN({"Sz",+2}),1,ts);
         }
 
     for(auto n : range1(N))
@@ -31,36 +31,36 @@ makeS2(SiteSet const& sites,
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
         auto& W = S2.ref(n);
-        W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
+        W = ITensor(row,col,dag(sites(n)),prime(sites(n)));
 
-        W += sites.op("Id",n) * row(1) * col(1);
-        W += sites.op("Id",n) * row(2) * col(2);
+        W += op(sites,"Id",n) * setElt(row(1)) * setElt(col(1));
+        W += op(sites,"Id",n) * setElt(row(2)) * setElt(col(2));
 
         if(phys_site)
             {
-            W += sites.op("S2",n) * row(2) * col(1);
+            W += op(sites,"S2",n) * setElt(row(2)) * setElt(col(1));
             }
 
         if(phys_site)
             {
-            W += 2*sites.op("Sz",n) * row(2) * col(3);
-            W +=   sites.op("Sz",n) * row(3) * col(1);
+            W += 2*op(sites,"Sz",n) * setElt(row(2)) * setElt(col(3));
+            W +=   op(sites,"Sz",n) * setElt(row(3)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(3) * col(3);
+        W += op(sites,"Id",n) * setElt(row(3)) * setElt(col(3));
 
         if(phys_site)
             {
-            W += sites.op("S+",n) * row(2) * col(4);
-            W += sites.op("S-",n) * row(4) * col(1);
+            W += op(sites,"S+",n) * setElt(row(2)) * setElt(col(4));
+            W += op(sites,"S-",n) * setElt(row(4)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(4) * col(4);
+        W += op(sites,"Id",n) * setElt(row(4)) * setElt(col(4));
 
         if(phys_site)
             {
-            W += sites.op("S-",n) * row(2) * col(5);
-            W += sites.op("S+",n) * row(5) * col(1);
+            W += op(sites,"S-",n) * setElt(row(2)) * setElt(col(5));
+            W += op(sites,"S+",n) * setElt(row(5)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(5) * col(5);
+        W += op(sites,"Id",n) * setElt(row(5)) * setElt(col(5));
 
         //W.scaleTo(1.);
         }
@@ -71,20 +71,20 @@ makeS2(SiteSet const& sites,
     return S2;
     }
 
-IQMPO
+MPO
 makeTotSz2(SiteSet const& sites,
            Args const& args = Args::global())
     {
     auto skip_ancilla = args.getBool("SkipAncilla",false);
     auto N = sites.N();
 
-    auto Sz2 = IQMPO(sites);
+    auto Sz2 = MPO(sites);
 
-    auto links = std::vector<IQIndex>(N+1);
+    auto links = std::vector<Index>(N+1);
     for(auto n : range(N+1))
         {
         auto ts = format("Link,MPO,%d",n);
-        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0));
+        links.at(n) = Index(QN({"Sz=",0}),3,ts);
         }
 
     for(auto n : range1(N))
@@ -95,22 +95,22 @@ makeTotSz2(SiteSet const& sites,
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
         auto& W = Sz2.ref(n);
-        W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
+        W = ITensor(row,col,dag(sites(n)),prime(sites(n)));
 
-        W += sites.op("Id",n) * row(1) * col(1);
-        W += sites.op("Id",n) * row(2) * col(2);
+        W += op(sites,"Id",n) * setElt(row(1)) * setElt(col(1));
+        W += op(sites,"Id",n) * setElt(row(2)) * setElt(col(2));
 
         if(phys_site)
             {
-            W += sites.op("Sz*Sz",n) * row(2) * col(1);
+            W += op(sites,"Sz*Sz",n) * setElt(row(2)) * setElt(col(1));
             }
 
         if(phys_site)
             {
-            W += 2*sites.op("Sz",n) * row(2) * col(3);
-            W +=   sites.op("Sz",n) * row(3) * col(1);
+            W += 2*op(sites,"Sz",n) * setElt(row(2)) * setElt(col(3));
+            W +=   op(sites,"Sz",n) * setElt(row(3)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(3) * col(3);
+        W += op(sites,"Id",n) * setElt(row(3)) * setElt(col(3));
 
         //W.scaleTo(1.);
         }
@@ -121,22 +121,22 @@ makeTotSz2(SiteSet const& sites,
     return Sz2;
     }
 
-IQMPO
+MPO
 makeSxy2(SiteSet const& sites,
          Args const& args = Args::global())
     {
     auto skip_ancilla = args.getBool("SkipAncilla",false);
     auto N = sites.N();
 
-    auto Sxy2 = IQMPO(sites);
+    auto Sxy2 = MPO(sites);
 
-    auto links = std::vector<IQIndex>(N+1);
+    auto links = std::vector<Index>(N+1);
     for(auto n : range(N+1))
         {
         auto ts = format("Link,MPO,%d",n);
-        links.at(n) = IQIndex(Index(3,ts),QN("Sz=",0),
-                              Index(1,ts),QN("Sz=",-2),
-                              Index(1,ts),QN("Sz=",+2));
+        links.at(n) = Index(QN({"Sz",0}),3,
+                            QN({"Sz",-2}),1,
+                            QN({"Sz",+2}),1,ts);
         }
 
     for(auto n : range1(N))
@@ -147,36 +147,36 @@ makeSxy2(SiteSet const& sites,
         auto row = dag(links.at(n-1));
         auto col = links.at(n);
         auto& W = Sxy2.ref(n);
-        W = IQTensor(row,col,dag(sites(n)),prime(sites(n)));
+        W = ITensor(row,col,dag(sites(n)),prime(sites(n)));
 
-        W += sites.op("Id",n) * row(1) * col(1);
-        W += sites.op("Id",n) * row(2) * col(2);
+        W += op(sites,"Id",n) * setElt(row(1)) * setElt(col(1));
+        W += op(sites,"Id",n) * setElt(row(2)) * setElt(col(2));
 
         if(phys_site)
             {
-            W += 0.5*sites.op("Id",n) * row(2) * col(1);
+            W += 0.5*op(sites,"Id",n) * setElt(row(2)) * setElt(col(1));
             }
 
         //if(phys_site)
         //    {
-        //    W += 2*sites.op("Sz",n) * row(2) * col(3);
-        //    W +=   sites.op("Sz",n) * row(3) * col(1);
+        //    W += 2*op(sites,"Sz",n) * setElt(row(2)) * setElt(col(3));
+        //    W +=   op(sites,"Sz",n) * setElt(row(3)) * setElt(col(1));
         //    }
-        //W += sites.op("Id",n) * row(3) * col(3);
+        //W += op(sites,"Id",n) * setElt(row(3)) * setElt(col(3));
 
         if(phys_site)
             {
-            W += sites.op("S+",n) * row(2) * col(4);
-            W += sites.op("S-",n) * row(4) * col(1);
+            W += op(sites,"S+",n) * setElt(row(2)) * setElt(col(4));
+            W += op(sites,"S-",n) * setElt(row(4)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(4) * col(4);
+        W += op(sites,"Id",n) * setElt(row(4)) * setElt(col(4));
 
         if(phys_site)
             {
-            W += sites.op("S-",n) * row(2) * col(5);
-            W += sites.op("S+",n) * row(5) * col(1);
+            W += op(sites,"S-",n) * setElt(row(2)) * setElt(col(5));
+            W += op(sites,"S+",n) * setElt(row(5)) * setElt(col(1));
             }
-        W += sites.op("Id",n) * row(5) * col(5);
+        W += op(sites,"Id",n) * setElt(row(5)) * setElt(col(5));
 
         //W.scaleTo(1.);
         }

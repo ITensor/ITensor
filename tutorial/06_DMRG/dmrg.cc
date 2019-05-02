@@ -8,7 +8,7 @@ int main()
 
     //sites objects represent the Hilbert space, 
     //a collection of "physical" indices
-    auto sites = SpinOne(N);
+    auto sites = SpinOne(N,{"ConserveQNs=",false});
 
     //Use AutoMPO to make Hamiltonian MPO
     auto ampo = AutoMPO(sites);
@@ -21,7 +21,7 @@ int main()
     auto H = toMPO(ampo);
 
     //Create MPS
-    auto psi = MPS(sites); //random starting state
+    auto psi = randomMPS(sites); //random starting state
 
     //Define DMRG sweeps
     auto sweeps = Sweeps(5);
@@ -30,12 +30,10 @@ int main()
 
     //Some stuff needed to solve
     //projected eigenvalue problem
-    auto Heff = LocalMPO<ITensor>(H);
-
-    Real energy = NAN;
+    auto Heff = LocalMPO(H);
 
     //Loop over sweeps
-    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
+    for(auto sw : range1(sweeps.nsweep()))
         {
         //Loop over bonds
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
@@ -47,20 +45,14 @@ int main()
             Heff.position(b,psi);
 
             //Solve effective eigenvalue problem
-            ITensor phi = psi(b)*psi(b+1);
-            energy = davidson(Heff,phi);
+            auto phi = psi(b)*psi(b+1);
+            auto energy = davidson(Heff,phi);
 
             //Update accuracy parameters
             //to pass to svd
             auto args = Args("Cutoff",sweeps.cutoff(sw),
                              "MaxDim",sweeps.maxdim(sw),
                              "MinDim",sweeps.mindim(sw));
-
-            //Define tensor (references/aliases)
-            //to hold SVD results
-            auto& A = psi.ref(b);  //ref means reference
-            auto& B = psi.ref(b+1); //ref means reference
-            ITensor D;
 
             //Add code:
             //
