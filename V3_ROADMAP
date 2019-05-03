@@ -54,6 +54,7 @@ For help upgrading an existing code to version 3, see the [[upgrade guide|upgrad
 END OF DRAFT CHANGELOG
 
 
+! Update all files with new license info
 
 
 (! means necessary / blocker for releasing v3)
