@@ -350,7 +350,9 @@ truncate(Vector & P,
 
     auto degen_cutoff = 1E-3*P(n);
     if(P(n) == 0.0)
+        {
         degen_cutoff = REAL_EPSILON;
+        }
 
     docut_lower = P(n)-degen_cutoff;
     docut_upper = P(n)+degen_cutoff;
