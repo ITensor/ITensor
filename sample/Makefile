@@ -3,7 +3,7 @@ include ../options.mk
 
 #Define Flags ----------
 
-TENSOR_HEADERS=$(PREFIX)/itensor/all.h $(PREFIX)/itensor/mps/idmrg.h
+TENSOR_HEADERS=$(PREFIX)/itensor/all.h
 CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
 CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
@@ -19,11 +19,11 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg dmrg_table dmrgj1j2 exthubbard idmrg trg
+build: dmrg dmrg_table dmrgj1j2 exthubbard trg
 
-debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g idmrg-g trg-g
+debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g trg-g
 
-all: dmrg dmrg_table dmrgj1j2 exthubbard idmrg trg
+all: dmrg dmrg_table dmrgj1j2 exthubbard trg
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
@@ -55,12 +55,6 @@ exthubbard: exthubbard.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 exthubbard-g: mkdebugdir .debug_objs/exthubbard.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) .debug_objs/exthubbard.o -o exthubbard-g $(LIBGFLAGS)
 
-idmrg: idmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) idmrg.o -o idmrg $(LIBFLAGS)
-
-idmrg-g: mkdebugdir .debug_objs/idmrg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/idmrg.o -o idmrg-g $(LIBGFLAGS)
-
 trg: trg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) trg.o -o trg $(LIBFLAGS)
 
@@ -73,4 +67,4 @@ mkdebugdir:
 clean:
 	@rm -fr *.o .debug_objs dmrg dmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
-    idmrg idmrg-g mixedspin mixedspin-g trg trg-g
+    mixedspin mixedspin-g trg trg-g
