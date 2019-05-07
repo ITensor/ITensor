@@ -63,8 +63,11 @@ TagSet(const char* ts)
 #ifdef DEBUG
             if(j >= SmallString::size()) throw std::runtime_error("Tag name is too long");
 #endif
-            t.set(j,ts[i]);
-            ++j;
+            if(ts[i] != ' ') // Ignore spaces
+                {
+                t.set(j,ts[i]);
+                ++j;
+                }
             }
         }
     this->addTag(t);

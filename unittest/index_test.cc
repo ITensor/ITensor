@@ -118,6 +118,13 @@ TEST_CASE("IndexTest")
         CHECK(hasTags(addTags(ic,"a,b"),"a,b,c"));
         }
 
+    SECTION("Ignore spaces input string tests")
+      {
+      auto ts1 = TagSet("a,n=1");
+      auto ts2 = TagSet(" a , n = 1 ");
+      CHECK(ts1 == ts2);
+      }
+
     SECTION("Access Prime Level from TagSet")
       {
       auto s = Index(3);
