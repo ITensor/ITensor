@@ -121,8 +121,11 @@ TEST_CASE("IndexTest")
     SECTION("Ignore spaces input string tests")
       {
       auto ts1 = TagSet("a,n=1");
-      auto ts2 = TagSet(" a , n = 1 ");
+      auto ts2 = TagSet(" a, n = 1 ");
       CHECK(ts1 == ts2);
+
+      ts1.addTags(" b ");
+      CHECK(ts1 == TagSet("a, b, n = 1"));
       }
 
     SECTION("Access Prime Level from TagSet")
