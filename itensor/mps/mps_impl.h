@@ -28,7 +28,7 @@ svdBond(int b, ITensor const& AA, Direction dir,
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto usesvd = args.getBool("UseSVD",false);
     // Truncate blocks of degenerate singular values
-    args.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
+    args.add("RespectDegenerate",args.getBool("RespectDegenerate",true));
 
     Spectrum res;
 

@@ -689,7 +689,7 @@ orthogonalize(Args args)
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
 
     // Truncate blocks of degenerate singular values
-    dargs.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
+    dargs.add("RespectDegenerate",args.getBool("RespectDegenerate",true));
 
     int rand_plev = 14741;
 

@@ -256,6 +256,7 @@ svd(ITensor AA, IndexSet const& Uis,
     return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
     }
 
+// output: truncerr,docut_lower,docut_upper,ndegen_below
 std::tuple<Real,Real,Real,int>
 truncate(Vector & P,
          long maxdim,
@@ -265,7 +266,7 @@ truncate(Vector & P,
          bool doRelCutoff,
          Args const& args)
     {
-    auto truncateDegenerate = args.getBool("TruncateDegenerate",false);
+    auto respectDegenerate = args.getBool("RespectDegenerate",false);
 
     long origm = P.size();
     long n = origm-1;
@@ -276,14 +277,20 @@ truncate(Vector & P,
     if(P(0) == 0.0)
         {
         resize(P,1); 
-        return std::make_tuple(0.,0.,0.,0);
+        auto degen_cutoff = REAL_EPSILON;
+        auto docut_lower = -degen_cutoff;
+        auto docut_upper = degen_cutoff;
+        auto ndegen_below = 1;
+        return std::make_tuple(0.,docut_lower,docut_upper,ndegen_below);
         }
     
     if(origm == 1) 
         {
-        docut_lower = P(0)/2.;
-        docut_upper = P(0)/2.;
-        return std::make_tuple(0.,0.,0.,0);
+        auto degen_cutoff = 1E-3*P(0);
+        auto docut_lower = P(0)-degen_cutoff;
+        auto docut_upper = P(0)+degen_cutoff;
+        auto ndegen_below = 1;
+        return std::make_tuple(0.,docut_lower,docut_upper,ndegen_below);
         }
 
     // TODO: check this is correct
@@ -378,19 +385,23 @@ truncate(Vector & P,
             }
         }
 
-    if( truncateDegenerate && (ndegen_below + ndegen_above > 1) )
+    // If the new dimension falls within a degenerate subspace and we 
+    // are respecting degeneracies (we are making sure to not truncate 
+    // within a degenerate subspace)
+    if( respectDegenerate && (ndegen_below + ndegen_above > 1) )
         {
-        if( m+ndegen_above <= maxdim && m-ndegen_below < mindim )
+        if( maxdim < m+ndegen_above ) // If the maximum dimension falls within the degenerate subspace
+            {
+            // Truncate the subspace
+            m -= ndegen_below;
+            ndegen_above += ndegen_below;
+            ndegen_below = 0;
+            }
+        else // Otherwise, keep the subspace
             {
             m += ndegen_above;
             ndegen_below += ndegen_above;
             ndegen_above = 0;
-            }
-        else
-            {
-            m -= ndegen_below;
-            ndegen_above += ndegen_below;
-            ndegen_below = 0;
             }
         }
 

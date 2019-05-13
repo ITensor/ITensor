@@ -330,7 +330,7 @@ DMRGWorker(MPS & psi,
       }
 
     // Truncate blocks of degenerate singular values (or not)
-    args.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
+    args.add("RespectDegenerate",args.getBool("RespectDegenerate",true));
 
     const bool silent = args.getBool("Silent",false);
     if(silent)

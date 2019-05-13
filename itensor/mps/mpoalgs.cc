@@ -26,7 +26,7 @@ nmultMPO(MPO const& Aorig,
          Args args)
     {
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
-    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
+    if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
 
     if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
     const int N = length(Borig);
@@ -116,7 +116,7 @@ applyMPO(MPO const& K,
     if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
 
     auto method = args.getString("Method","DensityMatrix");
-    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
+    if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
 
     MPS res;
     if(method == "DensityMatrix")
@@ -154,7 +154,7 @@ applyMPO(MPO const& K,
     if( !x0 ) Error("Error in applyMPO, guess MPS is uninitialized.");
 
     auto method = args.getString("Method","Fit");
-    if(!args.defined("TruncateDegenerate")) args.add("TruncateDegenerate",true);
+    if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
 
     MPS res = x0;
     if(method == "DensityMatrix")
@@ -194,7 +194,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     auto dargs = Args{"Cutoff",cutoff};
     auto maxdim_set = args.defined("MaxDim");
     if(maxdim_set) dargs.add("MaxDim",args.getInt("MaxDim"));
-    dargs.add("TruncateDegenerate",args.getBool("TruncateDegenerate",true));
+    dargs.add("RespectDegenerate",args.getBool("RespectDegenerate",true));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
 
