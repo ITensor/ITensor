@@ -3,7 +3,7 @@
 
 # 2. Edit LIBRARY_DIR to point at the location of your ITensor Library
 #    source folder (this is the folder that has options.mk in it)
-LIBRARY_DIR=$(HOME)/software/itensor
+LIBRARY_DIR=$(HOME)/itensor
 
 # 3. If your 'main' function is in a file called 'myappname.cc', then
 #    set APP to 'myappname'. Running 'make' will compile the app.
