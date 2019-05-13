@@ -256,6 +256,7 @@ svd(ITensor AA, IndexSet const& Uis,
     return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
     }
 
+// tuple: truncerr,docut_lower,docut_upper,ndegen_below>
 std::tuple<Real,Real,Real,int>
 truncate(Vector & P,
          long maxdim,
@@ -283,7 +284,7 @@ truncate(Vector & P,
         {
         docut_lower = P(0)/2.;
         docut_upper = P(0)/2.;
-        return std::make_tuple(0.,0.,0.,0);
+        return std::make_tuple(0.,docut_lower,docut_upper,0);
         }
 
     // TODO: check this is correct
@@ -380,14 +381,16 @@ truncate(Vector & P,
 
     if( truncateDegenerate && (ndegen_below + ndegen_above > 1) )
         {
-        if( m+ndegen_above <= maxdim && m-ndegen_below < mindim )
+        if( m+ndegen_above <= maxdim && m-ndegen_below < mindim ) // keeping would respect max and min dim
             {
+            // keep all of the degenerate states now, not just some
             m += ndegen_above;
             ndegen_below += ndegen_above;
             ndegen_above = 0;
             }
         else
             {
+            // keep none of the degenerate states now, not just some
             m -= ndegen_below;
             ndegen_above += ndegen_below;
             ndegen_below = 0;
