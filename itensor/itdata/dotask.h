@@ -52,14 +52,14 @@ struct FuncT : FuncT<Derived,popFront<TList>>
     using FuncT<Derived,popFront<TList>>::applyTo;
 
     void
-    applyTo(const T& t) final
+    applyTo(T const& t) 
         {
         auto* pd = static_cast<Derived*>(this);
         pd->applyToImpl(t);
         }
 
     void
-    applyTo(T& t) final
+    applyTo(T& t) 
         {
         auto* pd = static_cast<Derived*>(this);
         pd->applyToImpl(t);
@@ -302,7 +302,7 @@ template<typename Task, typename Storage>
 struct HasConstDoTask
     {
     using ResultType = stdx::result_of_t<HasDTHelper<Task,const Storage>()>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{}; }
     };
 template<typename Task, typename Storage>
@@ -310,7 +310,7 @@ struct HasNonConstDoTask
     {
     using ResultType = stdx::result_of_t<HasDTHelper<Task,stdx::remove_const_t<Storage>>()>;
     using CResultType = stdx::result_of_t<HasDTHelper<Task,const Storage>()>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{} && (not CResultType{}); }
     };
 template<typename Task, typename Storage>
@@ -321,7 +321,7 @@ struct HasDoTask
     using ResultType = stdx::conditional_t<CResultType::value,
                                           CResultType,
                                           NCResultType>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{}; }
     };
 
@@ -362,7 +362,7 @@ template<typename Task, typename D1, typename D2>
 struct HasConstDoTask2Arg
     {
     using ResultType = stdx::result_of_t<HasDTHelper2Arg<Task,const D1, const D2>()>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{}; }
     };
 template<typename Task, typename D1, typename D2>
@@ -370,7 +370,7 @@ struct HasNonConstDoTask2Arg
     {
     using ResultType = stdx::result_of_t<HasDTHelper2Arg<Task,stdx::remove_const_t<D1>,D2>()>;
     using CResultType = stdx::result_of_t<HasDTHelper2Arg<Task,const D1,D2>()>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{} && (not CResultType{}); }
     };
 template<typename Task, typename D1, typename D2>
@@ -381,7 +381,7 @@ struct HasDoTask2Arg
     using ResultType = stdx::conditional_t<CResultType::value,
                                           CResultType,
                                           NCResultType>;
-    bool constexpr static
+    bool constexpr 
     result() { return ResultType{}; }
     };
 
@@ -410,7 +410,7 @@ struct HasEvaluate
         auto operator()() -> decltype(testEvalImpl(stdx::select_overload{},*s))
             { return testEvalImpl(stdx::select_overload{},*s); }
         };
-    bool constexpr static
+    bool constexpr 
     result() { return stdx::result_of_t<Test()>{}; }
     };
 
