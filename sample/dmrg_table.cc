@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     auto [energy,psi] = dmrg(H,psi0,sweeps,{"Quiet",quiet});
 
     printfln("\nGround State Energy = %.10f",energy);
+    printfln("\nUsing inner = %.10f", inner(psi,H,psi) );
 
     return 0;
     }

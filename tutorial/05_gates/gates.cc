@@ -98,7 +98,7 @@ main()
             AA /= norm(AA);
 
             //SVD AA to restore MPS form
-            auto [U,D,V,u,v] = svd(AA,inds(psi(b)),{"Cutoff",1E-10});
+            auto [U,D,V] = svd(AA,inds(psi(b)),{"Cutoff",1E-10});
             psi.set(b,U);
             psi.set(b+1,D*V);
             }
