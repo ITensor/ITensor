@@ -259,7 +259,7 @@ svdImpl(ITensor const& A,
             auto& d = dvecs.at(b);
             auto& B = blocks[b];
 
-            size_t this_m = 0;
+            decltype(d.size()) this_m = 0;
             if(do_truncate)
                 {
                 //Keep all eigenvalues above docut_upper

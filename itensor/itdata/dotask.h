@@ -52,14 +52,14 @@ struct FuncT : FuncT<Derived,popFront<TList>>
     using FuncT<Derived,popFront<TList>>::applyTo;
 
     void
-    applyTo(const T& t) final
+    applyTo(const T& t) 
         {
         auto* pd = static_cast<Derived*>(this);
         pd->applyToImpl(t);
         }
 
     void
-    applyTo(T& t) final
+    applyTo(T& t) 
         {
         auto* pd = static_cast<Derived*>(this);
         pd->applyToImpl(t);
