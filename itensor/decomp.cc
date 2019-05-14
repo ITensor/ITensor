@@ -486,6 +486,9 @@ showEigs(Vector const& P,
     println();
     } // showEigs
 
+Real
+absSqrt(Real x) { return std::sqrt(std::fabs(x)); }
+
 Spectrum
 factor(ITensor const& T,
        ITensor      & A,
@@ -497,7 +500,7 @@ factor(ITensor const& T,
     auto spec = svd(T,A,D,B,{args,"LeftTags=",itagset});
     auto dl = commonIndex(A,D);
     auto dr = commonIndex(B,D);
-    D.apply([](Real x){ return std::sqrt(std::fabs(x)); });
+    D.apply(absSqrt);
     A *= D;
     B *= D;
     //Replace index dl with dr
