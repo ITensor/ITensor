@@ -11,8 +11,8 @@
    and follow the remaining instructions.
 
 2. Set which compiler to use (the `CCCOM` variable). 
-   Make sure to include the flag -std=c++11 or similar 
-   to enable C++11.
+   Make sure to include the flag -std=c++17 or similar 
+   to enable C++17.
    
 3. If you are using a system other than a Mac, edit `PLATFORM`,
    `BLAS_LAPACK_INCLUDEFLAGS` and `BLAS_LAPACK_LIBFLAGS` to reflect the

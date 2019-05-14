@@ -322,6 +322,7 @@ SECTION("Dense Cplx Storage")
 SECTION("Combiner Storage")
     {
     auto [C,ci] = combiner(s1,s2);
+    CHECK(hasIndex(C,ci));
     writeToFile(fname,C);
     auto nC = readFromFile<ITensor>(fname);
     CHECK(hasIndex(nC,s1));
@@ -1899,8 +1900,8 @@ SECTION("Combiner")
 
         auto T1 = randomITensor(s1,s2,s3);
         auto R1 = C*T1;
-        //auto ci = commonIndex(C,R1);
-        CHECK(ci);
+
+        CHECK(hasIndex(R1,ci));
         CHECK(ci.dim() == s1.dim()*s2.dim());
 
         CHECK(ci == combinedIndex(C));
@@ -1935,7 +1936,7 @@ SECTION("Combiner")
         auto [cs4,cs4ind] = combiner(s4);
         auto Rs4a = T1*cs4;
         CHECK(!hasIndex(Rs4a,s4));
-        CHECK(commonIndex(cs4,Rs4a));
+        CHECK(cs4ind==commonIndex(cs4,Rs4a));
         auto Rs4b = cs4*T1;
         CHECK(!hasIndex(Rs4b,s4));
         CHECK(commonIndex(cs4,Rs4b));
@@ -1943,6 +1944,7 @@ SECTION("Combiner")
         auto [cl2,cl2ind] = combiner(l2);
         auto Rl2a = T1*cl2;
         CHECK(!hasIndex(Rl2a,l2));
+        CHECK(hasIndex(Rl2a,cl2ind));
         CHECK(commonIndex(cl2,Rl2a));
         auto Rl2b = cl2*T1;
         CHECK(commonIndex(cl2,Rl2b));
@@ -1961,7 +1963,6 @@ SECTION("Combiner")
         auto T = randomITensor(a,b,c);
         auto [C,ci] = combiner(a,c);
         auto R = T*C;
-        //auto ci = commonIndex(C,R);
 
         CHECK(hasIndex(R,ci));
         CHECK(hasIndex(R,b));
@@ -1980,8 +1981,8 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(i,j);
             auto R = C * T;
-            //auto ci = commonIndex(C,R);
 
+            CHECK(hasIndex(R,ci));
             CHECK_CLOSE(norm(R),norm(T));
 
             for(auto i_ : range1(i.dim()))
@@ -1997,8 +1998,8 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(i,k);
             auto R = C * T;
-            //auto ci = commonIndex(C,R);
 
+            CHECK(hasIndex(R,ci));
             CHECK_CLOSE(norm(R),norm(T));
 
             for(auto i_ : range1(i.dim()))
@@ -2014,8 +2015,8 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(k,j);
             auto R = T * C;
-            //auto ci = commonIndex(C,R);
 
+            CHECK(hasIndex(R,ci));
             CHECK_CLOSE(norm(R),norm(T));
 
             for(auto i_ : range1(i.dim()))
@@ -2031,7 +2032,6 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner({k,j});
             auto R = T * C;
-            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2048,7 +2048,6 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(std::array<Index,2>({k,j}));
             auto R = T * C;
-            //auto ci = commonIndex(C,R);
 
             CHECK_CLOSE(norm(R),norm(T));
 
@@ -2066,9 +2065,8 @@ SECTION("Combiner")
             auto T = randomITensor(QN(),L1,L2,S1,S2);
             auto [C,ci] = combiner({L1,S1});
             auto R = T*C;
-            //auto ci = commonIndex(R,C); //get combined index
-            //check that ci exists
-            CHECK(ci);
+
+            CHECK(hasIndex(R,ci));
             CHECK_CLOSE(norm(T),norm(R));
             CHECK(div(T) == div(R));
 
@@ -2088,9 +2086,8 @@ SECTION("Combiner")
             auto T = randomITensor(QN(),L1,L2,S1,S2);
             auto [C,ci] = combiner(std::array<Index,2>({L1,S1}));
             auto R = T*C;
-            //auto ci = commonIndex(R,C); //get combined index
-            //check that ci exists
-            CHECK(ci);
+
+            CHECK(hasIndex(R,ci));
             CHECK_CLOSE(norm(T),norm(R));
             CHECK(div(T) == div(R));
 
@@ -2130,7 +2127,6 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(i,k,m);
             auto R = C * T;
-            //auto ci = commonIndex(R,C);
 
             CHECK_CLOSE(norm(R),norm(T));
             
@@ -2149,7 +2145,6 @@ SECTION("Combiner")
             {
             auto [C,ci] = combiner(k,j,l);
             auto R = C * T;
-            //auto ci = commonIndex(R,C);
 
             CHECK_CLOSE(norm(R),norm(T));
             

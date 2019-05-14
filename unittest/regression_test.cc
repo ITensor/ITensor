@@ -56,15 +56,14 @@ TEST_CASE("CombinerOrder")
 
     auto [C,ci] = combiner(c,a);
     auto CU = C * U;
-    //PrintDat(CU);
+    CHECK(hasIndex(CU,ci));
     auto UU = C * CU;
-    //PrintDat(UU);
 
     CHECK(norm(U-UU) < 1E-10);
 
     auto [D,di] = combiner(a,c);
     CU = D * U;
-    //PrintDat(CU);
+    CHECK(hasIndex(CU,di));
     UU = D * CU;
 
     CHECK(norm(U-UU) < 1E-10);

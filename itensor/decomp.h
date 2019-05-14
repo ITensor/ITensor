@@ -21,11 +21,11 @@ Spectrum
 svd(ITensor AA, ITensor& U, ITensor& D, ITensor& V, 
     Args args = Args::global());
 
-std::tuple<ITensor,ITensor,ITensor,Index,Index>
+std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis, 
     Args args = Args::global());
 
-std::tuple<ITensor,ITensor,ITensor,Index,Index>
+std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor AA, IndexSet const& Uis,
     Args args = Args::global());
 
@@ -50,13 +50,13 @@ factor(ITensor const& T,
        ITensor      & B,
        Args args = Args::global());
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 factor(ITensor const& T,
        IndexSet const& Ais,
        IndexSet const& Bis,
        Args const& args = Args::global());
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 factor(ITensor const& T,
        IndexSet const& Ais,
        Args const& args = Args::global());
@@ -119,7 +119,7 @@ denmatDecomp(ITensor const& AA,
              Args const& args = Args::global());
 
 template<class BigMatrixT>
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              IndexSet const& Bis,
@@ -133,7 +133,7 @@ denmatDecomp(ITensor const& T,
     }
 
 template<class BigMatrixT>
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              Direction dir,
@@ -142,18 +142,17 @@ denmatDecomp(ITensor const& T,
     {
     ITensor A(Ais),B;
     denmatDecomp(T,A,B,dir,PH,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    return std::tuple<ITensor,ITensor>(A,B);
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              IndexSet const& Bis,
              Direction dir,
              Args const& args = Args::global());
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              Direction dir,
@@ -177,7 +176,7 @@ diagHermitian(ITensor const& M,
 
 // TODO: allow specifying IndexSets, instead
 // of assuming inds(T) = unionInds(inds,prime(inds))
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 diagHermitian(ITensor const& T,
               Args const& args = Args::global());
 
@@ -187,7 +186,7 @@ diagPosSemiDef(ITensor const& M,
                ITensor      & D,
                Args args = Args::global());
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 diagPosSemiDef(ITensor const& T,
                Args const& args = Args::global());
 
@@ -220,7 +219,7 @@ eigen(ITensor const& T,
       ITensor & D,
       Args args = Args::global());
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 eigen(ITensor const& T,
       Args const& args = Args::global());
 

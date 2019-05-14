@@ -708,7 +708,7 @@ orthogonalize(Args args)
     auto rho = E[N-1] * psi(N) * itensor::prime(psic(N),rand_plev,siteInds(psic,N));
 
     auto original_tags = tags(linkIndex(psi,N-1));
-    auto [U,D,lj] = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
+    auto [U,D] = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
 
     //O is partial inner of previous and new MPS
     auto O = U * psi(N) * psi(N-1);
@@ -726,7 +726,7 @@ orthogonalize(Args args)
             }
         rho = E.at(j-1) * O * itensor::dag(itensor::prime(O,rand_plev));
         original_tags = tags(linkIndex(psi,j-1));
-        std::tie(U,D,lj) = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
+        std::tie(U,D) = diagPosSemiDef(rho,{dargs,"Tags=",original_tags});
         O *= U;
         O *= psi(j-1);
         psi.ref(j) = itensor::dag(U);

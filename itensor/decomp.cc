@@ -236,7 +236,7 @@ svd(ITensor AA,
     return spec;
     } //svd
 
-std::tuple<ITensor,ITensor,ITensor,Index,Index>
+std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
     Args args)
     {
@@ -245,7 +245,7 @@ svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
     return svd(AA,Uis,args);
     }
 
-std::tuple<ITensor,ITensor,ITensor,Index,Index>
+std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor AA, IndexSet const& Uis,
     Args args)
     {
@@ -253,7 +253,7 @@ svd(ITensor AA, IndexSet const& Uis,
     svd(AA,U,S,V,args);
     auto u = commonIndex(U,S);
     auto v = commonIndex(S,V);
-    return std::tuple<ITensor,ITensor,ITensor,Index,Index>(U,S,V,u,v);
+    return std::tuple<ITensor,ITensor,ITensor>(U,S,V);
     }
 
 // output: truncerr,docut_lower,docut_upper,ndegen_below
@@ -505,7 +505,7 @@ factor(ITensor const& T,
     return spec;
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 factor(ITensor const& T,
        IndexSet const& Ais,
        IndexSet const& Bis,
@@ -516,15 +516,14 @@ factor(ITensor const& T,
     return factor(T,Ais,args);
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 factor(ITensor const& T,
        IndexSet const& Ais,
        Args const& args)
     {
     ITensor A(Ais),B;
     factor(T,A,B,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    return std::tuple<ITensor,ITensor>(A,B);
     }
 
 //TODO: create a tag convention
@@ -649,7 +648,7 @@ denmatDecomp(ITensor const& AA,
     return denmatDecomp(AA,A,B,dir,NoOp(),args);
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              IndexSet const& Bis,
@@ -661,7 +660,7 @@ denmatDecomp(ITensor const& T,
     return denmatDecomp(T,Ais,dir,args);
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 denmatDecomp(ITensor const& T,
              IndexSet const& Ais,
              Direction dir,
@@ -669,8 +668,7 @@ denmatDecomp(ITensor const& T,
     {
     ITensor A(Ais),B;
     denmatDecomp(T,A,B,dir,args);
-    auto l = commonIndex(A,B);
-    return std::tuple<ITensor,ITensor,Index>(A,B,l);
+    return std::tuple<ITensor,ITensor>(A,B);
     }
 
 Spectrum
@@ -717,6 +715,7 @@ diagPosSemiDef(ITensor const& M,
         }
 
     auto [comb,cind] = combiner(std::move(inds),args);
+    (void)cind;
     auto Mc = M*comb;
 
     auto combP = dag(prime(comb,pdiff));
@@ -736,14 +735,13 @@ diagPosSemiDef(ITensor const& M,
     return spec;
     } //diagHermitian
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 diagPosSemiDef(ITensor const& T,
                Args const& args)
     {
     ITensor U,D;
     diagPosSemiDef(T,U,D,args);
-    auto l = commonIndex(U,D);
-    return std::tuple<ITensor,ITensor,Index>(U,D,l);
+    return std::tuple<ITensor,ITensor>(U,D);
     }
 
 Spectrum
@@ -756,14 +754,13 @@ diagHermitian(ITensor const& M,
     return diagPosSemiDef(M,U,D,args);
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 diagHermitian(ITensor const& T,
               Args const& args)
     {
     ITensor U,D;
     diagHermitian(T,U,D,args);
-    auto l = commonIndex(U,D);
-    return std::tuple<ITensor,ITensor,Index>(U,D,l);
+    return std::tuple<ITensor,ITensor>(U,D);
     }
 
 void 
@@ -779,6 +776,7 @@ eigen(ITensor const& T,
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
     auto [comb,cind] = combiner(std::move(colinds),args);
+    (void)cind;
 
     auto Tc = prime(comb) * T * comb; 
 
@@ -795,14 +793,13 @@ eigen(ITensor const& T,
     V = V * comb;
     }
 
-std::tuple<ITensor,ITensor,Index>
+std::tuple<ITensor,ITensor>
 eigen(ITensor const& T,
       Args const& args)
     {
     ITensor V,D;
     eigen(T,V,D,args);
-    auto l = commonIndex(V,D);
-    return std::tuple<ITensor,ITensor,Index>(V,D,l);
+    return std::tuple<ITensor,ITensor>(V,D);
     }
 
 void 
@@ -818,6 +815,7 @@ eigDecomp(ITensor const& T,
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
     auto [comb,cind] = combiner(std::move(colinds));
+    (void)cind;
 
     auto Tc = prime(comb) * T * comb; 
 

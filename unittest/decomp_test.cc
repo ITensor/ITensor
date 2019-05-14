@@ -306,8 +306,10 @@ SECTION("ITensor diagHermitian (with QNs)")
         auto I = Index(QN(-1),4,QN(+1),4,"I");
         auto T = randomITensor(QN(),dag(I),prime(I));
         T += swapTags(dag(T),"0","1");
-        auto [U,D,d] = diagHermitian(T);
+        auto [U,D] = diagHermitian(T);
+        auto d = commonIndex(U,D);
         CHECK(hasIndex(U,I));
+        CHECK(hasInds(D,{d,prime(d)}));
         CHECK(not hasIndex(U,prime(I)));
         CHECK(norm(T-dag(U)*D*prime(U)) < 1E-12);
         }
@@ -383,8 +385,11 @@ SECTION("Truncating (Special Cases)")
         Aqn.set(blocksize_sum+ii,blocksize_sum+ii,vals[ii-1]);
       blocksize_sum += blocksize_b;
       }
-    auto [U,S,V,u,v] = svd(Aqn,{iqn},{"Cutoff=",1.0});
+    auto [U,S,V] = svd(Aqn,{iqn},{"Cutoff=",1.0});
+    auto u = commonIndex(U,S);
     CHECK(dim(u)==1);
+    auto v = commonIndex(S,V);
+    CHECK(dim(v)==1);
     }
 
   SECTION("Starting Dimension of One")
@@ -393,8 +398,11 @@ SECTION("Truncating (Special Cases)")
     auto iqnp = prime(iqn);
     auto Aqn = randomITensor(QN(),iqn,dag(iqnp));
     Aqn /= norm(Aqn);
-    auto [U,S,V,u,v] = svd(Aqn,{iqn},{"Cutoff=",1.0});
+    auto [U,S,V] = svd(Aqn,{iqn},{"Cutoff=",1.0});
+    auto u = commonIndex(U,S);
     CHECK(dim(u)==1);
+    auto v = commonIndex(S,V);
+    CHECK(dim(v)==1);
     }
 
   }
@@ -436,28 +444,32 @@ SECTION("Truncating Degenerate Values")
       auto cutoff = 0.0;
       SECTION("No QNs, don't truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(A,{"MaxDim=",cutoff_dim,
+        auto [U,D] = diagPosSemiDef(A,{"MaxDim=",cutoff_dim,
                                          "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==cutoff_dim);
         }
       SECTION("No QNs, truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(A,{"RespectDegenerate=",true,
+        auto [U,D] = diagPosSemiDef(A,{"RespectDegenerate=",true,
                                          "MaxDim=",cutoff_dim,
                                          "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==nblck);
         }
       SECTION("QNs, don't truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(Aqn,{"MaxDim=",cutoff_dim,
+        auto [U,D] = diagPosSemiDef(Aqn,{"MaxDim=",cutoff_dim,
                                            "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==cutoff_dim);
         }
       SECTION("QNs, truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(Aqn,{"RespectDegenerate=",true,
+        auto [U,D] = diagPosSemiDef(Aqn,{"RespectDegenerate=",true,
                                            "MaxDim=",cutoff_dim,
                                            "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==nblck);
         }
       }
@@ -467,28 +479,32 @@ SECTION("Truncating Degenerate Values")
       auto cutoff = 1.0;
       SECTION("No QNs, don't truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(A,{"MinDim=",cutoff_dim,
+        auto [U,D] = diagPosSemiDef(A,{"MinDim=",cutoff_dim,
                                          "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==cutoff_dim);
         }
       SECTION("No QNs, truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(A,{"RespectDegenerate=",true,
+        auto [U,D] = diagPosSemiDef(A,{"RespectDegenerate=",true,
                                          "MinDim=",cutoff_dim,
                                          "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==dim(i)-nblck);
         }
       SECTION("QNs, don't truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(Aqn,{"MinDim=",cutoff_dim,
+        auto [U,D] = diagPosSemiDef(Aqn,{"MinDim=",cutoff_dim,
                                            "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==cutoff_dim);
         }
       SECTION("QNs, truncate degenerate")
         {
-        auto [U,D,u] = diagPosSemiDef(Aqn,{"RespectDegenerate=",true,
+        auto [U,D] = diagPosSemiDef(Aqn,{"RespectDegenerate=",true,
                                            "MinDim=",cutoff_dim,
                                            "Cutoff=",cutoff});
+        auto u = commonIndex(U,D);
         CHECK(dim(u)==dim(i)-nblck);
         }
       }
@@ -501,29 +517,41 @@ SECTION("Truncating Degenerate Values")
       auto cutoff = 0.0;
       SECTION("No QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"MaxDim=",cutoff_dim,
+        auto [U,S,V] = svd(A,{i},{"MaxDim=",cutoff_dim,
                                       "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==cutoff_dim);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==cutoff_dim);
         }
       SECTION("No QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(A,{i},{"RespectDegenerate=",true,
                                       "MaxDim=",cutoff_dim,
                                       "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==nblck);
         }
       SECTION("QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"MaxDim=",cutoff_dim,
+        auto [U,S,V] = svd(Aqn,{i},{"MaxDim=",cutoff_dim,
                                         "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==cutoff_dim);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==cutoff_dim);
         }
       SECTION("QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(Aqn,{i},{"RespectDegenerate=",true,
                                         "MaxDim=",cutoff_dim,
                                         "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==nblck);
         }
       }
 
@@ -532,29 +560,41 @@ SECTION("Truncating Degenerate Values")
       auto cutoff = 1.0;
       SECTION("No QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"MinDim=",cutoff_dim,
+        auto [U,S,V] = svd(A,{i},{"MinDim=",cutoff_dim,
                                       "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==cutoff_dim);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==cutoff_dim);
         }
       SECTION("No QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(A,{i},{"RespectDegenerate=",true,
                                       "MinDim=",cutoff_dim,
                                       "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim(i)-nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim(i)-nblck);
         }
       SECTION("QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"MinDim=",cutoff_dim,
+        auto [U,S,V] = svd(Aqn,{i},{"MinDim=",cutoff_dim,
                                         "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==cutoff_dim);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==cutoff_dim);
         }
       SECTION("QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(Aqn,{i},{"RespectDegenerate=",true,
                                         "MinDim=",cutoff_dim,
                                         "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim(i)-nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim(i)-nblck);
         }
       }
 
@@ -564,25 +604,37 @@ SECTION("Truncating Degenerate Values")
       auto dim_goal = 10;
       SECTION("No QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"Cutoff=",cutoff});
+        auto [U,S,V] = svd(A,{i},{"Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim_goal);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim_goal);
         }
       SECTION("No QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(A,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(A,{i},{"RespectDegenerate=",true,
                                       "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim(i)-nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim(i)-nblck);
         }
       SECTION("QNs, don't truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"Cutoff=",cutoff});
+        auto [U,S,V] = svd(Aqn,{i},{"Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim_goal);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim_goal);
         }
       SECTION("QNs, truncate degenerate")
         {
-        auto [U,S,V,u,v] = svd(Aqn,{i},{"RespectDegenerate=",true,
+        auto [U,S,V] = svd(Aqn,{i},{"RespectDegenerate=",true,
                                         "Cutoff=",cutoff});
+        auto u = commonIndex(U,S);
         CHECK(dim(u)==dim(i)-nblck);
+        auto v = commonIndex(S,V);
+        CHECK(dim(v)==dim(i)-nblck);
         }
       }
 
