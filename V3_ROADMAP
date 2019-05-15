@@ -16,7 +16,9 @@ X Update website:
   X Update news
   X Update front page, including news article link
 
-! Send email
+X Send email
+
+X Post about v3 on ITensor Twitter account
 
 # Final Release Checks
   X Fresh install with new options.mk file compiles
