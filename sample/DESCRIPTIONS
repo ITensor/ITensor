@@ -1,0 +1,21 @@
+dmrg - simple ground-state DMRG of spin chains
+
+dmrgj1j2 - DMRG for the J1-J2 spin chain
+           J2/J1 = 0.5 is the AKLT point with
+           bond dimension 2 ground state
+
+dmrg_table - DMRG sample code which takes an 
+             external input file (inputfile_dmrg_table)
+
+exthubbard - DMRG calculation for ground state of 
+             extended Hubbard model 
+             Uses inputfile_exthubbard for 
+             input parameters
+
+mixedspin - demo code showing how to make and use
+            a site set with alternating S=1/2 and
+            S=1 spins
+
+trg - tensor renormalization group (TRG) algorithm
+      for computing properties of large 2D classical
+      stat mech systems
