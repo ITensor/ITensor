@@ -7,9 +7,10 @@
 
 # Website:
 ! Update website:
-  o Finalize changelog
+  X Finalize changelog
   o Update installation instructions
   o Remove " ITensor version 3 has not been released yet. This documentation is a preview only."
+  o Make v3 the default in the docs system
   o Update code samples of DMRG and contraction on the main page
   o Update news
   o Update front page, including news article link
