@@ -1,7 +1,6 @@
 (! means necessary / blocker for releasing v3)
 
 # General changes:
-! Update all files with new license info
 
 # Github:
 ! Update branch names on Github (rc3 -> v3)
@@ -9,16 +8,16 @@
 # Website:
 ! Update website:
   o Finalize changelog
-  o Post announcement
   o Update installation instructions
-  o Update news
-  o Update code samples of DMRG and contraction on the main page
   o Remove " ITensor version 3 has not been released yet. This documentation is a preview only."
+  o Update code samples of DMRG and contraction on the main page
+  o Update news
+  o Update front page, including news article link
 
 ! Send email
 
 # Final Release Checks
-  ! Fresh install with new options.mk file compiles
+  X Fresh install with new options.mk file compiles
   ! Jenkins is passing
   ! All sample codes compile and run and are up to date
 
