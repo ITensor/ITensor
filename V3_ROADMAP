@@ -3,22 +3,23 @@
 # General changes:
 
 # Github:
-! Update branch names on Github (rc3 -> v3)
+X Update branch names on Github (rc3 -> v3)
+X Create a new release on Github
 
 # Website:
-! Update website:
+X Update website:
   X Finalize changelog
-  o Update installation instructions
-  o Remove " ITensor version 3 has not been released yet. This documentation is a preview only."
-  o Make v3 the default in the docs system
-  o Update code samples of DMRG and contraction on the main page
-  o Update news
-  o Update front page, including news article link
+  X Update installation instructions
+  X Remove " ITensor version 3 has not been released yet. This documentation is a preview only."
+  X Make v3 the default in the docs system
+  X Update code samples of DMRG and contraction on the main page
+  X Update news
+  X Update front page, including news article link
 
 ! Send email
 
 # Final Release Checks
   X Fresh install with new options.mk file compiles
+  X All sample codes compile and run and are up to date
   ! Jenkins is passing
-  ! All sample codes compile and run and are up to date
 
