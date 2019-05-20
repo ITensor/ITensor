@@ -218,7 +218,11 @@ class AutoMPO
 
     //Type conversion AutoMPO -> MPO
     //This is deprecated in favor of toMPO(AutoMPO)
-    operator MPO() const { Global::warnDeprecated("MPO(AutoMPO) is deprecated in favor of toMPO(AutoMPO)"); return toMPO(*this); }
+    operator MPO() const 
+        { 
+        Global::warnDeprecated("MPO(AutoMPO) is deprecated in favor of toMPO(AutoMPO)"); 
+        return toMPO(*this); 
+        }
 
     };
 
