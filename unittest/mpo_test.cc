@@ -6,6 +6,7 @@
 #include "itensor/util/str.h"
 #include "itensor/mps/sites/electron.h"
 #include "itensor/mps/autompo.h"
+#include "itensor/mps/dmrg.h"
 #include "mps_mpo_test_helper.h"
 
 using namespace itensor;
@@ -531,6 +532,33 @@ SECTION("nmultMPO (custom tags)")
   CHECK(checkTags(C,"x","z","Alink"));
 
   CHECK_CLOSE(traceC(A,B),traceC(C));
+  }
+
+SECTION("DMRG")
+  {
+  int N = 32;
+  auto sites = SpinHalf(N,{"ConserveQNs=",false});
+  auto psi0 = randomMPS(sites);
+
+  auto ampo = AutoMPO(sites);
+  for(int j = 1; j < N; ++j)
+      {
+      ampo += -1.0,"Sz",j,"Sz",j+1;
+      ampo += -0.5,"Sx",j;
+      }
+  ampo += -0.5,"Sx",N;    
+  auto H = toMPO(ampo);
+
+  auto sweeps = Sweeps(3);
+  sweeps.maxdim() = 10,20;
+  sweeps.cutoff() = 1E-12;
+  auto [energy,psi] = dmrg(H,psi0,sweeps,{"Silent",true});
+  (void)psi;
+
+  // Exact energy for transverse field Ising model
+  // with open boundary conditions
+  Real E = 1.0 - 1.0/sin(Pi/(2*(2*N+1)));
+  CHECK_CLOSE(energy/N,E/(4*N));
   }
 
 }
