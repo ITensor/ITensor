@@ -368,6 +368,21 @@ findInds(ITensor const& T,
     return findInds(inds(T),tsmatch);
     }
 
+IndexSet
+commonInds(ITensor const& A,
+           ITensor const& B)
+    {
+    return commonInds(inds(A),inds(B));
+    }
+
+IndexSet
+commonInds(ITensor const& A,
+           ITensor const& B,
+           TagSet const& tsmatch)
+    {
+    return findInds(commonInds(inds(A),inds(B)),tsmatch);
+    }
+
 Index
 commonIndex(ITensor const& A, 
             ITensor const& B)

@@ -1665,6 +1665,20 @@ SECTION("Access Primes Through TagSet")
       }
     }
 
+SECTION("CommonInds")
+    {
+    auto T1 = ITensor(s1,s2,l1,l2);
+    auto T2 = ITensor(s1,s2,l3);
+
+    CHECK(hasInds(T1,s1,s2));
+    CHECK(hasInds(T2,s1,s2));
+
+    auto cis = commonInds(T1,T2);
+
+    CHECK(hasSameInds(cis,{s1,s2}));
+    CHECK(order(commonInds(T1,T2,"Link")) == 0);
+    }
+
 SECTION("CommonIndex")
     {
     ITensor T1(s1,s2,l1,l2),

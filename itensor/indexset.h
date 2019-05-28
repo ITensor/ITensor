@@ -627,6 +627,14 @@ bool
 hasInds(IndexSet const& is,
         IndexSet const& ismatch);
 
+template<typename... Inds>
+bool
+hasInds(IndexSet const& is,
+        Index const& i1, Inds&&... inds)
+  {
+  return hasInds(is,IndexSet(i1,std::forward<Inds>(inds)...));
+  }
+
 // Return true if IndexSet `is1` and `is2` have 
 // the same indices
 bool

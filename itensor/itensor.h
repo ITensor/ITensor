@@ -655,6 +655,14 @@ bool
 hasInds(ITensor const& T,
         IndexSet const& ismatch);
 
+template<typename... Inds>
+bool
+hasInds(ITensor const& T,
+        Index const& i1, Inds&&... inds)
+  {
+  return hasInds(T,IndexSet(i1,std::forward<Inds>(inds)...));
+  }
+
 Index
 findIndex(ITensor const& T,
           TagSet const& tsmatch);
@@ -662,6 +670,14 @@ findIndex(ITensor const& T,
 IndexSet
 findInds(ITensor const& T,
          TagSet const& tsmatch);
+
+IndexSet
+commonInds(ITensor const& A,
+           ITensor const& B);
+IndexSet
+commonInds(ITensor const& A,
+           ITensor const& B,
+           TagSet const& tsmatch);
 
 //Find index of tensor A (optionally having tags ts)
 //which is shared with tensor B
