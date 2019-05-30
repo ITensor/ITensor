@@ -33,6 +33,9 @@ class BosonSite
 
     BosonSite(Args const& args = Args::global())
         {
+        auto conserveQNs = args.getBool("ConserveQNs",true);
+        auto conserveNb = args.getBool("ConserveNb",conserveQNs);
+
         auto tags = TagSet("Site,Boson");
         auto n = 1;
         if(args.defined("SiteNumber") )
@@ -42,17 +45,25 @@ class BosonSite
             }
 
         auto maxOcc = args.getInt("MaxOcc",1);
-        if(args.getBool("ConserveQNs",true))
+        if(conserveQNs)
             {
-            auto qints = Index::qnstorage(1+maxOcc);
-            for(int n : range(1+maxOcc)) 
+            if(conserveNb)
                 {
-                qints[n] = QNInt(QN({"Nb",n}),1);
+                auto qints = Index::qnstorage(1+maxOcc);
+                for(int n : range(1+maxOcc)) 
+                    {
+                    qints[n] = QNInt(QN({"Nb",n}),1);
+                    }
+                s = Index(std::move(qints),tags);
                 }
-            s = Index(std::move(qints),tags);
+            else
+                {
+                s = Index(QN(),1+maxOcc,tags);
+                }
             }
         else
             {
+            if(conserveNb) Error("ConserveNb cannot be true when ConserveQNs=false");
             s = Index(1+maxOcc,tags);
             }
         }

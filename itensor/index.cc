@@ -687,5 +687,18 @@ read(std::istream& s)
     return *this;
     }
 
+bool
+isFermionic(Index const& I)
+    {
+    for(auto i : range1(I.nblock()))
+        {
+        for(auto& qnum : I.qn(i).store())
+            {
+            if(isFermionic(qnum)) return true;
+            }
+        }
+    return false;
+    }
+
 } //namespace itensor
 

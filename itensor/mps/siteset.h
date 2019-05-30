@@ -367,14 +367,25 @@ op(String const& opname,
     if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
     if(opname == "Id")
         {
-        Index s = dag(si(i));
-        Index sP = siP(i);
-        auto id_ = ITensor(s,sP);
-        for(int j = 1; j <= dim(s); ++j)
-            {
-            id_.set(s(j),sP(j),1);
-            }
+        auto s = si(i);
+        auto id_ = ITensor(dag(s),prime(s));
+        for(auto j : range1(dim(s))) id_.set(j,j,1.0);
         return id_;
+        }
+    else
+    if(opname == "F") //Jordan-Wigner string operator
+        {
+        auto s = si(i);
+        if(isFermionic(s))
+            {
+            return sites_->op(i,opname,args);
+            }
+        else
+            { //Just make F equal identity, since not fermionic
+            auto F = ITensor(dag(s),prime(s));
+            for(auto j : range1(dim(s))) F.set(j,j,1.0);
+            return F;
+            }
         }
     else
     if(opname == "Proj")

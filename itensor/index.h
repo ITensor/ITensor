@@ -519,6 +519,9 @@ write(std::ostream & s, QNInt const& q);
 void
 read(std::istream & s, QNInt & q);
 
+bool
+isFermionic(Index const& I);
+
 } //namespace itensor
 
 #include "itensor/index_impl.h"
