@@ -571,6 +571,13 @@ template<class I>
 ITensorT<I>
 multSiteOps(ITensorT<I> A, ITensorT<I> const& B);
 
+template<class I>
+detail::IndexValIter<I>
+iterInds(ITensorT<I> const& T)
+    {
+    return iterInds(T.inds());
+    }
+
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
 
