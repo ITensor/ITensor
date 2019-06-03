@@ -35,7 +35,7 @@ class FermionSite
         {
         auto ts = TagSet("Site,Fermion");
         auto n = 1;
-        if( args.defined("SiteNumber") )
+        if(args.defined("SiteNumber"))
           {
           n = args.getInt("SiteNumber");
           ts.addTags("n="+str(n));
@@ -49,17 +49,24 @@ class FermionSite
             }
         else if(not oddevenupdown) //usual case
             {
-            auto q_occ = QN({"Nf",1});
-            if(not conserve_Nf) q_occ = QN({"Pf",1,-2});
-            s = Index(QN(),1,
-                      q_occ,1,Out,ts);
+            if(conserve_Nf) //usual case
+                {
+                s = Index(QN({"Nf",0,-1}),1,
+                          QN({"Nf",1,-1}),1,Out,ts);
+                }
+            else
+                {
+                s = Index(QN({"Pf",0,-2}),1,
+                          QN({"Pf",1,-2}),1,Out,ts);
+                }
             }
         else
             {
+            auto q_emp = QN({"Sz",0},{"Nf",0,-1});
             QN q_occ;
             if(n%2==1) q_occ = QN({"Sz",+1},{"Nf",1,-1});
             else       q_occ = QN({"Sz",-1},{"Nf",1,-1});
-            s = Index(QN(),1,
+            s = Index(q_emp,1,
                       q_occ,1,Out,ts);
             }
         }
