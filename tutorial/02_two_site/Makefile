@@ -1,10 +1,6 @@
 LIBRARY_DIR=../..
 
-ifdef app
-APP=$(app)
-else
 APP=two
-endif
 
 CCFILES=$(APP).cc
 

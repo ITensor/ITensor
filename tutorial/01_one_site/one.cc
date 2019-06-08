@@ -1,3 +1,7 @@
+//
+// 2019 Many Electron Collaboration Summer School
+// ITensor Tutorial
+//
 #include "itensor/all.h"
 
 using namespace itensor;
@@ -5,54 +9,64 @@ using namespace itensor;
 int main()
     {
     //
-    // Single-site wavefunction
+    // Define our Index 
+    // (the space we are working with)
     //
-    
+
     auto s = Index(2,"s");
 
-    auto psi = ITensor(s); //initialized to zero
-
-    psi.set(s=1,1);
-
-    // TODO try changing above wavefunction
-    //      to be Sx eigenstate
-
-    PrintData(psi);
-    
     //
     // Operators 
     //
 
-    auto Sz = ITensor(s,prime(s));
     auto Sx = ITensor(s,prime(s));
-
-    Sz.set(s=1,prime(s)=1,+0.5);
-    Sz.set(s=2,prime(s)=2,-0.5);
 
     Sx.set(s=1,prime(s)=2,+0.5);
     Sx.set(s=2,prime(s)=1,+0.5);
 
-    PrintData(Sz);
     PrintData(Sx);
 
     //
-    // Product Sx * psi 
+    // Single-site wavefunction
     //
+    
+    auto psi = ITensor(s); //initialized to zero
 
     //
     // TODO 
     //
-    // 1. Compute |phi> = Sx |psi> using
+    // 1. make the above wavefunction
+    //    the (normalized) positive Sx eigenstate
+    //    HINT: use psi.set(...)
+    //
+
+    /* Your code here */
+
+    PrintData(psi);
+    
+    //
+    // TODO
+    //
+    // 2. Compute |phi> = Sx |psi> using
     //    the Sx and psi ITensors above
-    //
-    // 2. Next compute: auto olap = <psi|phi>;
-    //    using the * operator and elt(...) method
-    //
-    // 3. Try normalizing |phi> before computing
-    //    the inner: phi /= norm(phi);
+    //    AND
+    //    compute: auto olap = <psi|phi>
+    //    using the * operator and elt(...) method.
+    //    Print the result with PrintData(...).
     //
 
+    /* Your code here */
 
+    //
+    // TODO
+    //
+    // 3. Try normalizing |phi> and recompute
+    //    the inner product <psi|phi>
+    //    Print the result with PrintData(...).
+    //    HINT: use phi /= norm(phi)) to normalize.
+    //
+
+    /* Your code here */
 
     return 0;
     }

@@ -1,15 +1,10 @@
+//
+// 2019 Many Electron Collaboration Summer School
+// ITensor Tutorial
+//
 #include "itensor/all.h"
 
 using namespace itensor;
-
-ITensor
-makeId(Index const& s)
-    {
-    auto Id = ITensor(s,prime(s));
-    Id.set(s=1,prime(s)=1,1);
-    Id.set(s=2,prime(s)=2,1);
-    return Id;
-    }
 
 ITensor
 makeSp(Index const& s)
@@ -31,7 +26,7 @@ ITensor
 makeSz(Index const& s)
     {
     auto Sz = ITensor(s,prime(s));
-    Sz.set(s=1,prime(s)=1, 0.5);
+    Sz.set(s=1,prime(s)=1,+0.5);
     Sz.set(s=2,prime(s)=2,-0.5);
     return Sz;
     }
@@ -39,17 +34,15 @@ makeSz(Index const& s)
 
 int main()
     {
-    Real beta = 1.;
-
     //
-    // Random initial wavefunction
+    // Initial product state
     //
     auto s1 = Index(2,"s1");
     auto s2 = Index(2,"s2");
-    auto psi_init = randomITensor(s1,s2);
-    psi_init /= norm(psi_init);
+    auto psi = ITensor(s1,s2);
+    psi.set(s1=1,s2=2,1.0);
 
-    //PrintData(psi);
+    PrintData(psi);
 
     //
     // Single-site operators
@@ -60,8 +53,6 @@ int main()
     auto Sp2 = makeSp(s2);
     auto Sm1 = makeSm(s1);
     auto Sm2 = makeSm(s2);
-    auto Id1 = makeId(s1);
-    auto Id2 = makeId(s2);
 
     //
     // Two-site Heisenberg Hamiltonian
@@ -69,35 +60,63 @@ int main()
     auto H = Sz1*Sz2 + 0.5*Sp1*Sm2 + 0.5*Sm1*Sp2;
 
     // Initial energy expectation value
-    auto initEn = elt(dag(prime(psi_init)) * H * psi_init);
+    auto initEn = elt(dag(prime(psi)) * H * psi);
     printfln("\nInitial energy = %.10f",initEn);
 
 
     //
     // Make exp(-beta*H)
     //
+    // TODO
+    //
+    // 3. Adjust beta to get the ground state
+    //
+    Real beta = 0.;
     auto expH = expHermitian(H,-beta);
 
-    auto psi = expH*psi_init;
-    psi.noPrime();
-    psi /= norm(psi);
+    // Here we apply exp(-beta*H), normalize
+    // and unprime
+    auto psibeta = expH*psi;
+    psibeta.noPrime();
+    psibeta /= norm(psibeta);
 
-    auto En = elt(dag(prime(psi)) * H * psi);
+    PrintData(psibeta);
+
+    auto En = elt(dag(prime(psibeta)) * H * psibeta);
     printfln("At beta=%.1f, energy = %.10f",beta,En);
 
     //
     // TODO
-    // (1) Compute the SVD of psi,
-    //     and look at the singular values
     //
+    // 1. Adjust the following code to
+    //    truncate to dimension 1.
+    //    HINT: use the ITensor named argument
+    //    system, e.g. {"MaxDim=",...}
+    //
+
+    auto [U,D,V] = svd(psibeta,{s1} /* Your code here */ );
+
+    PrintData(D);
 
     //
     // TODO
-    // (2) Use the spectrum of the density matrix
-    //     (squares of singular values)
-    //     to compute entanglement entropy
+    //
+    // 2. Calculate the overlap of the new
+    //    wavefunction with the old wavefunction.
+    //    Print your results with PrintData(...).
+    //    HINT: use U*D*V to calculate the new,
+    //    truncated wavefunction
     //    
 
+    /* Your code here */
+
+    //
+    // TODO
+    //
+    // 3. Increase beta (defined above) to get the
+    //    ground state. How does the overlap 
+    //    change?
+    //    
 
     return 0;
     }

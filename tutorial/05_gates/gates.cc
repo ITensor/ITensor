@@ -1,3 +1,7 @@
+//
+// 2019 Many Electron Collaboration Summer School
+// ITensor Tutorial
+//
 #include "itensor/all.h"
 
 using std::vector;
@@ -90,7 +94,7 @@ main()
             //
             // After applying G to AA, don't forget
             // to reset the prime level to 0 by using
-            // the noprime or mapprime methods.
+            // the noPrime method.
             //
 
 
