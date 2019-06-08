@@ -79,6 +79,7 @@ class BosonSite
             {
             if(state == str(n)) return s(1+n);
             }
+	if(state == "Emp")return s(1);
         Error("State " + state + " not recognized");
         return IndexVal{};
         }
