@@ -42,6 +42,12 @@
 #endif
 
 #ifdef COLLECT_TIMES
+#define TIMER_RESET(N) timers().reset(N);
+#else
+#define TIMER_RESET(N) 
+#endif
+
+#ifdef COLLECT_TIMES
 #define START_TIMER(N) timers().start(N);
 #else
 #define START_TIMER(N) 
@@ -51,6 +57,12 @@
 #define STOP_TIMER(N) timers().stop(N);
 #else
 #define STOP_TIMER(N) 
+#endif
+
+#ifdef COLLECT_TIMES
+#define RESET_TIMER(N) timers().reset(N);
+#else
+#define RESET_TIMER(N) 
 #endif
 
 #ifdef COLLECT_TIMES
@@ -114,6 +126,20 @@ struct Timers
         timer_[n] += delt;
         timer2_[n] += duration_type(1E-18*delt.count()*delt.count());
         count_[n] += 1ul;
+        }
+
+    void
+    reset(size_type n)
+        {
+        timer_[n] = duration_type::zero();
+        timer2_[n] = duration_type::zero();
+        count_[n] = 0ul;
+        }
+
+    void
+    reset()
+        {
+        for(size_t n = 0; n < NTimer; ++n) reset(n);
         }
 
     size_t
