@@ -86,16 +86,12 @@ svdImpl(ITensor const& A,
 
     if(not hasQNs(A))
         {
-        SCOPED_TIMER(7);
-
         auto M = toMatRefc<T>(A,uI,vI);
 
         Mat<T> UU,VV;
         Vector DD;
 
-        TIMER_START(6)
         SVD(M,UU,DD,VV,thresh);
-        TIMER_STOP(6)
 
         //conjugate VV so later we can just do
         //U*D*V to reconstruct ITensor A:

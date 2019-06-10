@@ -317,7 +317,6 @@ denmatDecomp(ITensor const& AA,
         }
 
     //Apply combiner
-    START_TIMER(8)
     auto [cmb,ci] = combiner(std::move(cinds),args);
     //auto ci = cmb.inds().front();
 
@@ -337,7 +336,6 @@ denmatDecomp(ITensor const& AA,
         if(tr > 1E-16) rho *= 1./tr;
         }
 
-    STOP_TIMER(8)
 
     if(args.getBool("UseOrigM",false))
         {

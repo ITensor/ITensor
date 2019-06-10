@@ -218,11 +218,9 @@ gemm_wrapper(bool transa,
         bt = CblasTrans;
         ldb = n;
         }
-    TIMER_START(31)
     auto palpha = (void*)(&alpha); 
     auto pbeta = (void*)(&beta); 
     cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
-    TIMER_STOP(31)
 #else //use Fortran zgemm
     auto *ncA = const_cast<Cplx*>(A);
     auto *ncB = const_cast<Cplx*>(B);

@@ -147,7 +147,9 @@ davidson(BigMatrixT const& A,
     auto eigs = std::vector<Real>(nget,NAN);
 
     V[0] = phi.front();
+    START_TIMER(21);
     A.product(V[0],AV[0]);
+    STOP_TIMER(21);
 
     auto initEn = eltC((dag(V[0])*AV[0])).real();
 
@@ -362,7 +364,9 @@ davidson(BigMatrixT const& A,
         //Step G of Davidson (1975)
         //Expand AV and M
         //for next step
+        START_TIMER(21);
         A.product(V[ni],AV[ni]);
+        STOP_TIMER(21);
 
         //Step H of Davidson (1975)
         //Add new row and column to M

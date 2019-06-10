@@ -429,6 +429,8 @@ DMRGWorker(MPS & psi,
             auto sm = sw_time.sincemark();
             printfln("    Sweep %d/%d CPU time = %s (Wall time = %s)",
                       sw,sweeps.nsweep(),showtime(sm.time),showtime(sm.wall));
+            println(timers());
+            timers().reset();
             }
 
         if(obs.checkDone(args)) break;

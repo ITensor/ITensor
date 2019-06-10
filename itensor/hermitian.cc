@@ -179,7 +179,6 @@ diagHImpl(ITensor H,
         }
     else  // With QNs
         {
-        SCOPED_TIMER(7)
         auto compute_qns = args.getBool("ComputeQNs",false);
 
         if(H.order() != 2)

@@ -159,7 +159,6 @@ loopContractedBlocks(BlockSparseA const& A,
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto& aio : A.offsets)
         {
-        TIMER_START(19)
         //Reconstruct indices labeling this block of A, put into Ablock
         //TODO: optimize away need to call computeBlockInd by
         //      storing block indices directly in QDense
@@ -179,12 +178,9 @@ loopContractedBlocks(BlockSparseA const& A,
             //Begin computing elements of Cblock(=destination of this block-block contraction)
             if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
             }
-        TIMER_STOP(19)
         //Loop over blocks of B which contract with current block of A
         for(;couB.notDone(); ++couB)
             {
-            TIMER_START(19)
-            //START_TIMER(33)
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by storing all blocks
             //      but most have null pointers to data
@@ -203,7 +199,6 @@ loopContractedBlocks(BlockSparseA const& A,
             assert(cblock);
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
-            TIMER_STOP(19)
 
             callback(ablock,Ablockind,
                      bblock,Bblockind,
