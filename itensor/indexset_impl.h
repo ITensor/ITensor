@@ -51,6 +51,29 @@ swapTags(TagSet const& ts1,
     return *this;
     }
 
+template<typename... VarArgs>
+IndexSet& IndexSet::
+swapPrime(int pl1,
+          int pl2,
+          VarArgs&&... vargs)
+    {
+    int tempPrime = 431543;
+#ifdef DEBUG
+    for(auto& I : *this)
+        {
+        if(primeLevel(I)==tempPrime)
+            {
+            println("tempPrime = ",tempPrime);
+            throw ITError("swapPrime fails if an index has prime level tempPrime");
+            }
+        }
+#endif
+    mapPrime(pl1,tempPrime,std::forward<VarArgs>(vargs)...);
+    mapPrime(pl2,pl1,std::forward<VarArgs>(vargs)...);
+    mapPrime(tempPrime,pl2);
+    return *this;
+    }
+
 template<class LabelT>
 void
 contractIS(IndexSet const& Lis,

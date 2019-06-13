@@ -75,6 +75,8 @@ class MPO : private MPS
     using Parent::swapTags;
     using Parent::prime;
     using Parent::setPrime;
+    using Parent::mapPrime;
+    using Parent::swapPrime;
     using Parent::noPrime;
 
     // Replace the site indices of MPO A from sites_old
@@ -321,6 +323,30 @@ setPrime(MPO A,
          VarArgs&&... vargs)
     {
     A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPO
+mapPrime(MPO A, int plevold, int plevnew, IndexSet const& is);
+
+template <typename... VarArgs>
+MPO
+mapPrime(MPO A,
+         VarArgs&&... vargs)
+    {
+    A.mapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPO
+swapPrime(MPO A, int plevold, int plevnew, IndexSet const& is);
+
+template <typename... VarArgs>
+MPO
+swapPrime(MPO A,
+         VarArgs&&... vargs)
+    {
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

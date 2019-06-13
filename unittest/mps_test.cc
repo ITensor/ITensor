@@ -265,9 +265,8 @@ SECTION("PositionTest")
 
 SECTION("Orthogonalize")
     {
-    auto N = 10;
     auto d = 20;
-    auto sites = SpinHalf(10,{"ConserveQNs=",false});
+    auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     //Make a random MPS of bond dim. d
     auto psi = MPS(sites,d);
@@ -305,8 +304,7 @@ SECTION("Overlap - 1 site")
 
 SECTION("siteInds")
     {
-    auto N = 10;
-    auto sites = SpinHalf(10);
+    auto sites = SpinHalf(N);
     auto initstate = InitState(sites,"Up");
     auto psi = randomMPS(initstate);
 
@@ -323,8 +321,6 @@ SECTION("siteInds")
 
 SECTION("replaceSiteInds")
     {
-    auto N = 10;
-
     auto sites1 = SpinHalf(N);
     auto initstate1 = InitState(sites1,"Up");
     auto psi1 = randomMPS(initstate1);
@@ -350,6 +346,33 @@ SECTION("replaceSiteInds")
     CHECK(checkTags(psi1_new,"MySite","Link"));
     for( auto n : range1(N) )
       CHECK( siteIndex(psi1_new,n)==siteIndex(psi2,n) );
+    }
+
+SECTION("prime")
+    {
+    auto s = SpinHalf(N,{"ConserveQNs=",false});
+    auto psi = randomMPS(s);
+
+    auto psi1 = prime(psi);
+
+    CHECK( prime(siteIndex(psi,3)) == siteIndex(psi1,3) );
+    CHECK( prime(linkIndex(psi,3)) == linkIndex(psi1,3) );
+
+    auto psi2 = prime(psi,"Site");
+
+    CHECK( prime(siteIndex(psi,3)) == siteIndex(psi2,3) );
+    CHECK( linkIndex(psi,3) == linkIndex(psi2,3) );
+
+    auto psi3 = mapPrime(psi2,1,2);
+
+    CHECK( prime(siteIndex(psi,3),2) == siteIndex(psi3,3) );
+    CHECK( linkIndex(psi,3) == linkIndex(psi3,3) );
+
+    auto psi4 = swapPrime(psi2,0,1);
+    
+    CHECK( siteIndex(psi,3) == siteIndex(psi4,3) );
+    CHECK( prime(linkIndex(psi,3)) == linkIndex(psi4,3) );
+
     }
 
 }

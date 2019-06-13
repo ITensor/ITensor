@@ -301,6 +301,48 @@ class MPS
         }
 
     MPS&
+    mapPrime(int plevold, int plevnew, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("mapPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].mapPrime(plevold,plevnew,is);
+        return *this;
+        }
+
+    template<typename... VarArgs>
+    MPS&
+    mapPrime(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("mapPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].mapPrime(std::forward<VarArgs>(vargs)...);
+        return *this;
+        }
+
+    MPS&
+    swapPrime(int plevold, int plevnew, IndexSet const& is)
+        {
+        if(do_write_)
+            Error("swapPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].swapPrime(plevold,plevnew,is);
+        return *this;
+        }
+
+    template<typename... VarArgs>
+    MPS&
+    swapPrime(VarArgs&&... vargs)
+        {
+        if(do_write_)
+            Error("swapPrime not supported if doWrite(true)");
+        for(int i = 1; i <= N_; ++i)
+            A_[i].swapPrime(std::forward<VarArgs>(vargs)...);
+        return *this;
+        }
+
+    MPS&
     noPrime(IndexSet const& is)
         {
         if(do_write_)
@@ -605,6 +647,30 @@ setPrime(MPS A,
          VarArgs&&... vargs)
     {
     A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPS
+mapPrime(MPS A, int plevold, int plevnew, IndexSet const& is);
+
+template<typename... VarArgs>
+MPS
+mapPrime(MPS A,
+         VarArgs&&... vargs)
+    {
+    A.mapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+MPS
+swapPrime(MPS A, int plevold, int plevnew, IndexSet const& is);
+
+template<typename... VarArgs>
+MPS
+swapPrime(MPS A,
+          VarArgs&&... vargs)
+    {
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

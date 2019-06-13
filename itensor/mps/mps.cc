@@ -1114,6 +1114,20 @@ setPrime(MPS A, int plev, IndexSet const& is)
     }
 
 MPS
+mapPrime(MPS A, int plevold, int plevnew, IndexSet const& is)
+    {
+    A.mapPrime(plevold,plevnew,is);
+    return A;
+    }
+
+MPS
+swapPrime(MPS A, int plevold, int plevnew, IndexSet const& is)
+    {
+    A.swapPrime(plevold,plevnew,is);
+    return A;
+    }
+
+MPS
 noPrime(MPS A, IndexSet const& is)
     {
     A.noPrime(is);

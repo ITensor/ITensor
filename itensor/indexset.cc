@@ -279,6 +279,42 @@ setPrime(int plnew, TagSet const& tsmatch)
     }
 
 IndexSet& IndexSet::
+mapPrime(int plold, int plnew)
+    {
+    for(auto& J : *this) if( J.primeLevel() == plold ) J.setPrime(plnew);
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    return *this;
+    }
+
+IndexSet& IndexSet::
+mapPrime(int plold, int plnew, IndexSet const& ismatch)
+    {
+    auto ilocs = indexPositions(*this,ismatch);
+    for(auto i : ilocs)
+      {
+      auto& J = parent::index(i);
+      if( J.primeLevel() == plold ) J.setPrime(plnew);
+      }
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    return *this;
+    }
+
+IndexSet& IndexSet::
+mapPrime(int plold, int plnew, TagSet const& tsmatch)
+    {
+    for(auto& J : *this)
+      if( (J.primeLevel() == plold) && hasTags(J,tsmatch) ) J.setPrime(plnew);
+#ifdef DEBUG
+    checkIndexSet(*this);
+#endif
+    return *this;
+    }
+
+IndexSet& IndexSet::
 prime(int plinc)
     {
     for(auto& J : *this) J.prime(plinc);
