@@ -8,6 +8,34 @@ using namespace std;
 TEST_CASE("Decomposition Tests")
 {
 
+SECTION("SVD interface")
+    {
+    auto i = Index(3,"i"),
+         j = Index(2,"j"),
+         k = Index(4,"k");
+    auto A = randomITensor(i,j,k);
+    auto [U,S,V] = svd(A,i,j);
+    CHECK( norm(A-U*S*V) < 1E-12 );
+    std::tie(U,S,V) = svd(A,i);
+    CHECK( norm(A-U*S*V) < 1E-12 );
+    std::tie(U,S,V) = svd(A,i,Args("Cutoff=",1E-13));
+    CHECK( norm(A-U*S*V) < 1E-12 );
+    }
+
+SECTION("Factor interface")
+    {
+    auto i = Index(3,"i"),
+         j = Index(2,"j"),
+         k = Index(4,"k");
+    auto A = randomITensor(i,j,k);
+    auto [X,Y] = factor(A,i,j);
+    CHECK( norm(A-X*Y) < 1E-12 );
+    std::tie(X,Y) = factor(A,i);
+    CHECK( norm(A-X*Y) < 1E-12 );
+    std::tie(X,Y) = factor(A,i,Args("Cutoff=",1E-13));
+    CHECK( norm(A-X*Y) < 1E-12 );
+    }
+
 SECTION("Transpose SVD")
     {
     Index a(3),
@@ -23,8 +51,7 @@ SECTION("Transpose SVD")
     A.set(a(2),b(2),el);
     A.set(a(3),b(2),el);
 
-    ITensor U(b),D,V;
-    svd(A,U,D,V,{"Truncate",false});
+    auto [U,D,V] = svd(A,{b},{"Truncate",false});
 
     CHECK(norm(A-U*D*V) < 1E-12);
     }

@@ -118,7 +118,7 @@ doTask(GetBlocks<Cplx> const& G, QDense<Cplx> const& d);
 ///////////////
 
 Spectrum
-svd(ITensor AA,
+svd(ITensor const& AA,
     ITensor & U,
     ITensor & D,
     ITensor & V,
@@ -202,15 +202,16 @@ svd(ITensor AA,
     Index ui,
           vi;
 
+    auto AAcomb = AA;
     if(!Uinds.empty())
         {
         std::tie(Ucomb,ui) = combiner(std::move(Uinds));
-        AA *= Ucomb;
+        AAcomb *= Ucomb;
         }
     if(!Vinds.empty())
         {
         std::tie(Vcomb,vi) = combiner(std::move(Vinds));
-        AA *= Vcomb;
+        AAcomb *= Vcomb;
         }
 
     if(useOrigDim)
@@ -236,10 +237,10 @@ svd(ITensor AA,
         args.add("MaxDim",maxdim);
         }
 
-    //auto ui = commonIndex(AA,Ucomb);
-    //auto vi = commonIndex(AA,Vcomb);
+    //auto ui = commonIndex(AAcomb,Ucomb);
+    //auto vi = commonIndex(AAcomb,Vcomb);
 
-    auto spec = svdOrd2(AA,ui,vi,U,D,V,args);
+    auto spec = svdOrd2(AAcomb,ui,vi,U,D,V,args);
 
     U = dag(Ucomb) * U;
     V = V * dag(Vcomb);
@@ -248,7 +249,7 @@ svd(ITensor AA,
     } //svd
 
 std::tuple<ITensor,ITensor,ITensor>
-svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
+svd(ITensor const& AA, IndexSet const& Uis, IndexSet const& Vis,
     Args args)
     {
     if( !hasSameInds(inds(AA),IndexSet(Uis,Vis)) )
@@ -257,7 +258,7 @@ svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis,
     }
 
 std::tuple<ITensor,ITensor,ITensor>
-svd(ITensor AA, IndexSet const& Uis,
+svd(ITensor const& AA, IndexSet const& Uis,
     Args args)
     {
     ITensor U(Uis),S,V;
