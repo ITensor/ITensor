@@ -390,6 +390,33 @@ class IndexSet : public RangeT<Index>
     setPrime(int plnew,
              TagSet const& tsmatch);
 
+    IndexSet&
+    mapPrime(int plold, int plnew);
+
+    IndexSet&
+    mapPrime(int plold, int plnew,
+             IndexSet const& ismatch);
+
+    template<typename... VarArgs>
+    IndexSet&
+    mapPrime(int plold, int plnew,
+             Index const& imatch1,
+             VarArgs&&... vargs)
+        {
+        mapPrime(plold,plnew,IndexSet(imatch1,std::forward<VarArgs>(vargs)...));
+        return *this;
+        }
+
+    IndexSet&
+    mapPrime(int plold, int plnew,
+             TagSet const& tsmatch);
+
+    template<typename... VarArgs>
+    IndexSet&
+    swapPrime(int pl1,
+              int pl2,
+              VarArgs&&... vargs);
+
     template<typename... VarArgs>
     IndexSet&
     noPrime(VarArgs&&... vargs)
@@ -569,6 +596,24 @@ setPrime(IndexSet A,
          VarArgs&&... vargs)
     {
     A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+mapPrime(IndexSet A,
+         VarArgs&&... vargs)
+    {
+    A.mapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename... VarArgs>
+IndexSet
+swapPrime(IndexSet A,
+          VarArgs&&... vargs)
+    {
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

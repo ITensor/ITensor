@@ -222,6 +222,28 @@ class ITensor
         { is_.setPrime(std::forward<VarArgs>(vargs)...); return *this; }
 
     ITensor&
+    mapPrime(int plevold,
+             int plevnew,
+             IndexSet const& is)
+        { is_.mapPrime(plevold,plevnew,is); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    mapPrime(VarArgs&&... vargs)
+        { is_.mapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
+    swapPrime(int plevold,
+              int plevnew,
+              IndexSet const& is)
+        { is_.swapPrime(plevold,plevnew,is); return *this; }
+
+    template<typename... VarArgs>
+    ITensor&
+    swapPrime(VarArgs&&... vargs)
+        { is_.swapPrime(std::forward<VarArgs>(vargs)...); return *this; }
+
+    ITensor&
     noPrime(IndexSet const& is)
         { is_.noPrime(is); return *this; }
 
@@ -631,6 +653,36 @@ setPrime(ITensor A,
          VarArgs&&... vargs)
     {
     A.setPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+mapPrime(ITensor A,
+         int plevold,
+         int plevnew,
+         IndexSet const& is);
+
+template<typename... VarArgs>
+ITensor
+mapPrime(ITensor A,
+         VarArgs&&... vargs)
+    {
+    A.mapPrime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+ITensor
+swapPrime(ITensor A,
+          int plevold,
+          int plevnew,
+          IndexSet const& is);
+
+template<typename... VarArgs>
+ITensor
+swapPrime(ITensor A,
+          VarArgs&&... vargs)
+    {
+    A.swapPrime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

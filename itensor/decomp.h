@@ -29,16 +29,21 @@ namespace itensor {
 // with D diagonal, real, and non-negative.
 //
 Spectrum 
-svd(ITensor AA, ITensor& U, ITensor& D, ITensor& V, 
+svd(ITensor const& AA, ITensor& U, ITensor& D, ITensor& V, 
     Args args = Args::global());
 
 std::tuple<ITensor,ITensor,ITensor>
-svd(ITensor AA, IndexSet const& Uis, IndexSet const& Vis, 
+svd(ITensor const& AA, IndexSet const& Uis, IndexSet const& Vis, 
     Args args = Args::global());
 
 std::tuple<ITensor,ITensor,ITensor>
-svd(ITensor AA, IndexSet const& Uis,
+svd(ITensor const& AA, IndexSet const& Uis,
     Args args = Args::global());
+
+// Version that takes variable number of indices
+template <typename... IndsArgs>
+std::tuple<ITensor,ITensor,ITensor>
+svd(ITensor const& AA, Index const& i1, IndsArgs&&... indsargs);
 
 //
 // The "factor" decomposition is based on the SVD,
@@ -71,6 +76,10 @@ std::tuple<ITensor,ITensor>
 factor(ITensor const& T,
        IndexSet const& Ais,
        Args const& args = Args::global());
+
+template <typename... IndsArgs>
+std::tuple<ITensor,ITensor>
+factor(ITensor const& T, Index const& i1, IndsArgs&&... indsargs);
 
 //
 // Density Matrix Decomposition
@@ -433,5 +442,6 @@ struct EigQN
 
 } //namespace itensor
 
+#include "itensor/decomp_impl.h"
 
 #endif

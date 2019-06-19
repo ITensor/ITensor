@@ -1383,7 +1383,45 @@ SECTION("Prime")
     CHECK(inds(T)(4) == prime(x,2));
     }
 
+SECTION("mapPrime")
+    {
+    auto i = Index(2,"i"),
+         j = Index(2,"j"),
+         k = Index(2,"k");
+    auto T = ITensor(i,prime(i),j,k);
+    
+    auto T1 = T;
+    T1.mapPrime(0,2);
+    CHECK(inds(T1)(1) == prime(i,2));
+    CHECK(inds(T1)(2) == prime(i));
+    CHECK(inds(T1)(3) == prime(j,2));
+    CHECK(inds(T1)(4) == prime(k,2));
+
+    auto T2 = T;
+    T2.mapPrime(0,2,"i");
+    CHECK(inds(T2)(1) == prime(i,2));
+    CHECK(inds(T2)(2) == prime(i));
+    CHECK(inds(T2)(3) == j);
+    CHECK(inds(T2)(4) == k);
+
+    }
+
 SECTION("SwapPrimeTest")
+    {
+    CHECK_EQUAL(elt(A,s1(1),prime(s1)(1)),11);
+    CHECK_EQUAL(elt(A,s1(2),prime(s1)(1)),21);
+    CHECK_EQUAL(elt(A,s1(1),prime(s1)(2)),12);
+    CHECK_EQUAL(elt(A,s1(2),prime(s1)(2)),22);
+
+    A = swapPrime(A,0,1);
+
+    CHECK_EQUAL(elt(A,prime(s1)(1),s1(1)),11);
+    CHECK_EQUAL(elt(A,prime(s1)(2),s1(1)),21);
+    CHECK_EQUAL(elt(A,prime(s1)(1),s1(2)),12);
+    CHECK_EQUAL(elt(A,prime(s1)(2),s1(2)),22);
+    }
+
+SECTION("SwapTagsTest")
     {
     CHECK_EQUAL(elt(A,s1(1),prime(s1)(1)),11);
     CHECK_EQUAL(elt(A,s1(2),prime(s1)(1)),21);
