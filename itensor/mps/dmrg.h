@@ -400,7 +400,9 @@ DMRGWorker(MPS & psi,
 
             energy = davidson(PH,phi,args);
             
+            TIMER_START(40);
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
+            TIMER_STOP(40);
 
             if(!quiet)
                 { 
