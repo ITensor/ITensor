@@ -39,7 +39,8 @@ class BondGate
              int i2, 
              Type type, 
              Real tau, 
-             ITensor bondH);
+             ITensor bondH,
+	     int approx);
 
     BondGate(SiteSet const& sites, 
              int i1, 
@@ -99,7 +100,8 @@ BondGate(SiteSet const& sites,
          int i2, 
          Type type, 
          Real tau, 
-         ITensor bondH)
+         ITensor bondH,
+	 int approx=100)
   : type_(type)
     {
     if(i1 < i2)
@@ -130,7 +132,7 @@ BondGate(SiteSet const& sites,
     // exp(x) = 1 + x +  x^2/2! + x^3/3! ..
     // = 1 + x * (1 + x/2 *(1 + x/3 * (...
     // ~ ((x/3 + 1) * x/2 + 1) * x + 1
-    for(int ord = 100; ord >= 1; --ord)
+    for(int ord = approx; ord >= 1; --ord)
         {
         term /= ord;
         gate_ = unit + term;
