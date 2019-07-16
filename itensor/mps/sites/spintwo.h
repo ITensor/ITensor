@@ -303,7 +303,7 @@ read(std::istream& s)
             {
             auto I = Index{};
             I.read(s);
-            if(dim(I) == 3) store.set(j,SpinTwoSite(I));
+            if(dim(I) == 5) store.set(j,SpinTwoSite(I));
             else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
             else Error(format("SpinTwo cannot read index of size %d",dim(I)));
             }
