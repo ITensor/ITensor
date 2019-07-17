@@ -1439,7 +1439,6 @@ flux(ITensor const& T)
     return div(T);
     }
 
-namespace detail {
 
 IndexSet
 moveToFront(IndexSet const& isf, IndexSet const& is)
@@ -1596,6 +1595,5 @@ matrixTensor(CMatrix const& M, Index const& i1, Index const& i2)
     return matrixITensor(M,i1,i2);
     }
 
-} //namespace detail
 
 } //namespace itensor
