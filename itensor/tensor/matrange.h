@@ -90,6 +90,22 @@ struct MatRangeT : public MatRangeType
         rn = 0; rs = 0; cn = 0; cs = 0;
         }
 
+    void
+    write(std::ostream& s) const
+        {
+        itensor::write(s,rn);
+        itensor::write(s,rs);
+        itensor::write(s,cn);
+        itensor::write(s,cs);
+        }
+    void
+    read(std::istream& s)
+        {
+        itensor::read(s,rn);
+        itensor::read(s,rs);
+        itensor::read(s,cn);
+        itensor::read(s,cs);
+        }
     };
 
 template<size_t S>

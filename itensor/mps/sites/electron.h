@@ -41,19 +41,29 @@ class ElectronSite
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
         int Up = (conserveSz ? +1 : 0),
             Dn = -Up;
-        if(conserveNf)
+        if(conserveQNs || conserveNf || conserveSz)
             {
-            s = Index(QN({"Sz", 0},{"Nf",0,-1}),1,
-                      QN({"Sz",Up},{"Nf",1,-1}),1,
-                      QN({"Sz",Dn},{"Nf",1,-1}),1,
-                      QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts);
-            }
-        else if(conserveSz) //don't conserve Nf, only fermion parity
-            {
-            s = Index(QN({"Sz", 0},{"Pf",0,-1}),1,
-                      QN({"Sz",+1},{"Pf",1,-1}),1,
-                      QN({"Sz",-1},{"Pf",1,-1}),1,
-                      QN({"Sz", 0},{"Pf",0,-1}),1,Out,ts);
+            if(conserveNf)
+                {
+                s = Index(QN({"Sz", 0},{"Nf",0,-1}),1,
+                          QN({"Sz",Up},{"Nf",1,-1}),1,
+                          QN({"Sz",Dn},{"Nf",1,-1}),1,
+                          QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts);
+                }
+            else if(conserveSz) //don't conserve Nf, only fermion parity
+                {
+                s = Index(QN({"Sz", 0},{"Pf",0,-2}),1,
+                          QN({"Sz",+1},{"Pf",1,-2}),1,
+                          QN({"Sz",-1},{"Pf",1,-2}),1,
+                          QN({"Sz", 0},{"Pf",0,-2}),1,Out,ts);
+                }
+            else
+                {
+                s = Index(QN({"Pf",0,-2}),1,
+                          QN({"Pf",1,-2}),1,
+                          QN({"Pf",1,-2}),1,
+                          QN({"Pf",0,-2}),1,Out,ts);
+                }
             }
         else
             {
