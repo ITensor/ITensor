@@ -61,6 +61,13 @@ nmultMPO(MPO const& Aorig,
     auto sA = uniqueSiteInds(A,B);
     auto sB = uniqueSiteInds(B,A);
 
+    // Check that A and B have unique indices
+    for(int i = 1; i <= N; ++i)
+      {
+      if(!sA(i)) throw ITError("Error in nmultMPO(A,B): MPO tensor A("+str(i)+") does not have a unique site index. You may have meant to call nmultMPO(A,prime(B)).");
+      if(!sB(i)) throw ITError("Error in nmultMPO(A,B): MPO tensor B("+str(i)+") does not have a unique site index. You may have meant to call nmultMPO(A,prime(B)).");
+      }
+
     res=A;
     res.ref(1) = ITensor(sA(1),sB(1),lA(1));
 

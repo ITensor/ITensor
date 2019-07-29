@@ -489,6 +489,10 @@ SECTION("nmultMPO")
   CHECK(checkTags(A));
   CHECK(checkTags(B));
 
+  // Check nmultMPO with all shared site indices
+  // throws an error
+  CHECK_THROWS_AS(nmultMPO(A,B),ITError);
+
   // By default, C-links get the tags of A
   auto C = nmultMPO(A,prime(B));
 
