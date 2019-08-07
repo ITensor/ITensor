@@ -172,6 +172,27 @@ SECTION("IQFourSite")
 
     }
 
+SECTION("Davidson (Custom Linear Map)")
+    {
+    auto a1 = Index(3,"Site,a1");
+    auto a2 = Index(4,"Site,a2");
+    auto a3 = Index(3,"Site,a3");
+
+    auto A = randomITensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    A = 0.5*(A + swapPrime(dag(A),0,1));
+    auto x = randomITensor(a1,a2,a3);
+
+    // ITensorMap is defined above, it simply wraps an ITensor that is of the
+    // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
+    auto lambda = davidson(ITensorMap(A),x,{"MaxIter",50,"ErrGoal",1e-10});
+
+    // Run it again as a "restart"
+    lambda = davidson(ITensorMap(A),x,{"MaxIter",50,"ErrGoal",1e-10});
+ 
+    CHECK_CLOSE(norm(noPrime(A*x)-lambda*x)/norm(x),0.0);
+
+    }
+
 SECTION("GMRES (ITensor, Real)")
     {
     auto a1 = Index(3,"Site,a1");

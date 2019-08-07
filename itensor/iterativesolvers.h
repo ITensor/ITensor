@@ -107,8 +107,8 @@ davidson(BigMatrixT const& A,
         phi[j] *= 1./nrm;
         }
 
-    auto maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,maxsize-1);
+    size_t maxsize = A.size();
+    size_t actual_maxiter = std::min(maxiter_,size_t(maxsize-1));
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
