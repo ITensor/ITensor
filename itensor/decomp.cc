@@ -543,13 +543,15 @@ factor(ITensor const& T,
 
 //TODO: create a tag convention
 template<typename value_type>
-void 
+Index 
 eigDecompImpl(ITensor T, 
               ITensor & L, 
               ITensor & R, 
               ITensor & D,
               Args const& args)
     {
+    // New index listing eigenvectors
+    Index newmid;
     if(not hasQNs(T))
         {
         auto full = args.getBool("FullDecomp",false);
@@ -570,14 +572,14 @@ eigDecompImpl(ITensor T,
         Matrix Lr, Li;
         if(!full) 
             {
-            eigen(MM,Rr,Ri,Dr,Di);
+            eigen(transpose(MM),Rr,Ri,Dr,Di);
             }
         else
             {
             eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
             }
 
-        auto newmid = Index(dim(lind));
+        newmid = Index(dim(lind));
 
         //put right eigenvectors into an ITensor
         if(norm(Ri) > 1E-16*norm(Rr))
@@ -593,12 +595,14 @@ eigDecompImpl(ITensor T,
 #endif
                 store[n] = Cplx(*ri,*ii);
                 }
-            R = ITensor({lind,newmid},move(store));
+            //R = ITensor({lind,newmid},move(store));
+            R = ITensor({newmid,lind},move(store));
             }
         else
             {
             //real eigenvectors
-            R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
+            //R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
+            R = ITensor({newmid,lind},DenseReal{move(Rr.storage())});
             }
 
         if(norm(Di) > 1E-16*norm(Dr))
@@ -609,12 +613,12 @@ eigDecompImpl(ITensor T,
                 {
                 store.store.at(n) = Cplx(Dr(n),Di(n));
                 }
-            D = ITensor({prime(newmid),newmid},move(store),T.scale());
+            D = ITensor({prime(lind),lind},move(store),T.scale());
             }
         else
             {
             //real eigenvectors
-            D = ITensor({prime(newmid),newmid},DiagReal{move(Dr.storage())},T.scale());
+            D = ITensor({prime(lind),lind},DiagReal{move(Dr.storage())},T.scale());
             }
 
         if(full)
@@ -651,6 +655,7 @@ eigDecompImpl(ITensor T,
         {
         Error("eigDecompImpl not implemented for QN ITensor");
         }
+    return newmid;
     }
 
 Spectrum 
@@ -791,21 +796,39 @@ eigen(ITensor const& T,
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
     auto [comb,cind] = combiner(std::move(colinds),args);
-    (void)cind;
+    //(void)cind;
+
+    PrintData(inds(T));
+
+    PrintData(cind);
 
     auto Tc = prime(comb) * T * comb; 
 
+    PrintData(inds(Tc));
+
     ITensor L;
+    Index eigvec_ind;
     if(isComplex(T))
         {
-        eigDecompImpl<Cplx>(Tc,L,V,D,args);
+        eigvec_ind = eigDecompImpl<Cplx>(Tc,L,V,D,args);
         }
     else
         {
-        eigDecompImpl<Real>(Tc,L,V,D,args);
+        eigvec_ind = eigDecompImpl<Real>(Tc,L,V,D,args);
         }
 
-    V = V * comb;
+    PrintData(eigvec_ind);
+    PrintData(inds(V));
+    PrintData(inds(comb));
+
+    V *= comb;
+
+    PrintData(inds(V));
+
+    V *= delta(eigvec_ind,cind);
+
+    PrintData(inds(V));
+
     }
 
 std::tuple<ITensor,ITensor>
