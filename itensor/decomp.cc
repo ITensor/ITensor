@@ -268,6 +268,20 @@ svd(ITensor const& AA, IndexSet const& Uis,
     return std::tuple<ITensor,ITensor,ITensor>(U,S,V);
     }
 
+std::tuple<ITensor,ITensor>
+polar(ITensor const& T,
+      IndexSet const& Uis)
+    {
+    auto [U,S,V] = svd(T,Uis);
+    auto u = commonIndex(S,U);
+    auto v = commonIndex(S,V);
+    auto Vis = uniqueInds(inds(V),{v});
+    auto Vp = prime(V,Vis)*delta(v,u);
+    auto Q = U*Vp;
+    auto P = dag(Vp)*S*V;
+    return std::tuple<ITensor,ITensor>(Q,P);
+    }
+
 // output: truncerr,docut_lower,docut_upper,ndegen_below
 std::tuple<Real,Real,Real,int>
 truncate(Vector & P,

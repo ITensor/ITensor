@@ -45,6 +45,10 @@ template <typename... IndsArgs>
 std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor const& AA, Index const& i1, IndsArgs&&... indsargs);
 
+std::tuple<ITensor,ITensor>
+polar(ITensor const& T,
+      IndexSet const& Uis);
+
 //
 // The "factor" decomposition is based on the SVD,
 // but factorizes a tensor T into only two
