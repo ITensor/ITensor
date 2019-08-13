@@ -727,4 +727,37 @@ SECTION("Exp Hermitian")
         }
     }
 
+SECTION("Eigen")
+    {
+    auto i = Index(2,"i"),
+         j = Index(2,"j"),
+         k = Index(2,"k");
+    auto I = IndexSet(i,j,k);
+    auto Ip = prime(I);
+
+    SECTION("Case 1")
+      {
+      auto A = randomITensor({Ip,I});
+
+      auto [P,D] = eigen(A,{"Tags=","test"});
+
+      auto d = commonIndex(P,D);
+
+      CHECK(hasTags(d,"test"));
+      CHECK_CLOSE(norm(A*P - prime(P)*D),0.);
+      }
+
+    SECTION("Case 2")
+      {
+      auto A = randomITensor({I,Ip});
+
+      auto [P,D] = eigen(A,{"Tags=","test"});
+
+      auto d = commonIndex(P,D);
+
+      CHECK(hasTags(d,"test"));
+      CHECK_CLOSE(norm(A*P - prime(P)*D),0.);
+      }
+
+    }
 }

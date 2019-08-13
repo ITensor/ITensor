@@ -541,15 +541,15 @@ factor(ITensor const& T,
     return std::tuple<ITensor,ITensor>(A,B);
     }
 
-//TODO: create a tag convention
 template<typename value_type>
-Index 
+void
 eigDecompImpl(ITensor T, 
               ITensor & L, 
               ITensor & R, 
               ITensor & D,
               Args const& args)
     {
+    auto itagset = getTagSet(args,"Tags","Link");
     // New index listing eigenvectors
     Index newmid;
     if(not hasQNs(T))
@@ -567,19 +567,20 @@ eigDecompImpl(ITensor T,
 
         //Do the diagonalization
         auto MM = toMatRefc<value_type>(T,prime(lind),lind);
+
         Vector Dr, Di;
         Matrix Rr, Ri;
         Matrix Lr, Li;
         if(!full) 
             {
-            eigen(transpose(MM),Rr,Ri,Dr,Di);
+            eigen(MM,Rr,Ri,Dr,Di);
             }
         else
             {
             eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
             }
 
-        newmid = Index(dim(lind));
+        newmid = Index(dim(lind),itagset);
 
         //put right eigenvectors into an ITensor
         if(norm(Ri) > 1E-16*norm(Rr))
@@ -595,14 +596,12 @@ eigDecompImpl(ITensor T,
 #endif
                 store[n] = Cplx(*ri,*ii);
                 }
-            //R = ITensor({lind,newmid},move(store));
-            R = ITensor({newmid,lind},move(store));
+            R = ITensor({lind,newmid},move(store));
             }
         else
             {
             //real eigenvectors
-            //R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
-            R = ITensor({newmid,lind},DenseReal{move(Rr.storage())});
+            R = ITensor({lind,newmid},DenseReal{move(Rr.storage())});
             }
 
         if(norm(Di) > 1E-16*norm(Dr))
@@ -613,12 +612,12 @@ eigDecompImpl(ITensor T,
                 {
                 store.store.at(n) = Cplx(Dr(n),Di(n));
                 }
-            D = ITensor({prime(lind),lind},move(store),T.scale());
+            D = ITensor({prime(newmid),newmid},move(store),T.scale());
             }
         else
             {
             //real eigenvectors
-            D = ITensor({prime(lind),lind},DiagReal{move(Dr.storage())},T.scale());
+            D = ITensor({prime(newmid),newmid},DiagReal{move(Dr.storage())},T.scale());
             }
 
         if(full)
@@ -655,7 +654,6 @@ eigDecompImpl(ITensor T,
         {
         Error("eigDecompImpl not implemented for QN ITensor");
         }
-    return newmid;
     }
 
 Spectrum 
@@ -796,39 +794,32 @@ eigen(ITensor const& T,
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
     auto [comb,cind] = combiner(std::move(colinds),args);
-    //(void)cind;
-
-    PrintData(inds(T));
-
-    PrintData(cind);
 
     auto Tc = prime(comb) * T * comb; 
 
-    PrintData(inds(Tc));
+    // The version where Tc is ordered
+    // {cind,prime(cind)} does not work,
+    // here we will explicitly permute the
+    // ITensor so the indices are ordered
+    // {prime(cind),cind}.
+    // This is not great since it is an
+    // extra reordering of the data,
+    // look into fixing eigen properly.
+    if(inds(Tc)(1) != prime(cind))
+      Tc = permute(Tc,{prime(cind),cind});
 
     ITensor L;
     Index eigvec_ind;
     if(isComplex(T))
         {
-        eigvec_ind = eigDecompImpl<Cplx>(Tc,L,V,D,args);
+        eigDecompImpl<Cplx>(Tc,L,V,D,args);
         }
     else
         {
-        eigvec_ind = eigDecompImpl<Real>(Tc,L,V,D,args);
+        eigDecompImpl<Real>(Tc,L,V,D,args);
         }
 
-    PrintData(eigvec_ind);
-    PrintData(inds(V));
-    PrintData(inds(comb));
-
     V *= comb;
-
-    PrintData(inds(V));
-
-    V *= delta(eigvec_ind,cind);
-
-    PrintData(inds(V));
-
     }
 
 std::tuple<ITensor,ITensor>
