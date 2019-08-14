@@ -191,7 +191,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-            for(auto k : range(ii+1))
+            for(auto k : range1(ii))
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
@@ -390,15 +390,6 @@ davidson(BigMatrixT const& A,
     //    {
     //    if(T.scale().logNum() > 2) T.scaleTo(1.);
     //    }
-
-    //TODO: previously, it seems like the
-    //eigenvectors were being normalized
-    //automatically, and this was expected
-    //by DMRG (when calculating the proper
-    //entanglement entropy). At some point, 
-    //normalization had to be done explicitly, why?
-    for(auto& phi_j : phi)
-        phi_j /= norm(phi_j);
 
     //Compute any remaining eigenvalues and eigenvectors requested
     //(zero indexed) value of t indicates how many have been "targeted" so far
