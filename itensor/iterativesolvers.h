@@ -451,7 +451,7 @@ update(BigVectorT &x, int const k, Matrix const& h, std::vector<T>& s, std::vect
         }
 
     for (int j = 0; j <= k; j++)
-        x += v[j] * y[j];
+        x += y[j] * v[j];
     }
 
 template<typename T>
