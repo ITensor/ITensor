@@ -2530,6 +2530,56 @@ SECTION("ITensor Negation")
         }
     }
 
+SECTION("ITensor partial direct sum")
+  {
+  SECTION("No QNs")
+    {
+    auto a = Index(2,"a"),
+         b = Index(2,"b"),
+         i = Index(2,"i"),
+         j = Index(2,"j");
+
+    auto A = randomITensor(a,b,i);
+    auto B = randomITensor(a,b,j);
+
+    // Version accepting an index on A and an index on B to be direct summed
+    // Here we create a new ITensor C with indices {a,b,i+j}
+    // Indices that are not specified must be shared by A and B
+    auto [C,ij] = directSum(A,B,i,j,{"Tags=","i+j"});
+
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=1),A.elt(a=1,b=1,i=1));
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=dim(i)+1),B.elt(a=1,b=1,j=1));
+    }
+  SECTION("QNs")
+    {
+    auto a = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"a");
+
+    auto b = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"b");
+
+    auto i = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"i");
+
+    auto j = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"j");
+
+    auto A = randomITensor(QN(0),a,b,dag(i));
+    auto B = randomITensor(QN(0),a,b,dag(j));
+
+    // Version accepting an index on A and an index on B to be direct summed
+    // Here we create a new ITensor C with indices {a,b,i+j}
+    // Indices that are not specified must be shared by A and B
+    auto [C,ij] = directSum(A,B,i,j,{"Tags=","i+j"});
+
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=1),A.elt(a=1,b=1,i=1));
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=dim(i)+1),B.elt(a=1,b=1,j=1));
+    }
+  }
 
 } //TEST_CASE("ITensor")
 

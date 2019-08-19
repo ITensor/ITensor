@@ -1000,6 +1000,94 @@ operator/(ITensor A, ITensor const& B) { A /= B; return A; }
 ITensor
 operator/(ITensor const& A, ITensor && B) { B /= A; return std::move(B); }
 
+// Create some sparse tensors to help with
+// a partial direct sum
+Index
+directSumITensors(Index const& i,
+                  Index const& j,
+                  ITensor& D1,
+                  ITensor& D2,
+                  Args const& args = Args::global())
+  {
+  auto ij = directSum(i,j,args);
+  if(not hasQNs(i) && not hasQNs(j))
+    {
+    D1 = delta(i,ij);
+    auto S = Matrix(dim(j),dim(ij));
+    for(auto jj : range(dim(j)))
+      {
+      S(jj,dim(i)+jj) = 1;
+      }
+    D2 = matrixITensor(std::move(S),j,ij);
+    }
+  else
+    {
+    D1 = ITensor(dag(i),ij);
+    int n = 1;
+    auto nblock_i = nblock(i);
+    for(auto iq1 : range1(nblock_i))
+        {
+        auto blocksize_i = blocksize(i,iq1);
+        auto blocksize_ij = blocksize(ij,n);
+        auto D = Matrix(blocksize_i,blocksize_ij);
+        auto minsize = std::min(blocksize_i,blocksize_ij);
+        for(auto ii : range(minsize)) D(ii,ii) = 1.0;
+        getBlock<Real>(D1,{iq1,n}) &= D;
+        ++n;
+        }
+    auto nblock_j = nblock(j);
+    D2 = ITensor(dag(j),ij);
+    for(auto iq2 : range1(nblock_j))
+        {
+        auto blocksize_j = blocksize(j,iq2);
+        auto blocksize_ij = blocksize(ij,n);
+        auto D = Matrix(blocksize_j,blocksize_ij);
+        auto minsize = std::min(blocksize_j,blocksize_ij);
+        for(auto ii : range(minsize)) D(ii,ii) = 1.0;
+        getBlock<Real>(D2,{iq2,n}) &= D;
+        ++n;
+        }
+    }
+  return ij;
+  }
+
+std::tuple<ITensor,IndexSet>
+directSum(ITensor const& A, ITensor const& B,
+          IndexSet const& I, IndexSet const& J,
+          Args const& args)
+  {
+  if( order(I) != order(J) ) Error("In directSum(ITensor, ITensor, ...), must sum equal number of indices");
+  auto AD = A;
+  auto BD = B;
+  auto newinds = IndexSetBuilder(I.size());
+  for( auto n : range1(order(I)) )
+    {
+    auto In = I(n);
+    auto Jn = J(n);
+    if( dir(A,In) != dir(In) ) In.dag();
+    if( dir(B,Jn) != dir(Jn) ) Jn.dag();
+    ITensor D1, D2;
+    auto IJn = directSumITensors(In,Jn,D1,D2,args);
+    newinds.nextIndex(IJn);
+    AD *= D1;
+    BD *= D2;
+    }
+  auto IJ = newinds.build();
+  auto C = AD+BD;
+  return std::make_tuple(C,IJ);
+  }
+
+// Direct sum A and B over indices i on A and j on B
+std::tuple<ITensor,Index>
+directSum(ITensor const& A, ITensor const& B,
+          Index const& i, Index const& j,
+          Args const& args)
+  {
+  auto [C,IJ] = directSum(A,B,IndexSet(i),IndexSet(j),args);
+  auto ij = IJ.index(1);
+  return std::make_tuple(C,ij);
+  }
+
 void
 daxpy(ITensor & L,
       ITensor const& R,
@@ -1090,6 +1178,13 @@ hasIndex(ITensor const& T,
          Index const& imatch)
     {
     return hasIndex(inds(T),imatch);
+    }
+
+Arrow
+dir(ITensor const& T,
+    Index const& i)
+    {
+    return dir(inds(T),i);
     }
 
 bool
