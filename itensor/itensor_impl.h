@@ -488,21 +488,29 @@ ITensor
 diagITensor(Container const& C, 
             IndexSet const& is)
     { 
+    if( not hasQNs(is) )
+      {
 #ifdef DEBUG
-    using size_type = decltype(C.size());
-    //Compute min of all index dimensions
-    auto mindim = dim(is[0]);
-    for(const auto& ind : is)
-        if(dim(ind) < mindim) mindim = dim(ind);
-    if(C.size() != size_type(mindim))
-        {
-        println("mindim = ",mindim);
-        println("C.size() = ",C.size());
-        Error("Wrong size of data in diagonal ITensor constructor");
-        }
+      using size_type = decltype(C.size());
+      //Compute min of all index dimensions
+      auto mindim = dim(is[0]);
+      for(const auto& ind : is)
+          if(dim(ind) < mindim) mindim = dim(ind);
+      if(C.size() != size_type(mindim))
+          {
+          println("mindim = ",mindim);
+          println("C.size() = ",C.size());
+          Error("Wrong size of data in diagonal ITensor constructor");
+          }
 #endif
-    using value_type = typename Container::value_type;
-    return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+      using value_type = typename Container::value_type;
+      return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+      }
+    else
+      {
+      Error("diagITensor constructor not yet implemented for QNs");
+      return ITensor();
+      }
     }
 
 template<typename V>
