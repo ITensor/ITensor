@@ -558,6 +558,15 @@ struct RemoveQNs
 inline const char*
 typeNameOf(RemoveQNs) { return "RemoveQNs";}
 
+struct ToDense
+    {
+    IndexSet const& is;
+    ToDense(IndexSet const& is_) : is(is_) {}
+    };
+
+inline const char*
+typeNameOf(ToDense) { return "ToDense";}
+
 } //namespace itensor 
 
 #endif

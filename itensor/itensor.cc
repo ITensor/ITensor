@@ -868,19 +868,15 @@ operator*=(ITensor const& R)
 
 #ifndef USESCALE
 
-////for Diag and QDiag
-////QDense -> Dense
-////QDiag  -> Dense
-////Diag   -> Dense
-//ITensor
-//toDense(ITensor T)
-//    {
-//    if(not hasQNs(T)) return T;
-//    if(T.store()) doTask(ToDense{T.inds()},T.store());
-//    auto nis = T.inds();
-//    nis.removeQNs();
-//    return ITensor{move(nis),move(T.store()),T.scale()};
-//    }
+//for Diag and QDiag
+//Diag  -> Dense
+//QDiag -> QDense
+ITensor
+toDense(ITensor T)
+    {
+    if(T.store()) doTask(ToDense{T.inds()},T.store());
+    return ITensor{move(T.inds()),move(T.store()),T.scale()};
+    }
 
 //TODO: make this use a RemoveQNs task type that does:
 //QDense -> Dense

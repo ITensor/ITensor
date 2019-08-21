@@ -269,6 +269,10 @@ doTask(StorageType const& S, DiagReal const& d) ->StorageType::Type { return Sto
 auto inline
 doTask(StorageType const& S, DiagCplx const& d) ->StorageType::Type { return StorageType::DiagCplx; }
 
+template<typename T>
+void
+doTask(ToDense &, Diag<T> const&, ManageStore &);
+
 } //namespace itensor
 
 #endif

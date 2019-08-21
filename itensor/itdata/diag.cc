@@ -418,4 +418,29 @@ doTask(SumEls S, Diag<T> const& d)
 template Cplx doTask(SumEls S, DiagReal const& d);
 template Cplx doTask(SumEls S, DiagCplx const& d);
 
+template<typename V>
+void
+doTask(ToDense & R,
+       Diag<V> const& d,
+       ManageStore & m)
+    {
+    auto nd = m.makeNewData<Dense<V>>(dim(R.is),0.);
+    auto Nref = makeTenRef(nd->data(),nd->size(),&R.is);
+    long tot_stride = 0; //total strides
+    for(auto i : range(length(R.is)))
+      tot_stride += R.is.stride(i);
+    if(d.allSame())
+      {
+      for(auto i : range(d.length))
+        Nref[i*tot_stride] = d.val;
+      }
+    else
+      {
+      for(auto i : range(d.length))
+        Nref[i*tot_stride] = d.store[i];
+      }
+    }
+template void doTask(ToDense &, Diag<Real> const&, ManageStore &);
+template void doTask(ToDense &, Diag<Cplx> const&, ManageStore &);
+
 } //namespace itensor

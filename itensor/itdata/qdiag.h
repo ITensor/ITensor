@@ -365,6 +365,10 @@ template<typename V>
 void
 doTask(RemoveQNs &, QDiag<V> const&, ManageStore &);
 
+template<typename T>
+void
+doTask(ToDense &, QDiag<T> const&, ManageStore &);
+
 } //namespace itensor
 
 #endif
