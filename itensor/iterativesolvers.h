@@ -54,11 +54,11 @@ davidson(BigMatrixT const& A,
 // (BigMatrixT objects must implement the methods product and size.)
 // Initial guess x is overwritten with the output.
 //
-template<typename BigMatrixT>
+template<typename BigMatrixT, typename BigVectorT>
 void
 gmres(BigMatrixT const& A,
-      ITensor const& b,
-      ITensor& x,
+      BigVectorT const& b,
+      BigVectorT& x,
       Args const& args = Args::global());
 
 //
@@ -336,7 +336,7 @@ davidson(BigMatrixT const& A,
                     }
                 }
             q *= 1./qnrm;
-            q.scaleTo(1.);
+            //q.scaleTo(1.);
             ++pass;
             }
         if(debug_level_ >= 3) println("Done with orthog step, tot_pass=",tot_pass);
@@ -436,9 +436,9 @@ davidson(BigMatrixT const& A,
 
 namespace gmres_details {
 
-template<class Matrix, class T>
+template<class Matrix, class T, class BigVectorT>
 void
-update(ITensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<ITensor> const& v)
+update(BigVectorT &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<BigVectorT> const& v)
     {
     std::vector<T> y(s);
 
@@ -451,7 +451,7 @@ update(ITensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<
         }
 
     for (int j = 0; j <= k; j++)
-        x += v[j] * y[j];
+        x += y[j] * v[j];
     }
 
 template<typename T>
@@ -493,26 +493,28 @@ applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
     dx = temp;
     }
 
-void inline
-dot(ITensor const& A, ITensor const& B, Real& res)
+template<typename BigVectorT>
+void
+dot(BigVectorT const& A, BigVectorT const& B, Real& res)
     {
     res = elt(dag(A)*B);
     }
 
-void inline
-dot(ITensor const& A, ITensor const& B, Cplx& res)
+template<typename BigVectorT>
+void
+dot(BigVectorT const& A, BigVectorT const& B, Cplx& res)
     {
     res = eltC(dag(A)*B);
     }
 
 }//namespace gmres_details
 
-template<typename T, typename BigMatrixT>
+template<typename T, typename BigMatrixT, typename BigVectorT>
 void
 gmresImpl(BigMatrixT const& A,
-          ITensor const& b,
-          ITensor& x,
-          ITensor& Ax,
+          BigVectorT const& b,
+          BigVectorT& x,
+          BigVectorT& Ax,
           Args const& args)
     {
     auto n = A.size();
@@ -530,7 +532,7 @@ gmresImpl(BigMatrixT const& A,
     std::vector<T> s(m+1);
     std::vector<T> cs(m+1);
     std::vector<T> sn(m+1);
-    ITensor w;
+    BigVectorT w = x;
 
     auto normb = norm(b);
 
@@ -547,20 +549,20 @@ gmresImpl(BigMatrixT const& A,
         max_iter = 0;
         }
 
-    std::vector<ITensor> v(m+1);
+    std::vector<BigVectorT> v(m+1);
 
     while(j <= max_iter)
         {
 
         v[0] = r/beta;
-        v[0].scaleTo(1.0);
+        //v[0].scaleTo(1.0);
 
         std::fill(s.begin(), s.end(), 0.0);
         s[0] = beta; 
 
         for(i = 0; i < m && j <= max_iter; i++, j++)
             {
-            ITensor w;
+            BigVectorT w = x;
             A.product(v[i],w);
 
             // Begin Arnoldi iteration
@@ -579,7 +581,7 @@ gmresImpl(BigMatrixT const& A,
             if(normw != 0)
                 {
                 v[i+1] = w/H(i+1,i);
-                v[i+1].scaleTo(1.0);
+                //v[i+1].scaleTo(1.0);
                 }
             else
                 {
@@ -619,11 +621,11 @@ gmresImpl(BigMatrixT const& A,
     }
 
 
-template<typename BigMatrixT>
+template<typename BigMatrixT, typename BigVectorT>
 void
 gmres(BigMatrixT const& A,
-      ITensor const& b,
-      ITensor& x,
+      BigVectorT const& b,
+      BigVectorT& x,
       Args const& args)
     {
     auto debug_level_ = args.getInt("DebugLevel",-1);
@@ -633,7 +635,7 @@ gmres(BigMatrixT const& A,
     // to avoid this?
     // Otherwise we would need to require that BigMatrixT
     // has a function isComplex()
-    ITensor Ax;
+    BigVectorT Ax = x;
     A.product(x, Ax); 
     if(isComplex(b) || isComplex(Ax))
         {
