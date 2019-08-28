@@ -61,6 +61,9 @@ class SiteSet
     int 
     length() const;
 
+    SiteSet
+    removeQNs() const;
+
 		// Deprecated in favor of .length()
     int 
     N() const;
@@ -302,6 +305,19 @@ SiteSet(IndexSet const& is)
 int inline SiteSet::
 length() const { return sites_ ? sites_->length() : 0; }
 
+SiteSet inline SiteSet::
+removeQNs() const
+    {
+    auto s = *this;
+    for(auto j : range1(s.length()))
+        {
+        auto sj = s(j);
+        sj.removeQNs();
+        s.set(j,GenericSite(sj));
+        }
+    return s;
+    }
+
 int inline
 length(SiteSet const& sites) { return sites.length(); }
 
@@ -507,6 +523,21 @@ class BasicSiteSet : public SiteSet
         SiteSet::readType<SiteType>(s);
         }
 
+    // Only need to implement if you want to remove
+    // the QNs from the indices of the SiteSet
+    BasicSiteSet<SiteType>
+    removeQNs() const
+        {
+        auto s = *this;
+        for(auto j : range1(s.length()))
+            {
+            auto sj = s(j);
+            sj.removeQNs();
+            s.set(j,SiteType(sj));
+            }
+        return s;
+        }
+
     };
 
 template<typename ASiteType, typename BSiteType>
@@ -557,6 +588,23 @@ class MixedSiteSet : public SiteSet
             init(std::move(store));
             }
         }
+
+    // Only need to implement if you want to remove
+    // the QNs from the indices of the SiteSet
+    MixedSiteSet<ASiteType,BSiteType>
+    removeQNs() const
+        {
+        auto s = *this;
+        for(auto j : range1(s.length()))
+            {
+            auto sj = s(j);
+            sj.removeQNs();
+            if(j%2 == 1) s.set(j,ASiteType(sj));
+            else         s.set(j,BSiteType(sj));
+            }
+        return s;
+        }
+
     };
 
 template<typename SiteSetT,

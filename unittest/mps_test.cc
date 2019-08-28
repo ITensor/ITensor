@@ -375,4 +375,24 @@ SECTION("prime")
 
     }
 
+SECTION("removeQNs from SiteSet")
+    {
+    auto N = 10;
+    auto sites = SpinHalf(N);
+
+    auto state = InitState(sites,"Up");
+    auto psi = MPS(state);
+
+    // Measure Sx on site j
+    auto j = 3;
+    psi.position(j);
+
+    sites.removeQNs();
+    auto Sxj = op(sites,"Sx",j);
+
+    auto sxj = elt(psi(j)*Sxj*dag(prime(psi(j),"Site")));
+
+    CHECK_CLOSE(sxj,0.);
+    }
+
 }
