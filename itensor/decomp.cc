@@ -809,7 +809,7 @@ eigen(ITensor const& T,
         }
     auto [comb,cind] = combiner(std::move(colinds),args);
 
-    auto Tc = prime(comb) * T * comb; 
+    auto Tc = prime(dag(comb)) * T * comb; 
 
     // The version where Tc is ordered
     // {cind,prime(cind)} does not work,
