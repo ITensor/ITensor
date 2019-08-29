@@ -578,7 +578,7 @@ permute(IndexSet const& iset)
         return A;
         }
     // If not trivial, use permutation to get new index set
-    // This is necessary to preserve the proper arrow direction of IQIndex
+    // This is necessary to preserve the proper arrow direction of QN Index
     auto bind = RangeBuilderT<IndexSet>(r);
     for(auto i : range(r))
         {
@@ -789,13 +789,13 @@ checkArrows(IndexSet const& is1,
                 if(cond)
                     {
                     println("----------------------------------------");
-                    println("IQIndexSet 1 = \n",is1);
+                    println("IndexSet 1 = \n",is1);
                     println("----------------------------------------");
-                    println("IQIndexSet 2 = \n",is2);
+                    println("IndexSet 2 = \n",is2);
                     println("----------------------------------------");
-                    printfln("Mismatched IQIndex from set 1 %s",I1);
-                    printfln("Mismatched IQIndex from set 2 %s",I2);
-                    Error("Mismatched IQIndex arrows");
+                    printfln("Mismatched QN Index from set 1 %s",I1);
+                    printfln("Mismatched QN Index from set 2 %s",I2);
+                    Error("Mismatched QN Index arrows");
                     }
                 }
             }
