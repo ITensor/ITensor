@@ -19,11 +19,11 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d
+build: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d tdvp
 
-debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g trg-g mixedspin-g hubbard_2d-g
+debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g trg-g mixedspin-g hubbard_2d-g tdvp-g
 
-all: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d
+all: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d tdvp
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
@@ -67,10 +67,18 @@ hubbard_2d: hubbard_2d.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 hubbard_2d-g: mkdebugdir .debug_objs/hubbard_2d.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/hubbard_2d.o -o hubbard_2d-g $(LIBGFLAGS)
 
+tdvp: tdvp.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) tdvp.o -o tdvp $(LIBFLAGS)
+
+tdvp-g: mkdebugdir .debug_objs/tdvp.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/tdvp.o -o tdvp-g $(LIBGFLAGS)
+
+
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
 	@rm -fr *.o .debug_objs dmrg dmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
-    mixedspin mixedspin-g trg trg-g
+    mixedspin mixedspin-g trg trg-g \
+	tdvp tdvp-g

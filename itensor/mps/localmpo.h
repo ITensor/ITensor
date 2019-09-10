@@ -126,6 +126,9 @@ class LocalMPO
     void
     position(int b, MPS const& psi);
 
+	void
+    positionA(int b, MPS const& psi, int nc);
+
     int
     position() const;
 
@@ -177,8 +180,9 @@ class LocalMPO
     void
     numCenter(int val) 
         { 
-        if(val < 1) Error("numCenter must be set >= 1");
+        if(val < 1 || val > 2) Error("numCenter must be set 1 or 2");
         nc_ = val; 
+		lop_.numCenter(val);
         }
 
     size_t
@@ -304,7 +308,9 @@ LocalMPO(const MPO& H,
     { 
     PH_[0] = LH;
     PH_[H.length()+1] = RH;
-    if(H.length()==2)
+    if(H.length()==1)
+        lop_.update(Op_->A(1),L(),R());
+	else if(H.length()==2)
         lop_.update(Op_->A(1),Op_->A(2),L(),R());
     if(args.defined("NumCenter"))
         numCenter(args.getInt("NumCenter"));
@@ -344,7 +350,10 @@ LocalMPO(MPO const& H,
     { 
     PH_.at(LHlim) = LH;
     PH_.at(RHlim) = RH;
-    if(H.length()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(H.length()==1)
+        lop_.update(Op_->A(1),L(),R());
+	else if(H.length()==2) 
+		lop_.update(Op_->A(1),Op_->A(2),L(),R());
     if(args.defined("NumCenter")) numCenter(args.getInt("NumCenter"));
     }
 
@@ -360,11 +369,44 @@ product(ITensor const& phi,
     if(Psi_ != 0)
         {
         int b = position();
-        auto othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
-        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
-        othr *= othrR;
-        auto z = (othr*phi).eltC();
+		
+		ITensor othr;
+		if(!L())
+			{
+			if(nc_ == 1)
+				{
+				othr = (!R()? dag(prime(Psi_->A(b),"Link")) : R()*dag(prime(Psi_->A(b),"Link")));
+				}
+			else if(nc_ == 2)
+				{
+				othr = dag(prime(Psi_->A(b),"Link"));
+				othr *= (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
+				}
+			else if(nc_ == 0)
+				{
+				if(!R()) Error("Empty L() and R() in product");
+				else othr = R();
+				}
+			}
+		else
+			{
+			othr = L();
+			if(nc_ == 1)
+				{
+				othr *= (!R()? dag(prime(Psi_->A(b),"Link")) : R()*dag(prime(Psi_->A(b),"Link")));
+				}
+			else if(nc_ == 2)
+				{
+				othr *= dag(prime(Psi_->A(b),"Link"));
+				othr *= (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
+				}
+			else if(nc_ == 0)
+				{
+				if(R()) othr *= R();
+				}
+			}
 
+        auto z = (othr*phi).eltC();
         phip = dag(othr);
         phip *= z;
         }
@@ -400,16 +442,48 @@ position(int b, MPS const& psi)
     setRHlim(b+nc_); //not redundant since RHlim_ could be < b+nc_
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 1 && nc_ != 2)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 1 and 2 center sites currently");
         }
 #endif
 
     if(Op_ != 0) //normal MPO case
         {
-        lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+        if(nc_ == 2)
+			lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+		else if(nc_ == 1)
+			lop_.update(Op_->A(b),L(),R());
         }
+    }
+
+inline void LocalMPO::
+positionA(int b, MPS const& psi, int nc)
+    {
+    if(!(*this)) Error("LocalMPO is null");
+
+    makeL(psi,b-1);
+    makeR(psi,b+nc);
+
+    setLHlim(b-1); //not redundant since LHlim_ could be > b-1
+    setRHlim(b+nc); //not redundant since RHlim_ could be < b+nc
+
+#ifdef DEBUG
+    if(nc != 0 && nc != 1 && nc != 2 && nc != 3)
+        {
+        Error("positionA only supports 0 and 1 and 2 and 3 center sites currently");
+        }
+#endif
+
+    if(Op_ != 0) //normal MPO case
+        {
+        if(nc == 2)
+			lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+		else if(nc == 1)
+			lop_.update(Op_->A(b),L(),R());
+		else if(nc == 0)
+			lop_.updateLR(L(),R());
+		}
     }
 
 int inline LocalMPO::
@@ -430,9 +504,9 @@ shift(int j,
     if(!(*this)) Error("LocalMPO is null");
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 1 && nc_ != 2)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 1 and 2 center sites currently");
         }
 #endif
 
@@ -450,9 +524,12 @@ shift(int j,
         nE *= dag(prime(A));
         setLHlim(j);
         setRHlim(j+nc_+1);
-
-        lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
-        }
+        
+		if(nc_ == 2)
+            lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
+		else if(nc_ == 1)
+			lop_.update(Op_->A(j+1),L(),R());	
+		}
     else //dir == Fromright
         {
         if((j+1) != LHlim_)
@@ -468,7 +545,10 @@ shift(int j,
         setLHlim(j-nc_-1);
         setRHlim(j);
 
-        lop_.update(Op_->A(j-1),Op_->A(j),L(),R());
+		if(nc_ == 2)
+            lop_.update(Op_->A(j-2),Op_->A(j-1),L(),R());
+		else if(nc_ == 1)
+			lop_.update(Op_->A(j-1),L(),R());
         }
     }
 

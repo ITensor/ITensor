@@ -53,6 +53,7 @@ copyNegElts(Iter mre,
     hermitianDiag(int N, Real *Udata, Real *ddata);
     int
     hermitianDiag(int N, Cplx *Udata,Real *ddata);
+
 } //namespace detail
 
 template<class MatM, 
@@ -188,6 +189,122 @@ SVD(MatM && M,
     resize(D,nsv);
     SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
     }
+
+namespace exptH_detail {
+	//Helper for expPade
+	template<typename Iter, typename V>
+	void
+	multTElts(Iter m,
+			  MatRef<V> const& F,
+			  const Real t,
+			  const bool typet)	
+		{
+		auto fe = F.data()+F.size();
+		for(auto f = F.data(); f != fe; ++f, ++m)//------------make a copy of the pointer m? yes! adress copy
+			{
+			*f = typet? (-Complex_i * t * (*m)) : (-t * (*m));
+			}
+		}
+	
+	//Helper for expPade
+	template<typename Iter>
+	void
+	multTElts(Iter mre,
+			  Iter mim,
+			  std::vector<Cplx> & Hc,
+			  const Real t,
+			  const bool typet)
+		{
+		if(typet)
+			{
+			for(auto& z : Hc)
+				{
+				realRef(z) =  t * (*mim);
+				imagRef(z) = -t * (*mre);
+				++mre;
+				++mim;
+				}
+			}
+		else
+			{
+			for(auto& z : Hc)
+				{
+				realRef(z) = -t * (*mre);
+				imagRef(z) = -t * (*mim);
+				++mre;
+				++mim;
+				}
+			}
+		}
+	
+	//template <typename T>
+	//int padeExp(VecRef<T> const& y, int N, MatRef<T> const& F, int ideg);
+	int
+	padeExp(VecRef<Real> const& y, int N, MatRef<Real> const& F, int ideg);
+	int
+	padeExp(VecRef<Cplx> const& y, int N, MatRef<Cplx> const& F, int ideg);
+
+} //exptH_detail
+
+template<class Vecy,
+		 class MatH,
+		 class>
+void
+expMatrixApply(Vecy && y,
+		  	   MatH && H,
+		  	   const Real t,
+		  	   const bool typet,
+		  	   const int ideg)
+	{
+	using yval = typename stdx::decay_t<Vecy>::value_type;
+	using Hval = typename stdx::decay_t<MatH>::value_type;
+	if(typet)
+		static_assert( isCplx<yval>(),
+				  "expMatrixApply: RealTEvl - y must be complex");	
+	else
+		static_assert( (isReal<yval>() && isReal<Hval>()) || (isCplx<yval>() && isCplx<Hval>()),
+				"expMatrixApply: ImagTEvl - y and H must be both real or both complex");
+
+	auto N = ncols(H);
+	if(N < 1) throw std::runtime_error("expMatrixApply: 0 dimensional matrix");
+	if(N != nrows(H))
+		{
+		printfln("H is %dx%d",nrows(H),ncols(H));
+		throw std::runtime_error("expMatrixApply: Input Matrix must be square");
+		}
+
+	auto F = Mat<yval>(nrows(H),ncols(H));
+
+#ifdef DEBUG
+    if(!isContiguous(y))
+        throw std::runtime_error("expMatrixApply: y must be contiguous");
+#endif
+    
+	if(isContiguous(H)) 
+		{
+		exptH_detail::multTElts(H.data(),makeRef(F),t,typet);//--------------------------multiply time can also be done in padeExp, to be modified
+		}
+	else                
+		{
+		exptH_detail::multTElts(H.cbegin(),makeRef(F),t,typet);
+		}
+
+	int info = 0;
+	if(ideg > 0)	
+		{
+		info = exptH_detail::padeExp(y,N,makeRef(F),ideg);
+		}
+	else
+		{
+		//info = detail::chebyshevExp(y.data(),N,F.data());
+		Error("ideg cannot be less than 1");
+		}
+
+	if(info != 0)
+		{
+		throw std::runtime_error("expMatrixApply failed");
+		}
+	}
 
 } //namespace itensor
 

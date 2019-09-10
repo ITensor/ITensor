@@ -315,6 +315,28 @@ void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
                      LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
                      LAPACK_INT *info);
 
+void F77NAME(dgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_REAL *a, LAPACK_INT *lda,
+					LAPACK_INT *ipiv, LAPACK_REAL *b, LAPACK_INT *ldb, LAPACK_INT *info);
+
+void F77NAME(zgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_COMPLEX *a, LAPACK_INT * lda,
+					LAPACK_INT *ipiv, LAPACK_COMPLEX *b, LAPACK_INT *ldb, LAPACK_INT *info);
+
+#ifdef PLATFORM_lapacke
+double LAPACKE_dlange(int matrix_layout, char norm, lapack_int m, lapack_int n, const double* a, lapack_int lda);
+#elif defined PLATFORM_acml
+double F77NAME(dlange)(char* norm, LAPACK_INT* m, LAPACK_INT* n, double* a, LAPACK_INT* lda, double* work, LAPACK_INT norm_len);
+#else
+double F77NAME(dlange)(char* norm, LAPACK_INT* m, LAPACK_INT* n, double* a, LAPACK_INT* lda, double* work);
+#endif
+
+#ifdef PLATFORM_lapacke
+lapack_real LAPACKE_zlange(int matrix_layout, char norm, lapack_int m, lapack_int n, const lapack_complex_double* a, lapack_int lda);
+#elif defined PLATFORM_acml
+LAPACK_REAL F77NAME(zlange)(char* norm, LAPACK_INT* m, LAPACK_INT* n, LAPACK_COMPLEX* a, LAPACK_INT* lda, double* work, LAPACK_INT norm_len);
+#else
+LAPACK_REAL F77NAME(zlange)(char* norm, LAPACK_INT* m, LAPACK_INT* n, LAPACK_COMPLEX* a, LAPACK_INT* lda, double* work);
+#endif
+
 #ifdef PLATFORM_lapacke
 lapack_int LAPACKE_zheev(int matrix_order, char jobz, char uplo, lapack_int n,
                          lapack_complex_double* a, lapack_int lda, double* w);
@@ -531,6 +553,53 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info);  //error info
+
+// dgesv
+//
+// computes the solution to system of linear equations A*X = B
+// where A is a general real matrix
+//
+LAPACK_INT
+dgesv_wrapper(LAPACK_INT n,
+			  LAPACK_INT nrhs,
+			  LAPACK_REAL* a,
+			  LAPACK_REAL* b);
+
+//
+// zgesv
+//
+// computes the solution to system of linear euqations A*X =B
+// where A is a general complex matrix
+//
+LAPACK_INT
+zgesv_wrapper(LAPACK_INT n,
+			  LAPACK_INT nrhs,
+			  Cplx* a,
+			  Cplx* b);
+
+//
+// dlange
+//
+// returns the value of the 1-norm, Frobenius norm, infinity-norm, 
+// or the largest absolute value of any element of a general rectangular matrix.
+//
+double
+dlange_wrapper(char norm,
+			   LAPACK_INT m,
+			   LAPACK_INT n,
+			   double* a);
+
+//
+// zlange
+//
+// returns the value of the 1-norm, Frobenius norm, infinity-norm, 
+// or the largest absolute value of any element of a general rectangular matrix.
+//
+LAPACK_REAL
+zlange_wrapper(char norm,
+			   LAPACK_INT m,
+			   LAPACK_INT n,
+			   Cplx* a);
 
 //
 // zheev

@@ -35,6 +35,7 @@
 #include "itensor/util/stats.h"
 
 #include "itensor/mps/dmrg.h"
+#include "itensor/mps/tdvp.h"
 #include "itensor/mps/tevol.h"
 #include "itensor/mps/autompo.h"
 

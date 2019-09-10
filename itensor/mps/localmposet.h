@@ -56,6 +56,11 @@ class LocalMPOSet
     position(int b, 
              MPS const& psi);
 
+	void
+	positionA(int b,
+			  MPS const& psi,
+			  int nc);
+	
     std::vector<ITensor>
     L() const 
         { 
@@ -196,6 +201,17 @@ position(int b,
         lmpo_[n].position(b,psi);
         }
     }
+
+void inline LocalMPOSet::
+positionA(int b, 
+		  MPS const& psi,
+		  int nc)
+	{
+	for(auto n : range(lmpo_.size()))
+		{
+		lmpo_[n].positionA(b,psi,nc);
+		}
+	}
 
 void inline LocalMPOSet::
 numCenter(int val)
