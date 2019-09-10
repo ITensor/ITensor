@@ -469,9 +469,9 @@ positionA(int b, MPS const& psi, int nc)
     setRHlim(b+nc); //not redundant since RHlim_ could be < b+nc
 
 #ifdef DEBUG
-    if(nc != 0 && nc != 1 && nc != 2 && nc != 3)
+    if(nc != 0 && nc != 1 && nc != 2)
         {
-        Error("positionA only supports 0 and 1 and 2 and 3 center sites currently");
+        Error("positionA only supports 0 and 1 and 2 center sites currently");
         }
 #endif
 
