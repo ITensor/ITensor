@@ -196,7 +196,6 @@ TDVPWorker(MPS & psi,
 
     args.add("DebugLevel",debug_level);
     args.add("DoNormalize",true);
-	//args.add("UseSVD",true);
 
     if(numCenter == 2)
 		{	
@@ -242,20 +241,6 @@ TDVPWorker(MPS & psi,
 					phi/=norm(phi);
 					}
 				
-//				ITensor U,S,V;
-//				if(b != 1) U = ITensor(commonIndex(psi.A(b-1),psi.A(b),"Link"),siteIndex(psi,b));
-//				else U = ITensor(siteIndex(psi,b));
-//				auto spec = svd(phi,U,S,V,args);
-//				if(ha == 1)
-//					{
-//					psi.Aref(b) = U;
-//					psi.Aref(b+1) = S*V;
-//					}
-//				else
-//					{
-//					psi.Aref(b+1) = V;
-//					psi.Aref(b) = U*S;
-//					}
 				auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
 
 				if((ha == 1 && b+1 != N) || (ha == 2 && b != 1))
