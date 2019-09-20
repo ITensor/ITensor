@@ -23,7 +23,7 @@ namespace itensor {
 
 const Real DefaultLogRefScale = 2.0255;
 
-class MPO : private MPS
+class MPO : protected MPS
     {
     using Parent = MPS;
     using Parent::N_;
