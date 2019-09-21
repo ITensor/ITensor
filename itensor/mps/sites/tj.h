@@ -34,18 +34,42 @@ class tJSite
     tJSite(Args const& args = Args::global())
         {
         auto ts = TagSet("Site,tJ");
-        if( args.defined("SiteNumber") )
-          ts.addTags("n="+str(args.getInt("SiteNumber")));
-        if(args.getBool("ConserveQNs",true))
-          {
-          s = Index(QN({"Sz", 0},{"Nf",0}),1,
-                    QN({"Sz",+1},{"Nf",1}),1,
-                    QN({"Sz",-1},{"Nf",1}),1,Out,ts);
-          }
+        if(args.defined("SiteNumber"))
+            {
+            ts.addTags("n="+str(args.getInt("SiteNumber")));
+            }
+        auto conserveQNs = args.getBool("ConserveQNs",true);
+        auto conserveNf = args.getBool("ConserveNf",conserveQNs);
+        auto conserveSz = args.getBool("ConserveSz",conserveQNs);
+
+        int Up = (conserveSz ? +1 : 0),
+            Dn = -Up;
+
+        if(conserveQNs || conserveNf || conserveSz)
+            {
+            if(conserveNf)
+                {
+                s = Index(QN({"Sz", 0},{"Nf",0,-1}),1,
+                          QN({"Sz",Up},{"Nf",1,-1}),1,
+                          QN({"Sz",Dn},{"Nf",1,-1}),1,Out,ts);
+                }
+            else if(conserveSz) //don't conserve Nf, only fermion parity
+                {
+                s = Index(QN({"Sz", 0},{"Pf",0,-2}),1,
+                          QN({"Sz",+1},{"Pf",1,-2}),1,
+                          QN({"Sz",-1},{"Pf",1,-2}),1,Out,ts);
+                }
+            else
+                {
+                s = Index(QN({"Pf",0,-2}),1,
+                          QN({"Pf",1,-2}),1,
+                          QN({"Pf",1,-2}),1,Out,ts);
+                }
+            }
         else
-          {
-          s = Index(3,ts);
-          }
+            {
+            s = Index(3,ts);
+            }
         }
 
     Index
