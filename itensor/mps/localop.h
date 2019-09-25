@@ -48,7 +48,6 @@ class LocalOp
     ITensor const* L_;
     ITensor const* R_;
     mutable size_t size_;
-	int nc_;
     public:
 
 
@@ -58,16 +57,8 @@ class LocalOp
 
     LocalOp();
 
-	LocalOp(ITensor const& Op1, 
-            Args const& args = Args::global());
-
     LocalOp(ITensor const& Op1, 
             ITensor const& Op2,
-            Args const& args = Args::global());
-
-	LocalOp(ITensor const& Op1, 
-            ITensor const& L, 
-            ITensor const& R,
             Args const& args = Args::global());
 
     LocalOp(ITensor const& Op1, 
@@ -97,39 +88,18 @@ class LocalOp
     size_t
     size() const;
 
-	int
-    numCenter() const { return nc_; }
-    void
-    numCenter(int val)
-        {
-        if(val < 1 || val > 2) Error("numCenter must be set to be 1 or 2.");
-        if(val != nc_) nc_ = val;
-        }
-
     //
     // Accessor Methods
     //
 
-	void
-    update(ITensor const& Op1);
-
     void
     update(ITensor const& Op1, ITensor const& Op2);
-
-	void
-    update(ITensor const& Op1, 
-           ITensor const& L, 
-           ITensor const& R);
 
     void
     update(ITensor const& Op1, 
            ITensor const& Op2, 
            ITensor const& L, 
            ITensor const& R);
-
-	void
-	updateLR(ITensor const& L,
-			 ITensor const& R);
 
     ITensor const&
     Op1() const 
@@ -176,23 +146,8 @@ LocalOp()
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(0)
+    size_(-1)
     { 
-    }
-
-inline LocalOp::
-LocalOp(const ITensor& Op1,
-        const Args& args)
-    : 
-    Op1_(nullptr),
-    Op2_(nullptr),
-    L_(nullptr),
-    R_(nullptr),
-    size_(-1),
-	nc_(1)
-    {
-    update(Op1);
     }
 
 inline LocalOp::
@@ -203,25 +158,9 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(2)
+    size_(-1)
     {
     update(Op1,Op2);
-    }
-
-inline LocalOp::
-LocalOp(const ITensor& Op1, 
-        const ITensor& L, const ITensor& R,
-        const Args& args)
-    : 
-    Op1_(nullptr),
-    Op2_(nullptr),
-    L_(nullptr),
-    R_(nullptr),
-    size_(-1),
-	nc_(1)
-    {
-    update(Op1,L,R);
     }
 
 inline LocalOp::
@@ -233,21 +172,9 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(2)
+    size_(-1)
     {
     update(Op1,Op2,L,R);
-    }
-
-void inline LocalOp::
-update(const ITensor& Op1)
-    {
-    Op1_ = &Op1;
-    Op2_ = nullptr;
-    L_ = nullptr;
-    R_ = nullptr;
-    size_ = -1;
-	nc_ = 1;
     }
 
 void inline LocalOp::
@@ -258,16 +185,6 @@ update(const ITensor& Op1, const ITensor& Op2)
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
-	nc_ = 2;
-    }
-
-void inline LocalOp::
-update(const ITensor& Op1, 
-       const ITensor& L, const ITensor& R)
-    {
-    update(Op1);
-    L_ = &L;
-    R_ = &R;
     }
 
 void inline LocalOp::
@@ -277,15 +194,6 @@ update(const ITensor& Op1, const ITensor& Op2,
     update(Op1,Op2);
     L_ = &L;
     R_ = &R;
-    }
-
-void inline LocalOp::
-updateLR(const ITensor& L, const ITensor& R)
-    {
-    //update(nullptr,nullptr);//need to let Op1 and Op2 to be null, but that will make *this null
-    L_ = &L;
-    R_ = &R;
-	nc_ = 0;
     }
 
 bool inline LocalOp::
@@ -308,6 +216,9 @@ product(ITensor const& phi,
     {
     if(!(*this)) Error("LocalOp is null");
 
+    auto& Op1 = *Op1_;
+    auto& Op2 = *Op2_;
+
     if(LIsNull())
         {
         phip = phi;
@@ -315,35 +226,15 @@ product(ITensor const& phi,
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
 
-		if(nc_ == 1)
-            {
-			auto& Op1 = *Op1_;
-			phip *= Op1;
-            }
-		else if(nc_ == 2)
-			{
-			auto& Op2 = *Op2_;
-			auto& Op1 = *Op1_;
-			phip *= Op2; //m^2 k^2
-			phip *= Op1; //m^2 k^2
-			}
+        phip *= Op2; //m^2 k^2
+        phip *= Op1; //m^2 k^2
         }
     else
         {
         phip = phi * L(); //m^3 k d
 
-		if(nc_ == 1)
-            {
-			auto& Op1 = *Op1_;
-			phip *= Op1;
-            }
-		else if(nc_ == 2)
-			{
-			auto& Op2 = *Op2_;
-			auto& Op1 = *Op1_;
-			phip *= Op2; //m^2 k^2
-			phip *= Op1; //m^2 k^2
-			}
+        phip *= Op1; //m^2 k^2
+        phip *= Op2; //m^2 k^2
 
         if(!RIsNull()) 
             phip *= R();
@@ -394,6 +285,9 @@ diag() const
     {
     if(!(*this)) Error("LocalOp is null");
 
+    auto& Op1 = *Op1_;
+    auto& Op2 = *Op2_;
+
     //lambda helper function:
     auto findIndPair = [](ITensor const& T) {
         for(auto& s : T.inds())
@@ -406,29 +300,13 @@ diag() const
         return Index();
         };
 
-	Index toTie;
-	ITensor Diag;
-	if(nc_ == 2)
-		{
-	    auto& Op1 = *Op1_;
-		auto& Op2 = *Op2_;
+    auto toTie = findIndex(Op1,"Site,0");
+    auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
+    Diag.noPrime();
 
-    	toTie = findIndex(Op1,"Site,0");
-    	Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
-    	Diag.noPrime();
-
-    	toTie = findIndex(Op2,"Site,0");
-    	auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
-    	Diag *= noPrime(Diag2);
-		}
-	else if(nc_ == 1)
-		{
-    	auto& Op1 = *Op1_;
-
-    	toTie = findIndex(Op1,"Site,0");
-    	Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
-    	Diag.noPrime();
-		}
+    toTie = findIndex(Op2,"Site,0");
+    auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
+    Diag *= noPrime(Diag2);
 
     if(!LIsNull())
         {
@@ -497,15 +375,8 @@ size() const
                 }
             }
 
-		if(nc_ == 2)
-        	{
-			size_ *= dim(findIndex(*Op1_,"Site,0"));
-        	size_ *= dim(findIndex(*Op2_,"Site,0"));
-			}
-		else if(nc_ == 1)
-			{
-			size_ *= dim(findIndex(*Op1_,"Site,0"));
-			}
+        size_ *= dim(findIndex(*Op1_,"Site,0"));
+        size_ *= dim(findIndex(*Op2_,"Site,0"));
         }
     return size_;
     }
