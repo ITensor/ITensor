@@ -66,16 +66,16 @@ gmres(BigMatrixT const& A,
 // phi' = exp(-t*A)*phi
 // or
 // phi' = exp(-it*A)*phi
-// for the Hermitian matrix A and the real constant t.
+// for the BigMatrixT(e.g. localmpo or localmposet) A,and the real constant t.
 // It does not compute the matrix exponential explicitly
 // but instead compute the action of the exponential matrix on the vector.
 // After finished, phi -> phi'.
 template <class BigMatrixT>
 Real
-krylov(BigMatrixT const& A,
-	   ITensor& phi,
-	   Real t,
-	   Args const& args = Args::global());
+applyExp(BigMatrixT const& A,
+         ITensor& phi,
+         Real t,
+         Args const& args = Args::global());
 
 //
 //
@@ -955,15 +955,15 @@ arnoldi(const BigMatrixT& A,
 
 template <class BigMatrixT>
 Real
-krylov(BigMatrixT const& A,
-	   ITensor& phi,
-	   Real t,
-	   Args const& args)
+applyExp(BigMatrixT const& A,
+         ITensor& phi,
+         Real t,
+         Args const& args)
 	{
     auto maxiter_ = args.getSizeT("MaxIter",30);
-    auto errgoal_ = args.getReal("ErrGoal",1E-10);
+    auto errgoal_ = args.getReal("ErrGoal",1E-12);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-	int ideg_ = args.getInt("Ideg",6);
+	int ideg_ = args.getInt("PadeApproxDeg",6);
 	auto typet_ = args.getBool("IsRealTevol",false);//true: real time evolution; false: imag time evolution 
 	auto orthot_ = args.getBool("UseLanczos",false);//true: using Lanczos; false: using Arnoldi
 
@@ -991,7 +991,7 @@ krylov(BigMatrixT const& A,
 	Real Anorm = eltC(dag(phi)*temp).real();
 	
 	int maxrej = 10;// maximum allowable number of rejections at each step
-	auto break_tol = 1E-10;// break tolerance when doing orthogonalization
+	auto break_tol = 1E-14;// break tolerance when doing orthogonalization
 	Real gamma = 0.9;// stepsize 'shrinking factor'
 	Real delta = 1.2;// local truncation error 'safety factor'
 	int mbrkdwn = actual_maxiter;
