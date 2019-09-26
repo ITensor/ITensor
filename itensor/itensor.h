@@ -859,6 +859,9 @@ swapInds(ITensor T,
          IndexSet const& is1,
          IndexSet const& is2);
 
+detail::IndexValIter
+iterInds(ITensor const& T);
+
 //
 // Given Tensors which represent operator matrices
 // (e.g. A(site1',site1), B(site1',site1) )
