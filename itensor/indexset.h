@@ -868,6 +868,71 @@ operator+(typename IndexSetIter<T>::difference_type d,
     return x += d;
     } 
 
+
+//
+// IndexValIter - helper for iterInds
+//
+
+namespace detail {
+
+struct IndexValIter
+    {
+    IndexSet const& is;
+    detail::GCounter count;
+    bool done = false;
+    IndexValIter(IndexSet const& is_) 
+      : is(is_),
+        count(is_.size())
+        { 
+        for(auto n : range(is.size()))
+            {
+            count.setRange(n,0,is[n].dim()-1);
+            }
+        }
+
+    IndexValIter
+    begin() const { return *this; }
+
+    IndexValIter
+    end() const 
+        { 
+        auto eit = *this;
+        eit.done = true;
+        //for(auto n : range(is.size())) 
+        //    {
+        //    eit.count.setRange(n,is[n].dim()-1,is[n].dim()-1);
+        //    }
+        return eit;
+        }
+
+    bool
+    operator!=(IndexValIter const& other) { return done != other.done; }
+
+    std::vector<IndexVal>
+    operator*() 
+        { 
+        auto res = std::vector<IndexVal>(is.size());
+        for(auto n : range(is.size())) 
+            {
+            res.at(n) = is[n](1+count[n]);
+            }
+        return res;
+        }
+
+    IndexValIter&
+    operator++()
+        {
+        ++count;
+        done = !count.notDone();
+        return *this;
+        }
+    };
+
+} //namespace detail
+
+detail::IndexValIter
+iterInds(IndexSet const& is);
+
 bool
 hasQNs(IndexSet const& is);
 

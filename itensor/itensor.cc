@@ -1160,6 +1160,12 @@ operator-=(ITensor const& R)
     return L;
     }
 
+detail::IndexValIter
+iterInds(ITensor const& T)
+    {
+    return iterInds(inds(T));
+    }
+
 ITensor
 multSiteOps(ITensor A, ITensor const& B) 
     {

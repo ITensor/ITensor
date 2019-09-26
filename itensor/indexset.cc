@@ -671,5 +671,10 @@ noncommonInds(IndexSet const& is1,
     return unionInds(uniqueInds(is1,is2),uniqueInds(is2,is1));
     }
 
+detail::IndexValIter
+iterInds(IndexSet const& is)
+    {
+    return detail::IndexValIter(is);
+    }
 
 } //namespace itensor
