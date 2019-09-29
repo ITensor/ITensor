@@ -25,7 +25,7 @@ class ITensorMap
     product(ITensor const& x, ITensor& b) const
         {
         b = *A_*x;
-        b.replaceTags("1","0");
+        b.noPrime();
         }
 
     long
@@ -362,5 +362,27 @@ SECTION("Arnoldi (QN)")
     CHECK_CLOSE(norm(PHx-lambda*x)/norm(PHx),0.0);
 
     }
+
+SECTION("applyExp (QNs)")
+	{
+	auto i = Index(QN(-1),10,QN(1),10,"i");
+	auto A = randomITensor(QN(0),dag(i),prime(i));
+
+	A += swapPrime(dag(A),0,1);
+	A *= 0.5;
+
+	auto t = 0.1;
+
+	auto x0 = randomITensor(QN(-1),i);
+	auto x = x0;
+	applyExp(ITensorMap(A),x,-t*1_i,{"ErrGoal=",1E-14,
+									 "MaxIter=",10});
+
+	auto exptA = expHermitian(A,-t*1_i);
+
+	auto exptAx = noPrime(exptA*x0);
+
+	CHECK_CLOSE(norm(exptAx - x), 0.);
+	}
 
 }

@@ -790,7 +790,7 @@ template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&,
 
 namespace exptH_detail {
 	int 
-	padeExp(VecRef<Real> const& y, int N, MatRef<Real> const& F, int ideg)
+	padeExp(MatRef<Real> const& F,int N, int ideg)
 		{
 		LAPACK_INT info = 0;
 			
@@ -798,7 +798,7 @@ namespace exptH_detail {
 		// Scaling: seek ns such that ||F/2^ns|| < 1/2
 		// and set scale = 1/2^ns
 		//
-		Real ns = dlange_wrapper('I',N,N,F.data());// infinite norm of the matrix to be exponentiated
+		auto ns = dlange_wrapper('I',N,N,F.data());// infinite norm of the matrix to be exponentiated
 #ifdef DEBUG
 		if(ns == 0) throw std::runtime_error("padeExp: null input matrix");
 #endif
@@ -898,20 +898,13 @@ namespace exptH_detail {
 		//	{
 		//	*f = *p;
 		//	}
-
-		//	
-		//	Perform exp(F)*y;
-		//
-		auto yout = Vec<Real>(N);
-		mult(makeRef(P),y,makeRef(yout));
-		for(auto i : range(N))
-			y(i) = yout(i);
+		F &= P;//deep copy
 
 		return info;
 	}
 
 	int
-	padeExp(VecRef<Cplx> const& y, int N, MatRef<Cplx> const& F, int ideg)
+	padeExp(MatRef<Cplx> const& F, int N, int ideg)
 		{
 		LAPACK_INT info = 0;
 
@@ -919,8 +912,7 @@ namespace exptH_detail {
 		// Scaling: seek ns such that ||F/2^ns|| < 1/2
 		// and set scale = 1/2^ns
 		//
-		Real ns = 0;
-		zlange_wrapper('I',N,N,F.data());
+		auto ns = zlange_wrapper('I',N,N,F.data());
 #ifdef DEBUG
 		if(ns == 0) throw std::runtime_error("padeExp: null input matrix");
 #endif
@@ -1021,18 +1013,11 @@ namespace exptH_detail {
 		//	{
 		//	*f = *p;
 		//	}
-
-		//	
-		//	Perform exp(F)*y;
-		//
-		auto yout = Vec<Cplx>(N);	
-		mult(makeRef(P),y,makeRef(yout));
-		for(auto i : range(N))
-			y(i) = yout(i);
+		F &= P;//deep copy;
 
 		return info;
 		}
 
-} //namespace exptH_detail
+    } //namespace exptH_detail
 
 } //namespace itensor

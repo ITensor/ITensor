@@ -63,10 +63,9 @@ gmres(BigMatrixT const& A,
 
 //
 // Use the Krylov subspace method to compute
-// phi' = exp(-t*A)*phi
-// or
-// phi' = exp(-it*A)*phi
-// for the BigMatrixT(e.g. localmpo or localmposet) A,and the real constant t.
+// phi' = exp(t*A)*phi
+// for the BigMatrixT(e.g. localmpo or localmposet) A,
+// and the cplx constant t.
 // It does not compute the matrix exponential explicitly
 // but instead compute the action of the exponential matrix on the vector.
 // After finished, phi -> phi'.
@@ -74,7 +73,7 @@ template <class BigMatrixT>
 Real
 applyExp(BigMatrixT const& A,
          ITensor& phi,
-         Real t,
+         Cplx t,
          Args const& args = Args::global());
 
 //
@@ -957,17 +956,16 @@ template <class BigMatrixT>
 Real
 applyExp(BigMatrixT const& A,
          ITensor& phi,
-         Real t,
+         Cplx t,
          Args const& args)
 	{
     auto maxiter_ = args.getSizeT("MaxIter",30);
     auto errgoal_ = args.getReal("ErrGoal",1E-12);
     auto debug_level_ = args.getInt("DebugLevel",-1);
 	int ideg_ = args.getInt("PadeApproxDeg",6);
-	auto typet_ = args.getBool("IsRealTevol",false);//true: real time evolution; false: imag time evolution 
-	auto orthot_ = args.getBool("UseLanczos",false);//true: using Lanczos; false: using Arnoldi
+	auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
 
-    auto maxsize = A.size();
+    size_t maxsize = A.size();
     auto actual_maxiter = std::min(maxiter_,maxsize);
     if(debug_level_ >= 2)
         {
@@ -996,6 +994,7 @@ applyExp(BigMatrixT const& A,
 	Real delta = 1.2;// local truncation error 'safety factor'
 	int mbrkdwn = actual_maxiter;
 	Real t_out = std::abs(t);
+	auto sgnt = t/t_out;
 	int nstep = 0;
 	Real t_now = 0.0;
 	Real s_error = 0.0;
@@ -1012,7 +1011,6 @@ applyExp(BigMatrixT const& A,
 	Real t_new = (1.0/Anorm)*std::pow((fact*errgoal_)/(4.0*beta*Anorm),xm);
 	Real s = std::pow(10,std::floor(std::log10(t_new))-1);
 	t_new = std::ceil(t_new/s)*s;
-	auto sgnt = std::signbit(t);
 
 	auto& w = phi;
 	// hum = max||exp(-sA)||, where s in [0,t].
@@ -1096,7 +1094,7 @@ applyExp(BigMatrixT const& A,
 		//
 		// Loop while irej < maxrej until the errgoal_ is reached
 		//
-		Real irej = 0.0;
+		int irej = 0;
 		Real err_loc = 0.0;
 		auto mx = mbrkdwn + k1;
 		auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
@@ -1105,11 +1103,12 @@ applyExp(BigMatrixT const& A,
 		while(irej < maxrej)
 			{
 			//
-			// Compute F = exp(-i * t_step * H) * e1  or exp(- t_step *H) * e1
+			// Compute F = exp(sgnt * t_step * H) * e1
 			//
 			// ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
 			// else use irreducible rational Pade approximation
-			expMatrixApply(makeRef(F),Href,(sgnt? -t_step: t_step),typet_,ideg_);
+			//
+			expMatrixApply(makeRef(F),Href,sgnt*t_step,ideg_);
 
 			//
 			// Error estimate
@@ -1163,7 +1162,7 @@ applyExp(BigMatrixT const& A,
 				}
 			}
 
-		// Update w = beta * V * exp(-i t_step * H) * e1 or w = beta * V * exp(- t_step * H) * e1;
+		// Update w = beta * V * exp(sgnt * t_step * H) * e1
 		mx = mbrkdwn + std::max(0,k1-1);
 		w = V[0]*F(0);
 		for(int i = 1; i < mx; ++i)

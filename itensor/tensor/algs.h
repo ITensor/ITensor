@@ -117,15 +117,15 @@ SVD(MatM && M,
     Real thresh = SVD_THRESH);
 
 //
-// expMatrixApply computes exp(-tH)*y or exp(-itH)*y
-// depending on typet,
-// where H is a small general complex matrix,
-// using the irreducible rational Pade approximation
+// expMatrixApply computes exp(tH)*y,
+// where H is a general dense matrix,
+// and t can be real or complex.
+// Either of the two options can be used:
+// 1. the irreducible rational Pade approximation
 // to the exponential exp(z) = r(z) = (+/-)(I+2*(q(z)/p(z))),
 // combined with scaling and squaring;
-// or where H is a small upper Hessenberg matrix,
-// using the uniform rational Chebyshev approximation to exp(-x) of type(14,14).
-// About 14-digit accuracy is expected if -H or -iH is negative definite,
+// 2. the uniform rational Chebyshev approximation to exp(-x) of type(14,14),
+// using which 14-digit accuracy is expected if tH is negative definite,
 // but may behave poorly otherwise.
 //
 template<class Vecy, class MatH,
@@ -136,9 +136,8 @@ template<class Vecy, class MatH,
 void
 expMatrixApply(Vecy && y,
 		  	   MatH && H,
-		  	   const Real t,
-		  	   const bool typet,
-		  	   const int ideg);
+		  	   Cplx t,
+		  	   int ideg);
 
 } //namespace itensor
 
