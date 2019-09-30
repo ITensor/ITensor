@@ -42,6 +42,7 @@ namespace detail {
         {
         return zheev_wrapper(N,Udata,ddata);
         }
+
 } //namespace detail
 
 //void
@@ -787,5 +788,236 @@ template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&,
 //    SVDRef(Mre,Mim,Ure,Uim,D,Vre,Vim,thresh);
 //    }
 
+namespace exptH_detail {
+	int 
+	padeExp(MatRef<Real> const& F,int N, int ideg)
+		{
+		LAPACK_INT info = 0;
+			
+		//
+		// Scaling: seek ns such that ||F/2^ns|| < 1/2
+		// and set scale = 1/2^ns
+		//
+		auto ns = dlange_wrapper('I',N,N,F.data());// infinite norm of the matrix to be exponentiated
+#ifdef DEBUG
+		if(ns == 0) throw std::runtime_error("padeExp: null input matrix");
+#endif
+		ns = std::max(0,(int)(std::log(ns)/log(2))+2);
+		Real scale = std::pow(2,-ns);
+		Real scale2 = scale*scale;
+
+		//
+		// Compute Pade coefficient
+		//
+		std::vector<Real> coef(ideg+1);
+		coef[0] = 1.0;
+		for(int k = 1; k <= ideg; ++k)
+			{
+			coef[k] = coef[k-1]*((double)(ideg+1-k)/(double)(k*(2*ideg+1-k)));
+			}	
+
+		//
+		// H^2 = scale2*F*F
+		//
+		auto F2 = Mat<Real>(N,N);
+		gemm(F,F,makeRef(F2),scale2,0);
+
+		//
+		// Initialize P and Q
+		//
+		auto P = Mat<Real>(N,N);
+		auto Q = Mat<Real>(N,N);
+		for(auto j : range(N))
+			{
+			Q(j,j) = coef[ideg];
+			P(j,j) = coef[ideg-1];
+			}
+
+		//
+		// Horner evaluation of the irreducible fraction:
+		// Apply Horner rule
+		//
+		bool odd = true;
+		for(int k = ideg-1; k > 0; --k)
+			{
+			if(odd)
+				{
+				Q = Q*F2;
+				for(auto j : range(N))
+					{
+					Q(j,j) += coef[k-1];
+					}
+				}
+			else
+				{
+				P = P*F2;
+				for(auto j : range(N))
+					{
+					P(j,j) += coef[k-1];
+					}
+				}
+			odd = !odd;
+			}
+
+		//
+		// Horner evaluation of the irreducible fraction:
+		// Obtain (+/-)(I+2*(P\Q))
+		//
+		if(odd)
+			{
+			Q = scale*Q*F;
+			}
+		else
+			{
+			P = scale*P*F;
+			}
+		Q -= P;
+		info = dgesv_wrapper(N,N,Q.data(),P.data());
+		if(info != 0) return info;
+		P *= 2.0;
+		for(auto j : range(N))
+			{
+			P(j,j) += 1.0;
+			}
+		if(ns == 0 && odd) 
+			{
+			P *= -1.0;
+			}
+
+		//
+		// Squaring: exp(F) = (exp(F))^(2^ns)
+		//
+		for(int k = 1; k <= ns; ++k)
+			{
+			P = P*P;
+			}
+		
+		//auto pend = P.data()+P.size();
+		//auto f = Fdata;
+		//for(auto p = P.data(); p != pend; ++p,++f)
+		//	{
+		//	*f = *p;
+		//	}
+		F &= P;//deep copy
+
+		return info;
+	}
+
+	int
+	padeExp(MatRef<Cplx> const& F, int N, int ideg)
+		{
+		LAPACK_INT info = 0;
+
+		//
+		// Scaling: seek ns such that ||F/2^ns|| < 1/2
+		// and set scale = 1/2^ns
+		//
+		auto ns = zlange_wrapper('I',N,N,F.data());
+#ifdef DEBUG
+		if(ns == 0) throw std::runtime_error("padeExp: null input matrix");
+#endif
+		ns = std::max(0,(int)(std::log(ns)/log(2))+2);
+		Real scale = std::pow(2,-ns);
+		Real scale2 = scale*scale;
+
+		//
+		// Compute Pade coefficient
+		//
+		std::vector<Real> coef(ideg+1);
+		coef[0] = 1.0;
+		for(int k = 1; k <= ideg; ++k)
+			{
+			coef[k] = coef[k-1]*((double)(ideg+1-k)/(double)(k*(2*ideg+1-k)));
+			}	
+
+		//
+		// H^2 = scale2*F*F
+		//
+		auto F2 = Mat<Cplx>(N,N);
+		gemm(F,F,makeRef(F2),scale2,0);
+
+		//
+		// Initialize P and Q
+		//
+		auto P = Mat<Cplx>(N,N);
+		auto Q = Mat<Cplx>(N,N);
+		for(auto j : range(N))
+			{
+			Q(j,j) = coef[ideg];
+			P(j,j) = coef[ideg-1];
+			}
+
+		//
+		// Horner evaluation of the irreducible fraction:
+		// Apply Horner rule
+		//
+		bool odd = true;
+		for(int k = ideg-1; k > 0; --k)
+			{
+			if(odd)
+				{
+				Q = Q*F2;
+				for(auto j : range(N))
+					{
+					Q(j,j) += coef[k-1];
+					}
+				}
+			else
+				{
+				P = P*F2;
+				for(auto j : range(N))
+					{
+					P(j,j) += coef[k-1];
+					}
+				}
+			odd = !odd;
+			}
+
+		//
+		// Horner evaluation of the irreducible fraction:
+		// Obtain (+/-)(I+2*(P\Q))
+		//
+		if(odd)
+			{
+			Q = scale*Q*F;
+			}
+		else
+			{
+			P = scale*P*F;
+			}
+		
+		Q -= P;
+		info = zgesv_wrapper(N,N,Q.data(),P.data());
+		if(info != 0) return info;
+		P *= 2.0;
+		for(auto j : range(N))
+			{
+			P(j,j) += 1.0;
+			}
+		if(ns == 0 && odd) 
+			{
+			P *= -1.0;
+			}
+
+		//
+		// Squaring: exp(F) = (exp(F))^(2^ns)
+		//
+		for(int k = 1; k <= ns; ++k)
+			{
+			P = P*P;
+			}
+		
+		//auto pend = P.data()+P.size();
+		//auto f = Fdata;
+		//for(auto p = P.data(); p != pend; ++p,++f)
+		//	{
+		//	*f = *p;
+		//	}
+		F &= P;//deep copy;
+
+		return info;
+		}
+
+    } //namespace exptH_detail
 
 } //namespace itensor
