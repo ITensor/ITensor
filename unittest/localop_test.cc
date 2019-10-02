@@ -14,6 +14,7 @@ auto h0 = Index(4,"Link");
 auto h1 = Index(4,"Link");
 auto h2 = Index(4,"Link");
 auto l0 = Index(10,"Link");
+auto l1 = Index(10,"Link");
 auto l2 = Index(10,"Link");
 
 auto S1 = Index(QN(-1),1,
@@ -38,6 +39,10 @@ auto L0 = Index(QN(-2),4,
                 QN(+0),8,
                 QN(+2),4,
                 "Link");
+auto L1 = Index(QN(-2),4,
+                QN(+0),8,
+                QN(+2),4,
+                "Link");
 auto L2 = Index(QN(-2),4,
                 QN(+0),8,
                 QN(+2),4,
@@ -46,7 +51,7 @@ auto L2 = Index(QN(-2),4,
 
 SECTION("Product")
     {
-    SECTION("Bulk Case")
+    SECTION("Bulk Case - 2 center site")
         {
         auto Op1 = randomITensor(s1,prime(s1),h0,h1);
         auto Op2 = randomITensor(s2,prime(s2),h1,h2);
@@ -61,6 +66,33 @@ SECTION("Product")
         CHECK(hasIndex(Hpsi,l0));
         CHECK(hasIndex(Hpsi,l2));
         }
+
+    SECTION("Bulk Case - 1 center site")
+        {
+        auto Op1 = randomITensor(s1,prime(s1),h0,h1);
+        auto L = randomITensor(l0,prime(l0),h0);
+        auto R = randomITensor(l1,prime(l1),h1);
+        auto lop = LocalOp(Op1,L,R);
+        auto psi = randomITensor(l0,s1,l1);
+        auto Hpsi = ITensor();
+        lop.product(psi,Hpsi);
+        CHECK(hasIndex(Hpsi,s1));
+        CHECK(hasIndex(Hpsi,l0));
+        CHECK(hasIndex(Hpsi,l1));
+        }
+    
+    SECTION("Bulk Case - 0 center site")
+        {
+        auto L = randomITensor(l0,prime(l0),h0);
+        auto R = randomITensor(l1,prime(l1),h0);
+        auto lop = LocalOp(L,R);
+        auto psi = randomITensor(l0,l1);
+        auto Hpsi = ITensor();
+        lop.product(psi,Hpsi);
+        CHECK(hasIndex(Hpsi,l0));
+        CHECK(hasIndex(Hpsi,l1));
+        }
+
     }
 
 SECTION("Diag")
@@ -113,7 +145,14 @@ SECTION("LocalMPO As MPS")
     auto psiN = MPS(neel);
 
     auto lmps = LocalMPO(psiN);
+
     lmps.position(3,psiF);
+
+    lmps.numCenter(1);
+    lmps.position(6,psiF);
+    
+    lmps.numCenter(0);
+    lmps.position(2,psiF);
     }
 }
 
