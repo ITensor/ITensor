@@ -293,6 +293,109 @@ densityMatrixApplyMPOImpl(MPO const& K,
     }
 
 void
+oneSiteFitApply(vector<ITensor> & E,
+                Real fac,
+                MPS const& x,
+                MPO const& K,
+                MPS & Kx,
+                Args const& args)
+    {
+    auto N = length(x);
+    auto verbose = args.getBool("Verbose",false);
+    auto normalize = args.getBool("Normalize",false);
+    auto sw = args.getInt("Sweep",1);
+
+    for(int s = 1, ha = 1; ha <= 2; sweepnext1(s,ha,N))
+        {
+        if(verbose)
+            {
+            printfln("Sweep=%d, HS=%d, Site=%d",sw,ha,s);
+            }
+        auto ds = (ha==1 ? +1 : -1);
+
+        auto nE = E[s-ds]*x(s)*K(s);
+        auto P = nE*E[s+ds];
+
+        if(order(P) > 3)
+            {
+            Print(P);
+            Error("order > 3 of P");
+            }
+
+        P *= fac;
+        if(normalize) P /= norm(P);
+
+        if(s+ds >= 1 && s+ds <= N)
+            {
+            auto ci = commonIndex(Kx(s),Kx(s+ds));
+            if(!hasIndex(P,ci))
+                {
+                Print(ci);
+                Print(inds(P));
+                Error("P does not have Index ci");
+                }
+            auto [U,S,V] = svd(P,{ci},args);
+            Kx.ref(s) = dag(V);
+            }
+        else
+            {
+            Kx.ref(s) = dag(P);
+            }
+
+        // Update environment:
+        E[s] = nE * Kx(s);
+        }
+    }
+
+void
+twoSiteFitApply(vector<ITensor> & E,
+                Real fac,
+                MPS const& x,
+                MPO const& K,
+                MPS & Kx,
+                Args const& args)
+    {
+    auto N = length(x);
+    auto verbose = args.getBool("Verbose",false);
+    auto normalize = args.getBool("Normalize",false);
+    auto sw = args.getInt("Sweep",1);
+
+    for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+        {
+        if(verbose)
+            {
+            printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
+            }
+
+        auto lwfK = E[b-1]*x(b);
+        lwfK *= K(b);
+        auto rwfK = E[b+2]*x(b+1);
+        rwfK *= K(b+1);
+
+        auto wfK = lwfK*rwfK;
+        wfK *= fac;
+
+        if(normalize) wfK /= norm(wfK);
+        auto PH = LocalOp(K(b),K(b+1),E[b-1],E[b+2]);
+
+        wfK.dag();
+        auto spec = Kx.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
+
+        if(verbose)
+            {
+            printfln("    Trunc. err=%.1E, States kept=%s",
+                     spec.truncerr(),
+                     showDim(linkIndex(Kx,b)) );
+            }
+
+        if(ha == 1)
+            E[b] = lwfK * Kx(b);
+        else
+            E[b+1] = rwfK * Kx(b+1);
+        }
+    }
+
+void
 fitApplyMPOImpl(Real fac,
                 MPS const& x,
                 MPO const& K,
@@ -301,8 +404,7 @@ fitApplyMPOImpl(Real fac,
                 Args args)
     {
     auto N = length(x);
-    auto verbose = args.getBool("Verbose",false);
-    auto normalize = args.getBool("Normalize",false);
+    auto NCenterSites = args.getInt("NCenterSites",2);
 
     Kx.dag();
     // Make the indices of |Kx> and K|x> match
@@ -312,10 +414,11 @@ fitApplyMPOImpl(Real fac,
     Kx.replaceLinkInds(sim(linkInds(Kx)));
     Kx.position(1);
 
-    auto E = vector<ITensor>(N+2);
-    E[N] = x(N)*K(N)*Kx(N);
-    for(auto n = N-1; n > 2; --n)
+    auto E = vector<ITensor>(N+2,ITensor(1.));
+    for(auto n = N; n > NCenterSites; --n)
+        {
         E[n] = E[n+1]*x(n)*K(n)*Kx(n);
+        }
 
     for(auto sw : range1(sweeps.nsweep()))
         {
@@ -325,36 +428,17 @@ fitApplyMPOImpl(Real fac,
         args.add("MaxDim",sweeps.maxdim(sw));
         args.add("Noise",sweeps.noise(sw));
 
-        for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+        if(NCenterSites == 2)
             {
-            if(verbose)
-                printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
-
-            auto lwfK = (E[b-1] ? E[b-1]*x(b) : x(b));
-            lwfK *= K(b);
-            auto rwfK = (E[b+2] ? E[b+2]*x(b+1) : x(b+1));
-            rwfK *= K(b+1);
-
-            auto wfK = lwfK*rwfK;
-            wfK *= fac;
-
-            if(normalize) wfK /= norm(wfK);
-            auto PH = LocalOp(K(b),K(b+1),E[b-1],E[b+2]);
-
-            wfK.dag();
-            auto spec = Kx.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
- 
-            if(verbose)
-                {
-                printfln("    Trunc. err=%.1E, States kept=%s",
-                         spec.truncerr(),
-                         showDim(linkIndex(Kx,b)) );
-                }
-
-            if(ha == 1)
-                E[b] = lwfK * Kx(b);
-            else
-                E[b+1] = rwfK * Kx(b+1);
+            twoSiteFitApply(E,fac,x,K,Kx,args);
+            }
+        else if(NCenterSites == 1)
+            {
+            oneSiteFitApply(E,fac,x,K,Kx,args);
+            }
+        else
+            {
+            Error(format("NCenterSites = %d not supported",NCenterSites));
             }
         }
     Kx.dag();
