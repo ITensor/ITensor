@@ -159,7 +159,12 @@ class LocalOp
         return *R_;
         }
 
-    explicit operator bool() const { return bool(Op1_); }
+    explicit operator bool() const 
+        {
+        if(nc_ == 2) return bool(Op1_) && bool(Op2_);
+        else if(nc_ == 1) return bool(Op1_);
+        else if(nc_ == 0) return !LIsNull() || !RIsNull();
+        }
 
     bool
     LIsNull() const;
@@ -192,7 +197,15 @@ LocalOp(const ITensor& Op1,
     size_(-1),
 	nc_(1)
     {
-    updateOp(Op1);
+    if(args.defined("NumCenter"))
+        {
+        if(args.getInt("NumCenter") == 1)	
+            updateOp(Op1);
+        else
+            Error("NumCenter cannot be set other than 1");
+        }
+    else
+        updateOp(Op1);
     }
 
 inline LocalOp::
@@ -212,7 +225,7 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
             updateOp(Op1,Op2);
         else if(args.getInt("NumCenter") == 0)
             update(Op1,Op2);// L, R
-	    else
+        else
             Error("NumCenter cannot be set other than 2 or 0");
         }
     else
@@ -231,7 +244,15 @@ LocalOp(const ITensor& Op1,
     size_(-1),
     nc_(1)
     {
-    update(Op1,L,R);
+    if(args.defined("NumCenter"))
+        {
+        if(args.getInt("NumCenter") == 1)
+            update(Op1,L,R);
+        else
+            Error("NumCenter cannot be set other than 1");
+        }
+    else
+        update(Op1,L,R);
     }
 
 inline LocalOp::
@@ -246,7 +267,15 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     size_(-1),
     nc_(2)
     {
-    update(Op1,Op2,L,R);
+    if(args.defined("NumCenter"))
+        {
+        if(args.getInt("NumCenter") == 2)
+            update(Op1,Op2,L,R);
+        else
+            Error("NumCenter cannot be set other than 2");
+        }
+    else
+        update(Op1,Op2,L,R);
     }
 
 void inline LocalOp::
@@ -274,12 +303,12 @@ updateOp(const ITensor& Op1, const ITensor& Op2)
 void inline LocalOp::
 update(const ITensor& L, const ITensor& R)
     {
-	Op1_ = nullptr;
-	Op2_ = nullptr;// will make *this null. How to solve this problem?
+    Op1_ = nullptr;
+    Op2_ = nullptr;
     L_ = &L;
     R_ = &R;
-	size_ = -1;
-	nc_ = 0;
+    size_ = -1;
+    nc_ = 0;
     }
 
 void inline LocalOp::
@@ -327,7 +356,7 @@ product(ITensor const& phi,
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
         
-		if(nc_ == 2)
+        if(nc_ == 2)
             {
             phip *= (*Op2_); //m^2 k^2
             phip *= (*Op1_); //m^2 k^2
@@ -347,8 +376,8 @@ product(ITensor const& phi,
             phip *= (*Op2_); //m^2 k^2
             }
         else if(nc_ == 1)
-		    {
-			phip *= (*Op1_);
+            {
+            phip *= (*Op1_);
             }
 
         if(!RIsNull()) 
@@ -438,7 +467,7 @@ diag() const
         toTie = findIndex(Op1,"Site,0");
         Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
         Diag.noPrime();
-		}
+        }
 
     if(!LIsNull())
         {
