@@ -71,6 +71,13 @@ ITensor(Cplx val)
         }
     }
 
+ITensor::
+ITensor(QN q, IndexSet const& is)
+  :
+  is_(std::move(is))
+  {
+  store_ = newITData<QDenseReal>(is,q); 
+  }
 
 Cplx ITensor::
 eltC() const
