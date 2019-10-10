@@ -598,13 +598,13 @@ gmresImpl(BigMatrixT const& A,
                 v[i+1] = w/H(i+1,i);
                 //v[i+1].scaleTo(1.0);
                 }
-            else
-                {
-                // Maybe this should be a warning?
-                // Also, maybe check if it is very close to zero?
-                // GMRES generally is converged at this point anyway
-                error("Norm of new Krylov vector is zero. Try raising 'ErrGoal'.");
-                }
+            //else
+            //    {
+            //    // Maybe this should be a warning?
+            //    // Also, maybe check if it is very close to zero?
+            //    // GMRES generally is converged at this point anyway
+            //    println("Warning: norm of new Krylov vector is zero.");
+            //    }
 
             for(k = 0; k<i; ++k)
                 gmres_details::applyPlaneRotation(H(k,i), H(k+1,i), cs[k], sn[k]);

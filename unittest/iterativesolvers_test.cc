@@ -15,10 +15,15 @@ class ITensorMap
     public:
 
     ITensorMap(ITensor const& A)
-      : A_(nullptr),
-        size_(-1)
+      : A_(nullptr)
         {
         A_ = &A;
+        size_ = 1;
+        for(auto& I : A_->inds())
+            {
+            if(I.primeLevel() > 0)
+                size_ *= dim(I);
+            }
         }
 
     void
@@ -29,19 +34,7 @@ class ITensorMap
         }
 
     long
-    size() const
-        {
-        if(size_ == -1)
-            {
-            size_ = 1;
-            for(auto& I : A_->inds())
-                {
-                if(I.primeLevel() > 0)
-                    size_ *= dim(I);
-                }
-            }
-        return size_;
-        }
+    size() const { return size_; }
 
     };
 
@@ -205,7 +198,25 @@ SECTION("GMRES (ITensor, Real)")
     // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
     gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
+
+    }
+
+SECTION("GMRES (ITensor, Real), size 1")
+    {
+    auto a1 = Index(1,"Site,a1");
+    auto a2 = Index(1,"Site,a2");
+    auto a3 = Index(1,"Site,a3");
+
+    auto A = randomITensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomITensor(a1,a2,a3);
+    auto b = randomITensor(a1,a2,a3);
+
+    // ITensorMap is defined above, it simply wraps an ITensor that is of the
+    // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
+    gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
+
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
 
     }
 
@@ -221,7 +232,7 @@ SECTION("GMRES (ITensor, Complex)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
 
     }
 
@@ -242,7 +253,7 @@ SECTION("GMRES (ITensor, QN)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
 
     }
 
