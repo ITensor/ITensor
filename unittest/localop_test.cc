@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor/mps/localop.h"
 #include "itensor/mps/localmpo.h"
+#include "itensor/mps/localmposet.h"
 #include "itensor/mps/autompo.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/print_macro.h"
@@ -274,6 +275,83 @@ SECTION("Test product")
 
   }
 
+SECTION("LocalMPOSet")
+  {
+  int N = 10;
+  auto sites = SpinHalf(N);
+  auto ampo1 = AutoMPO(sites);
+  auto ampo2 = AutoMPO(sites);
+  for(int j = 1; j < N; ++j)
+      {
+      ampo1 += 0.5,"S+",j,"S-",j+1;
+      ampo1 += 0.5,"S-",j,"S+",j+1;
+      ampo2 +=     "Sz",j,"Sz",j+1;
+      }
+  auto H1 = toMPO(ampo1);
+  auto H2 = toMPO(ampo2);
+  auto H = std::vector<MPO>({H1,H2});
+  auto psi = MPS(InitState(sites,"Up"));
+
+  auto b = 4;
+
+  SECTION("0-site")
+    {
+    auto Hpsi = LocalMPOSet(H,{"NumCenter=",0});
+
+    CHECK(Hpsi.numCenter()==0);
+
+    psi.position(b-1);
+
+    auto l = linkIndex(psi,b-2);
+    auto s = siteIndex(psi,b-1);
+    auto [U,C] = polar(psi(b-1),{l,s},{"AddTags=","left","Prime=",0});
+    psi.ref(b-1) = U;
+
+    Hpsi.position(b,psi);
+
+    auto phi = C;
+    auto Hphi = phi;
+
+    Hpsi.product(phi,Hphi);
+
+    CHECK_CLOSE(norm(Hphi-noPrime(phi*Hpsi.L()[0]*Hpsi.R()[0]+
+                                  phi*Hpsi.L()[1]*Hpsi.R()[1])),0.);
+    }
+
+  SECTION("1-site")
+    {
+    auto Hpsi = LocalMPOSet(H,{"NumCenter=",1});
+
+    CHECK(Hpsi.numCenter()==1);
+
+    psi.position(b);
+    Hpsi.position(b,psi);
+
+    auto phi = psi(b);
+    auto Hphi = phi;
+    Hpsi.product(phi,Hphi);
+
+    CHECK_CLOSE(norm(Hphi-noPrime(phi*Hpsi.L()[0]*H[0](b)*Hpsi.R()[0]+
+                                  phi*Hpsi.L()[1]*H[1](b)*Hpsi.R()[1])),0.);
+    }
+
+  SECTION("2-site")
+    {
+    auto Hpsi = LocalMPOSet(H,{"NumCenter=",2});
+
+    CHECK(Hpsi.numCenter()==2);
+
+    psi.position(b);
+    Hpsi.position(b,psi);
+
+    auto phi = psi(b)*psi(b+1);
+    auto Hphi = phi;
+    Hpsi.product(phi,Hphi);
+
+    CHECK_CLOSE(norm(Hphi-noPrime(phi*Hpsi.L()[0]*H[0](b)*H[0](b+1)*Hpsi.R()[0]+
+                                  phi*Hpsi.L()[1]*H[1](b)*H[1](b+1)*Hpsi.R()[1])),0.);
+    }
+  }
 }
 
 
