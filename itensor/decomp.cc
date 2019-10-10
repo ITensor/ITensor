@@ -270,7 +270,8 @@ svd(ITensor const& AA, IndexSet const& Uis,
 
 std::tuple<ITensor,ITensor>
 polar(ITensor const& T,
-      IndexSet const& Uis)
+      IndexSet const& Uis,
+      Args const& args)
     {
     auto [U,S,V] = svd(T,Uis);
     auto u = commonIndex(S,U);
@@ -279,6 +280,26 @@ polar(ITensor const& T,
     auto Vp = prime(V,Vis)*delta(v,u);
     auto Q = U*Vp;
     auto P = dag(Vp)*S*V;
+    auto qis = commonInds(Q,P);
+
+    // Add tags to the internal indices
+    auto ts = getTagSet(args,"AddTags","");
+
+    // Prime the internal indices.
+    // Prime by one less than specified,
+    // since they are already primed by one
+    // above.
+    auto plinc = args.getInt("Prime",1)-1;
+
+    if(primeLevel(ts) >= 0) Error("In polar, specify a prime level increment with the Prime argument");
+    if(ts=="" && plinc==-1) Error("In polar, must either increment prime level or add tags to new indices");
+
+    Q.addTags(ts,qis);
+    P.addTags(ts,qis);
+    qis.addTags(ts);
+    Q.prime(plinc,qis);
+    P.prime(plinc,qis);
+
     return std::tuple<ITensor,ITensor>(Q,P);
     }
 

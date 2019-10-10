@@ -56,7 +56,7 @@ class LocalOp
     // Constructors
     //
 
-    LocalOp();
+    LocalOp(Args const& args = Args::global());
 
     LocalOp(ITensor const& Op1,
             Args const& args = Args::global());
@@ -161,9 +161,10 @@ class LocalOp
 
     explicit operator bool() const 
         {
-        if(nc_ == 2) return bool(Op1_) && bool(Op2_);
-        else if(nc_ == 1) return bool(Op1_);
-        else if(nc_ == 0) return !LIsNull() || !RIsNull();
+        if(nc_ == 0) return !LIsNull() || !RIsNull();
+        else if(nc_ == 1) return bool(*Op1_);
+        else if(nc_ < 0 || nc_ > 2) Error("Number of center sites besides 0, 1 and 2 currently not supported");
+        return *Op1_ && *Op2_;
         }
 
     bool
@@ -175,15 +176,15 @@ class LocalOp
     };
 
 inline LocalOp::
-LocalOp()
+LocalOp(Args const& args)
     :
     Op1_(nullptr),
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(2)
-    { 
+    size_(-1)
+    {
+    nc_ = args.getInt("NumCenter",2);
     }
 
 inline LocalOp::
@@ -194,18 +195,13 @@ LocalOp(const ITensor& Op1,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(1)
+    size_(-1)
     {
-    if(args.defined("NumCenter"))
-        {
-        if(args.getInt("NumCenter") == 1)	
-            updateOp(Op1);
-        else
-            Error("NumCenter cannot be set other than 1");
-        }
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 1)	
+      updateOp(Op1);
     else
-        updateOp(Op1);
+      Error("In LocalOp(ITensor), NumCenter cannot be set other than 1");
     }
 
 inline LocalOp::
@@ -216,20 +212,15 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-	nc_(2)
+    size_(-1)
     {
-    if(args.defined("NumCenter"))
-        {
-        if(args.getInt("NumCenter") == 2)
-            updateOp(Op1,Op2);
-        else if(args.getInt("NumCenter") == 0)
-            update(Op1,Op2);// L, R
-        else
-            Error("NumCenter cannot be set other than 2 or 0");
-        }
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 2)
+      updateOp(Op1,Op2);
+    else if(nc_ == 0)
+      update(Op1,Op2);// L, R
     else
-        updateOp(Op1,Op2);
+      Error("In LocalOp(ITensor,ITensor), NumCenter cannot be set other than 2 or 0");
     }
 
 inline LocalOp::
@@ -241,18 +232,13 @@ LocalOp(const ITensor& Op1,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-    nc_(1)
+    size_(-1)
     {
-    if(args.defined("NumCenter"))
-        {
-        if(args.getInt("NumCenter") == 1)
-            update(Op1,L,R);
-        else
-            Error("NumCenter cannot be set other than 1");
-        }
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 1)
+      update(Op1,L,R);
     else
-        update(Op1,L,R);
+      Error("In LocalOp(ITensor,ITensor,ITensor), NumCenter cannot be set other than 1");
     }
 
 inline LocalOp::
@@ -264,18 +250,13 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
-    size_(-1),
-    nc_(2)
+    size_(-1)
     {
-    if(args.defined("NumCenter"))
-        {
-        if(args.getInt("NumCenter") == 2)
-            update(Op1,Op2,L,R);
-        else
-            Error("NumCenter cannot be set other than 2");
-        }
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 2)
+      update(Op1,Op2,L,R);
     else
-        update(Op1,Op2,L,R);
+      Error("In LocalOp(ITensor,ITensor,ITensor,ITensor), NumCenter cannot be set other than 2");
     }
 
 void inline LocalOp::
@@ -286,7 +267,7 @@ updateOp(const ITensor& Op1)
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
-	nc_ = 1;
+    nc_ = 1;
     }
 
 void inline LocalOp::
@@ -297,7 +278,7 @@ updateOp(const ITensor& Op1, const ITensor& Op2)
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
-	nc_ = 2;
+    nc_ = 2;
     }
 
 void inline LocalOp::
@@ -384,7 +365,7 @@ product(ITensor const& phi,
             phip *= R();
         }
 
-    phip.replaceTags("1","0");
+    phip.noPrime();
     }
 
 Real inline LocalOp::
@@ -392,7 +373,7 @@ expect(const ITensor& phi) const
     {
     ITensor phip;
     product(phi,phip);
-    return (dag(phip) * phi).elt();
+    return real(eltC(dag(phip) * phi));
     }
 
 ITensor inline LocalOp::
