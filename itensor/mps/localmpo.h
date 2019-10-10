@@ -65,6 +65,14 @@ class LocalMPO
     //
     LocalMPO(MPS const& Psi, 
              Args const& args = Args::global());
+    
+    //
+    //Use left and right boundary tensors LH and RH. Ok if both boundary 
+    //tensors are not default-constructed.
+    //
+    LocalMPO(const ITensor& LH, 
+             const ITensor& RH,
+             const Args& args = Args::global());
 
     //
     //Use an MPO having boundary indices capped off by left and
@@ -177,8 +185,9 @@ class LocalMPO
     void
     numCenter(int val) 
         { 
-        if(val < 1) Error("numCenter must be set >= 1");
+        if(val < 0 || val > 2) Error("numCenter must be set 0 or 1 or 2");
         nc_ = val; 
+		lop_.numCenter(val);
         }
 
     size_t
@@ -292,6 +301,21 @@ LocalMPO(const MPS& Psi,
     }
 
 inline LocalMPO::
+LocalMPO(const ITensor& LH, const ITensor& RH,
+         const Args& args)
+    : Op_(0),
+      PH_(2),
+      LHlim_(0),
+      RHlim_(1),
+      nc_(0),
+      Psi_(0)
+    { 
+    PH_[0] = LH;
+    PH_[1] = RH;
+    lop_.update(L(), R());//nc_ must be set to 0 in this case
+    }
+
+inline LocalMPO::
 LocalMPO(const MPO& H, 
          const ITensor& LH, const ITensor& RH,
          const Args& args)
@@ -304,8 +328,10 @@ LocalMPO(const MPO& H,
     { 
     PH_[0] = LH;
     PH_[H.length()+1] = RH;
-    if(H.length()==2)
-        lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(H.length() == 1)
+        lop_.update(Op_->A(1), L(), R());
+	else if(H.length() == 2)
+        lop_.update(Op_->A(1), Op_->A(2), L(), R());
     if(args.defined("NumCenter"))
         numCenter(args.getInt("NumCenter"));
     }
@@ -344,7 +370,10 @@ LocalMPO(MPO const& H,
     { 
     PH_.at(LHlim) = LH;
     PH_.at(RHlim) = RH;
-    if(H.length()==2) lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(H.length() == 1)
+        lop_.update(Op_->A(1), L(), R());
+    if(H.length() == 2) 
+        lop_.update(Op_->A(1), Op_->A(2), L(), R());
     if(args.defined("NumCenter")) numCenter(args.getInt("NumCenter"));
     }
 
@@ -360,10 +389,33 @@ product(ITensor const& phi,
     if(Psi_ != 0)
         {
         int b = position();
-        auto othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
-        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
-        othr *= othrR;
-        auto z = (othr*phi).eltC();
+ 
+        ITensor othr;
+        if(nc_ == 2)
+            {
+            othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
+            othr *= (!R() ? dag(prime(Psi_->A(b+1),"Link")) : R()*dag(prime(Psi_->A(b+1),"Link")));
+            }
+        else if(nc_ == 1)
+            {
+            othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
+			if(R()) othr *= R();	
+            }
+        else if(nc_ == 0)
+            {
+			if(!L())
+			    {
+			    if(!R()) Error("LocalMPO: Empty L() and R() in function product");
+				else othr = R();
+				}
+			else
+			    {
+				othr = L();
+				if(R()) othr *= R();
+			    }
+            }
+        
+		auto z = (othr*phi).eltC();
 
         phip = dag(othr);
         phip *= z;
@@ -400,15 +452,20 @@ position(int b, MPS const& psi)
     setRHlim(b+nc_); //not redundant since RHlim_ could be < b+nc_
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 2 && nc_ != 1 && nc_ != 0)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 0 and 1 and 2 center sites currently");
         }
 #endif
 
     if(Op_ != 0) //normal MPO case
         {
-        lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(b), Op_->A(b+1), L(), R());
+		else if(nc_ == 1)
+            lop_.update(Op_->A(b), L(), R());
+		else if(nc_ == 0)
+			lop_.update(L(),R());
         }
     }
 
@@ -430,9 +487,9 @@ shift(int j,
     if(!(*this)) Error("LocalMPO is null");
 
 #ifdef DEBUG
-    if(nc_ != 2)
+    if(nc_ != 2 && nc_ != 1 && nc_ != 0)
         {
-        Error("LocalOp only supports 2 center sites currently");
+        Error("LocalOp only supports 0 and 1 and 2 center sites currently");
         }
 #endif
 
@@ -451,7 +508,12 @@ shift(int j,
         setLHlim(j);
         setRHlim(j+nc_+1);
 
-        lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(j+1), Op_->A(j+2), L(), R());
+        else if(nc_ == 1)
+            lop_.update(Op_->A(j+1), L(), R());
+        else if(nc_ == 0)
+            lop_.update(L(), R());
         }
     else //dir == Fromright
         {
@@ -468,7 +530,12 @@ shift(int j,
         setLHlim(j-nc_-1);
         setRHlim(j);
 
-        lop_.update(Op_->A(j-1),Op_->A(j),L(),R());
+        if(nc_ == 2)
+            lop_.update(Op_->A(j-2), Op_->A(j-1), L(), R());
+		else if(nc_ == 1)
+            lop_.update(Op_->A(j-1), L(), R());
+		else if(nc_ == 0)
+			lop_.update(L(), R());
         }
     }
 

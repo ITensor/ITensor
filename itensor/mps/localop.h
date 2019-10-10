@@ -48,6 +48,7 @@ class LocalOp
     ITensor const* L_;
     ITensor const* R_;
     mutable size_t size_;
+    int nc_;
     public:
 
 
@@ -55,10 +56,18 @@ class LocalOp
     // Constructors
     //
 
-    LocalOp();
+    LocalOp(Args const& args = Args::global());
+
+    LocalOp(ITensor const& Op1,
+            Args const& args = Args::global());
 
     LocalOp(ITensor const& Op1, 
             ITensor const& Op2,
+            Args const& args = Args::global());
+  
+    LocalOp(ITensor const& Op1, 
+            ITensor const& L, 
+            ITensor const& R,
             Args const& args = Args::global());
 
     LocalOp(ITensor const& Op1, 
@@ -88,12 +97,33 @@ class LocalOp
     size_t
     size() const;
 
+    int
+    numCenter() const { return nc_; }
+    void
+    numCenter(int val)
+        {
+        if(val < 0 || val > 2) Error("numCenter must be set to be 0 or 1 or 2");
+        nc_ = val;
+        }
+
     //
     // Accessor Methods
     //
+    
+    void
+    updateOp(ITensor const& Op1);
 
     void
-    update(ITensor const& Op1, ITensor const& Op2);
+    updateOp(ITensor const& Op1, ITensor const& Op2);
+    
+    void
+    update(ITensor const& L, 
+           ITensor const& R);
+
+    void
+    update(ITensor const& Op1, 
+           ITensor const& L, 
+           ITensor const& R);
 
     void
     update(ITensor const& Op1, 
@@ -129,7 +159,13 @@ class LocalOp
         return *R_;
         }
 
-    explicit operator bool() const { return bool(Op1_); }
+    explicit operator bool() const 
+        {
+        if(nc_ == 0) return !LIsNull() || !RIsNull();
+        else if(nc_ == 1) return bool(*Op1_);
+        else if(nc_ < 0 || nc_ > 2) Error("Number of center sites besides 0, 1 and 2 currently not supported");
+        return *Op1_ && *Op2_;
+        }
 
     bool
     LIsNull() const;
@@ -140,14 +176,32 @@ class LocalOp
     };
 
 inline LocalOp::
-LocalOp()
+LocalOp(Args const& args)
     :
     Op1_(nullptr),
     Op2_(nullptr),
     L_(nullptr),
     R_(nullptr),
     size_(-1)
-    { 
+    {
+    nc_ = args.getInt("NumCenter",2);
+    }
+
+inline LocalOp::
+LocalOp(const ITensor& Op1,
+        const Args& args)
+    : 
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
+    size_(-1)
+    {
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 1)	
+      updateOp(Op1);
+    else
+      Error("In LocalOp(ITensor), NumCenter cannot be set other than 1");
     }
 
 inline LocalOp::
@@ -160,7 +214,31 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     R_(nullptr),
     size_(-1)
     {
-    update(Op1,Op2);
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 2)
+      updateOp(Op1,Op2);
+    else if(nc_ == 0)
+      update(Op1,Op2);// L, R
+    else
+      Error("In LocalOp(ITensor,ITensor), NumCenter cannot be set other than 2 or 0");
+    }
+
+inline LocalOp::
+LocalOp(const ITensor& Op1,
+        const ITensor& L, const ITensor& R,
+        const Args& args)
+    : 
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
+    size_(-1)
+    {
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 1)
+      update(Op1,L,R);
+    else
+      Error("In LocalOp(ITensor,ITensor,ITensor), NumCenter cannot be set other than 1");
     }
 
 inline LocalOp::
@@ -174,24 +252,60 @@ LocalOp(const ITensor& Op1, const ITensor& Op2,
     R_(nullptr),
     size_(-1)
     {
-    update(Op1,Op2,L,R);
+    nc_ = args.getInt("NumCenter",2);
+    if(nc_ == 2)
+      update(Op1,Op2,L,R);
+    else
+      Error("In LocalOp(ITensor,ITensor,ITensor,ITensor), NumCenter cannot be set other than 2");
     }
 
 void inline LocalOp::
-update(const ITensor& Op1, const ITensor& Op2)
+updateOp(const ITensor& Op1)
+    {
+    Op1_ = &Op1;
+    Op2_ = nullptr;
+    L_ = nullptr;
+    R_ = nullptr;
+    size_ = -1;
+    nc_ = 1;
+    }
+
+void inline LocalOp::
+updateOp(const ITensor& Op1, const ITensor& Op2)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
     L_ = nullptr;
     R_ = nullptr;
     size_ = -1;
+    nc_ = 2;
+    }
+
+void inline LocalOp::
+update(const ITensor& L, const ITensor& R)
+    {
+    Op1_ = nullptr;
+    Op2_ = nullptr;
+    L_ = &L;
+    R_ = &R;
+    size_ = -1;
+    nc_ = 0;
+    }
+
+void inline LocalOp::
+update(const ITensor& Op1, 
+       const ITensor& L, const ITensor& R)
+    {
+    updateOp(Op1);
+    L_ = &L;
+    R_ = &R;
     }
 
 void inline LocalOp::
 update(const ITensor& Op1, const ITensor& Op2, 
        const ITensor& L, const ITensor& R)
     {
-    update(Op1,Op2);
+    updateOp(Op1,Op2);
     L_ = &L;
     R_ = &R;
     }
@@ -216,31 +330,42 @@ product(ITensor const& phi,
     {
     if(!(*this)) Error("LocalOp is null");
 
-    auto& Op1 = *Op1_;
-    auto& Op2 = *Op2_;
-
     if(LIsNull())
         {
         phip = phi;
 
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
-
-        phip *= Op2; //m^2 k^2
-        phip *= Op1; //m^2 k^2
+        
+        if(nc_ == 2)
+            {
+            phip *= (*Op2_); //m^2 k^2
+            phip *= (*Op1_); //m^2 k^2
+            }
+        else if(nc_ == 1)
+            {
+            phip *= (*Op1_);
+            }
         }
     else
         {
         phip = phi * L(); //m^3 k d
 
-        phip *= Op1; //m^2 k^2
-        phip *= Op2; //m^2 k^2
+        if(nc_ == 2)
+            {
+            phip *= (*Op1_); //m^2 k^2
+            phip *= (*Op2_); //m^2 k^2
+            }
+        else if(nc_ == 1)
+            {
+            phip *= (*Op1_);
+            }
 
         if(!RIsNull()) 
             phip *= R();
         }
 
-    phip.replaceTags("1","0");
+    phip.noPrime();
     }
 
 Real inline LocalOp::
@@ -248,7 +373,7 @@ expect(const ITensor& phi) const
     {
     ITensor phip;
     product(phi,phip);
-    return (dag(phip) * phi).elt();
+    return real(eltC(dag(phip) * phi));
     }
 
 ITensor inline LocalOp::
@@ -256,6 +381,11 @@ deltaRho(ITensor const& AA,
          ITensor const& combine, 
          Direction dir) const
     {
+    if(nc_ != 2)
+        {
+        Error("LocalMPO: currently only support 2 center sites in deltaRho");
+        }
+
     auto drho = AA;
     if(dir == Fromleft)
         {
@@ -279,14 +409,10 @@ deltaRho(ITensor const& AA,
     return drho;
     }
 
-
 ITensor inline LocalOp::
 diag() const
     {
-    if(!(*this)) Error("LocalOp is null");
-
-    auto& Op1 = *Op1_;
-    auto& Op2 = *Op2_;
+    if(!(*this)) Error("LocalOp is default constructed");
 
     //lambda helper function:
     auto findIndPair = [](ITensor const& T) {
@@ -297,16 +423,32 @@ diag() const
                 return s;
                 }
             }
-        return Index();
+        return Index();//default constructed
         };
 
-    auto toTie = findIndex(Op1,"Site,0");
-    auto Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
-    Diag.noPrime();
+    Index toTie;
+    ITensor Diag;
+    if(nc_ == 2)
+        {
+        auto& Op1 = *Op1_;
+        auto& Op2 = *Op2_;
 
-    toTie = findIndex(Op2,"Site,0");
-    auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
-    Diag *= noPrime(Diag2);
+        toTie = findIndex(Op1,"Site,0");
+        Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
+        Diag.noPrime();
+
+        toTie = findIndex(Op2,"Site,0");
+        auto Diag2 = Op2 * delta(toTie,prime(toTie),prime(toTie,2));
+        Diag *= noPrime(Diag2);
+        }
+    else if(nc_ == 1)
+        {
+        auto& Op1 = *Op1_;
+
+        toTie = findIndex(Op1,"Site,0");
+        Diag = Op1 * delta(toTie,prime(toTie),prime(toTie,2));
+        Diag.noPrime();
+        }
 
     if(!LIsNull())
         {
@@ -314,11 +456,13 @@ diag() const
         if(toTie)
             {
             auto DiagL = L() * delta(toTie,prime(toTie),prime(toTie,2));
-            Diag *= noPrime(DiagL);
+            if(Diag) Diag *= noPrime(DiagL);
+            else Diag = noPrime(DiagL);
             }
         else
             {
-            Diag *= L();
+            if(Diag) Diag *= L();
+            else Diag = L();
             }
         }
 
@@ -328,11 +472,13 @@ diag() const
         if(toTie)
             {
             auto DiagR = R() * delta(toTie,prime(toTie),prime(toTie,2));
-            Diag *= noPrime(DiagR);
+            if(Diag) Diag *= noPrime(DiagR);
+            else Diag = noPrime(DiagR);
             }
         else
             {
-            Diag *= R();
+            if(Diag) Diag *= R();
+			else Diag = R();
             }
         }
 
@@ -374,9 +520,15 @@ size() const
                     }
                 }
             }
-
-        size_ *= dim(findIndex(*Op1_,"Site,0"));
-        size_ *= dim(findIndex(*Op2_,"Site,0"));
+        if(nc_ == 2)
+            {
+            size_ *= dim(findIndex(*Op1_,"Site,0"));
+            size_ *= dim(findIndex(*Op2_,"Site,0"));
+            }
+        else if(nc_ == 1)
+            {
+            size_ *= dim(findIndex(*Op1_,"Site,0"));
+            }
         }
     return size_;
     }

@@ -47,7 +47,8 @@ svd(ITensor const& AA, Index const& i1, IndsArgs&&... indsargs);
 
 std::tuple<ITensor,ITensor>
 polar(ITensor const& T,
-      IndexSet const& Uis);
+      IndexSet const& Uis,
+      Args const& args = Args::global());
 
 //
 // The "factor" decomposition is based on the SVD,
