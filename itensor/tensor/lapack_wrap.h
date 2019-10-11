@@ -561,9 +561,9 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
 //
 LAPACK_INT
 dgesv_wrapper(LAPACK_INT n,
-			  LAPACK_INT nrhs,
-			  LAPACK_REAL* a,
-			  LAPACK_REAL* b);
+              LAPACK_INT nrhs,
+              LAPACK_REAL* a,
+              LAPACK_REAL* b);
 
 //
 // zgesv
@@ -573,9 +573,9 @@ dgesv_wrapper(LAPACK_INT n,
 //
 LAPACK_INT
 zgesv_wrapper(LAPACK_INT n,
-			  LAPACK_INT nrhs,
-			  Cplx* a,
-			  Cplx* b);
+              LAPACK_INT nrhs,
+              Cplx* a,
+              Cplx* b);
 
 //
 // dlange
@@ -585,9 +585,9 @@ zgesv_wrapper(LAPACK_INT n,
 //
 double
 dlange_wrapper(char norm,
-			   LAPACK_INT m,
-			   LAPACK_INT n,
-			   double* a);
+               LAPACK_INT m,
+               LAPACK_INT n,
+               double* a);
 
 //
 // zlange
@@ -597,9 +597,9 @@ dlange_wrapper(char norm,
 //
 LAPACK_REAL
 zlange_wrapper(char norm,
-			   LAPACK_INT m,
-			   LAPACK_INT n,
-			   Cplx* a);
+               LAPACK_INT m,
+               LAPACK_INT n,
+               Cplx* a);
 
 //
 // zheev
