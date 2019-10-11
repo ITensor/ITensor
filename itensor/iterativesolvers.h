@@ -958,12 +958,12 @@ applyExp(BigMatrixT const& A,
          ITensor& phi,
          Cplx t,
          Args const& args)
-	{
+    {
     auto maxiter_ = args.getSizeT("MaxIter",30);
     auto errgoal_ = args.getReal("ErrGoal",1E-12);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-	int ideg_ = args.getInt("PadeApproxDeg",6);
-	auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
+    int ideg_ = args.getInt("PadeApproxDeg",6);
+    auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
 
     size_t maxsize = A.size();
     auto actual_maxiter = std::min(maxiter_,maxsize);
@@ -980,216 +980,215 @@ applyExp(BigMatrixT const& A,
         Error("krylov: size of initial vector should match linear matrix size");
         }
 	
-	//
-	// Initializations
-	//
-	//Real Anorm = A.norm();// infinite norm of A, not efficient to calculate.
-	ITensor temp;
-	A.product(phi,temp);
-	Real Anorm = eltC(dag(phi)*temp).real();
+    //
+    // Initializations
+    //
+    //Real Anorm = A.norm();// infinite norm of A, not efficient to calculate.
+    ITensor temp;
+    A.product(phi,temp);
+    Real Anorm = eltC(dag(phi)*temp).real();
 	
-	int maxrej = 10;// maximum allowable number of rejections at each step
-	auto break_tol = 1E-14;// break tolerance when doing orthogonalization
-	Real gamma = 0.9;// stepsize 'shrinking factor'
-	Real delta = 1.2;// local truncation error 'safety factor'
-	int mbrkdwn = actual_maxiter;
-	Real t_out = std::abs(t);
-	auto sgnt = t/t_out;
-	int nstep = 0;
-	Real t_now = 0.0;
-	Real s_error = 0.0;
-	Real rndoff = Anorm*std::numeric_limits<double>::epsilon();
+    int maxrej = 10;// maximum allowable number of rejections at each step
+    auto break_tol = 1E-14;// break tolerance when doing orthogonalization
+    Real gamma = 0.9;// stepsize 'shrinking factor'
+    Real delta = 1.2;// local truncation error 'safety factor'
+    int mbrkdwn = actual_maxiter;
+    Real t_out = std::abs(t);
+    auto sgnt = t/t_out;
+    int nstep = 0;
+    Real t_now = 0.0;
+    Real s_error = 0.0;
+    Real rndoff = Anorm*std::numeric_limits<double>::epsilon();
 
-	//
-	// Obtain the very first stepsize
-	//
-	int k1 = 2;
-	Real xm = 1.0/((double)actual_maxiter);
-	Real vnorm = norm(phi);
-	Real beta = vnorm;
-	Real fact = std::pow((actual_maxiter+1)/std::exp(1.0),actual_maxiter+1)*std::sqrt(2*Pi*(actual_maxiter+1));
-	Real t_new = (1.0/Anorm)*std::pow((fact*errgoal_)/(4.0*beta*Anorm),xm);
-	Real s = std::pow(10,std::floor(std::log10(t_new))-1);
-	t_new = std::ceil(t_new/s)*s;
+    //
+    // Obtain the very first stepsize
+    //
+    int k1 = 2;
+    Real xm = 1.0/((double)actual_maxiter);
+    Real vnorm = norm(phi);
+    Real beta = vnorm;
+    Real fact = std::pow((actual_maxiter+1)/std::exp(1.0),actual_maxiter+1)*std::sqrt(2*Pi*(actual_maxiter+1));
+    Real t_new = (1.0/Anorm)*std::pow((fact*errgoal_)/(4.0*beta*Anorm),xm);
+    Real s = std::pow(10,std::floor(std::log10(t_new))-1);
+    t_new = std::ceil(t_new/s)*s;
 
-	auto& w = phi;
-	// hum = max||exp(-sA)||, where s in [0,t].
-	// It measures the conditioning of the matrix exponential. 
-	// Well conditioned if hump = 1.
-	Real hump = vnorm;
+    auto& w = phi;
+    // hum = max||exp(-sA)||, where s in [0,t].
+    // It measures the conditioning of the matrix exponential. 
+    // Well conditioned if hump = 1.
+    Real hump = vnorm;
 
-	//
-	// Step-by-step integration
-	//
-	while(t_now < t_out)
-		{
-		++nstep;
-		Real t_step = std::min(t_out-t_now,t_new);
+    //
+    // Step-by-step integration
+    //
+    while(t_now < t_out)
+        {
+        ++nstep;
+        Real t_step = std::min(t_out-t_now,t_new);
 
-		auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
-    	auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
-		//for(auto& el : H) el = Cplx(0,0); // Already initialized to be zero
+        auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
+	auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
 
-		V[0] = 1.0/beta * w;
-		if(!orthot_)
-			{
-			// Arnoldi: Modified Gram-Schmidt
-			for(size_t j = 1; j <= actual_maxiter; ++j)
-				{
-				ITensor p;
-				A.product(V[j-1],p);
-				for(size_t i = 1 ; i <= j; ++i)
-					{
-					H(i-1,j-1) = (dag(V[i-1])*p).eltC();
-					p = p - H(i-1,j-1)*V[i-1];
-					}
-				s = norm(p);
-				if(s < break_tol)
-					{
-					k1 = 0;
-					mbrkdwn = j;
-					t_step = t_out-t_now;
-					break;
-					}
-				H(j,j-1) = s;
-				V[j] = (1.0/s)*p;
-				}
-			}
-		else
-			{
-			// Lanczos
-			for(size_t j = 1; j <= actual_maxiter; ++j)
-				{
-				ITensor p;
-				A.product(V[j-1],p);
-				if(j != 1) p = p - H(j-2,j-1)*V[j-2];
-				H(j-1,j-1) = (dag(V[j-1])*p).eltC();
-				p = p - H(j-1,j-1)*V[j-1];
-				s = norm(p);
-				if(s < break_tol)
-					{
-					k1 = 0;
-					mbrkdwn = j;
-					t_step = t_out-t_now;
-					break;
-					}
-				H(j-1,j) = s;
-				H(j,j-1) = s;
-				V[j] = (1.0/s)*p;
-				}
-			}
+        V[0] = 1.0/beta * w;
+        if(!orthot_)
+            {
+            // Arnoldi: Modified Gram-Schmidt
+            for(size_t j = 1; j <= actual_maxiter; ++j)
+                {
+                ITensor p;
+                A.product(V[j-1],p);
+                for(size_t i = 1 ; i <= j; ++i)
+                    {
+                    H(i-1,j-1) = (dag(V[i-1])*p).eltC();
+                    p = p - H(i-1,j-1)*V[i-1];
+                    }
+                s = norm(p);
+                if(s < break_tol)
+                    {
+                    k1 = 0;
+                    mbrkdwn = j;
+                    t_step = t_out-t_now;
+                    break;
+                    }
+                H(j,j-1) = s;
+                V[j] = (1.0/s)*p;
+                }
+            }
+        else
+            {
+            // Lanczos
+            for(size_t j = 1; j <= actual_maxiter; ++j)
+                {
+                ITensor p;
+                A.product(V[j-1],p);
+                if(j != 1) p = p - H(j-2,j-1)*V[j-2];
+                H(j-1,j-1) = (dag(V[j-1])*p).eltC();
+                p = p - H(j-1,j-1)*V[j-1];
+                s = norm(p);
+                if(s < break_tol)
+                    {
+                    k1 = 0;
+                    mbrkdwn = j;
+                    t_step = t_out-t_now;
+                    break;
+                    }
+                H(j-1,j) = s;
+                H(j,j-1) = s;
+                V[j] = (1.0/s)*p;
+                }
+            }
 
-		//
-		// if finished the loop but not get break_tol
-		//
-		Real AVnorm = 0.0;
-		if(k1 != 0)
-			{
-			H(actual_maxiter+1,actual_maxiter) = 1.0;
-			ITensor AV;
-			A.product(V[actual_maxiter],AV);
-			AVnorm = norm(AV);
-			}
+        //
+        // if finished the loop but not get break_tol
+        //
+        Real AVnorm = 0.0;
+        if(k1 != 0)
+            {
+            H(actual_maxiter+1,actual_maxiter) = 1.0;
+            ITensor AV;
+            A.product(V[actual_maxiter],AV);
+            AVnorm = norm(AV);
+            }
 
-		//
-		// Loop while irej < maxrej until the errgoal_ is reached
-		//
-		int irej = 0;
-		Real err_loc = 0.0;
-		auto mx = mbrkdwn + k1;
-		auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
-		auto F = CVector(mx);
-		F(0) = 1.0;//Already initialized by 0
-		while(irej < maxrej)
-			{
-			//
-			// Compute F = exp(sgnt * t_step * H) * e1
-			//
-			// ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
-			// else use irreducible rational Pade approximation
-			//
-			expMatrixApply(makeRef(F),Href,sgnt*t_step,ideg_);
+        //
+        // Loop while irej < maxrej until the errgoal_ is reached
+        //
+        int irej = 0;
+        Real err_loc = 0.0;
+        auto mx = mbrkdwn + k1;
+        auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
+        auto F = CVector(mx);
+        F(0) = 1.0;//Already initialized by 0
+        while(irej < maxrej)
+            {
+            //
+            // Compute F = exp(sgnt * t_step * H) * e1
+            //
+            // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
+            // else use irreducible rational Pade approximation
+            //
+            expMatrixApply(makeRef(F),Href,sgnt*t_step,ideg_);
 
-			//
-			// Error estimate
-			//
-			if(k1 == 0)
-				{
-				err_loc = break_tol;
-				break;
-				}
-			else
-				{
-				auto phi1 = std::abs(beta*F(actual_maxiter));
-				auto phi2 = std::abs(beta*F(actual_maxiter+1)*AVnorm);
+            //
+            // Error estimate
+            //
+            if(k1 == 0)
+                {
+                err_loc = break_tol;
+                break;
+                }
+            else
+                {
+                auto phi1 = std::abs(beta*F(actual_maxiter));
+                auto phi2 = std::abs(beta*F(actual_maxiter+1)*AVnorm);
 
-				if(phi1 > 10*phi2)
-					{
-					err_loc = phi2;
-					}
-				else
-					{
-					if(phi1 > phi2)
-						{
-						err_loc = (phi1*phi2)/(phi1-phi2);
-						}
-					else
-						{
-						err_loc = phi1;
-						xm = 1.0/(double)(actual_maxiter-1);
-						}
-					}
-				}
+                if(phi1 > 10*phi2)
+                    {
+                    err_loc = phi2;
+                    }
+                else
+                    {
+                    if(phi1 > phi2)
+                        {
+                        err_loc = (phi1*phi2)/(phi1-phi2);
+                        }
+                    else
+                        {
+                        err_loc = phi1;
+                        xm = 1.0/(double)(actual_maxiter-1);
+                        }
+                    }
+                }
 
-			//
-			// Reject the step-size if the error is not acceptable
-			//
-			if(err_loc <= delta * t_step * errgoal_)
-				{
-				break;
-				}
-			else
-				{
-				t_step = gamma * t_step * std::pow((t_step*errgoal_/err_loc),xm);
-				s = std::pow(10,std::floor(std::log10(t_step))-1);
-				t_step = std::ceil(t_step/s)*s;
+            //
+            // Reject the step-size if the error is not acceptable
+            //
+            if(err_loc <= delta * t_step * errgoal_)
+                {
+                break;
+                }
+            else
+                {
+                t_step = gamma * t_step * std::pow((t_step*errgoal_/err_loc),xm);
+                s = std::pow(10,std::floor(std::log10(t_step))-1);
+                t_step = std::ceil(t_step/s)*s;
 
-				if(irej == maxrej)
-					{
-					error("The requested error goal is too high");
-					}
-				++irej;
-				}
-			}
+                if(irej == maxrej)
+                    {
+                    error("The requested error goal is too high");
+                    }
+                ++irej;
+                }
+            }
 
-		// Update w = beta * V * exp(sgnt * t_step * H) * e1
-		mx = mbrkdwn + std::max(0,k1-1);
-		w = V[0]*F(0);
-		for(int i = 1; i < mx; ++i)
-			{
-			w += V[i]*F(i);
-			}
-		w *= beta;
-		beta = norm(w);
-		hump = std::max(hump,beta);
+        // Update w = beta * V * exp(sgnt * t_step * H) * e1
+        mx = mbrkdwn + std::max(0,k1-1);
+        w = V[0]*F(0);
+        for(int i = 1; i < mx; ++i)
+            {
+            w += V[i]*F(i);
+            }
+        w *= beta;
+        beta = norm(w);
+        hump = std::max(hump,beta);
 
-		t_now += t_step;
-		t_new = gamma * t_step * std::pow(t_step*errgoal_/err_loc,xm);
-		s = std::pow(10,std::floor(std::log10(t_new))-1);
-		t_new = std::ceil(t_new/s)*s;
+        t_now += t_step;
+        t_new = gamma * t_step * std::pow(t_step*errgoal_/err_loc,xm);
+        s = std::pow(10,std::floor(std::log10(t_new))-1);
+        t_new = std::ceil(t_new/s)*s;
 
-		err_loc = std::max(err_loc, rndoff);
-		s_error = s_error + err_loc;
-		}
+        err_loc = std::max(err_loc, rndoff);
+        s_error = s_error + err_loc;
+        }
 
-	hump = hump/vnorm;
-
-	ITensor Aw;
-	A.product(w,Aw);
-	Real energy = eltC(dag(w)*Aw).real()/eltC(dag(w)*w).real();
+    hump = hump/vnorm;
+            
+    ITensor Aw;
+    A.product(w,Aw);
+    Real energy = eltC(dag(w)*Aw).real()/eltC(dag(w)*w).real();
 	
-	return energy;
-	}
+    return energy;
+    }
 
 } //namespace itensor
 
