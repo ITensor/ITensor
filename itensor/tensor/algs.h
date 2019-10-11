@@ -129,15 +129,15 @@ SVD(MatM && M,
 // but may behave poorly otherwise.
 //
 template<class Vecy, class MatH,
-		 class = stdx::require<
-		 hasVecRange<Vecy>,
-		 hasMatRange<MatH>
-		 >>
+         class = stdx::require<
+         hasVecRange<Vecy>,
+         hasMatRange<MatH>
+         >>
 void
 expMatrixApply(Vecy && y,
-		  	   MatH && H,
-		  	   Cplx t,
-		  	   int ideg);
+	       MatH && H,
+	       Cplx t,
+	       int ideg);
 
 } //namespace itensor
 
