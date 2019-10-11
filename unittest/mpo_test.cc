@@ -542,27 +542,63 @@ SECTION("DMRG")
   {
   int N = 32;
   auto sites = SpinHalf(N,{"ConserveQNs=",false});
-  auto psi0 = randomMPS(sites);
+  auto psi0 = randomMPS(InitState(sites,"Up"));
+
+  auto h = 0.5; // Critical point
 
   auto ampo = AutoMPO(sites);
   for(int j = 1; j < N; ++j)
       {
-      ampo += -1.0,"Sz",j,"Sz",j+1;
-      ampo += -0.5,"Sx",j;
+      ampo += -1.0,"Sx",j,"Sx",j+1;
+      ampo += -h,"Sz",j;
       }
-  ampo += -0.5,"Sx",N;    
+  ampo += -h,"Sz",N;    
   auto H = toMPO(ampo);
 
-  auto sweeps = Sweeps(3);
-  sweeps.maxdim() = 10,20;
+  auto sweeps = Sweeps(5);
+  sweeps.maxdim() = 10,20,30;
   sweeps.cutoff() = 1E-12;
-  auto [energy,psi] = dmrg(H,psi0,sweeps,{"Silent",true});
+  auto [Energy,psi] = dmrg(H,psi0,sweeps,{"Silent",true});
+  auto energy = Energy/N;
   (void)psi;
 
   // Exact energy for transverse field Ising model
   // with open boundary conditions
-  Real E = 1.0 - 1.0/sin(Pi/(2*(2*N+1)));
-  CHECK_CLOSE(energy/N,E/(4*N));
+  auto Energy_exact = 1.0 - 1.0/sin(Pi/(2*(2*N+1)));
+  auto energy_exact = Energy_exact/(4*N);
+  CHECK_CLOSE((energy-energy_exact)/energy_exact,0.);
+  }
+
+SECTION("DMRG with QNs")
+  {
+  int N = 32;
+  auto sites = SpinHalf(N,{"ConserveSz=",false,
+                           "ConserveParity=",true});
+  auto psi0 = randomMPS(InitState(sites,"Up"));
+
+  auto h = 0.5; // Critical point
+
+  auto ampo = AutoMPO(sites);
+  for(int j = 1; j < N; ++j)
+      {
+      ampo += -1.0,"Sx",j,"Sx",j+1;
+      ampo += -h,"Sz",j;
+      }
+  ampo += -h,"Sz",N;
+  auto H = toMPO(ampo);
+
+  auto sweeps = Sweeps(5);
+  sweeps.maxdim() = 10,20,30;
+  sweeps.cutoff() = 1E-12;
+  auto [Energy,psi] = dmrg(H,psi0,sweeps,{"Silent",true});
+  auto energy = Energy/N;
+  (void)psi;
+
+  // Exact energy for transverse field Ising model
+  // with open boundary conditions
+  auto Energy_exact = 1.0 - 1.0/sin(Pi/(2*(2*N+1)));
+  auto energy_exact = Energy_exact/(4*N);
+  CHECK_CLOSE((energy-energy_exact)/energy_exact,0.);
   }
 
 }
