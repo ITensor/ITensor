@@ -399,23 +399,23 @@ product(ITensor const& phi,
         else if(nc_ == 1)
             {
             othr = (!L() ? dag(prime(Psi_->A(b),"Link")) : L()*dag(prime(Psi_->A(b),"Link")));
-			if(R()) othr *= R();	
+            if(R()) othr *= R();	
             }
         else if(nc_ == 0)
             {
-			if(!L())
-			    {
-			    if(!R()) Error("LocalMPO: Empty L() and R() in function product");
-				else othr = R();
-				}
-			else
-			    {
-				othr = L();
-				if(R()) othr *= R();
-			    }
+            if(!L())
+                {
+                if(!R()) Error("LocalMPO: Empty L() and R() in function product");
+                else othr = R();
+                }
+            else
+                {
+                othr = L();
+                if(R()) othr *= R();
+                }
             }
         
-		auto z = (othr*phi).eltC();
+        auto z = (othr*phi).eltC();
 
         phip = dag(othr);
         phip *= z;
@@ -462,10 +462,10 @@ position(int b, MPS const& psi)
         {
         if(nc_ == 2)
             lop_.update(Op_->A(b), Op_->A(b+1), L(), R());
-		else if(nc_ == 1)
+        else if(nc_ == 1)
             lop_.update(Op_->A(b), L(), R());
-		else if(nc_ == 0)
-			lop_.update(L(),R());
+        else if(nc_ == 0)
+            lop_.update(L(),R());
         }
     }
 
@@ -529,13 +529,13 @@ shift(int j,
         nE *= dag(prime(A));
         setLHlim(j-nc_-1);
         setRHlim(j);
-
+	
         if(nc_ == 2)
             lop_.update(Op_->A(j-2), Op_->A(j-1), L(), R());
-		else if(nc_ == 1)
+        else if(nc_ == 1)
             lop_.update(Op_->A(j-1), L(), R());
-		else if(nc_ == 0)
-			lop_.update(L(), R());
+        else if(nc_ == 0)
+            lop_.update(L(), R());
         }
     }
 
