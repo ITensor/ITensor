@@ -48,6 +48,14 @@ ITensor(Index  const& i1,
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
+template <typename... Inds>
+ITensor::
+ITensor(QN q, Index  const& i1,
+        Inds const&... inds)
+    {
+    *this = ITensor(q,IndexSet(i1,inds...));
+    }
+
 template <class DataType>
 ITensor::
 ITensor(IndexSet iset,

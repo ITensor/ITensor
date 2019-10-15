@@ -63,6 +63,13 @@ class ITensor
     //explicit
     //ITensor(std::array<Index,N> const& inds);
 
+    ITensor(QN q, IndexSet const& inds);
+
+    template <typename... Inds>
+    explicit
+    ITensor(QN q, Index const& i1,
+            Inds const&... inds);
+
     //Construct order 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit

@@ -298,6 +298,12 @@ SECTION("Diag Rank 2 from container")
     CHECK_DIFF(norm(T),std::sqrt(nrm),1E-10);
     CHECK_DIFF(sumels(T),tot,1E-10);
     }
+
+SECTION("QDense")
+  {
+  auto T = ITensor(QN(+1),S1,dag(S2),S3);
+  CHECK_CLOSE(norm(T),0.);
+  }
 }
 
 SECTION("Write to Disk")
