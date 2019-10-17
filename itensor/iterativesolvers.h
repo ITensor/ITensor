@@ -1027,9 +1027,9 @@ applyExp(BigMatrixT const& A,
         Real t_step = std::min(t_out-t_now,t_new);
 
         auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
-	auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
+        auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
 
-        V[0] = 1.0/beta * w;
+        V[0] = (w *= 1.0/beta);
         if(!orthot_)
             {
             // Arnoldi: Modified Gram-Schmidt
@@ -1040,7 +1040,7 @@ applyExp(BigMatrixT const& A,
                 for(size_t i = 1 ; i <= j; ++i)
                     {
                     H(i-1,j-1) = (dag(V[i-1])*p).eltC();
-                    p = p - H(i-1,j-1)*V[i-1];
+                    p -= H(i-1,j-1)*V[i-1];
                     }
                 s = norm(p);
                 if(s < break_tol)
@@ -1051,7 +1051,7 @@ applyExp(BigMatrixT const& A,
                     break;
                     }
                 H(j,j-1) = s;
-                V[j] = (1.0/s)*p;
+                V[j] = (p*=(1.0/s));
                 }
             }
         else
@@ -1061,9 +1061,9 @@ applyExp(BigMatrixT const& A,
                 {
                 ITensor p;
                 A.product(V[j-1],p);
-                if(j != 1) p = p - H(j-2,j-1)*V[j-2];
+                if(j != 1) p -= H(j-2,j-1)*V[j-2];
                 H(j-1,j-1) = (dag(V[j-1])*p).eltC();
-                p = p - H(j-1,j-1)*V[j-1];
+                p -= H(j-1,j-1)*V[j-1];
                 s = norm(p);
                 if(s < break_tol)
                     {
@@ -1074,7 +1074,7 @@ applyExp(BigMatrixT const& A,
                     }
                 H(j-1,j) = s;
                 H(j,j-1) = s;
-                V[j] = (1.0/s)*p;
+                V[j] = (p*=(1.0/s));
                 }
             }
 
@@ -1163,10 +1163,10 @@ applyExp(BigMatrixT const& A,
 
         // Update w = beta * V * exp(sgnt * t_step * H) * e1
         mx = mbrkdwn + std::max(0,k1-1);
-        w = V[0]*F(0);
+        w = (V[0]*=F(0));
         for(int i = 1; i < mx; ++i)
             {
-            w += V[i]*F(i);
+            w += (V[i]*=F(i));
             }
         w *= beta;
         beta = norm(w);
