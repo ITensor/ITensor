@@ -1035,7 +1035,7 @@ applyExp(BigMatrixT const& A,
             // Arnoldi: Modified Gram-Schmidt
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                ITensor p;
+                auto& p = V[j];
                 A.product(V[j-1],p);
                 for(size_t i = 1 ; i <= j; ++i)
                     {
@@ -1051,7 +1051,7 @@ applyExp(BigMatrixT const& A,
                     break;
                     }
                 H(j,j-1) = s;
-                V[j] = (p*=(1.0/s));
+                p *= (1.0/s);
                 }
             }
         else
@@ -1059,7 +1059,7 @@ applyExp(BigMatrixT const& A,
             // Lanczos
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                ITensor p;
+                auto& p = V[j];
                 A.product(V[j-1],p);
                 if(j != 1) p -= H(j-2,j-1)*V[j-2];
                 H(j-1,j-1) = (dag(V[j-1])*p).eltC();
@@ -1074,7 +1074,7 @@ applyExp(BigMatrixT const& A,
                     }
                 H(j-1,j) = s;
                 H(j,j-1) = s;
-                V[j] = (p*=(1.0/s));
+                p *= (1.0/s);
                 }
             }
 

@@ -135,9 +135,9 @@ template<class Vecy, class MatH,
          >>
 void
 expMatrixApply(Vecy && y,
-	       MatH && H,
-	       Cplx t,
-	       int ideg);
+               MatH && H,
+               Cplx t,
+               int ideg);
 
 } //namespace itensor
 

@@ -202,14 +202,14 @@ namespace exptH_detail {
         if(t.imag() == 0)
             {
             Real tre = t.real();
-            for(auto f = F.data(); f != fe; ++f, ++m)//------------make a copy of the pointer m? yes! adress copy
+            for(auto f = F.data(); f != fe; ++f, ++m)
                 {
                 *f = tre * (*m);
                 }
             }
         else
             {
-            for(auto f = F.data(); f != fe; ++f, ++m)//------------make a copy of the pointer m? yes! adress copy
+            for(auto f = F.data(); f != fe; ++f, ++m) 
                 {
                 *f = t * (*m);
                 }
@@ -221,7 +221,7 @@ namespace exptH_detail {
     void
     multTElts(Iter mre,
               Iter mim,
-	      std::vector<Cplx> & Hc,
+              std::vector<Cplx> & Hc,
               Cplx t)
         {
         if(t.imag() == 0)
@@ -262,7 +262,7 @@ void
 expMatrixApply(Vecy && y,
                MatH && H,
                Cplx t,
-              int ideg)
+               int ideg)
     {
     if(ideg <= 0)
         {
@@ -293,7 +293,8 @@ expMatrixApply(Vecy && y,
         if(!isContiguous(y))
             throw std::runtime_error("expMatrixApply: y must be contiguous");
 #endif
-    
+        
+        //TODO: use mult for matrix directly
         if(isContiguous(H)) 
             {
             exptH_detail::multTElts(H.data(),makeRef(F),t);
