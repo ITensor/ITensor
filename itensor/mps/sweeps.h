@@ -486,24 +486,12 @@ operator<<(std::ostream& s, const Sweeps& swps)
     }
 
 void inline
-sweepnext(int &b, int &ha, int N, int min_b = 1)
+sweepnext(int &b, int &ha, int N, Args const& args = Args::global(), int min_b = 1)
     {
+	const int numCenter = args.getInt("NumCenter",2);
     const int inc = (ha==1 ? +1 : -1);
     b += inc;
-    if(b == (ha==1 ? N : min_b-1))
-        {
-        b -= inc;
-        ++ha;
-        }
-    }
-
-//one-site version of sweepnext
-void inline
-sweepnext1(int &b, int &ha, int N, int min_b = 1)
-    {
-    const int inc = (ha==1 ? +1 : -1);
-    b += inc;
-    if(b == (ha==1 ? N+1 : min_b-1))
+    if(b == (ha==1 ? N+2-numCenter : min_b-1))
         {
         b -= inc;
         ++ha;
