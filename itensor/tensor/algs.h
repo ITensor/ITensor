@@ -117,7 +117,21 @@ SVD(MatM && M,
     Real thresh = SVD_THRESH);
 
 //
-// expMatrixApply computes exp(tH)*y,
+// Hermitian Matrix exponentiate
+// by diagHermitian
+//
+template<class MatM, class MatF,
+         class = stdx::require<
+         hasMatRange<MatM>,
+         hasMatRange<MatF>
+         >>
+void
+expHermitian(MatM && M,
+             MatF && F,
+             Cplx t);
+
+//
+// expGeneral computes exp(tH),
 // where H is a general dense matrix,
 // and t can be real or complex.
 // Either of the two options can be used:
@@ -128,16 +142,16 @@ SVD(MatM && M,
 // using which 14-digit accuracy is expected if tH is negative definite,
 // but may behave poorly otherwise.
 //
-template<class Vecy, class MatH,
+template<class MatH,class MatF,
          class = stdx::require<
-         hasVecRange<Vecy>,
-         hasMatRange<MatH>
+         hasMatRange<MatH>,
+         hasMatRange<MatF>
          >>
 void
-expMatrixApply(Vecy && y,
-               MatH && H,
-               Cplx t,
-               int ideg);
+expGeneral(MatH && H,
+           MatF && F,
+           Cplx t,
+           int ideg);
 
 } //namespace itensor
 
