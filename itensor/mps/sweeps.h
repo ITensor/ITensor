@@ -486,9 +486,10 @@ operator<<(std::ostream& s, const Sweeps& swps)
     }
 
 void inline
-sweepnext(int &b, int &ha, int N, Args const& args = Args::global(), int min_b = 1)
+sweepnext(int &b, int &ha, int N, Args const& args = Args::global())
     {
-	const int numCenter = args.getInt("NumCenter",2);
+    const int numCenter = args.getInt("NumCenter",2);
+    const int min_b = args.getInt("Minb",1);
     const int inc = (ha==1 ? +1 : -1);
     b += inc;
     if(b == (ha==1 ? N+2-numCenter : min_b-1))
@@ -496,6 +497,20 @@ sweepnext(int &b, int &ha, int N, Args const& args = Args::global(), int min_b =
         b -= inc;
         ++ha;
         }
+    }
+
+//void inline
+//sweepnext(int &b, int &ha, int N, int min_b = 1)
+//    {
+//    auto args = Args("NumCenter=",2,"Minb=",min_b);
+//    sweepnext(b,ha,N,args);
+//    }
+
+void inline
+sweepnext1(int &b, int &ha, int N, int min_b = 1)
+    {
+	auto args = Args("NumCenter=",1,"Minb=",min_b);
+    sweepnext(b,ha,N,args);
     }
 
 } //namespace itensor

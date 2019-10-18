@@ -305,7 +305,7 @@ oneSiteFitApply(vector<ITensor> & E,
     auto normalize = args.getBool("Normalize",false);
     auto sw = args.getInt("Sweep",1);
 
-    for(int s = 1, ha = 1; ha <= 2; sweepnext(s,ha,N,"NumCenter=",1))
+    for(int s = 1, ha = 1; ha <= 2; sweepnext1(s,ha,N))
         {
         if(verbose)
             {
