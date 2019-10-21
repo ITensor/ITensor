@@ -499,12 +499,12 @@ sweepnext(int &b, int &ha, int N, Args const& args = Args::global())
         }
     }
 
-//void inline
-//sweepnext(int &b, int &ha, int N, int min_b = 1)
-//    {
-//    auto args = Args("NumCenter=",2,"Minb=",min_b);
-//    sweepnext(b,ha,N,args);
-//    }
+void inline
+sweepnext(int &b, int &ha, int N, int min_b)
+    {
+    auto args = Args("NumCenter=",2,"Minb=",min_b);
+    sweepnext(b,ha,N,args);
+    }
 
 void inline
 sweepnext1(int &b, int &ha, int N, int min_b = 1)
