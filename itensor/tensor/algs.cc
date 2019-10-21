@@ -795,19 +795,6 @@ namespace exptH_detail {
         LAPACK_INT info = 0;
 		
         //
-        // Precondition to reduce the norm
-        //
-        //Real trF = 0;
-        //for(auto j : range(N))
-        //    {
-        //    trF += F(j,j);
-        //    }
-        //for(auto j : range(N))
-        //    {
-        //    F(j,j) -= trF;
-        //    }
-
-        //
         // Scaling: seek ns such that ||F/2^ns|| < 1/2
         // and set scale = 1/2^ns
         //
