@@ -790,10 +790,10 @@ template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&,
 
 namespace exptH_detail {
     int 
-    padeExp(MatRef<Real> const& F,int N, int ideg)
+    expPade(MatRef<Real> const& F, int N, int ideg)
         {
         LAPACK_INT info = 0;
-			
+		
         //
         // Scaling: seek ns such that ||F/2^ns|| < 1/2
         // and set scale = 1/2^ns
@@ -904,7 +904,7 @@ namespace exptH_detail {
         }
 
     int
-    padeExp(MatRef<Cplx> const& F, int N, int ideg)
+    expPade(MatRef<Cplx> const& F, int N, int ideg)
         {
         LAPACK_INT info = 0;
 

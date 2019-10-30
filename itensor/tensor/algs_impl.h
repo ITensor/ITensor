@@ -190,6 +190,41 @@ SVD(MatM && M,
     SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
     }
 
+template<class MatM, 
+         class MatF,
+         class>
+void
+expHermitian(MatM && M,
+             MatF && F,
+             Cplx t)
+    {
+    using Mval = typename stdx::decay_t<MatM>::value_type;
+	Mat<Mval> U;
+    Vec<Real> d;
+    diagHermitian(M,U,d);
+
+    auto N = ncols(M);
+	if(t.imag() == 0)
+        {
+	    Mat<Real> D(N,N);
+        for(auto j : range(N))
+            {
+            D(j,j) = exp(d(j)*t.real());
+            }
+        F &= U*D;
+        }
+    else
+        {
+        Mat<Cplx> D(N,N);
+		for(auto j : range(N))
+            {
+            D(j,j) = exp(d(j)*t);
+            }
+        F &= U*D;
+        }
+    F &= F*conj(transpose(U));
+    }
+
 namespace exptH_detail {
     //Helper for expPade
     template<typename Iter, typename V>
@@ -202,14 +237,14 @@ namespace exptH_detail {
         if(t.imag() == 0)
             {
             Real tre = t.real();
-            for(auto f = F.data(); f != fe; ++f, ++m)//------------make a copy of the pointer m? yes! adress copy
+            for(auto f = F.data(); f != fe; ++f, ++m)
                 {
                 *f = tre * (*m);
                 }
             }
         else
             {
-            for(auto f = F.data(); f != fe; ++f, ++m)//------------make a copy of the pointer m? yes! adress copy
+            for(auto f = F.data(); f != fe; ++f, ++m) 
                 {
                 *f = t * (*m);
                 }
@@ -221,7 +256,7 @@ namespace exptH_detail {
     void
     multTElts(Iter mre,
               Iter mim,
-	      std::vector<Cplx> & Hc,
+              std::vector<Cplx> & Hc,
               Cplx t)
         {
         if(t.imag() == 0)
@@ -249,69 +284,66 @@ namespace exptH_detail {
     //template <typename T>
     //int padeExp(VecRef<T> const& y, int N, MatRef<T> const& F, int ideg);
     int
-    padeExp(MatRef<Real> const& F, int N, int ideg);
+    expPade(MatRef<Real> const& F, int N, int ideg);
     int
-    padeExp(MatRef<Cplx> const& F, int N, int ideg);
+    expPade(MatRef<Cplx> const& F, int N, int ideg);
 
 } //exptH_detail
 
-template<class Vecy,
-         class MatH,
+template<class MatH,
+         class MatF,
          class>
 void
-expMatrixApply(Vecy && y,
-               MatH && H,
-               Cplx t,
-              int ideg)
+expGeneral(MatH && H,
+           MatF && F,
+           Cplx t,
+           int ideg)
     {
     if(ideg <= 0)
         {
-        Error("ideg cannot be less than 1");
+        Error("PadeApproxDeg cannot be less than 1");
         }
     else
         {
-        using yval = typename stdx::decay_t<Vecy>::value_type;
         using Hval = typename stdx::decay_t<MatH>::value_type;
+        using Fval = typename stdx::decay_t<MatF>::value_type;
         if(t.imag() == 0)
-            static_assert( !(isReal<yval>() && isCplx<Hval>()),
-                          "expMatrixApply: real t - y must complex when H is complex");	
+            static_assert( !(isReal<Hval>() && isCplx<Fval>()),
+                          "expGeneral: real t - F must complex when H is complex");	
         else
-            static_assert( isCplx<yval>(),
-                          "expMatrixApply: cplx t - y must be complex");
+            static_assert( isCplx<Fval>(),
+                          "expGeneral: cplx t - F must be complex");
 
         auto N = ncols(H);
-        if(N < 1) throw std::runtime_error("expMatrixApply: 0 dimensional matrix");
+        if(N < 1) throw std::runtime_error("expGeneral: 0 dimensional matrix");
         if(N != nrows(H))
             {
             printfln("H is %dx%d",nrows(H),ncols(H));
-            throw std::runtime_error("expMatrixApply: Input Matrix must be square");
+            throw std::runtime_error("expGeneral: Input Matrix must be square");
             }
 
-        auto F = Mat<yval>(nrows(H),ncols(H));
-
 #ifdef DEBUG
-        if(!isContiguous(y))
-            throw std::runtime_error("expMatrixApply: y must be contiguous");
+        if(!isContiguous(F))
+            throw std::runtime_error("expGeneral: F must be contiguous");
 #endif
-    
+ 
+        //TODO: use mult for matrix directly
         if(isContiguous(H)) 
             {
-            exptH_detail::multTElts(H.data(),makeRef(F),t);
+            exptH_detail::multTElts(H.data(),F,t);
             }
         else                
             {
-            exptH_detail::multTElts(H.cbegin(),makeRef(F),t);
+            exptH_detail::multTElts(H.cbegin(),F,t);
             }
 
         int info = 0;
-        info = exptH_detail::padeExp(makeRef(F),N,ideg);
+        info = exptH_detail::expPade(makeRef(F),N,ideg);
 
         if(info != 0)
             {
-            throw std::runtime_error("expMatrixApply failed");
+            throw std::runtime_error("expGeneral failed");
             }
-
-        y &= mult(makeRef(F),y);
         }
     }
 

@@ -962,9 +962,9 @@ applyExp(BigMatrixT const& A,
     auto maxiter_ = args.getSizeT("MaxIter",30);
     auto errgoal_ = args.getReal("ErrGoal",1E-12);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-    int ideg_ = args.getInt("PadeApproxDeg",6);
     auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
-
+    auto ideg_ = args.getInt("PadeApproxDeg",6);
+    
     size_t maxsize = A.size();
     auto actual_maxiter = std::min(maxiter_,maxsize);
     if(debug_level_ >= 2)
@@ -986,7 +986,8 @@ applyExp(BigMatrixT const& A,
     //Real Anorm = A.norm();// infinite norm of A, not efficient to calculate.
     ITensor temp;
     A.product(phi,temp);
-    Real Anorm = eltC(dag(phi)*temp).real();
+    Real Anorm = norm(temp);
+	//Real Anorm = eltC(dag(phi)*temp).real();
 	
     int maxrej = 10;// maximum allowable number of rejections at each step
     auto break_tol = 1E-14;// break tolerance when doing orthogonalization
@@ -1013,7 +1014,7 @@ applyExp(BigMatrixT const& A,
     t_new = std::ceil(t_new/s)*s;
 
     auto& w = phi;
-    // hum = max||exp(-sA)||, where s in [0,t].
+    // hump = max||exp(sA)||, where s in [0,t] when t > 0 or [t,0] when t < 0.
     // It measures the conditioning of the matrix exponential. 
     // Well conditioned if hump = 1.
     Real hump = vnorm;
@@ -1027,20 +1028,20 @@ applyExp(BigMatrixT const& A,
         Real t_step = std::min(t_out-t_now,t_new);
 
         auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
-	auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
+        auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
 
-        V[0] = 1.0/beta * w;
+        V[0] = (w *= 1.0/beta);
         if(!orthot_)
             {
             // Arnoldi: Modified Gram-Schmidt
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                ITensor p;
+                auto& p = V[j];
                 A.product(V[j-1],p);
                 for(size_t i = 1 ; i <= j; ++i)
                     {
                     H(i-1,j-1) = (dag(V[i-1])*p).eltC();
-                    p = p - H(i-1,j-1)*V[i-1];
+                    p -= H(i-1,j-1)*V[i-1];
                     }
                 s = norm(p);
                 if(s < break_tol)
@@ -1051,7 +1052,7 @@ applyExp(BigMatrixT const& A,
                     break;
                     }
                 H(j,j-1) = s;
-                V[j] = (1.0/s)*p;
+                p *= (1.0/s);
                 }
             }
         else
@@ -1059,11 +1060,11 @@ applyExp(BigMatrixT const& A,
             // Lanczos
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                ITensor p;
+                auto& p = V[j];
                 A.product(V[j-1],p);
-                if(j != 1) p = p - H(j-2,j-1)*V[j-2];
+                if(j != 1) p -= H(j-2,j-1)*V[j-2];
                 H(j-1,j-1) = (dag(V[j-1])*p).eltC();
-                p = p - H(j-1,j-1)*V[j-1];
+                p -= H(j-1,j-1)*V[j-1];
                 s = norm(p);
                 if(s < break_tol)
                     {
@@ -1074,7 +1075,7 @@ applyExp(BigMatrixT const& A,
                     }
                 H(j-1,j) = s;
                 H(j,j-1) = s;
-                V[j] = (1.0/s)*p;
+                p *= (1.0/s);
                 }
             }
 
@@ -1097,17 +1098,25 @@ applyExp(BigMatrixT const& A,
         Real err_loc = 0.0;
         auto mx = mbrkdwn + k1;
         auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
-        auto F = CVector(mx);
-        F(0) = 1.0;//Already initialized by 0
+        auto F = CMatrix(mx,mx);//TODO: reduce the storage to column
         while(irej < maxrej)
             {
             //
             // Compute F = exp(sgnt * t_step * H) * e1
             //
-            // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
-            // else use irreducible rational Pade approximation
-            //
-            expMatrixApply(makeRef(F),Href,sgnt*t_step,ideg_);
+            if(!orthot_)
+			    {
+                //
+                // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
+                // else use irreducible rational Pade approximation
+                //
+                expGeneral(Href,makeRef(F),sgnt*t_step,ideg_);
+                }
+            else
+                {
+                expHermitian(Href,makeRef(F),sgnt*t_step); 
+                }
+            //F = mult(makeRef(F),makeRef(e1));
 
             //
             // Error estimate
@@ -1119,18 +1128,20 @@ applyExp(BigMatrixT const& A,
                 }
             else
                 {
-                auto phi1 = std::abs(beta*F(actual_maxiter));
-                auto phi2 = std::abs(beta*F(actual_maxiter+1)*AVnorm);
+                auto phi1 = std::abs(beta*F(actual_maxiter,0));
+                auto phi2 = std::abs(beta*F(actual_maxiter+1,0)*AVnorm);
 
                 if(phi1 > 10*phi2)
                     {
                     err_loc = phi2;
+                    xm = 1.0/((double)actual_maxiter);
                     }
                 else
                     {
                     if(phi1 > phi2)
                         {
                         err_loc = (phi1*phi2)/(phi1-phi2);
+                        xm = 1.0/((double)actual_maxiter);
                         }
                     else
                         {
@@ -1163,10 +1174,10 @@ applyExp(BigMatrixT const& A,
 
         // Update w = beta * V * exp(sgnt * t_step * H) * e1
         mx = mbrkdwn + std::max(0,k1-1);
-        w = V[0]*F(0);
+        w = (V[0]*=F(0,0));
         for(int i = 1; i < mx; ++i)
             {
-            w += V[i]*F(i);
+            w += (V[i]*=F(i,0));
             }
         w *= beta;
         beta = norm(w);
@@ -1183,11 +1194,7 @@ applyExp(BigMatrixT const& A,
 
     hump = hump/vnorm;
             
-    ITensor Aw;
-    A.product(w,Aw);
-    Real energy = eltC(dag(w)*Aw).real()/eltC(dag(w)*w).real();
-	
-    return energy;
+    return hump;
     }
 
 } //namespace itensor
