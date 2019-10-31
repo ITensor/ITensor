@@ -89,6 +89,12 @@ multReal(MatRef<V> const& M, Real fac)
         }
     }
 
+void
+multCplx(CMatrixRef const& M, Cplx fac)
+    {
+    for(auto& el : M) el *= fac;
+    } 
+
 void 
 operator*=(MatrixRef const& M, Real fac)
     {
@@ -98,6 +104,12 @@ void
 operator*=(CMatrixRef const& M, Real fac)
     {
     multReal(M,fac);
+    }
+
+void
+operator*=(CMatrixRef const& M, Cplx fac)
+    {
+    multCplx(M,fac);
     }
 
 template<typename V>

@@ -10,16 +10,15 @@ using namespace std;
 
 class ITensorMap
     {
-    ITensor const* A_;
+    ITensor const& A_;
     mutable long size_;
     public:
 
     ITensorMap(ITensor const& A)
-      : A_(nullptr)
+      : A_(A)
         {
-        A_ = &A;
         size_ = 1;
-        for(auto& I : A_->inds())
+        for(auto& I : A_.inds())
             {
             if(I.primeLevel() > 0)
                 size_ *= dim(I);
@@ -29,7 +28,7 @@ class ITensorMap
     void
     product(ITensor const& x, ITensor& b) const
         {
-        b = *A_*x;
+        b = A_*x;
         b.noPrime();
         }
 
@@ -375,25 +374,43 @@ SECTION("Arnoldi (QN)")
     }
 
 SECTION("applyExp (QNs)")
-	{
-	auto i = Index(QN(-1),10,QN(1),10,"i");
-	auto A = randomITensor(QN(0),dag(i),prime(i));
+    {
+    auto i = Index(QN(-1),10,QN(1),10,"i");
+    auto A = randomITensor(QN(0),dag(i),prime(i));
 
-	A += swapPrime(dag(A),0,1);
-	A *= 0.5;
+    A += swapPrime(dag(A),0,1);
+    A *= 0.5;
 
-	auto t = 0.1;
+    auto x0 = randomITensor(QN(-1),i);
 
-	auto x0 = randomITensor(QN(-1),i);
-	auto x = x0;
-	applyExp(ITensorMap(A),x,-t*1_i,{"ErrGoal=",1E-14,
-									 "MaxIter=",10});
+    SECTION("Real timestep")
+        {
+        auto t = 0.1;
 
-	auto exptA = expHermitian(A,-t*1_i);
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
 
-	auto exptAx = noPrime(exptA*x0);
+        auto exptA = expHermitian(A,-t);
+        auto exptAx = noPrime(exptA*x0);
 
-	CHECK_CLOSE(norm(exptAx - x), 0.);
-	}
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+    
+    SECTION("Complex timestep")
+        {
+        auto t = 0.1*1_i;
+        
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+        
+        auto exptA = expHermitian(A,-t);
+        auto exptAx = noPrime(exptA*x0);
+        
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    }
 
 }

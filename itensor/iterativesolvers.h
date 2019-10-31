@@ -166,7 +166,7 @@ davidson(BigMatrixT const& A,
     A.product(V[0],AV[0]);
     STOP_TIMER(21);
 
-    auto initEn = eltC((dag(V[0])*AV[0])).real();
+    auto initEn = real(eltC((dag(V[0])*AV[0])));
 
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
@@ -311,7 +311,7 @@ davidson(BigMatrixT const& A,
             ++tot_pass;
             for(auto k : range(ni))
                 {
-                Vq[k] = (dag(V[k])*q).eltC();
+                Vq[k] = eltC(dag(V[k])*q);
                 //printfln("pass=%d Vq[%d] = %s",pass,k,Vq[k]);
                 }
             for(auto k : range(ni))
@@ -361,7 +361,7 @@ davidson(BigMatrixT const& A,
         //for(int r = 1; r <= ni+1; ++r)
         //for(int c = r; c <= ni+1; ++c)
         //    {
-        //    z = (dag(V[r-1])*V[c-1]).eltC();
+        //    z = eltC(dag(V[r-1])*V[c-1]);
         //    Vo(r,c) = abs(z);
         //    Vo(c,r) = Vo(r,c);
         //    }
@@ -389,7 +389,7 @@ davidson(BigMatrixT const& A,
         auto newCol = subVector(NC,0,1+ni);
         for(auto k : range(ni+1))
             {
-            newCol(k) = (dag(V.at(k))*AV.at(ni)).eltC();
+            newCol(k) = eltC(dag(V.at(k))*AV.at(ni));
             }
         column(Mref,ni) &= newCol;
         row(Mref,ni) &= conj(newCol);
@@ -428,7 +428,7 @@ davidson(BigMatrixT const& A,
         for(auto r : range(iter+1))
         for(auto c : range(r,iter+1))
             {
-            auto z = (dag(V[r])*V[c]).eltC();
+            auto z = eltC(dag(V[r])*V[c]);
             Vo_final(r,c) = std::abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
@@ -962,7 +962,7 @@ applyExp(BigMatrixT const& A,
     auto maxiter_ = args.getSizeT("MaxIter",30);
     auto errgoal_ = args.getReal("ErrGoal",1E-12);
     auto debug_level_ = args.getInt("DebugLevel",-1);
-    auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
+    auto ishermitian_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
     auto ideg_ = args.getInt("PadeApproxDeg",6);
     
     size_t maxsize = A.size();
@@ -987,7 +987,7 @@ applyExp(BigMatrixT const& A,
     ITensor temp;
     A.product(phi,temp);
     Real Anorm = norm(temp);
-	//Real Anorm = eltC(dag(phi)*temp).real();
+	//Real Anorm = real(eltC(dag(phi)*temp));
 	
     int maxrej = 10;// maximum allowable number of rejections at each step
     auto break_tol = 1E-14;// break tolerance when doing orthogonalization
@@ -1019,6 +1019,9 @@ applyExp(BigMatrixT const& A,
     // Well conditioned if hump = 1.
     Real hump = vnorm;
 
+    // If debug level >= 1, count number of matvecs
+    auto nmatvec = 0;
+
     //
     // Step-by-step integration
     //
@@ -1030,20 +1033,21 @@ applyExp(BigMatrixT const& A,
         auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
         auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
 
-        V[0] = (w *= 1.0/beta);
-        if(!orthot_)
+        w *= 1.0/beta;
+        V[0] = w;
+        if(!ishermitian_)
             {
             // Arnoldi: Modified Gram-Schmidt
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                auto& p = V[j];
-                A.product(V[j-1],p);
+                if(debug_level_ >= 1) nmatvec += 1;
+                A.product(V[j-1],V[j]);
                 for(size_t i = 1 ; i <= j; ++i)
                     {
-                    H(i-1,j-1) = (dag(V[i-1])*p).eltC();
-                    p -= H(i-1,j-1)*V[i-1];
+                    H(i-1,j-1) = eltC(dag(V[i-1])*V[j]);
+                    V[j] -= H(i-1,j-1)*V[i-1];
                     }
-                s = norm(p);
+                s = norm(V[j]);
                 if(s < break_tol)
                     {
                     k1 = 0;
@@ -1052,7 +1056,7 @@ applyExp(BigMatrixT const& A,
                     break;
                     }
                 H(j,j-1) = s;
-                p *= (1.0/s);
+                V[j] *= (1.0/s);
                 }
             }
         else
@@ -1060,12 +1064,12 @@ applyExp(BigMatrixT const& A,
             // Lanczos
             for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                auto& p = V[j];
-                A.product(V[j-1],p);
-                if(j != 1) p -= H(j-2,j-1)*V[j-2];
-                H(j-1,j-1) = (dag(V[j-1])*p).eltC();
-                p -= H(j-1,j-1)*V[j-1];
-                s = norm(p);
+                if(debug_level_ >= 1) nmatvec += 1;
+                A.product(V[j-1],V[j]);
+                if(j != 1) V[j] -= H(j-2,j-1)*V[j-2];
+                H(j-1,j-1) = eltC(dag(V[j-1])*V[j]);
+                V[j] -= H(j-1,j-1)*V[j-1];
+                s = norm(V[j]);
                 if(s < break_tol)
                     {
                     k1 = 0;
@@ -1075,7 +1079,7 @@ applyExp(BigMatrixT const& A,
                     }
                 H(j-1,j) = s;
                 H(j,j-1) = s;
-                p *= (1.0/s);
+                V[j] *= (1.0/s);
                 }
             }
 
@@ -1087,6 +1091,7 @@ applyExp(BigMatrixT const& A,
             {
             H(actual_maxiter+1,actual_maxiter) = 1.0;
             ITensor AV;
+            if(debug_level_ >= 1) nmatvec += 1;
             A.product(V[actual_maxiter],AV);
             AVnorm = norm(AV);
             }
@@ -1098,25 +1103,24 @@ applyExp(BigMatrixT const& A,
         Real err_loc = 0.0;
         auto mx = mbrkdwn + k1;
         auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
-        auto F = CMatrix(mx,mx);//TODO: reduce the storage to column
+        CMatrix F;
         while(irej < maxrej)
             {
             //
-            // Compute F = exp(sgnt * t_step * H) * e1
+            // Compute F = exp(sgnt * t_step * H)
             //
-            if(!orthot_)
+            if(!ishermitian_)
 			    {
                 //
                 // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
                 // else use irreducible rational Pade approximation
                 //
-                expGeneral(Href,makeRef(F),sgnt*t_step,ideg_);
+                F = expMatrix(Href,sgnt*t_step,ideg_);
                 }
             else
                 {
-                expHermitian(Href,makeRef(F),sgnt*t_step); 
+                F = expHermitian(Href,sgnt*t_step); 
                 }
-            //F = mult(makeRef(F),makeRef(e1));
 
             //
             // Error estimate
@@ -1174,10 +1178,12 @@ applyExp(BigMatrixT const& A,
 
         // Update w = beta * V * exp(sgnt * t_step * H) * e1
         mx = mbrkdwn + std::max(0,k1-1);
-        w = (V[0]*=F(0,0));
+        V[0] *= F(0,0);
+        w = V[0];
         for(int i = 1; i < mx; ++i)
             {
-            w += (V[i]*=F(i,0));
+            V[i] *= F(i,0);
+            w += V[i];
             }
         w *= beta;
         beta = norm(w);
@@ -1191,6 +1197,8 @@ applyExp(BigMatrixT const& A,
         err_loc = std::max(err_loc, rndoff);
         s_error = s_error + err_loc;
         }
+
+    if(debug_level_ >= 1) println("Number of matrix-vector multiplies: ", nmatvec);
 
     hump = hump/vnorm;
             

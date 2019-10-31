@@ -47,6 +47,21 @@ operator*(MatA const& A, Real fac)
 
 template<typename MatA,
          class = stdx::require<hasMatRange<MatA>> >
+Mat<val_type<MatA>>
+operator*(MatA const& A, Cplx fac)
+    {
+    Mat<val_type<MatA>> res(A);
+    res *= fac;
+    return res;
+    }
+
+template<typename MatA,
+         class = stdx::require<hasMatRange<MatA>> >
+Mat<val_type<MatA>>
+operator*(Cplx fac, MatA const& A) { return A*fac; }
+
+template<typename MatA,
+         class = stdx::require<hasMatRange<MatA>> >
 Mat<val_type<MatA>> 
 operator*(Real fac, MatA const& A)
     { 
@@ -65,6 +80,28 @@ operator*(Mat<V> && A, Real fac)
     }
 
 template<typename V>
+Mat<V>
+operator*(Mat<V> && A, Cplx fac)
+    {
+    Mat<V> res(std::move(A));
+    res *= fac;
+    return res;
+    }
+
+inline Mat<Cplx>
+operator*(Mat<Real> const& A, Cplx fac)
+    {
+    auto nr = nrows(A);
+    auto nc = ncols(A);
+    Mat<Cplx> res(nr,nc);
+    auto resend = res.data()+res.size();
+    auto Adata = A.data();
+    for(auto r = res.data(); r != resend; ++r, ++Adata)
+        *r = fac * (*Adata);
+    return res;
+    }
+
+template<typename V>
 Mat<V> 
 operator*(Real fac, Mat<V> && A)
     { 
@@ -72,6 +109,10 @@ operator*(Real fac, Mat<V> && A)
     res *= fac; 
     return res; 
     }
+
+template<typename V>
+Mat<common_type<V,Cplx>>
+operator*(Cplx fac, Mat<V> const& A) { return A*fac; }
 
 template<typename MatA,
          class = stdx::require<hasMatRange<MatA>> >
