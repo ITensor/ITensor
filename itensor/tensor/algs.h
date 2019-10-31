@@ -120,18 +120,20 @@ SVD(MatM && M,
 // Hermitian Matrix exponentiate
 // by diagHermitian
 //
-template<class MatM, class MatF,
-         class = stdx::require<
-         hasMatRange<MatM>,
-         hasMatRange<MatF>
-         >>
-void
+template<class MatM,
+         class ScalarT,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<common_type<val_type<MatM>,ScalarT>>
 expHermitian(MatM && M,
-             MatF && F,
-             Cplx t);
+                   ScalarT t);
+
+template<class MatM,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<val_type<MatM>>
+expHermitian(MatM && M) { return expHermitian(M,1.); }
 
 //
-// expGeneral computes exp(tH),
+// expMatrix computes exp(tH),
 // where H is a general dense matrix,
 // and t can be real or complex.
 // Either of the two options can be used:
@@ -142,16 +144,18 @@ expHermitian(MatM && M,
 // using which 14-digit accuracy is expected if tH is negative definite,
 // but may behave poorly otherwise.
 //
-template<class MatH,class MatF,
-         class = stdx::require<
-         hasMatRange<MatH>,
-         hasMatRange<MatF>
-         >>
-void
-expGeneral(MatH && H,
-           MatF && F,
-           Cplx t,
-           int ideg);
+template<class MatM,
+         class ScalarT,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<common_type<val_type<MatM>,ScalarT>>
+expMatrix(MatM && M,
+          ScalarT t,
+          int ideg = 6);
+
+template<class MatM,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<val_type<MatM>>
+expMatrix(MatM && M) { return expMatrix(M,1.); }
 
 } //namespace itensor
 

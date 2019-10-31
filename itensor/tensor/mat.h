@@ -72,6 +72,9 @@ void
 operator*=(CMatrixRef const& M, Real fac);
 
 void
+operator*=(CMatrixRef const& M, Cplx fac);
+
+void
 operator/=(MatrixRef const& M, Real fac);
 void
 operator/=(CMatrixRef const& M, Real fac);
@@ -206,16 +209,32 @@ Mat<V>
 operator*(MatRefc<V> const& A, Real fac);
 
 template<typename V>
+Mat<V>
+operator*(MatRefc<V> const& A, Cplx fac);
+
+template<typename V>
 Mat<V> 
 operator*(Real fac, MatRefc<V> const& A);
+
+template<typename V>
+Mat<V>
+operator*(Cplx fac, MatRefc<V> const& A);
 
 template<typename V>
 Mat<V> 
 operator*(Mat<V> && A, Real fac);
 
 template<typename V>
+Mat<V>
+operator*(Mat<V> && A, Cplx fac);
+
+template<typename V>
 Mat<V> 
 operator*(Real fac, Mat<V> && A);
+
+template<typename V>
+Mat<V>
+operator*(Cplx fac, Mat<V> && A);
 
 template<typename V>
 Mat<V> 

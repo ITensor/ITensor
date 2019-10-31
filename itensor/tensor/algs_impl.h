@@ -191,98 +191,30 @@ SVD(MatM && M,
     }
 
 template<class MatM, 
-         class MatF,
+         class ScalarT,
          class>
-void
+Mat<common_type<val_type<MatM>,ScalarT>>
 expHermitian(MatM && M,
-             MatF && F,
-             Cplx t)
+             ScalarT t)
     {
-    using Mval = typename stdx::decay_t<MatM>::value_type;
-	Mat<Mval> U;
+    //using Mval = typename stdx::decay_t<MatM>::value_type;
+    using valM = val_type<MatM>;
+	Mat<valM> U;
     Vec<Real> d;
     diagHermitian(M,U,d);
 
     auto N = ncols(M);
-	if(t.imag() == 0)
+	Mat<ScalarT> D(N,N);
+    for(auto j : range(N))
         {
-	    Mat<Real> D(N,N);
-        for(auto j : range(N))
-            {
-            D(j,j) = exp(d(j)*t.real());
-            }
-        F &= U*D;
+        D(j,j) = exp(d(j)*t);
         }
-    else
-        {
-        Mat<Cplx> D(N,N);
-		for(auto j : range(N))
-            {
-            D(j,j) = exp(d(j)*t);
-            }
-        F &= U*D;
-        }
-    F &= F*conj(transpose(U));
+    auto expM = U*D*conj(transpose(U));
+    return expM;
     }
 
 namespace exptH_detail {
-    //Helper for expPade
-    template<typename Iter, typename V>
-    void
-    multTElts(Iter m,
-              MatRef<V> const& F,
-              Cplx t)	
-        {
-        auto fe = F.data()+F.size();
-        if(t.imag() == 0)
-            {
-            Real tre = t.real();
-            for(auto f = F.data(); f != fe; ++f, ++m)
-                {
-                *f = tre * (*m);
-                }
-            }
-        else
-            {
-            for(auto f = F.data(); f != fe; ++f, ++m) 
-                {
-                *f = t * (*m);
-                }
-            }
-        }
-	
-    //Helper for expPade
-    template<typename Iter>
-    void
-    multTElts(Iter mre,
-              Iter mim,
-              std::vector<Cplx> & Hc,
-              Cplx t)
-        {
-        if(t.imag() == 0)
-            {
-            for(auto& z : Hc)
-                {
-                realRef(z) = t.real() * (*mre);
-                imagRef(z) = t.real() * (*mim);
-                ++mre;
-                ++mim;
-                }
-            }
-        else
-            {
-            for(auto& z : Hc)
-                {
-                realRef(z) = t.real() * (*mre) - t.imag() * (*mim);
-                imagRef(z) = t.real() * (*mim) + t.imag() * (*mre);
-                ++mre;
-                ++mim;
-                }
-            }
-        }
-	
-    //template <typename T>
-    //int padeExp(VecRef<T> const& y, int N, MatRef<T> const& F, int ideg);
+
     int
     expPade(MatRef<Real> const& F, int N, int ideg);
     int
@@ -290,61 +222,32 @@ namespace exptH_detail {
 
 } //exptH_detail
 
-template<class MatH,
-         class MatF,
+template<class MatM,
+         class ScalarT,
          class>
-void
-expGeneral(MatH && H,
-           MatF && F,
-           Cplx t,
-           int ideg)
+Mat<common_type<val_type<MatM>,ScalarT>>
+expMatrix(MatM && M,
+          ScalarT t,
+          int ideg)
     {
-    if(ideg <= 0)
+    if(ideg <= 0) Error("PadeApproxDeg cannot be less than 1");
+    auto N = ncols(M);
+    if(N < 1) throw std::runtime_error("exp: 0 dimensional matrix");
+    if(N != nrows(M))
         {
-        Error("PadeApproxDeg cannot be less than 1");
+        printfln("M is %dx%d",nrows(M),ncols(M));
+        throw std::runtime_error("exp: Input Matrix must be square");
         }
-    else
-        {
-        using Hval = typename stdx::decay_t<MatH>::value_type;
-        using Fval = typename stdx::decay_t<MatF>::value_type;
-        if(t.imag() == 0)
-            static_assert( !(isReal<Hval>() && isCplx<Fval>()),
-                          "expGeneral: real t - F must complex when H is complex");	
-        else
-            static_assert( isCplx<Fval>(),
-                          "expGeneral: cplx t - F must be complex");
-
-        auto N = ncols(H);
-        if(N < 1) throw std::runtime_error("expGeneral: 0 dimensional matrix");
-        if(N != nrows(H))
-            {
-            printfln("H is %dx%d",nrows(H),ncols(H));
-            throw std::runtime_error("expGeneral: Input Matrix must be square");
-            }
-
-#ifdef DEBUG
-        if(!isContiguous(F))
-            throw std::runtime_error("expGeneral: F must be contiguous");
-#endif
  
-        //TODO: use mult for matrix directly
-        if(isContiguous(H)) 
-            {
-            exptH_detail::multTElts(H.data(),F,t);
-            }
-        else                
-            {
-            exptH_detail::multTElts(H.cbegin(),F,t);
-            }
+    auto tM = t*M;
 
-        int info = 0;
-        info = exptH_detail::expPade(makeRef(F),N,ideg);
+    int info = 0;
+    info = exptH_detail::expPade(makeRef(tM),N,ideg);
 
-        if(info != 0)
-            {
-            throw std::runtime_error("expGeneral failed");
-            }
-        }
+    if(info != 0)
+        throw std::runtime_error("exp failed");
+
+    return tM;
     }
 
 } //namespace itensor
