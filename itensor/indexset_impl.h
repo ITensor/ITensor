@@ -503,6 +503,18 @@ dir(const IndexSetT<IndexT>& is, const IndexT& I)
     return In;
     }
 
+template<class IndexT>
+IndexSetT<IndexT> 
+replaceIndex(IndexSetT<IndexT> const& is, 
+             IndexT const& oi, 
+             IndexT const& ni)
+    {
+    auto n = findindex(is,oi);
+    if(n < 0) Error("replaceIndex: index not found");
+    auto nis = is;
+    nis[n] = ni;
+    return nis;
+    }
 
 template <class IndexT>
 IndexT

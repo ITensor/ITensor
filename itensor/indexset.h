@@ -362,6 +362,10 @@ template<class IndexT>
 Arrow
 dir(IndexSetT<IndexT> const& is, IndexT const& I);
 
+template<class IndexT>
+IndexSetT<IndexT> 
+replaceIndex(IndexSetT<IndexT> const& is, IndexT const& oi, IndexT const& ni);
+
 
 ////
 //// Compute the permutation P taking an IndexSetT iset
