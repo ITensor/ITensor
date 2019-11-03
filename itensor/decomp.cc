@@ -379,6 +379,7 @@ eigDecompImpl(IQTensor T,
               IQTensor & D,
               Args const& args)
     {
+    error("eigen for IQTensors is not currently implemented");
     /*
     const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
@@ -533,7 +534,19 @@ eigen(ITensorT<index_type> const& T,
         }
     auto comb = combiner(std::move(colinds));
 
-    auto Tc = prime(comb) * T * comb; 
+    auto Tc = prime(dag(comb)) * T * comb; 
+
+    // The version where Tc is ordered
+    // {cind,prime(cind)} does not work,
+    // here we will explicitly permute the
+    // ITensor so the indices are ordered
+    // {prime(cind),cind}.
+    // This is not great since it is an
+    // extra reordering of the data,
+    // look into fixing eigen properly.
+    auto cind = commonIndex(Tc,comb);
+    if(Tc.index(1) != prime(cind))
+      Tc.order(prime(cind),cind);
 
     ITensorT<index_type> L;
     if(isComplex(T))
