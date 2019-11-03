@@ -265,6 +265,22 @@ idmrg(MPSt<Tensor> & psi,
 
         printfln("    Energy per site = %.14f",energy/N0);
 
+        if((obs.checkDone(args) && sw%2==1)
+           || sw == sweeps.nsweep()) 
+            {
+            auto l = uniqueIndex(psi.A(1),psi.A(2),Link);
+            Tensor U(l),D,V;
+            svd(psi.A(1),U,D,V);
+
+            auto ri = uniqueIndex(psi.A(N0),psi.A(N0-1),Link);
+            auto rd = commonIndex(D,V,Link);
+            D.replaceIndex(rd,ri);
+            V.replaceIndex(dag(rd),dag(ri));
+            psi.Aref(0) = D;
+            psi.Aref(1) = V;
+            goto done;
+            }
+
 
         //Save last center matrix
         lastV = dag(D);
@@ -306,40 +322,22 @@ idmrg(MPSt<Tensor> & psi,
 
         psi.Aref(N0) *= D;
 
-        if((obs.checkDone(args) && sw%2==0)
-           || sw == sweeps.nsweep()) 
-            {
-            //Convert A's (left-ortho) to B's by moving D (center matrix)
-            //through until last V*A_j*D == B_j
-            for(int b = N0-1; b >= Nuc+1; --b)
-                {
-                Tensor d;
-                svd(psi.A(b)*psi.A(b+1),psi.Aref(b),d,psi.Aref(b+1));
-                psi.Aref(b) *= d;
-                }
-            psi.Aref(Nuc+1) *= lastV;
-
-            psi.Aref(0) = D;
-
-            break;
-            }
-
-        if(fileExists("WRITE_WF") && sw%2==0)
-            {
-            println("File WRITE_WF found: writing out wavefunction after step",sw);
-            system("rm -f WRITE_WF");
-            auto wpsi = psi;
-            for(int b = N0-1; b >= Nuc+1; --b)
-                {
-                Tensor d;
-                svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Aref(b),d,wpsi.Aref(b+1));
-                wpsi.Aref(b) *= d;
-                }
-            wpsi.Aref(Nuc+1) *= lastV;
-            wpsi.Aref(0) = D;
-            writeToFile(format("psi_%d",sw),wpsi);
-            writeToFile("sites",wpsi.sites());
-            }
+        //if(fileExists("WRITE_WF") && sw%2==0)
+        //    {
+        //    println("File WRITE_WF found: writing out wavefunction after step",sw);
+        //    system("rm -f WRITE_WF");
+        //    auto wpsi = psi;
+        //    for(int b = N0-1; b >= Nuc+1; --b)
+        //        {
+        //        Tensor d;
+        //        svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Aref(b),d,wpsi.Aref(b+1));
+        //        wpsi.Aref(b) *= d;
+        //        }
+        //    wpsi.Aref(Nuc+1) *= lastV;
+        //    wpsi.Aref(0) = D;
+        //    writeToFile(format("psi_%d",sw),wpsi);
+        //    writeToFile("sites",wpsi.sites());
+        //    }
 
         psi.Aref(Nuc+1) *= lastV;
         psi.Aref(1) *= D;
@@ -347,8 +345,10 @@ idmrg(MPSt<Tensor> & psi,
         psi.orthogonalize();
         psi.normalize();
 
+
         } //for loop over sw
     
+done:
     auto res = idmrgRVal<Tensor>();
     res.energy = energy;
     res.HL = HL;

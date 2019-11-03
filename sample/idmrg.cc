@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     IQMPO H = Heisenberg(sites,{"Infinite=",true});
 
-    auto sweeps = Sweeps(20);
+    auto sweeps = Sweeps(21);
     sweeps.maxm() = 20,80,140,200;
     sweeps.cutoff() = 1E-10,Args("Repeat",10),1E-14;
     sweeps.niter() = 3,2;
@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
     //lcorr is the left side of the correlation function tensor
     //which grows site by site below
     auto lcorr = prime(wf1,oi)*sites.op("Sz",1)*dag(prime(wf1));
-
     println("\nj <psi|Sz_1 Sz_j|psi> = ");
     //xrange is how far to go in measuring <Sz_1 Sz_j>, 
     //ok to adjust xrange to any size >= 2
