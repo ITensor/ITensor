@@ -314,6 +314,8 @@ class ITensorT
     void
     write(std::ostream& s) const;
 
+    void
+    replaceIndex(index_type const& oi, index_type const& ni);
 
     //
     // Developer / advanced methods

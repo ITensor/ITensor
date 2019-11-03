@@ -1266,6 +1266,15 @@ doTask(Write & W, D const& d)
 //write(std::ostream& s, ITensorT<I> const& T);
 
 
+template<typename IndexT>
+void ITensorT<IndexT>::
+replaceIndex(IndexT const& oi, 
+             IndexT const& ni)
+    {
+    auto nis = itensor::replaceIndex(inds(),oi,ni);
+    is_ = nis;
+    }
+
 } // namespace itensor
 
 
