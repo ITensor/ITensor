@@ -1097,6 +1097,7 @@ daxpy(ITensor & L,
       Real alpha)
     {
     if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
+    detail::checkSameDiv(L,R);
 
     using permutation = typename PlusEQ::permutation;
 
@@ -1119,10 +1120,6 @@ daxpy(ITensor & L,
         }
 
     if(!L.store()) Error("L not initialized in daxpy");
-
-#ifdef DEBUG
-    detail::checkSameDiv(L,R);
-#endif
 
 #ifdef USESCALE
     if(L.scale().magnitudeLessThan(R.scale())) 
