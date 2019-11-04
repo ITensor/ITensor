@@ -29,15 +29,6 @@ using std::move;
 
 namespace itensor {
 
-BlOf inline
-make_blof(long b, long o)
-    {
-    BlOf B;
-    B.block = b;
-    B.offset = o;
-    return B;
-    }
-
 const char*
 typeNameOf(QDenseReal const& d) { return "QDenseReal"; }
 const char*
@@ -472,18 +463,22 @@ doTask(Contract& Con,
     {
     using VC = common_type<VA,VB>;
     Labels Lind,
-          Rind;
+           Rind;
     computeLabels(Con.Lis,order(Con.Lis),Con.Ris,order(Con.Ris),Lind,Rind);
     //compute new index set (Con.Nis):
     Labels Cind;
     const bool sortResult = false;
     contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
 
-    auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
+    //auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
 TIMER_START(42);
-    auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
+    // TODO: This constructor is slow since it determines the non-zero blocks
+    // from the flux instead of from the A and B tensors
+    //auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
+    auto [Noffsets,Nsize] = getConstractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
+    auto nd = m.makeNewData<QDense<VC>>(Noffsets,Nsize);
 TIMER_STOP(42);
     auto& C = *nd;
 

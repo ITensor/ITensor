@@ -20,6 +20,14 @@
 
 namespace itensor {
 
+BlOf inline
+make_blof(long b, long o)
+    {
+    BlOf B;
+    B.block = b;
+    B.offset = o;
+    return B;
+    }
 
 //
 // Helper object for treating
@@ -110,6 +118,132 @@ getBlock(BlockSparse & d,
     return data_range_type{};
     }
 
+// From two input block-sparse tensors,
+// output the offsets and data size of the
+// result of contracting the tensors
+template<typename BlockSparseA,
+         typename BlockSparseB>
+std::tuple<std::vector<BlOf>,int>
+getConstractedOffsets(BlockSparseA const& A,
+                      IndexSet const& Ais,
+                      BlockSparseB const& B,
+                      IndexSet const& Bis,
+                      IndexSet const& Cis)
+    {
+    auto rC = order(Cis);
+
+    auto Coffsets = std::vector<BlOf>();
+    auto Csize = 0;
+
+    if(rC==0)
+        {
+        Coffsets.push_back(make_blof(0,0));
+        return std::make_tuple(Coffsets,Csize+1);
+        }
+
+    auto rA = order(Ais);
+    auto rB = order(Bis);
+
+    auto AtoB = IntArray(rA,-1);
+    auto AtoC = IntArray(rA,-1);
+    auto BtoC = IntArray(rB,-1);
+    for(auto ic : range(rC))
+        {
+        auto j = indexPosition(Ais,Cis[ic]);
+        if(j >= 0)
+            {
+            AtoC[j] = ic;
+            }
+        else
+            {
+            j = indexPosition(Bis,Cis[ic]);
+            BtoC[j] = ic;
+            }
+        }
+    for(auto ia : range(rA))
+    for(auto ib : range(rB))
+        {
+        if(Ais[ia] == Bis[ib])
+            {
+            AtoB[ia] = ib;
+            break;
+            }
+        }
+
+    auto couB = detail::GCounter(rB);
+    auto Ablockind = IntArray(rA,0);
+    auto Cblockind = IntArray(rC,0);
+
+    //Loop over blocks of A (labeled by elements of A.offsets)
+    for(auto& aio : A.offsets)
+        {
+        //Reconstruct indices labeling this block of A, put into Ablock
+        //TODO: optimize away need to call computeBlockInd by
+        //      storing block indices directly in QDense
+        //      Taking 10% of running time in S=1 N=100 DMRG tests (maxdim=100)
+        computeBlockInd(aio.block,Ais,Ablockind);
+
+        //Reset couB to run over indices of B (at first)
+        couB.reset();
+        for(auto iB : range(rB))
+            {
+            couB.setRange(iB,0,Bis[iB].nblock()-1);
+            }
+        for(auto iA : range(rA))
+            {
+            auto ival = Ablockind[iA];
+            //Restrict couB to be fixed for indices of B contracted with A
+            if(AtoB[iA] != -1) couB.setRange(AtoB[iA],ival,ival);
+            //Begin computing elements of Cblock(=destination of this block-block contraction)
+            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
+            }
+        //Loop over blocks of B which contract with current block of A
+        for(;couB.notDone(); ++couB)
+            {
+            //Check whether B contains non-zero block for this setting of couB
+            //TODO: check whether block is present by storing all blocks
+            //      but most have null pointers to data
+            auto bblock = getBlock(B,Bis,couB.i);
+            if(!bblock) continue;
+
+            //Finish making Cblockind and Bblockind
+            auto Bblockind = IntArray(rB,0);
+            for(auto iB : range(rB))
+                {
+                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = couB.i[iB];
+                Bblockind[iB] = couB.i[iB];
+                }
+
+            // Get the size of cblock, add it to the total size
+
+            //auto cblock = getBlock(C,Cis,Cblockind);
+            //assert(cblock);
+
+            auto ablock = makeDataRange(A.data(),aio.offset,A.size());
+
+            PrintData(aio.block);
+            PrintData(aio.offset);
+            PrintData(Ablockind);
+            PrintData(ablock.size());
+
+            PrintData(Bblockind);
+            PrintData(bblock.size());
+
+            PrintData(Cblockind);
+            PrintData(Cis);
+
+            //auto cblocksize = getBlockSize(Cis,Cblockind);
+
+            //PrintData(cblock.size());
+
+            //callback(ablock,Ablockind,
+            //         bblock,Bblockind,
+            //         cblock,Cblockind);
+            } //for couB
+        } //for A.offsets
+    return std::make_tuple(Coffsets,Csize);
+    }
+
 template<typename BlockSparseA, 
          typename BlockSparseB,
          typename BlockSparseC,
@@ -195,6 +329,9 @@ loopContractedBlocks(BlockSparseA const& A,
                 if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = couB.i[iB];
                 Bblockind[iB] = couB.i[iB];
                 }
+
+            PrintData(Cis);
+            PrintData(Cblockind);
 
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
