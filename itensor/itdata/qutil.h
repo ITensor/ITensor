@@ -123,6 +123,7 @@ loopContractedBlocks(BlockSparseA const& A,
                      IndexSet const& Cis,
                      Callable & callback)
     {
+//TIMER_START(312);
     auto rA = Ais.order();
     auto rB = Bis.order();
     auto rC = Cis.order();
@@ -200,12 +201,15 @@ loopContractedBlocks(BlockSparseA const& A,
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
 
+//TIMER_START(313);
             callback(ablock,Ablockind,
                      bblock,Bblockind,
                      cblock,Cblockind);
+//TIMER_STOP(313);
 
             } //for couB
         } //for A.offsets
+//TIMER_STOP(312);
     }
 
 

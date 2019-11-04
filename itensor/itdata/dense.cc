@@ -301,9 +301,7 @@ doTask(Contract & C,
     tstats(tL,Lind,tR,Rind,tN,Nind);
 #endif
 
-    START_TIMER(30);
     contract(tL,Lind,tR,Rind,tN,Nind);
-    STOP_TIMER(30);
 
 #ifdef USESCALE
     if(rsize > 1) C.scalefac = computeScalefac(*nd);

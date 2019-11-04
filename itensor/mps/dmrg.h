@@ -394,15 +394,21 @@ DMRGWorker(MPS & psi,
                 printfln("Sweep=%d, HS=%d, Bond=%d/%d",sw,ha,b,(N-1));
                 }
 
+TIMER_START(1);
             PH.position(b,psi);
+TIMER_STOP(1);
 
+TIMER_START(2);
             auto phi = psi(b)*psi(b+1);
+TIMER_STOP(2);
 
+TIMER_START(3);
             energy = davidson(PH,phi,args);
+TIMER_STOP(3);
             
-            TIMER_START(40);
+TIMER_START(4);
             auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
-            TIMER_STOP(40);
+TIMER_STOP(4);
 
             if(!quiet)
                 { 

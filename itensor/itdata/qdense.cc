@@ -114,6 +114,8 @@ updateOffsets(IndexSet const& is,
     long totalsize = 0;
     for(auto I : RB.build())
         {
+        PrintData(I);
+
         auto blockqn = QN{};
         for(auto j : range(order(is)))
             {
@@ -480,7 +482,9 @@ doTask(Contract& Con,
     auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
+TIMER_START(42);
     auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
+TIMER_STOP(42);
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -510,10 +514,12 @@ doTask(Contract& Con,
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         };
 
+TIMER_START(41);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          do_contract);
+TIMER_STOP(41);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);

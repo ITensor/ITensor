@@ -349,20 +349,28 @@ product(ITensor const& phi,
         }
     else
         {
+TIMER_START(32);
         phip = phi * L(); //m^3 k d
+TIMER_STOP(32);
 
         if(nc_ == 2)
             {
+TIMER_START(33);
             phip *= (*Op1_); //m^2 k^2
+TIMER_STOP(33);
+TIMER_START(34);
             phip *= (*Op2_); //m^2 k^2
+TIMER_STOP(34);
             }
         else if(nc_ == 1)
             {
             phip *= (*Op1_);
             }
 
+TIMER_START(35);
         if(!RIsNull()) 
             phip *= R();
+TIMER_STOP(35);
         }
 
     phip.noPrime();

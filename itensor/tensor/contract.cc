@@ -757,9 +757,7 @@ contract(CProps const& p,
         {
         auto aptr = SAFE_REINTERPRET(VA,ab);
         auto tref = makeTenRef(SAFE_PTR_GET(aptr,Apsize),Apsize,&p.newArange);
-        TIMER_START(32);
         tref &= permute(A,p.PA);
-        TIMER_STOP(32);
         aref = transpose(makeMatRefc(tref.store(),p.dmid,p.dleft));
         }
     else
@@ -779,9 +777,7 @@ contract(CProps const& p,
         {
         auto bptr = SAFE_REINTERPRET(VB,bb);
         auto tref = makeTenRef(SAFE_PTR_GET(bptr,Bpsize),Bpsize,&p.newBrange);
-        TIMER_START(32);
         tref &= permute(B,p.PB);
-        TIMER_STOP(32);
         bref = makeMatRefc(tref.store(),p.dmid,p.dright);
         }
     else
@@ -816,18 +812,14 @@ contract(CProps const& p,
             }
         }
 
-    TIMER_START(31);
     gemm(aref,bref,cref,alpha,beta);
-    TIMER_STOP(31);
 
     if(p.permuteC())
         {
 #ifdef DEBUG
         if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
 #endif
-        TIMER_START(32);
         C &= permute(newC,p.PC);
-        TIMER_STOP(32);
         }
     }
 
