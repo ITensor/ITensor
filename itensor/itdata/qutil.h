@@ -219,18 +219,32 @@ getConstractedOffsets(BlockSparseA const& A,
             //auto cblock = getBlock(C,Cis,Cblockind);
             //assert(cblock);
 
-            auto ablock = makeDataRange(A.data(),aio.offset,A.size());
+            //auto ablock = makeDataRange(A.data(),aio.offset,A.size());
 
-            PrintData(aio.block);
-            PrintData(aio.offset);
-            PrintData(Ablockind);
-            PrintData(ablock.size());
+            //PrintData(aio.block);
+            //PrintData(aio.offset);
+            //PrintData(Ablockind);
+            //PrintData(ablock.size());
 
-            PrintData(Bblockind);
-            PrintData(bblock.size());
+            //PrintData(Bblockind);
+            //PrintData(bblock.size());
 
-            PrintData(Cblockind);
-            PrintData(Cis);
+            //PrintData(Cblockind);
+            //PrintData(Cis);
+
+            long indstr = 1, //accumulate Index strides
+                 ind = 0,
+                 totdim = 1;   //accumulate dim of Indices
+            for(auto j : range(order(Cis)))
+                {
+                auto& J = Cis[j];
+                auto i_j = Cblockind[j];
+                ind += i_j*indstr;
+                indstr *= J.nblock();
+                totdim *= J.blocksize0(i_j);
+                }
+            Coffsets.push_back(make_blof(ind,Csize));
+            Csize += totdim;
 
             //auto cblocksize = getBlockSize(Cis,Cblockind);
 
@@ -330,19 +344,19 @@ loopContractedBlocks(BlockSparseA const& A,
                 Bblockind[iB] = couB.i[iB];
                 }
 
-            PrintData(Cis);
-            PrintData(Cblockind);
+            //PrintData(Cis);
+            //PrintData(Cblockind);
 
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
 
-//TIMER_START(313);
+//TIMER_START(3);
             callback(ablock,Ablockind,
                      bblock,Bblockind,
                      cblock,Cblockind);
-//TIMER_STOP(313);
+//TIMER_STOP(3);
 
             } //for couB
         } //for A.offsets

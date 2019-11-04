@@ -105,7 +105,7 @@ updateOffsets(IndexSet const& is,
     long totalsize = 0;
     for(auto I : RB.build())
         {
-        PrintData(I);
+        //PrintData(I);
 
         auto blockqn = QN{};
         for(auto j : range(order(is)))
@@ -473,13 +473,13 @@ doTask(Contract& Con,
     //auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
-TIMER_START(42);
+TIMER_START(1);
     // TODO: This constructor is slow since it determines the non-zero blocks
     // from the flux instead of from the A and B tensors
     //auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
-    auto [Noffsets,Nsize] = getConstractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
-    auto nd = m.makeNewData<QDense<VC>>(Noffsets,Nsize);
-TIMER_STOP(42);
+    auto [Coffsets,Csize] = getConstractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
+    auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
+TIMER_STOP(1);
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -509,12 +509,12 @@ TIMER_STOP(42);
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         };
 
-TIMER_START(41);
+TIMER_START(2);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          do_contract);
-TIMER_STOP(41);
+TIMER_STOP(2);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);
