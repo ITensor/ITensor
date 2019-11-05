@@ -295,11 +295,28 @@ SECTION("QN ITensor denmatDecomp")
         auto A1 = randomITensor(QN(),L1,S1,L2),
              A2 = randomITensor(QN(),dag(L2),S2,L3);
 
+        PrintData("Compute initial AA = A1*A2");
+
         auto AA = A1*A2;
+
         AA *= -1./norm(AA);
+
+        PrintData(AA);
+
+        PrintData("Compute denmatDecomp(AA)");
+
         auto spec = denmatDecomp(AA,A1,A2,Fromleft);
  
-        CHECK(norm(AA-A1*A2) < 1E-11);
+        PrintData(A1);
+        PrintData(A2);
+
+        PrintData("Compute AAres");
+
+        auto AAres = A1*A2;
+
+        PrintData(AAres);
+
+        CHECK(norm(AA-AAres) < 1E-11);
 
         for(auto eig : spec.eigsKept())
             {

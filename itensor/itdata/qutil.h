@@ -132,13 +132,9 @@ getConstractedOffsets(BlockSparseA const& A,
     {
     auto rC = order(Cis);
 
-    auto Coffsets = std::vector<BlOf>();
-    auto Csize = 0;
-
     if(rC==0)
         {
-        Coffsets.push_back(make_blof(0,0));
-        return std::make_tuple(Coffsets,Csize+1);
+        return std::make_tuple(std::vector<BlOf>({make_blof(0,0)}),1);
         }
 
     auto rA = order(Ais);
@@ -173,6 +169,13 @@ getConstractedOffsets(BlockSparseA const& A,
     auto couB = detail::GCounter(rB);
     auto Ablockind = IntArray(rA,0);
     auto Cblockind = IntArray(rC,0);
+
+    // Store pairs of unordered block numbers and their sizes,
+    // to be ordered later and stored in Coffsets
+    auto Cblocksizes_unordered = std::vector<std::pair<long,long>>();
+
+    // Stores the total size that the storage of C should have
+    auto Csize = 0;
 
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto& aio : A.offsets)
@@ -232,19 +235,32 @@ getConstractedOffsets(BlockSparseA const& A,
             //PrintData(Cblockind);
             //PrintData(Cis);
 
-            long indstr = 1, //accumulate Index strides
-                 ind = 0,
-                 totdim = 1;   //accumulate dim of Indices
+            // TODO: I think here we need to make sure whichblock
+            // is ordered
+            long blockStride = 1, //accumulate Index strides
+                 blockLabel = 0,
+                 blockDim = 1;   //accumulate dim of Indices
             for(auto j : range(order(Cis)))
                 {
                 auto& J = Cis[j];
                 auto i_j = Cblockind[j];
-                ind += i_j*indstr;
-                indstr *= J.nblock();
-                totdim *= J.blocksize0(i_j);
+                blockLabel += i_j*blockStride;
+                blockStride *= J.nblock();
+                blockDim *= J.blocksize0(i_j);
                 }
-            Coffsets.push_back(make_blof(ind,Csize));
-            Csize += totdim;
+
+            //PrintData(blockLabel);
+            //PrintData(blockDim);
+
+            //Coffsets.push_back(make_blof(whichblock,Csize));
+            auto block_already_found = std::any_of(Cblocksizes_unordered.begin(),
+                                                   Cblocksizes_unordered.end(), 
+                                                   [blockLabel](auto a) { return a.first == blockLabel; });
+            if(!block_already_found)
+              {
+              Cblocksizes_unordered.push_back(std::make_pair(blockLabel,blockDim));
+              Csize += blockDim;
+              }
 
             //auto cblocksize = getBlockSize(Cis,Cblockind);
 
@@ -255,6 +271,21 @@ getConstractedOffsets(BlockSparseA const& A,
             //         cblock,Cblockind);
             } //for couB
         } //for A.offsets
+
+    // Sort the block sizes by the block labels
+    std::sort(Cblocksizes_unordered.begin(),Cblocksizes_unordered.end(),
+              [](auto a, auto b) { return a.first < b.first; });
+    auto Coffsets = std::vector<BlOf>(Cblocksizes_unordered.size());
+    auto current_offset = 0;
+    for(auto i : range(Cblocksizes_unordered.size()))
+        {
+        Coffsets[i].block = Cblocksizes_unordered[i].first;
+        Coffsets[i].offset = current_offset;
+        current_offset += Cblocksizes_unordered[i].second;
+        //PrintData(i);
+        //PrintData(Coffsets[i].block);
+        //PrintData(Coffsets[i].offset);
+        } 
     return std::make_tuple(Coffsets,Csize);
     }
 
