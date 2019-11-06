@@ -175,7 +175,7 @@ void inline
 doTask(Conj, ScalarReal const& d) { }
 
 void inline
-doTask(Conj, ScalarCplx & d) { std::conj(d.val); }
+doTask(Conj, ScalarCplx & d) { d.val = std::conj(d.val); }
 
 void inline
 doTask(TakeReal, ScalarReal const& ) { /*nothing to do*/ }
