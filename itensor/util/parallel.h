@@ -228,7 +228,7 @@ parallelDebugWait(Environment const& env)
         printfln("Process %d found file GO, exiting wait loop",env.rank());
         }
     env.barrier();
-    if(env.firstNode()) system("rm -f GO");
+    if(env.firstNode()) std::remove("GO");
 #endif
     } 
 
