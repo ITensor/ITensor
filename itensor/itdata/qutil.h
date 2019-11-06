@@ -124,11 +124,11 @@ getBlock(BlockSparse & d,
 template<typename BlockSparseA,
          typename BlockSparseB>
 std::tuple<std::vector<BlOf>,int>
-getConstractedOffsets(BlockSparseA const& A,
-                      IndexSet const& Ais,
-                      BlockSparseB const& B,
-                      IndexSet const& Bis,
-                      IndexSet const& Cis)
+getContractedOffsets(BlockSparseA const& A,
+                     IndexSet const& Ais,
+                     BlockSparseB const& B,
+                     IndexSet const& Bis,
+                     IndexSet const& Cis)
     {
     auto rC = order(Cis);
 
@@ -168,6 +168,7 @@ getConstractedOffsets(BlockSparseA const& A,
 
     auto couB = detail::GCounter(rB);
     auto Ablockind = IntArray(rA,0);
+    auto Bblockind = IntArray(rB,0);
     auto Cblockind = IntArray(rC,0);
 
     // Store pairs of unordered block numbers and their sizes,
@@ -201,20 +202,74 @@ getConstractedOffsets(BlockSparseA const& A,
             if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = ival;
             }
         //Loop over blocks of B which contract with current block of A
-        for(;couB.notDone(); ++couB)
+        //
+        //TODO: should this loop over B.offsets? I think that should be faster
+        //      This is looping over all possible blocks of B, both structurally
+        //      zero and non-zero. Why not just search through the offsets of B?
+        //      Can do: 
+        //      for(auto& bio : B.offsets)
+        //        {
+        //        Bblockind = IntArray(rB,0);
+        //        computeBlockInd(bio.block,Bis,Bblockind);
+        //        for(auto iB : range(rB))
+        //          if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = Bblockind[iB];
+        //        // TODO: need to check if this block really contracts with the A block
+        //        Use Ablockind and Bblockind, check that for the contracted dimensions
+        //        the indices are common:
+        //        for(auto iA : range(rA))
+        //          for(auto iB : range(rB))
+        //            if(BtoC[iB] == -1 && AtoC[iA] == -1)
+        //              if(Bblockind[iB] != Ablockind[iA]) continue;
+        //        }
+        //
+
+        //PrintData(Ablockind);
+
+        for(auto& bio : B.offsets)
             {
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by storing all blocks
             //      but most have null pointers to data
-            auto bblock = getBlock(B,Bis,couB.i);
-            if(!bblock) continue;
 
-            //Finish making Cblockind and Bblockind
-            auto Bblockind = IntArray(rB,0);
+            computeBlockInd(bio.block,Bis,Bblockind);
+
+            //PrintData(Bblockind);
+
+            //auto bblock = getBlock(B,Bis,couB.i);
+            //if(!bblock) continue;
+
+            auto do_blocks_contract = true;
+
+            for(auto iA : range(rA))
+                {
+                //PrintData(iA);
+                //PrintData(AtoB[iA]);
+                auto iB = AtoB[iA];
+                //PrintData(iB);
+                if(AtoB[iA] != -1)
+                  if(Ablockind[iA] != Bblockind[iB])
+                    {
+                    do_blocks_contract = false;
+                    break;
+                    }
+                }
+
+            if(!do_blocks_contract) continue;
+
+            //for(auto iA : range(rA))
+            //    {
+            //    PrintData(iA);
+            //    PrintData(AtoC[iA]);
+            //    }
+
+            //Finish making Cblockind
             for(auto iB : range(rB))
                 {
-                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = couB.i[iB];
-                Bblockind[iB] = couB.i[iB];
+
+                //PrintData(BtoC[iB]);
+
+                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = Bblockind[iB];
+                //Bblockind[iB] = couB.i[iB];
                 }
 
             // Get the size of cblock, add it to the total size
@@ -235,8 +290,6 @@ getConstractedOffsets(BlockSparseA const& A,
             //PrintData(Cblockind);
             //PrintData(Cis);
 
-            // TODO: I think here we need to make sure whichblock
-            // is ordered
             long blockStride = 1, //accumulate Index strides
                  blockLabel = 0,
                  blockDim = 1;   //accumulate dim of Indices
@@ -248,6 +301,8 @@ getConstractedOffsets(BlockSparseA const& A,
                 blockStride *= J.nblock();
                 blockDim *= J.blocksize0(i_j);
                 }
+
+            //PrintData(Cblockind);
 
             //PrintData(blockLabel);
             //PrintData(blockDim);

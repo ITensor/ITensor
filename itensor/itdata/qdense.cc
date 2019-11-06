@@ -477,7 +477,7 @@ TIMER_START(1);
     // TODO: This constructor is slow since it determines the non-zero blocks
     // from the flux instead of from the A and B tensors
     //auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
-    auto [Coffsets,Csize] = getConstractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
+    auto [Coffsets,Csize] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
     auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
 TIMER_STOP(1);
     auto& C = *nd;
