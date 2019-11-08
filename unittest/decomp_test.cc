@@ -224,6 +224,98 @@ SECTION("QN ITensor SVD")
 
     }
 
+ SECTION("QR Decomposition")
+   {
+     Index i(3),
+       j(4),
+       k(5),
+       l(6);
+
+     SECTION("Case 1")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i,j),R;
+	 qr_decomp(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,j));
+	 CHECK(hasIndex(R,k));
+       }
+
+     SECTION("Case 2")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i,k),R;
+	 qr_decomp(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,k));
+	 CHECK(hasIndex(R,j));
+       }
+
+     SECTION("Case 3")
+       {
+	 auto T = randomITensor(i,k,prime(i));
+
+	 ITensor Q(i,prime(i)),R;
+	 qr_decomp(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,prime(i)));
+	 CHECK(hasIndex(R,k));
+       }
+     
+      SECTION("Case 4")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i),R;
+	 qr_decomp(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(R,j));
+	 CHECK(hasIndex(R,k));
+       }
+
+   }
+ 
+ SECTION("Complex QR Decomposition")
+   {
+     Index i(3),
+       j(4),
+       k(5),
+       l(6);
+
+
+     auto T = randomITensorC(i,j,k);
+
+     ITensor Q(i,j),R;
+     qr_decomp(T, Q, R);
+     CHECK(norm(T-Q*R) < 1E-12);
+     CHECK(hasIndex(Q,i));
+     CHECK(hasIndex(Q,j));
+     CHECK(hasIndex(R,k));
+   }
+ 
+
+ SECTION("QN ITensor QR")
+   {
+     Index u(QN(+2),3,
+	     QN( 0),2,
+	     QN(-2),2);
+     Index v(QN(+2),2,
+	     QN( 0),2,
+	     QN(-2),1);
+
+     auto S = randomITensor(QN(),u,v);
+     ITensor Q(u),R;
+     qr_decomp(S, Q,R);
+
+     CHECK(norm(S-Q*R) < 1E-12);
+   }
+
 SECTION("Polar")
   {
   auto i = Index(2,"i");

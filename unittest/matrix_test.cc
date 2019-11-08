@@ -1411,6 +1411,63 @@ SECTION("diagHermitian")
         }
     }
 
+ SECTION("QR")
+    {
+    auto N = 10;
+    auto P = 6;
+
+    SECTION("Real case")
+        {
+	auto M = randomMat(N, P);
+
+        Matrix Q, R;
+        QR(M,Q,R);
+
+        auto T = Q*R;
+
+        for(auto r : range(N))
+        for(auto c : range(P))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+        }
+
+    SECTION("Complex case")
+        {
+	auto M = randomMatC(N, P);
+
+        CMatrix Q, R;
+        QR(M,Q,R);
+
+        auto T = Q*R;
+
+        for(auto r : range(N))
+        for(auto c : range(P))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+        }
+
+    SECTION("Complex rank deficient case")
+        {
+        auto M = randomMatC(P, N);
+
+        CMatrix Q, R;
+        QR(M,Q,R);
+
+        auto T = Q*R;
+
+        for(auto r : range(P))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+        }
+    }
+
 SECTION("expMatrix")
     {
     auto N = 10;
