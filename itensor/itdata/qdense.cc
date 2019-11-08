@@ -76,7 +76,7 @@ template QN doTask(CalcDiv const&,QDense<Cplx> const&);
 template<typename T>
 QDense<T>::
 QDense(IndexSet const& is, 
-       QN         const& div)
+       QN       const& div)
     {
     auto totalsize = updateOffsets(is,div);
     store.assign(totalsize,0.);
@@ -84,10 +84,23 @@ QDense(IndexSet const& is,
 template QDense<Real>::QDense(IndexSet const&, QN const&);
 template QDense<Cplx>::QDense(IndexSet const&, QN const&);
 
+// Constructor taking a list of block labels
+// instead of QN divergence
+template<typename T>
+QDense<T>::
+QDense(IndexSet       const& is,
+       vector<Labels> const& blocks)
+    {
+    auto totalsize = updateOffsets(is,blocks);
+    store.assign(totalsize,0.);
+    }
+template QDense<Real>::QDense(IndexSet const&, vector<Labels> const&);
+template QDense<Cplx>::QDense(IndexSet const&, vector<Labels> const&);
+
 template<typename T>
 long QDense<T>::
 updateOffsets(IndexSet const& is,
-              QN         const& div)
+              QN       const& div)
     {
     offsets.clear();
 
@@ -105,8 +118,6 @@ updateOffsets(IndexSet const& is,
     long totalsize = 0;
     for(auto I : RB.build())
         {
-        //PrintData(I);
-
         auto blockqn = QN{};
         for(auto j : range(order(is)))
             {
@@ -133,8 +144,42 @@ updateOffsets(IndexSet const& is,
     return totalsize;
     }
 
+template<typename T>
+long QDense<T>::
+updateOffsets(IndexSet       const& is,
+              vector<Labels> const& blocks)
+    {
+    offsets.clear();
+
+    if(order(is)==0)
+        {
+        offsets.push_back(make_blof(0,0));
+        return 1;
+        }
+
+    long totalsize = 0;
+    for(auto const& block : blocks)
+        {
+        long indstr = 1, //accumulate Index strides
+             ind = 0,
+             totm = 1;   //accumulate dim of Indices
+        for(auto j : range(order(is)))
+            {
+            auto& J = is[j];
+            auto i_j = block[j];
+            ind += i_j*indstr;
+            indstr *= J.nblock();
+            totm *= J.blocksize0(i_j);
+            }
+        offsets.push_back(make_blof(ind,totalsize));
+        totalsize += totm;
+        //    }
+        }
+    return totalsize;
+    }
+
 long
-offsetOf(std::vector<BlOf> const& offsets,
+offsetOf(vector<BlOf> const& offsets,
          long blockind)
     {
     auto blk = detail::binaryFind(offsets,blockind,compBlock());
@@ -396,35 +441,36 @@ add(PlusEQ const& P,
     QDense<T1>            & A,
     QDense<T2>       const& B)
     {
-#ifdef DEBUG
-    if(A.store.size() != B.store.size()) Error("Mismatched sizes in plusEq");
-#endif
-    if(isTrivial(P.perm()) && std::is_same<T1,T2>::value)
+    auto r = order(P.is1());
+
+    if(r==0)
         {
         auto dA = realData(A);
         auto dB = realData(B);
         daxpy_wrapper(dA.size(),P.alpha(),dB.data(),1,dA.data(),1);
+        return;
         }
-    else
-        {
-        auto r = order(P.is1());
-        Labels Ablock(r,0),
-              Bblock(r,0);
-        Range Arange,
-              Brange;
-        for(auto& aio : A.offsets)
-            {
-            computeBlockInd(aio.block,P.is1(),Ablock);
-            for(auto i : range(r))
-                Bblock[i] = Ablock[P.perm().dest(i)];
-            Arange.init(make_indexdim(P.is1(),Ablock));
-            Brange.init(make_indexdim(P.is2(),Bblock));
 
-            auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
-            auto bblock = getBlock(B,P.is2(),Bblock);
-            auto bref = makeRef(bblock,&Brange);
-            transform(permute(bref,P.perm()),aref,Adder{P.alpha()});
-            }
+    Labels Ablock(r,0),
+           Bblock(r,0);
+    Range Arange,
+          Brange;
+
+    for(auto& aio : A.offsets)
+        {
+        computeBlockInd(aio.block,P.is1(),Ablock);
+
+        for(auto i : range(r))
+            Bblock[i] = Ablock[P.perm().dest(i)];
+
+        auto bblock = getBlock(B,P.is2(),Bblock);
+        if(!bblock) continue;
+
+        Arange.init(make_indexdim(P.is1(),Ablock));
+        Brange.init(make_indexdim(P.is2(),Bblock));
+        auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
+        auto bref = makeRef(bblock,&Brange);
+        transform(permute(bref,P.perm()),aref,Adder{P.alpha()});
         }
     }
 
@@ -437,7 +483,78 @@ doTask(PlusEQ const& P,
     {
     if(B.store.size() == 0) return;
 
-    if(isReal(A) && isCplx(B))
+    //
+    // If B has blocks that A doesn't have,
+    // then we need to widen the storage of A
+    //
+
+    auto r = order(P.is1());
+
+    if(r == 0)
+        {
+        if(isReal(A) && isCplx(B))
+            {
+            auto *nA = m.makeNewData<QDenseCplx>(A.offsets,A.begin(),A.end());
+            add(P,*nA,B);
+            }
+        else
+            {
+            auto *mA = m.modifyData(A);
+            add(P,*mA,B);
+            }
+        return;
+        }
+
+    auto Ablock = Labels(r,0),
+         Bblock = Labels(r,0);
+
+    // Store the blocks of the output
+    // TODO: optimize this to merge and remove repeats
+    //       at the same time, assuming A.offsets and 
+    //       B.offsets are already sorted
+    auto Cblocks = vector<Labels>();
+
+    for(auto& aio : A.offsets)
+        {
+        computeBlockInd(aio.block,P.is1(),Ablock);
+        Cblocks.push_back(Ablock);
+        }
+
+    for(auto& bio : B.offsets)
+        {
+        computeBlockInd(bio.block,P.is2(),Bblock);
+        auto Bblockp = Labels(r,0);
+        // TODO: check this is the correct permutation
+        for(auto i : range(r))
+          Bblockp[i] = Bblock[P.perm().dest(i)];
+        Cblocks.push_back(Bblockp);
+        }
+
+    // TODO: turn this into a sort_blocks function
+    std::sort(Cblocks.begin(),Cblocks.end(),[](Labels const& l1,
+              Labels const& l2){ return std::lexicographical_compare(l1.rbegin(),l1.rend(),
+                                                                     l2.rbegin(),l2.rend()); });
+
+    // Remove the duplicates (need to resize manually)
+    auto newCend = std::unique(Cblocks.begin(), Cblocks.end());
+    Cblocks.resize(std::distance(Cblocks.begin(),newCend));
+
+    // TODO: make a special case for B.offsets.size() == Cblocks.size()?
+    //       This could avoid having to allocate new memory in certain
+    //       situations
+    if(A.offsets.size() < Cblocks.size())
+        {
+        // This means there are blocks in B that are not
+        // in A
+
+        auto *nA = m.makeNewData<QDense<common_type<TA,TB>>>(P.is1(),Cblocks);
+        // Do a trivial permutation
+        auto trivial_perm = PlusEQ::permutation(r);
+        auto PA = PlusEQ(trivial_perm,P.is1(),P.is1(),1.0);
+        add(PA,*nA,A);
+        add(P,*nA,B);
+        }
+    else if(isReal(A) && isCplx(B))
         {
         auto *nA = m.makeNewData<QDenseCplx>(A.offsets,A.begin(),A.end());
         add(P,*nA,B);
@@ -725,6 +842,21 @@ doTask(RemoveQNs & R,
     }
 template void doTask(RemoveQNs &, QDense<Real> const&, ManageStore &);
 template void doTask(RemoveQNs &, QDense<Cplx> const&, ManageStore &);
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, QDense<T> const& t)
+    {
+    s << "QDense blocks and offsets:\n";
+    for(auto const& blof : t.offsets)
+      s << "Block: " << blof.block << ", Offset: " << blof.offset << "\n";
+    s << "\nQDense storage:\n";
+    for(auto const& el : t.store)
+      s << el << "\n";
+    return s;
+    }
+template std::ostream& operator<<(std::ostream & s, QDense<Real> const& t);
+template std::ostream& operator<<(std::ostream & s, QDense<Cplx> const& t);
 
 } //namespace itensor
 

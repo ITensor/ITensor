@@ -708,12 +708,14 @@ orthogonalize(Args args)
     auto E = vector<ITensor>(N+1);
 
     auto psic = itensor::dag(psi);
+
     //TODO: use sim(linkInds)
     //That would require changing the requirements of diagPosSemiDef to
     //allow more general ITensors
     psic.replaceLinkInds(itensor::prime(itensor::linkInds(psic),rand_plev));
 
     E[1] = psi(1)*psic(1); 
+
     for(int j = 2; j < N; ++j)
         E[j] = E[j-1] * psi(j) * psic(j);
     auto rho = E[N-1] * psi(N) * itensor::prime(psic(N),rand_plev,siteInds(psic,N));

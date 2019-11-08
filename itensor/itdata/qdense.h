@@ -62,7 +62,12 @@ class QDense
     QDense() { }
 
     QDense(IndexSet const& is, 
-           QN const& div_);
+           QN       const& div);
+
+    // Constructor taking a list of block labels
+    // instead of QN divergence
+    QDense(IndexSet       const& is,
+           std::vector<Labels> const& blocks);
 
     //template<typename InputIter>
     //QDense(std::vector<BlOf> const& off,
@@ -119,7 +124,15 @@ class QDense
     updateOffsets(IndexSet const& is,
                   QN const& div);
 
+    long
+    updateOffsets(IndexSet            const& is,
+                  std::vector<Labels> const& blocks);
+
     };
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, QDense<T> const& t);
 
 const char*
 typeNameOf(QDenseReal const& d);
