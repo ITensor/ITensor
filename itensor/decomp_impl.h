@@ -67,6 +67,14 @@ svd(ITensor const& T, Index const& i1, IndsArgs&&... indsargs)
 
 template <typename... IndsArgs>
 std::tuple<ITensor,ITensor>
+qr_decomp(ITensor const& T, Index const& i1, IndsArgs&&... indsargs)
+  {
+  auto [is,args] = detail::makeIndexSetArgs(i1,indsargs...);
+  return qr_decomp(T,is,args);
+  }
+
+template <typename... IndsArgs>
+std::tuple<ITensor,ITensor>
 factor(ITensor const& T, Index const& i1, IndsArgs&&... indsargs)
   {
   auto [is,args] = detail::makeIndexSetArgs(i1,indsargs...);

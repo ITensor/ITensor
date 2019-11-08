@@ -43,6 +43,33 @@ namespace detail {
         return zheev_wrapper(N,Udata,ddata);
         }
 
+    int
+    QR(int M, int N, Real *Qdata, Real *Rdata)
+        {
+        LAPACK_INT info = 0;
+	std::vector<LAPACK_REAL> tau(N);
+        dgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
+	for (int i = 0; i < M; i++)
+	  for (int j = i; j < N; j++) 
+	    Rdata[i + j*M] = Qdata[i+j*M];
+	int min = M < N ? M : N;
+	dorgqr_wrapper(&M, &M, &min, Qdata, &M, tau.data(), &info);
+        return info;
+        }
+    int
+    QR(int M, int N, Cplx *Qdata, Cplx *Rdata)
+        {
+        LAPACK_INT info = 0;
+	std::vector<LAPACK_COMPLEX> tau(N);
+        zgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
+	for (int i = 0; i < M; i++)
+	  for (int j = i; j < N; j++) 
+	    Rdata[i + j*M] = Qdata[i+j*M];
+	int min = M < N ? M : N;
+	zungqr_wrapper(&M, &M, &min, Qdata, &M, tau.data(), &info);
+        return info;
+        }
+
 } //namespace detail
 
 //void

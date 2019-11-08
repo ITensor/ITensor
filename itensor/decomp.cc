@@ -925,4 +925,185 @@ expHermitian(ITensor const& T, Cplx t)
     return prime(U)*d*dag(U);
     }
 
+void
+qr_decomp(ITensor const& AA,
+    ITensor & Q,
+	  ITensor & R,
+    Args args)
+    {
+
+#ifdef DEBUG
+    if(!Q && !R)
+        Error("Q and R default-initialized in qr_decomp, must indicate at least one index on Q or R");
+#endif
+    
+    //Combiners which transform AA
+    //into a order 2 tensor
+    std::vector<Index> Qinds,
+                       Rinds;
+    Qinds.reserve(AA.order());
+    Rinds.reserve(AA.order());
+    //Divide up indices based on Q
+    //If Q is null, use R instead
+    auto &A = (Q ? Q : R);
+    auto &Ainds = (Q ? Qinds : Rinds),
+         &Binds = (Q ? Rinds : Qinds);
+    for(const auto& I : AA.inds())
+        {
+        if(hasIndex(A,I)) Ainds.push_back(I);
+        else              Binds.push_back(I);
+        }
+    ITensor Qcomb,
+            Rcomb;
+    Index qi,
+          ri;
+
+    auto AAcomb = AA;
+    if(!Qinds.empty())
+        {
+        std::tie(Qcomb,qi) = combiner(std::move(Qinds));
+        AAcomb *= Qcomb;
+        }
+    if(!Rinds.empty())
+        {
+        std::tie(Rcomb,ri) = combiner(std::move(Rinds));
+        AAcomb *= Rcomb;
+        }
+    
+    qr_decompOrd2(AAcomb,qi,ri,Q,R,args);
+
+    Q = dag(Qcomb) * Q;
+    R = R * dag(Rcomb);
+    } //qr_decomp
+
+std::tuple<ITensor,ITensor>
+qr_decomp(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris,
+    Args args)
+    {
+    if( !hasSameInds(inds(AA),IndexSet(Qis,Ris)) )
+      Error("In QR, Q indices and R indices must match the indices of the input ITensor");
+    return qr_decomp(AA,Qis,args);
+    }
+
+std::tuple<ITensor,ITensor>
+qr_decomp(ITensor const& AA, IndexSet const& Qis,
+    Args args)
+    {
+    ITensor Q(Qis),R;
+    qr_decomp(AA,Q,R,args);
+    auto q = commonIndex(Q,R);
+    return std::tuple<ITensor,ITensor>(Q,R);
+    }
+
+template<typename T>
+void
+qrImpl(ITensor const& A,
+        Index const& qI, 
+        Index const& rI,
+        ITensor & Q,
+        ITensor & R,
+        Args args)
+    {
+   
+    auto internaltagset = getTagSet(args,"InternalTags","Link,QR");
+    
+    if(not hasQNs(A))
+        {
+        auto matA = toMatRefc<T>(A,qI,rI);
+
+        Mat<T> QQ,RR;
+
+        QR(matA, QQ, RR);
+        
+        auto qL = Index(nrows(matA),internaltagset);
+        auto rL = setTags(qL,internaltagset);
+
+        Q = ITensor({qI,qL},Dense<T>(move(QQ.storage())));
+        R = ITensor({rL,rI},Dense<T>(move(RR.storage())));
+	}
+    else
+        {
+        auto blocks = doTask(GetBlocks<T>{A.inds(),qI,rI},A.store());
+        auto Nblock = blocks.size();
+        if(Nblock == 0) throw ResultIsZero("IQTensor has no blocks");
+	auto Liq = Index::qnstorage{};
+        auto Riq = Index::qnstorage{};
+        Liq.reserve(Nblock);
+        Riq.reserve(Nblock);
+
+
+        //TODO: optimize allocation/lookup of Qmats,Rmats
+        //      etc. by allocating memory ahead of time (see algs.cc)
+        //      and making Qmats a vector of MatrixRef's to this memory
+        auto Qmats = vector<Mat<T>>(Nblock);
+        auto Rmats = vector<Mat<T>>(Nblock);
+	for(auto b : range(Nblock))
+            {
+	      auto& B = blocks[b];
+	      auto& matA = B.M;
+
+	      auto & QQ = Qmats.at(b);
+	      auto & RR = Rmats.at(b);
+	      QR(matA, QQ, RR);
+	      Liq.emplace_back(qn(qI,1+B.i1),nrows(matA));
+	    }
+	
+	auto qL = Index(move(Liq),qI.dir(),internaltagset);
+	auto rL = qL;
+	rL.setDir(rI.dir());
+	rL.setTags(internaltagset);
+	auto Qis = IndexSet(qI,dag(qL));
+        auto Ris = IndexSet(rL, rI);
+
+        auto Qstore = QDense<T>(Qis,QN());
+        auto Rstore = QDense<T>(Ris,QN());
+	
+	long n =0;
+	for(auto b : range(Nblock))
+            {
+	      auto& B = blocks[b];
+
+	      auto & QQ = Qmats.at(b);
+	      auto & RR = Rmats.at(b);
+	      auto qind = stdx::make_array(B.i1,n);
+	      auto pQ = getBlock(Qstore,Qis,qind);
+	      assert(pQ.data() != nullptr);
+	      auto Qref = makeMatRef(pQ,nrows(QQ),ncols(QQ));
+	      Qref &= QQ;
+
+
+	      auto rind = stdx::make_array(n, B.i2);
+	      auto pR = getBlock(Rstore,Ris,rind);
+	      assert(pR.data() != nullptr);
+	      auto Rref = makeMatRef(pR.data(),pR.size(),nrows(RR),ncols(RR));
+	      Rref &= RR;
+	      n++; 
+	    }
+	 Q = ITensor(Qis,move(Qstore));
+	 R = ITensor(Ris,move(Rstore));
+	}
+    }
+        
+  void 
+qr_decompOrd2(ITensor const& A, 
+        Index const& qI, 
+        Index const& rI,
+        ITensor & Q,
+        ITensor & R,
+        Args args)
+    {
+    if(A.order() != 2) 
+        {
+        Error("A must be matrix-like (order 2)");
+        }
+    if(isComplex(A))
+        {
+	  qrImpl<Cplx>(A,qI,rI,Q,R,args);
+        }
+    else
+      {
+	qrImpl<Real>(A,qI,rI,Q,R,args);
+      }
+    }
+
 } //namespace itensor

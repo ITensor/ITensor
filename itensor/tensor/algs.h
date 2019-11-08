@@ -116,6 +116,22 @@ SVD(MatM && M,
     MatV && V,
     Real thresh = SVD_THRESH);
 
+  
+//
+// Compute QR decomposition such that 
+// norm(A-QR) < epsilon
+// where Q is orthogonal (unitary) matrix
+// and R is upper triangular.
+// 
+// 
+template<class MatA, 
+         class MatQ,
+         class MatR>
+void
+QR(MatA && A,
+   MatQ && Q,
+   MatR && R);
+
 //
 // Hermitian Matrix exponentiate
 // by diagHermitian
