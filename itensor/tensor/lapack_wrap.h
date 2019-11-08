@@ -315,6 +315,14 @@ void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
                      LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
                      LAPACK_INT *info);
 
+  
+void F77NAME(zgeqrf)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
+                     LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_INT *info);
+
+void F77NAME(zorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
+                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, 
+                     LAPACK_INT *info);
+
 void F77NAME(dgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_REAL *a, LAPACK_INT *lda,
 					LAPACK_INT *ipiv, LAPACK_REAL *b, LAPACK_INT *ldb, LAPACK_INT *info);
 
@@ -552,6 +560,37 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //on return contains Q
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
+               LAPACK_INT* info);  //error info
+
+
+  //
+// dgeqrf
+//
+// QR factorization of a complex matrix A
+//
+void
+zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
+               LAPACK_INT* n,     //number of cols of A
+               Cplx* A,    //matrix A
+                                  //on return upper triangle contains R
+               LAPACK_INT* lda,   //size of A (usually same as n)
+               LAPACK_COMPLEX* tau,  //scalar factors of elementary reflectors
+                                  //length should be min(m,n)
+               LAPACK_INT* info);  //error info
+
+//
+// dorgqr
+//
+// Generates Q from output of QR factorization routine zgeqrf (see above)
+//
+void
+zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
+               LAPACK_INT* n,     //number of cols of A
+               LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
+               Cplx* A,    //matrix A, as returned from "A" argument of dgeqrf
+                                  //on return contains Q
+               LAPACK_INT* lda,   //size of A (usually same as n)
+               LAPACK_COMPLEX* tau,  //scalar factors as returned by zgeqrf
                LAPACK_INT* info);  //error info
 
 // dgesv
