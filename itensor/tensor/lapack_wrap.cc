@@ -475,7 +475,11 @@ zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
     work.resize(lwork+2);
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
+    #ifdef PLATFORM_lapacke
+    LAPACKE_zungqr(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+    #else
     F77NAME(zungqr)(m,n,k,pA,lda,tau,work.data(),&lwork,info);
+    #endif
     }
 
 //

@@ -319,9 +319,15 @@ void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
 void F77NAME(zgeqrf)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
                      LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_INT *info);
 
-void F77NAME(zorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
+#ifdef PLATFORM_lapacke
+void LAPACKE_zungqr(int matrix_layout, LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
                      LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, 
                      LAPACK_INT *info);
+#else
+void F77NAME(zungqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
+                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, 
+                     LAPACK_INT *info);
+#endif
 
 void F77NAME(dgesv)(LAPACK_INT *n, LAPACK_INT *nrhs, LAPACK_REAL *a, LAPACK_INT *lda,
 					LAPACK_INT *ipiv, LAPACK_REAL *b, LAPACK_INT *ldb, LAPACK_INT *info);
