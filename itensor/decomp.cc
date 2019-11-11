@@ -926,7 +926,7 @@ expHermitian(ITensor const& T, Cplx t)
     }
 
 void
-qr_decomp(ITensor const& AA,
+qr(ITensor const& AA,
     ITensor & Q,
 	  ITensor & R,
     Args args)
@@ -934,7 +934,7 @@ qr_decomp(ITensor const& AA,
 
 #ifdef DEBUG
     if(!Q && !R)
-        Error("Q and R default-initialized in qr_decomp, must indicate at least one index on Q or R");
+        Error("Q and R default-initialized in qr, must indicate at least one index on Q or R");
 #endif
     
     //Combiners which transform AA
@@ -970,27 +970,27 @@ qr_decomp(ITensor const& AA,
         AAcomb *= Rcomb;
         }
     
-    qr_decompOrd2(AAcomb,qi,ri,Q,R,args);
+    qrOrd2(AAcomb,qi,ri,Q,R,args);
 
     Q = dag(Qcomb) * Q;
     R = R * dag(Rcomb);
-    } //qr_decomp
+    } //qr
 
 std::tuple<ITensor,ITensor>
-qr_decomp(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris,
+qr(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris,
     Args args)
     {
     if( !hasSameInds(inds(AA),IndexSet(Qis,Ris)) )
       Error("In QR, Q indices and R indices must match the indices of the input ITensor");
-    return qr_decomp(AA,Qis,args);
+    return qr(AA,Qis,args);
     }
 
 std::tuple<ITensor,ITensor>
-qr_decomp(ITensor const& AA, IndexSet const& Qis,
+qr(ITensor const& AA, IndexSet const& Qis,
     Args args)
     {
     ITensor Q(Qis),R;
-    qr_decomp(AA,Q,R,args);
+    qr(AA,Q,R,args);
     auto q = commonIndex(Q,R);
     return std::tuple<ITensor,ITensor>(Q,R);
     }
@@ -1085,7 +1085,7 @@ qrImpl(ITensor const& A,
     }
         
   void 
-qr_decompOrd2(ITensor const& A, 
+qrOrd2(ITensor const& A, 
         Index const& qI, 
         Index const& rI,
         ITensor & Q,

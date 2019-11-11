@@ -236,7 +236,7 @@ SECTION("QN ITensor SVD")
 	 auto T = randomITensor(i,j,k);
 
 	 ITensor Q(i,j),R;
-	 qr_decomp(T, Q, R);
+	 qr(T, Q, R);
 	 CHECK(norm(T-Q*R) < 1E-12);
 	 CHECK(hasIndex(Q,i));
 	 CHECK(hasIndex(Q,j));
@@ -248,7 +248,7 @@ SECTION("QN ITensor SVD")
 	 auto T = randomITensor(i,j,k);
 
 	 ITensor Q(i,k),R;
-	 qr_decomp(T, Q, R);
+	 qr(T, Q, R);
 	 CHECK(norm(T-Q*R) < 1E-12);
 	 CHECK(hasIndex(Q,i));
 	 CHECK(hasIndex(Q,k));
@@ -260,7 +260,7 @@ SECTION("QN ITensor SVD")
 	 auto T = randomITensor(i,k,prime(i));
 
 	 ITensor Q(i,prime(i)),R;
-	 qr_decomp(T, Q, R);
+	 qr(T, Q, R);
 	 CHECK(norm(T-Q*R) < 1E-12);
 	 CHECK(hasIndex(Q,i));
 	 CHECK(hasIndex(Q,prime(i)));
@@ -272,7 +272,7 @@ SECTION("QN ITensor SVD")
 	 auto T = randomITensor(i,j,k);
 
 	 ITensor Q(i),R;
-	 qr_decomp(T, Q, R);
+	 qr(T, Q, R);
 	 CHECK(norm(T-Q*R) < 1E-12);
 	 CHECK(hasIndex(Q,i));
 	 CHECK(hasIndex(R,j));
@@ -292,7 +292,7 @@ SECTION("QN ITensor SVD")
      auto T = randomITensorC(i,j,k);
 
      ITensor Q(i,j),R;
-     qr_decomp(T, Q, R);
+     qr(T, Q, R);
      CHECK(norm(T-Q*R) < 1E-12);
      CHECK(hasIndex(Q,i));
      CHECK(hasIndex(Q,j));
@@ -313,7 +313,7 @@ SECTION("QN ITensor SVD")
 
      auto S = randomITensor(QN(),u,v);
      ITensor Q(u),R;
-     qr_decomp(S, Q,R);
+     qr(S, Q,R);
 
      CHECK(norm(S-Q*R) < 1E-12);
        }
@@ -328,7 +328,7 @@ SECTION("QN ITensor SVD")
 
      auto S = randomITensor(QN(1),u,v);
      ITensor Q(u),R;
-     qr_decomp(S, Q,R);
+     qr(S, Q,R);
 
      CHECK(norm(S-Q*R) < 1E-12);
        }

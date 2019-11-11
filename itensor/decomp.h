@@ -258,21 +258,21 @@ eigen(ITensor const& T,
 // and R an upper triangular M x N tensor, without pivoting.
 //
 void
-qr_decomp(ITensor const& AA, ITensor& Q, ITensor& R, 
+qr(ITensor const& AA, ITensor& Q, ITensor& R, 
     Args args = Args::global());
 
 std::tuple<ITensor,ITensor>
-qr_decomp(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris, 
+qr(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris, 
     Args args = Args::global());
 
 std::tuple<ITensor,ITensor>
-qr_decomp(ITensor const& AA, IndexSet const& Qis,
+qr(ITensor const& AA, IndexSet const& Qis,
     Args args = Args::global());
 
  // Version that takes variable number of indices
  template <typename... IndsArgs>
 std::tuple<ITensor,ITensor>
- qr_decomp(ITensor const& T, Index const& i1, IndsArgs&&... indsargs);
+ qr(ITensor const& T, Index const& i1, IndsArgs&&... indsargs);
 
 
 ///////////////////////////
@@ -291,7 +291,7 @@ svdOrd2(ITensor const& A,
         ITensor & V,
         Args args = Args::global());
 
-void qr_decompOrd2(ITensor const& A, 
+void qrOrd2(ITensor const& A, 
         Index const& Qi, 
         Index const& Ri,
         ITensor & Q, 
