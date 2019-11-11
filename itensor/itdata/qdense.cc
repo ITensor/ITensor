@@ -591,16 +591,11 @@ doTask(Contract& Con,
     const bool sortResult = false;
     contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
 
-    //auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
-
+TIMER_START(32);
     //Allocate storage for C
-TIMER_START(311);
-    // TODO: This constructor is slow since it determines the non-zero blocks
-    // from the flux instead of from the A and B tensors
-    //auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
-    auto [Coffsets,Csize] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
+    auto [Coffsets,Csize,blockContractions] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
     auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
-TIMER_STOP(311);
+TIMER_STOP(32);
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -630,12 +625,13 @@ TIMER_STOP(311);
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         };
 
-TIMER_START(312);
+TIMER_START(33);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
+                         blockContractions,
                          do_contract);
-TIMER_STOP(312);
+TIMER_STOP(33);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);
