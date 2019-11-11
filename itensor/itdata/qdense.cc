@@ -520,13 +520,17 @@ doTask(PlusEQ const& P,
         Cblocks.push_back(Ablock);
         }
 
+    auto invperm = inverse(P.perm());
     for(auto& bio : B.offsets)
         {
         computeBlockInd(bio.block,P.is2(),Bblock);
         auto Bblockp = Labels(r,0);
         // TODO: check this is the correct permutation
         for(auto i : range(r))
-          Bblockp[i] = Bblock[P.perm().dest(i)];
+          {
+          //Bblockp[i] = Bblock[P.perm().dest(i)];
+          Bblockp[i] = Bblock[invperm.dest(i)];
+          }
         Cblocks.push_back(Bblockp);
         }
 
@@ -590,13 +594,13 @@ doTask(Contract& Con,
     //auto Cdiv = doTask(CalcDiv{Con.Lis},A)+doTask(CalcDiv{Con.Ris},B);
 
     //Allocate storage for C
-TIMER_START(1);
+TIMER_START(311);
     // TODO: This constructor is slow since it determines the non-zero blocks
     // from the flux instead of from the A and B tensors
     //auto nd = m.makeNewData<QDense<VC>>(Con.Nis,Cdiv);
     auto [Coffsets,Csize] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
     auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
-TIMER_STOP(1);
+TIMER_STOP(311);
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -626,12 +630,12 @@ TIMER_STOP(1);
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         };
 
-TIMER_START(2);
+TIMER_START(312);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          do_contract);
-TIMER_STOP(2);
+TIMER_STOP(312);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);
