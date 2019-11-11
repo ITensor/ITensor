@@ -302,6 +302,8 @@ SECTION("QN ITensor SVD")
 
  SECTION("QN ITensor QR")
    {
+     SECTION("Zero Divergence")
+       {
      Index u(QN(+2),3,
 	     QN( 0),2,
 	     QN(-2),2);
@@ -314,6 +316,23 @@ SECTION("QN ITensor SVD")
      qr_decomp(S, Q,R);
 
      CHECK(norm(S-Q*R) < 1E-12);
+       }
+     SECTION("Non-zero Divergence")
+       {
+     Index u(QN(+2),3,
+	     QN( 0),2,
+	     QN(-1),2);
+     Index v(QN(+2),2,
+	     QN( 0),2,
+	     QN(-1),1);
+
+     auto S = randomITensor(QN(1),u,v);
+     ITensor Q(u),R;
+     qr_decomp(S, Q,R);
+
+     CHECK(norm(S-Q*R) < 1E-12);
+       }
+     
    }
 
 SECTION("Polar")

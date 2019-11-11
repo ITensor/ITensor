@@ -1056,7 +1056,7 @@ qrImpl(ITensor const& A,
         auto Ris = IndexSet(rL, rI);
 
         auto Qstore = QDense<T>(Qis,QN());
-        auto Rstore = QDense<T>(Ris,QN());
+        auto Rstore = QDense<T>(Ris,QN(div(A)));
 	
 	long n =0;
 	for(auto b : range(Nblock))
