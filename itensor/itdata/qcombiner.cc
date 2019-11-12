@@ -80,7 +80,7 @@ permuteIQ(Permutation const& P,
     for(auto aio : dA.offsets)
         {
         //Compute bi, new block index of blk
-        computeBlockInd(aio.block,Ais,Ablock);
+        Ablock = aio.block;
         for(auto j : range(Ablock)) 
             {
             Bblock.at(P.dest(j)) = Ablock[j];
@@ -173,7 +173,7 @@ combine(QDense<T> const& d,
     for(auto io : d.offsets) //loop over non-zero blocks
         {
         //Figure out this block's "block index"
-        computeBlockInd(io.block,dis,dblock);
+        dblock = io.block;
 
         //Make TensorRef for this block of d
         drange.init(make_indexdim(dis,dblock));
@@ -254,7 +254,7 @@ uncombine(QDense<T> const& d,
     for(auto io : d.offsets) //loop over non-zero blocks
         {
         //Figure out this block's "block index"
-        computeBlockInd(io.block,dis,dblock);
+        dblock = io.block;
 
         //Make TensorRef for this block of d
         drange.init(make_indexdim(dis,dblock));

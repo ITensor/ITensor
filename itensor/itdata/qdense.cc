@@ -34,6 +34,13 @@ typeNameOf(QDenseReal const& d) { return "QDenseReal"; }
 const char*
 typeNameOf(QDenseCplx const& d) { return "QDenseCplx"; }
 
+bool
+operator<(Block const& l1, Block const& l2)
+    {
+    return std::lexicographical_compare(l1.rbegin(),l1.rend(),
+                                        l2.rbegin(),l2.rend());
+    }
+
 //function object for calling binaryFind
 //on offset vectors below
 struct compBlock
@@ -43,16 +50,16 @@ struct compBlock
                const BlOf& bo2) const
         { return bo1.block < bo2.block; }
     bool
-    operator()(const BlOf& bo, long blk) const        
+    operator()(const BlOf& bo, Block const& blk) const        
         { return bo.block < blk; }
     bool
-    operator()(long blk, const BlOf& bo) const 
+    operator()(Block const& blk, const BlOf& bo) const 
         { return blk < bo.block; }
     };
 
 QN
 calcDiv(IndexSet const& is, 
-        Labels const& block_ind)
+        Block const& block_ind)
     {
     QN div;
     for(auto i : range(order(is))) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
@@ -66,8 +73,8 @@ doTask(CalcDiv const& C,
     {
     if(order(C.is)==0 || D.offsets.empty()) return QN{};
     auto b = D.offsets.front().block;
-    Labels block_ind(order(C.is));
-    computeBlockInd(b,C.is,block_ind);
+    auto block_ind = Block(order(C.is));
+    block_ind = b;
     return calcDiv(C.is,block_ind);
     }
 template QN doTask(CalcDiv const&,QDense<Real> const&);
@@ -88,14 +95,14 @@ template QDense<Cplx>::QDense(IndexSet const&, QN const&);
 // instead of QN divergence
 template<typename T>
 QDense<T>::
-QDense(IndexSet       const& is,
-       vector<Labels> const& blocks)
+QDense(IndexSet const& is,
+       Blocks   const& blocks)
     {
     auto totalsize = updateOffsets(is,blocks);
     store.assign(totalsize,0.);
     }
-template QDense<Real>::QDense(IndexSet const&, vector<Labels> const&);
-template QDense<Cplx>::QDense(IndexSet const&, vector<Labels> const&);
+template QDense<Real>::QDense(IndexSet const&, Blocks const&);
+template QDense<Cplx>::QDense(IndexSet const&, Blocks const&);
 
 template<typename T>
 long QDense<T>::
@@ -106,7 +113,7 @@ updateOffsets(IndexSet const& is,
 
     if(order(is)==0)
         {
-        offsets.push_back(make_blof(0,0));
+        offsets.push_back(make_blof(Block(0),0));
         return 1;
         }
 
@@ -126,19 +133,17 @@ updateOffsets(IndexSet const& is,
             }
         if(blockqn == div)
             {
-            long indstr = 1, //accumulate Index strides
-                 ind = 0,
-                 totm = 1;   //accumulate dim of Indices
+            auto block = Block(order(is));
+            long totdim = 1;   //accumulate dim of Indices
             for(auto j : range(order(is)))
                 {
                 auto& J = is[j];
                 auto i_j = I[j];
-                ind += i_j*indstr;
-                indstr *= J.nblock();
-                totm *= J.blocksize0(i_j);
+                block[j] = i_j;
+                totdim *= J.blocksize0(i_j);
                 }
-            offsets.push_back(make_blof(ind,totalsize));
-            totalsize += totm;
+            offsets.push_back(make_blof(block,totalsize));
+            totalsize += totdim;
             }
         }
     return totalsize;
@@ -147,40 +152,35 @@ updateOffsets(IndexSet const& is,
 template<typename T>
 long QDense<T>::
 updateOffsets(IndexSet       const& is,
-              vector<Labels> const& blocks)
+              Blocks const& blocks)
     {
     offsets.clear();
 
     if(order(is)==0)
         {
-        offsets.push_back(make_blof(0,0));
+        offsets.push_back(make_blof(Block(0),0));
         return 1;
         }
 
     long totalsize = 0;
     for(auto const& block : blocks)
         {
-        long indstr = 1, //accumulate Index strides
-             ind = 0,
-             totm = 1;   //accumulate dim of Indices
+        long totdim = 1;   //accumulate dim of Indices
         for(auto j : range(order(is)))
             {
             auto& J = is[j];
             auto i_j = block[j];
-            ind += i_j*indstr;
-            indstr *= J.nblock();
-            totm *= J.blocksize0(i_j);
+            totdim *= J.blocksize0(i_j);
             }
-        offsets.push_back(make_blof(ind,totalsize));
-        totalsize += totm;
-        //    }
+        offsets.push_back(make_blof(block,totalsize));
+        totalsize += totdim;
         }
     return totalsize;
     }
 
 long
-offsetOf(vector<BlOf> const& offsets,
-         long blockind)
+offsetOf(BlockOffsets const& offsets,
+         Block        const& blockind)
     {
     auto blk = detail::binaryFind(offsets,blockind,compBlock());
     if(blk) return blk->offset;
@@ -356,7 +356,7 @@ doTask(PrintIT& P, QDense<T> const& d)
         return;
         }
         
-    Labels block(ord,0);
+    Block block(ord,0);
     //auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
     auto blockSize = [&block,&P](long i)->long { return (P.is[i]).blocksize0(block[i]); };
 
@@ -368,9 +368,9 @@ doTask(PrintIT& P, QDense<T> const& d)
 
         //Determine block indices (where in the Index space
         //this non-zero block is located)
-        computeBlockInd(io.block,P.is,block);
+        block = io.block;
 
-        Labels boff(ord,0);
+        Block boff(ord,0);
         for(auto i : range(ord))
             {
             for(auto j : range(block[i]))
@@ -451,14 +451,14 @@ add(PlusEQ const& P,
         return;
         }
 
-    Labels Ablock(r,0),
-           Bblock(r,0);
+    Block Ablock(r,0),
+          Bblock(r,0);
     Range Arange,
           Brange;
 
     for(auto& aio : A.offsets)
         {
-        computeBlockInd(aio.block,P.is1(),Ablock);
+        Ablock = aio.block;
 
         for(auto i : range(r))
             Bblock[i] = Ablock[P.perm().dest(i)];
@@ -505,39 +505,37 @@ doTask(PlusEQ const& P,
         return;
         }
 
-    auto Ablock = Labels(r,0),
-         Bblock = Labels(r,0);
+    auto Ablock = Block(r,0),
+         Bblock = Block(r,0);
 
     // Store the blocks of the output
     // TODO: optimize this to merge and remove repeats
     //       at the same time, assuming A.offsets and 
     //       B.offsets are already sorted
-    auto Cblocks = vector<Labels>();
+    auto Cblocks = Blocks();
 
     for(auto& aio : A.offsets)
         {
-        computeBlockInd(aio.block,P.is1(),Ablock);
+        Ablock = aio.block;
         Cblocks.push_back(Ablock);
         }
 
     auto invperm = inverse(P.perm());
     for(auto& bio : B.offsets)
         {
-        computeBlockInd(bio.block,P.is2(),Bblock);
-        auto Bblockp = Labels(r,0);
-        // TODO: check this is the correct permutation
+        Bblock = bio.block;
+        auto Bblockp = Block(r,0);
         for(auto i : range(r))
           {
-          //Bblockp[i] = Bblock[P.perm().dest(i)];
           Bblockp[i] = Bblock[invperm.dest(i)];
           }
         Cblocks.push_back(Bblockp);
         }
 
     // TODO: turn this into a sort_blocks function
-    std::sort(Cblocks.begin(),Cblocks.end(),[](Labels const& l1,
-              Labels const& l2){ return std::lexicographical_compare(l1.rbegin(),l1.rend(),
-                                                                     l2.rbegin(),l2.rend()); });
+    std::sort(Cblocks.begin(),Cblocks.end(),[](Block const& l1,
+              Block const& l2){ return std::lexicographical_compare(l1.rbegin(),l1.rend(),
+                                                                    l2.rbegin(),l2.rend()); });
 
     // Remove the duplicates (need to resize manually)
     auto newCend = std::unique(Cblocks.begin(), Cblocks.end());
@@ -548,9 +546,7 @@ doTask(PlusEQ const& P,
     //       situations
     if(A.offsets.size() < Cblocks.size())
         {
-        // This means there are blocks in B that are not
-        // in A
-
+        // This means there are blocks in B that are not in A
         auto *nA = m.makeNewData<QDense<common_type<TA,TB>>>(P.is1(),Cblocks);
         // Do a trivial permutation
         auto trivial_perm = PlusEQ::permutation(r);
@@ -602,9 +598,9 @@ TIMER_STOP(32);
     //contracted blocks of A and B
     auto do_contract = 
         [&Con,&Lind,&Rind,&Cind]
-        (DataRange<const VA> ablock, Labels const& Ablockind,
-         DataRange<const VB> bblock, Labels const& Bblockind,
-         DataRange<VC>       cblock, Labels const& Cblockind)
+        (DataRange<const VA> ablock, Block const& Ablockind,
+         DataRange<const VB> bblock, Block const& Bblockind,
+         DataRange<VC>       cblock, Block const& Cblockind)
         {
         Range Arange,
               Brange,
@@ -673,12 +669,12 @@ doTask(NCProd& P,
     auto Cdiv = QN{};
         {
         Cdiv = doTask(CalcDiv{Ais},A);
-        auto Ablock_ind = Labels(rA);
-        computeBlockInd(A.offsets.front().block,Ais,Ablock_ind);
-        auto Bblock_ind = Labels(rB);
+        auto Ablock_ind = Block(rA);
+        Ablock_ind = A.offsets.front().block;
+        auto Bblock_ind = Block(rB);
         for(auto& bo : B.offsets)
             {
-            computeBlockInd(bo.block,Bis,Bblock_ind);
+            Bblock_ind = bo.block;
             bool matchesA = true;
             for(auto n : range(rB))
                 {
@@ -703,9 +699,9 @@ doTask(NCProd& P,
 
     auto do_ncprod = 
         [&P,&Aind,&Bind,&Cind]
-        (DataRange<const VA> ablock, Labels const& Ablockind,
-         DataRange<const VB> bblock, Labels const& Bblockind,
-         DataRange<VC>       cblock, Labels const& Cblockind)
+        (DataRange<const VA> ablock, Block const& Ablockind,
+         DataRange<const VB> bblock, Block const& Bblockind,
+         DataRange<VC>       cblock, Block const& Cblockind)
         {
         Range Arange,
               Brange,
@@ -759,14 +755,14 @@ permuteQDense(Permutation  const& P,
     Bis = bind.build();
     dB = QDense<T>(Bis,doTask(CalcDiv{Ais},dA));
     // Perform permutation
-    Labels Ablock(r,-1),
-           Bblock(r,-1);
+    Block Ablock(r,-1),
+          Bblock(r,-1);
     Range Arange,
           Brange;
     for(auto aio : dA.offsets)
         {
         //Compute bi, new block index of blk
-        computeBlockInd(aio.block,Ais,Ablock);
+        Ablock = aio.block;
         for(auto j : range(Ablock))
             Bblock.at(P.dest(j)) = Ablock[j];
         Arange.init(make_indexdim(Ais,Ablock));
@@ -822,7 +818,7 @@ doTask(RemoveQNs & R,
     detail::GCounter C(r);
     for(auto& io : d.offsets)
         {
-        computeBlockInd(io.block,R.is,block);
+        block = io.block;
         for(auto j : range(r))
             {
             long start = 0;
@@ -843,16 +839,23 @@ doTask(RemoveQNs & R,
 template void doTask(RemoveQNs &, QDense<Real> const&, ManageStore &);
 template void doTask(RemoveQNs &, QDense<Cplx> const&, ManageStore &);
 
+std::ostream&
+operator<<(std::ostream & s, BlockOffsets const& offsets)
+    {
+    for(auto const& blof : offsets)
+        s << "Block: " << blof.block << ", Offset: " << blof.offset << "\n";
+    return s;
+    }
+
 template<typename T>
 std::ostream&
 operator<<(std::ostream & s, QDense<T> const& t)
     {
     s << "QDense blocks and offsets:\n";
-    for(auto const& blof : t.offsets)
-      s << "Block: " << blof.block << ", Offset: " << blof.offset << "\n";
+    s << t.offsets << "\n";
     s << "\nQDense storage:\n";
-    for(auto const& el : t.store)
-      s << el << "\n";
+    for(auto i : range(t.store.size()))
+      s << i << " " << t.store[i] << "\n";
     return s;
     }
 template std::ostream& operator<<(std::ostream & s, QDense<Real> const& t);

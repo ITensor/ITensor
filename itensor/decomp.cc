@@ -93,7 +93,7 @@ doTask(GetBlocks<T> const& G,
     for(auto& dio : d.offsets)
         {
         auto& R = res[n++];
-        computeBlockInd(dio.block,G.is,dblock);
+        dblock = dio.block;
         auto nrow = G.is[0].blocksize0(dblock[0]);
         auto ncol = G.is[1].blocksize0(dblock[1]);
         R.i1 = dblock[0];
