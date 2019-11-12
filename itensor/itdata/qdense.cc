@@ -590,8 +590,10 @@ doTask(Contract& Con,
 TIMER_START(32);
     //Allocate storage for C
     auto [Coffsets,Csize,blockContractions] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
-    auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
 TIMER_STOP(32);
+TIMER_START(33);
+    auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
+TIMER_STOP(33);
     auto& C = *nd;
 
     //Function to execute for each pair of
@@ -621,13 +623,13 @@ TIMER_STOP(32);
         contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
         };
 
-TIMER_START(33);
+TIMER_START(34);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          blockContractions,
                          do_contract);
-TIMER_STOP(33);
+TIMER_STOP(34);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);

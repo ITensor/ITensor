@@ -126,14 +126,11 @@ getContractedOffsets(BlockSparseA const& A,
         }
 
     auto couB = detail::GCounter(rB);
-    auto Ablockind = Block(rA,0);
-    auto Bblockind = Block(rB,0);
     auto Cblockind = Block(rC,0);
 
     // Store pairs of unordered block numbers and their sizes,
-    // to be ordered later and stored in Coffsets
-    // TODO: make this BlockOffsets storage directly
-    auto Cblocksizes = std::vector<std::pair<Block,long>>();
+    // to be ordered later
+    auto Cblocksizes = BlockOffsets();
 
     auto blockContractions = std::vector<std::tuple<Block,Block,Block>>();
 
@@ -141,26 +138,21 @@ getContractedOffsets(BlockSparseA const& A,
     auto Csize = 0;
 
     //Loop over blocks of A (labeled by elements of A.offsets)
-    for(auto& aio : A.offsets)
+    for(auto const& aio : A.offsets)
         {
-        //Reconstruct indices labeling this block of A, put into Ablock
-        Ablockind = aio.block;
-
         //Begin computing elements of Cblock(=destination of this block-block contraction)
         for(auto iA : range(rA))
-            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = Ablockind[iA];
+            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = aio.block[iA];
 
         //Loop over blocks of B which contract with current block of A
-        for(auto& bio : B.offsets)
+        for(auto const& bio : B.offsets)
             {
-            Bblockind = bio.block;
-
             auto do_blocks_contract = true;
             for(auto iA : range(rA))
                 {
                 auto iB = AtoB[iA];
                 if(AtoB[iA] != -1)
-                    if(Ablockind[iA] != Bblockind[iB])
+                    if(aio.block[iA] != bio.block[iB])
                         {
                         do_blocks_contract = false;
                         break;
@@ -170,10 +162,10 @@ getContractedOffsets(BlockSparseA const& A,
 
             //Finish making Cblockind
             for(auto iB : range(rB))
-                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = Bblockind[iB];
+                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = bio.block[iB];
 
             // Store the current contraction
-            blockContractions.push_back(std::make_tuple(Ablockind,Bblockind,Cblockind));
+            blockContractions.push_back(std::make_tuple(aio.block,bio.block,Cblockind));
 
             long blockDim = 1;   //accumulate dim of Indices
             for(auto j : range(order(Cis)))
@@ -183,31 +175,29 @@ getContractedOffsets(BlockSparseA const& A,
                 blockDim *= J.blocksize0(i_j);
                 }
 
-            Cblocksizes.push_back(std::make_pair(Cblockind,blockDim));
+            Cblocksizes.push_back(make_blof(Cblockind,blockDim));
             Csize += blockDim;
             } //for B.offsets
         } //for A.offsets
 
     // Sort the block sizes by the block labels
     std::sort(Cblocksizes.begin(),Cblocksizes.end(),
-              [](auto a, auto b) { return a.first < b.first; });
+              [](auto a, auto b) { return a.block < b.block; });
 
     // Remove the duplicates, need to resize manually
     auto newCend = std::unique(Cblocksizes.begin(),
                                Cblocksizes.end(),
-                               [](auto a, auto b) { return a.first == b.first; } );
+                               [](auto a, auto b) { return a.block == b.block; } );
     Cblocksizes.resize(std::distance(Cblocksizes.begin(),newCend));
 
-    // TODO: make Coffsets directly, instead of Cblocksizes
-    auto Coffsets = BlockOffsets(Cblocksizes.size());
     auto current_offset = 0;
     for(auto i : range(Cblocksizes.size()))
         {
-        Coffsets[i].block = Cblocksizes[i].first;
-        Coffsets[i].offset = current_offset;
-        current_offset += Cblocksizes[i].second;
+        auto current_size = Cblocksizes[i].offset;
+        Cblocksizes[i].offset = current_offset;
+        current_offset += current_size;
         } 
-    return std::make_tuple(Coffsets,Csize,blockContractions);
+    return std::make_tuple(Cblocksizes,Csize,blockContractions);
     }
 
 template<typename TA,
