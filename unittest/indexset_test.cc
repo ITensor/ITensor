@@ -17,6 +17,7 @@ auto i7 = Index("i7",7);
 auto i8 = Index("i8",8);
 auto i9 = Index("i9",9);
 auto i10 = Index("i10",10);
+auto x1 = Index("x2",2,Xtype);
 auto v1 = Index("v1",2,Vtype);
 auto w1 = Index("w1",2,Wtype);
 
@@ -79,6 +80,82 @@ SECTION("Constructors")
         }
 
     }
+
+SECTION("IndexSet Arithmetic")
+{
+    SECTION("A union B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A.setUnion(B);
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(hasindex(C,i3));
+        CHECK(hasindex(C,i4));
+        CHECK(hasindex(C,i5));
+        CHECK(hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(hasindex(C,prime(i4)));
+    }
+    SECTION("A intersection B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A.setIntersection(B);
+        CHECK(!hasindex(C,i1));
+        CHECK(!hasindex(C,i2));
+        CHECK(hasindex(C,i3));
+        CHECK(hasindex(C,i4));
+        CHECK(!hasindex(C,i5));
+        CHECK(!hasindex(C,i6));
+        CHECK(!hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
+    SECTION("A difference B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4);
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A.setDifference(B);
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(!hasindex(C,i3));
+        CHECK(!hasindex(C,i4));
+        CHECK(!hasindex(C,i5));
+        CHECK(!hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
+    SECTION("A symmetric difference B")
+    {
+        IndexSet A(i1,i2,i3,prime(i3),i4,prime(i4));
+        IndexSet B(i3,i4,prime(i4),i5,i6);
+        IndexSet C = A.setSymmetricDifference(B);
+        CHECK(hasindex(C,i1));
+        CHECK(hasindex(C,i2));
+        CHECK(!hasindex(C,i3));
+        CHECK(!hasindex(C,i4));
+        CHECK(hasindex(C,i5));
+        CHECK(hasindex(C,i6));
+        CHECK(hasindex(C,prime(i3)));
+        CHECK(!hasindex(C,prime(i4)));
+    }
+    SECTION("Select")
+    {
+        IndexSet A(x1,v1,w1);
+        IndexSet B = A.selectType(Xtype);
+        CHECK(hasindex(B,x1));
+        CHECK(!hasindex(B,v1));
+        CHECK(!hasindex(B,w1));
+    }
+    SECTION("Filter")
+    {
+        IndexSet A(x1,v1,w1);
+        IndexSet B = A.filterType(Xtype);
+        CHECK(!hasindex(B,x1));
+        CHECK(hasindex(B,v1));
+        CHECK(hasindex(B,w1));
+    }
+}
 
 SECTION("PrimeLevelMethods")
 {

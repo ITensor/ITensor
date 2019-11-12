@@ -141,12 +141,109 @@ class IndexSetT : public RangeT<index_type_>
 
     parent const&
     range() const { return *this; }
-
+    
     void
     dag() { for(auto& J : *this) J.dag(); }
 
     void
     swap(IndexSetT & other) { parent::swap(other); }
+
+    // Indexset arithmetic & tools
+    // Useful additions for higher-order tensors index manipulation    
+    // Set union between A and B
+    // Returns a new IndexSet with all the indices of A and B together
+    IndexSetT
+    setUnion(IndexSetT const& other)
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this)) inds.push_back(i);
+        for (index_type i : other)
+            {
+            if (!hasindex(*this, i)) inds.push_back(i);
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Set difference between A and B
+    // Returns a new IndexSet with indices of A that are not in B
+    IndexSetT
+    setDifference(IndexSetT const& other)
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this))
+            {
+            if (!hasindex(other, i)) inds.push_back(i);
+            } 
+        return IndexSetT(inds);
+        }
+    
+    // Set symmetric difference between A and B
+    // Returns a new IndexSet with indices which are exclusive to either A or B, but not in both
+    IndexSetT
+    setSymmetricDifference(IndexSetT const& other)
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this))
+            {
+            if (!hasindex(other, i)) inds.push_back(i);
+            }
+        for (index_type i : other)
+            {
+            if (!hasindex(*this, i)) inds.push_back(i);
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Set intersection
+    // Returns a new IndexSet with ALL common indices between A and B
+    // In contrast, commonIndex() can only get ONE common index of a given type and prime level
+    IndexSetT
+    setIntersection(IndexSetT const& other)
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this))
+            {
+            if (hasindex(other, i)) inds.push_back(i);
+            }
+        return IndexSetT(inds);
+        }
+    
+    // Select from IndexSet by type
+    // This generalizes findtype() to multiple indices
+    IndexSetT
+    selectType(IndexType type)
+        {
+            std::vector< index_type > inds;
+            for (auto& J : (*this))
+                {
+                    if (J.type() == type) inds.push_back(J);
+                }
+            return IndexSetT(inds);
+        }
+    
+    // Filter IndexSet by type
+    // This generalizes the complement of findtype() to multiple indices
+    IndexSetT
+    filterType(IndexType type)
+        {
+            std::vector< index_type > inds;
+            for (auto& J : (*this))
+                {
+                    if (J.type() != type) inds.push_back(J);
+                }
+            return IndexSetT(inds);
+        }
+    
+    // Utility function
+    // some ITensor functions seem to only accept Index vectors as input, but
+    // not IndexSets. Why not?
+    // This gives us a handy way to get all the indices as a vector
+    std::vector< index_type > vector()
+        {
+        std::vector< index_type > inds;
+        for (index_type i : (*this)) inds.push_back(i);
+        return inds;
+        }
 
     index_type const&
     front() const { return parent::front().ind; }
