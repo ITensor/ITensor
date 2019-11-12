@@ -118,19 +118,21 @@ SVD(MatM && M,
 
   
 //
-// Compute QR decomposition such that 
+// Compute QR decomposition of MxN A matrix such that 
 // norm(A-QR) < epsilon
-// where Q is orthogonal (unitary) matrix
-// and R is upper triangular.
-// 
-// 
+// where Q is MxM orthogonal (unitary) matrix
+// and R is MxN upper triangular.
+// If complete = false, instead compute "thin" QR: for M >= N
+//   Q is MxN matrix with orthonormal columns: Q^T Q = I
+//   R is NxN upper triangular
 template<class MatA, 
          class MatQ,
          class MatR>
 void
 QR(MatA && A,
    MatQ && Q,
-   MatR && R);
+   MatR && R,
+   bool complete = true);
 
 //
 // Hermitian Matrix exponentiate

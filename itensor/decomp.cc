@@ -18,6 +18,7 @@
 #include <limits>
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
+#include "itensor/tensor/slicemat.h"
 #include "itensor/decomp.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/itdata/qutil.h"
@@ -1006,6 +1007,10 @@ qrImpl(ITensor const& A,
     {
    
     auto internaltagset = getTagSet(args,"InternalTags","Link,QR");
+    auto uppertriangular = args.getBool("UpperTriangular",true);
+    auto complete = args.getBool("Complete",true);
+    if (not complete and not uppertriangular)
+      Error("Cannot construct thin QR without R being upper triangular.");
     
     if(not hasQNs(A))
         {
@@ -1013,9 +1018,9 @@ qrImpl(ITensor const& A,
 
         Mat<T> QQ,RR;
 
-        QR(matA, QQ, RR);
+        QR(matA, QQ, RR, complete);
         
-        auto qL = Index(nrows(matA),internaltagset);
+        auto qL = Index(nrows(RR),internaltagset);
         auto rL = setTags(qL,internaltagset);
 
         Q = ITensor({qI,qL},Dense<T>(move(QQ.storage())));
@@ -1026,27 +1031,55 @@ qrImpl(ITensor const& A,
         auto blocks = doTask(GetBlocks<T>{A.inds(),qI,rI},A.store());
         auto Nblock = blocks.size();
         if(Nblock == 0) throw ResultIsZero("IQTensor has no blocks");
-	auto Liq = Index::qnstorage{};
-        auto Riq = Index::qnstorage{};
-        Liq.reserve(Nblock);
-        Riq.reserve(Nblock);
+	
+	
 
+	vector<std::tuple<int, QNInt, int>> indLiq;
+	auto Liq = Index::qnstorage{};
+	Liq.reserve(Nblock);
+	if (uppertriangular)
+	  indLiq.reserve(Nblock);
 
         //TODO: optimize allocation/lookup of Qmats,Rmats
         //      etc. by allocating memory ahead of time (see algs.cc)
         //      and making Qmats a vector of MatrixRef's to this memory
         auto Qmats = vector<Mat<T>>(Nblock);
         auto Rmats = vector<Mat<T>>(Nblock);
+	
 	for(auto b : range(Nblock))
             {
 	      auto& B = blocks[b];
 	      auto& matA = B.M;
-
 	      auto & QQ = Qmats.at(b);
 	      auto & RR = Rmats.at(b);
-	      QR(matA, QQ, RR);
-	      Liq.emplace_back(qn(qI,1+B.i1),nrows(matA));
+	      QR(matA, QQ, RR, complete);
+	      if (uppertriangular)
+		  indLiq.emplace_back(B.i2, QNInt(qn(qI,1+B.i1),nrows(RR)), b);
+	      else
+		  Liq.emplace_back(qn(qI,1+B.i1), nrows(RR));
 	    }
+	
+	if(uppertriangular)
+	  {
+	    //Sort the blocks by block column index so R is upper triangular
+	    sort(begin(indLiq),end(indLiq));
+	    std::transform(begin(indLiq), end(indLiq), std::back_inserter(Liq),
+			   [](auto & triplet){ return std::get<1>(triplet);});
+	    if (complete)
+	      {
+		//Add filler rows of zero to R and extra orthonormal rows to Q
+		for(auto b : range(Nblock))
+		  {
+		    auto& B = blocks[b];
+		    auto& matA = B.M;
+		    if (nrows(matA) > ncols(matA))
+		      {
+			int fillrows = nrows(matA)- ncols(matA);
+			Liq.emplace_back(qn(qI,1+B.i1),fillrows);
+		      }
+		  }
+	      }
+	  }
 	
 	auto qL = Index(move(Liq),qI.dir(),internaltagset);
 	auto rL = qL;
@@ -1054,33 +1087,48 @@ qrImpl(ITensor const& A,
 	rL.setTags(internaltagset);
 	auto Qis = IndexSet(qI,dag(qL));
         auto Ris = IndexSet(rL, rI);
-
         auto Qstore = QDense<T>(Qis,QN());
         auto Rstore = QDense<T>(Ris,QN(div(A)));
-	
-	long n =0;
+	int extrab = 0;
+       
 	for(auto b : range(Nblock))
             {
+	      int n = b;
+	      if(uppertriangular)
+		n = std::get<2>(indLiq[b]);
+	  
 	      auto& B = blocks[b];
-
+	      
 	      auto & QQ = Qmats.at(b);
 	      auto & RR = Rmats.at(b);
+	      int Rrows = nrows(RR);
+	      int fillrows = nrows(QQ) - Rrows;
+	      
 	      auto qind = stdx::make_array(B.i1,n);
 	      auto pQ = getBlock(Qstore,Qis,qind);
 	      assert(pQ.data() != nullptr);
-	      auto Qref = makeMatRef(pQ,nrows(QQ),ncols(QQ));
-	      Qref &= QQ;
-
-
+	      auto Qref = makeMatRef(pQ,nrows(QQ), Rrows);
+	      Qref &= columns(QQ,0,Rrows);
+	      
+	      if (uppertriangular and complete and fillrows > 0)
+		{
+		  auto qfind = stdx::make_array(B.i1, extrab + Nblock);
+		  auto pQf = getBlock(Qstore,Qis,qfind);
+		  assert(pQf.data() != nullptr);
+		  auto Qfref = makeMatRef(pQf,nrows(QQ), fillrows);
+		  Qfref &= columns(QQ,Rrows,Rrows + fillrows);
+		  extrab++;
+		}
+	      
 	      auto rind = stdx::make_array(n, B.i2);
 	      auto pR = getBlock(Rstore,Ris,rind);
 	      assert(pR.data() != nullptr);
-	      auto Rref = makeMatRef(pR.data(),pR.size(),nrows(RR),ncols(RR));
-	      Rref &= RR;
-	      n++; 
+	      auto Rref = makeMatRef(pR.data(),pR.size(),Rrows,ncols(RR));
+	      Rref &= rows(RR,0,Rrows); 
 	    }
-	 Q = ITensor(Qis,move(Qstore));
-	 R = ITensor(Ris,move(Rstore));
+	
+	Q = ITensor(Qis,move(Qstore));
+	R = ITensor(Ris,move(Rstore));
 	}
     }
         

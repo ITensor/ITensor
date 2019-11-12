@@ -231,12 +231,36 @@ SECTION("QN ITensor SVD")
        k(5),
        l(6);
 
-     SECTION("Case 1")
+     SECTION("Case 1 Default")
        {
 	 auto T = randomITensor(i,j,k);
 
 	 ITensor Q(i,j),R;
-	 qr(T, Q, R);
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,j));
+	 CHECK(hasIndex(R,k));
+       }
+
+     SECTION("Case 1 Thin")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i,j),R;
+	 qr(T, Q, R, {"Complete", false});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,j));
+	 CHECK(hasIndex(R,k));
+       }
+
+     SECTION("Case 1 Not Upper Triangular")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i,j),R;
+	 qr(T, Q, R, {"UpperTriangular", false});
 	 CHECK(norm(T-Q*R) < 1E-12);
 	 CHECK(hasIndex(Q,i));
 	 CHECK(hasIndex(Q,j));
@@ -313,7 +337,37 @@ SECTION("QN ITensor SVD")
 
      auto S = randomITensor(QN(),u,v);
      ITensor Q(u),R;
-     qr(S, Q,R);
+     qr(S, Q, R);
+
+     CHECK(norm(S-Q*R) < 1E-12);
+       }
+     SECTION("Zero Divergence Thin")
+       {
+     Index u(QN(+2),3,
+	     QN( 0),2,
+	     QN(-2),2);
+     Index v(QN(+2),2,
+	     QN( 0),2,
+	     QN(-2),1);
+
+     auto S = randomITensor(QN(),u,v);
+     ITensor Q(u),R;
+     qr(S, Q, R, {"Complete", false});
+
+     CHECK(norm(S-Q*R) < 1E-12);
+       }
+     SECTION("Zero Divergence Not Upper Triangular")
+       {
+     Index u(QN(+2),3,
+	     QN( 0),2,
+	     QN(-2),2);
+     Index v(QN(+2),2,
+	     QN( 0),2,
+	     QN(-2),1);
+
+     auto S = randomITensor(QN(),u,v);
+     ITensor Q(u),R;
+     qr(S, Q, R, {"UpperTriangular", false});
 
      CHECK(norm(S-Q*R) < 1E-12);
        }
@@ -332,7 +386,6 @@ SECTION("QN ITensor SVD")
 
      CHECK(norm(S-Q*R) < 1E-12);
        }
-     
    }
 
 SECTION("Polar")

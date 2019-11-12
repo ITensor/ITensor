@@ -55,9 +55,9 @@ copyNegElts(Iter mre,
     hermitianDiag(int N, Cplx *Udata,Real *ddata);
 
     int
-    QR(int M, int N, Real *Qdata, Real *Rdata);
+    QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata);
     int
-    QR(int M, int N, Cplx *Qdata,Cplx *Rdata);
+    QR(int M, int N, int Rrows, Cplx *Qdata,Cplx *Rdata);
     
 
 } //namespace detail
@@ -262,7 +262,8 @@ expMatrix(MatM && M,
 void
 QR( MatA&& A,
     MatQ && Q,
-    MatR && R)
+    MatR && R,
+    bool complete)
    {
     using Aval = typename stdx::decay_t<MatA>::value_type;
     using Qval = typename stdx::decay_t<MatQ>::value_type;
@@ -271,17 +272,19 @@ QR( MatA&& A,
     int M = nrows(A);
     int N = ncols(A);
     if(M < 1 or N < 1) throw std::runtime_error("QR: 0 dimensional matrix");
+    int Rrows = M;
     if (N > M)
       {
 	println("Warning: QR for ncol > nrow may require pivoting to be numerically stable.");
-	resize (Q,M,N);
+	resize(Q,M,N);
       }
     else
       {
-      resize(Q,M,M);
+	Rrows = complete ? M : N;
+	resize(Q,M,Rrows);
       }
-    resize(R,M, N);
-
+    resize(R, Rrows, N);
+  
 #ifdef DEBUG
     if(!isContiguous(Q))
         throw std::runtime_error("QR: Q must be contiguous");
@@ -292,11 +295,11 @@ QR( MatA&& A,
       {
       for (int j = 0; j < N; ++j)
 	Q(i, j) = A(i,j);
-      for (int j = N; j < M; ++j)
+      for (unsigned int j = N; j < ncols(Q); ++j)
 	Q(i, j) = 0;
       }
     
-    auto info = detail::QR(M,N,Q.data(),R.data());
+    auto info = detail::QR(M,N,Rrows,Q.data(),R.data());
     if(info != 0) 
         {
         throw std::runtime_error("Error condition in QR");

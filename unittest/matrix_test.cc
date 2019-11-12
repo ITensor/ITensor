@@ -1423,7 +1423,7 @@ SECTION("diagHermitian")
 	auto Id = eye(N, N);
 
         Matrix Q, R;
-        QR(M,Q,R);
+        QR(M,Q,R, true);
 
         auto T = Q*R;
 	auto QQ = Q*transpose(Q);
@@ -1439,12 +1439,56 @@ SECTION("diagHermitian")
 	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
         }
 
+    SECTION("Real case rank deficient")
+        {
+	auto M = randomMat(P, N);
+	auto Id = eye(P, P);
+
+        Matrix Q, R;
+        QR(M,Q,R, true);
+
+        auto T = Q*R;
+	auto QQ = Q*transpose(Q);
+
+        for(auto r : range(P))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+	    if (r > c)
+	      CHECK(R(r,c) == 0); //Check R upper triangular
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
+        }
+
+    SECTION("Real case thin")
+        {
+	auto M = randomMat(N, P);
+	auto Id = eye(P, P);
+
+        Matrix Q, R;
+        QR(M,Q,R, false);
+
+        auto T = Q*R;
+	auto QQ = transpose(Q)*Q;
+
+        for(auto r : range(N))
+        for(auto c : range(P))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+	    if (r > c and r < P)
+	      CHECK(R(r,c) == 0); //Check R upper triangular
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
+        }
+
     SECTION("Complex case")
         {
 	auto M = randomMatC(N, P);
 
         CMatrix Q, R;
-        QR(M,Q,R);
+        QR(M,Q,R, true);
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1467,7 +1511,7 @@ SECTION("diagHermitian")
         {
         auto M = randomMatC(P, N);
         CMatrix Q, R;
-        QR(M,Q,R);
+        QR(M,Q,R, true);
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1485,6 +1529,31 @@ SECTION("diagHermitian")
             }
         CHECK(norm(T-M) < 1E-12*norm(M));
         }
+    SECTION("Complex case thin")
+        {
+	auto M = randomMatC(N, P);
+
+        CMatrix Q, R;
+        QR(M,Q,R, false);
+
+        auto T = Q*R;
+	auto QQ = conj(transpose(Q))*Q;
+
+        for(auto r : range(N))
+	  {
+	    if (r < P)
+	      CHECK(abs(QQ(r,r)-complex(1.0)) < 1E-12);  //Check Q unitary
+	    for(auto c : range(P))
+	      {
+		CHECK_CLOSE(T(r,c),M(r,c));
+		if (r > c and r < P)
+		  CHECK(R(r,c) == complex(0.0)); //Check R upper triangular
+		if (r != c and r < P)
+		  CHECK(abs(QQ(r,c)) < 1E-12);
+	      }
+	  }
+	CHECK(norm(T-M) < 1E-12*norm(M));
+	}
     }
 
 SECTION("expMatrix")
