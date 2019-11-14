@@ -57,6 +57,10 @@ class uninitialized_allocator
     {
     ::new(up) U(std::forward<A0>(a0), std::forward<Args>(args)...);
     }
+
+  bool
+  operator==(uninitialized_allocator<T> const&) { return true; }
+
   };
 
 template<typename T>
