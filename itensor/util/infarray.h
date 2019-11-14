@@ -387,7 +387,7 @@ class InfArray
 
     template<typename T2, size_t ArrSize2>
     bool
-    operator==(InfArray<T2,ArrSize2> const& v2)
+    operator==(InfArray<T2,ArrSize2> const& v2) const
       {
       if(size() != v2.size()) return false;
       for(int i = 0; i < size(); ++i)
