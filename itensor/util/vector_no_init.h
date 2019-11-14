@@ -62,16 +62,6 @@ class uninitialized_allocator
 template<typename T>
 using vector_no_init = std::vector<T,uninitialized_allocator<T>>;
 
-template<typename T>
-vector_no_init<T>
-vector_to_vector_no_init(std::vector<T> const& v)
-  {
-  auto vout = vector_no_init<T>(v.size());
-  // Can this be done faster? Can we just use a reinterpret_cast?
-  vout.assign(v.begin(),v.end());
-  return vout;
-  };
-
 } //namespace itensor
 
 #endif

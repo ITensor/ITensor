@@ -59,8 +59,12 @@ class Dense
     explicit
     Dense(UndefInitializer, size_t size) : store(size) { }
 
+    // This allows a Dense to be constructed from a std::vector.
+    // TODO: Does this copy?
     explicit
-    Dense(std::vector<value_type> const& v) : store(vector_to_vector_no_init(v)) { }
+    Dense(std::vector<value_type> const& v)
+      : store(v.begin(),v.end())
+      { }
 
     Dense(size_t size, value_type val) 
       : store(size,val)

@@ -31,7 +31,7 @@ class Diag
     {
     public:
     using value_type = stdx::decay_t<T>;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using size_type = typename storage_type::size_type;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
@@ -60,6 +60,14 @@ class Diag
       : store(b,e),
         length(store.size())
         { }
+
+    // This allows a Diag to be constructed from a std::vector.
+    // TODO: Does this copy?
+    explicit
+    Diag(std::vector<value_type> const& v)
+      : store(v.begin(),v.end()),
+        length(store.size())
+      { }
 
     explicit
     Diag(storage_type&& data)
@@ -134,7 +142,7 @@ read(std::istream& s, Diag<T>& dat)
     {
     itensor::read(s,dat.val);
     itensor::read(s,dat.length);
-    itensor::read(s,dat.store);
+    //itensor::read(s,dat.store);
     }
 
 template<typename T>
@@ -143,7 +151,7 @@ write(std::ostream& s, Diag<T> const& dat)
     {
     itensor::write(s,dat.val);
     itensor::write(s,dat.length);
-    itensor::write(s,dat.store);
+    //itensor::write(s,dat.store);
     }
 
 template <typename F, typename T>

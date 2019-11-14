@@ -86,23 +86,46 @@ class QDense
     //       store(b,c)
     //       { }
 
-    template<typename... StoreArgs>
     QDense(BlockOffsets const& off,
-           StoreArgs&&... sargs)
+           size_t size)
          : offsets(off),
-           store(std::forward<StoreArgs>(sargs)...)
+           store(size)
            {
            std::fill(store.begin(),store.end(),0.);
            }
 
-    template<typename... StoreArgs>
-    QDense(UndefInitializer,
-           std::vector<BlOf> const& off,
-           StoreArgs&&... sargs)
+    QDense(BlockOffsets const& off,
+           std::vector<value_type> const& v)
          : offsets(off),
-           store(std::forward<StoreArgs>(sargs)...)
+           store(v.begin(),v.end())
            {
            }
+
+    template<typename InputIterator>
+    QDense(BlockOffsets const& off,
+           InputIterator begin, InputIterator end)
+     : offsets(off),
+       store(begin,end)
+       {
+       }
+
+    QDense(UndefInitializer,
+           std::vector<BlOf> const& off,
+           size_t size)
+         : offsets(off),
+           store(size)
+           {
+           }
+
+    // TODO: any need for this generic constructor?
+    //template<typename... StoreArgs>
+    //QDense(BlockOffsets const& off,
+    //       StoreArgs&&... sargs)
+    //     : offsets(off),
+    //       store(std::forward<StoreArgs>(sargs)...)
+    //       {
+    //       std::fill(store.begin(),store.end(),0.);
+    //       }
 
     explicit operator bool() const { return !store.empty() && !offsets.empty(); }
 
