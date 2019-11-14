@@ -44,7 +44,7 @@ class QDense
                   "Template argument of QDense must be non-const");
     public:
     using value_type = T;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
 
@@ -76,7 +76,18 @@ class QDense
            StoreArgs&&... sargs)
          : offsets(off),
            store(std::forward<StoreArgs>(sargs)...)
-           { }
+           {
+           std::fill(store.begin(),store.end(),0.);
+           }
+
+    template<typename... StoreArgs>
+    QDense(UndefInitializer,
+           std::vector<BlOf> const& off,
+           StoreArgs&&... sargs)
+         : offsets(off),
+           store(std::forward<StoreArgs>(sargs)...)
+           {
+           }
 
     explicit operator bool() const { return !store.empty() && !offsets.empty(); }
 
@@ -159,7 +170,7 @@ void
 write(std::ostream & s, QDense<T> const& dat)
     {
     itensor::write(s,dat.offsets);
-    itensor::write(s,dat.store);
+    //itensor::write(s,dat.store);
     }
 
 template<typename T>
@@ -167,7 +178,7 @@ void
 read(std::istream & s, QDense<T> & dat)
     {
     itensor::read(s,dat.offsets);
-    itensor::read(s,dat.store);
+    //itensor::read(s,dat.store);
     }
 
 template<typename T>

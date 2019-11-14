@@ -29,10 +29,6 @@ class Dense;
 using DenseReal = Dense<Real>;
 using DenseCplx = Dense<Cplx>;
 
-class UndefInitializer { };
-
-auto const undef = UndefInitializer();
-
 template<typename T>
 class Dense
     {
@@ -40,7 +36,7 @@ class Dense
                   "Template argument to Dense storage should not be const");
     public:
     using value_type = T;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using size_type = typename storage_type::size_type;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
@@ -49,7 +45,6 @@ class Dense
     // Data members
     //
 
-    value_type *ptr;
     storage_type store;
 
     //
@@ -59,16 +54,13 @@ class Dense
     Dense() { }
 
     explicit
-    Dense(size_t size) : store(size) { }
+    Dense(size_t size) : store(size) { std::fill(store.begin(),store.end(),0.); }
 
     explicit
-    Dense(UndefInitializer, size_t size)
-      :
-      ptr(new value_type[size]),
-      store(storage_type(ptr,ptr+size))
-      {
-      delete[] ptr;
-      }
+    Dense(UndefInitializer, size_t size) : store(size) { }
+
+    explicit
+    Dense(std::vector<value_type> const& v) : store(vector_to_vector_no_init(v)) { }
 
     Dense(size_t size, value_type val) 
       : store(size,val)
@@ -155,14 +147,14 @@ template<typename T>
 void 
 read(std::istream& s, Dense<T> & dat)
     {
-    itensor::read(s,dat.store);
+    //itensor::read(s,dat.store);
     }
 
 template<typename T>
 void
 write(std::ostream& s, Dense<T> const& dat)
     {
-    itensor::write(s,dat.store);
+    //itensor::write(s,dat.store);
     }
 
 template<typename F, typename T>

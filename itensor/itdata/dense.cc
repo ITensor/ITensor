@@ -262,8 +262,8 @@ doTask(Contract & C,
     //    return;
     //    }
     Labels Lind,
-          Rind,
-          Nind;
+           Rind,
+           Nind;
     computeLabels(C.Lis,C.Lis.order(),C.Ris,C.Ris.order(),Lind,Rind);
     if(not C.Nis)
         {
@@ -295,20 +295,19 @@ doTask(Contract & C,
     auto tR = makeTenRef(R.data(),R.size(),&C.Ris);
     auto rsize = dim(C.Nis);
 TIMER_START(40);
-    //auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
+    // Create a Dense storage with undefined data, since it will be
+    // overwritten anyway
     auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(undef,rsize);
 TIMER_STOP(40);
     auto tN = makeTenRef(nd->data(),nd->size(),&(C.Nis));
-
-    //PrintData(tN);
 
 #ifdef COLLECT_TSTATS
     tstats(tL,Lind,tR,Rind,tN,Nind);
 #endif
 
-    START_TIMER(30);
+START_TIMER(30);
     contract(tL,Lind,tR,Rind,tN,Nind);
-    STOP_TIMER(30);
+STOP_TIMER(30);
 
 #ifdef USESCALE
     if(rsize > 1) C.scalefac = computeScalefac(*nd);
