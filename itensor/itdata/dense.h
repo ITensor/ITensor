@@ -29,6 +29,10 @@ class Dense;
 using DenseReal = Dense<Real>;
 using DenseCplx = Dense<Cplx>;
 
+class UndefInitializer { };
+
+auto const undef = UndefInitializer();
+
 template<typename T>
 class Dense
     {
@@ -45,6 +49,7 @@ class Dense
     // Data members
     //
 
+    value_type *ptr;
     storage_type store;
 
     //
@@ -55,6 +60,15 @@ class Dense
 
     explicit
     Dense(size_t size) : store(size) { }
+
+    explicit
+    Dense(UndefInitializer, size_t size)
+      :
+      ptr(new value_type[size]),
+      store(storage_type(ptr,ptr+size))
+      {
+      delete[] ptr;
+      }
 
     Dense(size_t size, value_type val) 
       : store(size,val)

@@ -294,8 +294,13 @@ doTask(Contract & C,
     auto tL = makeTenRef(L.data(),L.size(),&C.Lis);
     auto tR = makeTenRef(R.data(),R.size(),&C.Ris);
     auto rsize = dim(C.Nis);
-    auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
+TIMER_START(40);
+    //auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(rsize);
+    auto nd = m.makeNewData<Dense<common_type<T1,T2>>>(undef,rsize);
+TIMER_STOP(40);
     auto tN = makeTenRef(nd->data(),nd->size(),&(C.Nis));
+
+    //PrintData(tN);
 
 #ifdef COLLECT_TSTATS
     tstats(tL,Lind,tR,Rind,tN,Nind);
