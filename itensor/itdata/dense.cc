@@ -305,9 +305,10 @@ TIMER_STOP(40);
     tstats(tL,Lind,tR,Rind,tN,Nind);
 #endif
 
-START_TIMER(30);
+START_TIMER(41);
     contract(tL,Lind,tR,Rind,tN,Nind);
-STOP_TIMER(30);
+STOP_TIMER(41);
+
 
 #ifdef USESCALE
     if(rsize > 1) C.scalefac = computeScalefac(*nd);

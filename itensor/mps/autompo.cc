@@ -934,7 +934,7 @@ decomposeTerm(int n,
     }  
 
 template<typename T>
-struct Block
+struct BasisBlock
     {
     using Basis = map<SiteTermProd,int>;
     Basis left;
@@ -943,7 +943,7 @@ struct Block
     };
 
 template<typename T>
-using QNBlock = map<QN, Block<T>>;
+using QNBlock = map<QN, BasisBlock<T>>;
 using IQMatEls = set<IQMPOMatElem>;
 using MPOMatrix = vector<vector<ITensor>>;
 
@@ -952,7 +952,7 @@ using MPOMatrix = vector<vector<ITensor>>;
 template<typename T>
 int
 posInBlock(SiteTermProd const& ops, 
-           typename Block<T>::Basis & b)
+           typename BasisBlock<T>::Basis & b)
     {
     auto it = b.find(ops);
     if(it != b.end()) return it->second;
@@ -1040,14 +1040,12 @@ partitionHTerms(SiteSet const& sites,
         {
         SiteTermProd left, onsite, right;
         decomposeTerm(n, ht.ops, left, onsite, right);
-        
         QN lqn,sqn;
         if(checkqns)
             {
             lqn = calcQN(left);
             sqn = calcQN(onsite);
             }
-        
         int j=-1,k=-1;
 
         // qbs.at(i) are the blocks at the link between sites i+1 and i+2

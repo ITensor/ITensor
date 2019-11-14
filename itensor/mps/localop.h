@@ -333,7 +333,6 @@ product(ITensor const& phi,
     if(LIsNull())
         {
         phip = phi;
-
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
         

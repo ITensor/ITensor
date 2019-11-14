@@ -373,6 +373,28 @@ class InfArray
     const_iterator
     cend() const { return data_+size_; }
 
+    std::reverse_iterator<iterator>
+    rbegin() { return std::reverse_iterator<iterator>(end()); }
+
+    std::reverse_iterator<iterator>
+    rend() { return std::reverse_iterator<iterator>(begin()); }
+
+    std::reverse_iterator<const_iterator>
+    rbegin() const { return std::reverse_iterator<const_iterator>(end()); }
+
+    std::reverse_iterator<const_iterator>
+    rend() const { return std::reverse_iterator<const_iterator>(begin()); }
+
+    template<typename T2, size_t ArrSize2>
+    bool
+    operator==(InfArray<T2,ArrSize2> const& v2)
+      {
+      if(size() != v2.size()) return false;
+      for(int i = 0; i < size(); ++i)
+        if(operator[](i) != v2[i]) return false;
+      return true;
+      }
+
     private:
     void
     setDataPtr()
@@ -391,6 +413,7 @@ class InfArray
         {
         if(size_==0) Error("InfArray is empty");
         }
+
     };
 
 //template<typename T, size_t ArrSize>

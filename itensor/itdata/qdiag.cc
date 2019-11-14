@@ -594,7 +594,7 @@ doTask(ToDense & R,
   for(auto& io : nd->offsets)
     {
     // Get the current block
-    computeBlockInd(io.block,R.is,ind);
+    ind = io.block;
 
     // Check that the current block
     // is on the diagonal. If it is not,

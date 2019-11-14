@@ -162,9 +162,9 @@ davidson(BigMatrixT const& A,
     auto eigs = std::vector<Real>(nget,NAN);
 
     V[0] = phi.front();
-    START_TIMER(21);
+TIMER_START(31);
     A.product(V[0],AV[0]);
-    STOP_TIMER(21);
+TIMER_STOP(31);
 
     auto initEn = real(eltC((dag(V[0])*AV[0])));
 
@@ -180,7 +180,7 @@ davidson(BigMatrixT const& A,
         //and compute the residual q
 
         auto ni = ii+1; 
-        auto& q = V.at(ni);
+        auto& q = V[ni];
         auto& phi_t = phi.at(t);
         auto& lambda = eigs.at(t);
 
@@ -190,8 +190,8 @@ davidson(BigMatrixT const& A,
             lambda = initEn;
             stdx::fill(Mref,lambda);
             //Calculate residual q
+
             q = AV[0] - lambda*V[0];
-            //printfln("ii=%d, q = \n%f",ii,q);
             }
         else // ii != 0
             {
@@ -206,6 +206,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
+
             for(auto k : range1(ii))
                 {
                 phi_t += U(k,t)*V[k];
@@ -325,7 +326,7 @@ davidson(BigMatrixT const& A,
                 //Orthogonalization failure,
                 //try randomizing
                 if(debug_level_ >= 2) println("Vector not independent, randomizing");
-                q = V.at(ni-1);
+                q = V[ni-1];
                 q.randomize();
                 qnrm = norm(q);
                 //Do another orthog pass
@@ -379,9 +380,9 @@ davidson(BigMatrixT const& A,
         //Step G of Davidson (1975)
         //Expand AV and M
         //for next step
-        START_TIMER(21);
+TIMER_START(31);
         A.product(V[ni],AV[ni]);
-        STOP_TIMER(21);
+TIMER_STOP(31);
 
         //Step H of Davidson (1975)
         //Add new row and column to M

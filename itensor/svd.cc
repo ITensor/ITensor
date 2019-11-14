@@ -343,7 +343,9 @@ svdImpl(ITensor const& A,
             //printfln("{n,n} = {%d,%d}",n,n);
             //printfln("{B.i2,n} = {%d,%d}",B.i2,n);
 
-            auto uind = stdx::make_array(B.i1,n);
+            auto uind = Labels(2);
+            uind[0] = B.i1;
+            uind[1] = n;
             auto pU = getBlock(Ustore,Uis,uind);
             assert(pU.data() != nullptr);
             assert(uI.blocksize0(B.i1) == long(nrows(UU)));
@@ -351,13 +353,17 @@ svdImpl(ITensor const& A,
             reduceCols(UU,L.blocksize0(n));
             Uref &= UU;
 
-            auto dind = stdx::make_array(n,n);
+            auto dind = Labels(2);
+            dind[0] = n;
+            dind[1] = n;
             auto pD = getBlock(Dstore,Dis,dind);
             assert(pD.data() != nullptr);
             auto Dref = makeVecRef(pD.data(),d.size());
             Dref &= d;
 
-            auto vind = stdx::make_array(B.i2,n);
+            auto vind = Labels(2);
+            vind[0] = B.i2;
+            vind[1] = n;
             auto pV = getBlock(Vstore,Vis,vind);
             assert(pV.data() != nullptr);
             assert(vI.blocksize0(B.i2) == long(nrows(VV)));

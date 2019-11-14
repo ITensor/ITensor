@@ -31,11 +31,21 @@ class QDense;
 using QDenseReal = QDense<Real>;
 using QDenseCplx = QDense<Cplx>;
 
+using Block = Labels;
+
+// Define a block ordering according to (reverse)
+// lexicographical order
+bool
+operator<(Block const& l1, Block const& l2);
+
 struct BlOf
     {
-    long block;
+    Block block;
     long offset;
     };
+
+using Blocks = std::vector<Block>;
+using BlockOffsets = std::vector<BlOf>;
 
 template<typename T>
 class QDense
@@ -50,7 +60,7 @@ class QDense
 
 
     //////////////
-    std::vector<BlOf> offsets;
+    BlockOffsets offsets;
         //^ Block index / data offset pairs.
         //  Assumed that block indices are
         //  in increasing order.
@@ -62,17 +72,22 @@ class QDense
     QDense() { }
 
     QDense(IndexSet const& is, 
-           QN const& div_);
+           QN       const& div);
+
+    // Constructor taking a list of block labels
+    // instead of QN divergence
+    QDense(IndexSet const& is,
+           Blocks   const& blocks);
 
     //template<typename InputIter>
-    //QDense(std::vector<BlOf> const& off,
+    //QDense(BlockOffsets const& off,
     //       InputIter && b, InputIter && c)
     //     : offsets(off),
     //       store(b,c)
     //       { }
 
     template<typename... StoreArgs>
-    QDense(std::vector<BlOf> const& off,
+    QDense(BlockOffsets const& off,
            StoreArgs&&... sargs)
          : offsets(off),
            store(std::forward<StoreArgs>(sargs)...)
@@ -130,7 +145,15 @@ class QDense
     updateOffsets(IndexSet const& is,
                   QN const& div);
 
+    long
+    updateOffsets(IndexSet const& is,
+                  Blocks   const& blocks);
+
     };
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, QDense<T> const& t);
 
 const char*
 typeNameOf(QDenseReal const& d);
@@ -164,20 +187,36 @@ realData(QDenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.siz
 Datac inline
 realData(QDenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
 
+std::ostream&
+operator<<(std::ostream & s, BlockOffsets const& offsets);
 
+// TODO: write this
+//void
+//write(std::ostream & s, BlockOffsets const& offsets)
+//    {
+//    }
+
+// TODO: write this
+//void
+//read(std::istream & s, BlockOffsets const& offsets)
+//    {
+//    }
+
+// TODO: need to add writing of BlockOffsets
 template<typename T>
 void
 write(std::ostream & s, QDense<T> const& dat)
     {
-    itensor::write(s,dat.offsets);
+    //itensor::write(s,dat.offsets);
     //itensor::write(s,dat.store);
     }
 
+// TODO: need to add reading of BlockOffsets
 template<typename T>
 void
 read(std::istream & s, QDense<T> & dat)
     {
-    itensor::read(s,dat.offsets);
+    //itensor::read(s,dat.offsets);
     //itensor::read(s,dat.store);
     }
 
@@ -357,8 +396,8 @@ doTask(NCProd& P,
 // If so, return the corresponding data offset,
 // otherwise return -1
 long
-offsetOf(std::vector<BlOf> const& offsets,
-         long blockind);
+offsetOf(BlockOffsets const& offsets,
+         Block const& blockind);
 
 template<typename T>
 template<typename Indexable>
@@ -375,10 +414,9 @@ getElt(IndexSet const& is,
         Error("Mismatched size of IndexSet and elt_ind in get_block");
         }
 #endif
-    long bind = 0, //block index (total)
-         bstr = 1, //block stride so far
-         eoff = 0, //element offset within block
+    long eoff = 0, //element offset within block
          estr = 1; //element stride
+    auto block = Block(r);
     for(auto i = 0; i < r; ++i)
         {
         auto& I = is[i];
@@ -389,14 +427,13 @@ getElt(IndexSet const& is,
             elt_subind -= I.blocksize0(block_subind);
             ++block_subind;
             }
-        bind += block_subind*bstr;
-        bstr *= I.nblock();
+        block[i] = block_subind;
         eoff += elt_subind*estr;
         estr *= I.blocksize0(block_subind);
         }
     //Do a binary search (equal_range) to see
     //if there is a block with block index "bind"
-    auto boff = offsetOf(offsets,bind);
+    auto boff = offsetOf(offsets,block);
     if(boff >= 0)
         {
 #ifdef DEBUG
@@ -415,10 +452,10 @@ doTask(Order const& P,
 template<typename T>
 void
 permuteQDense(Permutation const& P,
-             QDense<T>    const& dA,
-             IndexSet   const& Ais,
-             QDense<T>         & dB,
-             IndexSet   const& Bis);
+              QDense<T>    const& dA,
+              IndexSet   const& Ais,
+              QDense<T>         & dB,
+              IndexSet   const& Bis);
 
 //template<typename BlockSparseStore, typename Indexable>
 //auto
@@ -434,7 +471,7 @@ permuteQDense(Permutation const& P,
 
 QN
 calcDiv(IndexSet const& is, 
-        Labels const& block_ind);
+        Block const& block_ind);
 
 ////code for doTask(ToITensor...) is in iqtensor.cc
 //template<typename V>
