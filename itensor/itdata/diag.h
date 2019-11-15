@@ -142,7 +142,7 @@ read(std::istream& s, Diag<T>& dat)
     {
     itensor::read(s,dat.val);
     itensor::read(s,dat.length);
-    //itensor::read(s,dat.store);
+    itensor::read(s,dat.store);
     }
 
 template<typename T>
@@ -151,7 +151,7 @@ write(std::ostream& s, Diag<T> const& dat)
     {
     itensor::write(s,dat.val);
     itensor::write(s,dat.length);
-    //itensor::write(s,dat.store);
+    itensor::write(s,dat.store);
     }
 
 template <typename F, typename T>
