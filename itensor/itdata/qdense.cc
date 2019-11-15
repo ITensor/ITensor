@@ -187,6 +187,15 @@ offsetOf(BlockOffsets const& offsets,
     return -1;
     }
 
+int
+offsetOfLoc(BlockOffsets const& offsets,
+            Block        const& blockind)
+    {
+    auto it = std::lower_bound(offsets.begin(),offsets.end(),blockind,compBlock());
+    int loc = std::distance(offsets.begin(),it);
+    return loc;
+    }
+
 Cplx
 doTask(GetElt& G, QDenseReal const& d)
     {
@@ -581,7 +590,9 @@ doTask(Contract& Con,
     using VC = common_type<VA,VB>;
     Labels Lind,
            Rind;
+
     computeLabels(Con.Lis,order(Con.Lis),Con.Ris,order(Con.Ris),Lind,Rind);
+
     //compute new index set (Con.Nis):
     Labels Cind;
     const bool sortResult = false;
@@ -592,17 +603,25 @@ TIMER_START(32);
     auto [Coffsets,Csize,blockContractions] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
 TIMER_STOP(32);
 TIMER_START(33);
-    auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
+    // Create QDense storage with uninitialized memory, faster than
+    // setting to zeros
+    auto nd = m.makeNewData<QDense<VC>>(undef,Coffsets,Csize);
 TIMER_STOP(33);
     auto& C = *nd;
+
+    //Determines if the contraction in the list overwrites or
+    //adds to the data. Initially, overwrite the data since the
+    //data starts uninitialized
+    auto betas = std::vector<Real>(C.offsets.size(),0.);
 
     //Function to execute for each pair of
     //contracted blocks of A and B
     auto do_contract = 
-        [&Con,&Lind,&Rind,&Cind]
+        [&Con,&Lind,&Rind,&Cind,&betas]
         (DataRange<const VA> ablock, Block const& Ablockind,
          DataRange<const VB> bblock, Block const& Bblockind,
-         DataRange<VC>       cblock, Block const& Cblockind)
+         DataRange<VC>       cblock, Block const& Cblockind,
+         int Cblockloc)
         {
         Range Arange,
               Brange,
@@ -619,8 +638,12 @@ TIMER_STOP(33);
         auto bref = makeRef(bblock,&Brange);
         auto cref = makeRef(cblock,&Crange);
 
-        //Compute cref += aref*bref
-        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.);
+        // cref += aref*bref or cref = aref*bref
+        contract(aref,Lind,bref,Rind,cref,Cind,1.,betas[Cblockloc]);
+
+        // If the block had not been called, betas[Cblockloc] == 0
+        // Set it to 1 after it has been called
+        betas[Cblockloc] = 1.;
         };
 
 TIMER_START(34);

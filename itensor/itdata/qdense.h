@@ -422,6 +422,10 @@ long
 offsetOf(BlockOffsets const& offsets,
          Block const& blockind);
 
+int
+offsetOfLoc(BlockOffsets const& offsets,
+            Block        const& blockind);
+
 template<typename T>
 template<typename Indexable>
 T const* QDense<T>::

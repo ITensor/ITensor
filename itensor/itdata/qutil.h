@@ -63,6 +63,15 @@ make_indexdim(IndexSet const& is, Indexable const& ind)
     return IndexDim<Indexable>(is,ind); 
     }
 
+template<typename T>
+int
+getBlockLoc(QDense<T> const& d,
+            Block const& block_ind)
+    {
+    auto loc = offsetOfLoc(d.offsets,block_ind);
+    return loc;
+    }
+
 template<typename BlockSparse>
 auto
 getBlock(BlockSparse & d,
@@ -134,9 +143,6 @@ getContractedOffsets(BlockSparseA const& A,
 
     auto blockContractions = std::vector<std::tuple<Block,Block,Block>>();
 
-    // Stores the total size that the storage of C should have
-    auto Csize = 0;
-
     //Loop over blocks of A (labeled by elements of A.offsets)
     for(auto const& aio : A.offsets)
         {
@@ -176,7 +182,6 @@ getContractedOffsets(BlockSparseA const& A,
                 }
 
             Cblocksizes.push_back(make_blof(Cblockind,blockDim));
-            Csize += blockDim;
             } //for B.offsets
         } //for A.offsets
 
@@ -197,6 +202,9 @@ getContractedOffsets(BlockSparseA const& A,
         Cblocksizes[i].offset = current_offset;
         current_offset += current_size;
         } 
+    // Stores the total size that the storage of C should have
+    auto Csize = current_offset;
+
     return std::make_tuple(Cblocksizes,Csize,blockContractions);
     }
 
@@ -219,9 +227,11 @@ loopContractedBlocks(QDense<TA> const& A,
         auto ablock = getBlock(A,Ais,Ablockind);
         auto bblock = getBlock(B,Bis,Bblockind);
         auto cblock = getBlock(C,Cis,Cblockind);
+        auto Cblockloc = getBlockLoc(C,Cblockind);
         callback(ablock,Ablockind,
                  bblock,Bblockind,
-                 cblock,Cblockind);
+                 cblock,Cblockind,
+                 Cblockloc);
         }
     }
 
