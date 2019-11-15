@@ -61,6 +61,9 @@ class uninitialized_allocator
   bool
   operator==(uninitialized_allocator<T> const&) { return true; }
 
+  bool
+  operator!=(uninitialized_allocator<T> const&) { return false; }
+
   };
 
 template<typename T>
