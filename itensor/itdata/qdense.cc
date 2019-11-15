@@ -763,21 +763,18 @@ permuteQDense(Permutation  const& P,
     auto r = order(Ais);
     auto bind = IndexSetBuilder(r);
     for(auto i : range(r))
-        {
         bind.setIndex(P.dest(i),Ais[i]);
-        }
     Bis = bind.build();
     dB = QDense<T>(Bis,doTask(CalcDiv{Ais},dA));
     // Perform permutation
-    Block Ablock(r,-1),
-          Bblock(r,-1);
+    auto Bblock = Block(r,-1);
     Range Arange,
           Brange;
     for(auto const& aio : dA.offsets)
         {
         //Compute bi, new block index of blk
-        for(auto j : range(Ablock))
-            Bblock.at(P.dest(j)) = Ablock[j];
+        for(auto j : range(aio.block))
+            Bblock.at(P.dest(j)) = aio.block[j];
         Arange.init(make_indexdim(Ais,aio.block));
         Brange.init(make_indexdim(Bis,Bblock));
 

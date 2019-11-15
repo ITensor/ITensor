@@ -88,16 +88,14 @@ doTask(GetBlocks<T> const& G,
     {
     if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
-    auto dblock = IntArray(2,0);
     size_t n = 0;
-    for(auto& dio : d.offsets)
+    for(auto const& dio : d.offsets)
         {
         auto& R = res[n++];
-        dblock = dio.block;
-        auto nrow = G.is[0].blocksize0(dblock[0]);
-        auto ncol = G.is[1].blocksize0(dblock[1]);
-        R.i1 = dblock[0];
-        R.i2 = dblock[1];
+        auto nrow = G.is[0].blocksize0(dio.block[0]);
+        auto ncol = G.is[1].blocksize0(dio.block[1]);
+        R.i1 = dio.block[0];
+        R.i2 = dio.block[1];
         R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
         }
     if(G.transpose) 

@@ -2680,6 +2680,46 @@ SECTION("ITensor toDense function")
     }
   }
 
+SECTION("Block deficient ITensor tests")
+  {
+  auto i = Index(QN(0),1,QN(1),1,"i");
+  auto ip = prime(i);
+  auto l = Index(QN(0),1,"l");
+
+  auto a = randomITensor(QN(1),i,l);
+  auto A = a*prime(dag(a),i);
+
+  auto val = 1.;
+
+  SECTION("Add")
+    {
+    auto T = randomITensor(QN(),dag(prime(i)),i);
+    auto AT = A+T;
+    auto TA = T+A;
+    CHECK(norm(AT-TA)==0);
+    }
+
+  SECTION("Set elements")
+    {
+    auto A22 = elt(A,i=2,ip=2);
+    A.set(i=1,ip=1,val);
+    CHECK(elt(A,i=1,ip=1)==val);
+    CHECK(elt(A,i=2,ip=2)==A22);
+    CHECK(elt(A,i=1,ip=2)==0.);
+    CHECK(elt(A,i=2,ip=1)==0.);
+    }
+
+  SECTION("fill")
+    {
+    A.fill(val);
+    CHECK(elt(A,i=1,ip=1)==val);
+    CHECK(elt(A,i=2,ip=2)==val);
+    CHECK(elt(A,i=1,ip=2)==0.);
+    CHECK(elt(A,i=2,ip=1)==0.);
+    }
+
+  }
+
 } //TEST_CASE("ITensor")
 
 
