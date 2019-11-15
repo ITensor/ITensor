@@ -283,14 +283,11 @@ loopContractedBlocks(TA const& A,
         }
 
     auto couB = detail::GCounter(rB);
-    auto Ablockind = IntArray(rA,0);
-    auto Bblockind = IntArray(rB,0);
-    auto Cblockind = IntArray(rC,0);
+    auto Bblockind = Block(rB,0);
+    auto Cblockind = Block(rC,0);
     //Loop over blocks of A (labeled by elements of A.offsets)
-    for(auto& aio : A.offsets)
+    for(auto const& aio : A.offsets)
         {
-        //Reconstruct indices labeling this block of A, put into Ablock
-        Ablockind = aio.block;
         //Reset couB to run over indices of B (at first)
         couB.reset();
         for(auto iB : range(rB))
@@ -299,7 +296,7 @@ loopContractedBlocks(TA const& A,
             }
         for(auto iA : range(rA))
             {
-            auto ival = Ablockind[iA];
+            auto ival = aio.block[iA];
             //Restrict couB to be fixed for indices of B contracted with A
             if(AtoB[iA] != -1) couB.setRange(AtoB[iA],ival,ival);
             //Begin computing elements of Cblock(=destination of this block-block contraction)
@@ -325,7 +322,7 @@ loopContractedBlocks(TA const& A,
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
 
-            callback(ablock,Ablockind,
+            callback(ablock,aio.block,
                      bblock,Bblockind,
                      cblock,Cblockind);
             } //for couB

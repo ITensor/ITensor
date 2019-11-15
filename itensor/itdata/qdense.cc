@@ -371,18 +371,14 @@ doTask(PrintIT& P, QDense<T> const& d)
 
     Range brange;
     auto C = detail::GCounter(ord);
-    for(const auto& io : d.offsets)
+    for(auto const& io : d.offsets)
         {
         bool block_info_printed = false;
-
-        //Determine block indices (where in the Index space
-        //this non-zero block is located)
-        block = io.block;
 
         Block boff(ord,0);
         for(auto i : range(ord))
             {
-            for(auto j : range(block[i]))
+            for(auto j : range(io.block[i]))
                 boff[i] += P.is[i].blocksize0(j);
             }
 
@@ -402,7 +398,7 @@ doTask(PrintIT& P, QDense<T> const& d)
                     block_info_printed = true;
                     //Print Indices of this block
                     P.s << "Block:";
-                    for(auto bi : block)
+                    for(auto const& bi : io.block)
                         {
                         P.s << " " << (1+bi);
                         //if(i > 0) P.s << " ";
@@ -460,22 +456,19 @@ add(PlusEQ const& P,
         return;
         }
 
-    Block Ablock(r,0),
-          Bblock(r,0);
+    auto Bblock = Block(r,0);
     Range Arange,
           Brange;
 
-    for(auto& aio : A.offsets)
+    for(auto const& aio : A.offsets)
         {
-        Ablock = aio.block;
-
         for(auto i : range(r))
-            Bblock[i] = Ablock[P.perm().dest(i)];
+            Bblock[i] = aio.block[P.perm().dest(i)];
 
         auto bblock = getBlock(B,P.is2(),Bblock);
         if(!bblock) continue;
 
-        Arange.init(make_indexdim(P.is1(),Ablock));
+        Arange.init(make_indexdim(P.is1(),aio.block));
         Brange.init(make_indexdim(P.is2(),Bblock));
         auto aref = makeTenRef(A.data(),aio.offset,A.size(),&Arange);
         auto bref = makeRef(bblock,&Brange);
@@ -514,29 +507,24 @@ doTask(PlusEQ const& P,
         return;
         }
 
-    auto Ablock = Block(r,0),
-         Bblock = Block(r,0);
-
     // Store the blocks of the output
     // TODO: optimize this to merge and remove repeats
     //       at the same time, assuming A.offsets and 
     //       B.offsets are already sorted
     auto Cblocks = Blocks();
 
-    for(auto& aio : A.offsets)
+    for(auto const& aio : A.offsets)
         {
-        Ablock = aio.block;
-        Cblocks.push_back(Ablock);
+        Cblocks.push_back(aio.block);
         }
 
     auto invperm = inverse(P.perm());
-    for(auto& bio : B.offsets)
+    for(auto const& bio : B.offsets)
         {
-        Bblock = bio.block;
-        auto Bblockp = Block(r,0);
+        auto Bblockp = Block(r);
         for(auto i : range(r))
           {
-          Bblockp[i] = Bblock[invperm.dest(i)];
+          Bblockp[i] = bio.block[invperm.dest(i)];
           }
         Cblocks.push_back(Bblockp);
         }
@@ -556,6 +544,7 @@ doTask(PlusEQ const& P,
     if(A.offsets.size() < Cblocks.size())
         {
         // This means there are blocks in B that are not in A
+        // Need to expand the data
         auto *nA = m.makeNewData<QDense<common_type<TA,TB>>>(P.is1(),Cblocks);
         // Do a trivial permutation
         auto trivial_perm = PlusEQ::permutation(r);
@@ -784,13 +773,12 @@ permuteQDense(Permutation  const& P,
           Bblock(r,-1);
     Range Arange,
           Brange;
-    for(auto aio : dA.offsets)
+    for(auto const& aio : dA.offsets)
         {
         //Compute bi, new block index of blk
-        Ablock = aio.block;
         for(auto j : range(Ablock))
             Bblock.at(P.dest(j)) = Ablock[j];
-        Arange.init(make_indexdim(Ais,Ablock));
+        Arange.init(make_indexdim(Ais,aio.block));
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto bblock = getBlock(dB,Bis,Bblock);
@@ -841,13 +829,12 @@ doTask(RemoveQNs & R,
     auto *pn = nd->data();
     IntArray block(r,0);
     detail::GCounter C(r);
-    for(auto& io : d.offsets)
+    for(auto const& io : d.offsets)
         {
-        block = io.block;
         for(auto j : range(r))
             {
             long start = 0;
-            for(auto b : range(block[j]))
+            for(auto b : range(io.block[j]))
                 {
                 start += R.is[j].blocksize0(b);
                 }

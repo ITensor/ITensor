@@ -588,28 +588,23 @@ doTask(ToDense & R,
   auto nd = m.makeNewData<QDense<V>>(R.is,ddiv);
   auto ninds = length(R.is);
 
-  // Store the which block we are currently using
-  auto ind = IntArray(ninds,0);
   Range dense_range;
-  for(auto& io : nd->offsets)
+  for(auto const& io : nd->offsets)
     {
-    // Get the current block
-    ind = io.block;
-
     // Check that the current block
     // is on the diagonal. If it is not,
     // no diagonal elements need to be set.
     auto diag_block = true;
     for(auto i : range(1,ninds))
       {
-      if(ind[i] != ind[0])
+      if(io.block[i] != io.block[0])
         diag_block = false;
       }
 
     if(diag_block)
       {
       // Make a TenRef of the current block we want to assign to
-      dense_range.init(make_indexdim(R.is,ind));
+      dense_range.init(make_indexdim(R.is,io.block));
       auto aref = makeTenRef(nd->data(),io.offset,nd->size(),&dense_range);
 
       long tot_stride = 0; //total strides for this block
@@ -627,7 +622,7 @@ doTask(ToDense & R,
         {
         // Get the diagonal elements of the current
         // block
-        auto pD = getBlock(d,R.is,ind);
+        auto pD = getBlock(d,R.is,io.block);
         // Make a VecRef of the diagonal elements of the block to assign
         // to the diagonal of the new QDense storage block
         auto Dref = makeVecRef(pD.data(),pD.size());
