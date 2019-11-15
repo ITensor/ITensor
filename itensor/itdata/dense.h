@@ -151,14 +151,14 @@ template<typename T>
 void 
 read(std::istream& s, Dense<T> & dat)
     {
-    //itensor::read(s,dat.store);
+    itensor::read(s,dat.store);
     }
 
 template<typename T>
 void
 write(std::ostream& s, Dense<T> const& dat)
     {
-    //itensor::write(s,dat.store);
+    itensor::write(s,dat.store);
     }
 
 template<typename F, typename T>

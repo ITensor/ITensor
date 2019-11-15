@@ -203,6 +203,25 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
     return DataRange<T>(pb,size);
     }
 
+//
+// Types to help with block sparse data
+//
+
+using Block = Labels;
+
+// Define a block ordering according to (reverse)
+// lexicographical order
+bool
+operator<(Block const& l1, Block const& l2);
+
+struct BlOf
+    {
+    Block block;
+    long offset;
+    };
+
+using Blocks = std::vector<Block>;
+using BlockOffsets = std::vector<BlOf>;
 
 template<typename T, size_t N>
 std::ostream& 

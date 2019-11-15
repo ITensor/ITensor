@@ -31,22 +31,6 @@ class QDense;
 using QDenseReal = QDense<Real>;
 using QDenseCplx = QDense<Cplx>;
 
-using Block = Labels;
-
-// Define a block ordering according to (reverse)
-// lexicographical order
-bool
-operator<(Block const& l1, Block const& l2);
-
-struct BlOf
-    {
-    Block block;
-    long offset;
-    };
-
-using Blocks = std::vector<Block>;
-using BlockOffsets = std::vector<BlOf>;
-
 template<typename T>
 class QDense
     {
@@ -213,34 +197,20 @@ realData(QDenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.dat
 std::ostream&
 operator<<(std::ostream & s, BlockOffsets const& offsets);
 
-// TODO: write this
-//void
-//write(std::ostream & s, BlockOffsets const& offsets)
-//    {
-//    }
-
-// TODO: write this
-//void
-//read(std::istream & s, BlockOffsets const& offsets)
-//    {
-//    }
-
-// TODO: need to add writing of BlockOffsets
 template<typename T>
 void
 write(std::ostream & s, QDense<T> const& dat)
     {
-    //itensor::write(s,dat.offsets);
-    //itensor::write(s,dat.store);
+    itensor::write(s,dat.offsets);
+    itensor::write(s,dat.store);
     }
 
-// TODO: need to add reading of BlockOffsets
 template<typename T>
 void
 read(std::istream & s, QDense<T> & dat)
     {
-    //itensor::read(s,dat.offsets);
-    //itensor::read(s,dat.store);
+    itensor::read(s,dat.offsets);
+    itensor::read(s,dat.store);
     }
 
 template<typename T>
