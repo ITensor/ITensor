@@ -114,7 +114,7 @@ ITENSOR_MAKE_DYLIB=0
 ### Not necessary to modify these for most cases.
 ###
 
-PREFIX=$(THIS_DIR)
+PREFIX='$(THIS_DIR)'
 
 ITENSOR_LIBDIR=$(PREFIX)/lib
 ITENSOR_INCLUDEDIR=$(PREFIX)
