@@ -503,6 +503,9 @@ maxDim(ITensor const& A);
 std::vector<IndexSet> 
 inds(std::vector<ITensor> const& A);
 
+int
+nnzblocks(ITensor const& A);
+
 // Get Index at a certain position
 // in the ITensor's IndexSet, using 1-based indexing
 Index const& 

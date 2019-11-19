@@ -129,19 +129,16 @@ QDense(IndexSet const& is,
 template QDense<Real>::QDense(IndexSet const&, Blocks const&);
 template QDense<Cplx>::QDense(IndexSet const&, Blocks const&);
 
-template<typename T>
-long QDense<T>::
-updateOffsets(IndexSet const& is,
-              QN       const& div)
+std::tuple<BlockOffsets,long>
+getBlockOffsets(IndexSet const& is,
+                QN       const& div)
     {
-    offsets.clear();
-
+    auto bofs = BlockOffsets();
     if(order(is)==0)
         {
-        offsets.push_back(make_blof(Block(0),0));
-        return 1;
+        bofs.push_back(make_blof(Block(0),0));
+        return std::make_tuple(bofs,1);
         }
-
     //Set up a Range to iterate over all blocks
     auto RB = RangeBuilder(order(is));
     for(auto j : range(order(is)))
@@ -167,17 +164,27 @@ updateOffsets(IndexSet const& is,
                 block[j] = i_j;
                 totdim *= J.blocksize0(i_j);
                 }
-            offsets.push_back(make_blof(block,totalsize));
+            bofs.push_back(make_blof(block,totalsize));
             totalsize += totdim;
             }
         }
-    return totalsize;
+    return std::make_tuple(bofs,totalsize);
     }
 
 template<typename T>
 long QDense<T>::
-updateOffsets(IndexSet       const& is,
-              Blocks const& blocks)
+updateOffsets(IndexSet const& is,
+              QN       const& div)
+    {
+    auto [bofs,size] = getBlockOffsets(is,div);
+    offsets = bofs;
+    return size;
+    }
+
+template<typename T>
+long QDense<T>::
+updateOffsets(IndexSet const& is,
+              Blocks   const& blocks)
     {
     offsets.clear();
 
@@ -315,6 +322,15 @@ doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m)
     auto *nd = m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
     doTask(M,*nd);
     }
+
+template<typename T>
+int
+doTask(NNZBlocks, QDense<T> const& D)
+    {
+    return D.offsets.size();
+    }
+template int doTask(NNZBlocks, QDense<Real> const&);
+template int doTask(NNZBlocks, QDense<Cplx> const&);
 
 template<typename T>
 void

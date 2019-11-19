@@ -376,6 +376,10 @@ Real
 doTask(NormNoScale, QDense<T> const& D);
 
 template<typename T>
+int
+doTask(NNZBlocks, QDense<T> const& D);
+
+template<typename T>
 void
 doTask(PrintIT& P, QDense<T> const& d);
 
@@ -414,7 +418,12 @@ doTask(NCProd& P,
        QDense<VB> const& B,
        ManageStore& m);
 
-
+// From an indexset and a QN divergence,
+// get the list of block-offsets and the
+// size of the storage
+std::tuple<BlockOffsets,long>
+getBlockOffsets(IndexSet const& is,
+                QN       const& div);
 
 // Does a binary search over offsets to see 
 // if they contain "blockind"

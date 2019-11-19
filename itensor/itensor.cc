@@ -281,6 +281,13 @@ randomize(Args const& args)
     return *this;
     }
 
+int
+nnzblocks(ITensor const& A)
+    {
+    if(hasQNs(A)) return doTask(NNZBlocks{},A.store());
+    return 1;
+    }
+
 ITensor& ITensor::
 fill(Cplx z)
     {
@@ -290,6 +297,25 @@ fill(Cplx z)
         else Error("Can't fill default-constructed tensor");
         }
     IF_USESCALE(scale_ = scale_type(1.);)
+    if(itensor::hasQNs(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            // Make the new memory undefined since it
+            // will be overwritten anyway.
+            if(z.imag() == 0)
+              store_ = newITData<QDense<Real>>(undef,bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(undef,bofs,size);
+            }
+        }
     if(z.imag() == 0)
         doTask(Fill<Real>{z.real()},store_);
     else
