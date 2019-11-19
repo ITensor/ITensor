@@ -81,6 +81,15 @@ randomData(size_t size)
     return data;
     }
 
+struct GetQDenseStore {};
+struct GetQDenseOffsets {};
+
+vector_no_init<Real>
+doTask(GetQDenseStore, QDense<Real> const& d) { return d.store; }
+
+BlockOffsets
+doTask(GetQDenseOffsets, QDense<Real> const& d) { return d.offsets; }
+
 TEST_CASE("ITensor")
 {
 Index s1(2,"Site");
@@ -2682,18 +2691,15 @@ SECTION("ITensor toDense function")
 
 SECTION("Block deficient ITensor tests")
   {
-  auto i = Index(QN(0),1,QN(1),1,"i");
+  auto i = Index(QN(0),2,QN(1),3,QN(2),4,QN(1),5,QN(3),6,"i");
   auto ip = prime(i);
-  auto l = Index(QN(0),1,"l");
-
+  auto l = Index(QN(0),3,"l");
   auto a = randomITensor(QN(1),i,l);
   auto A = a*prime(dag(a),i);
 
-  auto val = 1.;
-
   SECTION("Add")
     {
-    auto T = randomITensor(QN(),dag(prime(i)),i);
+    auto T = randomITensor(QN(0),dag(prime(i)),i);
     auto AT = A+T;
     auto TA = T+A;
     CHECK(norm(AT-TA)==0);
@@ -2701,21 +2707,58 @@ SECTION("Block deficient ITensor tests")
 
   SECTION("Set elements")
     {
-    auto A22 = elt(A,i=2,ip=2);
-    A.set(i=1,ip=1,val);
-    CHECK(elt(A,i=1,ip=1)==val);
-    CHECK(elt(A,i=2,ip=2)==A22);
-    CHECK(elt(A,i=1,ip=2)==0.);
-    CHECK(elt(A,i=2,ip=1)==0.);
+    auto copyA = A;
+    auto val1 = 1.;
+    auto val2 = 2.;
+    auto val3 = 3.;
+
+    auto d = doTask(GetQDenseStore{},copyA.store());
+    auto bofs = doTask(GetQDenseOffsets{},copyA.store());
+
+    CHECK(d.size()==64);
+    CHECK(bofs.size()==4);
+
+    copyA.set(i=2, ip=1, val1);
+
+    d = doTask(GetQDenseStore{},copyA.store());
+    bofs = doTask(GetQDenseOffsets{},copyA.store());
+
+    CHECK(d.size()==68);
+    CHECK(bofs.size()==5);
+
+    copyA.set(i=7, ip=8, val2);
+
+    d = doTask(GetQDenseStore{},copyA.store());
+    bofs = doTask(GetQDenseOffsets{},copyA.store());
+
+    CHECK(d.size()==84);
+    CHECK(bofs.size()==6);
+
+    copyA.set(i=16,ip=18,val3);
+
+    d = doTask(GetQDenseStore{},copyA.store());
+    bofs = doTask(GetQDenseOffsets{},copyA.store());
+
+    CHECK(d.size()==120);
+    CHECK(bofs.size()==7);
+
+    CHECK(elt(copyA,i=2, ip=1) ==val1);
+    CHECK(elt(copyA,i=7, ip=8) ==val2);
+    CHECK(elt(copyA,i=16,ip=18)==val3);
     }
 
   SECTION("fill")
     {
-    A.fill(val);
-    CHECK(elt(A,i=1,ip=1)==val);
-    CHECK(elt(A,i=2,ip=2)==val);
-    CHECK(elt(A,i=1,ip=2)==0.);
-    CHECK(elt(A,i=2,ip=1)==0.);
+    auto copyA = A;
+    auto val = 1.3;
+    copyA.fill(val);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
     }
 
   }

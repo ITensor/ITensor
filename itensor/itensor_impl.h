@@ -304,6 +304,58 @@ getInts(Iter it,
     getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
+template<typename IndexVals>
+void
+checkEltFlux(ITensor const& A, IndexVals const& ivs)
+    {
+    if(hasQNs(A))
+      {
+      QN elt_flux;
+      auto indsA = inds(A);
+      for(auto i : range1(order(A)))
+          {
+          auto iv = indsA(i)(ivs[i-1].val);
+          elt_flux += dir(iv)*qn(iv);
+          }
+      if(elt_flux != flux(A))
+          {
+          println("Trying to set element: ");
+          for(auto i : range1(order(A)))
+            println("Index: ", indsA(i), ", Val: ",ivs[i-1].val);
+          println("Element flux is: ",elt_flux);
+          println("ITensor flux is: ",flux(A));
+          Error("In .set, cannot set element with flux different from ITensor flux");
+          }
+      }
+    return;
+    }
+
+template<typename Ints>
+void
+checkEltFluxInts(ITensor const& A, Ints const& ints)
+    {
+    if(hasQNs(A))
+      {
+      QN elt_flux;
+      auto indsA = inds(A);
+      for(auto i : range1(order(A)))
+          {
+          auto iv = indsA(i)(ints[i-1]+1);
+          elt_flux += dir(iv)*qn(iv);
+          }
+      if(elt_flux != flux(A))
+          {
+          println("Trying to set element: ");
+          for(auto i : range1(order(A)))
+            println("Index: ", indsA(i), ", Val: ",ints[i-1]+1);
+          println("Element flux is: ",elt_flux);
+          println("ITensor flux is: ",flux(A));
+          Error("In .set, cannot set element with flux different from ITensor flux");
+          }
+      }
+    return;
+    }
+
 } //namespace detail
 
 
@@ -334,6 +386,7 @@ set(IV const& iv1, VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
+    detail::checkEltFlux(*this,vals);
     if(z.imag()==0.0)
         {
         doTask(SetElt<Real>{z.real(),is_,inds},store_);
@@ -369,6 +422,7 @@ set(Int iv1, VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,ints);
     scaleTo(1.);
+    detail::checkEltFluxInts(*this,ints);
     if(z.imag()==0.0)
         {
         doTask(SetElt<Real>{z.real(),is_,ints},store_);

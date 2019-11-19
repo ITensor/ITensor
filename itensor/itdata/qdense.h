@@ -137,7 +137,10 @@ class QDense
     template<typename Indexable>
     value_type const*
     getElt(IndexSet const& is,
-           Indexable const& ind) const;
+           Indexable const& ind) const
+        {
+        return std::get<0>(getEltBlockOffset(is,ind));
+        }
 
     template<typename Indexable>
     value_type *
@@ -148,6 +151,23 @@ class QDense
         return const_cast<value_type*>(cthis.getElt(is,ind));
         }
 
+    template<typename Indexable>
+    std::tuple<value_type const*,Block,long>
+    getEltBlockOffset(IndexSet const& is,
+                      Indexable const& ind) const;
+
+    template<typename Indexable>
+    std::tuple<value_type*,Block,long>
+    getEltBlockOffset(IndexSet const& is,
+                      Indexable const& ind)
+        {
+        const auto& cthis = *this;
+        auto eltblockoffset = cthis.getEltBlockOffset(is,ind);
+        return std::make_tuple(const_cast<value_type*>(std::get<0>(eltblockoffset)),
+                               std::get<1>(eltblockoffset),
+                               std::get<2>(eltblockoffset));
+        }
+
     long
     updateOffsets(IndexSet const& is,
                   QN const& div);
@@ -156,7 +176,22 @@ class QDense
     updateOffsets(IndexSet const& is,
                   Blocks   const& blocks);
 
+    // Insert a new block into the QDense storage
+    // and fill with the specified value.
+    // Return the offset of the new block.
+    long
+    insertBlock(IndexSet const& is,
+                Block    const& block,
+                T val = 0);
+
     };
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, BlOf const& t);
+
+std::ostream&
+operator<<(std::ostream & s, BlockOffsets const& offsets);
 
 template<typename T>
 std::ostream&
@@ -193,9 +228,6 @@ realData(QDenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.siz
 
 Datac inline
 realData(QDenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
-
-std::ostream&
-operator<<(std::ostream & s, BlockOffsets const& offsets);
 
 template<typename T>
 void
@@ -398,12 +430,12 @@ offsetOfLoc(BlockOffsets const& offsets,
 
 template<typename T>
 template<typename Indexable>
-T const* QDense<T>::
-getElt(IndexSet const& is,
-       Indexable const& ind) const
+std::tuple<T const*,Block,long> QDense<T>::
+getEltBlockOffset(IndexSet const& is,
+                  Indexable const& ind) const
     {
     auto r = long(ind.size());
-    if(r == 0) return store.data();
+    if(r == 0) return std::make_tuple(store.data(),Block(0),0);
 #ifdef DEBUG
     if(is.order() != r) 
         {
@@ -436,9 +468,48 @@ getElt(IndexSet const& is,
 #ifdef DEBUG
         if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
 #endif
-        return store.data()+boff+eoff;
+        return std::make_tuple(store.data()+boff+eoff,block,eoff);
         }
-    return nullptr;
+    return std::make_tuple(nullptr,block,eoff);
+    }
+
+template<typename T>
+long QDense<T>::
+insertBlock(IndexSet const& is,
+            Block    const& block,
+            T val)
+    {
+    // Get the block dimension
+    int blockdim = 1;
+    for(auto i : range(is.order()))
+        blockdim *= is[i].blocksize0(block[i]);
+
+    // Find where to insert the new block
+    // TODO: optimize with a binary search
+    auto insert_loc = 0;
+    for(auto const& bof : offsets)
+        {
+        if(block > bof.block) insert_loc++;
+        else break;
+        }
+
+    // Get the offset of the new block
+    long new_offset;
+    if(insert_loc >= offsets.size())
+        new_offset = store.size();
+    else
+        new_offset = offsets[insert_loc].offset;
+
+    // Insert the specified value into the storage
+    store.insert(store.begin()+new_offset,blockdim,val);
+
+    // Shift the offsets by the new block dimension
+    for(int i = insert_loc; i < offsets.size(); i++)
+        offsets[i].offset += blockdim;
+
+    // Insert the block and offset into the block-offsets list
+    offsets.insert(offsets.begin()+insert_loc,make_blof(block,new_offset));
+    return new_offset;
     }
 
 template<typename T>

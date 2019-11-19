@@ -20,15 +20,6 @@
 
 namespace itensor {
 
-BlOf inline
-make_blof(Block const& b, long o)
-    {
-    BlOf B;
-    B.block = b;
-    B.offset = o;
-    return B;
-    }
-
 //
 // Helper object for treating
 // QDense storage as a "tensor of tensors"

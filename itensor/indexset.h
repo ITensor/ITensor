@@ -936,6 +936,9 @@ iterInds(IndexSet const& is);
 bool
 hasQNs(IndexSet const& is);
 
+QN
+flux(std::vector<IndexVal> const& ivs);
+
 void
 checkIndexSet(IndexSet const& is);
 

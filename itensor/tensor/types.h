@@ -211,8 +211,18 @@ using Block = Labels;
 
 // Define a block ordering according to (reverse)
 // lexicographical order
+// Implemented in qdense.cc
+bool
+operator==(Block const& l1, Block const& l2);
+
+bool
+operator!=(Block const& l1, Block const& l2);
+
 bool
 operator<(Block const& l1, Block const& l2);
+
+bool
+operator>(Block const& l1, Block const& l2);
 
 struct BlOf
     {
@@ -222,6 +232,9 @@ struct BlOf
 
 using Blocks = std::vector<Block>;
 using BlockOffsets = std::vector<BlOf>;
+
+BlOf
+make_blof(Block const& b, long o);
 
 template<typename T, size_t N>
 std::ostream& 

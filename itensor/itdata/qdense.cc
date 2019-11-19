@@ -34,12 +34,37 @@ typeNameOf(QDenseReal const& d) { return "QDenseReal"; }
 const char*
 typeNameOf(QDenseCplx const& d) { return "QDenseCplx"; }
 
+BlOf 
+make_blof(Block const& b, long o)
+    {
+    BlOf B;
+    B.block = b;
+    B.offset = o;
+    return B;
+    }
+
+bool
+operator==(Block const& b1, Block const& b2)
+    {
+    for(auto i : range(b1.size()))
+        {
+        if(b1[i] != b2[i]) return false;
+        }
+    return true;
+    }
+
+bool
+operator!=(Block const& b1, Block const& b2) { return !(b1==b2); }
+
 bool
 operator<(Block const& l1, Block const& l2)
     {
     return std::lexicographical_compare(l1.rbegin(),l1.rend(),
                                         l2.rbegin(),l2.rend());
     }
+
+bool
+operator>(Block const& l1, Block const& l2) { return !(l1 < l2) && (l1 != l2); }
 
 //function object for calling binaryFind
 //on offset vectors below
@@ -215,9 +240,23 @@ template<typename E, typename T>
 void
 setEltImpl(SetElt<E> & S, QDense<T> & d)
     {
-    auto* pelt = d.getElt(S.is,S.inds);
-    if(pelt) *pelt = S.elt;
-    else     Error("Setting Tensor element non-zero would violate its symmetry.");
+    auto eltblockoffset = d.getEltBlockOffset(S.is,S.inds);
+    auto* pelt = std::get<0>(eltblockoffset);
+    auto block = std::get<1>(eltblockoffset);
+    auto eltoffset = std::get<2>(eltblockoffset);
+    if(pelt)
+      {
+      // The block already exists
+      *pelt = S.elt;
+      }
+    else
+      {
+      // The block doesn't exist, so add it and then
+      // set the element
+      auto boffset = d.insertBlock(S.is,block);
+      pelt = d.store.data()+boffset+eltoffset;
+      *pelt = S.elt;
+      }
     }
 
 template<typename T>
@@ -365,10 +404,6 @@ doTask(PrintIT& P, QDense<T> const& d)
         return;
         }
         
-    Block block(ord,0);
-    //auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
-    auto blockSize = [&block,&P](long i)->long { return (P.is[i]).blocksize0(block[i]); };
-
     Range brange;
     auto C = detail::GCounter(ord);
     for(auto const& io : d.offsets)
@@ -386,7 +421,7 @@ doTask(PrintIT& P, QDense<T> const& d)
         C.reset();
         for(auto i : range(ord))
             {
-            C.setRange(i,0,blockSize(i)-1);
+            C.setRange(i,0,P.is[i].blocksize0(io.block[i])-1);
             }
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
@@ -849,10 +884,16 @@ template void doTask(RemoveQNs &, QDense<Real> const&, ManageStore &);
 template void doTask(RemoveQNs &, QDense<Cplx> const&, ManageStore &);
 
 std::ostream&
+operator<<(std::ostream & s, BlOf const& blof)
+    {
+    s << "Block: " << blof.block << ", Offset: " << blof.offset << "\n";
+    return s;
+    }
+
+std::ostream&
 operator<<(std::ostream & s, BlockOffsets const& offsets)
     {
-    for(auto const& blof : offsets)
-        s << "Block: " << blof.block << ", Offset: " << blof.offset << "\n";
+    for(auto const& blof : offsets) s << blof;
     return s;
     }
 
