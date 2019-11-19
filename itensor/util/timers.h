@@ -21,7 +21,7 @@
 #include "itensor/util/stdx.h"
 #include "itensor/util/print.h"
 
-#define COLLECT_TIMES
+//#define COLLECT_TIMES
 
 #ifdef COLLECT_TIMES
 #define SCOPED_TIMER(N) auto scoped_timer_instance0_ = ScopedTimer(N);
