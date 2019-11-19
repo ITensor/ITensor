@@ -333,6 +333,15 @@ template int doTask(NNZBlocks, QDense<Real> const&);
 template int doTask(NNZBlocks, QDense<Cplx> const&);
 
 template<typename T>
+long
+doTask(NNZ, QDense<T> const& D)
+    {
+    return D.store.size();
+    }
+template long doTask(NNZ, QDense<Real> const&);
+template long doTask(NNZ, QDense<Cplx> const&);
+
+template<typename T>
 void
 doTask(Fill<T> const& F, QDense<T> & d)
     {
@@ -864,6 +873,16 @@ doTask(GetBlock<V> const& G,
     }
 template TenRef<Range,Real> doTask(GetBlock<Real> const& G,QDense<Real> & d);
 template TenRef<Range,Cplx> doTask(GetBlock<Cplx> const& G,QDense<Cplx> & d);
+
+template<typename T>
+bool
+doTask(IsDense,
+       QDense<T> const& d)
+    {
+    return true;
+    }
+template bool doTask(IsDense,QDense<Real> const& d);
+template bool doTask(IsDense,QDense<Cplx> const& d);
 
 template<typename V>
 void

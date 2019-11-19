@@ -380,6 +380,10 @@ int
 doTask(NNZBlocks, QDense<T> const& D);
 
 template<typename T>
+long
+doTask(NNZ, QDense<T> const& D);
+
+template<typename T>
 void
 doTask(PrintIT& P, QDense<T> const& d);
 
@@ -562,6 +566,11 @@ doTask(IsEmpty, QDense<V> const& d) { return d.offsets.empty(); }
 template<typename V>
 TenRef<Range,V>
 doTask(GetBlock<V> const& G, QDense<V> & d);
+
+template<typename T>
+bool
+doTask(IsDense,
+       QDense<T> const& d);
 
 template<typename V>
 void

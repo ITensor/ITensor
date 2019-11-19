@@ -2712,35 +2712,23 @@ SECTION("Block deficient ITensor tests")
     auto val2 = 2.;
     auto val3 = 3.;
 
-    auto d = doTask(GetQDenseStore{},copyA.store());
-    auto bofs = doTask(GetQDenseOffsets{},copyA.store());
-
-    CHECK(d.size()==64);
-    CHECK(bofs.size()==4);
+    CHECK(nnzblocks(copyA)==4);
+    CHECK(nnz(copyA)==64);
 
     copyA.set(i=2, ip=1, val1);
 
-    d = doTask(GetQDenseStore{},copyA.store());
-    bofs = doTask(GetQDenseOffsets{},copyA.store());
-
-    CHECK(d.size()==68);
-    CHECK(bofs.size()==5);
+    CHECK(nnzblocks(copyA)==5);
+    CHECK(nnz(copyA)==68);
 
     copyA.set(i=7, ip=8, val2);
 
-    d = doTask(GetQDenseStore{},copyA.store());
-    bofs = doTask(GetQDenseOffsets{},copyA.store());
-
-    CHECK(d.size()==84);
-    CHECK(bofs.size()==6);
+    CHECK(nnzblocks(copyA)==6);
+    CHECK(nnz(copyA)==84);
 
     copyA.set(i=16,ip=18,val3);
 
-    d = doTask(GetQDenseStore{},copyA.store());
-    bofs = doTask(GetQDenseOffsets{},copyA.store());
-
-    CHECK(d.size()==120);
-    CHECK(bofs.size()==7);
+    CHECK(nnzblocks(copyA)==7);
+    CHECK(nnz(copyA)==120);
 
     CHECK(elt(copyA,i=2, ip=1) ==val1);
     CHECK(elt(copyA,i=7, ip=8) ==val2);
@@ -2756,6 +2744,34 @@ SECTION("Block deficient ITensor tests")
       {
       if(flux(copyA)==flux(ivs))
         CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("generate")
+    {
+    auto copyA = A;
+    auto val = 1.1;
+    copyA.generate([val]() { return val; });
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("apply")
+    {
+    auto copyA = A;
+    auto f = [](auto x) { return sin(x)+2.; };
+    copyA.apply(f);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==f(elt(A,ivs)));
       else
         CHECK(elt(copyA,ivs)==0);
       }

@@ -259,6 +259,10 @@ typeNameOf(VisitIT<F> const&) { return "VisitIT"; }
 
 struct NNZBlocks { };
 
+struct NNZ { };
+
+struct IsDense { };
+
 inline const char*
 typeNameOf(NNZBlocks) { return "NNZBlocks"; }
 

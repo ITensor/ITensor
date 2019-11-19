@@ -288,6 +288,38 @@ nnzblocks(ITensor const& A)
     return 1;
     }
 
+long
+nnz(ITensor const& A)
+    {
+    return doTask(NNZ{},A.store());
+    }
+
+ITensor& ITensor::
+fixBlockDeficient()
+    {
+    if(itensor::hasQNs(*this) && itensor::isDense(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // Make a copy of the original ITensor
+            auto Torig = *this;
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            if(isReal(*this))
+              store_ = newITData<QDense<Real>>(bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(bofs,size);
+            *this += Torig;
+            }
+        }
+    return *this;
+    }
+
 ITensor& ITensor::
 fill(Cplx z)
     {
@@ -909,6 +941,12 @@ toDense(ITensor T)
     {
     if(T.store()) doTask(ToDense{T.inds()},T.store());
     return ITensor{move(T.inds()),move(T.store()),T.scale()};
+    }
+
+bool
+isDense(ITensor const& T)
+    {
+    return doTask(IsDense{},T.store());
     }
 
 //TODO: make this use a RemoveQNs task type that does:

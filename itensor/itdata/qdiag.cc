@@ -565,6 +565,16 @@ template void doTask(Contract& Con,QDense<Cplx> const& A,QDiag<Real> const& B,Ma
 template void doTask(Contract& Con,QDense<Real> const& A,QDiag<Cplx> const& B,ManageStore& m);
 template void doTask(Contract& Con,QDense<Cplx> const& A,QDiag<Cplx> const& B,ManageStore& m);
 
+template<typename T>
+bool
+doTask(IsDense,
+       QDiag<T> const& d)
+    {
+    return false;
+    }
+template bool doTask(IsDense,QDiag<Real> const& d);
+template bool doTask(IsDense,QDiag<Cplx> const& d);
+
 template<typename V>
 void
 doTask(RemoveQNs & R, 

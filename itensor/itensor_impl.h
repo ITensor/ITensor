@@ -455,6 +455,7 @@ generate(Func&& f)
             Error("generate: generator function must return Real or Cplx scalar value");
             }
         }
+    fixBlockDeficient();
     scaleTo(1);
     doTask(GenerateIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
@@ -464,6 +465,7 @@ template <typename Func>
 ITensor& ITensor::
 apply(Func&& f)
     {
+    fixBlockDeficient();
     scaleTo(1);
     doTask(ApplyIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;

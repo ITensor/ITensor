@@ -301,6 +301,9 @@ class ITensor
     const ITensor&
     visit(Func&& f) const;
 
+    ITensor&
+    fixBlockDeficient();
+
     //
     // Complex number methods
     //
@@ -505,6 +508,9 @@ inds(std::vector<ITensor> const& A);
 
 int
 nnzblocks(ITensor const& A);
+
+long
+nnz(ITensor const& A);
 
 // Get Index at a certain position
 // in the ITensor's IndexSet, using 1-based indexing
@@ -1019,6 +1025,9 @@ hasQNs(ITensor const& T);
 
 ITensor
 toDense(ITensor T);
+
+bool
+isDense(ITensor const& T);
 
 ITensor
 removeQNs(ITensor T);
