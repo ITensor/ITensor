@@ -568,35 +568,62 @@ doTask(PlusEQ const& P,
         }
 
     // Store the blocks of the output
-    // TODO: optimize this to merge and remove repeats
-    //       at the same time, assuming A.offsets and 
-    //       B.offsets are already sorted
+    // TODO: can this be optimized more? Currently, the
+    // strategy is to permute and sort the blocks of B,
+    // then mergy A and B using that they are both sorted
     auto Cblocks = Blocks();
+    // Reserve the maximum space we need in order to avoid
+    // reallocations when using push_back()
+    Cblocks.reserve(A.offsets.size()+B.offsets.size());
 
-    for(auto const& aio : A.offsets)
-        {
-        Cblocks.push_back(aio.block);
-        }
-
+    // First we need to permute the blocks of B
+    // and sort them
+    auto Bblockps = Blocks(B.offsets.size(),Block(r));
     auto invperm = inverse(P.perm());
-    for(auto const& bio : B.offsets)
+    for(auto ib : range(B.offsets.size()))
         {
-        auto Bblockp = Block(r);
+        auto const& Bblock = B.offsets[ib].block;
+        auto& Bblockp = Bblockps[ib];
         for(auto i : range(r))
-          {
-          Bblockp[i] = bio.block[invperm.dest(i)];
-          }
-        Cblocks.push_back(Bblockp);
+            Bblockp[i] = Bblock[invperm.dest(i)];
         }
+    std::sort(Bblockps.begin(),Bblockps.end());
 
-    // TODO: turn this into a sort_blocks function
-    std::sort(Cblocks.begin(),Cblocks.end(),[](Block const& l1,
-              Block const& l2){ return std::lexicographical_compare(l1.rbegin(),l1.rend(),
-                                                                    l2.rbegin(),l2.rend()); });
-
-    // Remove the duplicates (need to resize manually)
-    auto newCend = std::unique(Cblocks.begin(), Cblocks.end());
-    Cblocks.resize(std::distance(Cblocks.begin(),newCend));
+    int ia = 0,
+        ib = 0;
+    while(ia < A.offsets.size() && ib < B.offsets.size())
+        {
+        auto const& Ablock = A.offsets[ia].block;
+        auto const& Bblockp = Bblockps[ib];
+        if(Bblockp < Ablock)
+            {
+            Cblocks.push_back(Bblockp);
+            ib++;
+            }
+        else if(Ablock < Bblockp)
+            {
+            Cblocks.push_back(Ablock);
+            ia++;
+            }
+        else // Ablock == Bblockp
+            {
+            Cblocks.push_back(Ablock);
+            ia++;
+            ib++;
+            }
+        }
+    while(ia < A.offsets.size())
+        {
+        auto const& Ablock = A.offsets[ia].block;
+        Cblocks.push_back(Ablock);
+        ia++;
+        }
+    while(ib < B.offsets.size())
+        {
+        auto const& Bblockp = Bblockps[ib];
+        Cblocks.push_back(Bblockp);
+        ib++;
+        }
 
     // TODO: make a special case for B.offsets.size() == Cblocks.size()?
     //       This could avoid having to allocate new memory in certain
@@ -929,6 +956,13 @@ std::ostream&
 operator<<(std::ostream & s, BlockOffsets const& offsets)
     {
     for(auto const& blof : offsets) s << blof;
+    return s;
+    }
+
+std::ostream&
+operator<<(std::ostream & s, Blocks const& blocks)
+    {
+    for(auto const& block : blocks) s << block << "\n";
     return s;
     }
 

@@ -193,6 +193,9 @@ operator<<(std::ostream & s, BlOf const& t);
 std::ostream&
 operator<<(std::ostream & s, BlockOffsets const& offsets);
 
+std::ostream&
+operator<<(std::ostream & s, Blocks const& offsets);
+
 template<typename T>
 std::ostream&
 operator<<(std::ostream & s, QDense<T> const& t);
