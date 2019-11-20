@@ -101,6 +101,9 @@ operator-=(CMatrixRef const& A, CMatrix && B);
 void
 operator&=(MatrixRef const& A, MatrixRefc const& B);
 
+void
+operator&=(CMatrixRef const& A, MatrixRefc const& B);
+
 //Copy data of B to memory referenced by A
 void inline
 operator&=(MatrixRef const& A, Matrix const& B) { A &= makeRefc(B); }

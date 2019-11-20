@@ -47,17 +47,17 @@ operator*(MatA const& A, Real fac)
 
 template<typename MatA,
          class = stdx::require<hasMatRange<MatA>> >
-Mat<val_type<MatA>>
+Mat<common_type<val_type<MatA>,Cplx>>
 operator*(MatA const& A, Cplx fac)
     {
-    Mat<val_type<MatA>> res(A);
+    Mat<common_type<val_type<MatA>,Cplx>> res(A);
     res *= fac;
     return res;
     }
 
 template<typename MatA,
          class = stdx::require<hasMatRange<MatA>> >
-Mat<val_type<MatA>>
+Mat<common_type<val_type<MatA>,Cplx>>
 operator*(Cplx fac, MatA const& A) { return A*fac; }
 
 template<typename MatA,
