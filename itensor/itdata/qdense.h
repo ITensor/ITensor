@@ -31,12 +31,6 @@ class QDense;
 using QDenseReal = QDense<Real>;
 using QDenseCplx = QDense<Cplx>;
 
-struct BlOf
-    {
-    long block;
-    long offset;
-    };
-
 template<typename T>
 class QDense
     {
@@ -44,13 +38,13 @@ class QDense
                   "Template argument of QDense must be non-const");
     public:
     using value_type = T;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
 
 
     //////////////
-    std::vector<BlOf> offsets;
+    BlockOffsets offsets;
         //^ Block index / data offset pairs.
         //  Assumed that block indices are
         //  in increasing order.
@@ -62,21 +56,60 @@ class QDense
     QDense() { }
 
     QDense(IndexSet const& is, 
-           QN const& div_);
+           QN       const& div);
+
+    // Constructor taking a list of block labels
+    // instead of QN divergence
+    QDense(IndexSet const& is,
+           Blocks   const& blocks);
 
     //template<typename InputIter>
-    //QDense(std::vector<BlOf> const& off,
+    //QDense(BlockOffsets const& off,
     //       InputIter && b, InputIter && c)
     //     : offsets(off),
     //       store(b,c)
     //       { }
 
-    template<typename... StoreArgs>
-    QDense(std::vector<BlOf> const& off,
-           StoreArgs&&... sargs)
+    QDense(BlockOffsets const& off,
+           size_t size)
          : offsets(off),
-           store(std::forward<StoreArgs>(sargs)...)
-           { }
+           store(size)
+           {
+           std::fill(store.begin(),store.end(),0.);
+           }
+
+    QDense(BlockOffsets const& off,
+           std::vector<value_type> const& v)
+         : offsets(off),
+           store(v.begin(),v.end())
+           {
+           }
+
+    template<typename InputIterator>
+    QDense(BlockOffsets const& off,
+           InputIterator begin, InputIterator end)
+     : offsets(off),
+       store(begin,end)
+       {
+       }
+
+    QDense(UndefInitializer,
+           std::vector<BlOf> const& off,
+           size_t size)
+         : offsets(off),
+           store(size)
+           {
+           }
+
+    // TODO: any need for this generic constructor?
+    //template<typename... StoreArgs>
+    //QDense(BlockOffsets const& off,
+    //       StoreArgs&&... sargs)
+    //     : offsets(off),
+    //       store(std::forward<StoreArgs>(sargs)...)
+    //       {
+    //       std::fill(store.begin(),store.end(),0.);
+    //       }
 
     explicit operator bool() const { return !store.empty() && !offsets.empty(); }
 
@@ -104,7 +137,10 @@ class QDense
     template<typename Indexable>
     value_type const*
     getElt(IndexSet const& is,
-           Indexable const& ind) const;
+           Indexable const& ind) const
+        {
+        return std::get<0>(getEltBlockOffset(is,ind));
+        }
 
     template<typename Indexable>
     value_type *
@@ -115,11 +151,54 @@ class QDense
         return const_cast<value_type*>(cthis.getElt(is,ind));
         }
 
+    template<typename Indexable>
+    std::tuple<value_type const*,Block,long>
+    getEltBlockOffset(IndexSet const& is,
+                      Indexable const& ind) const;
+
+    template<typename Indexable>
+    std::tuple<value_type*,Block,long>
+    getEltBlockOffset(IndexSet const& is,
+                      Indexable const& ind)
+        {
+        const auto& cthis = *this;
+        auto eltblockoffset = cthis.getEltBlockOffset(is,ind);
+        return std::make_tuple(const_cast<value_type*>(std::get<0>(eltblockoffset)),
+                               std::get<1>(eltblockoffset),
+                               std::get<2>(eltblockoffset));
+        }
+
     long
     updateOffsets(IndexSet const& is,
                   QN const& div);
 
+    long
+    updateOffsets(IndexSet const& is,
+                  Blocks   const& blocks);
+
+    // Insert a new block into the QDense storage
+    // and fill with the specified value.
+    // Return the offset of the new block.
+    long
+    insertBlock(IndexSet const& is,
+                Block    const& block,
+                T val = 0);
+
     };
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, BlOf const& t);
+
+std::ostream&
+operator<<(std::ostream & s, BlockOffsets const& offsets);
+
+std::ostream&
+operator<<(std::ostream & s, Blocks const& offsets);
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, QDense<T> const& t);
 
 const char*
 typeNameOf(QDenseReal const& d);
@@ -152,7 +231,6 @@ realData(QDenseCplx & d) { return Data(reinterpret_cast<Real*>(d.data()),2*d.siz
 
 Datac inline
 realData(QDenseCplx const& d) { return Datac(reinterpret_cast<const Real*>(d.data()),2*d.size()); }
-
 
 template<typename T>
 void
@@ -301,6 +379,14 @@ Real
 doTask(NormNoScale, QDense<T> const& D);
 
 template<typename T>
+int
+doTask(NNZBlocks, QDense<T> const& D);
+
+template<typename T>
+long
+doTask(NNZ, QDense<T> const& D);
+
+template<typename T>
 void
 doTask(PrintIT& P, QDense<T> const& d);
 
@@ -339,24 +425,33 @@ doTask(NCProd& P,
        QDense<VB> const& B,
        ManageStore& m);
 
-
+// From an indexset and a QN divergence,
+// get the list of block-offsets and the
+// size of the storage
+std::tuple<BlockOffsets,long>
+getBlockOffsets(IndexSet const& is,
+                QN       const& div);
 
 // Does a binary search over offsets to see 
 // if they contain "blockind"
 // If so, return the corresponding data offset,
 // otherwise return -1
 long
-offsetOf(std::vector<BlOf> const& offsets,
-         long blockind);
+offsetOf(BlockOffsets const& offsets,
+         Block const& blockind);
+
+int
+offsetOfLoc(BlockOffsets const& offsets,
+            Block        const& blockind);
 
 template<typename T>
 template<typename Indexable>
-T const* QDense<T>::
-getElt(IndexSet const& is,
-       Indexable const& ind) const
+std::tuple<T const*,Block,long> QDense<T>::
+getEltBlockOffset(IndexSet const& is,
+                  Indexable const& ind) const
     {
     auto r = long(ind.size());
-    if(r == 0) return store.data();
+    if(r == 0) return std::make_tuple(store.data(),Block(0),0);
 #ifdef DEBUG
     if(is.order() != r) 
         {
@@ -364,10 +459,9 @@ getElt(IndexSet const& is,
         Error("Mismatched size of IndexSet and elt_ind in get_block");
         }
 #endif
-    long bind = 0, //block index (total)
-         bstr = 1, //block stride so far
-         eoff = 0, //element offset within block
+    long eoff = 0, //element offset within block
          estr = 1; //element stride
+    auto block = Block(r);
     for(auto i = 0; i < r; ++i)
         {
         auto& I = is[i];
@@ -378,22 +472,60 @@ getElt(IndexSet const& is,
             elt_subind -= I.blocksize0(block_subind);
             ++block_subind;
             }
-        bind += block_subind*bstr;
-        bstr *= I.nblock();
+        block[i] = block_subind;
         eoff += elt_subind*estr;
         estr *= I.blocksize0(block_subind);
         }
     //Do a binary search (equal_range) to see
     //if there is a block with block index "bind"
-    auto boff = offsetOf(offsets,bind);
+    auto boff = offsetOf(offsets,block);
     if(boff >= 0)
         {
 #ifdef DEBUG
         if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
 #endif
-        return store.data()+boff+eoff;
+        return std::make_tuple(store.data()+boff+eoff,block,eoff);
         }
-    return nullptr;
+    return std::make_tuple(nullptr,block,eoff);
+    }
+
+template<typename T>
+long QDense<T>::
+insertBlock(IndexSet const& is,
+            Block    const& block,
+            T val)
+    {
+    // Get the block dimension
+    int blockdim = 1;
+    for(auto i : range(is.order()))
+        blockdim *= is[i].blocksize0(block[i]);
+
+    // Find where to insert the new block
+    // TODO: optimize with a binary search
+    auto insert_loc = 0;
+    for(auto const& bof : offsets)
+        {
+        if(block > bof.block) insert_loc++;
+        else break;
+        }
+
+    // Get the offset of the new block
+    long new_offset;
+    if(insert_loc >= offsets.size())
+        new_offset = store.size();
+    else
+        new_offset = offsets[insert_loc].offset;
+
+    // Insert the specified value into the storage
+    store.insert(store.begin()+new_offset,blockdim,val);
+
+    // Shift the offsets by the new block dimension
+    for(int i = insert_loc; i < offsets.size(); i++)
+        offsets[i].offset += blockdim;
+
+    // Insert the block and offset into the block-offsets list
+    offsets.insert(offsets.begin()+insert_loc,make_blof(block,new_offset));
+    return new_offset;
     }
 
 template<typename T>
@@ -404,10 +536,10 @@ doTask(Order const& P,
 template<typename T>
 void
 permuteQDense(Permutation const& P,
-             QDense<T>    const& dA,
-             IndexSet   const& Ais,
-             QDense<T>         & dB,
-             IndexSet   const& Bis);
+              QDense<T>    const& dA,
+              IndexSet   const& Ais,
+              QDense<T>         & dB,
+              IndexSet   const& Bis);
 
 //template<typename BlockSparseStore, typename Indexable>
 //auto
@@ -423,7 +555,7 @@ permuteQDense(Permutation const& P,
 
 QN
 calcDiv(IndexSet const& is, 
-        Labels const& block_ind);
+        Block const& block_ind);
 
 ////code for doTask(ToITensor...) is in iqtensor.cc
 //template<typename V>
@@ -437,6 +569,11 @@ doTask(IsEmpty, QDense<V> const& d) { return d.offsets.empty(); }
 template<typename V>
 TenRef<Range,V>
 doTask(GetBlock<V> const& G, QDense<V> & d);
+
+template<typename T>
+bool
+doTask(IsDense,
+       QDense<T> const& d);
 
 template<typename V>
 void

@@ -30,10 +30,10 @@ template<typename T>
 class QDiag
     {
     static_assert(not std::is_const<T>::value,
-                  "Template argument of QDense must be non-const");
+                  "Template argument of QDiag must be non-const");
     public:
     using value_type = T;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
 
@@ -360,6 +360,11 @@ getBlock(QDiag<V> & D,
 template<typename V>
 bool
 doTask(IsEmpty, QDiag<V> const& d) { return (d.length == 0ul); }
+
+template<typename T>
+bool
+doTask(IsDense,
+       QDiag<T> const& d);
 
 template<typename V>
 void

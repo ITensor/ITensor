@@ -20,6 +20,7 @@
 #include <iostream>
 #include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
+#include "itensor/util/vector_no_init.h"
 #include "itensor/util/timers.h"
 #include "itensor/types.h"
 
@@ -32,6 +33,11 @@ isReal() { return std::is_same<stdx::decay_t<T>,Real>::value; }
 template<typename T>
 bool inline constexpr
 isCplx() { return std::is_same<stdx::decay_t<T>,Cplx>::value; }
+
+// Singleton type for specifying in storage initializers
+// that the data is uninitialized
+class UndefInitializer { };
+auto const undef = UndefInitializer();
 
 using IntArray = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
 using Labels = IntArray;
@@ -197,6 +203,38 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
     return DataRange<T>(pb,size);
     }
 
+//
+// Types to help with block sparse data
+//
+
+using Block = Labels;
+
+// Define a block ordering according to (reverse)
+// lexicographical order
+// Implemented in qdense.cc
+bool
+operator==(Block const& l1, Block const& l2);
+
+bool
+operator!=(Block const& l1, Block const& l2);
+
+bool
+operator<(Block const& l1, Block const& l2);
+
+bool
+operator>(Block const& l1, Block const& l2);
+
+struct BlOf
+    {
+    Block block;
+    long offset;
+    };
+
+using Blocks = std::vector<Block>;
+using BlockOffsets = std::vector<BlOf>;
+
+BlOf
+make_blof(Block const& b, long o);
 
 template<typename T, size_t N>
 std::ostream& 

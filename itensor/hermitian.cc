@@ -383,14 +383,18 @@ diagHImpl(ITensor H,
             //to this_m==0 case above
             if(not B.M) continue;
 
-            auto uind = stdx::make_array(B.i1,n);
+            auto uind = Labels(2);
+            uind[0] = B.i1;
+            uind[1] = n;
             auto pU = getBlock(Ustore,Uis,uind);
             assert(pU.data() != nullptr);
             assert(ai.blocksize0(B.i1) == long(nrows(UU)));
             auto Uref = makeMatRef(pU,nrows(UU),mm);
             Uref &= UU;
 
-            auto dind = stdx::make_array(n,n);
+            auto dind = Labels(2);
+            dind[0] = n;
+            dind[1] = n;
             auto pD = getBlock(Dstore,Dis,dind);
             assert(pD.data() != nullptr);
             auto Dref = makeVecRef(pD.data(),mm);

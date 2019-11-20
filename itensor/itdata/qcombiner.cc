@@ -73,19 +73,17 @@ permuteIQ(Permutation const& P,
     Bis = bind.build();
     dB = QDenseReal(Bis,doTask(CalcDiv{Ais},dA));
 
-    Labels Ablock(r,-1),
-           Bblock(r,-1);
+    auto Bblock = Block(r,-1);
     Range Arange,
           Brange;
     for(auto aio : dA.offsets)
         {
         //Compute bi, new block index of blk
-        computeBlockInd(aio.block,Ais,Ablock);
-        for(auto j : range(Ablock)) 
+        for(auto j : range(aio.block)) 
             {
-            Bblock.at(P.dest(j)) = Ablock[j];
+            Bblock.at(P.dest(j)) = aio.block[j];
             }
-        Arange.init(make_indexdim(Ais,Ablock));
+        Arange.init(make_indexdim(Ais,aio.block));
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto bblock = getBlock(dB,Bis,Bblock);
@@ -165,18 +163,14 @@ combine(QDense<T> const& d,
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
-    auto dblock = Labels(dr), //block index of current storage
-         nblock = Labels(nr), //block index of new storage
-         cblock = Labels(ncomb); //corresponding subblock of combiner
+    auto nblock = Block(nr), //block index of new storage
+         cblock = Block(ncomb); //corresponding subblock of combiner
     size_t start = 0, //offsets within sector of combined
            end   = 0; //Index where block will go
     for(auto io : d.offsets) //loop over non-zero blocks
         {
-        //Figure out this block's "block index"
-        computeBlockInd(io.block,dis,dblock);
-
         //Make TensorRef for this block of d
-        drange.init(make_indexdim(dis,dblock));
+        drange.init(make_indexdim(dis,io.block));
         auto dref = makeTenRef(d.data(),io.offset,d.size(),&drange);
 
         //Permute combined indices to front, then
@@ -190,8 +184,8 @@ combine(QDense<T> const& d,
         size_t nu = 1;
         for(auto i : range(dr)) 
             {
-            if(combined(i)) cblock[dperm[i]] = dblock[i];
-            else            nblock[nu++] = dblock[i];
+            if(combined(i)) cblock[dperm[i]] = io.block[i];
+            else            nblock[nu++] = io.block[i];
             }
 
         //Use cblock to recover info about structure of combined Index,
@@ -249,18 +243,14 @@ uncombine(QDense<T> const& d,
 
     auto drange = Range(dr), //block range of current storage
          nrange = Range(nr); //block range of new storage
-    auto dblock = Labels(dr), //block index of current storage
-         nblock = Labels(nr); //block index of new storage
+    auto nblock = Block(nr); //block index of new storage
     for(auto io : d.offsets) //loop over non-zero blocks
         {
-        //Figure out this block's "block index"
-        computeBlockInd(io.block,dis,dblock);
-
         //Make TensorRef for this block of d
-        drange.init(make_indexdim(dis,dblock));
+        drange.init(make_indexdim(dis,io.block));
         auto dref = makeTenRef(d.data(),io.offset,d.size(),&drange);
 
-        auto n = dblock[jc];
+        auto n = io.block[jc];
 
         for(auto o : range(C.store_))
             {
@@ -284,8 +274,8 @@ uncombine(QDense<T> const& d,
             nblock[jc+ncomb-1] = o;
 
             //fill out rest of nblock
-            for(auto m : range(jc)) nblock[m] = dblock[m];
-            for(auto m : range(1+jc,dr)) nblock[ncomb+m-1] = dblock[m];
+            for(auto m : range(jc)) nblock[m] = io.block[m];
+            for(auto m : range(1+jc,dr)) nblock[ncomb+m-1] = io.block[m];
 
             //Get subblock of d data
             auto dsub = subIndex(dref,jc,br.start,br.start+br.extent);

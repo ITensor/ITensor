@@ -81,6 +81,15 @@ randomData(size_t size)
     return data;
     }
 
+struct GetQDenseStore {};
+struct GetQDenseOffsets {};
+
+vector_no_init<Real>
+doTask(GetQDenseStore, QDense<Real> const& d) { return d.store; }
+
+BlockOffsets
+doTask(GetQDenseOffsets, QDense<Real> const& d) { return d.offsets; }
+
 TEST_CASE("ITensor")
 {
 Index s1(2,"Site");
@@ -2678,6 +2687,96 @@ SECTION("ITensor toDense function")
             CHECK(elt(A,i=iv,j=jv,k=kv) == elt(B,i=iv,j=jv,k=kv));
       }
     }
+  }
+
+SECTION("Block deficient ITensor tests")
+  {
+  auto i = Index(QN(0),2,QN(1),3,QN(2),4,QN(1),5,QN(3),6,"i");
+  auto ip = prime(i);
+  auto l = Index(QN(0),3,"l");
+  auto a = randomITensor(QN(1),i,l);
+  auto A = a*prime(dag(a),i);
+
+  SECTION("Add")
+    {
+    auto T = randomITensor(QN(0),dag(prime(i)),i);
+    auto AT = A+T;
+    auto TA = T+A;
+    CHECK(norm(AT-TA)==0);
+    }
+
+  SECTION("Set elements")
+    {
+    auto copyA = A;
+    auto val1 = 1.;
+    auto val2 = 2.;
+    auto val3 = 3.;
+
+    CHECK(nnzblocks(copyA)==4);
+    CHECK(nnz(copyA)==64);
+
+    copyA.set(i=2, ip=1, val1);
+
+    CHECK(nnzblocks(copyA)==5);
+    CHECK(nnz(copyA)==68);
+
+    copyA.set(i=7, ip=8, val2);
+
+    CHECK(nnzblocks(copyA)==6);
+    CHECK(nnz(copyA)==84);
+
+    copyA.set(i=16,ip=18,val3);
+
+    CHECK(nnzblocks(copyA)==7);
+    CHECK(nnz(copyA)==120);
+
+    CHECK(elt(copyA,i=2, ip=1) ==val1);
+    CHECK(elt(copyA,i=7, ip=8) ==val2);
+    CHECK(elt(copyA,i=16,ip=18)==val3);
+    }
+
+  SECTION("fill")
+    {
+    auto copyA = A;
+    auto val = 1.3;
+    copyA.fill(val);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("generate")
+    {
+    auto copyA = A;
+    auto val = 1.1;
+    copyA.generate([val]() { return val; });
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("apply")
+    {
+    auto copyA = A;
+    auto f = [](auto x) { return sin(x)+2.; };
+    copyA.apply(f);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==f(elt(A,ivs)));
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
   }
 
 } //TEST_CASE("ITensor")

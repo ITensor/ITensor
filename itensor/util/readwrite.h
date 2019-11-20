@@ -21,6 +21,7 @@
 #include <vector>
 #include "string.h"
 #include "itensor/types.h"
+#include "itensor/tensor/types.h"
 #include "itensor/util/error.h"
 #include "itensor/util/infarray.h"
 
@@ -164,12 +165,17 @@ write(std::ostream& s, const Cplx& z)
     s.write((char*)&i,sizeof(i));
     }
 
-template<typename T>
 void
-read(std::istream& s, std::vector<T> & v);
-template<typename T>
+write(std::ostream & s, BlOf const& blof);
 void
-write(std::ostream& s, std::vector<T> const& v);
+read(std::istream & s, BlOf & blof);
+
+template<typename T, typename A>
+void
+read(std::istream& s, std::vector<T,A> & v);
+template<typename T, typename A>
+void
+write(std::ostream& s, std::vector<T,A> const& v);
 
 template<typename T, size_t N>
 void
@@ -178,9 +184,9 @@ template<typename T, size_t N>
 void
 write(std::ostream& s, std::array<T,N> const& a);
 
-template<typename T>
+template<typename T, typename A>
 auto
-read(std::istream& s, std::vector<T> & v)
+read(std::istream& s, std::vector<T,A> & v)
     -> stdx::if_compiles_return<void,decltype(itensor::read(s,v[0]))>
     {
     auto size = v.size();
@@ -197,9 +203,9 @@ read(std::istream& s, std::vector<T> & v)
     }
 
 
-template<typename T>
+template<typename T, typename A>
 auto
-write(std::ostream& s, std::vector<T> const& v)
+write(std::ostream& s, std::vector<T,A> const& v)
     -> stdx::if_compiles_return<void,decltype(itensor::write(s,v[0]))>
     {
     auto size = v.size();
@@ -300,6 +306,19 @@ write(std::ostream& s, const InfArray<T,N>& ia)
     WriteIAData<T,N>(size,s,ia);
     }
 
+void inline
+write(std::ostream & s, BlOf const& blof)
+    {
+    itensor::write(s,blof.block);
+    itensor::write(s,blof.offset);
+    }
+
+void inline
+read(std::istream & s, BlOf & blof)
+    {
+    itensor::read(s,blof.block);
+    itensor::read(s,blof.offset);
+    }
 
 //////////////////////////////////////////////
 //////////////////////////////////////////////

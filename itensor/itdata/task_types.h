@@ -257,6 +257,15 @@ template<typename F>
 const char*
 typeNameOf(VisitIT<F> const&) { return "VisitIT"; }
 
+struct NNZBlocks { };
+
+struct NNZ { };
+
+struct IsDense { };
+
+inline const char*
+typeNameOf(NNZBlocks) { return "NNZBlocks"; }
+
 template<typename T>
 struct Fill
     {
