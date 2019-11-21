@@ -1048,7 +1048,7 @@ applyExp(BigMatrixT const& H, ITensor& phi,
             if ((error < tol) || (iter == max_iter-1))
                 {
                 if (iter == max_iter-1)
-                    printf("warning: lanczosTevol not converged in %d steps\n", max_iter);
+                    printf("warning: applyExp not converged in %d steps\n", max_iter);
 
                 // Assemble the time evolved state
                 auto linear_comb = Vec<ElT>(tmat_ext_size);
