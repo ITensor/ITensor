@@ -997,7 +997,7 @@ applyExp(BigMatrixT const& H, ITensor& phi,
         H.product(v1, w);
 
         double avnorm = norm(w);
-        double alpha = elt(dag(w) * v1);
+        double alpha = real(eltC(dag(w) * v1));
         bigTmat(iter, iter) = alpha;
         w -= alpha * v1;
         if (iter > 0)
