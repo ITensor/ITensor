@@ -506,7 +506,7 @@ maxDim(ITensor const& A);
 std::vector<IndexSet> 
 inds(std::vector<ITensor> const& A);
 
-int
+size_t
 nnzblocks(ITensor const& A);
 
 long

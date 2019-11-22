@@ -589,8 +589,8 @@ doTask(PlusEQ const& P,
         }
     std::sort(Bblockps.begin(),Bblockps.end());
 
-    int ia = 0,
-        ib = 0;
+    size_t ia = 0,
+           ib = 0;
     while(ia < A.offsets.size() && ib < B.offsets.size())
         {
         auto const& Ablock = A.offsets[ia].block;
