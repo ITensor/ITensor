@@ -359,12 +359,9 @@ denmatDecomp(ITensor const& AA,
         }
 
     if(args.getBool("TraceReIm",false))
-        {
         rho = realPart(rho);
-        }
 
     ITensor U,D;
-    args.add("Truncate",true);
     auto spec = diag_hermitian(rho,U,D,args);
 
     cmb.dag();

@@ -169,9 +169,6 @@ svd(ITensor const& AA,
     auto noise = args.getReal("Noise",0);
     auto useOrigDim = args.getBool("UseOrigDim",false);
 
-    // Set the cutoff to 0 by default
-    args.add("Cutoff",args.getReal("Cutoff",0.0));
-
     if(noise > 0)
         Error("Noise term not implemented for svd");
 
