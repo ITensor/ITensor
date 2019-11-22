@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor/itensor.h"
+#include "itensor/decomp.h"
 #include "itensor/util/cplx_literal.h"
 #include "itensor/util/iterate.h"
 #include "itensor/util/set_scoped.h"
@@ -2794,6 +2795,31 @@ SECTION("Block deficient ITensor tests")
       else
         CHECK(elt(copyA,ivs)==0);
       }
+    }
+
+  }
+
+SECTION("SVD truncation behavior")
+  {
+  auto i = Index(2,"i");
+  auto A = randomITensor(i,prime(i));
+  auto D = ITensor(i,prime(i));
+  D.set(1,1,1.);
+
+  SECTION("Truncate 0")
+    {
+    auto [U,S,V] = svd(D,{i},{"Cutoff=",0.});
+    (void) V;
+    auto u = commonIndex(U,S);
+    CHECK(dim(u)==1);
+    }
+
+  SECTION("No truncation")
+    {
+    auto [U,S,V] = svd(D,{i});
+    (void) V;
+    auto u = commonIndex(U,S);
+    CHECK(dim(u)==2);
     }
 
   }

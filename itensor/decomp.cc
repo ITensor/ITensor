@@ -366,7 +366,7 @@ truncate(Vector & P,
         {
         //Test if individual prob. weights fall below cutoff
         //rather than using *sum* of discarded weights
-        for(; P(n) < cutoff && n >= mindim; --n) 
+        for(; P(n) <= cutoff && n >= mindim; --n) 
             {
             truncerr += P(n);
             }
@@ -383,7 +383,7 @@ truncate(Vector & P,
 
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==mindim)
-        while(truncerr+P(n) < cutoff*scale && n >= mindim)
+        while(truncerr+P(n) <= cutoff*scale && n >= mindim)
             {
             truncerr += P(n);
             --n;
