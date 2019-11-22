@@ -921,7 +921,6 @@ doTask(RemoveQNs & R,
     auto *nd = m.makeNewData<Dense<V>>(dim(R.is),0);
     auto *pd = d.data();
     auto *pn = nd->data();
-    IntArray block(r,0);
     detail::GCounter C(r);
     for(auto const& io : d.offsets)
         {
@@ -932,7 +931,7 @@ doTask(RemoveQNs & R,
                 {
                 start += R.is[j].blocksize0(b);
                 }
-            C.setRange(j,start,start+R.is[j].blocksize0(block[j])-1);
+            C.setRange(j,start,start+R.is[j].blocksize0(io.block[j])-1);
             }
         //TODO: need to make a Range/TensorRef iterator
         //to rewrite the following code more efficiently

@@ -2689,6 +2689,25 @@ SECTION("ITensor toDense function")
     }
   }
 
+SECTION("removeQNs")
+  {
+  auto i = Index(QN(-1),1,
+                 QN(0),2,
+                 QN(+1),3,"i");
+  auto j = Index(QN(-1),1,
+                 QN(0),2,
+                 QN(+1),3,"j");
+  auto k = Index(QN(-2),1,
+                 QN(0),2,
+                 QN(+2),3,"k");
+
+  auto Aqn = randomITensor(QN(0),i,j,dag(k));
+  auto A = removeQNs(Aqn);
+
+  for(auto const& ivs : iterInds(A))
+      CHECK(elt(Aqn,ivs)==elt(A,ivs));
+  }
+
 SECTION("Block deficient ITensor tests")
   {
   auto i = Index(QN(0),2,QN(1),3,QN(2),4,QN(1),5,QN(3),6,"i");
