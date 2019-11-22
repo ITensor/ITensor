@@ -74,7 +74,7 @@ svdImpl(ITensor const& A,
 
     auto do_truncate = args.getBool("Truncate");
     auto thresh = args.getReal("SVDThreshold",1E-3);
-    auto cutoff = args.getReal("Cutoff",0.);
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxdim = args.getInt("MaxDim",MAX_DIM);
     auto mindim = args.getInt("MinDim",1);
     auto doRelCutoff = args.getBool("DoRelCutoff",true);
