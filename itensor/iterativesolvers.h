@@ -973,7 +973,7 @@ applyExp(BigMatrixT const& H, ITensor& phi,
     auto tol = args.getReal("ErrGoal",1E-10);
     auto max_iter = args.getInt("MaxIter",30);
     auto debug_level = args.getInt("DebugLevel",-1);
-    const double beta_tol = 1e-7;
+    auto beta_tol = args.getReal("NormCutoff",1e-7);
 
     // Initialize Lanczos vectors
     ITensor v1 = phi;
