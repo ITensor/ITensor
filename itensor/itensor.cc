@@ -281,7 +281,7 @@ randomize(Args const& args)
     return *this;
     }
 
-int
+size_t
 nnzblocks(ITensor const& A)
     {
     if(hasQNs(A)) return doTask(NNZBlocks{},A.store());

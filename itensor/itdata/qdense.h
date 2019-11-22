@@ -502,7 +502,7 @@ insertBlock(IndexSet const& is,
 
     // Find where to insert the new block
     // TODO: optimize with a binary search
-    auto insert_loc = 0;
+    size_t insert_loc = 0;
     for(auto const& bof : offsets)
         {
         if(block > bof.block) insert_loc++;
@@ -520,7 +520,7 @@ insertBlock(IndexSet const& is,
     store.insert(store.begin()+new_offset,blockdim,val);
 
     // Shift the offsets by the new block dimension
-    for(int i = insert_loc; i < offsets.size(); i++)
+    for(auto i = insert_loc; i < offsets.size(); i++)
         offsets[i].offset += blockdim;
 
     // Insert the block and offset into the block-offsets list
