@@ -16,20 +16,18 @@
 #ifndef __ITENSOR_DECOMP_IMPL_H
 #define __ITENSOR_DECOMP_IMPL_H
 
-using std::vector;
-
 namespace itensor {
 
 namespace detail {
 
 Args inline
-makeIndexSetArgs(vector<Index>& inds, Args const& args)
+makeIndexSetArgs(std::vector<Index>& inds, Args const& args)
   {
   return args;
   }
 
 Args inline
-makeIndexSetArgs(vector<Index>& inds, Index const& i)
+makeIndexSetArgs(std::vector<Index>& inds, Index const& i)
   {
   inds.push_back(i);
   return Args::global();
@@ -37,7 +35,7 @@ makeIndexSetArgs(vector<Index>& inds, Index const& i)
 
 template <typename... IndsArgs>
 Args
-makeIndexSetArgs(vector<Index>& inds,
+makeIndexSetArgs(std::vector<Index>& inds,
                  Index const& i1,
                  IndsArgs&&... indsargs)
   {
@@ -49,7 +47,7 @@ template <typename... IndsArgs>
 std::tuple<IndexSet,Args>
 makeIndexSetArgs(Index const& i1, IndsArgs&&... indsargs)
   {
-  auto inds = vector<Index>();
+  auto inds = std::vector<Index>();
   auto args = makeIndexSetArgs(inds,i1,indsargs...);
   auto is = IndexSet(inds);
   return std::make_tuple(is,args);
