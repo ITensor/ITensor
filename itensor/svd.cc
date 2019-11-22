@@ -445,12 +445,9 @@ svdOrd2(ITensor const& A,
         }
       }
 
-    auto do_truncate = args.defined("Cutoff") 
-                    || args.defined("MaxDim");
+    auto do_truncate = args.defined("Cutoff") || args.defined("MaxDim");
     if(not args.defined("Truncate")) 
-        {
         args.add("Truncate",do_truncate);
-        }
 
     if(A.order() != 2) 
         {

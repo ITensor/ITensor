@@ -299,7 +299,7 @@ SECTION("QN ITensor denmatDecomp")
 
         AA *= -1./norm(AA);
 
-        auto spec = denmatDecomp(AA,A1,A2,Fromleft);
+        auto spec = denmatDecomp(AA,A1,A2,Fromleft,{"Truncate=",true});
  
         auto AAres = A1*A2;
 
