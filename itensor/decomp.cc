@@ -156,7 +156,7 @@ svd(ITensor const& AA,
         }
       else
         {
-        Global::warnDeprecated("Arg UseOrigDim is deprecated in favor of MaxDim.");
+        Global::warnDeprecated("Arg UseOrigM is deprecated in favor of UseOrigDim.");
         args.add("UseOrigDim",args.getBool("UseOrigM"));
         }
       }
