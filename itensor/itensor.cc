@@ -84,8 +84,8 @@ eltC() const
     {
     if(inds().order() != 0)
         {
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         PrintData(inds());
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
