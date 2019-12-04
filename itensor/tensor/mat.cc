@@ -70,6 +70,27 @@ operator&=(MatrixRef const& a, MatrixRefc const& b)
         }
     }
 
+void
+operator&=(CMatrixRef const& a, MatrixRefc const& b)
+    {
+#ifdef DEBUG
+    if(!(nrows(b)==nrows(a) && ncols(b)==ncols(a)))
+        throw std::runtime_error("mismatched sizes in MatrixRef operator&=");
+#endif
+    auto assign = [](Cplx& x, Real y) { x = y; };
+    if(a.range()==b.range() && isContiguous(b))
+        {
+        auto pa = MAKE_SAFE_PTR(a.data(),a.store().size());
+        auto pae = MAKE_SAFE_PTR_OFFSET(a.data(),dim(a.range()),a.store().size());
+        auto pb = MAKE_SAFE_PTR(b.data(),b.store().size());
+        apply(pa,pae,pb,assign);
+        }
+    else
+        {
+        apply(a,b.cbegin(),assign);
+        }
+    }
+
 template<typename V>
 void 
 multReal(MatRef<V> const& M, Real fac)
@@ -89,6 +110,12 @@ multReal(MatRef<V> const& M, Real fac)
         }
     }
 
+void
+multCplx(CMatrixRef const& M, Cplx fac)
+    {
+    for(auto& el : M) el *= fac;
+    } 
+
 void 
 operator*=(MatrixRef const& M, Real fac)
     {
@@ -98,6 +125,12 @@ void
 operator*=(CMatrixRef const& M, Real fac)
     {
     multReal(M,fac);
+    }
+
+void
+operator*=(CMatrixRef const& M, Cplx fac)
+    {
+    multCplx(M,fac);
     }
 
 template<typename V>

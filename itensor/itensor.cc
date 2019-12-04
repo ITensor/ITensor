@@ -71,13 +71,21 @@ ITensor(Cplx val)
         }
     }
 
+ITensor::
+ITensor(QN q, IndexSet const& is)
+  :
+  is_(std::move(is))
+  {
+  store_ = newITData<QDenseReal>(is,q); 
+  }
 
 Cplx ITensor::
 eltC() const
     {
     if(inds().order() != 0)
         {
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got 0)",inds().order()));
+        PrintData(inds());
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -274,6 +282,45 @@ randomize(Args const& args)
     return *this;
     }
 
+size_t
+nnzblocks(ITensor const& A)
+    {
+    if(hasQNs(A)) return doTask(NNZBlocks{},A.store());
+    return 1;
+    }
+
+long
+nnz(ITensor const& A)
+    {
+    return doTask(NNZ{},A.store());
+    }
+
+ITensor& ITensor::
+fixBlockDeficient()
+    {
+    if(itensor::hasQNs(*this) && itensor::isDense(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // Make a copy of the original ITensor
+            auto Torig = *this;
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            if(isReal(*this))
+              store_ = newITData<QDense<Real>>(bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(bofs,size);
+            *this += Torig;
+            }
+        }
+    return *this;
+    }
+
 ITensor& ITensor::
 fill(Cplx z)
     {
@@ -283,6 +330,25 @@ fill(Cplx z)
         else Error("Can't fill default-constructed tensor");
         }
     IF_USESCALE(scale_ = scale_type(1.);)
+    if(itensor::hasQNs(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            // Make the new memory undefined since it
+            // will be overwritten anyway.
+            if(z.imag() == 0)
+              store_ = newITData<QDense<Real>>(undef,bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(undef,bofs,size);
+            }
+        }
     if(z.imag() == 0)
         doTask(Fill<Real>{z.real()},store_);
     else
@@ -578,7 +644,7 @@ permute(IndexSet const& iset)
         return A;
         }
     // If not trivial, use permutation to get new index set
-    // This is necessary to preserve the proper arrow direction of IQIndex
+    // This is necessary to preserve the proper arrow direction of QN Index
     auto bind = RangeBuilderT<IndexSet>(r);
     for(auto i : range(r))
         {
@@ -789,13 +855,13 @@ checkArrows(IndexSet const& is1,
                 if(cond)
                     {
                     println("----------------------------------------");
-                    println("IQIndexSet 1 = \n",is1);
+                    println("IndexSet 1 = \n",is1);
                     println("----------------------------------------");
-                    println("IQIndexSet 2 = \n",is2);
+                    println("IndexSet 2 = \n",is2);
                     println("----------------------------------------");
-                    printfln("Mismatched IQIndex from set 1 %s",I1);
-                    printfln("Mismatched IQIndex from set 2 %s",I2);
-                    Error("Mismatched IQIndex arrows");
+                    printfln("Mismatched QN Index from set 1 %s",I1);
+                    printfln("Mismatched QN Index from set 2 %s",I2);
+                    Error("Mismatched QN Index arrows");
                     }
                 }
             }
@@ -868,19 +934,21 @@ operator*=(ITensor const& R)
 
 #ifndef USESCALE
 
-////for Diag and QDiag
-////QDense -> Dense
-////QDiag  -> Dense
-////Diag   -> Dense
-//ITensor
-//toDense(ITensor T)
-//    {
-//    if(not hasQNs(T)) return T;
-//    if(T.store()) doTask(ToDense{T.inds()},T.store());
-//    auto nis = T.inds();
-//    nis.removeQNs();
-//    return ITensor{move(nis),move(T.store()),T.scale()};
-//    }
+//for Diag and QDiag
+//Diag  -> Dense
+//QDiag -> QDense
+ITensor
+toDense(ITensor T)
+    {
+    if(T.store()) doTask(ToDense{T.inds()},T.store());
+    return ITensor{move(T.inds()),move(T.store()),T.scale()};
+    }
+
+bool
+isDense(ITensor const& T)
+    {
+    return doTask(IsDense{},T.store());
+    }
 
 //TODO: make this use a RemoveQNs task type that does:
 //QDense -> Dense
@@ -1000,12 +1068,101 @@ operator/(ITensor A, ITensor const& B) { A /= B; return A; }
 ITensor
 operator/(ITensor const& A, ITensor && B) { B /= A; return std::move(B); }
 
+// Create some sparse tensors to help with
+// a partial direct sum
+Index
+directSumITensors(Index const& i,
+                  Index const& j,
+                  ITensor& D1,
+                  ITensor& D2,
+                  Args const& args = Args::global())
+  {
+  auto ij = directSum(i,j,args);
+  if(not hasQNs(i) && not hasQNs(j))
+    {
+    D1 = delta(i,ij);
+    auto S = Matrix(dim(j),dim(ij));
+    for(auto jj : range(dim(j)))
+      {
+      S(jj,dim(i)+jj) = 1;
+      }
+    D2 = matrixITensor(std::move(S),j,ij);
+    }
+  else
+    {
+    D1 = ITensor(dag(i),ij);
+    int n = 1;
+    auto nblock_i = nblock(i);
+    for(auto iq1 : range1(nblock_i))
+        {
+        auto blocksize_i = blocksize(i,iq1);
+        auto blocksize_ij = blocksize(ij,n);
+        auto D = Matrix(blocksize_i,blocksize_ij);
+        auto minsize = std::min(blocksize_i,blocksize_ij);
+        for(auto ii : range(minsize)) D(ii,ii) = 1.0;
+        getBlock<Real>(D1,{iq1,n}) &= D;
+        ++n;
+        }
+    auto nblock_j = nblock(j);
+    D2 = ITensor(dag(j),ij);
+    for(auto iq2 : range1(nblock_j))
+        {
+        auto blocksize_j = blocksize(j,iq2);
+        auto blocksize_ij = blocksize(ij,n);
+        auto D = Matrix(blocksize_j,blocksize_ij);
+        auto minsize = std::min(blocksize_j,blocksize_ij);
+        for(auto ii : range(minsize)) D(ii,ii) = 1.0;
+        getBlock<Real>(D2,{iq2,n}) &= D;
+        ++n;
+        }
+    }
+  return ij;
+  }
+
+std::tuple<ITensor,IndexSet>
+directSum(ITensor const& A, ITensor const& B,
+          IndexSet const& I, IndexSet const& J,
+          Args const& args)
+  {
+  if( order(I) != order(J) ) Error("In directSum(ITensor, ITensor, ...), must sum equal number of indices");
+  auto AD = A;
+  auto BD = B;
+  auto newinds = IndexSetBuilder(I.size());
+  for( auto n : range1(order(I)) )
+    {
+    auto In = I(n);
+    auto Jn = J(n);
+    if( dir(A,In) != dir(In) ) In.dag();
+    if( dir(B,Jn) != dir(Jn) ) Jn.dag();
+    ITensor D1, D2;
+    auto IJn = directSumITensors(In,Jn,D1,D2,args);
+    newinds.nextIndex(IJn);
+    AD *= D1;
+    BD *= D2;
+    }
+  auto IJ = newinds.build();
+  auto C = AD+BD;
+  return std::make_tuple(C,IJ);
+  }
+
+// Direct sum A and B over indices i on A and j on B
+std::tuple<ITensor,Index>
+directSum(ITensor const& A, ITensor const& B,
+          Index const& i, Index const& j,
+          Args const& args)
+  {
+  auto [C,IJ] = directSum(A,B,IndexSet(i),IndexSet(j),args);
+  auto ij = IJ.index(1);
+  return std::make_tuple(C,ij);
+  }
+
 void
 daxpy(ITensor & L,
       ITensor const& R,
       Real alpha)
     {
     if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
+    detail::checkSameDiv(L,R);
 
     using permutation = typename PlusEQ::permutation;
 
@@ -1028,10 +1185,6 @@ daxpy(ITensor & L,
         }
 
     if(!L.store()) Error("L not initialized in daxpy");
-
-#ifdef DEBUG
-    detail::checkSameDiv(L,R);
-#endif
 
 #ifdef USESCALE
     if(L.scale().magnitudeLessThan(R.scale())) 
@@ -1076,6 +1229,12 @@ operator-=(ITensor const& R)
     return L;
     }
 
+detail::IndexValIter
+iterInds(ITensor const& T)
+    {
+    return iterInds(inds(T));
+    }
+
 ITensor
 multSiteOps(ITensor A, ITensor const& B) 
     {
@@ -1090,6 +1249,13 @@ hasIndex(ITensor const& T,
          Index const& imatch)
     {
     return hasIndex(inds(T),imatch);
+    }
+
+Arrow
+dir(ITensor const& T,
+    Index const& i)
+    {
+    return dir(inds(T),i);
     }
 
 bool

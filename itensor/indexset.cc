@@ -671,5 +671,21 @@ noncommonInds(IndexSet const& is1,
     return unionInds(uniqueInds(is1,is2),uniqueInds(is2,is1));
     }
 
+detail::IndexValIter
+iterInds(IndexSet const& is)
+    {
+    return detail::IndexValIter(is);
+    }
+
+QN
+flux(std::vector<IndexVal> const& ivs)
+    {
+    QN elt_flux;
+    for(auto const& iv : ivs)
+        {
+        elt_flux += dir(iv)*qn(iv);
+        }
+    return elt_flux;
+    }
 
 } //namespace itensor

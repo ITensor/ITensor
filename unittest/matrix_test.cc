@@ -1411,6 +1411,91 @@ SECTION("diagHermitian")
         }
     }
 
+SECTION("expMatrix")
+    {
+    auto N = 10;
+    auto M = randomMat(N,N);
+    M = M+transpose(M);
+    auto t = 2.0;
+    auto Mc = randomMatC(N,N);
+    Mc = Mc+conj(transpose(Mc));
+    auto tc = 1.0+2.0_i;
+
+    SECTION("Real Matrix")
+        {
+        auto expM = expMatrix(M);
+        auto expM2 = expHermitian(M);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Complex Matrix")
+        {
+        auto expM = expMatrix(Mc);
+        auto expM2 = expHermitian(Mc);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Real Matrix, Real Scalar")
+        {
+        auto expM = expMatrix(M,t);
+        auto expM2 = expHermitian(M,t);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Real Matrix, Complex Scalar")
+        {
+        auto expM = expMatrix(M,tc);
+        auto expM2 = expHermitian(M,tc);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Complex Matrix, Real Scalar")
+        {
+        auto expM = expMatrix(Mc,t);
+        auto expM2 = expHermitian(Mc,t);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Complex Matrix, Complex Scalar")
+        {
+        auto expM = expMatrix(Mc,tc);
+        auto expM2 = expHermitian(Mc,tc);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Real subMatrix, Real Scalar")
+        {
+        auto Ms = subMatrix(M,0,N-1,0,N-1);
+        auto expM = expMatrix(Ms,t);
+        auto expM2 = expHermitian(Ms,t);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Real subMatrix, Complex Scalar")
+        {
+        auto Ms = subMatrix(M,0,N-1,0,N-1);
+        auto expM = expMatrix(Ms,tc);
+        auto expM2 = expHermitian(Ms,tc);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Complex subMatrix, Real Scalar")
+        {
+        auto Ms = subMatrix(Mc,0,N-1,0,N-1);
+        auto expM = expMatrix(Ms,t);
+        auto expM2 = expHermitian(Ms,t);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    SECTION("Complex subMatrix, Complex Scalar")
+        {
+        auto Ms = subMatrix(Mc,0,N-1,0,N-1);
+        auto expM = expMatrix(Ms,tc);
+        auto expM2 = expHermitian(Ms,tc);
+        CHECK(norm(expM-expM2) < 1E-12*norm(expM2));
+        }
+
+    }
 
 //SECTION("diagHermitian")
 //    {

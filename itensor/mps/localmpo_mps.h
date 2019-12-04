@@ -33,7 +33,7 @@ class LocalMPO_MPS
     Real weight_ = 1;
     public:
 
-    LocalMPO_MPS() { }
+    LocalMPO_MPS(Args const& args = Args::global()) { }
 
     LocalMPO_MPS(MPO const& Op, 
                  std::vector<MPS > const& psis,
@@ -101,7 +101,7 @@ LocalMPO_MPS(MPO const& Op,
 
     for(auto j : range(lmps_.size()))
         {
-        lmps_[j] = LocalMPO(psis[j]);
+        lmps_[j] = LocalMPO(psis[j],args);
         }
     }
 
@@ -117,7 +117,7 @@ LocalMPO_MPS(MPO const& Op,
     lmps_(psis.size()),
     weight_(args.getReal("Weight",1))
     { 
-    lmpo_ = LocalMPO(Op,LOp,ROp);
+    lmpo_ = LocalMPO(Op,LOp,ROp,args);
 #ifdef DEBUG
     if(Lpsi.size() != psis.size()) Error("Lpsi must have same number of elements as psis");
     if(Rpsi.size() != psis.size()) Error("Rpsi must have same number of elements as psis");
@@ -125,7 +125,7 @@ LocalMPO_MPS(MPO const& Op,
 
     for(auto j : range(lmps_.size()))
         {
-        lmps_[j] = LocalMPO(psis[j],Lpsi[j],Rpsi[j]);
+        lmps_[j] = LocalMPO(psis[j],Lpsi[j],Rpsi[j],args);
         }
     }
 

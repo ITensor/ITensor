@@ -3,44 +3,37 @@
 #include "sample/Heisenberg.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/localmpo.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 using namespace std;
 
 class ITensorMap
     {
-    ITensor const* A_;
+    ITensor const& A_;
     mutable long size_;
     public:
 
     ITensorMap(ITensor const& A)
-      : A_(nullptr),
-        size_(-1)
+      : A_(A)
         {
-        A_ = &A;
+        size_ = 1;
+        for(auto& I : A_.inds())
+            {
+            if(I.primeLevel() > 0)
+                size_ *= dim(I);
+            }
         }
 
     void
     product(ITensor const& x, ITensor& b) const
         {
-        b = *A_*x;
-        b.replaceTags("1","0");
+        b = A_*x;
+        b.noPrime();
         }
 
     long
-    size() const
-        {
-        if(size_ == -1)
-            {
-            size_ = 1;
-            for(auto& I : A_->inds())
-                {
-                if(I.primeLevel() > 0)
-                    size_ *= dim(I);
-                }
-            }
-        return size_;
-        }
+    size() const { return size_; }
 
     };
 
@@ -172,6 +165,24 @@ SECTION("IQFourSite")
 
     }
 
+SECTION("Davidson (Custom Linear Map)")
+    {
+    auto a1 = Index(3,"Site,a1");
+    auto a2 = Index(4,"Site,a2");
+    auto a3 = Index(5,"Site,a3");
+
+    auto A = randomITensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    A = 0.5*(A + swapPrime(dag(A),0,1));
+    auto x = randomITensor(a1,a2,a3);
+
+    // ITensorMap is defined above, it simply wraps an ITensor that is of the
+    // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
+    auto lambda = davidson(ITensorMap(A),x,{"MaxIter",40,"ErrGoal",1e-14});
+
+    CHECK_CLOSE(norm(noPrime(A*x)-lambda*x)/norm(x),0.0);
+
+    }
+
 SECTION("GMRES (ITensor, Real)")
     {
     auto a1 = Index(3,"Site,a1");
@@ -186,7 +197,25 @@ SECTION("GMRES (ITensor, Real)")
     // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
     gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
+
+    }
+
+SECTION("GMRES (ITensor, Real), size 1")
+    {
+    auto a1 = Index(1,"Site,a1");
+    auto a2 = Index(1,"Site,a2");
+    auto a3 = Index(1,"Site,a3");
+
+    auto A = randomITensor(prime(a1),prime(a2),prime(a3),a1,a2,a3);
+    auto x = randomITensor(a1,a2,a3);
+    auto b = randomITensor(a1,a2,a3);
+
+    // ITensorMap is defined above, it simply wraps an ITensor that is of the
+    // form of a matrix (i.e. has indices of the form {i,j,k,...,i',j',k',...})
+    gmres(ITensorMap(A),b,x,{"MaxIter",36,"ErrGoal",1e-10});
+
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
 
     }
 
@@ -202,7 +231,7 @@ SECTION("GMRES (ITensor, Complex)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
 
     }
 
@@ -223,7 +252,196 @@ SECTION("GMRES (ITensor, QN)")
 
     gmres(ITensorMap(A),b,x,{"MaxIter",100,"DebugLevel",0,"ErrGoal",1e-10});
 
-    CHECK_CLOSE(norm((A*x).replaceTags("1","0")-b)/norm(b),0.0);
+    CHECK_CLOSE(norm(noPrime(A*x)-b)/norm(b),0.0);
+
+    }
+
+SECTION("Arnoldi (No QN)")
+    {
+    const int N = 50;
+    const int Nc = N/2;
+    SpinHalf sites(N,{"ConserveQNs=",false});
+
+    // Create random MPO
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = toMPO(ampo);
+    for(int j = 1; j <= N; ++j)
+      {
+      H.ref(j).randomize();
+      H.ref(j) /= norm(H(j));
+      }
+    auto normH = sqrt(trace(H,prime(H)));
+    for(int j = 1; j <= N; ++j)
+      H.ref(j) /= pow(normH,1.0/N);
+
+    // Create random starting MPS
+    auto initState = InitState(sites);
+    for(int i = 1; i <= N; ++i)
+        initState.set(i,i%2==1 ? "Up" : "Dn");
+    auto psi = MPS(initState);
+    for(int j = 1; j < 2; ++j)
+      {
+      psi = applyMPO(H,psi);
+      psi.noPrime();
+      psi.normalize();
+      }
+    for(int j = 1; j <= N; ++j)
+      {
+      psi.ref(j).randomize();
+      psi.ref(j) /= norm(psi(j));
+      }
+
+    psi.position(Nc);
+    psi.normalize();
+
+    LocalMPO PH(H);
+
+    PH.position(Nc,psi);
+
+    auto x = psi(Nc) * psi(Nc+1);
+    x.randomize();
+
+    auto lambda = arnoldi(PH,x,{"MaxIter",20,"ErrGoal",1e-14,"DebugLevel",0,"WhichEig","LargestMagnitude"});
+    auto PHx = x;
+    PH.product(x,PHx);
+
+    CHECK_CLOSE(norm(PHx-lambda*x)/norm(PHx),0.0);
+  }
+
+SECTION("Arnoldi (QN)")
+    {
+    const int N = 50;
+    const int Nc = N/2;
+    SpinHalf sites(N);
+
+    // Create random MPO
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = toMPO(ampo);
+    for(int j = 1; j <= N; ++j)
+      {
+      H.ref(j).randomize();
+      H.ref(j) /= norm(H(j));
+      }
+    auto normH = sqrt(trace(H,prime(H)));
+    for(int j = 1; j <= N; ++j)
+      H.Aref(j) /= pow(normH,1.0/N);
+
+    // Create random starting MPS
+    auto initState = InitState(sites);
+    for(int i = 1; i <= N; ++i)
+        initState.set(i,i%2==1 ? "Up" : "Dn");
+    auto psi = MPS(initState);
+    for(int j = 1; j < 2; ++j)
+      {
+      psi = applyMPO(H,psi);
+      psi.noPrime();
+      psi.normalize();
+      }
+    for(int j = 1; j <= N; ++j)
+      {
+      psi.ref(j).randomize();
+      psi.ref(j) /= norm(psi(j));
+      }
+    psi.position(Nc);
+    psi.normalize();
+
+    LocalMPO PH(H);
+
+    psi.position(Nc);
+    PH.position(Nc,psi);
+
+    auto x = psi.A(Nc) * psi.A(Nc+1);
+    x.randomize();
+
+    auto lambda = arnoldi(PH,x,{"MaxIter",20,"ErrGoal",1e-14,"DebugLevel",0,"WhichEig","LargestMagnitude"});
+    auto PHx = x;
+    PH.product(x,PHx);
+
+    CHECK_CLOSE(norm(PHx-lambda*x)/norm(PHx),0.0);
+
+    }
+
+SECTION("applyExp (QNs)")
+    {
+    auto i = Index(QN(-1),10,QN(1),10,"i");
+
+    auto A = randomITensor(QN(0),dag(i),prime(i));
+    A += swapPrime(dag(A),0,1);
+    A *= 0.5;
+    auto x0 = randomITensor(QN(-1),i);
+
+    auto Ac = randomITensorC(QN(0),dag(i),prime(i));
+    Ac += swapPrime(dag(Ac),0,1);
+    Ac *= 0.5;
+    auto x0c = randomITensorC(QN(-1),i);
+
+    SECTION("Real timestep")
+        {
+        auto t = 0.1;
+
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+
+        auto exptA = expHermitian(A,-t);
+        auto exptAx = noPrime(exptA*x0);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+    
+    SECTION("Complex timestep")
+        {
+        auto t = 0.1*1_i;
+        
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+        
+        auto exptA = expHermitian(A,-t);
+        auto exptAx = noPrime(exptA*x0);
+        
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors, Real timestep")
+        {
+        auto t = 0.1;
+
+        auto x = x0;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                      "MaxIter=",10});
+
+        auto exptA = expHermitian(Ac,-t);
+        auto exptAx = noPrime(exptA*x0);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors Complex timestep")
+        {
+        auto t = 0.1*1_i;
+
+        auto x = x0c;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+
+        auto exptA = expHermitian(Ac,-t);
+        auto exptAx = noPrime(exptA*x0c);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
 
     }
 

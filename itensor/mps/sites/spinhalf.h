@@ -38,10 +38,21 @@ class SpinHalfSite
           ts.addTags("n="+str(args.getInt("SiteNumber")));
         auto conserveqns = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveqns);
-        if(conserveSz)
+        auto conserveParity = args.getBool("ConserveParity",false);
+        if(conserveSz && conserveParity)
+            {
+            s = Index(QN({"Sz",+1},{"Parity",1,2}),1,
+                      QN({"Sz",-1},{"Parity",0,2}),1,Out,ts);
+            }
+        else if(conserveSz)
             {
             s = Index(QN({"Sz",+1}),1,
                       QN({"Sz",-1}),1,Out,ts);
+            }
+        else if(conserveParity)
+            {
+            s = Index(QN({"Parity",1,2}),1,
+                      QN({"Parity",0,2}),1,Out,ts);
             }
         else
             {
@@ -92,41 +103,41 @@ class SpinHalfSite
         else
         if(opname == "Sx")
             {
-            if(not hasQNs(s))
-                {
+            //if(not hasQNs(s))
+            //    {
                 Op.set(Up,DnP,+0.5);
                 Op.set(Dn,UpP,+0.5);
-                }
-            else
-                {
-                Error("Operator " + opname + " does not have a well defined QN flux");
-                }
+            //    }
+            //else
+            //    {
+            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    }
             }
         else
         if(opname == "ISy")
             {
-            if(not hasQNs(s))
-                {
+            //if(not hasQNs(s))
+            //    {
                 Op.set(Up,DnP,-0.5);
                 Op.set(Dn,UpP,+0.5);
-                }
-            else
-                {
-                Error("Operator " + opname + " does not have a well defined QN flux");
-                }
+            //    }
+            //else
+            //    {
+            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    }
             }
         else
         if(opname == "Sy")
             {
-            if(not hasQNs(s))
-                {
+            //if(not hasQNs(s))
+            //    {
                 Op.set(Up,DnP,+0.5*Cplx_i);
                 Op.set(Dn,UpP,-0.5*Cplx_i);
-                }
-            else
-                {
-                Error("Operator " + opname + " does not have a well defined QN flux");
-                }
+            //    }
+            //else
+            //    {
+            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    }
             }
         else
         if(opname == "Sp" || opname == "S+")

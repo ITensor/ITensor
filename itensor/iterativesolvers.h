@@ -54,12 +54,27 @@ davidson(BigMatrixT const& A,
 // (BigMatrixT objects must implement the methods product and size.)
 // Initial guess x is overwritten with the output.
 //
-template<typename BigMatrixT>
+template<typename BigMatrixT, typename BigVectorT>
 void
 gmres(BigMatrixT const& A,
-      ITensor const& b,
-      ITensor& x,
+      BigVectorT const& b,
+      BigVectorT& x,
       Args const& args = Args::global());
+
+//
+// Use the Krylov subspace method to compute
+// phi' = exp(t*A)*phi
+// for the BigMatrixT(e.g. localmpo or localmposet) A,
+// and the cplx constant t.
+// It does not compute the matrix exponential explicitly
+// but instead compute the action of the exponential matrix on the vector.
+// After finished, phi -> phi'.
+template <typename BigMatrixT, typename ElT>
+void
+applyExp(BigMatrixT const& A,
+         ITensor& phi,
+         ElT t,
+         Args const& args = Args::global());
 
 //
 //
@@ -107,8 +122,8 @@ davidson(BigMatrixT const& A,
         phi[j] *= 1./nrm;
         }
 
-    auto maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,maxsize-1);
+    size_t maxsize = A.size();
+    size_t actual_maxiter = std::min(maxiter_,size_t(maxsize-1));
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
@@ -147,11 +162,11 @@ davidson(BigMatrixT const& A,
     auto eigs = std::vector<Real>(nget,NAN);
 
     V[0] = phi.front();
-    START_TIMER(21);
+TIMER_START(31);
     A.product(V[0],AV[0]);
-    STOP_TIMER(21);
+TIMER_STOP(31);
 
-    auto initEn = eltC((dag(V[0])*AV[0])).real();
+    auto initEn = real(eltC((dag(V[0])*AV[0])));
 
     if(debug_level_ > 2)
         printfln("Initial Davidson energy = %.10f",initEn);
@@ -165,7 +180,7 @@ davidson(BigMatrixT const& A,
         //and compute the residual q
 
         auto ni = ii+1; 
-        auto& q = V.at(ni);
+        auto& q = V[ni];
         auto& phi_t = phi.at(t);
         auto& lambda = eigs.at(t);
 
@@ -175,8 +190,8 @@ davidson(BigMatrixT const& A,
             lambda = initEn;
             stdx::fill(Mref,lambda);
             //Calculate residual q
+
             q = AV[0] - lambda*V[0];
-            //printfln("ii=%d, q = \n%f",ii,q);
             }
         else // ii != 0
             {
@@ -191,7 +206,8 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
-            for(auto k : range(ii+1))
+
+            for(auto k : range1(ii))
                 {
                 phi_t += U(k,t)*V[k];
                 q     += U(k,t)*AV[k];
@@ -296,7 +312,7 @@ davidson(BigMatrixT const& A,
             ++tot_pass;
             for(auto k : range(ni))
                 {
-                Vq[k] = (dag(V[k])*q).eltC();
+                Vq[k] = eltC(dag(V[k])*q);
                 //printfln("pass=%d Vq[%d] = %s",pass,k,Vq[k]);
                 }
             for(auto k : range(ni))
@@ -310,7 +326,7 @@ davidson(BigMatrixT const& A,
                 //Orthogonalization failure,
                 //try randomizing
                 if(debug_level_ >= 2) println("Vector not independent, randomizing");
-                q = V.at(ni-1);
+                q = V[ni-1];
                 q.randomize();
                 qnrm = norm(q);
                 //Do another orthog pass
@@ -336,7 +352,7 @@ davidson(BigMatrixT const& A,
                     }
                 }
             q *= 1./qnrm;
-            q.scaleTo(1.);
+            //q.scaleTo(1.);
             ++pass;
             }
         if(debug_level_ >= 3) println("Done with orthog step, tot_pass=",tot_pass);
@@ -346,7 +362,7 @@ davidson(BigMatrixT const& A,
         //for(int r = 1; r <= ni+1; ++r)
         //for(int c = r; c <= ni+1; ++c)
         //    {
-        //    z = (dag(V[r-1])*V[c-1]).eltC();
+        //    z = eltC(dag(V[r-1])*V[c-1]);
         //    Vo(r,c) = abs(z);
         //    Vo(c,r) = Vo(r,c);
         //    }
@@ -364,9 +380,9 @@ davidson(BigMatrixT const& A,
         //Step G of Davidson (1975)
         //Expand AV and M
         //for next step
-        START_TIMER(21);
+TIMER_START(31);
         A.product(V[ni],AV[ni]);
-        STOP_TIMER(21);
+TIMER_STOP(31);
 
         //Step H of Davidson (1975)
         //Add new row and column to M
@@ -374,7 +390,7 @@ davidson(BigMatrixT const& A,
         auto newCol = subVector(NC,0,1+ni);
         for(auto k : range(ni+1))
             {
-            newCol(k) = (dag(V.at(k))*AV.at(ni)).eltC();
+            newCol(k) = eltC(dag(V.at(k))*AV.at(ni));
             }
         column(Mref,ni) &= newCol;
         row(Mref,ni) &= conj(newCol);
@@ -390,15 +406,6 @@ davidson(BigMatrixT const& A,
     //    {
     //    if(T.scale().logNum() > 2) T.scaleTo(1.);
     //    }
-
-    //TODO: previously, it seems like the
-    //eigenvectors were being normalized
-    //automatically, and this was expected
-    //by DMRG (when calculating the proper
-    //entanglement entropy). At some point, 
-    //normalization had to be done explicitly, why?
-    for(auto& phi_j : phi)
-        phi_j /= norm(phi_j);
 
     //Compute any remaining eigenvalues and eigenvectors requested
     //(zero indexed) value of t indicates how many have been "targeted" so far
@@ -422,7 +429,7 @@ davidson(BigMatrixT const& A,
         for(auto r : range(iter+1))
         for(auto c : range(r,iter+1))
             {
-            auto z = (dag(V[r])*V[c]).eltC();
+            auto z = eltC(dag(V[r])*V[c]);
             Vo_final(r,c) = std::abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
@@ -445,9 +452,9 @@ davidson(BigMatrixT const& A,
 
 namespace gmres_details {
 
-template<class Matrix, class T>
+template<class Matrix, class T, class BigVectorT>
 void
-update(ITensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<ITensor> const& v)
+update(BigVectorT &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<BigVectorT> const& v)
     {
     std::vector<T> y(s);
 
@@ -460,7 +467,7 @@ update(ITensor &x, int const k, Matrix const& h, std::vector<T>& s, std::vector<
         }
 
     for (int j = 0; j <= k; j++)
-        x += v[j] * y[j];
+        x += y[j] * v[j];
     }
 
 template<typename T>
@@ -502,26 +509,28 @@ applyPlaneRotation(Cplx& dx, Cplx& dy, Cplx const& cs, Cplx const& sn)
     dx = temp;
     }
 
-void inline
-dot(ITensor const& A, ITensor const& B, Real& res)
+template<typename BigVectorT>
+void
+dot(BigVectorT const& A, BigVectorT const& B, Real& res)
     {
     res = elt(dag(A)*B);
     }
 
-void inline
-dot(ITensor const& A, ITensor const& B, Cplx& res)
+template<typename BigVectorT>
+void
+dot(BigVectorT const& A, BigVectorT const& B, Cplx& res)
     {
     res = eltC(dag(A)*B);
     }
 
 }//namespace gmres_details
 
-template<typename T, typename BigMatrixT>
+template<typename T, typename BigMatrixT, typename BigVectorT>
 void
 gmresImpl(BigMatrixT const& A,
-          ITensor const& b,
-          ITensor& x,
-          ITensor& Ax,
+          BigVectorT const& b,
+          BigVectorT& x,
+          BigVectorT& Ax,
           Args const& args)
     {
     auto n = A.size();
@@ -539,7 +548,7 @@ gmresImpl(BigMatrixT const& A,
     std::vector<T> s(m+1);
     std::vector<T> cs(m+1);
     std::vector<T> sn(m+1);
-    ITensor w;
+    BigVectorT w = x;
 
     auto normb = norm(b);
 
@@ -556,20 +565,20 @@ gmresImpl(BigMatrixT const& A,
         max_iter = 0;
         }
 
-    std::vector<ITensor> v(m+1);
+    std::vector<BigVectorT> v(m+1);
 
     while(j <= max_iter)
         {
 
         v[0] = r/beta;
-        v[0].scaleTo(1.0);
+        //v[0].scaleTo(1.0);
 
         std::fill(s.begin(), s.end(), 0.0);
         s[0] = beta; 
 
         for(i = 0; i < m && j <= max_iter; i++, j++)
             {
-            ITensor w;
+            BigVectorT w = x;
             A.product(v[i],w);
 
             // Begin Arnoldi iteration
@@ -588,15 +597,15 @@ gmresImpl(BigMatrixT const& A,
             if(normw != 0)
                 {
                 v[i+1] = w/H(i+1,i);
-                v[i+1].scaleTo(1.0);
+                //v[i+1].scaleTo(1.0);
                 }
-            else
-                {
-                // Maybe this should be a warning?
-                // Also, maybe check if it is very close to zero?
-                // GMRES generally is converged at this point anyway
-                error("Norm of new Krylov vector is zero. Try raising 'ErrGoal'.");
-                }
+            //else
+            //    {
+            //    // Maybe this should be a warning?
+            //    // Also, maybe check if it is very close to zero?
+            //    // GMRES generally is converged at this point anyway
+            //    println("Warning: norm of new Krylov vector is zero.");
+            //    }
 
             for(k = 0; k<i; ++k)
                 gmres_details::applyPlaneRotation(H(k,i), H(k+1,i), cs[k], sn[k]);
@@ -628,11 +637,11 @@ gmresImpl(BigMatrixT const& A,
     }
 
 
-template<typename BigMatrixT>
+template<typename BigMatrixT, typename BigVectorT>
 void
 gmres(BigMatrixT const& A,
-      ITensor const& b,
-      ITensor& x,
+      BigVectorT const& b,
+      BigVectorT& x,
       Args const& args)
     {
     auto debug_level_ = args.getInt("DebugLevel",-1);
@@ -642,7 +651,7 @@ gmres(BigMatrixT const& A,
     // to avoid this?
     // Otherwise we would need to require that BigMatrixT
     // has a function isComplex()
-    ITensor Ax;
+    BigVectorT Ax = x;
     A.product(x, Ax); 
     if(isComplex(b) || isComplex(Ax))
         {
@@ -658,6 +667,418 @@ gmres(BigMatrixT const& A,
         }
     }
 
+int inline
+findEig(Vector const& vr, Vector const& vi, std::string whichEig)
+    {
+    int n = -1;
+    Real foundval = NAN;
+    for(size_t i = 0; i < vr.size(); i++)
+      {
+      if(whichEig == "LargestMagnitude")
+        {
+        auto ival = abs(Complex(vr(i),vi(i)));
+        if(i == 0)
+          {
+          foundval = ival;
+          n = 0;
+          }
+        else if(ival > foundval)
+          {
+          foundval = ival;
+          n = i;
+          }
+        }
+      else if(whichEig == "SmallestReal")
+        {
+        auto ival = vr(i);
+        if(i == 0)
+          {
+          foundval = ival;
+          n = 0;
+          }
+        else if(ival < foundval)
+          {
+          foundval = ival;
+          n = i;
+          }
+        }
+      else
+        {
+        error("Unsupported eigenvalue target, currently only support: LargestMagnitude, SmallestReal");        
+        }
+      }
+    return n;
+    }
+  
+template <class BigMatrixT>
+std::vector<Complex>
+arnoldi(const BigMatrixT& A,
+        std::vector<ITensor>& phi,
+        Args const& args)
+    {
+    int maxiter_ = args.getInt("MaxIter",10);
+    int maxrestart_ = args.getInt("MaxRestart",0);
+    std::string whicheig_ = args.getString("WhichEig","LargestMagnitude");
+    const Real errgoal_ = args.getReal("ErrGoal",1E-6);
+    const int debug_level_ = args.getInt("DebugLevel",-1);
+
+    if(maxiter_ < 1) maxiter_ = 1;
+    if(maxrestart_ < 0) maxrestart_ = 0;
+
+    const Real Approx0 = 1E-12;
+    const int Npass = args.getInt("Npass",2); // number of Gram-Schmidt passes
+
+    const size_t nget = phi.size();
+    if(nget == 0) Error("No initial vectors passed to arnoldi.");
+
+    //if(nget > 1) Error("arnoldi currently only supports nget == 1");
+
+    for(size_t j = 0; j < nget; ++j)
+        {
+        const Real nrm = norm(phi[j]);
+        if(nrm == 0.0)
+            Error("norm of 0 in arnoldi");
+        phi[j] *= 1.0/nrm;
+        }
+
+    std::vector<Complex> eigs(nget);
+
+    const int maxsize = A.size();
+
+    if(phi.size() > size_t(maxsize))
+        Error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
+
+    if(maxsize == 1)
+        {
+        if(norm(phi.front()) == 0) randomize(phi.front());
+        phi.front() /= norm(phi.front());
+        ITensor Aphi(phi.front());
+        A.product(phi.front(),Aphi);
+        //eigs.front() = BraKet(Aphi,phi.front());
+        gmres_details::dot(Aphi,phi.front(),eigs.front());
+        return eigs;
+        }
+
+    auto actual_maxiter = std::min(maxiter_,maxsize-1);
+    if(debug_level_ >= 2)
+        {
+        printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
+                 (maxsize-1),     maxiter_ ,    actual_maxiter );
+        }
+
+    if(dim(phi.front().inds()) != size_t(maxsize))
+        {
+        Error("arnoldi: size of initial vector should match linear matrix size");
+        }
+
+    //Storage for Matrix that gets diagonalized 
+    Matrix HR(actual_maxiter+2,actual_maxiter+2),
+           HI(actual_maxiter+2,actual_maxiter+2);
+    //HR = 0;
+    //HI = 0;
+    for(auto& el : HR) el = 0;
+    for(auto& el : HI) el = 0;
+
+    std::vector<ITensor> V(actual_maxiter+2);
+
+    for(size_t w = 0; w < nget; ++w)
+    {
+
+    for(int r = 0; r <= maxrestart_; ++r)
+        {
+        Real err = 1000;
+        Matrix YR,YI;
+        int n = 0; //which column of Y holds the w^th eigenvector
+        int niter = 0;
+
+        //Mref holds current projection of A into V's
+        MatrixRef HrefR(subMatrix(HR,0,1,0,1)),
+                  HrefI(subMatrix(HI,0,1,0,1));
+
+        V.at(0) = phi.at(w);
+
+        for(int it = 0; it <= actual_maxiter; ++it)
+            {
+            const int j = it;
+            A.product(V.at(j),V.at(j+1)); // V[j+1] = A*V[j]
+            // "Deflate" previous eigenpairs:
+            for(size_t o = 0; o < w; ++o)
+                {
+                //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j+1]));
+                Complex overlap_;
+                gmres_details::dot(phi[o],V[j+1],overlap_);
+                V[j+1] += (-eigs.at(o)*phi[o]*overlap_);
+                }
+
+            //Do Gram-Schmidt orthogonalization Npass times
+            //Build H matrix only on the first pass
+            Real nh = NAN;
+            for(int pass = 1; pass <= Npass; ++pass)
+                {
+                for(int i = 0; i <= j; ++i)
+                    {
+                    //Complex h = BraKet(V.at(i),V.at(j+1));
+                    Complex h;
+                    gmres_details::dot(V.at(i),V.at(j+1),h);
+                    if(pass == 1)
+                        {
+                        HR(i,j) = h.real();
+                        HI(i,j) = h.imag();
+                        }
+                    V.at(j+1) -= h*V.at(i);
+                    }
+                Real nrm = norm(V.at(j+1));
+                if(pass == 1) nh = nrm;
+
+                if(nrm != 0) V.at(j+1) /= nrm;
+                else         randomize(V.at(j+1));
+                }
+
+            //for(int i1 = 0; i1 <= j+1; ++i1)
+            //for(int i2 = 0; i2 <= j+1; ++i2)
+            //    {
+            //    auto olap = BraKet(V.at(i1),V.at(i2)).real();
+            //    if(fabs(olap) > 1E-12)
+            //        Cout << Format(" %.2E") % BraKet(V.at(i1),V.at(i2)).real();
+            //    }
+            //Cout << Endl;
+
+            //Diagonalize projected form of A to
+            //obtain the w^th eigenvalue and eigenvector
+            Vector D(1+j),DI(1+j);
+
+            //TODO: eigen only takes a Matrix of Complex, not
+            //the real and imaginary parts seperately.
+            //Change it so that we don't have to allocate this
+            //Complex matrix
+            auto Hnrows = nrows(HrefR);
+            auto Hncols = ncols(HrefR);
+            CMatrix Href(Hnrows,Hncols);
+            for(size_t irows = 0; irows < Hnrows; irows++)
+              for(size_t icols = 0; icols < Hncols; icols++)
+                Href(irows,icols) = Complex(HrefR(irows,icols),HrefI(irows,icols));
+
+            eigen(Href,YR,YI,D,DI);
+            n = findEig(D,DI,whicheig_); //continue to target the largest eig 
+                                        //since we have 'deflated' the previous ones
+            eigs.at(w) = Complex(D(n),DI(n));
+
+            HrefR = subMatrix(HR,0,j+2,0,j+2);
+            HrefI = subMatrix(HI,0,j+2,0,j+2);
+
+            HR(1+j,j) = nh;
+
+            //Estimate error || (A-l_j*I)*p_j || = h_{j+1,j}*[last entry of Y_j]
+            //See http://web.eecs.utk.edu/~dongarra/etemplates/node216.html
+            assert(nrows(YR) == size_t(1+j));
+            err = nh*abs(Complex(YR(j,n),YI(j,n)));
+            assert(err >= 0);
+
+            if(debug_level_ >= 1)
+                {
+                if(r == 0)
+                    printf("I %d e %.0E E",(1+j),err);
+                else
+                    printf("R %d I %d e %.0E E",r,(1+j),err);
+
+                for(size_t j = 0; j <= w; ++j)
+                    {
+                    if(fabs(eigs[j].real()) > 1E-6)
+                        {
+                        if(fabs(eigs[j].imag()) > Approx0)
+                            printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
+                        else
+                            printf(" %.10f",eigs[j].real());
+                        }
+                    else
+                        {
+                        if(fabs(eigs[j].imag()) > Approx0)
+                            printf(" (%.5E,%.5E)",eigs[j].real(),eigs[j].imag());
+                        else
+                            printf(" %.5E",eigs[j].real());
+                        }
+                    }
+                println();
+                }
+
+            ++niter;
+
+            if(err < errgoal_) break;
+
+            } // for loop over j
+
+        //Cout << Endl;
+        //for(int i = 0; i < niter; ++i)
+        //for(int j = 0; j < niter; ++j)
+        //    Cout << Format("<V[%d]|V[%d]> = %.5E") % i % j % BraKet(V.at(i),V.at(j)) << Endl;
+        //Cout << Endl;
+
+        //Compute w^th eigenvector of A
+        //Cout << Format("Computing eigenvector %d") % w << Endl;
+        phi.at(w) = Complex(YR(0,n),YI(0,n))*V.at(0);
+        for(int j = 1; j < niter; ++j)
+            {
+            phi.at(w) += Complex(YR(j,n),YI(j,n))*V.at(j);
+            }
+
+        //Print(YR.Column(1+n));
+        //Print(YI.Column(1+n));
+
+        const Real nrm = norm(phi.at(w));
+        if(nrm != 0)
+            phi.at(w) /= nrm;
+        else
+            randomize(phi.at(w));
+
+        if(err < errgoal_) break;
+
+        //otherwise restart using the phi.at(w) computed above
+
+        } // for loop over r
+
+    } // for loop over w
+
+    return eigs;
+    }
+
+template <class BigMatrixT>
+Complex
+arnoldi(const BigMatrixT& A,
+        ITensor& vec,
+        Args const& args = Args::global())
+    {
+    std::vector<ITensor> phi(1,vec);
+    Complex res = arnoldi(A,phi,args).front();
+    vec = phi.front();
+    return res;
+    }
+
+template<typename VecT>
+void
+assembleLanczosVectors(std::vector<ITensor> const& lanczos_vectors,
+                       VecT const& linear_comb,
+                       double norm, ITensor& phi)
+    {
+    assert(lanczos_vectors.size() == linear_comb.size());
+    phi = norm*linear_comb(0)*lanczos_vectors[0];
+    for(int i=1; i<(int)lanczos_vectors.size(); ++i)
+        phi += norm*linear_comb(i)*lanczos_vectors[i];
+    }
+
+template<typename BigMatrixT, typename ElT>
+void
+applyExp(BigMatrixT const& H, ITensor& phi,
+         ElT tau, Args const& args)
+    {
+    auto tol = args.getReal("ErrGoal",1E-10);
+    auto max_iter = args.getInt("MaxIter",30);
+    auto debug_level = args.getInt("DebugLevel",-1);
+    auto beta_tol = args.getReal("NormCutoff",1e-7);
+
+    // Initialize Lanczos vectors
+    ITensor v1 = phi;
+    ITensor v0;
+    ITensor w;
+    Real nrm = norm(v1);
+    v1 /= nrm;
+    std::vector<ITensor> lanczos_vectors({v1});
+    Matrix bigTmat(max_iter + 2, max_iter + 2);
+    std::fill(bigTmat.begin(), bigTmat.begin()+bigTmat.size(), 0.);
+
+    auto nmatvec = 0;
+
+    double beta = 0;
+    for (int iter=0; iter < max_iter; ++iter)
+        {
+        int tmat_size=iter+1;
+        // Matrix-vector multiplication
+        if(debug_level >= 0)
+            nmatvec++;
+        H.product(v1, w);
+
+        double avnorm = norm(w);
+        double alpha = real(eltC(dag(w) * v1));
+        bigTmat(iter, iter) = alpha;
+        w -= alpha * v1;
+        if (iter > 0)
+            w -= beta * v0;
+        v0 = v1;
+        beta = norm(w);
+
+        // check for Lanczos sequence exhaustion
+        if (std::abs(beta) < beta_tol)
+            {
+            // Assemble the time evolved state
+            auto tmat = subMatrix(bigTmat, 0,tmat_size, 0, tmat_size);
+            auto tmat_exp = expMatrix(tmat, tau);
+            auto linear_comb = column(tmat_exp, 0);
+            assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+            break;
+            }
+
+        // update next lanczos vector
+        v1 = w;
+        v1 /= beta;
+        lanczos_vectors.push_back(v1);
+        bigTmat(iter+1, iter) = beta;
+        bigTmat(iter, iter+1) = beta;
+
+        // Convergence check
+        if (iter > 0)
+            {
+            // Prepare extended T-matrix for exponentiation
+            int tmat_ext_size = tmat_size + 2;
+            auto tmat_ext = Matrix(tmat_ext_size, tmat_ext_size);
+            tmat_ext = subMatrix(bigTmat, 0, tmat_ext_size, 0, tmat_ext_size);
+
+            tmat_ext(tmat_size-1, tmat_size) = 0.;
+            tmat_ext(tmat_size+1, tmat_size) = 1.;
+
+            // Exponentiate extended T-matrix
+            auto tmat_ext_exp = expMatrix(tmat_ext, tau);
+
+            double phi1 = std::abs( nrm*tmat_ext_exp(tmat_size, 0) );
+            double phi2 = std::abs( nrm*tmat_ext_exp(tmat_size + 1, 0) * avnorm );
+            double error;
+            if (phi1 > 10*phi2) error = phi2;
+            else if (phi1 > phi2) error = (phi1*phi2)/(phi1-phi2);
+            else error = phi1;
+            if(debug_level >= 1)
+                println("Iteration: ", iter, ", Error: ", error);
+            if ((error < tol) || (iter == max_iter-1))
+                {
+                if (iter == max_iter-1)
+                    printf("warning: applyExp not converged in %d steps\n", max_iter);
+
+                // Assemble the time evolved state
+                auto linear_comb = Vec<ElT>(tmat_ext_size);
+                linear_comb = column(tmat_ext_exp, 0);
+                linear_comb = subVector(linear_comb, 0, tmat_ext_size-1);
+                assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+                if(debug_level >= 0)
+                    printf("In applyExp, number of iterations: %d\n", iter);
+                break;
+                }
+            }  // end convergence test
+
+        }  // Lanczos iteratrions
+
+    if(debug_level >= 0)
+        println("In applyExp, number of matrix-vector multiplies: ", nmatvec);
+
+    return;
+    } // End applyExp
+
+template<typename BigMatrixT>
+void
+applyExp(BigMatrixT const& H, ITensor& phi,
+         int tau, Args const& args)
+    {
+    applyExp(H,phi,Real(tau),args);
+    return;
+    }
+
 } //namespace itensor
 
 #endif
+

@@ -63,6 +63,13 @@ class ITensor
     //explicit
     //ITensor(std::array<Index,N> const& inds);
 
+    ITensor(QN q, IndexSet const& inds);
+
+    template <typename... Inds>
+    explicit
+    ITensor(QN q, Index const& i1,
+            Inds const&... inds);
+
     //Construct order 0 tensor (scalar), value set to val
     //If val.imag()==0, storage will be Real
     explicit
@@ -294,6 +301,9 @@ class ITensor
     const ITensor&
     visit(Func&& f) const;
 
+    ITensor&
+    fixBlockDeficient();
+
     //
     // Complex number methods
     //
@@ -496,6 +506,12 @@ maxDim(ITensor const& A);
 std::vector<IndexSet> 
 inds(std::vector<ITensor> const& A);
 
+size_t
+nnzblocks(ITensor const& A);
+
+long
+nnz(ITensor const& A);
+
 // Get Index at a certain position
 // in the ITensor's IndexSet, using 1-based indexing
 Index const& 
@@ -529,6 +545,18 @@ ITensor
 operator/(ITensor A, ITensor const& B);
 ITensor
 operator/(ITensor const& A, ITensor && B);
+
+// Partial direct sum of ITensors A and B
+// over the specified indices
+std::tuple<ITensor,IndexSet>
+directSum(ITensor const& A, ITensor const& B,
+          IndexSet const& I, IndexSet const& J,
+          Args const& args = Args::global());
+
+std::tuple<ITensor,Index>
+directSum(ITensor const& A, ITensor const& B,
+          Index const& i, Index const& j,
+          Args const& args = Args::global());
 
 //
 // ITensor tag functions
@@ -707,6 +735,10 @@ bool
 hasInds(ITensor const& T,
         IndexSet const& ismatch);
 
+Arrow
+dir(ITensor const& T,
+    Index const& i);
+
 template<typename... Inds>
 bool
 hasInds(ITensor const& T,
@@ -842,6 +874,9 @@ ITensor
 swapInds(ITensor T,
          IndexSet const& is1,
          IndexSet const& is2);
+
+detail::IndexValIter
+iterInds(ITensor const& T);
 
 //
 // Given Tensors which represent operator matrices
@@ -987,6 +1022,12 @@ flux(ITensor const& T);
 
 bool
 hasQNs(ITensor const& T);
+
+ITensor
+toDense(ITensor T);
+
+bool
+isDense(ITensor const& T);
 
 ITensor
 removeQNs(ITensor T);

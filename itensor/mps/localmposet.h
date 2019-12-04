@@ -25,7 +25,7 @@ class LocalMPOSet
     std::vector<LocalMPO> lmpo_;
     public:
 
-    LocalMPOSet() { }
+    LocalMPOSet(Args const& args = Args::global()) { }
 
     LocalMPOSet(std::vector<MPO> const& Op,
                 Args const& args = Args::global());
@@ -117,7 +117,7 @@ LocalMPOSet(std::vector<MPO> const& Op,
     { 
     for(auto n : range(lmpo_.size()))
         {
-        lmpo_[n] = LocalMPO(Op.at(n));
+        lmpo_[n] = LocalMPO(Op.at(n),args);
         }
     }
 

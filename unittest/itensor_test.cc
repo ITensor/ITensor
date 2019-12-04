@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor/itensor.h"
+#include "itensor/decomp.h"
 #include "itensor/util/cplx_literal.h"
 #include "itensor/util/iterate.h"
 #include "itensor/util/set_scoped.h"
@@ -80,6 +81,15 @@ randomData(size_t size)
     for(auto& el : data) el = Global::random();
     return data;
     }
+
+struct GetQDenseStore {};
+struct GetQDenseOffsets {};
+
+vector_no_init<Real>
+doTask(GetQDenseStore, QDense<Real> const& d) { return d.store; }
+
+BlockOffsets
+doTask(GetQDenseOffsets, QDense<Real> const& d) { return d.offsets; }
 
 TEST_CASE("ITensor")
 {
@@ -298,6 +308,12 @@ SECTION("Diag Rank 2 from container")
     CHECK_DIFF(norm(T),std::sqrt(nrm),1E-10);
     CHECK_DIFF(sumels(T),tot,1E-10);
     }
+
+SECTION("QDense")
+  {
+  auto T = ITensor(QN(+1),S1,dag(S2),S3);
+  CHECK_CLOSE(norm(T),0.);
+  }
 }
 
 SECTION("Write to Disk")
@@ -2530,6 +2546,283 @@ SECTION("ITensor Negation")
         }
     }
 
+SECTION("ITensor partial direct sum")
+  {
+  SECTION("No QNs")
+    {
+    auto a = Index(2,"a"),
+         b = Index(2,"b"),
+         i = Index(2,"i"),
+         j = Index(2,"j");
+
+    auto A = randomITensor(a,b,i);
+    auto B = randomITensor(a,b,j);
+
+    // Version accepting an index on A and an index on B to be direct summed
+    // Here we create a new ITensor C with indices {a,b,i+j}
+    // Indices that are not specified must be shared by A and B
+    auto [C,ij] = directSum(A,B,i,j,{"Tags=","i+j"});
+
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=1),A.elt(a=1,b=1,i=1));
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=dim(i)+1),B.elt(a=1,b=1,j=1));
+    }
+  SECTION("QNs")
+    {
+    auto a = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"a");
+
+    auto b = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"b");
+
+    auto i = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"i");
+
+    auto j = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"j");
+
+    auto A = randomITensor(QN(0),a,b,dag(i));
+    auto B = randomITensor(QN(0),a,b,dag(j));
+
+    // Version accepting an index on A and an index on B to be direct summed
+    // Here we create a new ITensor C with indices {a,b,i+j}
+    // Indices that are not specified must be shared by A and B
+    auto [C,ij] = directSum(A,B,i,j,{"Tags=","i+j"});
+
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=1),A.elt(a=1,b=1,i=1));
+    CHECK_CLOSE(C.elt(a=1,b=1,ij=dim(i)+1),B.elt(a=1,b=1,j=1));
+    }
+  }
+
+SECTION("ITensor toDense function")
+  {
+  SECTION("No QNs")
+    {
+    auto i = Index(3,"i"),
+         j = Index(3,"j"),
+         k = Index(3,"k");
+
+    SECTION("General Diag")
+      {
+      auto v = vector<Real>({1.0,2.0,3.0});
+      auto A = diagITensor(v,i,j,k);
+      auto B = toDense(A);
+      CHECK(typeOf(B) == Type::DenseReal);
+      for(auto iv : range1(i))
+        for(auto jv : range1(j))
+          for(auto kv : range1(k))
+            CHECK(elt(A,i=iv,j=jv,k=kv) == elt(B,i=iv,j=jv,k=kv));
+      }
+    SECTION("Delta")
+      {
+      auto A = delta(i,j,k);
+      auto B = toDense(A);
+      CHECK(typeOf(B) == Type::DenseReal);
+      for(auto iv : range1(i))
+        for(auto jv : range1(j))
+          for(auto kv : range1(k))
+            CHECK(elt(A,i=iv,j=jv,k=kv) == elt(B,i=iv,j=jv,k=kv));
+      }
+    }
+
+  SECTION("QNs")
+    {
+    auto i = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"i");
+    auto j = Index(QN(-1),2,
+                   QN(0),2,
+                   QN(+1),2,"j");
+    auto k = Index(QN(-2),2,
+                   QN(0),2,
+                   QN(+2),2,"k");
+
+    auto is = IndexSet(i,j,dag(k));
+
+    SECTION("General Diag")
+      {
+      auto d = vector<Vector>(3);
+      d[0] = Vector(2);
+      d[0](0) = 1.0;
+      d[0](1) = 2.0;
+      d[1] = Vector(2);
+      d[1](0) = 3.0;
+      d[1](1) = 4.0;
+      d[2] = Vector(2);
+      d[2](0) = 5.0;
+      d[2](1) = 6.0;
+
+      // Helper function to make a diagITensor with QDiag storage
+      // A vector of containers is supplied, one for each block
+      // in the QDiag storage
+      auto Dstore = QDiagReal(is);
+      auto Nblocks = nblock(is[1]);
+      for(auto n : range(Nblocks))
+        {
+        auto ind = IntArray(length(is),n);
+        auto pD = getBlock(Dstore,is,ind);
+        if( d[n].size() != pD.size() ) Error("Block size and vector size must match");
+        auto Dref = makeVecRef(pD.data(),pD.size());
+        Dref &= d[n];
+        }
+      auto A = ITensor(is,move(Dstore));
+
+      auto B = toDense(A);
+      CHECK(typeOf(B) == Type::QDenseReal);
+      for(auto iv : range1(i))
+        for(auto jv : range1(j))
+          for(auto kv : range1(k))
+            CHECK(elt(A,i=iv,j=jv,k=kv) == elt(B,i=iv,j=jv,k=kv));
+      }
+    SECTION("General Delta")
+      {
+      auto A = delta(is);
+      auto B = toDense(A);
+      CHECK(typeOf(B) == Type::QDenseReal);
+      for(auto iv : range1(i))
+        for(auto jv : range1(j))
+          for(auto kv : range1(k))
+            CHECK(elt(A,i=iv,j=jv,k=kv) == elt(B,i=iv,j=jv,k=kv));
+      }
+    }
+  }
+
+SECTION("removeQNs")
+  {
+  auto i = Index(QN(-1),1,
+                 QN(0),2,
+                 QN(+1),3,"i");
+  auto j = Index(QN(-1),1,
+                 QN(0),2,
+                 QN(+1),3,"j");
+  auto k = Index(QN(-2),1,
+                 QN(0),2,
+                 QN(+2),3,"k");
+
+  auto Aqn = randomITensor(QN(0),i,j,dag(k));
+  auto A = removeQNs(Aqn);
+
+  for(auto const& ivs : iterInds(A))
+      CHECK(elt(Aqn,ivs)==elt(A,ivs));
+  }
+
+SECTION("Block deficient ITensor tests")
+  {
+  auto i = Index(QN(0),2,QN(1),3,QN(2),4,QN(1),5,QN(3),6,"i");
+  auto ip = prime(i);
+  auto l = Index(QN(0),3,"l");
+  auto a = randomITensor(QN(1),i,l);
+  auto A = a*prime(dag(a),i);
+
+  SECTION("Add")
+    {
+    auto T = randomITensor(QN(0),dag(prime(i)),i);
+    auto AT = A+T;
+    auto TA = T+A;
+    CHECK(norm(AT-TA)==0);
+    }
+
+  SECTION("Set elements")
+    {
+    auto copyA = A;
+    auto val1 = 1.;
+    auto val2 = 2.;
+    auto val3 = 3.;
+
+    CHECK(nnzblocks(copyA)==4);
+    CHECK(nnz(copyA)==64);
+
+    copyA.set(i=2, ip=1, val1);
+
+    CHECK(nnzblocks(copyA)==5);
+    CHECK(nnz(copyA)==68);
+
+    copyA.set(i=7, ip=8, val2);
+
+    CHECK(nnzblocks(copyA)==6);
+    CHECK(nnz(copyA)==84);
+
+    copyA.set(i=16,ip=18,val3);
+
+    CHECK(nnzblocks(copyA)==7);
+    CHECK(nnz(copyA)==120);
+
+    CHECK(elt(copyA,i=2, ip=1) ==val1);
+    CHECK(elt(copyA,i=7, ip=8) ==val2);
+    CHECK(elt(copyA,i=16,ip=18)==val3);
+    }
+
+  SECTION("fill")
+    {
+    auto copyA = A;
+    auto val = 1.3;
+    copyA.fill(val);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("generate")
+    {
+    auto copyA = A;
+    auto val = 1.1;
+    copyA.generate([val]() { return val; });
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==val);
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  SECTION("apply")
+    {
+    auto copyA = A;
+    auto f = [](auto x) { return sin(x)+2.; };
+    copyA.apply(f);
+    for(auto const& ivs : iterInds(inds(A)))
+      {
+      if(flux(copyA)==flux(ivs))
+        CHECK(elt(copyA,ivs)==f(elt(A,ivs)));
+      else
+        CHECK(elt(copyA,ivs)==0);
+      }
+    }
+
+  }
+
+SECTION("SVD truncation behavior")
+  {
+  auto i = Index(2,"i");
+  auto A = randomITensor(i,prime(i));
+  auto D = ITensor(i,prime(i));
+  D.set(1,1,1.);
+
+  SECTION("Truncate 0")
+    {
+    auto [U,S,V] = svd(D,{i},{"Cutoff=",0.});
+    (void) V;
+    auto u = commonIndex(U,S);
+    CHECK(dim(u)==1);
+    }
+
+  SECTION("No truncation")
+    {
+    auto [U,S,V] = svd(D,{i});
+    (void) V;
+    auto u = commonIndex(U,S);
+    CHECK(dim(u)==2);
+    }
+
+  }
 
 } //TEST_CASE("ITensor")
 

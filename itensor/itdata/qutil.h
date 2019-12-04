@@ -20,7 +20,6 @@
 
 namespace itensor {
 
-
 //
 // Helper object for treating
 // QDense storage as a "tensor of tensors"
@@ -55,39 +54,20 @@ make_indexdim(IndexSet const& is, Indexable const& ind)
     return IndexDim<Indexable>(is,ind); 
     }
 
-// For a block index (0,1,...,Nblocks-1),
-// as in the offsets array of an QDense,
-// computes the zero-indexed location of
-// the given block (e.g. 5 -> {1,0,2})
-// storing the resulting indices in the 
-// container "ind". The jth index of ind
-// can range from 0 to is[j].nblock(), 
-// such that these indices correspond to
-// viewing the QDense storage as a 
-// "tensor of tensors"
-template<typename Container>
-void
-computeBlockInd(long block,
-                IndexSet const& is,
-                Container & ind)
+template<typename T>
+int
+getBlockLoc(QDense<T> const& d,
+            Block const& block_ind)
     {
-    using size_type = decltype(ind.size());
-    size_type r = ind.size();
-    assert(r == size_type(is.order()));
-    for(size_type j = 0; j < r-1; ++j)
-        {
-        auto res = std::ldiv(block,is[j].nblock());
-        ind[j] = res.rem;
-        block = res.quot;
-        }
-    ind[r-1] = block;
+    auto loc = offsetOfLoc(d.offsets,block_ind);
+    return loc;
     }
 
-template<typename BlockSparse, typename Indexable>
+template<typename BlockSparse>
 auto
 getBlock(BlockSparse & d,
          IndexSet const& is,
-         Indexable const& block_ind)
+         Block const& block_ind)
     -> stdx::if_compiles_return<decltype(makeDataRange(d.data(),d.size())),decltype(d.offsets)>
     {
     auto r = long(block_ind.size());
@@ -95,31 +75,171 @@ getBlock(BlockSparse & d,
 #ifdef DEBUG
     if(is.order() != r) Error("Mismatched size of IndexSet and block_ind in getBlock");
 #endif
-    long ii = 0;
-    for(auto i = r-1; i > 0; --i)
-        {
-        ii += block_ind[i];
-        ii *= is[i-1].nblock();
-        }
-    ii += block_ind[0];
     //Do binary search to see if there
     //is a block with block index ii
-    auto boff = offsetOf(d.offsets,ii);
+    auto boff = offsetOf(d.offsets,block_ind);
     if(boff >= 0) return makeDataRange(d.data(),boff,d.size());
     using data_range_type = decltype(makeDataRange(d.data(),d.size()));
     return data_range_type{};
     }
 
-template<typename BlockSparseA, 
-         typename BlockSparseB,
-         typename BlockSparseC,
-         typename Callable>
-void
-loopContractedBlocks(BlockSparseA const& A,
+// From two input block-sparse tensors,
+// output the offsets and data size of the
+// result of contracting the tensors
+template<typename BlockSparseA,
+         typename BlockSparseB>
+std::tuple<BlockOffsets,int,std::vector<std::tuple<Block,Block,Block>>>
+getContractedOffsets(BlockSparseA const& A,
                      IndexSet const& Ais,
                      BlockSparseB const& B,
                      IndexSet const& Bis,
-                     BlockSparseC & C,
+                     IndexSet const& Cis)
+    {
+    auto rA = order(Ais);
+    auto rB = order(Bis);
+    auto rC = order(Cis);
+
+    auto AtoB = IntArray(rA,-1);
+    auto AtoC = IntArray(rA,-1);
+    auto BtoC = IntArray(rB,-1);
+    for(auto ic : range(rC))
+        {
+        auto j = indexPosition(Ais,Cis[ic]);
+        if(j >= 0)
+            {
+            AtoC[j] = ic;
+            }
+        else
+            {
+            j = indexPosition(Bis,Cis[ic]);
+            BtoC[j] = ic;
+            }
+        }
+    for(auto ia : range(rA))
+    for(auto ib : range(rB))
+        {
+        if(Ais[ia] == Bis[ib])
+            {
+            AtoB[ia] = ib;
+            break;
+            }
+        }
+
+    auto couB = detail::GCounter(rB);
+    auto Cblockind = Block(rC,0);
+
+    // Store pairs of unordered block numbers and their sizes,
+    // to be ordered later
+    auto Cblocksizes = BlockOffsets();
+
+    auto blockContractions = std::vector<std::tuple<Block,Block,Block>>();
+
+    //Loop over blocks of A (labeled by elements of A.offsets)
+    for(auto const& aio : A.offsets)
+        {
+        //Begin computing elements of Cblock(=destination of this block-block contraction)
+        for(auto iA : range(rA))
+            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = aio.block[iA];
+
+        //Loop over blocks of B which contract with current block of A
+        for(auto const& bio : B.offsets)
+            {
+            auto do_blocks_contract = true;
+            for(auto iA : range(rA))
+                {
+                auto iB = AtoB[iA];
+                if(AtoB[iA] != -1)
+                    if(aio.block[iA] != bio.block[iB])
+                        {
+                        do_blocks_contract = false;
+                        break;
+                        }
+                }
+            if(!do_blocks_contract) continue;
+
+            //Finish making Cblockind
+            for(auto iB : range(rB))
+                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = bio.block[iB];
+
+            // Store the current contraction
+            blockContractions.push_back(std::make_tuple(aio.block,bio.block,Cblockind));
+
+            long blockDim = 1;   //accumulate dim of Indices
+            for(auto j : range(order(Cis)))
+                {
+                auto& J = Cis[j];
+                auto i_j = Cblockind[j];
+                blockDim *= J.blocksize0(i_j);
+                }
+
+            Cblocksizes.push_back(make_blof(Cblockind,blockDim));
+            } //for B.offsets
+        } //for A.offsets
+
+    // Sort the block sizes by the block labels
+    std::sort(Cblocksizes.begin(),Cblocksizes.end(),
+              [](auto a, auto b) { return a.block < b.block; });
+
+    // Remove the duplicates, need to resize manually
+    auto newCend = std::unique(Cblocksizes.begin(),
+                               Cblocksizes.end(),
+                               [](auto a, auto b) { return a.block == b.block; } );
+    Cblocksizes.resize(std::distance(Cblocksizes.begin(),newCend));
+
+    auto current_offset = 0;
+    for(auto i : range(Cblocksizes.size()))
+        {
+        auto current_size = Cblocksizes[i].offset;
+        Cblocksizes[i].offset = current_offset;
+        current_offset += current_size;
+        } 
+    // Stores the total size that the storage of C should have
+    auto Csize = current_offset;
+
+    return std::make_tuple(Cblocksizes,Csize,blockContractions);
+    }
+
+template<typename TA,
+         typename TB,
+         typename TC,
+         typename Callable>
+void
+loopContractedBlocks(QDense<TA> const& A,
+                     IndexSet const& Ais,
+                     QDense<TB> const& B,
+                     IndexSet const& Bis,
+                     QDense<TC> & C,
+                     IndexSet const& Cis,
+                     std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
+                     Callable & callback)
+    {
+    for(auto const& [Ablockind,Bblockind,Cblockind] : blockContractions)
+        {
+        auto ablock = getBlock(A,Ais,Ablockind);
+        auto bblock = getBlock(B,Bis,Bblockind);
+        auto cblock = getBlock(C,Cis,Cblockind);
+        auto Cblockloc = getBlockLoc(C,Cblockind);
+        callback(ablock,Ablockind,
+                 bblock,Bblockind,
+                 cblock,Cblockind,
+                 Cblockloc);
+        }
+    }
+
+// This is a special case of loopContractedBlocks for QDiag
+// since QDiag doesn't have a .offsets function
+// TODO: add .offsets for QDiag so it can use the generic
+// (faster) version
+template<typename TA, 
+         typename TB,
+         typename TC,
+         typename Callable>
+void
+loopContractedBlocks(TA const& A,
+                     IndexSet const& Ais,
+                     TB const& B,
+                     IndexSet const& Bis,
+                     TC & C,
                      IndexSet const& Cis,
                      Callable & callback)
     {
@@ -154,16 +274,11 @@ loopContractedBlocks(BlockSparseA const& A,
         }
 
     auto couB = detail::GCounter(rB);
-    auto Ablockind = IntArray(rA,0);
-    auto Cblockind = IntArray(rC,0);
+    auto Bblockind = Block(rB,0);
+    auto Cblockind = Block(rC,0);
     //Loop over blocks of A (labeled by elements of A.offsets)
-    for(auto& aio : A.offsets)
+    for(auto const& aio : A.offsets)
         {
-        //Reconstruct indices labeling this block of A, put into Ablock
-        //TODO: optimize away need to call computeBlockInd by
-        //      storing block indices directly in QDense
-        //      Taking 10% of running time in S=1 N=100 DMRG tests (maxdim=100)
-        computeBlockInd(aio.block,Ais,Ablockind);
         //Reset couB to run over indices of B (at first)
         couB.reset();
         for(auto iB : range(rB))
@@ -172,7 +287,7 @@ loopContractedBlocks(BlockSparseA const& A,
             }
         for(auto iA : range(rA))
             {
-            auto ival = Ablockind[iA];
+            auto ival = aio.block[iA];
             //Restrict couB to be fixed for indices of B contracted with A
             if(AtoB[iA] != -1) couB.setRange(AtoB[iA],ival,ival);
             //Begin computing elements of Cblock(=destination of this block-block contraction)
@@ -184,26 +299,23 @@ loopContractedBlocks(BlockSparseA const& A,
             //Check whether B contains non-zero block for this setting of couB
             //TODO: check whether block is present by storing all blocks
             //      but most have null pointers to data
-            auto bblock = getBlock(B,Bis,couB.i);
-            if(!bblock) continue;
-
             //Finish making Cblockind and Bblockind
-            auto Bblockind = IntArray(rB,0);
             for(auto iB : range(rB))
                 {
                 if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = couB.i[iB];
                 Bblockind[iB] = couB.i[iB];
                 }
+            auto bblock = getBlock(B,Bis,Bblockind);
+            if(!bblock) continue;
 
             auto cblock = getBlock(C,Cis,Cblockind);
             assert(cblock);
 
             auto ablock = makeDataRange(A.data(),aio.offset,A.size());
 
-            callback(ablock,Ablockind,
+            callback(ablock,aio.block,
                      bblock,Bblockind,
                      cblock,Cblockind);
-
             } //for couB
         } //for A.offsets
     }

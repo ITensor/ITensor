@@ -116,6 +116,46 @@ SVD(MatM && M,
     MatV && V,
     Real thresh = SVD_THRESH);
 
+//
+// Hermitian Matrix exponentiate
+// by diagHermitian
+//
+template<class MatM,
+         class ScalarT,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<common_type<val_type<MatM>,ScalarT>>
+expHermitian(MatM && M,
+                   ScalarT t);
+
+template<class MatM,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<val_type<MatM>>
+expHermitian(MatM && M) { return expHermitian(M,1.); }
+
+//
+// expMatrix computes exp(tH),
+// where H is a general dense matrix,
+// and t can be real or complex.
+// Either of the two options can be used:
+// 1. the irreducible rational Pade approximation
+// to the exponential exp(z) = r(z) = (+/-)(I+2*(q(z)/p(z))),
+// combined with scaling and squaring;
+// 2. the uniform rational Chebyshev approximation to exp(-x) of type(14,14),
+// using which 14-digit accuracy is expected if tH is negative definite,
+// but may behave poorly otherwise.
+//
+template<class MatM,
+         class ScalarT,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<common_type<val_type<MatM>,ScalarT>>
+expMatrix(MatM && M,
+          ScalarT t,
+          int ideg = 6);
+
+template<class MatM,
+         class = stdx::require<hasMatRange<MatM>>>
+Mat<val_type<MatM>>
+expMatrix(MatM && M) { return expMatrix(M,1.); }
 
 } //namespace itensor
 

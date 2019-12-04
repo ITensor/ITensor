@@ -476,6 +476,12 @@ setPrime(IndexVal I, int plev);
 IndexVal
 noPrime(IndexVal I); 
 
+// Get the direct sum of two indices
+Index
+directSum(Index const& i,
+          Index const& j,
+          Args const& args = Args::global());
+
 //Make a new index with same properties as I,
 //but a different id number (will not compare equal)
 Index

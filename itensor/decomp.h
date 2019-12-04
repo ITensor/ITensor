@@ -45,6 +45,11 @@ template <typename... IndsArgs>
 std::tuple<ITensor,ITensor,ITensor>
 svd(ITensor const& AA, Index const& i1, IndsArgs&&... indsargs);
 
+std::tuple<ITensor,ITensor>
+polar(ITensor const& T,
+      IndexSet const& Uis,
+      Args const& args = Args::global());
+
 //
 // The "factor" decomposition is based on the SVD,
 // but factorizes a tensor T into only two
@@ -354,12 +359,9 @@ denmatDecomp(ITensor const& AA,
         }
 
     if(args.getBool("TraceReIm",false))
-        {
         rho = realPart(rho);
-        }
 
     ITensor U,D;
-    args.add("Truncate",true);
     auto spec = diag_hermitian(rho,U,D,args);
 
     cmb.dag();

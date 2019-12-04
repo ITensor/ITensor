@@ -432,6 +432,94 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
     }
 
 //
+// dgesv
+//
+LAPACK_INT
+dgesv_wrapper(LAPACK_INT n,
+              LAPACK_INT nrhs,
+              LAPACK_REAL* a,
+              LAPACK_REAL* b)
+	{
+	LAPACK_INT lda = n;
+	std::vector<LAPACK_INT> ipiv(n);
+	LAPACK_INT ldb = n;
+	LAPACK_INT info = 0;
+	F77NAME(dgesv)(&n,&nrhs,a,&lda,ipiv.data(),b,&ldb,&info);
+	return info;
+	}
+
+//
+// zgesv
+//
+LAPACK_INT
+zgesv_wrapper(LAPACK_INT n,
+              LAPACK_INT nrhs,
+              Cplx* a,
+              Cplx* b)
+	{
+	auto pa = reinterpret_cast<LAPACK_COMPLEX*>(a);
+	auto pb = reinterpret_cast<LAPACK_COMPLEX*>(b);
+	LAPACK_INT lda = n;
+	std::vector<LAPACK_INT> ipiv(n);
+	LAPACK_INT ldb = n;
+	LAPACK_INT info = 0;
+	F77NAME(zgesv)(&n,&nrhs,pa,&lda,ipiv.data(),pb,&ldb,&info);
+	return info;
+	}
+
+//
+// dlange
+//
+double
+dlange_wrapper(char norm,
+               LAPACK_INT m,
+               LAPACK_INT n,
+               double* a)
+	{
+	double norma;
+#ifdef PLATFORM_lapacke
+	norma = LAPACKE_dlange(LAPACK_COL_MAJOR,norm,m,n,a,m);
+#else
+	std::vector<double> work;
+	if(norm == 'I' || norm == 'i') work.resize(m);
+#ifdef PLATFORM_acml
+	LAPACK_INT norm_len = 1;
+	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data(),norm_len);
+#else
+	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data());
+#endif
+#endif
+	return norma;
+	}
+
+//
+// zlange
+//
+LAPACK_REAL
+zlange_wrapper(char norm,
+               LAPACK_INT m,
+               LAPACK_INT n,
+               Cplx* a)
+	{
+	LAPACK_REAL norma;
+#ifdef PLATFORM_lapacke
+	auto pA = reinterpret_cast<lapack_complex_double*>(a);
+	norma = LAPACKE_zlange(LAPACK_COL_MAJOR,norm,m,n,pa,m);
+#else
+	std::vector<double> work;
+	if(norm == 'I' || norm == 'i') work.resize(m);
+	auto pA = reinterpret_cast<LAPACK_COMPLEX*>(a);
+#ifdef PLATFORM_acml
+	LAPACK_INT norm_len = 1;
+	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data(),norm_len);
+#else
+	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data());
+#endif
+#endif
+	return norma;
+	}
+
+//
 // zheev
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A

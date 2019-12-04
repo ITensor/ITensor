@@ -88,7 +88,7 @@ checkDone(const Args& args)
     if(fileExists("STOP_TEVOL"))
         {
         println("File STOP_TEVOL found: stopping this time evolution run at time ",t);
-        system("rm -f STOP_TEVOL");
+        std::remove("STOP_TEVOL");
         return true;
         }
 
@@ -96,7 +96,7 @@ checkDone(const Args& args)
     if(fileExists("STOP_TEVOL_ALL"))
         {
         println("File STOP_TEVOL_ALL found: stopping this time evolution at time ",t);
-        system("rm -f STOP_TEVOL_ALL");
+        std::remove("STOP_TEVOL_ALL");
         done_ = true;
         return done_;
         }

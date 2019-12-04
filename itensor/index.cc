@@ -489,6 +489,38 @@ class IQIndexDat
 #endif
 
 Index
+directSum(Index const& i,
+          Index const& j,
+          Args const& args)
+  {
+  auto tags = getTagSet(args,"Tags","sum");
+  if(not hasQNs(i) && not hasQNs(j))
+    {
+    auto dim_ij = dim(i) + dim(j);
+    if(dim_ij <= 0) dim_ij = 1;
+    return Index(dim_ij,tags);
+    }
+  else
+    {
+#ifdef DEBUG
+    if( dir(i) != dir(j) ) Error("In directSum(Index, Index), input indices must have same arrow direction");
+#endif
+    auto nblock_i = nblock(i);
+    auto nblock_j = nblock(j);
+    auto siq = stdx::reserve_vector<QNInt>(nblock_i+nblock_j);
+    for(auto iqn : range1(nblock_i))
+        siq.emplace_back(qn(i,iqn),blocksize(i,iqn));
+    for(auto jqn : range1(nblock_j))
+        siq.emplace_back(qn(j,jqn),blocksize(j,jqn));
+#ifdef DEBUG
+    if(siq.empty()) Error("siq is empty in plussers");
+#endif
+    return Index(std::move(siq),dir(i),tags);
+    }
+  return Index();
+  }
+
+Index
 sim(Index const& I)
     {
     Index J;

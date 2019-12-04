@@ -48,6 +48,14 @@ ITensor(Index  const& i1,
     IF_USESCALE(scale_ = LogNum(1.);)
     }
 
+template <typename... Inds>
+ITensor::
+ITensor(QN q, Index  const& i1,
+        Inds const&... inds)
+    {
+    *this = ITensor(q,IndexSet(i1,inds...));
+    }
+
 template <class DataType>
 ITensor::
 ITensor(IndexSet iset,
@@ -296,6 +304,58 @@ getInts(Iter it,
     getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
+template<typename IndexVals>
+void
+checkEltFlux(ITensor const& A, IndexVals const& ivs)
+    {
+    if(hasQNs(A))
+      {
+      QN elt_flux;
+      auto indsA = inds(A);
+      for(auto i : range1(order(A)))
+          {
+          auto iv = indsA(i)(ivs[i-1].val);
+          elt_flux += dir(iv)*qn(iv);
+          }
+      if(elt_flux != flux(A))
+          {
+          println("Trying to set element: ");
+          for(auto i : range1(order(A)))
+            println("Index: ", indsA(i), ", Val: ",ivs[i-1].val);
+          println("Element flux is: ",elt_flux);
+          println("ITensor flux is: ",flux(A));
+          Error("In .set, cannot set element with flux different from ITensor flux");
+          }
+      }
+    return;
+    }
+
+template<typename Ints>
+void
+checkEltFluxInts(ITensor const& A, Ints const& ints)
+    {
+    if(hasQNs(A))
+      {
+      QN elt_flux;
+      auto indsA = inds(A);
+      for(auto i : range1(order(A)))
+          {
+          auto iv = indsA(i)(ints[i-1]+1);
+          elt_flux += dir(iv)*qn(iv);
+          }
+      if(elt_flux != flux(A))
+          {
+          println("Trying to set element: ");
+          for(auto i : range1(order(A)))
+            println("Index: ", indsA(i), ", Val: ",ints[i-1]+1);
+          println("Element flux is: ",elt_flux);
+          println("ITensor flux is: ",flux(A));
+          Error("In .set, cannot set element with flux different from ITensor flux");
+          }
+      }
+    return;
+    }
+
 } //namespace detail
 
 
@@ -326,6 +386,7 @@ set(IV const& iv1, VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
+    detail::checkEltFlux(*this,vals);
     if(z.imag()==0.0)
         {
         doTask(SetElt<Real>{z.real(),is_,inds},store_);
@@ -361,6 +422,7 @@ set(Int iv1, VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,ints);
     scaleTo(1.);
+    detail::checkEltFluxInts(*this,ints);
     if(z.imag()==0.0)
         {
         doTask(SetElt<Real>{z.real(),is_,ints},store_);
@@ -393,6 +455,7 @@ generate(Func&& f)
             Error("generate: generator function must return Real or Cplx scalar value");
             }
         }
+    fixBlockDeficient();
     scaleTo(1);
     doTask(GenerateIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
@@ -402,6 +465,7 @@ template <typename Func>
 ITensor& ITensor::
 apply(Func&& f)
     {
+    fixBlockDeficient();
     scaleTo(1);
     doTask(ApplyIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
@@ -488,21 +552,29 @@ ITensor
 diagITensor(Container const& C, 
             IndexSet const& is)
     { 
+    if( not hasQNs(is) )
+      {
 #ifdef DEBUG
-    using size_type = decltype(C.size());
-    //Compute min of all index dimensions
-    auto mindim = dim(is[0]);
-    for(const auto& ind : is)
-        if(dim(ind) < mindim) mindim = dim(ind);
-    if(C.size() != size_type(mindim))
-        {
-        println("mindim = ",mindim);
-        println("C.size() = ",C.size());
-        Error("Wrong size of data in diagonal ITensor constructor");
-        }
+      using size_type = decltype(C.size());
+      //Compute min of all index dimensions
+      auto mindim = dim(is[0]);
+      for(const auto& ind : is)
+          if(dim(ind) < mindim) mindim = dim(ind);
+      if(C.size() != size_type(mindim))
+          {
+          println("mindim = ",mindim);
+          println("C.size() = ",C.size());
+          Error("Wrong size of data in diagonal ITensor constructor");
+          }
 #endif
-    using value_type = typename Container::value_type;
-    return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+      using value_type = typename Container::value_type;
+      return ITensor(std::move(is),Diag<value_type>(C.begin(),C.end()));
+      }
+    else
+      {
+      Error("diagITensor constructor not yet implemented for QNs");
+      return ITensor();
+      }
     }
 
 template<typename V>

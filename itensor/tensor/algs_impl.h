@@ -53,6 +53,7 @@ copyNegElts(Iter mre,
     hermitianDiag(int N, Real *Udata, Real *ddata);
     int
     hermitianDiag(int N, Cplx *Udata,Real *ddata);
+
 } //namespace detail
 
 template<class MatM, 
@@ -187,6 +188,66 @@ SVD(MatM && M,
     resize(V,Mc,nsv);
     resize(D,nsv);
     SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
+    }
+
+template<class MatM, 
+         class ScalarT,
+         class>
+Mat<common_type<val_type<MatM>,ScalarT>>
+expHermitian(MatM && M,
+             ScalarT t)
+    {
+    //using Mval = typename stdx::decay_t<MatM>::value_type;
+    using valM = val_type<MatM>;
+	Mat<valM> U;
+    Vec<Real> d;
+    diagHermitian(M,U,d);
+
+    auto N = ncols(M);
+	Mat<ScalarT> D(N,N);
+    for(auto j : range(N))
+        {
+        D(j,j) = exp(d(j)*t);
+        }
+    auto expM = U*D*conj(transpose(U));
+    return expM;
+    }
+
+namespace exptH_detail {
+
+    int
+    expPade(MatRef<Real> const& F, int N, int ideg);
+    int
+    expPade(MatRef<Cplx> const& F, int N, int ideg);
+
+} //exptH_detail
+
+template<class MatM,
+         class ScalarT,
+         class>
+Mat<common_type<val_type<MatM>,ScalarT>>
+expMatrix(MatM && M,
+          ScalarT t,
+          int ideg)
+    {
+    if(ideg <= 0) Error("PadeApproxDeg cannot be less than 1");
+    auto N = ncols(M);
+    if(N < 1) throw std::runtime_error("exp: 0 dimensional matrix");
+    if(N != nrows(M))
+        {
+        printfln("M is %dx%d",nrows(M),ncols(M));
+        throw std::runtime_error("exp: Input Matrix must be square");
+        }
+ 
+    auto tM = t*M;
+
+    int info = 0;
+    info = exptH_detail::expPade(makeRef(tM),N,ideg);
+
+    if(info != 0)
+        throw std::runtime_error("exp failed");
+
+    return tM;
     }
 
 } //namespace itensor

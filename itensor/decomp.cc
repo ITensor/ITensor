@@ -88,16 +88,14 @@ doTask(GetBlocks<T> const& G,
     {
     if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
-    auto dblock = IntArray(2,0);
     size_t n = 0;
-    for(auto& dio : d.offsets)
+    for(auto const& dio : d.offsets)
         {
         auto& R = res[n++];
-        computeBlockInd(dio.block,G.is,dblock);
-        auto nrow = G.is[0].blocksize0(dblock[0]);
-        auto ncol = G.is[1].blocksize0(dblock[1]);
-        R.i1 = dblock[0];
-        R.i2 = dblock[1];
+        auto nrow = G.is[0].blocksize0(dio.block[0]);
+        auto ncol = G.is[1].blocksize0(dio.block[1]);
+        R.i1 = dio.block[0];
+        R.i2 = dio.block[1];
         R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
         }
     if(G.transpose) 
@@ -158,7 +156,7 @@ svd(ITensor const& AA,
         }
       else
         {
-        Global::warnDeprecated("Arg UseOrigDim is deprecated in favor of MaxDim.");
+        Global::warnDeprecated("Arg UseOrigM is deprecated in favor of UseOrigDim.");
         args.add("UseOrigDim",args.getBool("UseOrigM"));
         }
       }
@@ -170,9 +168,6 @@ svd(ITensor const& AA,
 
     auto noise = args.getReal("Noise",0);
     auto useOrigDim = args.getBool("UseOrigDim",false);
-
-    // Set the cutoff to 0 by default
-    args.add("Cutoff",args.getReal("Cutoff",0.0));
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
@@ -268,6 +263,41 @@ svd(ITensor const& AA, IndexSet const& Uis,
     return std::tuple<ITensor,ITensor,ITensor>(U,S,V);
     }
 
+std::tuple<ITensor,ITensor>
+polar(ITensor const& T,
+      IndexSet const& Uis,
+      Args const& args)
+    {
+    auto [U,S,V] = svd(T,Uis);
+    auto u = commonIndex(S,U);
+    auto v = commonIndex(S,V);
+    auto Vis = uniqueInds(inds(V),{v});
+    auto Vp = prime(V,Vis)*delta(v,u);
+    auto Q = U*Vp;
+    auto P = dag(Vp)*S*V;
+    auto qis = commonInds(Q,P);
+
+    // Add tags to the internal indices
+    auto ts = getTagSet(args,"AddTags","");
+
+    // Prime the internal indices.
+    // Prime by one less than specified,
+    // since they are already primed by one
+    // above.
+    auto plinc = args.getInt("Prime",1)-1;
+
+    if(primeLevel(ts) >= 0) Error("In polar, specify a prime level increment with the Prime argument");
+    if(ts=="" && plinc==-1) Error("In polar, must either increment prime level or add tags to new indices");
+
+    Q.addTags(ts,qis);
+    P.addTags(ts,qis);
+    qis.addTags(ts);
+    Q.prime(plinc,qis);
+    P.prime(plinc,qis);
+
+    return std::tuple<ITensor,ITensor>(Q,P);
+    }
+
 // output: truncerr,docut_lower,docut_upper,ndegen_below
 std::tuple<Real,Real,Real,int>
 truncate(Vector & P,
@@ -336,7 +366,7 @@ truncate(Vector & P,
         {
         //Test if individual prob. weights fall below cutoff
         //rather than using *sum* of discarded weights
-        for(; P(n) < cutoff && n >= mindim; --n) 
+        for(; P(n) <= cutoff && n >= mindim; --n) 
             {
             truncerr += P(n);
             }
@@ -353,7 +383,7 @@ truncate(Vector & P,
 
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==mindim)
-        while(truncerr+P(n) < cutoff*scale && n >= mindim)
+        while(truncerr+P(n) <= cutoff*scale && n >= mindim)
             {
             truncerr += P(n);
             --n;
@@ -541,15 +571,17 @@ factor(ITensor const& T,
     return std::tuple<ITensor,ITensor>(A,B);
     }
 
-//TODO: create a tag convention
 template<typename value_type>
-void 
+void
 eigDecompImpl(ITensor T, 
               ITensor & L, 
               ITensor & R, 
               ITensor & D,
               Args const& args)
     {
+    auto itagset = getTagSet(args,"Tags","Link");
+    // New index listing eigenvectors
+    Index newmid;
     if(not hasQNs(T))
         {
         auto full = args.getBool("FullDecomp",false);
@@ -565,6 +597,7 @@ eigDecompImpl(ITensor T,
 
         //Do the diagonalization
         auto MM = toMatRefc<value_type>(T,prime(lind),lind);
+
         Vector Dr, Di;
         Matrix Rr, Ri;
         Matrix Lr, Li;
@@ -577,7 +610,7 @@ eigDecompImpl(ITensor T,
             eigDecomp(MM,Lr,Li,Dr,Di,Rr,Ri);
             }
 
-        auto newmid = Index(dim(lind));
+        newmid = Index(dim(lind),itagset);
 
         //put right eigenvectors into an ITensor
         if(norm(Ri) > 1E-16*norm(Rr))
@@ -791,11 +824,22 @@ eigen(ITensor const& T,
         if(I.primeLevel() == 0) colinds.push_back(I);
         }
     auto [comb,cind] = combiner(std::move(colinds),args);
-    (void)cind;
 
-    auto Tc = prime(comb) * T * comb; 
+    auto Tc = prime(dag(comb)) * T * comb; 
+
+    // The version where Tc is ordered
+    // {cind,prime(cind)} does not work,
+    // here we will explicitly permute the
+    // ITensor so the indices are ordered
+    // {prime(cind),cind}.
+    // This is not great since it is an
+    // extra reordering of the data,
+    // look into fixing eigen properly.
+    if(inds(Tc)(1) != prime(cind))
+      Tc = permute(Tc,{prime(cind),cind});
 
     ITensor L;
+    Index eigvec_ind;
     if(isComplex(T))
         {
         eigDecompImpl<Cplx>(Tc,L,V,D,args);
@@ -805,7 +849,7 @@ eigen(ITensor const& T,
         eigDecompImpl<Real>(Tc,L,V,D,args);
         }
 
-    V = V * comb;
+    V *= comb;
     }
 
 std::tuple<ITensor,ITensor>

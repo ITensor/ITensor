@@ -94,23 +94,23 @@ measure(Args const& args)
     auto energy = args.getReal("Energy",0);
     auto silent = args.getBool("Silent",false);
 
-    if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
-        {
-        if(b < N && b > 0)
-            {
-            auto wfb = psi_(b)*psi_(b+1);
-            //for(const std::string& opname : default_ops_)
-            //    {
-            //    auto sb = IndexT(psi_.sites()(b));
-            //    auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).eltC();
-            //    //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).eltC();
-            //    if(std::fabs(z.imag()) < 1E-14)
-            //        printfln("<%s>(%d) = %.10E",opname,b,z.real());
-            //    else
-            //        printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
-            //    }
-            }
-        }
+    //if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
+    //    {
+    //    if(b < N && b > 0)
+    //        {
+    //        auto wfb = psi_(b)*psi_(b+1);
+    //        //for(const std::string& opname : default_ops_)
+    //        //    {
+    //        //    auto sb = IndexT(psi_.sites()(b));
+    //        //    auto z = (dag(prime(wfb,sb))*psi_.sites().op(opname,b)*wfb).eltC();
+    //        //    //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).eltC();
+    //        //    if(std::fabs(z.imag()) < 1E-14)
+    //        //        printfln("<%s>(%d) = %.10E",opname,b,z.real());
+    //        //    else
+    //        //        printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
+    //        //    }
+    //        }
+    //    }
 
     if(!silent && printeigs)
         {
@@ -188,7 +188,7 @@ checkDone(Args const& args)
     if(fileExists("STOP_DMRG"))
         {
         println("File STOP_DMRG found: stopping this DMRG run after sweep ",sw);
-        system("rm -f STOP_DMRG");
+        std::remove("STOP_DMRG");
         return true;
         }
 
@@ -196,7 +196,7 @@ checkDone(Args const& args)
     if(fileExists("STOP_DMRG_ALL"))
         {
         println("File STOP_DMRG_ALL found: stopping this run after sweep ",sw);
-        system("rm -f STOP_DMRG_ALL");
+        std::remove("STOP_DMRG_ALL");
         done_ = true;
         return done_;
         }
