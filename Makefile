@@ -30,6 +30,12 @@ configure:
 	@echo "#endif" >> itensor/config.h
 	@echo "" >> itensor/config.h
 	@echo "#endif " >> itensor/config.h
+#ifdef ITENSOR_USE_HDF5
+#ifeq ($(ITENSOR_USE_HDF5),1)
+	@echo "#ifndef ITENSOR_USE_HDF5" >> itensor/config.h
+	@echo "#define ITENSOR_USE_HDF5 1" >> itensor/config.h
+	@echo "#endif" >> itensor/config.h
+#endif
 
 clean:
 	@echo "Removing temporary build files"

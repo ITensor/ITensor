@@ -267,5 +267,14 @@ read(std::istream& s, TagSet & ts)
     ts.setPrime(plev);
     }
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, TagSet const& ts)
+    {
+    auto g = parent.create_group(name);
+    h5::h5_write(g,"plev",primeLevel(ts));
+    }
+#endif
+
 } //namespace itensor
 
