@@ -183,6 +183,7 @@ checkDone(Args const& args)
         last_energy_ = 1000;
         last_entropy_ = 1000;
         }
+    //Only energy_errgoal is specified
     if(energy_errgoal > 0 && entropy_errgoal < 0 && sw%2 == 0)
         {
         Real dE = std::fabs(energy-last_energy_);
@@ -195,6 +196,7 @@ checkDone(Args const& args)
             return true;
             }
         }
+    //Only entropy_errgoal is specified
     if(energy_errgoal < 0 && entropy_errgoal > 0 && sw%2 == 0)
         {
         Real dS = std::fabs(S-last_entropy_);
@@ -207,7 +209,7 @@ checkDone(Args const& args)
             return true;
             }
         }
-    //If both energy_errgoal and entropy_errgoal are specified, stop when one of them is met
+    //Both energy_errgoal and entropy_errgoal are specified, stop when one of them is met
     if(energy_errgoal > 0 && entropy_errgoal > 0 && sw%2 == 0)
         {
         Real dE = std::fabs(energy-last_energy_);
