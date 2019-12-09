@@ -58,7 +58,7 @@ class DMRGObserver : public Observer
 
     MPS const& psi_;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
-    Real vS; //von Neumann entropy
+    Real S; //von Neumann entropy
     //Real Renyi2; //2nd order Renyi entropy
     //Real DEnergy; //energy difference between last two sweeps
     //vector<Real> EnergyLis; //list of all energies of dmrg sweeps
@@ -133,15 +133,13 @@ measure(Args const& args)
             center_eigs /= norm_eigs;
             // Calculate entropy
             //Real S = 0;
-            vS = 0.0;
+            S = 0.0;
             for(auto& p : center_eigs)
                 {
-                if(p > 1E-13) vS += p*log(p);//S += p*log(p);
+                if(p > 1E-13) S += p*log(p);
                 }
-            //S *= -1;
-            vS *= -1;
-            //printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
-            printfln("    vN Entropy at center bond b=%d = %.12f",N/2,vS);
+            S *= -1;
+            printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
             printf(  "    Eigs at center bond b=%d: ",N/2);
             auto ten = decltype(center_eigs.size())(10);
             for(auto j : range(std::min(center_eigs.size(),ten)))
@@ -199,12 +197,12 @@ checkDone(Args const& args)
         }
     if(energy_errgoal < 0 && entropy_errgoal > 0 && sw%2 == 0)
         {
-        Real dvS = std::fabs(vS-last_entropy_);
-        printfln("    Entropy error dvS = %.3E after %d sweeps;", dvS, sw);
-        if(dvS < entropy_errgoal)
+        Real dS = std::fabs(S-last_entropy_);
+        printfln("    Entropy error dS = %.3E after %d sweeps;", dS, sw);
+        if(dS < entropy_errgoal)
             {
-            printfln("    Entropy error goal met (dvS = %.3E < %.3E); returning after %d sweeps.",
-                      dvS, entropy_errgoal, sw);
+            printfln("    Entropy error goal met (dS = %.3E < %.3E); returning after %d sweeps.",
+                      dS, entropy_errgoal, sw);
             last_entropy_ = 1000;
             return true;
             }
@@ -213,20 +211,20 @@ checkDone(Args const& args)
     if(energy_errgoal > 0 && entropy_errgoal > 0 && sw%2 == 0)
         {
         Real dE = std::fabs(energy-last_energy_);
-        Real dvS = std::fabs(vS-last_entropy_);
+        Real dS = std::fabs(S-last_entropy_);
         printfln("    Energy error dE = %.3E after %d sweeps;", dE, sw);
-        printfln("    Entropy error dvS = %.3E after %d sweeps;", dvS, sw);
-        if(dE < energy_errgoal || dvS < entropy_errgoal)
+        printfln("    Entropy error dS = %.3E after %d sweeps;", dS, sw);
+        if(dE < energy_errgoal || dS < entropy_errgoal)
             {
-            printfln("    Energy (Entropy) error goal met (dE = %.3E < %.3E or dvS = %.3E < %.3E); returning after %d sweeps.",
-                      dE, energy_errgoal, dvS, entropy_errgoal, sw);
+            printfln("    Energy (Entropy) error goal met (dE = %.3E < %.3E or dS = %.3E < %.3E); returning after %d sweeps.",
+                      dE, energy_errgoal, dS, entropy_errgoal, sw);
             last_energy_ = 1000;
             last_entropy_ = 1000;
             return true;
             }
         }
     last_energy_ = energy;
-    last_entropy_ = vS;
+    last_entropy_ = S;
 
     //If STOP_DMRG found, will return true (i.e. done) once, but 
     //outer calling using same Observer may continue running e.g. infinite dmrg calling finite dmrg.
