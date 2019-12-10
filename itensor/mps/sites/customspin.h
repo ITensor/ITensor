@@ -10,7 +10,7 @@ namespace itensor {
 
 class CustomSpinSite;
 
-using CustomSpins = BasicSiteSet<CustomSpinSite>;
+using CustomSpin = BasicSiteSet<CustomSpinSite>;
 
 class CustomSpinSite
     {
