@@ -216,9 +216,9 @@ checkDone(Args const& args)
         Real dS = std::fabs(S-last_entropy_);
         printfln("    Energy error dE = %.3E after %d sweeps;", dE, sw);
         printfln("    Entropy error dS = %.3E after %d sweeps;", dS, sw);
-        if(dE < energy_errgoal || dS < entropy_errgoal)
+        if(dE < energy_errgoal && dS < entropy_errgoal)
             {
-            printfln("    Energy (Entropy) error goal met (dE = %.3E < %.3E or dS = %.3E < %.3E); returning after %d sweeps.",
+            printfln("    Energy (Entropy) error goal met (dE = %.3E < %.3E and dS = %.3E < %.3E); returning after %d sweeps.",
                       dE, energy_errgoal, dS, entropy_errgoal, sw);
             last_energy_ = 1000;
             last_entropy_ = 1000;
