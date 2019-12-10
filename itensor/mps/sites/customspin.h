@@ -33,16 +33,17 @@ class CustomSpinSite
             }
         else if(args.defined("S")) 
             {
-            DSmax = std::round(args.getReal("S"));
+            auto S = args.getReal("S");
+            DSmax = std::round(2*S+0.01);
             }
         else
             {
             error("Must pass named args \"2S\" (integer) or \"S\" (real number) to CustomSpin");
             }
 
-        if(DSMax < 1) error("Invalid spin value in CustomSpin");
+        if(DSmax < 1) error(format("Invalid spin value %d/2 in CustomSpin",DSmax));
 
-        auto tags = TagSet(format("Site,S=%d/2",DSmax);
+        auto tags = TagSet(format("Site,S=%d/2",DSmax));
         if(args.defined("SiteNumber") )
             {
             auto n = args.getInt("SiteNumber");
