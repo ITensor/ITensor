@@ -8,34 +8,47 @@
 
 namespace itensor {
 
-class SpinShSite;
+class CustomSpinSite;
 
-using SpinHalfInt = BasicSiteSet<SpinShSite>;
+using CustomSpins = BasicSiteSet<CustomSpinSite>;
 
-
-class SpinShSite
+class CustomSpinSite
     {
     Index s;
     public:
 
-    SpinShSite() { }
+    CustomSpinSite() { }
 
-    SpinShSite(Index I) : s(I) { }
+    CustomSpinSite(Index I) : s(I) { }
     
-    SpinShSite(Args const& args = Args::global())
+    CustomSpinSite(Args const& args = Args::global())
         {
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
 
-        auto tags = TagSet("Site,SpinHalfInt");
-        auto n = 1;
+        auto DSmax = 3;
+        if(args.defined("2S")) 
+            {
+            DSmax = args.getInt("2S");
+            }
+        else if(args.defined("S")) 
+            {
+            DSmax = std::round(args.getReal("S"));
+            }
+        else
+            {
+            error("Must pass named args \"2S\" (integer) or \"S\" (real number) to CustomSpin");
+            }
+
+        if(DSMax < 1) error("Invalid spin value in CustomSpin");
+
+        auto tags = TagSet(format("Site,S=%d/2",DSmax);
         if(args.defined("SiteNumber") )
             {
-            n = args.getInt("SiteNumber");
+            auto n = args.getInt("SiteNumber");
             tags.addTags("n="+str(n));
             }
 
-        auto DSmax = args.getInt("DSmax",3); //2*Smax
         if(conserveQNs)
             {
             if(conserveSz)
@@ -125,7 +138,6 @@ class SpinShSite
             {
             for(int i = 2; i <= dim(s); ++i)
                 {
-                //auto sz = -(DSpinS-1)/2+i-1;
                 Op.set(s(i),sP(i-1),1.0);
                 }
             }
