@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <tuple>
 #include <limits>
+#include <set>
+#include <numeric>
 #include "itensor/util/stdx.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/tensor/slicemat.h"
@@ -198,6 +200,7 @@ svd(ITensor const& AA,
         if(hasIndex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
+
     ITensor Ucomb,
             Vcomb;
     Index ui,
@@ -1032,8 +1035,6 @@ qrImpl(ITensor const& A,
         auto Nblock = blocks.size();
         if(Nblock == 0) throw ResultIsZero("IQTensor has no blocks");
 	
-	
-
 	vector<std::tuple<int, QNInt, int>> indLiq;
 	auto Liq = Index::qnstorage{};
 	Liq.reserve(Nblock);
@@ -1046,17 +1047,28 @@ qrImpl(ITensor const& A,
         auto Qmats = vector<Mat<T>>(Nblock);
         auto Rmats = vector<Mat<T>>(Nblock);
 	
+	//Set for completely zero blocks in A
+	std::set<int> zerob;
+	for (int i = 0; i < nblock(qI); i++)
+	  zerob.emplace(i);
+	
 	for(auto b : range(Nblock))
             {
 	      auto& B = blocks[b];
 	      auto& matA = B.M;
+	      zerob.erase(B.i1);
 	      auto & QQ = Qmats.at(b);
 	      auto & RR = Rmats.at(b);
 	      QR(matA, QQ, RR, complete);
 	      if (uppertriangular)
-		  indLiq.emplace_back(B.i2, QNInt(qn(qI,1+B.i1),nrows(RR)), b);
-	      else
-		  Liq.emplace_back(qn(qI,1+B.i1), nrows(RR));
+		{
+		  int subQcols = nrows(RR) > ncols(RR) ? ncols(RR) : nrows(RR);
+		  indLiq.emplace_back(B.i2, QNInt(qn(qI,1+B.i1),subQcols), b);
+		}
+		else
+		  {
+		    Liq.emplace_back(qn(qI,1+B.i1), nrows(RR));
+		  }
 	    }
 	
 	if(uppertriangular)
@@ -1072,18 +1084,26 @@ qrImpl(ITensor const& A,
 		  {
 		    auto& B = blocks[b];
 		    auto& matA = B.M;
-		    if (nrows(matA) > ncols(matA))
+		    int fillrows = nrows(matA)- ncols(matA);
+		    if (fillrows > 0)
 		      {
-			int fillrows = nrows(matA)- ncols(matA);
 			Liq.emplace_back(qn(qI,1+B.i1),fillrows);
-		      }
+		      } 
 		  }
+	      }
+	  }
+
+	if (complete)
+	  {
+	    //For any blocks not appearing in A, Q is identity.
+	    for (const auto& b: zerob)
+	      {
+		Liq.emplace_back(qn(qI,1+b), blocksize(qI,1+b));
 	      }
 	  }
 	
 	auto qL = Index(move(Liq),qI.dir(),internaltagset);
 	auto rL = qL;
-	rL.setDir(rI.dir());
 	rL.setTags(internaltagset);
 	auto Qis = IndexSet(qI,dag(qL));
         auto Ris = IndexSet(rL, rI);
@@ -1100,8 +1120,8 @@ qrImpl(ITensor const& A,
 	      auto& B = blocks[b];
 	      
 	      auto & QQ = Qmats.at(b);
-	      auto & RR = Rmats.at(b);
-	      int Rrows = nrows(RR);
+	      auto & RR = Rmats.at(b); 
+	      int Rrows = nrows(RR) > ncols(RR) ? ncols(RR) : nrows(RR);
 	      int fillrows = nrows(QQ) - Rrows;
 	      
 	      auto qind = stdx::make_array(B.i1,n);
@@ -1109,7 +1129,8 @@ qrImpl(ITensor const& A,
 	      assert(pQ.data() != nullptr);
 	      auto Qref = makeMatRef(pQ,nrows(QQ), Rrows);
 	      Qref &= columns(QQ,0,Rrows);
-	      
+
+	      //Filler columns of Q due to reshuffling to make uppertriangular
 	      if (uppertriangular and complete and fillrows > 0)
 		{
 		  auto qfind = stdx::make_array(B.i1, extrab + Nblock);
@@ -1126,6 +1147,23 @@ qrImpl(ITensor const& A,
 	      auto Rref = makeMatRef(pR.data(),pR.size(),Rrows,ncols(RR));
 	      Rref &= rows(RR,0,Rrows); 
 	    }
+	
+	//Blocks not appearing in A are identity in Q
+	if (complete)
+	  {
+	    for (const auto& b : zerob)
+	      {
+		auto sqind = stdx::make_array(b, extrab + Nblock);
+		auto psQ = getBlock(Qstore,Qis,sqind);
+		int sQdim = blocksize(qI,1+b);
+		assert(psQ.data() != nullptr);
+		auto sQref = makeMatRef(psQ,sQdim, sQdim);
+		auto id = Mat<T>(sQdim,sQdim);
+		for(auto j : range(sQdim)) id(j,j) = 1.0;
+		sQref &= id;
+		extrab++;
+	      }
+	  }
 	
 	Q = ITensor(Qis,move(Qstore));
 	R = ITensor(Ris,move(Rstore));
