@@ -1011,7 +1011,7 @@ qrImpl(ITensor const& A,
    
     auto internaltagset = getTagSet(args,"InternalTags","Link,QR");
     auto uppertriangular = args.getBool("UpperTriangular",true);
-    auto complete = args.getBool("Complete",true);
+    auto complete = args.getBool("Complete",false);
     if (not complete and not uppertriangular)
       Error("Cannot construct thin QR without R being upper triangular.");
     
