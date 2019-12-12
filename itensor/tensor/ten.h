@@ -544,6 +544,11 @@ class Ten : public TensorType
     explicit
     Ten(TenRefc<R,value_type> const& ref) { assignFromRef(ref); }
 
+    // To cover case like Mat<Cplx>(A) where A is Mat<Real>
+    template<typename R, typename T>
+    explicit
+    Ten(TenRefc<R,T> const& ref) { assignFromRef(ref); }
+
     template<typename R>
     Ten&
     operator=(TenRefc<R,value_type> const& ref) { assignFromRef(ref); return *this; }
@@ -688,6 +693,16 @@ class Ten : public TensorType
         data_.resize(dim(range_));
         makeRef(*this) &= ref;
         }
+
+    template<typename R, typename T>
+    void
+    assignFromRef(TenRefc<R,T> const& ref)
+        {
+        range_ = normalRange(ref.range());
+        data_.resize(dim(range_));
+        makeRef(*this) &= ref;
+        }
+
     };
 
 template<typename R, typename T, typename... VArgs>

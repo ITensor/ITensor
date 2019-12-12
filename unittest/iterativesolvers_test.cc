@@ -376,12 +376,16 @@ SECTION("Arnoldi (QN)")
 SECTION("applyExp (QNs)")
     {
     auto i = Index(QN(-1),10,QN(1),10,"i");
-    auto A = randomITensor(QN(0),dag(i),prime(i));
 
+    auto A = randomITensor(QN(0),dag(i),prime(i));
     A += swapPrime(dag(A),0,1);
     A *= 0.5;
-
     auto x0 = randomITensor(QN(-1),i);
+
+    auto Ac = randomITensorC(QN(0),dag(i),prime(i));
+    Ac += swapPrime(dag(Ac),0,1);
+    Ac *= 0.5;
+    auto x0c = randomITensorC(QN(-1),i);
 
     SECTION("Real timestep")
         {
@@ -408,6 +412,34 @@ SECTION("applyExp (QNs)")
         auto exptA = expHermitian(A,-t);
         auto exptAx = noPrime(exptA*x0);
         
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors, Real timestep")
+        {
+        auto t = 0.1;
+
+        auto x = x0;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                      "MaxIter=",10});
+
+        auto exptA = expHermitian(Ac,-t);
+        auto exptAx = noPrime(exptA*x0);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors Complex timestep")
+        {
+        auto t = 0.1*1_i;
+
+        auto x = x0c;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+
+        auto exptA = expHermitian(Ac,-t);
+        auto exptAx = noPrime(exptA*x0c);
+
         CHECK_CLOSE(norm(exptAx - x), 0.);
         }
 

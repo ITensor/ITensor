@@ -608,10 +608,14 @@ SECTION("QN ITensor denmatDecomp")
              A2 = randomITensor(QN(),dag(L2),S2,L3);
 
         auto AA = A1*A2;
+
         AA *= -1./norm(AA);
-        auto spec = denmatDecomp(AA,A1,A2,Fromleft);
+
+        auto spec = denmatDecomp(AA,A1,A2,Fromleft,{"Truncate=",true});
  
-        CHECK(norm(AA-A1*A2) < 1E-11);
+        auto AAres = A1*A2;
+
+        CHECK(norm(AA-AAres) < 1E-11);
 
         for(auto eig : spec.eigsKept())
             {

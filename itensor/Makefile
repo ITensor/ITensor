@@ -63,13 +63,13 @@ install: build debug
 
 $(ITENSOR_LIBDIR)/libitensor.a: $(OBJECTS)
 	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor.a"
-	@ar r $(ITENSOR_LIBDIR)/libitensor.a $(OBJECTS)
-	@ranlib $(ITENSOR_LIBDIR)/libitensor.a
+	@ar r '$(ITENSOR_LIBDIR)/libitensor.a' $(OBJECTS)
+	@ranlib '$(ITENSOR_LIBDIR)/libitensor.a'
 
 $(ITENSOR_LIBDIR)/libitensor-g.a: mkdebugdir $(GOBJECTS)
 	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor-g.a"
-	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
-	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
+	@ar r '$(ITENSOR_LIBDIR)/libitensor-g.a' $(GOBJECTS)
+	@ranlib '$(ITENSOR_LIBDIR)/libitensor-g.a'
 
 $(ITENSOR_LIBDIR)/libitensor.$(DYLIB_EXT): $(OBJECTS)
 ifdef ITENSOR_MAKE_DYLIB

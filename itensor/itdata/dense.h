@@ -36,7 +36,7 @@ class Dense
                   "Template argument to Dense storage should not be const");
     public:
     using value_type = T;
-    using storage_type = std::vector<value_type>;
+    using storage_type = vector_no_init<value_type>;
     using size_type = typename storage_type::size_type;
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
@@ -54,7 +54,17 @@ class Dense
     Dense() { }
 
     explicit
-    Dense(size_t size) : store(size) { }
+    Dense(size_t size) : store(size) { std::fill(store.begin(),store.end(),0.); }
+
+    explicit
+    Dense(UndefInitializer, size_t size) : store(size) { }
+
+    // This allows a Dense to be constructed from a std::vector.
+    // TODO: Does this copy?
+    explicit
+    Dense(std::vector<value_type> const& v)
+      : store(v.begin(),v.end())
+      { }
 
     Dense(size_t size, value_type val) 
       : store(size,val)

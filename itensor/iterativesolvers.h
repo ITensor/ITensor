@@ -69,11 +69,11 @@ gmres(BigMatrixT const& A,
 // It does not compute the matrix exponential explicitly
 // but instead compute the action of the exponential matrix on the vector.
 // After finished, phi -> phi'.
-template <class BigMatrixT>
-Real
+template <typename BigMatrixT, typename ElT>
+void
 applyExp(BigMatrixT const& A,
          ITensor& phi,
-         Cplx t,
+         ElT t,
          Args const& args = Args::global());
 
 //
@@ -162,9 +162,9 @@ davidson(BigMatrixT const& A,
     auto eigs = std::vector<Real>(nget,NAN);
 
     V[0] = phi.front();
-    START_TIMER(21);
+TIMER_START(31);
     A.product(V[0],AV[0]);
-    STOP_TIMER(21);
+TIMER_STOP(31);
 
     auto initEn = real(eltC((dag(V[0])*AV[0])));
 
@@ -180,7 +180,7 @@ davidson(BigMatrixT const& A,
         //and compute the residual q
 
         auto ni = ii+1; 
-        auto& q = V.at(ni);
+        auto& q = V[ni];
         auto& phi_t = phi.at(t);
         auto& lambda = eigs.at(t);
 
@@ -190,8 +190,8 @@ davidson(BigMatrixT const& A,
             lambda = initEn;
             stdx::fill(Mref,lambda);
             //Calculate residual q
+
             q = AV[0] - lambda*V[0];
-            //printfln("ii=%d, q = \n%f",ii,q);
             }
         else // ii != 0
             {
@@ -206,6 +206,7 @@ davidson(BigMatrixT const& A,
             lambda = D(t);
             phi_t = U(0,t)*V[0];
             q     = U(0,t)*AV[0];
+
             for(auto k : range1(ii))
                 {
                 phi_t += U(k,t)*V[k];
@@ -325,7 +326,7 @@ davidson(BigMatrixT const& A,
                 //Orthogonalization failure,
                 //try randomizing
                 if(debug_level_ >= 2) println("Vector not independent, randomizing");
-                q = V.at(ni-1);
+                q = V[ni-1];
                 q.randomize();
                 qnrm = norm(q);
                 //Do another orthog pass
@@ -379,9 +380,9 @@ davidson(BigMatrixT const& A,
         //Step G of Davidson (1975)
         //Expand AV and M
         //for next step
-        START_TIMER(21);
+TIMER_START(31);
         A.product(V[ni],AV[ni]);
-        STOP_TIMER(21);
+TIMER_STOP(31);
 
         //Step H of Davidson (1975)
         //Add new row and column to M
@@ -952,257 +953,129 @@ arnoldi(const BigMatrixT& A,
     return res;
     }
 
-template <class BigMatrixT>
-Real
-applyExp(BigMatrixT const& A,
-         ITensor& phi,
-         Cplx t,
-         Args const& args)
+template<typename VecT>
+void
+assembleLanczosVectors(std::vector<ITensor> const& lanczos_vectors,
+                       VecT const& linear_comb,
+                       double norm, ITensor& phi)
     {
-    auto maxiter_ = args.getSizeT("MaxIter",30);
-    auto errgoal_ = args.getReal("ErrGoal",1E-12);
-    auto debug_level_ = args.getInt("DebugLevel",-1);
-    auto ishermitian_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
-    auto ideg_ = args.getInt("PadeApproxDeg",6);
-    
-    size_t maxsize = A.size();
-    auto actual_maxiter = std::min(maxiter_,maxsize);
-    if(debug_level_ >= 2)
-        {
-        printfln("maxsize = %d, maxiter = %d, actual_maxiter = %d",
-                 (maxsize), maxiter_, actual_maxiter);
-        }
+    assert(lanczos_vectors.size() == linear_comb.size());
+    phi = norm*linear_comb(0)*lanczos_vectors[0];
+    for(int i=1; i<(int)lanczos_vectors.size(); ++i)
+        phi += norm*linear_comb(i)*lanczos_vectors[i];
+    }
 
-    if(dim(inds(phi)) != maxsize)
-        {
-        println("dim(inds(phi.front())) = ",dim(inds(phi)));
-        println("A.size() = ",A.size());
-        Error("krylov: size of initial vector should match linear matrix size");
-        }
-	
-    //
-    // Initializations
-    //
-    //Real Anorm = A.norm();// infinite norm of A, not efficient to calculate.
-    ITensor temp;
-    A.product(phi,temp);
-    Real Anorm = norm(temp);
-	//Real Anorm = real(eltC(dag(phi)*temp));
-	
-    int maxrej = 10;// maximum allowable number of rejections at each step
-    auto break_tol = 1E-14;// break tolerance when doing orthogonalization
-    Real gamma = 0.9;// stepsize 'shrinking factor'
-    Real delta = 1.2;// local truncation error 'safety factor'
-    int mbrkdwn = actual_maxiter;
-    Real t_out = std::abs(t);
-    auto sgnt = t/t_out;
-    int nstep = 0;
-    Real t_now = 0.0;
-    Real s_error = 0.0;
-    Real rndoff = Anorm*std::numeric_limits<double>::epsilon();
+template<typename BigMatrixT, typename ElT>
+void
+applyExp(BigMatrixT const& H, ITensor& phi,
+         ElT tau, Args const& args)
+    {
+    auto tol = args.getReal("ErrGoal",1E-10);
+    auto max_iter = args.getInt("MaxIter",30);
+    auto debug_level = args.getInt("DebugLevel",-1);
+    auto beta_tol = args.getReal("NormCutoff",1e-7);
 
-    //
-    // Obtain the very first stepsize
-    //
-    int k1 = 2;
-    Real xm = 1.0/((double)actual_maxiter);
-    Real vnorm = norm(phi);
-    Real beta = vnorm;
-    Real fact = std::pow((actual_maxiter+1)/std::exp(1.0),actual_maxiter+1)*std::sqrt(2*Pi*(actual_maxiter+1));
-    Real t_new = (1.0/Anorm)*std::pow((fact*errgoal_)/(4.0*beta*Anorm),xm);
-    Real s = std::pow(10,std::floor(std::log10(t_new))-1);
-    t_new = std::ceil(t_new/s)*s;
+    // Initialize Lanczos vectors
+    ITensor v1 = phi;
+    ITensor v0;
+    ITensor w;
+    Real nrm = norm(v1);
+    v1 /= nrm;
+    std::vector<ITensor> lanczos_vectors({v1});
+    Matrix bigTmat(max_iter + 2, max_iter + 2);
+    std::fill(bigTmat.begin(), bigTmat.begin()+bigTmat.size(), 0.);
 
-    auto& w = phi;
-    // hump = max||exp(sA)||, where s in [0,t] when t > 0 or [t,0] when t < 0.
-    // It measures the conditioning of the matrix exponential. 
-    // Well conditioned if hump = 1.
-    Real hump = vnorm;
-
-    // If debug level >= 1, count number of matvecs
     auto nmatvec = 0;
 
-    //
-    // Step-by-step integration
-    //
-    while(t_now < t_out)
+    double beta = 0;
+    for (int iter=0; iter < max_iter; ++iter)
         {
-        ++nstep;
-        Real t_step = std::min(t_out-t_now,t_new);
+        int tmat_size=iter+1;
+        // Matrix-vector multiplication
+        if(debug_level >= 0)
+            nmatvec++;
+        H.product(v1, w);
 
-        auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
-        auto H = CMatrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
-
-        w *= 1.0/beta;
-        V[0] = w;
-        if(!ishermitian_)
-            {
-            // Arnoldi: Modified Gram-Schmidt
-            for(size_t j = 1; j <= actual_maxiter; ++j)
-                {
-                if(debug_level_ >= 1) nmatvec += 1;
-                A.product(V[j-1],V[j]);
-                for(size_t i = 1 ; i <= j; ++i)
-                    {
-                    H(i-1,j-1) = eltC(dag(V[i-1])*V[j]);
-                    V[j] -= H(i-1,j-1)*V[i-1];
-                    }
-                s = norm(V[j]);
-                if(s < break_tol)
-                    {
-                    k1 = 0;
-                    mbrkdwn = j;
-                    t_step = t_out-t_now;
-                    break;
-                    }
-                H(j,j-1) = s;
-                V[j] *= (1.0/s);
-                }
-            }
-        else
-            {
-            // Lanczos
-            for(size_t j = 1; j <= actual_maxiter; ++j)
-                {
-                if(debug_level_ >= 1) nmatvec += 1;
-                A.product(V[j-1],V[j]);
-                if(j != 1) V[j] -= H(j-2,j-1)*V[j-2];
-                H(j-1,j-1) = eltC(dag(V[j-1])*V[j]);
-                V[j] -= H(j-1,j-1)*V[j-1];
-                s = norm(V[j]);
-                if(s < break_tol)
-                    {
-                    k1 = 0;
-                    mbrkdwn = j;
-                    t_step = t_out-t_now;
-                    break;
-                    }
-                H(j-1,j) = s;
-                H(j,j-1) = s;
-                V[j] *= (1.0/s);
-                }
-            }
-
-        //
-        // if finished the loop but not get break_tol
-        //
-        Real AVnorm = 0.0;
-        if(k1 != 0)
-            {
-            H(actual_maxiter+1,actual_maxiter) = 1.0;
-            ITensor AV;
-            if(debug_level_ >= 1) nmatvec += 1;
-            A.product(V[actual_maxiter],AV);
-            AVnorm = norm(AV);
-            }
-
-        //
-        // Loop while irej < maxrej until the errgoal_ is reached
-        //
-        int irej = 0;
-        Real err_loc = 0.0;
-        auto mx = mbrkdwn + k1;
-        auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
-        CMatrix F;
-        while(irej < maxrej)
-            {
-            //
-            // Compute F = exp(sgnt * t_step * H)
-            //
-            if(!ishermitian_)
-			    {
-                //
-                // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
-                // else use irreducible rational Pade approximation
-                //
-                F = expMatrix(Href,sgnt*t_step,ideg_);
-                }
-            else
-                {
-                F = expHermitian(Href,sgnt*t_step); 
-                }
-
-            //
-            // Error estimate
-            //
-            if(k1 == 0)
-                {
-                err_loc = break_tol;
-                break;
-                }
-            else
-                {
-                auto phi1 = std::abs(beta*F(actual_maxiter,0));
-                auto phi2 = std::abs(beta*F(actual_maxiter+1,0)*AVnorm);
-
-                if(phi1 > 10*phi2)
-                    {
-                    err_loc = phi2;
-                    xm = 1.0/((double)actual_maxiter);
-                    }
-                else
-                    {
-                    if(phi1 > phi2)
-                        {
-                        err_loc = (phi1*phi2)/(phi1-phi2);
-                        xm = 1.0/((double)actual_maxiter);
-                        }
-                    else
-                        {
-                        err_loc = phi1;
-                        xm = 1.0/(double)(actual_maxiter-1);
-                        }
-                    }
-                }
-
-            //
-            // Reject the step-size if the error is not acceptable
-            //
-            if(err_loc <= delta * t_step * errgoal_)
-                {
-                break;
-                }
-            else
-                {
-                t_step = gamma * t_step * std::pow((t_step*errgoal_/err_loc),xm);
-                s = std::pow(10,std::floor(std::log10(t_step))-1);
-                t_step = std::ceil(t_step/s)*s;
-
-                if(irej == maxrej)
-                    {
-                    error("The requested error goal is too high");
-                    }
-                ++irej;
-                }
-            }
-
-        // Update w = beta * V * exp(sgnt * t_step * H) * e1
-        mx = mbrkdwn + std::max(0,k1-1);
-        V[0] *= F(0,0);
-        w = V[0];
-        for(int i = 1; i < mx; ++i)
-            {
-            V[i] *= F(i,0);
-            w += V[i];
-            }
-        w *= beta;
+        double avnorm = norm(w);
+        double alpha = real(eltC(dag(w) * v1));
+        bigTmat(iter, iter) = alpha;
+        w -= alpha * v1;
+        if (iter > 0)
+            w -= beta * v0;
+        v0 = v1;
         beta = norm(w);
-        hump = std::max(hump,beta);
 
-        t_now += t_step;
-        t_new = gamma * t_step * std::pow(t_step*errgoal_/err_loc,xm);
-        s = std::pow(10,std::floor(std::log10(t_new))-1);
-        t_new = std::ceil(t_new/s)*s;
+        // check for Lanczos sequence exhaustion
+        if (std::abs(beta) < beta_tol)
+            {
+            // Assemble the time evolved state
+            auto tmat = subMatrix(bigTmat, 0,tmat_size, 0, tmat_size);
+            auto tmat_exp = expMatrix(tmat, tau);
+            auto linear_comb = column(tmat_exp, 0);
+            assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+            break;
+            }
 
-        err_loc = std::max(err_loc, rndoff);
-        s_error = s_error + err_loc;
-        }
+        // update next lanczos vector
+        v1 = w;
+        v1 /= beta;
+        lanczos_vectors.push_back(v1);
+        bigTmat(iter+1, iter) = beta;
+        bigTmat(iter, iter+1) = beta;
 
-    if(debug_level_ >= 1) println("Number of matrix-vector multiplies: ", nmatvec);
+        // Convergence check
+        if (iter > 0)
+            {
+            // Prepare extended T-matrix for exponentiation
+            int tmat_ext_size = tmat_size + 2;
+            auto tmat_ext = Matrix(tmat_ext_size, tmat_ext_size);
+            tmat_ext = subMatrix(bigTmat, 0, tmat_ext_size, 0, tmat_ext_size);
 
-    hump = hump/vnorm;
-            
-    return hump;
+            tmat_ext(tmat_size-1, tmat_size) = 0.;
+            tmat_ext(tmat_size+1, tmat_size) = 1.;
+
+            // Exponentiate extended T-matrix
+            auto tmat_ext_exp = expMatrix(tmat_ext, tau);
+
+            double phi1 = std::abs( nrm*tmat_ext_exp(tmat_size, 0) );
+            double phi2 = std::abs( nrm*tmat_ext_exp(tmat_size + 1, 0) * avnorm );
+            double error;
+            if (phi1 > 10*phi2) error = phi2;
+            else if (phi1 > phi2) error = (phi1*phi2)/(phi1-phi2);
+            else error = phi1;
+            if(debug_level >= 1)
+                println("Iteration: ", iter, ", Error: ", error);
+            if ((error < tol) || (iter == max_iter-1))
+                {
+                if (iter == max_iter-1)
+                    printf("warning: applyExp not converged in %d steps\n", max_iter);
+
+                // Assemble the time evolved state
+                auto linear_comb = Vec<ElT>(tmat_ext_size);
+                linear_comb = column(tmat_ext_exp, 0);
+                linear_comb = subVector(linear_comb, 0, tmat_ext_size-1);
+                assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+                if(debug_level >= 0)
+                    printf("In applyExp, number of iterations: %d\n", iter);
+                break;
+                }
+            }  // end convergence test
+
+        }  // Lanczos iteratrions
+
+    if(debug_level >= 0)
+        println("In applyExp, number of matrix-vector multiplies: ", nmatvec);
+
+    return;
+    } // End applyExp
+
+template<typename BigMatrixT>
+void
+applyExp(BigMatrixT const& H, ITensor& phi,
+         int tau, Args const& args)
+    {
+    applyExp(H,phi,Real(tau),args);
+    return;
     }
 
 } //namespace itensor

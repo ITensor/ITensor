@@ -84,7 +84,8 @@ eltC() const
     {
     if(inds().order() != 0)
         {
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got 0)",inds().order()));
+        PrintData(inds());
+        Error(format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -281,6 +282,45 @@ randomize(Args const& args)
     return *this;
     }
 
+size_t
+nnzblocks(ITensor const& A)
+    {
+    if(hasQNs(A)) return doTask(NNZBlocks{},A.store());
+    return 1;
+    }
+
+long
+nnz(ITensor const& A)
+    {
+    return doTask(NNZ{},A.store());
+    }
+
+ITensor& ITensor::
+fixBlockDeficient()
+    {
+    if(itensor::hasQNs(*this) && itensor::isDense(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // Make a copy of the original ITensor
+            auto Torig = *this;
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            if(isReal(*this))
+              store_ = newITData<QDense<Real>>(bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(bofs,size);
+            *this += Torig;
+            }
+        }
+    return *this;
+    }
+
 ITensor& ITensor::
 fill(Cplx z)
     {
@@ -290,6 +330,25 @@ fill(Cplx z)
         else Error("Can't fill default-constructed tensor");
         }
     IF_USESCALE(scale_ = scale_type(1.);)
+    if(itensor::hasQNs(*this))
+        {
+        // If the ITensor has QNs, we may need to
+        // expand the storage since it may be
+        // block deficient
+        auto itflux = itensor::flux(*this);
+        auto [bofs,size] = getBlockOffsets(inds(),itflux);
+        if(bofs.size() != itensor::nnzblocks(*this))
+            {
+            // The QDense storage is block deficient,
+            // need to allocate new memory.
+            // Make the new memory undefined since it
+            // will be overwritten anyway.
+            if(z.imag() == 0)
+              store_ = newITData<QDense<Real>>(undef,bofs,size);
+            else
+              store_ = newITData<QDense<Cplx>>(undef,bofs,size);
+            }
+        }
     if(z.imag() == 0)
         doTask(Fill<Real>{z.real()},store_);
     else
@@ -885,6 +944,12 @@ toDense(ITensor T)
     return ITensor{move(T.inds()),move(T.store()),T.scale()};
     }
 
+bool
+isDense(ITensor const& T)
+    {
+    return doTask(IsDense{},T.store());
+    }
+
 //TODO: make this use a RemoveQNs task type that does:
 //QDense -> Dense
 //QDiag  -> Diag
@@ -1097,6 +1162,7 @@ daxpy(ITensor & L,
       Real alpha)
     {
     if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
+    detail::checkSameDiv(L,R);
 
     using permutation = typename PlusEQ::permutation;
 
@@ -1119,10 +1185,6 @@ daxpy(ITensor & L,
         }
 
     if(!L.store()) Error("L not initialized in daxpy");
-
-#ifdef DEBUG
-    detail::checkSameDiv(L,R);
-#endif
 
 #ifdef USESCALE
     if(L.scale().magnitudeLessThan(R.scale())) 

@@ -130,6 +130,7 @@ addAssumeOrth(MPSType      & L,
                      + dag(second.at(i-1)) * R(i) * second.at(i);
         }
     L.ref(N) = dag(first.at(N-1)) * L(N) + dag(second.at(N-1)) * R(N);
+
     L.replaceLinkInds(prime(linkInds(L),-rand_plev));
     L.orthogonalize(args);
     return L;

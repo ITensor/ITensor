@@ -91,16 +91,14 @@ doTask(GetBlocks<T> const& G,
     {
     if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
-    auto dblock = IntArray(2,0);
     size_t n = 0;
-    for(auto& dio : d.offsets)
+    for(auto const& dio : d.offsets)
         {
         auto& R = res[n++];
-        computeBlockInd(dio.block,G.is,dblock);
-        auto nrow = G.is[0].blocksize0(dblock[0]);
-        auto ncol = G.is[1].blocksize0(dblock[1]);
-        R.i1 = dblock[0];
-        R.i2 = dblock[1];
+        auto nrow = G.is[0].blocksize0(dio.block[0]);
+        auto ncol = G.is[1].blocksize0(dio.block[1]);
+        R.i1 = dio.block[0];
+        R.i2 = dio.block[1];
         R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
         }
     if(G.transpose) 
@@ -161,7 +159,7 @@ svd(ITensor const& AA,
         }
       else
         {
-        Global::warnDeprecated("Arg UseOrigDim is deprecated in favor of MaxDim.");
+        Global::warnDeprecated("Arg UseOrigM is deprecated in favor of UseOrigDim.");
         args.add("UseOrigDim",args.getBool("UseOrigM"));
         }
       }
@@ -173,9 +171,6 @@ svd(ITensor const& AA,
 
     auto noise = args.getReal("Noise",0);
     auto useOrigDim = args.getBool("UseOrigDim",false);
-
-    // Set the cutoff to 0 by default
-    args.add("Cutoff",args.getReal("Cutoff",0.0));
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
@@ -375,7 +370,7 @@ truncate(Vector & P,
         {
         //Test if individual prob. weights fall below cutoff
         //rather than using *sum* of discarded weights
-        for(; P(n) < cutoff && n >= mindim; --n) 
+        for(; P(n) <= cutoff && n >= mindim; --n) 
             {
             truncerr += P(n);
             }
@@ -392,7 +387,7 @@ truncate(Vector & P,
 
         //Continue truncating until *sum* of discarded probability 
         //weight reaches cutoff reached (or m==mindim)
-        while(truncerr+P(n) < cutoff*scale && n >= mindim)
+        while(truncerr+P(n) <= cutoff*scale && n >= mindim)
             {
             truncerr += P(n);
             --n;
