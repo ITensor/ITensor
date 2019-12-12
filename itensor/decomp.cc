@@ -1119,7 +1119,9 @@ qrImpl(ITensor const& A,
 	      int Rrows = nrows(RR) > ncols(RR) ? ncols(RR) : nrows(RR);
 	      int fillrows = nrows(QQ) - Rrows;
 	      
-	      auto qind = stdx::make_array(B.i1,n);
+	      auto qind = Labels(2);
+	      qind[0] = B.i1;
+	      qind[1] = n;
 	      auto pQ = getBlock(Qstore,Qis,qind);
 	      assert(pQ.data() != nullptr);
 	      auto Qref = makeMatRef(pQ,nrows(QQ), Rrows);
@@ -1128,7 +1130,9 @@ qrImpl(ITensor const& A,
 	      //Filler columns of Q due to reshuffling to make uppertriangular
 	      if (uppertriangular and complete and fillrows > 0)
 		{
-		  auto qfind = stdx::make_array(B.i1, extrab + Nblock);
+		  auto qfind = Labels(2);
+		  qfind[0] = B.i1;
+		  qfind[1] =  extrab + Nblock;
 		  auto pQf = getBlock(Qstore,Qis,qfind);
 		  assert(pQf.data() != nullptr);
 		  auto Qfref = makeMatRef(pQf,nrows(QQ), fillrows);
@@ -1136,7 +1140,9 @@ qrImpl(ITensor const& A,
 		  extrab++;
 		}
 	      
-	      auto rind = stdx::make_array(n, B.i2);
+	      auto rind =  Labels(2);
+	      rind[0] = n;
+	      rind[1] = B.i2;
 	      auto pR = getBlock(Rstore,Ris,rind);
 	      assert(pR.data() != nullptr);
 	      auto Rref = makeMatRef(pR.data(),pR.size(),Rrows,ncols(RR));
@@ -1148,7 +1154,9 @@ qrImpl(ITensor const& A,
 	  {
 	    for (const auto& b : zerob)
 	      {
-		auto sqind = stdx::make_array(b, extrab + Nblock);
+		auto sqind =  Labels(2);
+		sqind[0] = b;
+		sqind[1] = extrab + Nblock;
 		auto psQ = getBlock(Qstore,Qis,sqind);
 		int sQdim = blocksize(qI,1+b);
 		assert(psQ.data() != nullptr);
