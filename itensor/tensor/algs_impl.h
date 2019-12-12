@@ -54,6 +54,12 @@ copyNegElts(Iter mre,
     int
     hermitianDiag(int N, Cplx *Udata,Real *ddata);
 
+    int
+    QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata);
+    int
+    QR(int M, int N, int Rrows, Cplx *Qdata,Cplx *Rdata);
+    
+
 } //namespace detail
 
 template<class MatM, 
@@ -249,6 +255,58 @@ expMatrix(MatM && M,
 
     return tM;
     }
+
+  template<class MatA, 
+         class MatQ,
+         class MatR>
+void
+QR( MatA&& A,
+    MatQ && Q,
+    MatR && R,
+    bool complete)
+   {
+    using Aval = typename stdx::decay_t<MatA>::value_type;
+    using Qval = typename stdx::decay_t<MatQ>::value_type;
+    static_assert((isReal<Aval>() && isReal<Qval>()) || (isCplx<Aval>() && isCplx<Qval>()),
+                  "A and Q must be both real or both complex in QR");
+    int M = nrows(A);
+    int N = ncols(A);
+    if(M < 1 or N < 1) throw std::runtime_error("QR: 0 dimensional matrix");
+    int Rrows = M;
+    if (N > M)
+      {
+	println("Warning: QR for ncol > nrow may require pivoting to be numerically stable.");
+	resize(Q,M,N);
+      }
+    else
+      {
+	Rrows = complete ? M : N;
+	resize(Q,M,Rrows);
+      }
+    resize(R, Rrows, N);
+  
+#ifdef DEBUG
+    if(!isContiguous(Q))
+        throw std::runtime_error("QR: Q must be contiguous");
+    if(!isContiguous(R))
+        throw std::runtime_error("QR: R must be contiguous");
+#endif
+    for (int i = 0; i < M; ++i)
+      {
+      for (int j = 0; j < N; ++j)
+	Q(i, j) = A(i,j);
+      for (unsigned int j = N; j < ncols(Q); ++j)
+	Q(i, j) = 0;
+      }
+    
+    auto info = detail::QR(M,N,Rrows,Q.data(),R.data());
+    if(info != 0) 
+        {
+        throw std::runtime_error("Error condition in QR");
+        }
+    if(N > M)
+      reduceCols(Q,M);
+   }
 
 } //namespace itensor
 

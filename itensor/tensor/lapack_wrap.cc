@@ -431,6 +431,57 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
     F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
     }
 
+
+  //
+// dgeqrf
+//
+// QR factorization of a complex matrix A
+//
+void 
+zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
+               LAPACK_INT* n,     //number of cols of A
+               Cplx* A,    //matrix A
+                                  //on return upper triangle contains R
+               LAPACK_INT* lda,   //size of A (usually same as n)
+               LAPACK_COMPLEX* tau,  //scalar factors of elementary reflectors
+                                  //length should be min(m,n)
+               LAPACK_INT* info)  //error info
+    {
+    std::vector<LAPACK_COMPLEX> work;
+    int lwork = std::max(1,4*std::max(*n,*m));
+    work.resize(lwork+2);
+    static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
+    F77NAME(zgeqrf)(m,n,pA,lda,tau,work.data(),&lwork,info);
+    }
+
+//
+// dorgqr
+//
+// Generates Q from output of QR factorization routine zgeqrf (see above)
+//
+void 
+zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
+               LAPACK_INT* n,     //number of cols of A
+               LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
+               Cplx* A,    //matrix A, as returned from "A" argument of dgeqrf
+                                  //on return contains Q
+               LAPACK_INT* lda,   //size of A (usually same as n)
+               LAPACK_COMPLEX* tau,  //scalar factors as returned by dgeqrf
+               LAPACK_INT* info)  //error info
+    {
+    std::vector<LAPACK_COMPLEX> work;
+    auto lwork = std::max(1,4*std::max(*n,*m));
+    work.resize(lwork+2);
+    static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
+    #ifdef PLATFORM_lapacke
+    LAPACKE_zungqr(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+    #else
+    F77NAME(zungqr)(m,n,k,pA,lda,tau,work.data(),&lwork,info);
+    #endif
+    }
+
 //
 // dgesv
 //

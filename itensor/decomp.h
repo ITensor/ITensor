@@ -248,6 +248,42 @@ std::tuple<ITensor,ITensor>
 eigen(ITensor const& T,
       Args const& args = Args::global());
 
+
+
+//
+// QR decomposition
+//
+// Factors a real (complex) tensor AA, size M x N when order 2,
+// such that AA=Q*R with Q an M x M  orthogonal (unitary) tensor and
+// and R an upper triangular M x N tensor, without pivoting.
+//
+// If argument Complete is false, instead compute "thin" QR with
+// Q MxN tensor with orthonormal columns (Q^T Q = 1) and
+// R NxN upper triangular tensor. 
+//
+// If argument UpperTriangular is false, R is no longer guranteed to
+// be upper triangular if AA has QNs. Useful when only unitary Q
+// factor is needed.
+//
+// Complete and UpperTriangular can NOT be false at the same time. 
+void
+qr(ITensor const& AA, ITensor& Q, ITensor& R, 
+    Args args = Args::global());
+
+std::tuple<ITensor,ITensor>
+qr(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris, 
+    Args args = Args::global());
+
+std::tuple<ITensor,ITensor>
+qr(ITensor const& AA, IndexSet const& Qis,
+    Args args = Args::global());
+
+ // Version that takes variable number of indices
+ template <typename... IndsArgs>
+std::tuple<ITensor,ITensor>
+ qr(ITensor const& T, Index const& i1, IndsArgs&&... indsargs);
+
+
 ///////////////////////////
 //
 // Implementation (non-template parts in decomp.cc)
@@ -262,6 +298,13 @@ svdOrd2(ITensor const& A,
         ITensor & U, 
         ITensor & D, 
         ITensor & V,
+        Args args = Args::global());
+
+void qrOrd2(ITensor const& A, 
+        Index const& Qi, 
+        Index const& Ri,
+        ITensor & Q, 
+	ITensor & R,
         Args args = Args::global());
 
 Spectrum
