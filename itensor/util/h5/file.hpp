@@ -1,66 +1,64 @@
-/*******************************************************************************
- *
- * TRIQS: a Toolbox for Research in Interacting Quantum Systems
- *
- * Copyright (C) 2011-2014 by O. Parcollet
- *
- * TRIQS is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- *
- * TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * TRIQS. If not, see <http://www.gnu.org/licenses/>.
- *
- ******************************************************************************/
 #pragma once
-#include "./base_public.hpp"
+#include <vector>
+#include "./h5object.hpp"
 
-namespace triqs {
-  namespace h5 {
+namespace h5 {
 
+  /**
+   *  A little handler for the HDF5 file
+   *
+   *  The class is basically a pointer to the file.
+   */
+  class file : public h5_object {
+
+    public:
     /**
-  *  \brief A little handler for the file
-  */
-    class file : public h5_object {
+     * Open the file
+     *
+     * @param name  name of the file
+     *
+     * @param mode  Opening mode
+     * 
+     *       - 'r' : Read Only (HDF5 flag H5F_ACC_RDONLY)
+     *       - 'w' : Write Only (HDF5 flag H5F_ACC_TRUNC)
+     *       - 'a' : Append (HDF5 flag  H5F_ACC_RDWR)
+     *       - 'e' : Like 'w' but fails if the file already exists (HDF5 flag  H5F_ACC_EXCL)
+     */
+    file(const char *name, char mode);
 
-      public:
-      /**
-   * Open the file name.
-   * Flag char can be :
-   *   - 'a' H5F_ACC_RDWR
-   *   - 'r' H5F_ACC_RDONLY
-   *   - 'w' H5F_ACC_TRUNC
+    ///
+    file(std::string const &name, char mode) : file(name.c_str(), mode) {}
+
+    /// Name of the file
+    [[nodiscard]] std::string name() const;
+
+    /// Flush the file
+    void flush();
+
+    /** 
+     * Close the file
+     * NB : invalidates all groups currently open on this file
+     */
+    void close();
+
+    protected:
+    file() = default;
+  };
+
+  /**
+   * An hdf5 file in memory buffer
    */
-      file(const char *name, char flags);
+  class memory_file : public file {
 
-      /**
-   * Open the file name.
-   * Flags can be :
-   *   - H5F_ACC_RDWR
-   *   - H5F_ACC_RDONLY
-   *   - H5F_ACC_TRUNC
-   *   - H5F_ACC_EXCL
-   */
-      file(const char *name, unsigned flags);
+    public:
+    /// A writable file in memory with a buffer
+    memory_file();
 
-      /// Cf previous constructor
-      file(std::string const &name, unsigned flags) : file(name.c_str(), flags) {}
+    /// A read_only file on top on the buffer.
+    memory_file(std::vector<unsigned char> const &buf);
 
-      ///
-      file(std::string const &name, char flags) : file(name.c_str(), flags) {}
+    /// Get a copy of the buffer
+    [[nodiscard]] std::vector<unsigned char> as_buffer() const;
+  };
 
-      /// Internal : from an hdf5 id.
-      file(hid_t id);
-      file(h5_object obj);
-
-      /// Name of the file
-      std::string name() const;
-    };
-  } // namespace h5
-} // namespace triqs
+} // namespace h5
