@@ -7,6 +7,16 @@ include ../options.mk
 
 ####################################
 
+#ifdef ITENSOR_USE_HDF5
+SOURCES+= util/h5/array_interface.cpp
+SOURCES+= util/h5/file.cpp
+SOURCES+= util/h5/format.cpp
+SOURCES+= util/h5/group.cpp
+SOURCES+= util/h5/h5object.cpp
+SOURCES+= util/h5/stl/string.cpp
+SOURCES+= util/h5/stl/vector.cpp
+#endif
+
 SOURCES+= util/args.cc
 SOURCES+= util/input.cc
 SOURCES+= util/cputime.cc

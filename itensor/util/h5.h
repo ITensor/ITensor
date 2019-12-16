@@ -17,6 +17,4 @@
 #define __H5_H
 #include "itensor/util/h5/h5.hpp"
 
-namespace h5 = triqs::h5;
-
 #endif
