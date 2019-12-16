@@ -9,12 +9,11 @@
 #include "./generic.hpp"
 #include "./stl/string.hpp"
 #include "./stl/vector.hpp"
-
-//#include "./h5/stl/map.hpp"
-//#include "./h5/stl/pair.hpp"
-//#include "./h5/stl/tuple.hpp"
-//#include "./h5/stl/optional.hpp"
-//#include "./h5/stl/variant.hpp"
+//#include "./stl/map.hpp"
+//#include "./stl/pair.hpp"
+//#include "./stl/tuple.hpp"
+//#include "./stl/optional.hpp"
+//#include "./stl/variant.hpp"
 
 // FIXME : Still needed ?
 // for python code generator, we need to know what has to been included.
