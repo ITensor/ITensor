@@ -224,6 +224,318 @@ SECTION("QN ITensor SVD")
 
     }
 
+ SECTION("QR Decomposition")
+   {
+     Index i(3),
+       j(4),
+       k(5),
+       l(6),
+       u(8),
+       v(5);
+
+     SECTION("Case 1 Complete")
+       {
+	 auto T = randomITensor(u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(u));
+	 auto QQ = Q*dag(prime(Q,u));
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(u)))
+	   for(auto c : range1(dim(u)))
+	     {
+	       if (r==c)
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		   if (c <= dim(v) and r > c)
+		     CHECK(elt(R,r,c) == 0); //Check R upper triangular
+		 }
+	     }	 
+       }
+
+     SECTION("Case 1 Thin")
+       {
+	 auto T = randomITensor(u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", false, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(v));
+	 //auto QQ = Q*dag(prime(Q,u)); Thin Q is only right unitary
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(v)))
+	   for(auto c : range1(dim(v)))
+	     {
+	       if (r==c)
+		 {
+		   //CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   //CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		   if (r > c)
+		     CHECK(elt(R,r,c) == 0); //Check R upper triangular
+		 }
+	     }	 
+       }
+
+     SECTION("Case 1 Not Upper Triangular")
+       {
+	 auto T = randomITensor(u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(u));
+	 auto QQ = Q*dag(prime(Q,u));
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(u)))
+	   for(auto c : range1(dim(u)))
+	     {
+	       if (r==c)
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		 }
+	     }
+       }
+
+     SECTION("Case 2")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i,k),R;
+	 qr(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,k));
+	 CHECK(hasIndex(R,j));
+       }
+
+     SECTION("Case 3")
+       {
+	 auto T = randomITensor(i,k,prime(i));
+
+	 ITensor Q(i,prime(i)),R;
+	 qr(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(Q,prime(i)));
+	 CHECK(hasIndex(R,k));
+       }
+     
+     SECTION("Case 4")
+       {
+	 auto T = randomITensor(i,j,k);
+
+	 ITensor Q(i),R;
+	 qr(T, Q, R);
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 CHECK(hasIndex(Q,i));
+	 CHECK(hasIndex(R,j));
+	 CHECK(hasIndex(R,k));
+       }
+
+   }
+ 
+ SECTION("Complex QR Decomposition")
+   {
+     Index i(3),
+       j(4),
+       k(5),
+       l(6),
+       u(8),
+       v(5);
+
+
+     auto T = randomITensorC(u,v);
+
+     ITensor Q(u),R;
+     qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+     CHECK(norm(T-Q*R) < 1E-12);
+     auto qrlink = findIndex(Q.inds(),"Link,QR");
+     CHECK(dim(qrlink) == dim(u));
+     auto QQ = Q*dag(prime(Q,u));
+     auto QQt =  Q*dag(prime(Q,qrlink));
+     for(auto r : range1(dim(u)))
+       for(auto c : range1(dim(u)))
+	 {
+	   if (r==c)
+	     {
+	       CHECK_CLOSE(eltC(QQ,r,c),1.0);
+	       CHECK_CLOSE(eltC(QQt,r,c),1.0);
+	     }
+	   else
+	     {
+	       CHECK_CLOSE(eltC(QQ,r,c),0.0);
+	       CHECK_CLOSE(eltC(QQt,r,c),0.0);
+	       if (c <= dim(v) and r > c)
+		 CHECK(eltC(R,r,c) == 0.0); //Check R upper triangular
+	     }
+	 }
+   }
+ 
+
+ SECTION("QN ITensor QR")
+   {
+     SECTION("Zero Divergence")
+       {
+	 Index u(QN(+2),3,
+		 QN( 0),2,
+		 QN(-2),2);
+	 Index v(QN(+2),2,
+		 QN( 0),2,
+		 QN(-2),1);
+
+	 auto T = randomITensor(QN(),u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(u));
+	 auto QQ = Q*dag(prime(Q,u));
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(u)))
+	   for(auto c : range1(dim(u)))
+	     {
+	       if (r==c)
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		   if (c <= dim(v) and r > c)
+		     CHECK(elt(R,r,c) == 0); //Check R upper triangular
+		 }
+	     }
+       }
+     SECTION("Zero Divergence Thin")
+       {
+	 Index u(QN(+2),3,
+		 QN( 0),2,
+		 QN(-2),2);
+	 Index v(QN(+2),2,
+		 QN( 0),2,
+		 QN(-2),1);
+
+	 auto T = randomITensor(QN(), u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", false, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(v));
+	 //auto QQ = Q*dag(prime(Q,u)); Thin Q is only right unitary
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(v)))
+	   for(auto c : range1(dim(v)))
+	     {
+	       if (r==c)
+		 {
+		   //CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   //CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		   if (r > c)
+		     CHECK(elt(R,r,c) == 0); //Check R upper triangular
+		 }
+	     }	 
+       }
+     SECTION("Zero Divergence Not Upper Triangular")
+       {
+	 Index u(QN(+2),3,
+		 QN( 0),2,
+		 QN(-2),2);
+	 Index v(QN(+2),2,
+		 QN( 0),2,
+		 QN(-2),1);
+
+	 auto T = randomITensor(QN(), u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(u));
+	 auto QQ = Q*dag(prime(Q,u));
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(u)))
+	   for(auto c : range1(dim(u)))
+	     {
+	       if (r==c)
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		 }
+	     }
+       }
+     SECTION("Non-zero Divergence")
+       {
+	 Index u(QN(+2),3,
+		 QN( 0),2,
+		 QN(-1),2);
+	 Index v(QN(+2),2,
+		 QN( 0),2,
+		 QN(-1),1);
+
+	 auto T = randomITensor(QN(1),u,v);
+
+	 ITensor Q(u),R;
+	 qr(T, Q, R, {"Complete", true, "UpperTriangular", true});
+	 CHECK(norm(T-Q*R) < 1E-12);
+	 auto qrlink = findIndex(Q.inds(),"Link,QR");
+	 CHECK(dim(qrlink) == dim(u));
+	 auto QQ = Q*dag(prime(Q,u));
+	 auto QQt =  Q*dag(prime(Q,qrlink));
+	 for(auto r : range1(dim(u)))
+	   for(auto c : range1(dim(u)))
+	     {
+	       if (r==c)
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),1.0);
+		   CHECK_CLOSE(elt(QQt,r,c),1.0);
+		 }
+	       else
+		 {
+		   CHECK_CLOSE(elt(QQ,r,c),0.0);
+		   CHECK_CLOSE(elt(QQt,r,c),0.0);
+		   if (c <= dim(v) and r > c)
+		     CHECK(elt(R,r,c) == 0); //Check R upper triangular
+		 }
+	     }
+       }
+   }
+
 SECTION("Polar")
   {
   auto i = Index(2,"i");
