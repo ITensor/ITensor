@@ -82,7 +82,10 @@ svdImpl(ITensor const& A,
     auto show_eigs = args.getBool("ShowEigs",false);
     auto litagset = getTagSet(args,"LeftTags","Link,U");
     auto ritagset = getTagSet(args,"RightTags","Link,V");
-    if( litagset == ritagset ) Error("In SVD, must specify different tags for the new left and right indices (with Args 'LeftTags' and 'RightTags')");
+    if(litagset == ritagset) 
+        {
+        Error("In SVD, must specify different tags for the new left and right indices (with Args 'LeftTags' and 'RightTags')");
+        }
 
     if(not hasQNs(A))
         {

@@ -586,7 +586,7 @@ struct Sqrt
     };
 
 Spectrum
-orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args)
     {
     ITensor& L = (dir == Fromleft ? A1 : A2);
     ITensor& R = (dir == Fromleft ? A2 : A1);
