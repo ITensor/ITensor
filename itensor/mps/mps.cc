@@ -586,7 +586,7 @@ struct Sqrt
     };
 
 Spectrum
-orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args)
     {
     ITensor& L = (dir == Fromleft ? A1 : A2);
     ITensor& R = (dir == Fromleft ? A2 : A1);
@@ -663,7 +663,14 @@ position(int i, Args args)
             // Store the original tags for link b so that it can
             // be put back onto the newly introduced link index
             auto original_link_tags = tags(linkIndex(*this,b));
-            orthMPS(ref(b),ref(b+1),Fromright,{args,"LeftTags=",original_link_tags});
+            args.add("LeftTags=",original_link_tags);
+            if(original_link_tags == TagSet("Link,V,0"))
+                {
+                // Using LeftTags=Link,V will conflict with
+                // default right tags of svd (within orthMPS)
+                args.add("LeftTags=","Link");
+                }
+            orthMPS(ref(b),ref(b+1),Fromright,args);
 
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
