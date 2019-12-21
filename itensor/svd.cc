@@ -141,6 +141,17 @@ svdImpl(ITensor const& A,
         auto uL = Index(m,litagset);
         auto vL = setTags(uL,ritagset);
 
+        if(uL == vL)
+            {
+            Print(uL);
+            Print(vL);
+            Print(litagset);
+            Print(primeLevel(litagset));
+            Print(ritagset);
+            Print(primeLevel(ritagset));
+            Error("Error: new inds uL, vL in svd identical with given tag sets");
+            }
+
         //Fix sign to make sure D has positive elements
         Real signfix = (A.scale().sign() == -1) ? -1 : +1;
         D = ITensor({uL,vL},
