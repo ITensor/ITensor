@@ -967,114 +967,364 @@ assembleLanczosVectors(std::vector<ITensor> const& lanczos_vectors,
 
 template<typename BigMatrixT, typename ElT>
 void
-applyExp(BigMatrixT const& H, ITensor& phi,
-         ElT tau, Args const& args)
+applyExp(BigMatrixT const& A, ITensor& phi,
+         ElT t, Args const& args)
     {
-    auto tol = args.getReal("ErrGoal",1E-10);
-    auto max_iter = args.getInt("MaxIter",30);
-    auto debug_level = args.getInt("DebugLevel",-1);
-    auto beta_tol = args.getReal("NormCutoff",1e-7);
+    auto maxiter_ = args.getSizeT("MaxIter",30);
+    auto errgoal_ = args.getReal("ErrGoal",1E-10);
+    auto maxrej = args.getInt("MaxRej",10);;// maximum allowable number of rejections at each step
+    auto break_tol = args.getReal("NormCutoff",1E-7);// break tolerance when doing orthogonalization
+    auto debug_level_ = args.getInt("DebugLevel",-1);
+    auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
+    auto ideg_ = args.getInt("PadeApproxDeg",6);
 
-    // Initialize Lanczos vectors
-    ITensor v1 = phi;
-    ITensor v0;
-    ITensor w;
-    Real nrm = norm(v1);
-    v1 /= nrm;
-    std::vector<ITensor> lanczos_vectors({v1});
-    Matrix bigTmat(max_iter + 2, max_iter + 2);
-    std::fill(bigTmat.begin(), bigTmat.begin()+bigTmat.size(), 0.);
+    size_t maxsize = A.size();
+    auto actual_maxiter = std::min(maxiter_,maxsize);
+    //if(debug_level_ >= 2)
+    //    {
+    //    printfln("maxsize = %d, maxiter = %d, actual_maxiter = %d",
+    //             (maxsize), maxiter_, actual_maxiter);
+    //    }
+    //if(dim(inds(phi)) != maxsize)
+    //    {
+    //    println("dim(inds(phi.front())) = ",dim(inds(phi)));
+    //    println("A.size() = ",A.size());
+    //    Error("krylov: size of initial vector should match linear matrix size");
+    //    }
+    
+    //
+    // Initializations
+    //
+    ITensor A_phi;
+    A.product(phi,A_phi);
+    Real Anorm = norm(A_phi);
 
-    auto nmatvec = 0;
+    // TODO: The support question lost orthogonality might because break_tol set too large
+    Real gamma = 0.9;// stepsize 'shrinking factor'
+    Real delta = 1.2;// local truncation error 'safety factor'
+    int mbrkdwn = actual_maxiter;
+    Real t_out = std::abs(t);
+    auto sgnt = t/t_out;
+    int nstep = 0;
+    Real t_now = 0.0;
+    Real s_error = 0.0;
+    Real rndoff = Anorm*std::numeric_limits<double>::epsilon();
+        
+    //
+    // Obtain the very first stepsize
+    //
+    int k1 = 2;
+    Real xm = 1.0/((double)actual_maxiter);
+    Real vnorm = norm(phi);
+    Real beta = vnorm;
+    Real fact = std::pow((actual_maxiter+1)/std::exp(1.0),actual_maxiter+1)*std::sqrt(2*Pi*(actual_maxiter+1));
+    Real t_new = (1.0/Anorm)*std::pow((fact*errgoal_)/(4.0*beta*Anorm),xm);
+    Real s = std::pow(10,std::floor(std::log10(t_new))-1);
+    t_new = std::ceil(t_new/s)*s;
 
-    double beta = 0;
-    for (int iter=0; iter < max_iter; ++iter)
+    auto& w = phi;
+    // hump = max||exp(sA)||, where s in [0,t] when t > 0 or [t,0] when t < 0.
+    // It measures the conditioning of the matrix exponential.
+    // Well conditioned if hump = 1.
+    Real hump = vnorm;
+    
+    //
+    // Step-by-step integration
+    //
+    while(t_now < t_out)
         {
-        int tmat_size=iter+1;
-        // Matrix-vector multiplication
-        if(debug_level >= 0)
-            nmatvec++;
-        H.product(v1, w);
-
-        double avnorm = norm(w);
-        double alpha = real(eltC(dag(w) * v1));
-        bigTmat(iter, iter) = alpha;
-        w -= alpha * v1;
-        if (iter > 0)
-            w -= beta * v0;
-        v0 = v1;
-        beta = norm(w);
-
-        // check for Lanczos sequence exhaustion
-        if (std::abs(beta) < beta_tol)
+        ++nstep;
+        Real t_step = std::min(t_out-t_now,t_new);
+        // TODO: not necessarily be m+1, since maxiter might not reach, use push_back instead.
+        auto V = std::vector<ITensor>(actual_maxiter+1);// storage for the bases of the Krylov subspace
+        // TODO: real storage? only true if H is hermitian?
+        auto H = Matrix(actual_maxiter+2,actual_maxiter+2);// storage for the projected matrix
+        V[0] = (w *= 1.0/beta);
+            
+        // TODO: H_00 not need to calculate again!
+        if(!orthot_)
             {
-            // Assemble the time evolved state
-            auto tmat = subMatrix(bigTmat, 0,tmat_size, 0, tmat_size);
-            auto tmat_exp = expMatrix(tmat, tau);
-            auto linear_comb = column(tmat_exp, 0);
-            assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
-            break;
-            }
-
-        // update next lanczos vector
-        v1 = w;
-        v1 /= beta;
-        lanczos_vectors.push_back(v1);
-        bigTmat(iter+1, iter) = beta;
-        bigTmat(iter, iter+1) = beta;
-
-        // Convergence check
-        if (iter > 0)
-            {
-            // Prepare extended T-matrix for exponentiation
-            int tmat_ext_size = tmat_size + 2;
-            auto tmat_ext = Matrix(tmat_ext_size, tmat_ext_size);
-            tmat_ext = subMatrix(bigTmat, 0, tmat_ext_size, 0, tmat_ext_size);
-
-            tmat_ext(tmat_size-1, tmat_size) = 0.;
-            tmat_ext(tmat_size+1, tmat_size) = 1.;
-
-            // Exponentiate extended T-matrix
-            auto tmat_ext_exp = expMatrix(tmat_ext, tau);
-
-            double phi1 = std::abs( nrm*tmat_ext_exp(tmat_size, 0) );
-            double phi2 = std::abs( nrm*tmat_ext_exp(tmat_size + 1, 0) * avnorm );
-            double error;
-            if (phi1 > 10*phi2) error = phi2;
-            else if (phi1 > phi2) error = (phi1*phi2)/(phi1-phi2);
-            else error = phi1;
-            if(debug_level >= 1)
-                println("Iteration: ", iter, ", Error: ", error);
-            if ((error < tol) || (iter == max_iter-1))
+            // Arnoldi: Modified Gram-Schmidt
+            for(size_t j = 1; j <= actual_maxiter; ++j)
                 {
-                if (iter == max_iter-1)
-                    printf("warning: applyExp not converged in %d steps\n", max_iter);
+                auto& p = V[j];
+                A.product(V[j-1],p);
+                for(size_t i = 1 ; i <= j; ++i)
+                    {
+                    H(i-1,j-1) = eltC(dag(V[i-1])*p);
+                    p -= H(i-1,j-1)*V[i-1];
+                    }
+                s = norm(p);
+                if(s < break_tol)
+                    {
+                    k1 = 0;
+                    mbrkdwn = j;
+                    t_step = t_out-t_now;
+                    break;
+                    }
+                H(j,j-1) = s;// corrected scheme
+                p *= (1.0/s);
+                }
+            }
+        else
+            {
+            // Lanczos
+            // TODO: (s+s)/2 more symmetric
+            for(size_t j = 1; j <= actual_maxiter; ++j)
+                {
+                auto& p = V[j];
+                A.product(V[j-1],p);
+                if(j != 1)
+                    {
+                    H(j-2,j-1) = s;
+                    p -= H(j-2,j-1)*V[j-2];
+                    }
+                H(j-1,j-1) = real(eltC(dag(V[j-1])*p));
+                p -= H(j-1,j-1)*V[j-1];
+                s = norm(p);
+                if(s < break_tol)
+                    {
+                    k1 = 0;
+                    mbrkdwn = j;
+                    t_step = t_out-t_now;
+                    break;
+                    }
+                H(j,j-1) = s;
+                p *= (1.0/s);
+                }
+            }
+            
+        //
+        // if finished the loop but not get break_tol
+        //
+        Real AVnorm = 0.0;
+        if(k1 != 0)
+            {
+            // fortran version different from matlab version
+            // Higher order corrected scheme
+            H(actual_maxiter+1,actual_maxiter) = 1.0;
+            ITensor AV;
+            A.product(V[actual_maxiter],AV);
+            AVnorm = norm(AV);
+            }
+                        
+        //
+        // Loop while irej < maxrej until the errgoal_ is reached
+        //
+        int irej = 0;
+        Real err_loc = 0.0;
+        auto mx = mbrkdwn + k1;
+        auto Href = subMatrix(H,0,mx,0,mx);// get H(0:mx-1,0:mx-1)
+        // TODO: storage type need to depend on the return value
+        auto F = CMatrix(mx,mx);//TODO: reduce the storage to column
+        while(irej < maxrej)
+            {
+            //
+            // Compute F = exp(sgnt * t_step * H) * e1
+            //
+            if(!orthot_ || k1 != 0)
+                {
+                //
+                // ideg_ == 0 use (14,14) uniform rational Chebyshev approximation
+                // else use irreducible rational Pade approximation
+                //
+                F = expMatrix(Href,sgnt*t_step);
+                //expGeneral(Href,makeRef(F),sgnt*t_step,ideg_);
+                }
+            else
+                {
+                // No matter k1 == 0 or not, H is a expanded matrix with h_{m+1,m} not zero. But have Href!
+                // TODO: But there are cases expPade not converge?
+                F = expHermitian(Href,sgnt*t_step);
+                //expHermitian(Href,makeRef(F),sgnt*t_step);
+                }
+            //F = mult(makeRef(F),makeRef(e1));
 
-                // Assemble the time evolved state
-                auto linear_comb = Vec<ElT>(tmat_ext_size);
-                linear_comb = column(tmat_ext_exp, 0);
-                linear_comb = subVector(linear_comb, 0, tmat_ext_size-1);
-                assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
-                if(debug_level >= 0)
-                    printf("In applyExp, number of iterations: %d\n", iter);
+            //
+            // Error estimate
+            //
+            if(k1 == 0)
+                {
+                err_loc = break_tol;
                 break;
                 }
-            }  // end convergence test
+            else
+                {
+                auto phi1 = std::abs(beta*F(actual_maxiter,0));
+                auto phi2 = std::abs(beta*F(actual_maxiter+1,0)*AVnorm);
 
-        }  // Lanczos iteratrions
+                if(phi1 > 10*phi2)
+                    {
+                    err_loc = phi2;
+                    xm = 1.0/((double)actual_maxiter);
+                    }
+                else
+                    {
+                    if(phi1 > phi2)
+                        {
+                        err_loc = (phi1*phi2)/(phi1-phi2);
+                        xm = 1.0/((double)actual_maxiter);
+                        }
+                    else
+                        {
+                        err_loc = phi1;
+                        xm = 1.0/(double)(actual_maxiter-1);
+                        }
+                    }
+                }
+                
+            //
+            // Reject the step-size if the error is not acceptable
+            //
+            if(err_loc <= delta * t_step * errgoal_)
+                {
+                break;
+                }
+            else
+                {
+                t_step = gamma * t_step * std::pow((t_step*errgoal_/err_loc),xm);
+                s = std::pow(10,std::floor(std::log10(t_step))-1);
+                t_step = std::ceil(t_step/s)*s;
+                if(irej == maxrej)
+                    {
+                    error("The requested error goal is too high");
+                    }
+                ++irej;
+                }
+            }
 
-    if(debug_level >= 0)
-        println("In applyExp, number of matrix-vector multiplies: ", nmatvec);
+        // Update w = beta * V * exp(sgnt * t_step * H) * e1
+        auto linear_comb = Vec<ElT>(mx);
+        linear_comb = column(F, 0);
+        mx = mbrkdwn + std::max(0,k1-1);
+        linear_comb = subVector(linear_comb, 0, mx);
+        assembleLanczosVectors(V, linear_comb, beta, w);// w is phi
+        // multiplication of two vectors!
+        //w = (V[0]*=F(0,0));
+        //for(int i = 1; i < mx; ++i)
+        //    {
+        //    w += (V[i]*=F(i,0));
+        //    }
+        //w *= beta;
+        beta = norm(w);
+        hump = std::max(hump,beta);
+            
+        t_now += t_step;
+        t_new = gamma * t_step * std::pow(t_step*errgoal_/err_loc,xm);
+        s = std::pow(10,std::floor(std::log10(t_new))-1);
+        t_new = std::ceil(t_new/s)*s;
+            
+        err_loc = std::max(err_loc, rndoff);
+        s_error = s_error + err_loc;
+        }
+
+     hump = hump/vnorm;
+
+//    auto tol = args.getReal("ErrGoal",1E-10);
+//    auto max_iter = args.getInt("MaxIter",30);
+//    auto debug_level = args.getInt("DebugLevel",-1);
+//    auto beta_tol = args.getReal("NormCutoff",1e-7);
+//
+//    // Initialize Lanczos vectors
+//    ITensor v1 = phi;
+//    ITensor v0;
+//    ITensor w;
+//    Real nrm = norm(v1);
+//    v1 /= nrm;
+//    std::vector<ITensor> lanczos_vectors({v1});
+//    Matrix bigTmat(max_iter + 2, max_iter + 2);
+//    std::fill(bigTmat.begin(), bigTmat.begin()+bigTmat.size(), 0.);
+//
+//    auto nmatvec = 0;
+//
+//    double beta = 0;
+//    for (int iter=0; iter < max_iter; ++iter)
+//        {
+//        int tmat_size=iter+1;
+//        // Matrix-vector multiplication
+//        if(debug_level >= 0)
+//            nmatvec++;
+//        H.product(v1, w);
+//
+//        double avnorm = norm(w);
+//        double alpha = real(eltC(dag(w) * v1));
+//        bigTmat(iter, iter) = alpha;
+//        w -= alpha * v1;
+//        if (iter > 0)
+//            w -= beta * v0;
+//        v0 = v1;
+//        beta = norm(w);
+//
+//        // check for Lanczos sequence exhaustion
+//        if (std::abs(beta) < beta_tol)
+//            {
+//            // Assemble the time evolved state
+//            auto tmat = subMatrix(bigTmat, 0,tmat_size, 0, tmat_size);
+//            auto tmat_exp = expMatrix(tmat, tau);
+//            auto linear_comb = column(tmat_exp, 0);
+//            assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+//            break;
+//            }
+//
+//        // update next lanczos vector
+//        v1 = w;
+//        v1 /= beta;
+//        lanczos_vectors.push_back(v1);
+//        bigTmat(iter+1, iter) = beta;
+//        bigTmat(iter, iter+1) = beta;
+//
+//        // Convergence check
+//        if (iter > 0)
+//            {
+//            // Prepare extended T-matrix for exponentiation
+//            int tmat_ext_size = tmat_size + 2;
+//            auto tmat_ext = Matrix(tmat_ext_size, tmat_ext_size);
+//            tmat_ext = subMatrix(bigTmat, 0, tmat_ext_size, 0, tmat_ext_size);
+//
+//            tmat_ext(tmat_size-1, tmat_size) = 0.;
+//            tmat_ext(tmat_size+1, tmat_size) = 1.;
+//
+//            // Exponentiate extended T-matrix
+//            auto tmat_ext_exp = expMatrix(tmat_ext, tau);
+//
+//            double phi1 = std::abs( nrm*tmat_ext_exp(tmat_size, 0) );
+//            double phi2 = std::abs( nrm*tmat_ext_exp(tmat_size + 1, 0) * avnorm );
+//            double error;
+//            if (phi1 > 10*phi2) error = phi2;
+//            else if (phi1 > phi2) error = (phi1*phi2)/(phi1-phi2);
+//            else error = phi1;
+//            if(debug_level >= 1)
+//                println("Iteration: ", iter, ", Error: ", error);
+//            if ((error < tol) || (iter == max_iter-1))
+//                {
+//                if (iter == max_iter-1)
+//                    printf("warning: applyExp not converged in %d steps\n", max_iter);
+//
+//                // Assemble the time evolved state
+//                auto linear_comb = Vec<ElT>(tmat_ext_size);
+//                linear_comb = column(tmat_ext_exp, 0);
+//                linear_comb = subVector(linear_comb, 0, tmat_ext_size-1);
+//                assembleLanczosVectors(lanczos_vectors, linear_comb, nrm, phi);
+//                if(debug_level >= 0)
+//                    printf("In applyExp, number of iterations: %d\n", iter);
+//                break;
+//                }
+//            }  // end convergence test
+//
+//        }  // Lanczos iteratrions
+//
+//    if(debug_level >= 0)
+//        println("In applyExp, number of matrix-vector multiplies: ", nmatvec);
 
     return;
     } // End applyExp
 
 template<typename BigMatrixT>
 void
-applyExp(BigMatrixT const& H, ITensor& phi,
-         int tau, Args const& args)
+applyExp(BigMatrixT const& A, ITensor& phi,
+         int t, Args const& args)
     {
-    applyExp(H,phi,Real(tau),args);
+    applyExp(A,phi,Real(t),args);
     return;
     }
 
