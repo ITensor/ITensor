@@ -988,10 +988,10 @@ applyExp(BigMatrixT const& H, ITensor& phi,
     auto nmatvec = 0;
 
     double beta = 0;
-	// Matrix-vector multiplication
-	if(debug_level >= 0)
-		nmatvec++;
-	H.product(v1, w);
+    // Matrix-vector multiplication
+    if(debug_level >= 0)
+        nmatvec++;
+    H.product(v1, w);
     for (int iter=0; iter < max_iter; ++iter)
         {
         int tmat_size=iter+1;
@@ -1022,9 +1022,9 @@ applyExp(BigMatrixT const& H, ITensor& phi,
         bigTmat(iter+1, iter) = beta;
         bigTmat(iter, iter+1) = beta;
         
-		if(debug_level >= 0)
-			nmatvec++;
-		H.product(v1, w);
+        if(debug_level >= 0)
+            nmatvec++;
+        H.product(v1, w);
         double avnorm = norm(w);
 
         // Convergence check
