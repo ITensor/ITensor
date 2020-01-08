@@ -580,7 +580,7 @@ diagITensor(Container const& C,
 template<typename V>
 TenRef<Range,V>
 getBlock(ITensor & T,
-         IntArray block_ind)
+         Block block_ind)
     {
     if(block_ind.size() != size_t(T.order())) Error("Mismatched number of indices and ITensor order");
     if(not T.store())

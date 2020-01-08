@@ -383,7 +383,7 @@ diagHImpl(ITensor H,
             //to this_m==0 case above
             if(not B.M) continue;
 
-            auto uind = Labels(2);
+            auto uind = Block(2);
             uind[0] = B.i1;
             uind[1] = n;
             auto pU = getBlock(Ustore,Uis,uind);
@@ -392,7 +392,7 @@ diagHImpl(ITensor H,
             auto Uref = makeMatRef(pU,nrows(UU),mm);
             Uref &= UU;
 
-            auto dind = Labels(2);
+            auto dind = Block(2);
             dind[0] = n;
             dind[1] = n;
             auto pD = getBlock(Dstore,Dis,dind);
