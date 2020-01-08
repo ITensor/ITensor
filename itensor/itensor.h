@@ -1034,7 +1034,7 @@ removeQNs(ITensor T);
 
 template<typename V>
 TenRef<Range,V>
-getBlock(ITensor & T, IntArray block_ind);
+getBlock(ITensor & T, Block block_ind);
 
 std::ostream& 
 operator<<(std::ostream & s, ITensor const& T);
