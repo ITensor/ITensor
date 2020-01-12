@@ -146,6 +146,11 @@ write(std::ostream& s, TagSet const& ts);
 void
 read(std::istream& s, TagSet & ts);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, TagSet const& ts);
+#endif
+
 } //namespace itensor
 
 #endif

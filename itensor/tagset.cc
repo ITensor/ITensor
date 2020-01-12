@@ -215,15 +215,29 @@ replaceTags(TagSet const& tsremove, TagSet const& tsadd)
         this->addTag(tsadd[i]);
     }
 
+std::string
+tagString(TagSet const& ts)
+    {
+    std::string s;
+    for(auto i : range(size(ts)))
+      {
+      s += ts[i];
+      if(i < (size(ts)-1)) s += ",";
+      }
+    return s;
+    }
+
 std::ostream&
 operator<<(std::ostream & s, TagSet const& ts)
     {
     if( primeLevel(ts) != 0 ) s << "(";
-    for(auto i : range(size(ts)))
-      {
-      s << ts[i];
-      if( i < (size(ts)-1) ) s << ",";
-      }
+    //for(auto i : range(size(ts)))
+    //  {
+    //  s << ts[i];
+    //  if( i < (size(ts)-1) ) s << ",";
+    //  }
+    s << tagString(ts);
+
     if( primeLevel(ts) != 0 ) s << ")";
     if(primeLevel(ts) > 0)
         {
@@ -272,7 +286,10 @@ void
 h5_write(h5::group parent, std::string const& name, TagSet const& ts)
     {
     auto g = parent.create_group(name);
-    h5::h5_write(g,"plev",primeLevel(ts));
+    h5::h5_write_attribute(g,"type","TagSet");
+    h5::h5_write_attribute(g,"version",static_cast<long>(1));
+    h5::h5_write(g,"plev",static_cast<long>(primeLevel(ts)));
+    h5::h5_write(g,"tags",tagString(ts));
     }
 #endif
 
