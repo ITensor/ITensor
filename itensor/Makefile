@@ -10,7 +10,7 @@ include ../options.mk
 #ifdef ITENSOR_USE_HDF5
 SOURCES+= util/h5/array_interface.cc
 SOURCES+= util/h5/file.cc
-SOURCES+= util/h5/format.cc
+#SOURCES+= util/h5/format.cc
 SOURCES+= util/h5/group.cc
 SOURCES+= util/h5/h5object.cc
 SOURCES+= util/h5/stl/string.cc
