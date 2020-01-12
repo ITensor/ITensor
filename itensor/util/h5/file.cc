@@ -12,7 +12,7 @@ namespace h5 {
 
   file::file(const char *name, char mode) {
 
-    std::cerr << "OPENING file " << name << "in mode " << mode << std::endl;
+    //std::cerr << "OPENING file " << name << "in mode " << mode << std::endl;
 
     switch (mode) {
       case 'r': id = H5Fopen(name, H5F_ACC_RDONLY, H5P_DEFAULT); break;
@@ -49,7 +49,7 @@ namespace h5 {
 
   void file::close() {
     if (not is_valid()) return;
-    std::cerr << "CLOSING file " << name() << std::endl;
+    //std::cerr << "CLOSING file " << name() << std::endl;
     auto err = H5Fclose(id);
     CHECK_OR_THROW((err >= 0), "closing the file");
   }
