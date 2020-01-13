@@ -287,8 +287,8 @@ h5_write(h5::group parent, std::string const& name, TagSet const& ts)
     {
     auto g = parent.create_group(name);
     h5::h5_write_attribute(g,"type","TagSet");
-    h5::h5_write_attribute(g,"version",static_cast<long>(1));
-    h5::h5_write(g,"plev",static_cast<long>(primeLevel(ts)));
+    h5::h5_write_attribute(g,"version",long(1));
+    h5::h5_write(g,"plev",long(primeLevel(ts)));
     h5::h5_write(g,"tags",tagString(ts));
     }
 #endif
