@@ -290,10 +290,10 @@ void
 h5_write(h5::group parent, std::string const& name, TagSet const& ts)
     {
     auto g = parent.create_group(name);
-    h5::h5_write_attribute(g,"type","TagSet",true);
-    h5::h5_write_attribute(g,"version",long(1));
-    h5::h5_write(g,"plev",long(primeLevel(ts)));
-    h5::h5_write(g,"tags",tagString(ts),true);
+    h5_write_attribute(g,"type","TagSet",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"plev",long(primeLevel(ts)));
+    h5_write(g,"tags",tagString(ts),true);
     }
 
 void
@@ -301,12 +301,11 @@ h5_read(h5::group parent, std::string const& name, TagSet & ts)
     {
     auto g = parent.open_group(name);
 
-    auto type = h5::h5_read_attribute<string>(g,"type");
-    Print(type);
+    auto type = h5_read_attribute<string>(g,"type");
     if(type != "TagSet") Error("Group does not contain TagSet data in HDF5 file");
 
-    auto plev = h5::h5_read<long>(g,"plev");
-    auto tstr = h5::h5_read<string>(g,"tags");
+    auto plev = h5_read<long>(g,"plev");
+    auto tstr = h5_read<string>(g,"tags");
 
     ts = TagSet(tstr);
     ts.setPrime(plev);
