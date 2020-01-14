@@ -17,9 +17,7 @@
 #define __ITENSOR_TAGSET_H
 #include "itensor/smallstring.h"
 #include "itensor/global.h"
-#ifdef ITENSOR_USE_HDF5
-#include "itensor/util/h5/h5.hpp"
-#endif
+#include "itensor/util/h5/wrap_h5.hpp"
 
 namespace itensor {
 
