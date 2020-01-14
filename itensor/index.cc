@@ -732,5 +732,38 @@ isFermionic(Index const& I)
     return false;
     }
 
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, Index const& I)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Index",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"id",static_cast<unsigned long>(I.id()));
+    h5_write(g,"dim",long(I.dim()));
+    h5_write(g,"dir",long(I.dir()));
+    h5_write(g,"tags",I.tags());
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, Index & I)
+    {
+    //auto g = parent.open_group(name);
+
+    //auto type = h5::h5_read_attribute<string>(g,"type");
+    //Print(type);
+    //if(type != "TagSet") Error("Group does not contain TagSet data in HDF5 file");
+
+    //auto plev = h5::h5_read<long>(g,"plev");
+    //auto tstr = h5::h5_read<string>(g,"tags");
+
+    //ts = TagSet(tstr);
+    //ts.setPrime(plev);
+    }
+
+#endif
+
+
 } //namespace itensor
 
