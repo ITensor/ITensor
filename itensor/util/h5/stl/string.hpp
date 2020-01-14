@@ -16,7 +16,7 @@ namespace h5 {
    * @param name Name of the object in the HDF5 file
    * @param s String to be saved.
    */
-  void h5_write(group g, std::string const &name, std::string const &s);
+  void h5_write(group g, std::string const &name, std::string const &s, bool force_utf8 = false);
 
   /**
    * Write a string  into an hdf5 file
@@ -28,7 +28,7 @@ namespace h5 {
    * @param name Name of the object in the HDF5 file
    * @param s String to be saved.
    */
-  inline void h5_write(group g, std::string const &name, const char *s) { h5_write(g, name, std::string{s}); }
+  inline void h5_write(group g, std::string const &name, const char *s, bool force_utf8 = false) { h5_write(g, name, std::string{s},force_utf8); }
 
   /**
    * Read a string from an hdf5 file
@@ -43,16 +43,16 @@ namespace h5 {
   inline void h5_read(group g, std::string const &name, char *s) = delete;
 
   /**
-   * Read a string attribute
+   * Write a string attribute
    *
    * @param f The h5 file or group
    * @param name The name of the hdf5 array in the file/group where the stack will be stored
    * @param s The string.
   */
-  void h5_write_attribute(hid_t id, std::string const &name, std::string const &s);
+  void h5_write_attribute(hid_t id, std::string const &name, std::string const &s, bool force_utf8 = false);
 
   /**
-   * Read a string attribute
+   * Write a string attribute
    *
    * @param f The h5 file or group
    * @param name The name of the hdf5 array in the file/group where the stack will be stored

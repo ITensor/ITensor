@@ -3,22 +3,31 @@
 #include <hdf5_hl.h>
 #include <vector>
 #include <numeric>
+#include <algorithm>
 
 namespace h5 {
 
-  static datatype str_datatype(long size) {
+  static datatype str_datatype(long size, bool is_utf8 = false) {
     datatype dt = H5Tcopy(H5T_C_S1);
     auto err    = H5Tset_size(dt, size);
+    if (is_utf8) H5Tset_cset(dt, H5T_CSET_UTF8);
     if (err < 0) throw std::runtime_error("Internal error in H5Tset_size");
     return dt;
   }
 
+  static datatype str_datatype(std::string const &s) {
+    auto is_nonascii = [](char c) { return static_cast<unsigned char>(c) > 127; };
+    bool is_utf8 = std::any_of(begin(s), end(s), is_nonascii);
+    return str_datatype(s.size() + 1, is_utf8);
+  }
+
   // ------------------------------------------------------------------
 
-  void h5_write(group g, std::string const &name, std::string const &value) {
+  void h5_write(group g, std::string const &name, std::string const &value, bool force_utf8) {
 
-    datatype dt     = str_datatype(value.size() + 1);
+    datatype dt     = force_utf8 ? str_datatype(value.size()+1,true) : str_datatype(value);
     dataspace space = H5Screate(H5S_SCALAR);
+
     // FIXME : remove create_dataset
     dataset ds = g.create_dataset(name, dt, space);
 
@@ -28,9 +37,9 @@ namespace h5 {
 
   // ------------------------------------------------------------------
 
-  void h5_write_attribute(hid_t id, std::string const &name, std::string const &value) {
+  void h5_write_attribute(hid_t id, std::string const &name, std::string const &value, bool force_utf8) {
 
-    datatype dt     = str_datatype(value.size() + 1);
+    datatype dt     = force_utf8 ? str_datatype(value.size()+1,true) : str_datatype(value);
     dataspace space = H5Screate(H5S_SCALAR);
 
     attribute attr = H5Acreate2(id, name.c_str(), dt, space, H5P_DEFAULT, H5P_DEFAULT);
@@ -49,7 +58,8 @@ namespace h5 {
     if (rank != 0) throw std::runtime_error("Reading a string and got rank !=0");
     size_t size = H5Dget_storage_size(ds);
 
-    datatype dt = str_datatype(size);
+    datatype dt = H5Dget_type(ds);
+    H5_ASSERT(H5Tget_class(dt) == H5T_STRING);
 
     std::vector<char> buf(size + 1, 0x00);
     auto err = H5Dread(ds, dt, H5S_ALL, H5S_ALL, H5P_DEFAULT, &buf[0]);
@@ -77,6 +87,7 @@ namespace h5 {
     if (rank != 0) throw std::runtime_error("Reading a string attribute and got rank !=0");
 
     datatype strdatatype = H5Aget_type(attr);
+    H5_ASSERT(H5Tget_class(strdatatype) == H5T_STRING);
 
     std::vector<char> buf(H5Aget_storage_size(attr) + 1, 0x00);
     auto err = H5Aread(attr, strdatatype, (void *)(&buf[0]));
@@ -88,9 +99,7 @@ namespace h5 {
   // -------------------------------------------------------------------
   // the string datatype
   datatype char_buf::dtype() const {
-    datatype dt = H5Tcopy(H5T_C_S1);
-    H5Tset_size(dt, lengths.back());
-    return dt;
+    return str_datatype(lengths.back());
   }
 
   // the dataspace (without last dim, which is the string).
