@@ -28,10 +28,23 @@
 
 namespace itensor {
 
-    using h5::h5_write;
-    using h5::h5_write_attribute;
-    using h5::h5_read;
-    using h5::h5_read_attribute;
+using h5::h5_write;
+using h5::h5_write_attribute;
+using h5::h5_read;
+using h5::h5_read_attribute;
+
+
+h5::file inline
+h5_open(const char* name, char mode)
+    {
+    return h5::file(name,mode);
+    }
+
+h5::file inline
+h5_open(std::string const& name, char mode)
+    {
+    return h5::file(name.c_str(),mode);
+    }
 
 }
 
