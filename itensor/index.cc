@@ -764,7 +764,7 @@ h5_read(h5::group parent, std::string const& name, Index & I)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "Index") Error("Group does not contain TagSet data in HDF5 file");
+    if(type != "Index") Error("Group does not contain Index data in HDF5 file");
     auto id = h5_read<unsigned long>(g,"id");
     auto dim = h5_read<long>(g,"dim");
     auto dir = h5_read<long>(g,"dir");
