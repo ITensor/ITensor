@@ -708,14 +708,19 @@ h5_write(h5::group parent, std::string const& name, IndexSet const& is)
 void
 h5_read(h5::group parent, std::string const& name, IndexSet & is)
     {
-    //auto g = parent.open_group(name);
-    //auto type = h5_read_attribute<string>(g,"type");
-    //if(type != "Index") Error("Group does not contain TagSet data in HDF5 file");
-    //auto id = h5_read<unsigned long>(g,"id");
-    //auto dim = h5_read<long>(g,"dim");
-    //auto dir = h5_read<long>(g,"dir");
-    //auto tags = h5_read<TagSet>(g,"tags");
-    //I = Index(id,dim,toArrow(dir),tags);
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<std::string>(g,"type");
+    if(type != "IndexSet") Error("Group does not contain IndexSet data in HDF5 file");
+    auto N = h5_read<long>(g,"length");
+    auto iv = std::vector<Index>(N);
+    auto inds = IndexSetBuilder(N);
+    for(auto n : range1(N))
+        {
+        auto iname = format("index_%d",n);
+        auto i = h5_read<Index>(g,iname);
+        inds.nextIndex(i);
+        }
+    is = inds.build();
     }
 
 #endif
