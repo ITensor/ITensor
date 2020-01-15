@@ -251,6 +251,11 @@ class Index
           Arrow dir, 
           TagSet const& tags);
 
+    Index(id_type id,
+          long dim, 
+          Arrow dir, 
+          TagSet const& ts);
+
     //0-indexed
     long
     blocksize0(long i) const;

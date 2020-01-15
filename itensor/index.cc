@@ -71,6 +71,19 @@ Index(long m,
     if(primeLevel() < 0) setPrime(0);
     } 
 
+Index::
+Index(id_type id,
+      long dim, 
+      Arrow dir, 
+      TagSet const& ts)
+  : id_(id),
+    dim_(dim),
+    dir_(dir),
+    tags_(ts)
+    { 
+    if(primeLevel() < 0) setPrime(0);
+    } 
+
 
 Index& Index::
 setPrime(int plev) 
@@ -749,17 +762,14 @@ h5_write(h5::group parent, std::string const& name, Index const& I)
 void
 h5_read(h5::group parent, std::string const& name, Index & I)
     {
-    //auto g = parent.open_group(name);
-
-    //auto type = h5::h5_read_attribute<string>(g,"type");
-    //Print(type);
-    //if(type != "TagSet") Error("Group does not contain TagSet data in HDF5 file");
-
-    //auto plev = h5::h5_read<long>(g,"plev");
-    //auto tstr = h5::h5_read<string>(g,"tags");
-
-    //ts = TagSet(tstr);
-    //ts.setPrime(plev);
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Index") Error("Group does not contain TagSet data in HDF5 file");
+    auto id = h5_read<unsigned long>(g,"id");
+    auto dim = h5_read<long>(g,"dim");
+    auto dir = h5_read<long>(g,"dir");
+    auto tags = h5_read<TagSet>(g,"tags");
+    I = Index(id,dim,toArrow(dir),tags);
     }
 
 #endif
