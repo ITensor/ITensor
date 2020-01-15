@@ -30,6 +30,10 @@ SOURCES+= regression_test.cc
 SOURCES+= localop_test.cc
 SOURCES+= siteset_test.cc
 
+ifdef ITENSOR_USE_HDF5
+SOURCES+= hdf5_test.cc
+endif
+
 ####SOURCES+= spectrum_test.cc
 ####SOURCES+= iqtensor_test.cc
 ####SOURCES+= bondgate_test.cc
