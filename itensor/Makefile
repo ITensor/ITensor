@@ -117,7 +117,7 @@ mkdebugdir:
 	@mkdir -p .debug_objs/mps
 
 clean:	
-	@rm -fr *.o .debug_objs util/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
+	@rm -fr *.o .debug_objs util/*.o util/h5/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
 util/input.o: util/input.h
 .debug_objs/util/input.o: util/input.h
