@@ -38,6 +38,13 @@ template<typename T>
 const char*
 typeNameOf(Mult<T> const&) { return "Mult"; }
 
+
+struct MakeComplex { };
+
+const char*
+typeNameOf(MakeComplex const&) { return "MakeComplex"; }
+
+
 struct GetElt
     {
     IndexSet const& is;

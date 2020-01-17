@@ -250,6 +250,11 @@ doTask(Mult<Cplx> const& f, Dense<Real> const& D, ManageStore & m);
 void
 doTask(Mult<Cplx> const& f, Dense<Cplx> & D);
 
+void
+doTask(MakeComplex const&, Dense<Real> & D);
+void
+doTask(MakeComplex const&, Dense<Cplx> & D);
+
 template<typename T>
 Real
 doTask(NormNoScale, Dense<T> const& d);
