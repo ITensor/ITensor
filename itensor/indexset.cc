@@ -688,4 +688,41 @@ flux(std::vector<IndexVal> const& ivs)
     return elt_flux;
     }
 
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, IndexSet const& is)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","IndexSet",true);
+    h5_write_attribute(g,"version",long(1));
+    auto N = is.length();
+    h5_write(g,"length",N);
+    for(auto n : range1(N))
+        {
+        auto iname = format("index_%d",n);
+        h5_write(g,iname,is(n));
+        }
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, IndexSet & is)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<std::string>(g,"type");
+    if(type != "IndexSet") Error("Group does not contain IndexSet data in HDF5 file");
+    auto N = h5_read<long>(g,"length");
+    auto iv = std::vector<Index>(N);
+    auto inds = IndexSetBuilder(N);
+    for(auto n : range1(N))
+        {
+        auto iname = format("index_%d",n);
+        auto i = h5_read<Index>(g,iname);
+        inds.nextIndex(i);
+        }
+    is = inds.build();
+    }
+
+#endif
+
 } //namespace itensor

@@ -17,6 +17,7 @@
 #define __ITENSOR_TAGSET_H
 #include "itensor/smallstring.h"
 #include "itensor/global.h"
+#include "itensor/util/h5/wrap_h5.hpp"
 
 namespace itensor {
 
@@ -142,6 +143,13 @@ write(std::ostream& s, TagSet const& ts);
 
 void
 read(std::istream& s, TagSet & ts);
+
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, TagSet const& ts);
+void
+h5_read(h5::group parent, std::string const& name, TagSet & ts);
+#endif
 
 } //namespace itensor
 

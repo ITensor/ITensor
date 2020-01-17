@@ -1013,6 +1013,13 @@ IndexSet
 noncommonInds(IndexSet const& is1,
               IndexSet const& is2);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, IndexSet const& is);
+void
+h5_read(h5::group parent, std::string const& name, IndexSet & is);
+#endif
+
 } //namespace itensor
 
 #include "itensor/indexset_impl.h"

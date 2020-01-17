@@ -251,6 +251,11 @@ class Index
           Arrow dir, 
           TagSet const& tags);
 
+    Index(id_type id,
+          long dim, 
+          Arrow dir, 
+          TagSet const& ts);
+
     //0-indexed
     long
     blocksize0(long i) const;
@@ -527,6 +532,14 @@ read(std::istream & s, QNInt & q);
 
 bool
 isFermionic(Index const& I);
+
+
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, Index const& I);
+void
+h5_read(h5::group parent, std::string const& name, Index & I);
+#endif
 
 } //namespace itensor
 

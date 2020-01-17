@@ -12,7 +12,7 @@ CCCOM=g++ -m64 -std=c++17 -fPIC
 ## Clang compiler (good to use on macOS)
 ## Note: try this if you have trouble compiling 
 ##       with g++ on macOS Mojave 10.14
-#CCCOM=clang++ -std=c++17 -fPIC
+#CCCOM=clang++ -std=c++17 -fPIC -Wno-gcc-compat
 
 ## GCC On Windows cygwin
 ## Extra flags are workaround for limitations
@@ -93,6 +93,23 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #########
 ## [3]
 ##
+## If you want ITensor to be compiled with HDF5 support
+## uncomment the line below, and edit it to be the
+## location in which the HDF5 libraries and headers are
+## installed. 
+##
+## To determine the prefix on your system, use the command:
+## h5cc -show
+##
+## For more help, visit: 
+## http://itensor.org/docs.cgi?vers=cppv3&page=install
+##
+#HDF5_PREFIX=/usr/local
+
+
+#########
+## [4]
+##
 ## This step is optional, but if you wish to customize the flags
 ## used to compile optimized and debug code, you can do so here.
 
@@ -128,6 +145,13 @@ ITENSOR_LIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%.a, $(ITENSOR_LIBNAMES))
 ITENSOR_GLIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%-g.a, $(ITENSOR_LIBNAMES))
 
 ITENSOR_INCLUDEFLAGS=-I'$(ITENSOR_INCLUDEDIR)' $(BLAS_LAPACK_INCLUDEFLAGS)
+
+ifdef HDF5_PREFIX
+ITENSOR_USE_HDF5 = 1
+ITENSOR_INCLUDEFLAGS += -I$(HDF5_PREFIX)/include -DITENSOR_USE_HDF5
+ITENSOR_LIBFLAGS += -L$(HDF5_PREFIX)/lib -lhdf5 -lhdf5_hl
+ITENSOR_LIBGFLAGS += -L$(HDF5_PREFIX)/lib -lhdf5 -lhdf5_hl
+endif
 
 ifndef CCCOM
 $(error Makefile variable CCCOM not defined in options.mk; please define it.)

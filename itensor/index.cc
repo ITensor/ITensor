@@ -71,6 +71,19 @@ Index(long m,
     if(primeLevel() < 0) setPrime(0);
     } 
 
+Index::
+Index(id_type id,
+      long dim, 
+      Arrow dir, 
+      TagSet const& ts)
+  : id_(id),
+    dim_(dim),
+    dir_(dir),
+    tags_(ts)
+    { 
+    if(primeLevel() < 0) setPrime(0);
+    } 
+
 
 Index& Index::
 setPrime(int plev) 
@@ -731,6 +744,36 @@ isFermionic(Index const& I)
         }
     return false;
     }
+
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, Index const& I)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Index",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"id",static_cast<unsigned long>(I.id()));
+    h5_write(g,"dim",long(I.dim()));
+    h5_write(g,"dir",long(I.dir()));
+    h5_write(g,"tags",I.tags());
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, Index & I)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Index") Error("Group does not contain Index data in HDF5 file");
+    auto id = h5_read<unsigned long>(g,"id");
+    auto dim = h5_read<long>(g,"dim");
+    auto dir = h5_read<long>(g,"dir");
+    auto tags = h5_read<TagSet>(g,"tags");
+    I = Index(id,dim,toArrow(dir),tags);
+    }
+
+#endif
+
 
 } //namespace itensor
 
