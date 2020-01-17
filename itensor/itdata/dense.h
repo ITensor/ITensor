@@ -251,9 +251,9 @@ void
 doTask(Mult<Cplx> const& f, Dense<Cplx> & D);
 
 void
-doTask(MakeComplex const&, Dense<Real> & D);
+doTask(MakeCplx const&, Dense<Cplx> & D);
 void
-doTask(MakeComplex const&, Dense<Cplx> & D);
+doTask(MakeCplx const&, Dense<Real> const& d, ManageStore & m);
 
 template<typename T>
 Real
@@ -276,12 +276,6 @@ doTask(TakeImag, DenseReal & d);
 
 void
 doTask(TakeImag, DenseCplx const& d, ManageStore & m);
-
-void
-doTask(MakeCplx, DenseReal const& d, ManageStore & m);
-
-void inline
-doTask(MakeCplx, DenseCplx const& d) { }
 
 template<typename T>
 bool constexpr

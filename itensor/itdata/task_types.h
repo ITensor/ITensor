@@ -39,10 +39,10 @@ const char*
 typeNameOf(Mult<T> const&) { return "Mult"; }
 
 
-struct MakeComplex { };
+struct MakeCplx { };
 
-const char*
-typeNameOf(MakeComplex const&) { return "MakeComplex"; }
+inline const char*
+typeNameOf(MakeCplx const&) { return "MakeCplx"; }
 
 
 struct GetElt
@@ -286,7 +286,6 @@ typeNameOf(Fill<T> const&) { return "Fill"; }
 
 struct TakeReal { };
 struct TakeImag { };
-struct MakeCplx { };
 
 inline const char*
 typeNameOf(TakeReal const&) { return "TakeReal"; }

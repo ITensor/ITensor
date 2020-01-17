@@ -323,6 +323,17 @@ doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m)
     doTask(M,*nd);
     }
 
+void
+doTask(MakeCplx const&, QDense<Cplx> & d)
+    {
+    //nothing to do
+    }
+void
+doTask(MakeCplx const&, QDense<Real> const& d, ManageStore & m)
+    {
+    m.makeNewData<QDenseCplx>(d.offsets,d.begin(),d.end());
+    }
+
 template<typename T>
 int
 doTask(NNZBlocks, QDense<T> const& D)

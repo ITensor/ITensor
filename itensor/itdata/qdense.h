@@ -342,6 +342,12 @@ doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m);
 void
 doTask(Mult<Cplx> const& M, QDense<Cplx> & d);
 
+void
+doTask(MakeCplx const&, QDense<Cplx> & d);
+     
+void
+doTask(MakeCplx const&, QDense<Real> const& d, ManageStore & m);
+
 template<typename T>
 void
 doTask(Fill<T> const& F, QDense<T> & d);
