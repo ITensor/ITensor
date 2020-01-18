@@ -323,6 +323,10 @@ class ITensor
     ITensor&
     takeImag();
 
+    //Force storage to be complex-valued
+    ITensor&
+    makeCplx();
+
     //
     // Operators
     //

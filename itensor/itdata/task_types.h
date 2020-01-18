@@ -38,6 +38,13 @@ template<typename T>
 const char*
 typeNameOf(Mult<T> const&) { return "Mult"; }
 
+
+struct MakeCplx { };
+
+inline const char*
+typeNameOf(MakeCplx const&) { return "MakeCplx"; }
+
+
 struct GetElt
     {
     IndexSet const& is;
@@ -279,7 +286,6 @@ typeNameOf(Fill<T> const&) { return "Fill"; }
 
 struct TakeReal { };
 struct TakeImag { };
-struct MakeCplx { };
 
 inline const char*
 typeNameOf(TakeReal const&) { return "TakeReal"; }

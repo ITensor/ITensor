@@ -131,6 +131,18 @@ template
 void
 doTask(Mult<Real> const& M, DenseCplx & D);
 
+void
+doTask(MakeCplx const&, Dense<Cplx> & D)
+    {
+    //do nothing, already complex
+    }
+void
+doTask(MakeCplx const&, Dense<Real> const& D, ManageStore & m)
+    {
+    //convert data to complex
+    m.makeNewData<DenseCplx>(D.begin(),D.end());
+    }
+
 template<typename T>
 Real
 doTask(NormNoScale, Dense<T> const& D) 
@@ -182,12 +194,6 @@ doTask(TakeImag, DenseCplx const& D, ManageStore & m)
         {
         nD[n] = D[n].imag();
         }
-    }
-
-void
-doTask(MakeCplx, DenseReal const& d, ManageStore & m)
-    {
-    m.makeNewData<DenseCplx>(d.begin(),d.end());
     }
 
 
