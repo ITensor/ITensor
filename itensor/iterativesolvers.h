@@ -965,6 +965,20 @@ assembleLanczosVectors(std::vector<ITensor> const& lanczos_vectors,
         phi += norm*linear_comb(i)*lanczos_vectors[i];
     }
 
+// function to add next Lanczos vector with reorthogonalization
+inline double 
+reorthAddLanczosVector(std::vector<ITensor>& lanczos_vectors, 
+                       const ITensor& w) 
+     {
+      auto w2 = w;
+      for (const auto& v : lanczos_vectors)
+          w2 -= eltC(dag(v) * w) * v;
+
+      double beta = norm(w2);
+      lanczos_vectors.emplace_back(w2 / beta);
+      return beta;
+     }         
+         
 template<typename BigMatrixT, typename ElT>
 void
 applyExp(BigMatrixT const& H, ITensor& phi,
@@ -974,6 +988,7 @@ applyExp(BigMatrixT const& H, ITensor& phi,
     auto max_iter = args.getInt("MaxIter",30);
     auto debug_level = args.getInt("DebugLevel",-1);
     auto beta_tol = args.getReal("NormCutoff",1e-7);
+    auto doReorth = args.getBool("DoReorthogonalization", true); // default true
 
     // Initialize Lanczos vectors
     ITensor v1 = phi;
@@ -1003,7 +1018,6 @@ applyExp(BigMatrixT const& H, ITensor& phi,
         if (iter > 0)
             w -= beta * v0;
         v0 = v1;
-        beta = norm(w);
 
         // check for Lanczos sequence exhaustion
         if (std::abs(beta) < beta_tol)
@@ -1017,9 +1031,18 @@ applyExp(BigMatrixT const& H, ITensor& phi,
             }
 
         // update next lanczos vector
-        v1 = w;
-        v1 /= beta;
-        lanczos_vectors.push_back(v1);
+         if (doReorth)
+             {
+             beta = reorthAddLanczosVector(lanczos_vectors, w);
+             v1 = lanczos_vectors.back();
+             }
+         else
+             {
+             beta = norm(w);
+             v1 = w/beta; 
+             lanczos_vectors.push_back(v1);
+             }
+
         bigTmat(iter+1, iter) = beta;
         bigTmat(iter, iter+1) = beta;
 
