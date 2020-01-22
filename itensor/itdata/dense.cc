@@ -23,6 +23,10 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/util/tensorstats.h"
 
+using std::move;
+using std::string;
+using std::vector;
+
 namespace itensor {
 
 const char*
@@ -427,5 +431,21 @@ doTask(Order const& O,
     }
 template void doTask(Order const&,Dense<Real> &);
 template void doTask(Order const&,Dense<Cplx> &); 
+
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_read(h5::group parent, std::string const& name, DenseReal & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Dense") Error("Group does not contain Dense data in HDF5 file");
+    auto eltype = h5_read_attribute<string>(g,"eltype");
+    if(eltype != "Float64") Error("Group does not contain Dense Float64 data in HDF5 file");
+    auto data = h5_read<vector<Real>>(g,"data");
+    D = Dense<Real>(move(data));
+    }
+
+#endif //ITENSOR_USE_HDF5
 
 } // namespace itensor

@@ -1091,6 +1091,13 @@ matrixTensor(CMatrix && M, Index const& i1, Index const& i2);
 ITensor
 matrixTensor(CMatrix const& M, Index const& i1, Index const& i2);
 
+#ifdef ITENSOR_USE_HDF5
+//void
+//h5_write(h5::group parent, std::string const& name, ITensor const& I);
+void
+h5_read(h5::group parent, std::string const& name, ITensor & I);
+#endif //ITENSOR_USE_HDF5
+
 } //namespace itensor
 
 #include "itensor_impl.h"

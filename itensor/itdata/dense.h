@@ -330,6 +330,11 @@ permuteDense(Permutation const& P,
              Dense<T>        & dB,
              IndexSet   const& Bis);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_read(h5::group parent, std::string const& name, DenseReal & D);
+#endif
+
 } //namespace itensor
 
 #endif
