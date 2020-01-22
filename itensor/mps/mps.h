@@ -900,6 +900,9 @@ overlap(MPSType const& psi,
         MPSType const& phi, 
         Real& re, Real& im);
 
+Spectrum
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args);
+
 } //namespace itensor
 
 #include "mps_impl.h"

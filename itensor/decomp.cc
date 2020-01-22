@@ -1119,7 +1119,7 @@ qrImpl(ITensor const& A,
 	      int Rrows = nrows(RR) > ncols(RR) ? ncols(RR) : nrows(RR);
 	      int fillrows = nrows(QQ) - Rrows;
 	      
-	      auto qind = Labels(2);
+	      auto qind = Block(2);
 	      qind[0] = B.i1;
 	      qind[1] = n;
 	      auto pQ = getBlock(Qstore,Qis,qind);
@@ -1130,7 +1130,7 @@ qrImpl(ITensor const& A,
 	      //Filler columns of Q due to reshuffling to make uppertriangular
 	      if (uppertriangular and complete and fillrows > 0)
 		{
-		  auto qfind = Labels(2);
+		  auto qfind = Block(2);
 		  qfind[0] = B.i1;
 		  qfind[1] =  extrab + Nblock;
 		  auto pQf = getBlock(Qstore,Qis,qfind);
@@ -1140,7 +1140,7 @@ qrImpl(ITensor const& A,
 		  extrab++;
 		}
 	      
-	      auto rind =  Labels(2);
+	      auto rind = Block(2);
 	      rind[0] = n;
 	      rind[1] = B.i2;
 	      auto pR = getBlock(Rstore,Ris,rind);
@@ -1154,7 +1154,7 @@ qrImpl(ITensor const& A,
 	  {
 	    for (const auto& b : zerob)
 	      {
-		auto sqind =  Labels(2);
+		auto sqind = Block(2);
 		sqind[0] = b;
 		sqind[1] = extrab + Nblock;
 		auto psQ = getBlock(Qstore,Qis,sqind);

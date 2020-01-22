@@ -269,6 +269,12 @@ takeImag()
     return *this;
     }
 
+ITensor& ITensor::
+makeCplx()
+    {
+    doTask(MakeCplx{},store_);
+    return *this;
+    }
 
 ITensor& ITensor::
 randomize(Args const& args)

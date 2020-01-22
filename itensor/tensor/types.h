@@ -207,7 +207,9 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
 // Types to help with block sparse data
 //
 
-using Block = Labels;
+using Block = InfArray<long,11ul>;
+// Maybe try this for better memory?
+//using Block = std::vector<unsigned short>;
 
 // Define a block ordering according to (reverse)
 // lexicographical order
