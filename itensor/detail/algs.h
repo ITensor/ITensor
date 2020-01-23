@@ -98,10 +98,10 @@ quickran()
     auto res = 0.0;
     while(res == 0.0)
         {
-        auto& seed = seed_quickran(0);
-        int im = 134456;
-        int ia = 8121;
-        int ic = 28411;
+        long& seed = seed_quickran(0);
+        long im = 134456;
+        long ia = 8121;
+        long ic = 28411;
         double scale = 1.0 / im;
         seed = (seed*ia+ic)%im;
         res = std::fabs(double(seed)) * scale;
