@@ -98,7 +98,7 @@ quickran()
     auto res = 0.0;
     while(res == 0.0)
         {
-        long& seed = seed_quickran(0);
+        long seed = seed_quickran(0);
         long im = 134456;
         long ia = 8121;
         long ic = 28411;
