@@ -84,10 +84,10 @@ contains(const Container& C,
     }
 
 //Simple linear congruential random number generator
-inline int&
+inline long&
 seed_quickran(int newseed)
     {
-    static int seed = (std::time(NULL) + getpid());
+    static long seed = (std::time(NULL) + getpid());
     if(newseed != 0) seed = newseed;
     return seed;
     }
@@ -98,7 +98,7 @@ quickran()
     auto res = 0.0;
     while(res == 0.0)
         {
-        long seed = seed_quickran(0);
+        long& seed = seed_quickran(0);
         long im = 134456;
         long ia = 8121;
         long ic = 28411;
