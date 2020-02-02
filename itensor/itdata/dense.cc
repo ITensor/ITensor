@@ -452,6 +452,18 @@ h5_read(h5::group parent, std::string const& name, DenseReal & D)
     D = Dense<Real>(move(data));
     }
 
+void
+h5_read(h5::group parent, std::string const& name, DenseCplx & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Dense") Error("Group does not contain Dense data in HDF5 file");
+    auto eltype = h5_read_attribute<string>(g,"eltype");
+    if(eltype != "Complex{Float64}") Error("Group does not contain Dense Complex{Float64} data in HDF5 file");
+    auto data = h5_read<vector<Cplx>>(g,"data");
+    D = Dense<Cplx>(move(data));
+    }
+
 #endif //ITENSOR_USE_HDF5
 
 } // namespace itensor

@@ -841,6 +841,10 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
         { 
         store = h5_readType<DenseReal>(g,"store"); 
         }
+    else if(s_type == "Dense" && s_eltype == "Complex{Float64}") 
+        { 
+        store = h5_readType<DenseCplx>(g,"store"); 
+        }
 
     I = ITensor(is,std::move(store));
     }
