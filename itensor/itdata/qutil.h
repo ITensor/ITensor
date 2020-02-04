@@ -234,7 +234,6 @@ loopContractedBlocks(QDense<TA> const& A,
       if(std::get<2>(blockContractionsSorted[i]) == 
          std::get<2>(blockContractionsSorted[i-1]))
         {
-        println("Repeated");
         nrepeat[nblockC] += 1;
         }
       else
@@ -247,6 +246,9 @@ loopContractedBlocks(QDense<TA> const& A,
     #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < nnzblocksC; i++)
       {
+      // Contractions that have the same output block
+      // location in C are put in the same thread to
+      // avoid race conditions
       for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
         {
         auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
