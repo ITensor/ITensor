@@ -16,6 +16,7 @@
 #ifndef __ITENSOR_QUTIL_H
 #define __ITENSOR_QUTIL_H
 
+#include <omp.h>
 #include "itensor/indexset.h"
 
 namespace itensor {
@@ -213,8 +214,42 @@ loopContractedBlocks(QDense<TA> const& A,
                      std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
                      Callable & callback)
     {
-    for(auto const& [Ablockind,Bblockind,Cblockind] : blockContractions)
+    auto sortBlockContractions = [](std::tuple<Block,Block,Block> const& t1,
+                                    std::tuple<Block,Block,Block> const& t2)
+      { 
+      return std::get<2>(t1) < std::get<2>(t2);
+      };
+    auto blockContractionsSorted = blockContractions;
+    std::sort(std::begin(blockContractionsSorted),std::end(blockContractionsSorted),
+              sortBlockContractions);
+
+    auto nnzblocksC = C.offsets.size();
+    auto offset = std::vector<int>(nnzblocksC,0);
+    auto nrepeat = std::vector<int>(nnzblocksC,1);
+
+    int nblockC = 0;
+    auto ncontractions = blockContractionsSorted.size();
+    for(auto i : range(1,ncontractions))
+      {
+      if(std::get<2>(blockContractionsSorted[i]) == 
+         std::get<2>(blockContractionsSorted[i-1]))
         {
+        println("Repeated");
+        nrepeat[nblockC] += 1;
+        }
+      else
+        {
+        nblockC += 1;
+        offset[nblockC] = i;
+        }
+      }
+
+    #pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < nnzblocksC; i++)
+      {
+      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+        {
+        auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
         auto ablock = getBlock(A,Ais,Ablockind);
         auto bblock = getBlock(B,Bis,Bblockind);
         auto cblock = getBlock(C,Cis,Cblockind);
@@ -224,6 +259,7 @@ loopContractedBlocks(QDense<TA> const& A,
                  cblock,Cblockind,
                  Cblockloc);
         }
+      }
     }
 
 // This is a special case of loopContractedBlocks for QDiag
