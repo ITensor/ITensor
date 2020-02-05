@@ -2833,8 +2833,8 @@ SECTION("Test contraction with no output blocks")
   auto A = randomITensor(QN({"Sz",0}),dag(lA),s);
   auto B = randomITensor(QN({"Sz",0}),dag(lB),s);
 
-  A.set(s=1,lA=1,1.0);
-  B.set(s=2,lB=1,1.0);
+  A.set(lA=1,s=1,1.0);
+  B.set(lB=1,s=2,1.0);
 
   auto C = A*dag(B);
 
