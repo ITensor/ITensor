@@ -111,11 +111,11 @@ imagRef(LAPACK_COMPLEX & z)
     using LAPACK_REAL = double;
     using LAPACK_COMPLEX = MKL_Complex16;
 
-    inline LAPACK_REAL& 
-    realRef(LAPACK_COMPLEX & z) { return z.real; }
+    // inline LAPACK_REAL& 
+    // realRef(LAPACK_COMPLEX & z) { return z.real; }
 
-    inline LAPACK_REAL& 
-    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+    // inline LAPACK_REAL& 
+    // imagRef(LAPACK_COMPLEX & z) { return z.imag; }
     }
 
 //

@@ -126,56 +126,107 @@ getContractedOffsets(BlockSparseA const& A,
             }
         }
 
-    auto couB = detail::GCounter(rB);
-    auto Cblockind = Block(rC,0);
+    // auto couB = detail::GCounter(rB);
+    
 
     // Store pairs of unordered block numbers and their sizes,
     // to be ordered later
-    auto Cblocksizes = BlockOffsets();
-
-    auto blockContractions = std::vector<std::tuple<Block,Block,Block>>();
+    using blockContractionsT = std::vector<std::tuple<Block,Block,Block>>;
 
     //Loop over blocks of A (labeled by elements of A.offsets)
-    for(auto const& aio : A.offsets)
+    int num_threads = omp_get_max_threads();
+    auto Cblocksizes_thread = std::vector<BlockOffsets>(num_threads);
+    auto blockContractions_thread = std::vector<blockContractionsT>(num_threads);
+
+    // printf("num_threads: %d\n", num_threads);
+
+#pragma omp parallel
+    {
+      auto Cblockind = Block(rC,0);
+
+      int thread_num = omp_get_thread_num();
+      // printf("nt %d, tn %d\n", num_threads, thread_num);
+
+#pragma omp for schedule(dynamic)
+      for (int i=0; i<(int)A.offsets.size(); ++i)
+      // for(auto const& aio : A.offsets)
         {
-        //Begin computing elements of Cblock(=destination of this block-block contraction)
-        for(auto iA : range(rA))
+	  auto const& aio = A.offsets[i];
+
+	  //Begin computing elements of Cblock(=destination of this block-block contraction)
+	  for(auto iA : range(rA))
             if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = aio.block[iA];
 
-        //Loop over blocks of B which contract with current block of A
-        for(auto const& bio : B.offsets)
+	  //Loop over blocks of B which contract with current block of A
+	  for(auto const& bio : B.offsets)
             {
-            auto do_blocks_contract = true;
-            for(auto iA : range(rA))
+	      auto do_blocks_contract = true;
+	      for(auto iA : range(rA))
                 {
-                auto iB = AtoB[iA];
-                if(AtoB[iA] != -1)
+		  auto iB = AtoB[iA];
+		  if(AtoB[iA] != -1)
                     if(aio.block[iA] != bio.block[iB])
-                        {
+		      {
                         do_blocks_contract = false;
                         break;
-                        }
+		      }
                 }
-            if(!do_blocks_contract) continue;
+	      if(!do_blocks_contract) continue;
 
-            //Finish making Cblockind
-            for(auto iB : range(rB))
+	      //Finish making Cblockind
+	      for(auto iB : range(rB))
                 if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = bio.block[iB];
 
-            // Store the current contraction
-            blockContractions.push_back(std::make_tuple(aio.block,bio.block,Cblockind));
+	      // Store the current contraction
+	      // PrintData(thread_num);
+	      // PrintData(Cblockind);
+	      blockContractions_thread[thread_num].push_back(std::make_tuple(aio.block,bio.block,Cblockind));
 
-            long blockDim = 1;   //accumulate dim of Indices
-            for(auto j : range(order(Cis)))
+	      long blockDim = 1;   //accumulate dim of Indices
+	      for(auto j : range(order(Cis)))
                 {
-                auto& J = Cis[j];
-                auto i_j = Cblockind[j];
-                blockDim *= J.blocksize0(i_j);
+		  auto& J = Cis[j];
+		  auto i_j = Cblockind[j];
+		  blockDim *= J.blocksize0(i_j);
                 }
-
-            Cblocksizes.push_back(make_blof(Cblockind,blockDim));
+	      // PrintData(thread_num);
+	      // PrintData(Cblockind);
+	      Cblocksizes_thread[thread_num].push_back(make_blof(Cblockind,blockDim));
             } //for B.offsets
         } //for A.offsets
+// #pragma omp critical
+//       {
+// 	printf("tn %d\n", thread_num);
+// 	printf("Cb %d\n", Cblocksizes_thread[thread_num].size());
+// 	printf("bC %d\n", blockContractions_thread[thread_num].size());
+// 	for (auto cb : Cblocksizes_thread[thread_num])
+// 	  PrintData(cb);
+// 	for (auto [a, b, c] : blockContractions_thread[thread_num])
+// 	  {
+// 	    PrintData(a);
+// 	    PrintData(b);
+// 	    PrintData(c);
+// 	  }
+// 	printf("\n");
+//       }
+    }  // omp parallel
+
+    // printf("hgere\n");
+
+    // Combine blocks from threads
+    auto Cblocksizes = BlockOffsets();
+    auto blockContractions = blockContractionsT();
+    for(int thread_num=0; thread_num<num_threads; ++thread_num)
+      {
+	Cblocksizes.insert(Cblocksizes.end(), 
+			   Cblocksizes_thread[thread_num].begin(),
+			   Cblocksizes_thread[thread_num].end());
+	blockContractions.insert(blockContractions.end(), 
+				 blockContractions_thread[thread_num].begin(),
+				 blockContractions_thread[thread_num].end());
+      }
+    // printf("Cb %d\n", Cblocksizes.size());
+    // printf("bC %d\n", blockContractions.size());
 
     // Sort the block sizes by the block labels
     std::sort(Cblocksizes.begin(),Cblocksizes.end(),
@@ -196,6 +247,16 @@ getContractedOffsets(BlockSparseA const& A,
         } 
     // Stores the total size that the storage of C should have
     auto Csize = current_offset;
+    
+    // for (auto cb : Cblocksizes)
+    //   PrintData(cb);
+    // for (auto [a, b, c] : blockContractions)
+    //   {
+    // 	PrintData(a);
+    // 	PrintData(b);
+    // 	PrintData(c);
+    //   }
+
 
     return std::make_tuple(Cblocksizes,Csize,blockContractions);
     }
@@ -229,6 +290,9 @@ loopContractedBlocks(QDense<TA> const& A,
 
     int nblockC = 0;
     auto ncontractions = blockContractionsSorted.size();
+    // printf("nnzblocksC %d\n", nnzblocksC);
+    // printf("ncontractions %d\n", ncontractions);
+
     for(auto i : range(1,ncontractions))
       {
       if(std::get<2>(blockContractionsSorted[i]) == 
@@ -238,31 +302,49 @@ loopContractedBlocks(QDense<TA> const& A,
         }
       else
         {
-        nblockC += 1;
+	nblockC += 1;
+	// printf("nblockC %d, %d\n", nblockC, offset.size());
         offset[nblockC] = i;
-        }
+	}
       }
 
-    #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < nnzblocksC; i++)
-      {
-      // Contractions that have the same output block
-      // location in C are put in the same thread to
-      // avoid race conditions
-      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
-        {
-        auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
-        auto ablock = getBlock(A,Ais,Ablockind);
-        auto bblock = getBlock(B,Bis,Bblockind);
-        auto cblock = getBlock(C,Cis,Cblockind);
-        auto Cblockloc = getBlockLoc(C,Cblockind);
-        callback(ablock,Ablockind,
-                 bblock,Bblockind,
-                 cblock,Cblockind,
-                 Cblockloc);
-        }
-      }
+#pragma omp parallel
+    {
+      
+      // double wtime = omp_get_wtime();
+      
+      
+#pragma omp for schedule(dynamic)
+      for(int i = 0; i < nnzblocksC; i++)
+	{
+	  // Contractions that have the same output block
+	  // location in C are put in the same thread to
+	  // avoid race conditions
+	  for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+	    {
+	      auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
+	      auto ablock = getBlock(A,Ais,Ablockind);
+	      auto bblock = getBlock(B,Bis,Bblockind);
+	      auto cblock = getBlock(C,Cis,Cblockind);
+	      auto Cblockloc = getBlockLoc(C,Cblockind);
+	      callback(ablock,Ablockind,
+		       bblock,Bblockind,
+		       cblock,Cblockind,
+		       Cblockloc);
+	    }
+	}
+      
+//       wtime = omp_get_wtime() - wtime;
+// #pragma omp critical
+//       {
+//       printf("thread %d: ncontractions: %d, nnzblocksC: %d, time: %f \n", omp_get_thread_num(), ncontractions, nnzblocksC, wtime);
+    // }
     }
+  // printf("\n\n\n");
+
+    }
+
+
 
 // This is a special case of loopContractedBlocks for QDiag
 // since QDiag doesn't have a .offsets function
