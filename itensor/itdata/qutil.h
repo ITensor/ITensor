@@ -243,6 +243,19 @@ loopContractedBlocks(QDense<TA> const& A,
         }
       }
 
+#ifdef DEBUG
+    int n = 0;
+    for(int i = 0; i < nnzblocksC; i++)
+      {
+      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+        {
+        if(j != n) Error("Wrong contraction plan in QDense contraction");
+        n++;
+        }
+      }
+    if(ncontractions != n) Error("Wrong number of contractions in QDense contraction");
+#endif
+
     #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < nnzblocksC; i++)
       {
