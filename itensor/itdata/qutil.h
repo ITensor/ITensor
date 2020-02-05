@@ -229,7 +229,7 @@ loopContractedBlocks(QDense<TA> const& A,
 
     int nblockC = 0;
     auto ncontractions = blockContractionsSorted.size();
-    for(auto i : range(1,ncontractions))
+    for(int i = 1; i < ncontractions; i++)
       {
       if(std::get<2>(blockContractionsSorted[i]) == 
          std::get<2>(blockContractionsSorted[i-1]))
