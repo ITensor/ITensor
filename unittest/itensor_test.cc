@@ -2824,6 +2824,26 @@ SECTION("SVD truncation behavior")
 
   }
 
+SECTION("Test setting elements of QN ITensor")
+  {
+  auto s = Index(QN(1),1,QN(-1),1);
+  auto l = Index(QN(-1),1);
+  auto A = ITensor(QN(0),dag(l),s);
+  CHECK(nnz(A)==1);
+  CHECK(nnzblocks(A)==1);
+  CHECK(elt(A,s=2,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=2) == 0.0);
+  CHECK(elt(A,s=1,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=1) == 0.0);
+  A.set(s=2,l=1,1.0);
+  CHECK(nnz(A)==1);
+  CHECK(nnzblocks(A)==1);
+  CHECK(elt(A,s=2,l=1) == 1.0);
+  CHECK(elt(A,l=1,s=2) == 1.0);
+  CHECK(elt(A,s=1,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=1) == 0.0);
+  }
+
 } //TEST_CASE("ITensor")
 
 
