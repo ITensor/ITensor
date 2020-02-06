@@ -308,6 +308,7 @@ loopContractedBlocks(QDense<TA> const& A,
 	}
       }
 
+
 #pragma omp parallel
     {
       
@@ -339,6 +340,40 @@ loopContractedBlocks(QDense<TA> const& A,
 //       {
 //       printf("thread %d: ncontractions: %d, nnzblocksC: %d, time: %f \n", omp_get_thread_num(), ncontractions, nnzblocksC, wtime);
     // }
+=======
+#ifdef DEBUG
+    int n = 0;
+    for(int i = 0; i < nnzblocksC; i++)
+      {
+      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+        {
+        if(j != n) Error("Wrong contraction plan in QDense contraction");
+        n++;
+        }
+      }
+    if(ncontractions != n) Error("Wrong number of contractions in QDense contraction");
+#endif
+
+    #pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < nnzblocksC; i++)
+      {
+      // Contractions that have the same output block
+      // location in C are put in the same thread to
+      // avoid race conditions
+      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+        {
+        auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
+        auto ablock = getBlock(A,Ais,Ablockind);
+        auto bblock = getBlock(B,Bis,Bblockind);
+        auto cblock = getBlock(C,Cis,Cblockind);
+        auto Cblockloc = getBlockLoc(C,Cblockind);
+        callback(ablock,Ablockind,
+                 bblock,Bblockind,
+                 cblock,Cblockind,
+                 Cblockloc);
+        }
+      }
+>>>>>>> 8f27a6465d22437d2042066f6e476b07320813bd
     }
   // printf("\n\n\n");
 

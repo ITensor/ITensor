@@ -2824,6 +2824,24 @@ SECTION("SVD truncation behavior")
 
   }
 
+SECTION("Test contraction with no output blocks")
+  {
+  auto s = Index(QN({"Sz",1}),1,QN({"Sz",-1}),1,"n=10,Site,S=1/2");
+  auto lA = Index(QN({"Sz",1}),1,"l=9,Link");
+  auto lB = Index(QN({"Sz",-1}),1,"l=9,Link");
+
+  auto A = randomITensor(QN({"Sz",0}),dag(lA),s);
+  auto B = randomITensor(QN({"Sz",0}),dag(lB),s);
+
+  A.set(lA=1,s=1,1.0);
+  B.set(lB=1,s=2,1.0);
+
+  auto C = A*dag(B);
+
+  CHECK(nnz(C) == 0);
+  CHECK(nnzblocks(C) == 0);
+  }
+
 } //TEST_CASE("ITensor")
 
 
