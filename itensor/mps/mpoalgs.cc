@@ -335,6 +335,8 @@ oneSiteFitApply(vector<ITensor> & E,
                 Error("P does not have Index ci");
                 }
             auto [U,S,V] = svd(P,{ci},args);
+            (void)U;
+            (void)S;
             Kx.ref(s) = dag(V);
             }
         else
