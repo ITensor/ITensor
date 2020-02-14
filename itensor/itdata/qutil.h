@@ -16,7 +16,10 @@
 #ifndef __ITENSOR_QUTIL_H
 #define __ITENSOR_QUTIL_H
 
+#ifdef ITENSOR_USE_OMP
 #include <omp.h>
+#endif
+
 #include "itensor/indexset.h"
 
 namespace itensor {
@@ -128,19 +131,27 @@ getContractedOffsets(BlockSparseA const& A,
 
     // Store pairs of unordered block numbers and their sizes,
     // to be ordered later
-    using blockContractionsT = std::vector<std::tuple<Block,Block,Block>>;
+    using BlockContractions = std::vector<std::tuple<Block,Block,Block>>;
 
     //Loop over blocks of A (labeled by elements of A.offsets)
+#ifdef ITENSOR_USE_OMP
     int num_threads = omp_get_max_threads();
     auto Cblocksizes_thread = std::vector<BlockOffsets>(num_threads);
-    auto blockContractions_thread = std::vector<blockContractionsT>(num_threads);
+    auto blockContractions_thread = std::vector<BlockContractions>(num_threads);
+#else
+    auto Cblocksizes = BlockOffsets();
+    auto blockContractions = BlockContractions();
+#endif
 
-    #pragma omp parallel
+#pragma omp parallel
     {
     auto Cblockind = Block(rC,0);
 
+#ifdef ITENSOR_USE_OMP
     int thread_num = omp_get_thread_num();
-    #pragma omp for schedule(dynamic)
+#endif
+
+#pragma omp for schedule(dynamic)
     for (int i=0; i<(int)A.offsets.size(); ++i)
         {
         auto const& aio = A.offsets[i];
@@ -170,7 +181,11 @@ getContractedOffsets(BlockSparseA const& A,
                 if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = bio.block[iB];
 
             // Store the current contraction
+#ifdef ITENSOR_USE_OMP
             blockContractions_thread[thread_num].push_back(std::make_tuple(aio.block,bio.block,Cblockind));
+#else
+            blockContractions.push_back(std::make_tuple(aio.block,bio.block,Cblockind));
+#endif
 
             long blockDim = 1;   //accumulate dim of Indices
             for(auto j : range(order(Cis)))
@@ -179,14 +194,19 @@ getContractedOffsets(BlockSparseA const& A,
                 auto i_j = Cblockind[j];
                 blockDim *= J.blocksize0(i_j);
                 }
+#ifdef ITENSOR_USE_OMP
             Cblocksizes_thread[thread_num].push_back(make_blof(Cblockind,blockDim));
+#else
+            Cblocksizes.push_back(make_blof(Cblockind,blockDim));
+#endif
             } //for B.offsets
         } //for A.offsets
     }  // omp parallel
 
+#ifdef ITENSOR_USE_OMP
     // Combine blocks from threads
     auto Cblocksizes = BlockOffsets();
-    auto blockContractions = blockContractionsT();
+    auto blockContractions = BlockContractions();
     for(int thread_num=0; thread_num<num_threads; ++thread_num)
         {
         Cblocksizes.insert(Cblocksizes.end(), 
@@ -196,6 +216,7 @@ getContractedOffsets(BlockSparseA const& A,
                                  blockContractions_thread[thread_num].begin(),
                                  blockContractions_thread[thread_num].end());
         }
+#endif
 
     // Sort the block sizes by the block labels
     std::sort(Cblocksizes.begin(),Cblocksizes.end(),
@@ -342,11 +363,11 @@ loopContractedBlocks(QDense<TA> const& A,
                      std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
                      Callable & callback)
     {
-    #ifdef ITENSOR_USE_OMP
+#ifdef ITENSOR_USE_OMP
     _loopContractedBlocksOMP(A,Ais,B,Bis,C,Cis,blockContractions,callback);
-    #else
+#else
     _loopContractedBlocks(A,Ais,B,Bis,C,Cis,blockContractions,callback);
-    #endif
+#endif
     }
 
 // This is a special case of loopContractedBlocks for QDiag
