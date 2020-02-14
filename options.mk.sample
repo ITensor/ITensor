@@ -110,8 +110,9 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #########
 ## [4]
 ##
-## If you want ITensor to use openmp multithreading,
-## uncomment the line below. 
+## If you want to enable OpenMP multithreading in ITensor,
+## uncomment the line below. You must have OpenMP installed 
+## on your system.
 ##
 ## You should set the environment variable OMP_NUM_THREADS
 ## before running your code to set the number of threads,
