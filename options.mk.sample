@@ -180,8 +180,9 @@ $(error Makefile variable CCCOM not defined in options.mk; please define it.)
 endif
 
 ifdef ITENSOR_USE_OMP
-ITENSOR_INCLUDEFLAGS += -DITENSOR_USE_OMP
-CCCOM += -fopenmp
+ITENSOR_INCLUDEFLAGS += -DITENSOR_USE_OMP -fopenmp
+ITENSOR_LIBFLAGS += -fopenmp
+ITENSOR_LIBGFLAGS += -fopenmp
 endif
 
 CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
