@@ -110,14 +110,35 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #########
 ## [4]
 ##
+## If you want ITensor to use openmp multithreading,
+## uncomment the line below. 
+##
+## You should set the environment variable OMP_NUM_THREADS
+## before running your code to set the number of threads,
+## for example using the command:
+## export OMP_NUM_THREADS=8
+##
+## You may also want to set the MKL_NUM_THREADS to one if
+## you are compiling ITensor with MKL using the command:
+## export MKL_NUM_THREADS=1
+##
+## For more help, visit: 
+## http://itensor.org/docs.cgi?vers=cppv3&page=install
+##
+#ITENSOR_USE_OMP = 1
+
+
+#########
+## [5]
+##
 ## This step is optional, but if you wish to customize the flags
 ## used to compile optimized and debug code, you can do so here.
 
 ## Flags to give the compiler for "release mode"
-OPTIMIZATIONS=-O2 -DNDEBUG -Wall
+OPTIMIZATIONS=-O2 -DNDEBUG -Wall -Wno-unknown-pragmas
 
 ## Flags to give the compiler for "debug mode"
-DEBUGFLAGS=-DDEBUG -g -Wall -pedantic
+DEBUGFLAGS=-DDEBUG -g -Wall -Wno-unknown-pragmas -pedantic
 #
 ## Set this to 1 if you want ITensor to also build dynamic libraries
 ## These can be faster to link and give smaller binary sizes
@@ -155,6 +176,11 @@ endif
 
 ifndef CCCOM
 $(error Makefile variable CCCOM not defined in options.mk; please define it.)
+endif
+
+ifdef ITENSOR_USE_OMP
+ITENSOR_INCLUDEFLAGS += -DITENSOR_USE_OMP
+CCCOM += -fopenmp
 endif
 
 CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable

@@ -225,14 +225,41 @@ template<typename TA,
          typename TC,
          typename Callable>
 void
-loopContractedBlocks(QDense<TA> const& A,
-                     IndexSet const& Ais,
-                     QDense<TB> const& B,
-                     IndexSet const& Bis,
-                     QDense<TC> & C,
-                     IndexSet const& Cis,
-                     std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
-                     Callable & callback)
+_loopContractedBlocks(QDense<TA> const& A,
+                      IndexSet const& Ais,
+                      QDense<TB> const& B,
+                      IndexSet const& Bis,
+                      QDense<TC> & C,
+                      IndexSet const& Cis,
+                      std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
+                      Callable & callback)
+    {
+    for(auto const& [Ablockind,Bblockind,Cblockind] : blockContractions)
+        {
+        auto ablock = getBlock(A,Ais,Ablockind);
+        auto bblock = getBlock(B,Bis,Bblockind);
+        auto cblock = getBlock(C,Cis,Cblockind);
+        auto Cblockloc = getBlockLoc(C,Cblockind);
+        callback(ablock,Ablockind,
+                 bblock,Bblockind,
+                 cblock,Cblockind,
+                 Cblockloc);
+        }
+    }
+
+template<typename TA,
+         typename TB,
+         typename TC,
+         typename Callable>
+void
+_loopContractedBlocksOMP(QDense<TA> const& A,
+                         IndexSet const& Ais,
+                         QDense<TB> const& B,
+                         IndexSet const& Bis,
+                         QDense<TC> & C,
+                         IndexSet const& Cis,
+                         std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
+                         Callable & callback)
     {
     auto sortBlockContractions = [](std::tuple<Block,Block,Block> const& t1,
                                     std::tuple<Block,Block,Block> const& t2)
@@ -250,7 +277,7 @@ loopContractedBlocks(QDense<TA> const& A,
     int nblockC = 0;
     auto ncontractions = blockContractionsSorted.size();
 
-    for(int i = 1; i < ncontractions; i++)
+    for(decltype(ncontractions) i = 1; i < ncontractions; i++)
         {
         if(std::get<2>(blockContractionsSorted[i]) == 
            std::get<2>(blockContractionsSorted[i-1]))
@@ -266,10 +293,11 @@ loopContractedBlocks(QDense<TA> const& A,
 
       
 #ifdef DEBUG
-    int n = 0;
-    for(int i = 0; i < nnzblocksC; i++)
+    decltype(ncontractions) n = 0;
+    for(decltype(nnzblocksC) i = 0; i < nnzblocksC; i++)
       {
-      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+      decltype(ncontractions) last_offset_i = offset[i]+nrepeat[i];
+      for(decltype(ncontractions) j = offset[i]; j < last_offset_i; j++)
         {
         if(j != n) Error("Wrong contraction plan in QDense contraction");
         n++;
@@ -279,7 +307,7 @@ loopContractedBlocks(QDense<TA> const& A,
 #endif
 
     #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < nnzblocksC; i++)
+    for(decltype(nnzblocksC) i = 0; i < nnzblocksC; i++)
       {
       // Contractions that have the same output block
       // location in C are put in the same thread to
@@ -297,10 +325,29 @@ loopContractedBlocks(QDense<TA> const& A,
                  Cblockloc);
         }
       }
-    return;
     }
 
 
+template<typename TA,
+         typename TB,
+         typename TC,
+         typename Callable>
+void
+loopContractedBlocks(QDense<TA> const& A,
+                     IndexSet const& Ais,
+                     QDense<TB> const& B,
+                     IndexSet const& Bis,
+                     QDense<TC> & C,
+                     IndexSet const& Cis,
+                     std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
+                     Callable & callback)
+    {
+    #ifdef ITENSOR_USE_OMP
+    _loopContractedBlocksOMP(A,Ais,B,Bis,C,Cis,blockContractions,callback);
+    #else
+    _loopContractedBlocks(A,Ais,B,Bis,C,Cis,blockContractions,callback);
+    #endif
+    }
 
 // This is a special case of loopContractedBlocks for QDiag
 // since QDiag doesn't have a .offsets function
