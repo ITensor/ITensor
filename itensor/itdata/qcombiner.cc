@@ -47,6 +47,14 @@ write(std::ostream& s, QCombiner const& dat)
     itensor::write(s,dat.store());
     }
 
+std::ostream&
+operator<<(std::ostream & s, QCombiner const& dat)
+    {
+    for(auto const& br : dat.store_) br.print(s);
+    s << dat.range();
+    return s;
+    }
+
 Cplx
 doTask(GetElt const& g, QCombiner const& c)
     {
