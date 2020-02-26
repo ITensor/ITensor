@@ -297,6 +297,28 @@ void cblas_dscal(const LAPACK_INT N, const LAPACK_REAL alpha, LAPACK_REAL* X,con
 void F77NAME(dscal)(LAPACK_INT* N, LAPACK_REAL* alpha, LAPACK_REAL* X,LAPACK_INT* incX);
 #endif
 
+
+#ifdef PLATFORM_acml
+void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info, int jobz_len);
+#else
+void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info);
+#endif
+
+
+#ifdef PLATFORM_acml
+  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info, int jobz_len);
+#else
+  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info);
+#endif
+
 #ifdef PLATFORM_acml
 void F77NAME(zgesdd)(char *jobz, int *m, int *n, LAPACK_COMPLEX *a, int *lda, double *s, 
              LAPACK_COMPLEX *u, int *ldu, LAPACK_COMPLEX *vt, int *ldvt, 
@@ -527,16 +549,52 @@ dscal_wrapper(LAPACK_INT N,
               LAPACK_REAL* data,
               LAPACK_INT inc = 1);
 
+
+void
+dgesdd_wrapper(char * jobz,           //char* specifying how much of U, V to compute
+                                    //choosing *jobz=='S' computes min(m,n) cols of U, V
+               LAPACK_INT* m,       //number of rows of input matrix *A
+               LAPACK_INT* n,       //number of cols of input matrix *A
+               LAPACK_REAL *A,       //contents of input matrix A
+               LAPACK_REAL *s,       //on return, singular values of A
+               LAPACK_REAL *u,       //on return, unitary matrix U
+               LAPACK_REAL *vt,      //on return, unitary matrix V transpose
+               LAPACK_INT *info);
+
 void
 zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
                LAPACK_INT *n,        //number of cols of input matrix *A
-               LAPACK_COMPLEX *A,    //contents of input matrix A
+               Cplx *A,    //contents of input matrix A
                LAPACK_REAL *s,       //on return, singular values of A
-               LAPACK_COMPLEX *u,    //on return, unitary matrix U
-               LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
+               Cplx *u,    //on return, unitary matrix U
+               Cplx *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info);
+
+
+  void
+dgesvd_wrapper(char * jobz,           //char* specifying how much of U, V to compute
+                                    //choosing *jobz=='S' computes min(m,n) cols of U, V
+               LAPACK_INT* m,       //number of rows of input matrix *A
+               LAPACK_INT* n,       //number of cols of input matrix *A
+               LAPACK_REAL *A,       //contents of input matrix A
+               LAPACK_REAL *s,       //on return, singular values of A
+               LAPACK_REAL *u,       //on return, unitary matrix U
+               LAPACK_REAL *vt,      //on return, unitary matrix V transpose
+               LAPACK_INT *info);
+
+void
+zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
+                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
+               LAPACK_INT *m,        //number of rows of input matrix *A
+               LAPACK_INT *n,        //number of cols of input matrix *A
+               Cplx *A,    //contents of input matrix A
+               LAPACK_REAL *s,       //on return, singular values of A
+               Cplx *u,    //on return, unitary matrix U
+               Cplx *vt,   //on return, unitary matrix V transpose
+               LAPACK_INT *info);
+
 
 //
 // dgeqrf

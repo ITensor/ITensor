@@ -70,6 +70,45 @@ namespace detail {
         return info;
         }
 
+
+  int
+  SVD_gesdd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
+  {
+     LAPACK_INT info = 0;
+     char S = 'S';
+     zgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+     return info;
+  }
+
+  int
+  SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
+  {
+     LAPACK_INT info = 0;
+     char S = 'S';
+     dgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+     return info;
+  }
+
+  
+  int
+  SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
+  {
+     LAPACK_INT info = 0;
+     char S = 'S';
+     zgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+     
+     return info;
+  }
+
+  int
+  SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
+  {
+     LAPACK_INT info = 0;
+     char S = 'S';
+     dgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+     return info;
+  }
+
 } //namespace detail
 
 //void
@@ -460,31 +499,13 @@ SVDRefImpl(MatRefc<T> const& M,
            MatRef<T>  const& U, 
            VectorRef  const& D, 
            MatRef<T>  const& V,
-           Real thresh,
-           int depth = 0)
+           const Args & args)
     {
-    auto Mr = nrows(M), 
-         Mc = ncols(M);
+      auto Mr = nrows(M); 
+      //    Mc = ncols(M);
 
-    if(Mr > Mc)
-        {
-        SVDRefImpl(transpose(M),V,D,U,thresh,depth);
-        conjugate(V);
-        conjugate(U);
-#ifdef CHKSVD
-        checksvd(M,U,D,V);
-#endif
-        return;
-        }
-
-#ifdef DEBUG
-    if(!(nrows(U)==Mr && ncols(U)==Mr)) 
-        throw std::runtime_error("SVD (ref version), wrong size of U");
-    if(!(nrows(V)==Mc && ncols(V)==Mr)) 
-        throw std::runtime_error("SVD (ref version), wrong size of V");
-    if(D.size()!=Mr)
-        throw std::runtime_error("SVD (ref version), wrong size of D");
-#endif
+    auto thresh = args.getReal("SVDThreshold",SVD_THRESH);
+    //auto depth  = args.getInt("SVDDepth",0);
 
     //Form 'density matrix' rho
     Mat<T> rho,
@@ -596,7 +617,7 @@ SVDRefImpl(MatRefc<T> const& M,
     auto d = subVector(D,start,Mr);
     Mat<T> bu(n,n),
            bv(n,n);
-    SVDRef(makeRef(b),makeRef(bu),d,makeRef(bv),thresh);
+    SVDRefImpl(makeRef(b),makeRef(bu),d,makeRef(bv),args);
 
     //reuse mv's storage to avoid allocation
     auto W = move(mv);
@@ -605,12 +626,6 @@ SVDRefImpl(MatRefc<T> const& M,
 
     auto X = v*bv;
     v &= X;
-
-#ifdef CHKSVD
-	checksvd(M,U,D,V);
-#endif
-
-    return;
     }
 
 template<typename T>
@@ -619,12 +634,44 @@ SVDRef(MatRefc<T> const& M,
        MatRef<T>  const& U, 
        VectorRef  const& D, 
        MatRef<T>  const& V,
-       Real thresh)
+       const Args & args)
+{
+  auto Mr = nrows(M), Mc = ncols(M);
+  
+  if(Mr > Mc)
     {
-    SVDRefImpl(M,U,D,V,thresh);
+      SVDRef(transpose(M),V,D,U,args);
+      conjugate(V);
+      conjugate(U);
     }
-template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,Real);
-template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&,Real);
+  else
+    {
+  
+#ifdef DEBUG
+      if(!(nrows(U)==Mr && ncols(U)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of U");
+      if(!(nrows(V)==Mc && ncols(V)==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of V");
+      if(D.size()!=Mr)
+        throw std::runtime_error("SVD (ref version), wrong size of D");
+#endif
+  
+      auto svdMethod = args.getString("SVDMethod","ITensor");
+      if (svdMethod=="ITensor")
+	SVDRefImpl(M,U,D,V,args);
+      else if (svdMethod == "gesdd" or svdMethod == "gesvd")
+	SVDRefLAPACK(M,U,D,V,args);
+      else 
+	throw std::runtime_error("Unsupported SVD method: "+svdMethod);
+    }
+    
+#ifdef CHKSVD
+  checksvd(M,U,D,V);
+#endif
+}
+  
+template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,const Args&);
+template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&, const Args&);
 
 
 
