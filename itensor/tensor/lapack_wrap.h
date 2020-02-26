@@ -312,11 +312,22 @@ void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK
 #ifdef PLATFORM_acml
   void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
              double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
-             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info, int jobz_len);
+             double *work, LAPACK_INT *lwork, LAPACK_INT *info, int jobz_len);
 #else
   void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
              double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
-             double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info);
+             double *work, LAPACK_INT *lwork, LAPACK_INT *info);
+#endif
+
+
+  #ifdef PLATFORM_acml
+  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s, 
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu,  LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+             LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_REAL * rwork, LAPACK_INT *info, int jobz_len);
+#else
+  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s, 
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+		       LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_REAL * rwork, LAPACK_INT *info);
 #endif
 
 #ifdef PLATFORM_acml
