@@ -17,6 +17,7 @@
 #define __ITENSOR_MATRIX_ALGS__H_
 
 #include "itensor/tensor/slicemat.h"
+#include "itensor/util/args.h"
 
 namespace itensor {
 
@@ -114,7 +115,7 @@ SVD(MatM && M,
     MatU && U, 
     VecD && D, 
     MatV && V,
-    Real thresh = SVD_THRESH);
+    const Args & args = Args::global() );
 
   
 //

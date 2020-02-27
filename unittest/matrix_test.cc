@@ -1682,8 +1682,11 @@ SECTION("Orthogonalize")
 
 SECTION("Singular Value Decomp")
     {
-    SECTION("One Pass Case")
-        {
+      std::vector<std::string> svdMethods = {"ITensor", "gesdd", "gesvd"};
+      for (auto const & method : svdMethods){
+	Args svdArgs = {"SVDMethod", method, "SVDThreshold", SVD_THRESH};
+    SECTION("One Pass Case " + method)
+        {  
         Matrix U,V,D;
         Vector d;
 
@@ -1698,25 +1701,25 @@ SECTION("Singular Value Decomp")
         auto Nr = 10,
              Nc = 8;
         auto M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R = U*dMat(d)*transpose(V);
         CHECK((norm(R-M)/norm(M)) < 1E-14);
 
         Nr = 10;
         Nc = 10;
         M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R2 = U*dMat(d)*transpose(V);
         CHECK((norm(R2-M)/norm(M)) < 1E-12);
 
         Nr = 10;
         Nc = 20;
         M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R3 = U*dMat(d)*transpose(V);
         CHECK((norm(R3-M)/norm(M)) < 1E-14);
         }
-    SECTION("Two Pass Case")
+    SECTION("Two Pass Case "  + method)
         {
         auto n = 5,
              m = 5;
@@ -1725,6 +1728,7 @@ SECTION("Singular Value Decomp")
 
         Matrix U,V;
         Vector d;
+	//Use the same method to set up test matrix
         SVD(M,U,d,V);
 
         //Make svals decay quickly
@@ -1739,14 +1743,16 @@ SECTION("Singular Value Decomp")
         auto DD = Matrix(ns,ns);
         diagonal(DD) &= d;
         M = U*DD*transpose(V);
-        SVD(M,U,d,V,1E-1);
+	svdArgs.add("SVDThreshold",1e-1);
+        SVD(M,U,d,V,svdArgs);
+	svdArgs.add("SVDThreshold",SVD_THRESH);
         diagonal(DD) &= d;
 
         //Print(norm(U*DD*transpose(V)-M));
         CHECK(norm(U*DD*transpose(V)-M) < 1E-12);
         }
 
-    SECTION("Accuracy Stress Test")
+    SECTION("Accuracy Stress Test "  + method)
         {
         auto n = 100,
              m = n;
@@ -1755,6 +1761,7 @@ SECTION("Singular Value Decomp")
 
         Matrix U,V;
         Vector d;
+	//Use the same method to set up test matrix
         SVD(M,U,d,V);
 
         //Change spectrum to be quickly decaying,
@@ -1769,8 +1776,9 @@ SECTION("Singular Value Decomp")
 
         M = U*DD*transpose(V);
 
-        auto thresh = 1E-3;
-        SVD(M,U,d,V,thresh);
+        svdArgs.add("SVDThreshold",1e-3);
+        SVD(M,U,d,V,svdArgs);
+	svdArgs.add("SVDThreshold",SVD_THRESH);
         diagonal(DD) &= d;
 
         //Print(norm(U*DD*transpose(V)-M));
@@ -1779,7 +1787,7 @@ SECTION("Singular Value Decomp")
         CHECK(relnrm < 1E-13);
         }
 
-    SECTION("Complex SVD")
+    SECTION("Complex SVD "  + method)
         {
         auto M = CMatrix(10,10);
         for(auto r : range(nrows(M)))
@@ -1790,13 +1798,14 @@ SECTION("Singular Value Decomp")
 
         CMatrix U,V;
         Vector d;
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
 
         auto D = Matrix(d.size(),d.size());
         diagonal(D) &= d;
 
         CHECK(norm(M-U*D*conj(transpose(V))) < 1E-12);
         }
+      }
     }
 
 //SECTION("Complex SVD")
@@ -1868,7 +1877,7 @@ SECTION("Singular Value Decomp")
 //        Mre = Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim);
 //        Mim = Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim);
 //
-//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,1E-1);
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,{"SVDThreshold", 1e-1});
 //        diagonal(DD) &= d;
 //
 //        auto nrmre = norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre)/norm(Mre);

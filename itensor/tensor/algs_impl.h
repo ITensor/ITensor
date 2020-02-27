@@ -48,16 +48,42 @@ copyNegElts(Iter mre,
         ++mim;
         }
     }
+  
+  //Helpers for real/complex SVDs
+  inline Real
+  conjIfCplx(Real n) 
+  {
+    return n;
+      }
 
-    int
-    hermitianDiag(int N, Real *Udata, Real *ddata);
-    int
-    hermitianDiag(int N, Cplx *Udata,Real *ddata);
+   inline Cplx
+  conjIfCplx(Cplx n)
+  {
+    return std::conj(n);
+      }
+    
 
-    int
-    QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata);
-    int
-    QR(int M, int N, int Rrows, Cplx *Qdata,Cplx *Rdata);
+  int
+  hermitianDiag(int N, Real *Udata, Real *ddata);
+  int
+  hermitianDiag(int N, Cplx *Udata,Real *ddata);
+
+  int
+  QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata);
+  int
+  QR(int M, int N, int Rrows, Cplx *Qdata,Cplx *Rdata);
+
+  int
+  SVD_gesdd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata);
+
+  int
+  SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata);
+
+  int
+  SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata);
+
+  int
+  SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata);
     
 
 } //namespace detail
@@ -173,7 +199,7 @@ SVDRef(MatRefc<T> const& M,
        MatRef<T>  const& U, 
        VectorRef  const& D, 
        MatRef<T>  const& V,
-       Real thresh);
+       const Args & args);
 
 template<class MatM, 
          class MatU,
@@ -185,7 +211,7 @@ SVD(MatM && M,
     MatU && U, 
     VecD && D, 
     MatV && V,
-    Real thresh)
+    const Args & args)
     {
     auto Mr = nrows(M),
          Mc = ncols(M);
@@ -193,7 +219,7 @@ SVD(MatM && M,
     resize(U,Mr,nsv);
     resize(V,Mc,nsv);
     resize(D,nsv);
-    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V),thresh);
+    SVDRef(makeRef(M),makeRef(U),makeRef(D),makeRef(V), args);
     }
 
 template<class MatM, 
@@ -307,6 +333,62 @@ QR( MatA&& A,
     if(N > M)
       reduceCols(Q,M);
    }
+
+
+  template<typename T>
+  void
+SVDRefLAPACK(
+            MatRefc<T> const& M,
+            MatRef<T>  const& U, 
+            VectorRef  const& D, 
+            MatRef<T>  const& V,
+	     const Args & args)
+{
+    int Mr = nrows(M), 
+         Mc = ncols(M);
+
+    auto svdMethod = args.getString("SVDMethod");
+
+    auto pA = M.data();
+    std::vector<T> cpA;
+    cpA.resize(Mr*Mc);
+    
+    // LAPACK ?gesdd will read input matrix in column-major order. If we actually
+    // want to perform SVD of M**T where M is stored in column-major, we have to pass
+    // M**T stored in column-major. Copy of inpput matrix has to be done in any case, 
+    // since input matrix is destroyed in ?gesdd
+    if(isTransposed(M)) {
+        for (unsigned int i=0; i<cpA.size(); i++, pA++) cpA[(i%Mc)*Mr + i/Mc] = *pA;
+    } else {
+        std::copy(pA,pA+Mr*Mc,cpA.data());
+    }
+
+    int info = -1;
+    if (svdMethod == "gesdd")
+      info = detail::SVD_gesdd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+    else if (svdMethod == "gesvd")
+      info = detail::SVD_gesvd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+
+    if(info != 0) 
+      {
+        throw std::runtime_error("Error condition in LAPACK SVD");
+      }
+
+    // from ?gesdd:
+    // if JOBZ = 'S', V contains the first min(M=Mr,N=Mc) rows of
+    // V**T (the right singular vectors, stored rowwise); 
+    // Lapack stores V in column-major format, while the return of this function
+    // expects row-major format of V, hence the V is reordered accordingly
+    auto ncV = const_cast<T*>(V.data()); 
+    auto pV  = reinterpret_cast<T*>(ncV);
+
+    int l = std::min(Mr,Mc);
+    std::vector<T> vt(l*Mc);
+    std::copy(V.data(), V.data()+l*Mc, vt.data());
+    for (unsigned int i=0; i<vt.size(); i++, pV++) *pV = detail::conjIfCplx(vt[(i%Mc)*l + i/Mc]);
+    
+}
+
 
 } //namespace itensor
 
