@@ -15,7 +15,6 @@
 //
 #ifndef __ITENSOR_MATRIX_ALGS_IMPL_H_
 #define __ITENSOR_MATRIX_ALGS_IMPL_H_
-#include "itensor/global.h"
 
 namespace itensor {
 
