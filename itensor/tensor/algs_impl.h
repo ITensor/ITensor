@@ -15,6 +15,7 @@
 //
 #ifndef __ITENSOR_MATRIX_ALGS_IMPL_H_
 #define __ITENSOR_MATRIX_ALGS_IMPL_H_
+#include "itensor/global.h"
 
 namespace itensor {
 
@@ -289,8 +290,11 @@ void
 QR( MatA&& A,
     MatQ && Q,
     MatR && R,
-    bool complete)
+    const Args & args)
    {
+
+     auto complete = args.getBool("Complete", false);
+     auto positive = args.getBool("PositiveDiagonal", false);
     using Aval = typename stdx::decay_t<MatA>::value_type;
     using Qval = typename stdx::decay_t<MatQ>::value_type;
     static_assert((isReal<Aval>() && isReal<Qval>()) || (isCplx<Aval>() && isCplx<Qval>()),
@@ -332,6 +336,19 @@ QR( MatA&& A,
         }
     if(N > M)
       reduceCols(Q,M);
+    if (positive)
+      {
+	const int diagSize = Rrows < N ? Rrows : N;
+	for (int i = 0; i < diagSize; i++)
+	  {
+	  if(std::real(R(i,i)) < 0)
+	    {
+	      row(R, i) *= -1.;
+	      column(Q,i) *= -1.;
+	    }
+	 
+	  }
+      }
    }
 
 

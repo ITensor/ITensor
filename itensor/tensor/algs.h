@@ -133,7 +133,7 @@ void
 QR(MatA && A,
    MatQ && Q,
    MatR && R,
-   bool complete = true);
+   const Args & args = Args::global());
 
 //
 // Hermitian Matrix exponentiate
