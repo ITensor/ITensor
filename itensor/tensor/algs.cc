@@ -509,7 +509,7 @@ SVDRefImpl(MatRefc<T> const& M,
 
     //Form 'density matrix' rho
     Mat<T> rho,
-           Mconj;
+      Mconj, tempV, R;
     if(isCplx(M)) 
         {
         Mconj = conj(M);
@@ -522,13 +522,6 @@ SVDRefImpl(MatRefc<T> const& M,
 
     //Diagonalize rho: evals are squares of singular vals
     diagHermitian(rho,U,D);
-
-    for(auto& el : D)
-        {
-        if(el < 0) el = 0.;
-        else       el = std::sqrt(el);
-        }
-
 
     //Put result of Mt*U==(V*D) in V storage
     if(isCplx(M))
@@ -561,7 +554,23 @@ SVDRefImpl(MatRefc<T> const& M,
     //    orthog(columns(V,nlarge,Mr),2);
     //    }
 
-    orthog(V,2);
+    //orthog(V,2);
+
+
+    QR(V, tempV, R, {"Complete", false, "PositiveDiagonal", true});
+
+    //Sort diagonal into descending order
+    auto diag = diagonal(R);
+    std::vector<long unsigned int> idx(diag.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(),
+	      [&diag](long unsigned int i1, long unsigned int i2)
+	      {return std::real(diag(i1)) > std::real(diag(i2));});
+    for(long unsigned int i = 0; i < diag.size(); i++)
+      {
+	D(i) = std::real(diag(idx[i]));
+	column(V,i) &= column(tempV, idx[i]);
+      }
 
     bool done = false;
     size_t start = 1;
