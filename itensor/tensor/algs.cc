@@ -558,18 +558,10 @@ SVDRefImpl(MatRefc<T> const& M,
 
 
     QR(V, tempV, R, {"Complete", false, "PositiveDiagonal", true});
-
-    //Sort diagonal into descending order
-    auto diag = diagonal(R);
-    std::vector<long unsigned int> idx(diag.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    std::sort(idx.begin(), idx.end(),
-	      [&diag](long unsigned int i1, long unsigned int i2)
-	      {return std::real(diag(i1)) > std::real(diag(i2));});
-    for(long unsigned int i = 0; i < diag.size(); i++)
+    V &= std::move(tempV);
+    for(long unsigned int i = 0; i < D.size(); i++)
       {
-	D(i) = std::real(diag(idx[i]));
-	column(V,i) &= column(tempV, idx[i]);
+	D(i) = std::real(R(i,i));
       }
 
     bool done = false;
