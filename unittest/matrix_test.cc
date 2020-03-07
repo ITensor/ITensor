@@ -1423,7 +1423,7 @@ SECTION("diagHermitian")
 	auto Id = eye(N, N);
 
         Matrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*transpose(Q);
@@ -1445,7 +1445,7 @@ SECTION("diagHermitian")
 	auto Id = eye(P, P);
 
         Matrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*transpose(Q);
@@ -1461,13 +1461,38 @@ SECTION("diagHermitian")
 	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
         }
 
+
+     SECTION("Positive Real case rank deficient")
+        {
+	auto M = randomMat(P, N);
+	auto Id = eye(P, P);
+
+        Matrix Q, R;
+        QR(M,Q,R, {"Complete", true, "PositiveDiagonal", true});
+
+        auto T = Q*R;
+	auto QQ = Q*transpose(Q);
+
+        for(auto r : range(P))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+	    if (r > c)
+	      CHECK(R(r,c) == 0); //Check R upper triangular
+	     if (r == c)
+	      CHECK(R(r,r) >= 0); //Check R upper triangular
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
+        }
+
     SECTION("Real case thin")
         {
 	auto M = randomMat(N, P);
 	auto Id = eye(P, P);
 
         Matrix Q, R;
-        QR(M,Q,R, false);
+        QR(M,Q,R, {"Complete", false});
 
         auto T = Q*R;
 	auto QQ = transpose(Q)*Q;
@@ -1488,7 +1513,7 @@ SECTION("diagHermitian")
 	auto M = randomMatC(N, P);
 
         CMatrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1511,7 +1536,7 @@ SECTION("diagHermitian")
         {
         auto M = randomMatC(P, N);
         CMatrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1534,7 +1559,7 @@ SECTION("diagHermitian")
 	auto M = randomMatC(N, P);
 
         CMatrix Q, R;
-        QR(M,Q,R, false);
+        QR(M,Q,R, {"Complete", false});
 
         auto T = Q*R;
 	auto QQ = conj(transpose(Q))*Q;

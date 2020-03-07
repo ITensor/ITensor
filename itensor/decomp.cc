@@ -1016,7 +1016,7 @@ qrImpl(ITensor const& A,
 
         Mat<T> QQ,RR;
 
-        QR(matA, QQ, RR, complete);
+        QR(matA, QQ, RR, args);
         
         auto qL = Index(nrows(RR),internaltagset);
         auto rL = setTags(qL,internaltagset);
@@ -1054,7 +1054,7 @@ qrImpl(ITensor const& A,
 	      zerob.erase(B.i1);
 	      auto & QQ = Qmats.at(b);
 	      auto & RR = Rmats.at(b);
-	      QR(matA, QQ, RR, complete);
+	      QR(matA, QQ, RR, args);
 	      if (uppertriangular)
 		{
 		  int subQcols = nrows(RR) > ncols(RR) ? ncols(RR) : nrows(RR);
