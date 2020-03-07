@@ -30,6 +30,7 @@ using std::tie;
 namespace itensor {
 
 namespace detail {
+
     int
     hermitianDiag(int N, Real *Udata, Real *ddata)
         {
@@ -47,67 +48,71 @@ namespace detail {
     QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata)
         {
         LAPACK_INT info = 0;
-	std::vector<LAPACK_REAL> tau(N);
+        std::vector<LAPACK_REAL> tau(N);
         dgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
-	for (int i = 0; i < Rrows; i++)
-	  for (int j = i; j < N; j++) 
-	    Rdata[i + j*Rrows] = Qdata[i+j*M];
-	int min = M < N ? M : N;
-	dorgqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
+        for(int i = 0; i < Rrows; i++)
+        for(int j = i; j < N; j++) 
+            {
+            Rdata[i + j*Rrows] = Qdata[i+j*M];
+            }
+        int min = M < N ? M : N;
+        dorgqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
         return info;
         }
+
     int
     QR(int M, int N, int Rrows, Cplx *Qdata, Cplx *Rdata)
         {
         LAPACK_INT info = 0;
-	std::vector<LAPACK_COMPLEX> tau(N);
+        std::vector<LAPACK_COMPLEX> tau(N);
         zgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
-	for (int i = 0; i < Rrows; i++)
-	  for (int j = i; j < N; j++) 
-	    Rdata[i + j*Rrows] = Qdata[i+j*M];
-	int min = M < N ? M : N;
-	zungqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
+        for(int i = 0; i < Rrows; i++)
+        for(int j = i; j < N; j++) 
+            {
+            Rdata[i + j*Rrows] = Qdata[i+j*M];
+            }
+        int min = M < N ? M : N;
+        zungqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
         return info;
         }
 
 
   int
   SVD_gesdd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
-  {
-     LAPACK_INT info = 0;
-     char S = 'S';
-     zgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
-     return info;
-  }
+    {
+    LAPACK_INT info = 0;
+    char S = 'S';
+    zgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+    return info;
+    }
 
-  int
-  SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
-  {
-     LAPACK_INT info = 0;
-     char S = 'S';
-     dgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
-     return info;
-  }
+    int
+    SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
+    {
+    LAPACK_INT info = 0;
+    char S = 'S';
+    dgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+    return info;
+    }
 
   
-  int
-  SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
-  {
-     LAPACK_INT info = 0;
-     char S = 'S';
-     zgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
-     
-     return info;
-  }
+    int
+    SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
+        {
+        LAPACK_INT info = 0;
+        char S = 'S';
+        zgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+        return info;
+        }
 
-  int
-  SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
-  {
-     LAPACK_INT info = 0;
-     char S = 'S';
-     dgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
-     return info;
-  }
+    int
+    SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
+        {
+        LAPACK_INT info = 0;
+        char S = 'S';
+        dgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+        return info;
+        }
 
 } //namespace detail
 
@@ -501,15 +506,12 @@ SVDRefImpl(MatRefc<T> const& M,
            MatRef<T>  const& V,
            const Args & args)
     {
-      auto Mr = nrows(M); 
-      //    Mc = ncols(M);
+    auto Mr = nrows(M); 
 
     auto thresh = args.getReal("SVDThreshold",SVD_THRESH);
-    //auto depth  = args.getInt("SVDDepth",0);
 
     //Form 'density matrix' rho
-    Mat<T> rho,
-      Mconj, tempV, R;
+    Mat<T> rho, Mconj, tempV, R;
     if(isCplx(M)) 
         {
         Mconj = conj(M);
@@ -524,49 +526,17 @@ SVDRefImpl(MatRefc<T> const& M,
     diagHermitian(rho,U,D);
 
     //Put result of Mt*U==(V*D) in V storage
-    if(isCplx(M))
-        mult(transpose(Mconj),U,V);
-    else
-        mult(transpose(M),U,V);
+    if(isCplx(M)) mult(transpose(Mconj),U,V);
+    else          mult(transpose(M),U,V);
 
-    //size_t nlarge = 0;
-    //auto rthresh = D(0)*thresh;
-    //for(decltype(Mr) n = 0; n < Mr; ++n)
-    //    {
-    //    if(D(n) < rthresh)
-    //        {
-    //        nlarge = n;
-    //        break;
-    //        }
-    //    }
-    //for(decltype(nlarge) n = 0; n < nlarge; ++n)
-    //    {
-    //    column(V,n) /= D(n);
-    //    }
-    //if(nlarge < Mr)
-    //    {
-    //    //Much more accurate than dividing
-    //    //by smallest singular values
-    //    //TODO: buggy however, orthog may
-    //    //      not respect orthogonality
-    //    //      of "nlarge" columns relative
-    //    //      to rest of columns
-    //    orthog(columns(V,nlarge,Mr),2);
-    //    }
-
-    //orthog(V,2);
-
-
-    QR(V, tempV, R, {"Complete", false, "PositiveDiagonal", true});
+    QR(V, tempV, R, {"Complete=",false, "PositiveDiagonal=",true});
     V &= std::move(tempV);
-    for(long unsigned int i = 0; i < D.size(); i++)
-      {
-	D(i) = std::real(R(i,i));
-      }
+    for(decltype(D.size()) i = 0; i < D.size(); ++i)
+        {
+        D(i) = std::real(R(i,i));
+        }
 
-    bool done = false;
-    size_t start = 1;
-    tie(done,start) = checkSVDDone(D,thresh);
+    auto [done,start] = checkSVDDone(D,thresh);
 
     if(done) return;
 
@@ -576,30 +546,6 @@ SVDRefImpl(MatRefc<T> const& M,
     //
 
     auto n = Mr-start;
-
-     //   {
-     //   //println("Method 1");
-     //   //TEST VERSION - SLOW!
-     //   auto B = transpose(U)*M*V;
-     //   auto b = Matrix{subMatrix(B,start,Mr,start,Mr)};
-
-     //   auto d = subVector(D,start,Mr);
-     //   Matrix u(n,n),
-     //          v(n,n);
-     //   SVDRefImpl(b,u,d,v,thresh,1+depth);
-
-     //   auto ns = d.size();
-     //   auto dd = Matrix(ns,ns);
-     //   diagonal(dd) &= d;
-
-     //   auto nu = columns(U,start,Mr);
-     //   auto tmpu = nu * u;
-     //   nu &= tmpu;
-
-     //   auto nv = columns(V,start,Mr);
-     //   auto tmpv = nv * v;
-     //   nv &= tmpv;
-     //   }
 
     //reuse rho's storage to avoid allocation
     auto mv = move(rho);
@@ -636,40 +582,45 @@ SVDRef(MatRefc<T> const& M,
        VectorRef  const& D, 
        MatRef<T>  const& V,
        const Args & args)
-{
-  auto Mr = nrows(M), Mc = ncols(M);
-  
-  if(Mr > Mc)
     {
-      SVDRef(transpose(M),V,D,U,args);
-      conjugate(V);
-      conjugate(U);
-    }
-  else
-    {
+    auto Mr = nrows(M), Mc = ncols(M);
   
+    if(Mr > Mc)
+        {
+        SVDRef(transpose(M),V,D,U,args);
+        conjugate(V);
+        conjugate(U);
+        }
+    else
+        {
 #ifdef DEBUG
-      if(!(nrows(U)==Mr && ncols(U)==Mr)) 
-        throw std::runtime_error("SVD (ref version), wrong size of U");
-      if(!(nrows(V)==Mc && ncols(V)==Mr)) 
-        throw std::runtime_error("SVD (ref version), wrong size of V");
-      if(D.size()!=Mr)
-        throw std::runtime_error("SVD (ref version), wrong size of D");
+        if(!(nrows(U)==Mr && ncols(U)==Mr)) 
+            throw std::runtime_error("SVD (ref version), wrong size of U");
+        if(!(nrows(V)==Mc && ncols(V)==Mr)) 
+            throw std::runtime_error("SVD (ref version), wrong size of V");
+        if(D.size()!=Mr)
+            throw std::runtime_error("SVD (ref version), wrong size of D");
 #endif
-  
-      auto svdMethod = args.getString("SVDMethod","ITensor");
-      if (svdMethod=="ITensor")
-	SVDRefImpl(M,U,D,V,args);
-      else if (svdMethod == "gesdd" or svdMethod == "gesvd")
-	SVDRefLAPACK(M,U,D,V,args);
-      else 
-	throw std::runtime_error("Unsupported SVD method: "+svdMethod);
-    }
+
+        auto svdMethod = args.getString("SVDMethod","ITensor");
+        if(svdMethod=="ITensor")
+            {
+            SVDRefImpl(M,U,D,V,args);
+            }
+        else if(svdMethod == "gesdd" or svdMethod == "gesvd")
+            {
+            SVDRefLAPACK(M,U,D,V,args);
+            }
+        else 
+            {
+            throw std::runtime_error("Unsupported SVD method: "+svdMethod);
+            }
+        }
     
 #ifdef CHKSVD
-  checksvd(M,U,D,V);
+    checksvd(M,U,D,V);
 #endif
-}
+    }
   
 template void SVDRef(MatRefc<Real> const&,MatRef<Real> const&, VectorRef const&, MatRef<Real> const&,const Args&);
 template void SVDRef(MatRefc<Cplx> const&,MatRef<Cplx> const&, VectorRef const&, MatRef<Cplx> const&, const Args&);
