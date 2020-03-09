@@ -34,21 +34,28 @@ class ElectronSite
     ElectronSite(Args const& args = Args::global())
         {
         auto ts = TagSet("Site,Elec");
-        if( args.defined("SiteNumber") )
-          ts.addTags("n="+str(args.getInt("SiteNumber")));
+        if(args.defined("SiteNumber"))
+            {
+            ts.addTags("n="+str(args.getInt("SiteNumber")));
+            }
         auto conserveQNs = args.getBool("ConserveQNs",true);
         auto conserveNf = args.getBool("ConserveNf",conserveQNs);
         auto conserveSz = args.getBool("ConserveSz",conserveQNs);
-        int Up = (conserveSz ? +1 : 0),
-            Dn = -Up;
         if(conserveQNs || conserveNf || conserveSz)
             {
-            if(conserveNf)
+            if(conserveNf && conserveSz)
                 {
                 s = Index(QN({"Sz", 0},{"Nf",0,-1}),1,
-                          QN({"Sz",Up},{"Nf",1,-1}),1,
-                          QN({"Sz",Dn},{"Nf",1,-1}),1,
+                          QN({"Sz",+1},{"Nf",1,-1}),1,
+                          QN({"Sz",-1},{"Nf",1,-1}),1,
                           QN({"Sz", 0},{"Nf",2,-1}),1,Out,ts);
+                }
+            else if(conserveNf) // don't conserve Sz
+                {
+                s = Index(QN({"Nf",0,-1}),1,
+                          QN({"Nf",1,-1}),1,
+                          QN({"Nf",1,-1}),1,
+                          QN({"Nf",2,-1}),1,Out,ts);
                 }
             else if(conserveSz) //don't conserve Nf, only fermion parity
                 {
