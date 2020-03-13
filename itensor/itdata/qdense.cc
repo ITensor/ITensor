@@ -681,9 +681,9 @@ doTask(Contract& Con,
     computeLabels(Con.Lis,order(Con.Lis),Con.Ris,order(Con.Ris),Lind,Rind);
 
     //compute new index set (Con.Nis):
-    Labels Cind;
+    Labels Nind;
     const bool sortResult = false;
-    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
+    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Nind,sortResult);
 
 TIMER_START(32);
     //Allocate storage for C
@@ -704,7 +704,7 @@ TIMER_STOP(33);
     //Function to execute for each pair of
     //contracted blocks of A and B
     auto do_contract = 
-        [&Con,&Lind,&Rind,&Cind,&betas]
+        [&Con,&Lind,&Rind,&Nind,&betas]
         (DataRange<const VA> ablock, Block const& Ablockind,
          DataRange<const VB> bblock, Block const& Bblockind,
          DataRange<VC>       cblock, Block const& Cblockind,
@@ -726,7 +726,7 @@ TIMER_STOP(33);
         auto cref = makeRef(cblock,&Crange);
 
         // cref += aref*bref or cref = aref*bref
-        contract(aref,Lind,bref,Rind,cref,Cind,1.,betas[Cblockloc]);
+        contract(aref,Lind,bref,Rind,cref,Nind,1.,betas[Cblockloc]);
 
         // If the block had not been called, betas[Cblockloc] == 0
         // Set it to 1 after it has been called
@@ -734,9 +734,9 @@ TIMER_STOP(33);
         };
 
 TIMER_START(34);
-    loopContractedBlocks(A,Con.Lis,
-                         B,Con.Ris,
-                         C,Con.Nis,
+    loopContractedBlocks(A,Con.Lis,Lind,
+                         B,Con.Ris,Rind,
+                         C,Con.Nis,Nind,
                          blockContractions,
                          do_contract);
 TIMER_STOP(34);
@@ -778,42 +778,18 @@ doTask(NCProd& P,
             break;
             }
 
-    auto Cdiv = QN{};
-        {
-        Cdiv = doTask(CalcDiv{Ais},A);
-        auto Ablock_ind = Block(rA);
-        Ablock_ind = A.offsets.front().block;
-        auto Bblock_ind = Block(rB);
-        for(auto& bo : B.offsets)
-            {
-            Bblock_ind = bo.block;
-            bool matchesA = true;
-            for(auto n : range(rB))
-                {
-                if(Bind[n] < 0 && Ablock_ind[BtoA[n]] != Bind[n])
-                    {
-                    matchesA = false;
-                    break;
-                    }
-                }
-            if(matchesA) break;
-            }
-        //Only account for unique indices of B
-        for(auto n : range(rB))
-            if(Bind[n] > 0) //unique
-                {
-                Cdiv += Bis[n].dir()*Bis[n].qn(1+Bblock_ind[n]);
-                }
-        }
+    auto [Coffsets,Csize,blockContractions] = getContractedOffsets(A,Ais,B,Bis,Cis);
 
     //Allocate storage for C
-    auto& C = *m.makeNewData<QDense<VC>>(Cis,Cdiv);
+    auto nd = m.makeNewData<QDense<VC>>(undef,Coffsets,Csize);
+    auto& C = *nd;
 
     auto do_ncprod = 
         [&P,&Aind,&Bind,&Cind]
         (DataRange<const VA> ablock, Block const& Ablockind,
          DataRange<const VB> bblock, Block const& Bblockind,
-         DataRange<VC>       cblock, Block const& Cblockind)
+         DataRange<VC>       cblock, Block const& Cblockind,
+         int Cblockloc)
         {
         Range Arange,
               Brange,
@@ -834,9 +810,10 @@ doTask(NCProd& P,
         ncprod(aref,Aind,bref,Bind,cref,Cind);
         };
 
-    loopContractedBlocks(A,Ais,
-                         B,Bis,
-                         C,Cis,
+    loopContractedBlocks(A,Ais,Aind,
+                         B,Bis,Bind,
+                         C,Cis,Cind,
+                         blockContractions,
                          do_ncprod);
 
 #ifdef USESCALE
