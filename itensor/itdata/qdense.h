@@ -78,6 +78,9 @@ class QDense
            std::fill(store.begin(),store.end(),0.);
            }
 
+    QDense(IndexSet const& is,
+           BlockOffsets const& off);
+
     QDense(BlockOffsets const& off,
            std::vector<value_type> const& v)
          : offsets(off),
@@ -94,7 +97,7 @@ class QDense
        }
 
     QDense(UndefInitializer,
-           std::vector<BlOf> const& off,
+           BlockOffsets const& off,
            size_t size)
          : offsets(off),
            store(size)
@@ -235,7 +238,8 @@ template<typename T>
 void
 write(std::ostream & s, QDense<T> const& dat)
     {
-    itensor::write(s,dat.offsets);
+    //TODO: add writing BlockOffsets
+    //itensor::write(s,dat.offsets);
     itensor::write(s,dat.store);
     }
 
@@ -243,7 +247,8 @@ template<typename T>
 void
 read(std::istream & s, QDense<T> & dat)
     {
-    itensor::read(s,dat.offsets);
+    //TODO: add reading BlockOffsets
+    //itensor::read(s,dat.offsets);
     itensor::read(s,dat.store);
     }
 
@@ -443,7 +448,7 @@ getBlockOffsets(IndexSet const& is,
 // otherwise return -1
 long
 offsetOf(BlockOffsets const& offsets,
-         Block const& blockind);
+         Block        const& blockind);
 
 int
 offsetOfLoc(BlockOffsets const& offsets,
@@ -504,32 +509,12 @@ insertBlock(IndexSet const& is,
     int blockdim = 1;
     for(auto i : range(is.order()))
         blockdim *= is[i].blocksize0(block[i]);
-
-    // Find where to insert the new block
-    // TODO: optimize with a binary search
-    size_t insert_loc = 0;
-    for(auto const& bof : offsets)
-        {
-        if(block > bof.block) insert_loc++;
-        else break;
-        }
-
     // Get the offset of the new block
-    long new_offset;
-    if(insert_loc >= offsets.size())
-        new_offset = store.size();
-    else
-        new_offset = offsets[insert_loc].offset;
-
+    long new_offset = store.size();
     // Insert the specified value into the storage
     store.insert(store.begin()+new_offset,blockdim,val);
-
-    // Shift the offsets by the new block dimension
-    for(auto i = insert_loc; i < offsets.size(); i++)
-        offsets[i].offset += blockdim;
-
     // Insert the block and offset into the block-offsets list
-    offsets.insert(offsets.begin()+insert_loc,make_blof(block,new_offset));
+    offsets[block] = new_offset;
     return new_offset;
     }
 

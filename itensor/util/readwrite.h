@@ -309,15 +309,15 @@ write(std::ostream& s, const InfArray<T,N>& ia)
 void inline
 write(std::ostream & s, BlOf const& blof)
     {
-    itensor::write(s,blof.block);
-    itensor::write(s,blof.offset);
+    itensor::write(s,blof.first);
+    itensor::write(s,blof.second);
     }
 
 void inline
 read(std::istream & s, BlOf & blof)
     {
-    itensor::read(s,blof.block);
-    itensor::read(s,blof.offset);
+    itensor::read(s,blof.first);
+    itensor::read(s,blof.second);
     }
 
 //////////////////////////////////////////////

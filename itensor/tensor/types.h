@@ -18,6 +18,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <unordered_map>
 #include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/vector_no_init.h"
@@ -238,14 +239,26 @@ operator<(Block const& l1, Block const& l2);
 bool
 operator>(Block const& l1, Block const& l2);
 
-struct BlOf
+// Borrowed from:
+// https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector
+class block_hasher
     {
-    Block block;
-    long offset;
+    public:
+
+    size_t
+    operator()(Block const& b) const
+        {
+        size_t seed = b.size();
+        for(auto& i : b)
+            seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+        }
     };
 
+using BlOf = std::pair<Block,long>;
+
 using Blocks = std::vector<Block>;
-using BlockOffsets = std::vector<BlOf>;
+using BlockOffsets = std::unordered_map<Block,long,block_hasher>;
 
 BlOf
 make_blof(Block const& b, long o);

@@ -95,11 +95,11 @@ doTask(GetBlocks<T> const& G,
     for(auto const& dio : d.offsets)
         {
         auto& R = res[n++];
-        auto nrow = G.is[0].blocksize0(dio.block[0]);
-        auto ncol = G.is[1].blocksize0(dio.block[1]);
-        R.i1 = dio.block[0];
-        R.i2 = dio.block[1];
-        R.M = makeMatRef(d.data()+dio.offset,d.size()-dio.offset,nrow,ncol);
+        auto nrow = G.is[0].blocksize0(dio.first[0]);
+        auto ncol = G.is[1].blocksize0(dio.first[1]);
+        R.i1 = dio.first[0];
+        R.i2 = dio.first[1];
+        R.M = makeMatRef(d.data()+dio.second,d.size()-dio.second,nrow,ncol);
         }
     if(G.transpose) 
         {
