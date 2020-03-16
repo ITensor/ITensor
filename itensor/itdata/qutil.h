@@ -353,7 +353,8 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
         auto ablock = getBlock(A,Ais,Ablockind);
         auto bblock = getBlock(B,Bis,Bblockind);
         auto cblock = getBlock(C,Cis,Cblockind);
-        auto Cblockloc = getBlockLoc(C,Cblockind);
+        //auto Cblockloc = getBlockLoc(C,Cblockind);
+        int Cblockloc = 0;
         callback(ablock,Ablockind,
                  bblock,Bblockind,
                  cblock,Cblockind,
