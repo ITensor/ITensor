@@ -125,32 +125,37 @@ getContractedOffsets(BlockSparseA const& A,
     using BlockContractions = std::vector<std::tuple<Block,Block,Block>>;
 
     //Loop over blocks of A (labeled by elements of A.offsets)
-//#ifdef ITENSOR_USE_OMP
-//    int num_threads = omp_get_max_threads();
-//    auto Cblocksizes_thread = std::vector<BlockOffsets>(num_threads);
-//    auto blockContractions_thread = std::vector<BlockContractions>(num_threads);
-//#else
+#ifdef ITENSOR_USE_OMP
+    int num_threads = omp_get_max_threads();
+    auto Cblocksizes_thread = std::vector<BlockOffsets>(num_threads);
+    auto blockContractions_thread = std::vector<BlockContractions>(num_threads);
+#else
     auto Cblocksizes = BlockOffsets();
     auto blockContractions = BlockContractions();
-//#endif
+#endif
 
-//#pragma omp parallel
-//    {
-    auto Cblockind = Block(rC,0);
+#pragma omp parallel
+    {
+    auto Cblock = Block(rC,0);
 
-//#ifdef ITENSOR_USE_OMP
-//    int thread_num = omp_get_thread_num();
-//#endif
+#ifdef ITENSOR_USE_OMP
+    int thread_num = omp_get_thread_num();
+#endif
 
-    //for (int i=0; i<(int)A.offsets.size(); ++i)
-//#pragma omp for schedule(dynamic)
-    for(auto const& aio : A.offsets)
+    auto Ablocks = std::vector<Block>(A.offsets.size());
+    std::transform(A.offsets.begin(),
+                   A.offsets.end(),
+                   Ablocks.begin(),
+                   [](auto pair){return pair.first;});
+
+#pragma omp for schedule(dynamic)
+    for(int i=0; i<(int)A.offsets.size(); ++i)
         {
-        //auto const& aio = A.offsets[i];
+        auto const& Ablock = Ablocks[i];
 
         //Begin computing elements of Cblock(=destination of this block-block contraction)
         for(auto iA : range(rA))
-            if(AtoC[iA] != -1) Cblockind[AtoC[iA]] = aio.first[iA];
+            if(AtoC[iA] != -1) Cblock[AtoC[iA]] = Ablock[iA];
 
         //Loop over blocks of B which contract with current block of A
         for(auto const& bio : B.offsets)
@@ -160,7 +165,7 @@ getContractedOffsets(BlockSparseA const& A,
                 {
                 auto iB = AtoB[iA];
                 if(AtoB[iA] != -1)
-                    if(aio.first[iA] != bio.first[iB])
+                    if(Ablock[iA] != bio.first[iB])
                         {
                         do_blocks_contract = false;
                         break;
@@ -168,69 +173,46 @@ getContractedOffsets(BlockSparseA const& A,
                 }
             if(!do_blocks_contract) continue;
 
-            //Finish making Cblockind
+            //Finish making Cblock
             for(auto iB : range(rB))
-                if(BtoC[iB] != -1) Cblockind[BtoC[iB]] = bio.first[iB];
+                if(BtoC[iB] != -1) Cblock[BtoC[iB]] = bio.first[iB];
 
             // Store the current contraction
-//#ifdef ITENSOR_USE_OMP
-//            blockContractions_thread[thread_num].push_back(std::make_tuple(aio.first,bio.first,Cblockind));
-//#else
-            blockContractions.push_back(std::make_tuple(aio.first,bio.first,Cblockind));
-//#endif
+#ifdef ITENSOR_USE_OMP
+            blockContractions_thread[thread_num].push_back(std::make_tuple(Ablock,bio.first,Cblock));
+#else
+            blockContractions.push_back(std::make_tuple(Ablock,bio.first,Cblock));
+#endif
 
             long blockDim = 1;   //accumulate dim of Indices
             for(auto j : range(order(Cis)))
                 {
                 auto& J = Cis[j];
-                auto i_j = Cblockind[j];
+                auto i_j = Cblock[j];
                 blockDim *= J.blocksize0(i_j);
                 }
-//#ifdef ITENSOR_USE_OMP
-//            //Cblocksizes_thread[thread_num].push_back(make_blof(Cblockind,blockDim));
-//            Cblocksizes_thread[thread_num][Cblockind] = blockDim;
-//#else
-            //Cblocksizes.push_back(make_blof(Cblockind,blockDim));
-            Cblocksizes[Cblockind] = blockDim;
-//#endif
+#ifdef ITENSOR_USE_OMP
+            Cblocksizes_thread[thread_num][Cblock] = blockDim;
+#else
+            Cblocksizes[Cblock] = blockDim;
+#endif
             } //for B.offsets
         } //for A.offsets
-//    }  // omp parallel
+    }  // omp parallel
 
-//#ifdef ITENSOR_USE_OMP
-//    // Combine blocks from threads
-//    auto Cblocksizes = BlockOffsets();
-//    auto blockContractions = BlockContractions();
-//    for(int thread_num=0; thread_num<num_threads; ++thread_num)
-//        {
-//        //Cblocksizes.insert(Cblocksizes.end(), 
-//        //                   Cblocksizes_thread[thread_num].begin(),
-//        //                   Cblocksizes_thread[thread_num].end());
-//        Cblocksizes.insert(Cblocksizes_thread[thread_num].begin(),
-//                           Cblocksizes_thread[thread_num].end());
-//        blockContractions.insert(blockContractions.end(), 
-//                                 blockContractions_thread[thread_num].begin(),
-//                                 blockContractions_thread[thread_num].end());
-//        }
-//#endif
-
-    // Sort the block sizes by the block labels
-    //std::sort(Cblocksizes.begin(),Cblocksizes.end(),
-    //          [](auto a, auto b) { return a.block < b.block; });
-
-    // Remove the duplicates, need to resize manually
-    //auto newCend = std::unique(Cblocksizes.begin(),
-    //                           Cblocksizes.end(),
-    //                           [](auto a, auto b) { return a.block == b.block; } );
-    //Cblocksizes.resize(std::distance(Cblocksizes.begin(),newCend));
-
-    //auto current_offset = 0;
-    //for(auto i : range(Cblocksizes.size()))
-    //    {
-    //    auto current_size = Cblocksizes[i].offset;
-    //    Cblocksizes[i].offset = current_offset;
-    //    current_offset += current_size;
-    //    } 
+#ifdef ITENSOR_USE_OMP
+    // Combine blocks from threads
+    auto Cblocksizes = BlockOffsets();
+    auto blockContractions = BlockContractions();
+    for(int thread_num=0; thread_num<num_threads; ++thread_num)
+        {
+        Cblocksizes.insert(Cblocksizes_thread[thread_num].begin(),
+                           Cblocksizes_thread[thread_num].end());
+        blockContractions.insert(blockContractions.end(), 
+                                 blockContractions_thread[thread_num].begin(),
+                                 blockContractions_thread[thread_num].end());
+        }
+#endif
 
     auto current_offset = 0;
     for(auto i : Cblocksizes)
