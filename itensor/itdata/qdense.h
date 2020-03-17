@@ -450,10 +450,6 @@ long
 offsetOf(BlockOffsets const& offsets,
          Block        const& blockind);
 
-int
-offsetOfLoc(BlockOffsets const& offsets,
-            Block        const& blockind);
-
 template<typename T>
 template<typename Indexable>
 std::tuple<T const*,Block,long> QDense<T>::

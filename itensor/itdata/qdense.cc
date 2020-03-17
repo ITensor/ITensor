@@ -265,15 +265,6 @@ offsetOf(BlockOffsets const& offsets,
     return loc->second;
     }
 
-int
-offsetOfLoc(BlockOffsets const& offsets,
-            Block        const& blockind)
-    {
-    auto it = std::lower_bound(offsets.begin(),offsets.end(),blockind,compBlock());
-    int loc = std::distance(offsets.begin(),it);
-    return loc;
-    }
-
 Cplx
 doTask(GetElt& G, QDenseReal const& d)
     {
@@ -694,15 +685,16 @@ TIMER_STOP(32);
 TIMER_START(33);
     // Create QDense storage with uninitialized memory, faster than
     // setting to zeros
-    //auto nd = m.makeNewData<QDense<VC>>(undef,Coffsets,Csize);
-    auto nd = m.makeNewData<QDense<VC>>(Coffsets,Csize);
+    auto nd = m.makeNewData<QDense<VC>>(undef,Coffsets,Csize);
 TIMER_STOP(33);
     auto& C = *nd;
 
     //Determines if the contraction in the list overwrites or
     //adds to the data. Initially, overwrite the data since the
     //data starts uninitialized
-    auto betas = std::vector<Real>(C.offsets.size(),0.);
+    auto betas = std::unordered_map<Block,Real,block_hasher>(C.offsets.begin(),C.offsets.end());
+    for(auto & beta : betas)
+        beta.second = 0.;
 
     //Function to execute for each pair of
     //contracted blocks of A and B
@@ -710,8 +702,7 @@ TIMER_STOP(33);
         [&Con,&Lind,&Rind,&Cind,&betas]
         (DataRange<const VA> ablock, Block const& Ablockind,
          DataRange<const VB> bblock, Block const& Bblockind,
-         DataRange<VC>       cblock, Block const& Cblockind,
-         int Cblockloc)
+         DataRange<VC>       cblock, Block const& Cblockind)
         {
         Range Arange,
               Brange,
@@ -729,11 +720,11 @@ TIMER_STOP(33);
         auto cref = makeRef(cblock,&Crange);
 
         // cref += aref*bref or cref = aref*bref
-        contract(aref,Lind,bref,Rind,cref,Cind,1.,1.); //betas[Cblockloc]);
+        contract(aref,Lind,bref,Rind,cref,Cind,1.,betas[Cblockind]);
 
-        // If the block had not been called, betas[Cblockloc] == 0
+        // If the block had not been called, betas[Cblock] == 0
         // Set it to 1 after it has been called
-        //betas[Cblockloc] = 1.;
+        betas[Cblockind] = 1.;
         };
 
 TIMER_START(34);

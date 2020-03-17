@@ -58,15 +58,6 @@ make_indexdim(IndexSet const& is, Indexable const& ind)
     return IndexDim<Indexable>(is,ind); 
     }
 
-template<typename T>
-int
-getBlockLoc(QDense<T> const& d,
-            Block const& block_ind)
-    {
-    auto loc = offsetOfLoc(d.offsets,block_ind);
-    return loc;
-    }
-
 template<typename BlockSparse>
 auto
 getBlock(BlockSparse & d,
@@ -274,11 +265,9 @@ _loopContractedBlocks(QDense<TA> const& A,
         auto ablock = getBlock(A,Ais,Ablockind);
         auto bblock = getBlock(B,Bis,Bblockind);
         auto cblock = getBlock(C,Cis,Cblockind);
-        auto Cblockloc = getBlockLoc(C,Cblockind);
         callback(ablock,Ablockind,
                  bblock,Bblockind,
-                 cblock,Cblockind,
-                 Cblockloc);
+                 cblock,Cblockind);
         }
     }
 
@@ -353,12 +342,9 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
         auto ablock = getBlock(A,Ais,Ablockind);
         auto bblock = getBlock(B,Bis,Bblockind);
         auto cblock = getBlock(C,Cis,Cblockind);
-        //auto Cblockloc = getBlockLoc(C,Cblockind);
-        int Cblockloc = 0;
         callback(ablock,Ablockind,
                  bblock,Bblockind,
-                 cblock,Cblockind,
-                 Cblockloc);
+                 cblock,Cblockind);
         }
       }
     }
