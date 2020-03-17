@@ -235,10 +235,13 @@ template<typename TA,
 void
 _loopContractedBlocks(QDense<TA> const& A,
                       IndexSet const& Ais,
+                      Labels const& Alabel,
                       QDense<TB> const& B,
                       IndexSet const& Bis,
+                      Labels const& Blabel,
                       QDense<TC> & C,
                       IndexSet const& Cis,
+                      Labels const& Clabel,
                       std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
                       Callable & callback)
     {
@@ -253,6 +256,20 @@ _loopContractedBlocks(QDense<TA> const& A,
         }
     }
 
+long long int inline
+contractionCost(Range const& Arange,
+                Range const& Brange,
+                Labels const& Blabel)
+    {
+    long long int cost = 1;
+    for(decltype(Arange.order()) i = 0; i < Arange.order(); i++)
+        cost *= Arange.extent(i);
+    for(decltype(Brange.order()) i = 0; i < Brange.order(); i++)
+        if(Blabel[i] > 0) cost *= Brange.extent(i);
+    return cost;
+    }
+               
+
 template<typename TA,
          typename TB,
          typename TC,
@@ -260,10 +277,13 @@ template<typename TA,
 void
 _loopContractedBlocksOMP(QDense<TA> const& A,
                          IndexSet const& Ais,
+                         Labels const& Alabel,
                          QDense<TB> const& B,
                          IndexSet const& Bis,
+                         Labels const& Blabel,
                          QDense<TC> & C,
                          IndexSet const& Cis,
+                         Labels const& Clabel,
                          std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
                          Callable & callback)
     {
@@ -297,20 +317,55 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
             }
         }
 
+    // 
+    // Sort the contraction list by the costs
+    // (it doesn't seem to help)
+    //
+
+    auto perm = std::vector<int>(offset.size());
+    std::iota(perm.begin(), perm.end(), 0);
+
+    /*
+    auto costs = std::vector<long long int>(ncontractions);
+
+    for(decltype(ncontractions) i = 0; i < ncontractions; i++)
+        {
+        auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[i];
+        Range Arange,
+              Brange,
+              Crange;
+        //Construct range objects for aref,bref,cref
+        //using IndexDim helper objects
+        Arange.init(make_indexdim(Ais,Ablockind));
+        Brange.init(make_indexdim(Bis,Bblockind));
+        Crange.init(make_indexdim(Cis,Cblockind));
+        auto cost = contractionCost(Arange,
+                                    Brange,Blabel);
+        costs[i] = cost;
+        }
       
-#ifdef DEBUG
+    auto costs_per_output_block = std::vector<long long int>(nnzblocksC);
+
     decltype(ncontractions) n = 0;
     for(decltype(nnzblocksC) i = 0; i < nnzblocksC; i++)
       {
       decltype(ncontractions) last_offset_i = offset[i]+nrepeat[i];
+      auto& current_cost = costs_per_output_block[i];
       for(decltype(ncontractions) j = offset[i]; j < last_offset_i; j++)
         {
         if(j != n) Error("Wrong contraction plan in QDense contraction");
+        current_cost += costs[n];
         n++;
         }
       }
-    if(ncontractions != n) Error("Wrong number of contractions in QDense contraction");
-#endif
+
+    // Sort offset and nrepeat according to costs_per_output_block
+    auto sortby = [&](int i1, int i2) -> bool 
+                { 
+                return costs_per_output_block[i1] > costs_per_output_block[i2];
+                };
+    std::sort(perm.begin(), perm.end(), sortby);
+    */
 
 #pragma omp parallel for schedule(dynamic)
     for(decltype(nnzblocksC) i = 0; i < nnzblocksC; i++)
@@ -318,7 +373,8 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
       // Contractions that have the same output block
       // location in C are put in the same thread to
       // avoid race conditions
-      for(auto j = offset[i]; j < offset[i]+nrepeat[i]; j++)
+      auto p = perm[i];
+      for(auto j = offset[p]; j < offset[p]+nrepeat[p]; j++)
         {
         auto const& [Ablockind,Bblockind,Cblockind] = blockContractionsSorted[j];
         auto ablock = getBlock(A,Ais,Ablockind);
@@ -331,6 +387,52 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
       }
     }
 
+template<typename TA,
+         typename TB,
+         typename TC,
+         typename Callable>
+void
+_loopContractedBlocksOMPSingleOutputBlock(QDense<TA> const& A,
+                                          IndexSet const& Ais,
+                                          Labels const& Alabel,
+                                          QDense<TB> const& B,
+                                          IndexSet const& Bis,
+                                          Labels const& Blabel,
+                                          QDense<TC> & C,
+                                          IndexSet const& Cis,
+                                          Labels const& Clabel,
+                                          std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
+                                          Callable & callback)
+    {
+    auto ncontractions = blockContractions.size();
+
+    // Fill with zeros to overwrite garbage
+    std::fill(C.begin(),C.end(),0.);
+
+    auto cblock_tot = getBlock(C,Cis,C.offsets.begin()->first);
+    auto cblock_size = cblock_tot.size();
+    auto cblocks = std::vector<std::vector<TC>>(ncontractions);
+
+#pragma omp for schedule(dynamic)
+    for(decltype(ncontractions) i = 0; i < ncontractions; i++)
+        {
+        auto const& [Ablockind,Bblockind,Cblockind] = blockContractions[i];
+        auto ablock = getBlock(A,Ais,Ablockind);
+        auto bblock = getBlock(B,Bis,Bblockind);
+        auto cblockdata = std::vector<TC>(cblock_size);
+        auto cblock = makeDataRange<TC>(cblockdata.data(),cblockdata.size());
+        callback(ablock,Ablockind,
+                 bblock,Bblockind,
+                 cblock,Cblockind);
+        cblocks[i] = std::vector<TC>(cblock.data(),cblock.data()+cblock.size());
+        }
+
+    for(auto const& cblockdata : cblocks)
+        {
+        auto cblock = makeDataRange<TC>(cblockdata.data(),cblockdata.size());
+        makeRef(cblock_tot,VecRange(cblockdata.size())) += makeRef(cblock,VecRange(cblockdata.size()));
+        }
+    }
 
 template<typename TA,
          typename TB,
@@ -339,17 +441,35 @@ template<typename TA,
 void
 loopContractedBlocks(QDense<TA> const& A,
                      IndexSet const& Ais,
+                     Labels const& Alabel,
                      QDense<TB> const& B,
                      IndexSet const& Bis,
+                     Labels const& Blabel,
                      QDense<TC> & C,
                      IndexSet const& Cis,
+                     Labels const& Clabel,
                      std::vector<std::tuple<Block,Block,Block>> const& blockContractions,
                      Callable & callback)
     {
 #ifdef ITENSOR_USE_OMP
-    _loopContractedBlocksOMP(A,Ais,B,Bis,C,Cis,blockContractions,callback);
+    if(C.offsets.size() == 1)
+        _loopContractedBlocksOMPSingleOutputBlock(A,Ais,Alabel,
+                                                  B,Bis,Blabel,
+                                                  C,Cis,Clabel,
+                                                  blockContractions,
+                                                  callback);
+    else
+        _loopContractedBlocksOMP(A,Ais,Alabel,
+                                 B,Bis,Blabel,
+                                 C,Cis,Clabel,
+                                 blockContractions,
+                                 callback);
 #else
-    _loopContractedBlocks(A,Ais,B,Bis,C,Cis,blockContractions,callback);
+    _loopContractedBlocks(A,Ais,Alabel,
+                          B,Bis,Blabel,
+                          C,Cis,Clabel,
+                          blockContractions,
+                          callback);
 #endif
     }
 
