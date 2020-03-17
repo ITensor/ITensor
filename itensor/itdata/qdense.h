@@ -238,8 +238,7 @@ template<typename T>
 void
 write(std::ostream & s, QDense<T> const& dat)
     {
-    //TODO: add writing BlockOffsets
-    //itensor::write(s,dat.offsets);
+    itensor::write(s,dat.offsets);
     itensor::write(s,dat.store);
     }
 
@@ -247,8 +246,7 @@ template<typename T>
 void
 read(std::istream & s, QDense<T> & dat)
     {
-    //TODO: add reading BlockOffsets
-    //itensor::read(s,dat.offsets);
+    itensor::read(s,dat.offsets);
     itensor::read(s,dat.store);
     }
 
