@@ -413,7 +413,7 @@ _loopContractedBlocksOMPSingleOutputBlock(QDense<TA> const& A,
     auto cblock_size = cblock_tot.size();
     auto cblocks = std::vector<std::vector<TC>>(ncontractions);
 
-#pragma omp for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
     for(decltype(ncontractions) i = 0; i < ncontractions; i++)
         {
         auto const& [Ablockind,Bblockind,Cblockind] = blockContractions[i];
