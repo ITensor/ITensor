@@ -386,9 +386,9 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     iwork.resize(8*l);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
-    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,n,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
+    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
 #else
-    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,n,work.data(),&lwork,rwork.data(),iwork.data(),info);
+    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info);
 #endif
     }
 
@@ -447,9 +447,9 @@ zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     iwork.resize(8*l);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
-    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,n,work.data(),&lwork,rwork.data(),info,jobz_len);
+    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info,jobz_len);
 #else
-    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,n,work.data(),&lwork,rwork.data(),info);
+    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info);
 #endif
     }
 
