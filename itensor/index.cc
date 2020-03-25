@@ -272,7 +272,7 @@ operator<(Index const& i1, Index const& i2)
 std::ostream& 
 operator<<(std::ostream & s, Index const& I)
     {
-    s << "(";
+    s << "(dim=";
     s << dim(I);
     if(Global::showIDs()) 
         {
