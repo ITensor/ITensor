@@ -219,14 +219,48 @@ randomOrthog(int n, int m)
     }
 
 MPS
+randomCircuitMPS(SiteSet const& s, int m, Args const& args)
+    {
+    auto N = length(s);
+    auto M = MPS(N);
+    auto l = vector<Index>(N+1);
+    int chi = dim(s(1));
+    chi = std::min(m,chi);
+    l[1] = Index(chi,"Link,n=1");
+    auto O = randomOrthog(dim(s(1)),chi);
+    M.ref(1) = matrixITensor(O,s(1),l[1]);
+    for(int j : range1(2,N-1))
+        {
+        auto prev_chi = chi;
+        chi *= dim(s(j));
+        chi = std::min(m,chi);
+        l[j] = Index(chi,format("Link,n=%d",j));
+        O = randomOrthog(prev_chi*dim(s(j)),chi);
+        auto [C,c] = combiner(l[j-1],s(j));
+        M.ref(j) = matrixITensor(O,c,l[j]);
+        M.ref(j) *= C;
+        }
+    O = randomOrthog(chi*dim(s(N)),1);
+    auto [C,c] = combiner(l[N-1],s(N));
+    l[N] = Index(1,"Link,n=N");
+    M.ref(N) = matrixITensor(O,c,l[N]);
+    M.ref(N) *= C;
+    M.ref(N) *= setElt(l[N](1));
+    return M;
+    }
+
+MPS
 randomMPS(SiteSet const& sites, int m, Args const& args)
     {
     if(not hasQNs(sites))
         {
-        if(m>1) Error("randomMPS(SiteSet,m>1) not currently supported");
-        auto psi = MPS(sites,m);
-        psi.randomize(args);
-        return psi;
+        if(m == 1)
+            {
+            auto psi = MPS(sites,m);
+            psi.randomize(args);
+            return psi;
+            }
+        return randomCircuitMPS(sites,m,args);
         }
     else
         {
