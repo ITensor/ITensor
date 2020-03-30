@@ -302,6 +302,20 @@ template<typename... CtrArgs>
 CMatrix
 randomMatC(CtrArgs&&... args);
 
+
+//
+// Generate a random matrix
+// with normally distributed
+// elements: M(i,j) ~ N(0,1)
+// 
+template<typename... CtrArgs>
+Matrix
+randn(CtrArgs&&... args);
+
+template<typename... CtrArgs>
+CMatrix
+randnC(CtrArgs&&... args);
+
 template<>
 std::ostream&
 operator<<(std::ostream& s, MatrixRefc const& M);
