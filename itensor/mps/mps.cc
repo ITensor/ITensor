@@ -227,7 +227,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
 
     //Make N'th MPS tensor
     int chi = dim(s(N));
-    l[N-1] = Index(chi,format("Link,n=%d",N-1));
+    l[N-1] = Index(chi,format("Link,l=%d",N-1));
     auto O = randomOrthog(chi,dim(s(N)));
     M.ref(N) = matrixITensor(O,l[N-1],s(N));
 
@@ -237,7 +237,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
         auto prev_chi = chi;
         chi *= dim(s(j));
         chi = std::min(m,chi);
-        l[j-1] = Index(chi,format("Link,n=%d",j-1));
+        l[j-1] = Index(chi,format("Link,l=%d",j-1));
         O = randomOrthog(chi,prev_chi*dim(s(j)));
         auto [C,c] = combiner(s(j),l[j]);
         M.ref(j) = matrixITensor(O,l[j-1],c);
@@ -247,7 +247,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
     //Make 1st MPS tensor
     O = randomOrthog(1,dim(s(1))*chi);
     auto [C,c] = combiner(s(1),l[1]);
-    l[0] = Index(1,"Link,n=0");
+    l[0] = Index(1,"Link,l=0");
     M.ref(1) = matrixITensor(O,l[0],c);
     M.ref(1) *= C;
     M.ref(1) *= setElt(l[0](1));
