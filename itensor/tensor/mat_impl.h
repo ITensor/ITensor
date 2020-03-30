@@ -182,6 +182,30 @@ randomMatC(CtrArgs&&... args)
     return M;
     }
 
+template<typename... CtrArgs>
+Matrix
+randn(CtrArgs&&... args)
+    {
+    auto M = Matrix(std::forward<CtrArgs>(args)...);
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    std::normal_distribution<> normal{0,1};
+    for(auto& el : M) el = normal(gen);
+    return M;
+    }
+
+template<typename... CtrArgs>
+CMatrix
+randnC(CtrArgs&&... args)
+    {
+    auto M = CMatrix(std::forward<CtrArgs>(args)...);
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    std::normal_distribution<> normal{0,1};
+    for(auto& el : M) el = std::complex(normal(gen),normal(gen));
+    return M;
+    }
+
 } //namespace itensor
 
 #endif

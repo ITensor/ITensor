@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <ctime>
 #include <stdexcept>
+#include <random>
 #include "itensor/types.h"
 
 namespace itensor {
