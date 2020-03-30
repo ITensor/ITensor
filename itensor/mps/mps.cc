@@ -18,6 +18,7 @@
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
+#include "itensor/tensor/algs.h"
 
 namespace itensor {
 
@@ -196,6 +197,25 @@ int
 length(MPS const& W)
     {
     return W.length();
+    }
+
+Matrix
+randomOrthog(int n, int m)
+    {
+    auto r = std::max(n,m);
+    auto M = randn(r,r);
+    Matrix Q,R;
+    QR(M,Q,R,{"PositiveDiagonal",true});
+    if(m < n)
+        {
+        reduceCols(Q,m);
+        }
+    else if(n < m)
+        {
+        reduceCols(Q,n);
+        return Matrix(transpose(Q));
+        }
+    return Q;
     }
 
 MPS
