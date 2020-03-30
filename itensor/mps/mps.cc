@@ -224,13 +224,16 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
     auto N = length(s);
     auto M = MPS(N);
     auto l = vector<Index>(N+1);
+
+    //Make N'th MPS tensor
     int chi = dim(s(N));
-    chi = std::min(m,chi);
     l[N-1] = Index(chi,format("Link,n=%d",N-1));
     auto O = randomOrthog(chi,dim(s(N)));
     M.ref(N) = matrixITensor(O,l[N-1],s(N));
+
     for(int j = N-1; j > 1; j -= 1)
         {
+        //Make j'th MPS tensor
         auto prev_chi = chi;
         chi *= dim(s(j));
         chi = std::min(m,chi);
@@ -240,12 +243,15 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
         M.ref(j) = matrixITensor(O,l[j-1],c);
         M.ref(j) *= C;
         }
+
+    //Make 1st MPS tensor
     O = randomOrthog(1,dim(s(1))*chi);
     auto [C,c] = combiner(s(1),l[1]);
     l[0] = Index(1,"Link,n=0");
     M.ref(1) = matrixITensor(O,l[0],c);
     M.ref(1) *= C;
     M.ref(1) *= setElt(l[0](1));
+
     M.leftLim(0);
     M.rightLim(2);
     return M;
@@ -254,21 +260,12 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
 MPS
 randomMPS(SiteSet const& sites, int m, Args const& args)
     {
-    if(not hasQNs(sites))
-        {
-        if(m == 1)
-            {
-            auto psi = MPS(sites,m);
-            psi.randomize(args);
-            return psi;
-            }
-        return randomCircuitMPS(sites,m,args);
-        }
-    else
-        {
-        Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
-        }
-    return MPS();
+    if(hasQNs(sites))
+    {
+    Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
+    }
+
+    return randomCircuitMPS(sites,m,args);
     }
 
 MPS
