@@ -3,7 +3,7 @@ input
 
 N = 20
 
-beta = 2.0
+beta = 1.0
 tau = 0.002
 
 cutoff = 1E-10
