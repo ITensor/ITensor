@@ -89,6 +89,7 @@ main(int argc, char* argv[])
     for(int tt = 1; tt <= nt; ++tt)
         {
         psi = applyMPO(expH,psi,args);
+        psi.noPrime();
 
         //Normalize wavefunction
         psi.ref(1) /= norm(psi(1));
