@@ -473,6 +473,28 @@ SECTION("Rank 1")
     CHECK_DIFF(norm(t1),1,1E-10);
     }
 
+SECTION("Value besides 1 (Real)")
+    {
+    auto t1 = setElt(2.,l1=2);
+    CHECK_EQUAL(t1.r(),1);
+    CHECK(hasIndex(t1,l1));
+    CHECK_DIFF(elt(t1,l1(1)),0,1E-10);
+    CHECK_DIFF(elt(t1,l1(2)),2,1E-10);
+    CHECK_DIFF(sumels(t1),2,1E-10);
+    CHECK_DIFF(norm(t1),2,1E-10);
+    }
+
+SECTION("Value besides 1 (Complex)")
+    {
+    auto t1 = setElt(2_i,l1=2);
+    CHECK_EQUAL(t1.r(),1);
+    CHECK(hasIndex(t1,l1));
+    CHECK_DIFF(eltC(t1,l1(1)),0,1E-10);
+    CHECK_DIFF(eltC(t1,l1(2)),2_i,1E-10);
+    CHECK_DIFF(sumelsC(t1),2_i,1E-10);
+    CHECK_DIFF(norm(t1),2,1E-10);
+    }
+
 SECTION("Rank 2")
     {
     auto t2 = setElt(l1(2),l2(1));
