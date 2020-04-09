@@ -453,19 +453,52 @@ visit(Func&& f) const
     return *this;
     }
 
+namespace detail {
+
+    template <typename... IVals>
+    ITensor
+    IndexValsToITensor(IndexVal const& iv1,
+                       IVals const&... rest)
+        {
+        const constexpr auto size = 1+sizeof...(rest);
+        auto ivs = stdx::make_array(iv1,rest...);
+        //TODO: try directly making inds as iv1.index,(rest.index)...
+        auto inds = std::array<Index,size>{};
+        for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+        auto D = ITensor{IndexSet(inds)};
+        return D;
+        }
+
+} //namespace detail
+
+template <typename... IVals>
+ITensor
+setElt(Real el,
+       IndexVal const& iv1, 
+       IVals const&... rest)
+    {
+    auto D = detail::IndexValsToITensor(iv1, rest...);
+    D.set(iv1,rest...,el);
+    return D;
+    }
+
+template <typename... IVals>
+ITensor
+setElt(Cplx el,
+       IndexVal const& iv1, 
+       IVals const&... rest)
+    {
+    auto D = detail::IndexValsToITensor(iv1, rest...);
+    D.set(iv1,rest...,el);
+    return D;
+    }
+
 template <typename... IVals>
 ITensor
 setElt(IndexVal const& iv1, 
        IVals const&... rest)
     {
-    const constexpr auto size = 1+sizeof...(rest);
-    auto ivs = stdx::make_array(iv1,rest...);
-    //TODO: try directly making inds as iv1.index,(rest.index)...
-    auto inds = std::array<Index,size>{};
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    auto D = ITensor{IndexSet(inds)};
-    D.set(iv1,rest...,1.);
-    return D;
+    return setElt(1.,iv1,rest...);
     }
 
 template<typename... VarArgs>
