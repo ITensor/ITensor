@@ -173,7 +173,7 @@ class LocalOp
             {
             Error("Number of center sites besides 0, 1 and 2 currently not supported");
             }
-        return !LIsNull() && !RIsNull();
+        return !LIsNull() || !RIsNull();
         }
 
     bool
