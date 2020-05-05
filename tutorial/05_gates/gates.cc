@@ -3,6 +3,7 @@
 // ITensor Tutorial
 //
 #include "itensor/all.h"
+#include "itensor/util/print_macro.h"
 
 using std::vector;
 using std::move;

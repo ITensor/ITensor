@@ -17,7 +17,7 @@
 #define __ITENSOR_LOCALMPO
 #include "itensor/mps/mpo.h"
 #include "itensor/mps/localop.h"
-#include "itensor/util/print_macro.h"
+//#include "itensor/util/print_macro.h"
 
 namespace itensor {
 

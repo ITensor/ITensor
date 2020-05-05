@@ -1,5 +1,6 @@
 #include "itensor/all.h"
 #include "S2.h"
+#include "itensor/util/print_macro.h"
 
 using namespace std;
 using namespace itensor;

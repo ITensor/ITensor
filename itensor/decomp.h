@@ -15,7 +15,7 @@
 //
 #ifndef __ITENSOR_DECOMP_H
 #define __ITENSOR_DECOMP_H
-#include "itensor/util/print_macro.h"
+//#include "itensor/util/print_macro.h"
 #include "itensor/spectrum.h"
 #include "itensor/itensor.h"
 
