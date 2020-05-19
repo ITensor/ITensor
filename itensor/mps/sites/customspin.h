@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_SPINHI_H
-#define __ITENSOR_SPINHI_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 
 namespace itensor {
@@ -160,4 +160,3 @@ class CustomSpinSite
         }
     };
 }
-#endif
