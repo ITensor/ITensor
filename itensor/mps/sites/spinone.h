@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_SPINONE_H
-#define __ITENSOR_SPINONE_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/str.h"
@@ -313,5 +313,3 @@ read(std::istream& s)
     }
 
 } //namespace itensor
-
-#endif

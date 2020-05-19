@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_BOSON_H
-#define __ITENSOR_BOSON_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/util/str.h"
 
@@ -127,4 +127,3 @@ class BosonSite
 
 } //namespace itensor
 
-#endif
