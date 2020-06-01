@@ -138,26 +138,7 @@ svdImpl(ITensor const& A,
             }
         
         auto uL = Index(m,litagset);
-        auto vL = setTags(uL,ritagset);
-
-        if(uL == vL)
-            {
-            //Try to fix this case by adding
-            //a tag to vL: 
-            vL = addTags(vL,"vL");
-            }
-
-        //If fix above didn't work, error condition:
-        if(uL == vL)
-            {
-            Print(uL);
-            Print(vL);
-            Print(litagset);
-            Print(primeLevel(litagset));
-            Print(ritagset);
-            Print(primeLevel(ritagset));
-            Error("Error: new inds uL, vL in svd identical with given tag sets");
-            }
+        auto vL = Index(m,ritagset);
 
         //Fix sign to make sure D has positive elements
         Real signfix = (A.scale().sign() == -1) ? -1 : +1;
