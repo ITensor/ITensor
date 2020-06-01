@@ -142,6 +142,14 @@ svdImpl(ITensor const& A,
 
         if(uL == vL)
             {
+            //Try to fix this case by adding
+            //a tag to vL: 
+            vL = addTags(vL,"vL");
+            }
+
+        //If fix above didn't work, error condition:
+        if(uL == vL)
+            {
             Print(uL);
             Print(vL);
             Print(litagset);
