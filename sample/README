@@ -15,6 +15,9 @@ dmrg.cc, issue the command
 
     make dmrg
 
+or more generally `make <codename>` to compile
+the file <codename>.cc
+
 
 Descriptions of the Codes
 ==============================================
