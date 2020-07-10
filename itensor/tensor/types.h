@@ -156,6 +156,18 @@ class DataRange
         }
     };
 
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, DataRange<T> const& d)
+    {
+    s << "DataRange" << "\n";
+    s << "Size: " << d.size() << "\n";
+    for(auto i : range(d.size()))
+      s << i << " " << d[i] << "\n";
+    return s;
+    }
+
 template<typename T>
 DataRange<T>
 makeDataRange(T * p, size_t size)
@@ -207,7 +219,9 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
 // Types to help with block sparse data
 //
 
-using Block = Labels;
+using Block = InfArray<long,11ul>;
+// Maybe try this for better memory?
+//using Block = std::vector<unsigned short>;
 
 // Define a block ordering according to (reverse)
 // lexicographical order

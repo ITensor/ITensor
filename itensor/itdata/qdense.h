@@ -186,7 +186,6 @@ class QDense
 
     };
 
-template<typename T>
 std::ostream&
 operator<<(std::ostream & s, BlOf const& t);
 
@@ -341,6 +340,12 @@ doTask(Mult<Cplx> const& M, QDense<Real> const& d, ManageStore & m);
 
 void
 doTask(Mult<Cplx> const& M, QDense<Cplx> & d);
+
+void
+doTask(MakeCplx const&, QDense<Cplx> & d);
+     
+void
+doTask(MakeCplx const&, QDense<Real> const& d, ManageStore & m);
 
 template<typename T>
 void

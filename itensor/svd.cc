@@ -73,7 +73,6 @@ svdImpl(ITensor const& A,
       }
 
     auto do_truncate = args.getBool("Truncate");
-    auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxdim = args.getInt("MaxDim",MAX_DIM);
     auto mindim = args.getInt("MinDim",1);
@@ -82,7 +81,10 @@ svdImpl(ITensor const& A,
     auto show_eigs = args.getBool("ShowEigs",false);
     auto litagset = getTagSet(args,"LeftTags","Link,U");
     auto ritagset = getTagSet(args,"RightTags","Link,V");
-    if( litagset == ritagset ) Error("In SVD, must specify different tags for the new left and right indices (with Args 'LeftTags' and 'RightTags')");
+    if(litagset == ritagset) 
+        {
+        Error("In SVD, must specify different tags for the new left and right indices (with Args 'LeftTags' and 'RightTags')");
+        }
 
     if(not hasQNs(A))
         {
@@ -91,7 +93,7 @@ svdImpl(ITensor const& A,
         Mat<T> UU,VV;
         Vector DD;
 
-        SVD(M,UU,DD,VV,thresh);
+        SVD(M,UU,DD,VV,args);
 
         //conjugate VV so later we can just do
         //U*D*V to reconstruct ITensor A:
@@ -136,7 +138,7 @@ svdImpl(ITensor const& A,
             }
         
         auto uL = Index(m,litagset);
-        auto vL = setTags(uL,ritagset);
+        auto vL = Index(m,ritagset);
 
         //Fix sign to make sure D has positive elements
         Real signfix = (A.scale().sign() == -1) ? -1 : +1;
@@ -201,7 +203,7 @@ svdImpl(ITensor const& A,
             auto& VV = Vmats.at(b);
             auto& d =  dvecs.at(b);
 
-            SVD(M,UU,d,VV,thresh);
+            SVD(M,UU,d,VV,args);
 
             //conjugate VV so later we can just do
             //U*D*V to reconstruct ITensor A:
@@ -343,7 +345,7 @@ svdImpl(ITensor const& A,
             //printfln("{n,n} = {%d,%d}",n,n);
             //printfln("{B.i2,n} = {%d,%d}",B.i2,n);
 
-            auto uind = Labels(2);
+            auto uind = Block(2);
             uind[0] = B.i1;
             uind[1] = n;
             auto pU = getBlock(Ustore,Uis,uind);
@@ -353,7 +355,7 @@ svdImpl(ITensor const& A,
             reduceCols(UU,L.blocksize0(n));
             Uref &= UU;
 
-            auto dind = Labels(2);
+            auto dind = Block(2);
             dind[0] = n;
             dind[1] = n;
             auto pD = getBlock(Dstore,Dis,dind);
@@ -361,7 +363,7 @@ svdImpl(ITensor const& A,
             auto Dref = makeVecRef(pD.data(),d.size());
             Dref &= d;
 
-            auto vind = Labels(2);
+            auto vind = Block(2);
             vind[0] = B.i2;
             vind[1] = n;
             auto pV = getBlock(Vstore,Vis,vind);

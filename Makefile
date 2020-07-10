@@ -17,7 +17,7 @@ itensor: configure
 configure:
 	@echo
 	@echo Configure: Writing current dir to this_dir.mk
-	@echo "THIS_DIR=${CURDIR}" > this_dir.mk
+	@echo "THIS_DIR=$(PWD)" > this_dir.mk
 	@echo "#ifndef __ITENSOR_CONFIG_H" > itensor/config.h
 	@echo "#define __ITENSOR_CONFIG_H" >> itensor/config.h
 	@echo "" >> itensor/config.h
@@ -29,6 +29,13 @@ configure:
 	@echo "#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0" >> itensor/config.h
 	@echo "#endif" >> itensor/config.h
 	@echo "" >> itensor/config.h
+ifdef ITENSOR_USE_HDF5
+ifeq ($(ITENSOR_USE_HDF5),1)
+	@echo "#ifndef ITENSOR_USE_HDF5" >> itensor/config.h
+	@echo "#define ITENSOR_USE_HDF5 1" >> itensor/config.h
+	@echo "#endif" >> itensor/config.h
+endif
+endif
 	@echo "#endif " >> itensor/config.h
 
 clean:

@@ -304,32 +304,6 @@ getInts(Iter it,
     getInts<IntT>(++it,z,std::forward<Rest&&>(rest)...);
     }
 
-template<typename IndexVals>
-void
-checkEltFlux(ITensor const& A, IndexVals const& ivs)
-    {
-    if(hasQNs(A))
-      {
-      QN elt_flux;
-      auto indsA = inds(A);
-      for(auto i : range1(order(A)))
-          {
-          auto iv = indsA(i)(ivs[i-1].val);
-          elt_flux += dir(iv)*qn(iv);
-          }
-      if(elt_flux != flux(A))
-          {
-          println("Trying to set element: ");
-          for(auto i : range1(order(A)))
-            println("Index: ", indsA(i), ", Val: ",ivs[i-1].val);
-          println("Element flux is: ",elt_flux);
-          println("ITensor flux is: ",flux(A));
-          Error("In .set, cannot set element with flux different from ITensor flux");
-          }
-      }
-    return;
-    }
-
 template<typename Ints>
 void
 checkEltFluxInts(ITensor const& A, Ints const& ints)
@@ -386,7 +360,7 @@ set(IV const& iv1, VArgs&&... vargs)
     //and move this line after check for is_real
     if(!store_) detail::allocReal(*this,inds); 
     scaleTo(1.);
-    detail::checkEltFlux(*this,vals);
+    detail::checkEltFluxInts(*this,inds);
     if(z.imag()==0.0)
         {
         doTask(SetElt<Real>{z.real(),is_,inds},store_);
@@ -479,19 +453,52 @@ visit(Func&& f) const
     return *this;
     }
 
+namespace detail {
+
+    template <typename... IVals>
+    ITensor
+    IndexValsToITensor(IndexVal const& iv1,
+                       IVals const&... rest)
+        {
+        const constexpr auto size = 1+sizeof...(rest);
+        auto ivs = stdx::make_array(iv1,rest...);
+        //TODO: try directly making inds as iv1.index,(rest.index)...
+        auto inds = std::array<Index,size>{};
+        for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+        auto D = ITensor{IndexSet(inds)};
+        return D;
+        }
+
+} //namespace detail
+
+template <typename... IVals>
+ITensor
+setElt(Real el,
+       IndexVal const& iv1, 
+       IVals const&... rest)
+    {
+    auto D = detail::IndexValsToITensor(iv1, rest...);
+    D.set(iv1,rest...,el);
+    return D;
+    }
+
+template <typename... IVals>
+ITensor
+setElt(Cplx el,
+       IndexVal const& iv1, 
+       IVals const&... rest)
+    {
+    auto D = detail::IndexValsToITensor(iv1, rest...);
+    D.set(iv1,rest...,el);
+    return D;
+    }
+
 template <typename... IVals>
 ITensor
 setElt(IndexVal const& iv1, 
        IVals const&... rest)
     {
-    const constexpr auto size = 1+sizeof...(rest);
-    auto ivs = stdx::make_array(iv1,rest...);
-    //TODO: try directly making inds as iv1.index,(rest.index)...
-    auto inds = std::array<Index,size>{};
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    auto D = ITensor{IndexSet(inds)};
-    D.set(iv1,rest...,1.);
-    return D;
+    return setElt(1.,iv1,rest...);
     }
 
 template<typename... VarArgs>
@@ -580,7 +587,7 @@ diagITensor(Container const& C,
 template<typename V>
 TenRef<Range,V>
 getBlock(ITensor & T,
-         IntArray block_ind)
+         Block block_ind)
     {
     if(block_ind.size() != size_t(T.order())) Error("Mismatched number of indices and ITensor order");
     if(not T.store())

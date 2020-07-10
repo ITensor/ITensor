@@ -161,10 +161,7 @@ class LocalOp
 
     explicit operator bool() const 
         {
-        if(nc_ == 0) return !LIsNull() || !RIsNull();
-        else if(nc_ == 1) return bool(*Op1_);
-        else if(nc_ < 0 || nc_ > 2) Error("Number of center sites besides 0, 1 and 2 currently not supported");
-        return *Op1_ && *Op2_;
+        return !LIsNull() || !RIsNull();
         }
 
     bool

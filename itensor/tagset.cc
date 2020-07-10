@@ -15,6 +15,9 @@
 //
 #include "itensor/tagset.h"
 #include "itensor/util/readwrite.h"
+#include "itensor/util/print_macro.h"
+
+using std::string;
 
 namespace itensor {
 
@@ -215,15 +218,29 @@ replaceTags(TagSet const& tsremove, TagSet const& tsadd)
         this->addTag(tsadd[i]);
     }
 
+std::string
+tagString(TagSet const& ts)
+    {
+    std::string s;
+    for(auto i : range(size(ts)))
+      {
+      s += ts[i];
+      if(i < (size(ts)-1)) s += ",";
+      }
+    return s;
+    }
+
 std::ostream&
 operator<<(std::ostream & s, TagSet const& ts)
     {
     if( primeLevel(ts) != 0 ) s << "(";
-    for(auto i : range(size(ts)))
-      {
-      s << ts[i];
-      if( i < (size(ts)-1) ) s << ",";
-      }
+    //for(auto i : range(size(ts)))
+    //  {
+    //  s << ts[i];
+    //  if( i < (size(ts)-1) ) s << ",";
+    //  }
+    s << tagString(ts);
+
     if( primeLevel(ts) != 0 ) s << ")";
     if(primeLevel(ts) > 0)
         {
@@ -266,6 +283,35 @@ read(std::istream& s, TagSet & ts)
     itensor::read(s,plev);
     ts.setPrime(plev);
     }
+
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, TagSet const& ts)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","TagSet",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"plev",long(primeLevel(ts)));
+    h5_write(g,"tags",tagString(ts),true);
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, TagSet & ts)
+    {
+    auto g = parent.open_group(name);
+
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "TagSet") Error("Group does not contain TagSet data in HDF5 file");
+
+    auto plev = h5_read<long>(g,"plev");
+    auto tstr = h5_read<string>(g,"tags");
+
+    ts = TagSet(tstr);
+    ts.setPrime(plev);
+    }
+
+#endif
 
 } //namespace itensor
 

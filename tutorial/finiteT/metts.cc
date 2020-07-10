@@ -1,5 +1,6 @@
 #include "itensor/all.h"
 #include "S2.h"
+#include "itensor/util/print_macro.h"
 
 using namespace std;
 using namespace itensor;
@@ -156,12 +157,13 @@ main(int argc, char* argv[])
         for(int tt = 1; tt <= nt; ++tt)
             {
             psi = applyMPO(expH,psi,args);
+            psi.noPrime();
             psi.ref(1) /= norm(psi(1));
             }
 
         if(step > nwarm) println("Done making METTS ",step-nwarm);
         int maxdimm = 0;
-        for(int b = 0; b < psi.N(); ++b)
+        for(int b = 0; b < length(psi); ++b)
             {
             int m_b = dim(linkIndex(psi,b));
             maxdimm = std::max(maxdimm,m_b);

@@ -39,3 +39,8 @@ Then change the "dir" variable
 (near the end of main)
 to switch from "Z" to "X" on
 alternating even/odd steps.
+
+(If you want to check your work at the
+end, please look at the file
+metts_solution.cc for a completed, 
+correct solution to the steps above.)

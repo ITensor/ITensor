@@ -241,10 +241,14 @@ checkQNs(MPS const& psi)
 QN
 totalQN(MPS const& psi)
     {
-    const int center = findCenter(psi);
-    if(center == -1)
-        Error("Could not find ortho. center");
-    return div(psi(center));
+    auto tq = QN();
+    auto sj = psi.leftLim()+1;
+    auto ej = psi.rightLim()-1;
+    for(int j = sj; j <= ej; ++j)
+        {
+        tq += flux(psi(j));
+        }
+    return tq;
     }
 
 } //namespace itensor

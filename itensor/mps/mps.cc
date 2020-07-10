@@ -18,6 +18,7 @@
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
+#include "itensor/tensor/algs.h"
 
 namespace itensor {
 
@@ -198,21 +199,73 @@ length(MPS const& W)
     return W.length();
     }
 
+Matrix
+randomOrthog(int n, int m)
+    {
+    auto r = std::max(n,m);
+    auto M = randn(r,r);
+    Matrix Q,R;
+    QR(M,Q,R,{"PositiveDiagonal",true});
+    if(m < n)
+        {
+        reduceCols(Q,m);
+        }
+    else if(n < m)
+        {
+        reduceCols(Q,n);
+        return Matrix(transpose(Q));
+        }
+    return Q;
+    }
+
+MPS
+randomCircuitMPS(SiteSet const& s, int m, Args const& args)
+    {
+    auto N = length(s);
+    auto M = MPS(N);
+    auto l = vector<Index>(N+1);
+
+    //Make N'th MPS tensor
+    int chi = dim(s(N));
+    l[N-1] = Index(chi,format("Link,l=%d",N-1));
+    auto O = randomOrthog(chi,dim(s(N)));
+    M.ref(N) = matrixITensor(O,l[N-1],s(N));
+
+    for(int j = N-1; j > 1; j -= 1)
+        {
+        //Make j'th MPS tensor
+        auto prev_chi = chi;
+        chi *= dim(s(j));
+        chi = std::min(m,chi);
+        l[j-1] = Index(chi,format("Link,l=%d",j-1));
+        O = randomOrthog(chi,prev_chi*dim(s(j)));
+        auto [C,c] = combiner(s(j),l[j]);
+        M.ref(j) = matrixITensor(O,l[j-1],c);
+        M.ref(j) *= C;
+        }
+
+    //Make 1st MPS tensor
+    O = randomOrthog(1,dim(s(1))*chi);
+    auto [C,c] = combiner(s(1),l[1]);
+    l[0] = Index(1,"Link,l=0");
+    M.ref(1) = matrixITensor(O,l[0],c);
+    M.ref(1) *= C;
+    M.ref(1) *= setElt(l[0](1));
+
+    M.leftLim(0);
+    M.rightLim(2);
+    return M;
+    }
+
 MPS
 randomMPS(SiteSet const& sites, int m, Args const& args)
     {
-    if(not hasQNs(sites))
-        {
-        if(m>1) Error("randomMPS(SiteSet,m>1) not currently supported");
-        auto psi = MPS(sites,m);
-        psi.randomize(args);
-        return psi;
-        }
-    else
-        {
-        Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
-        }
-    return MPS();
+    if(hasQNs(sites))
+    {
+    Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
+    }
+
+    return randomCircuitMPS(sites,m,args);
     }
 
 MPS
@@ -586,7 +639,7 @@ struct Sqrt
     };
 
 Spectrum
-orthMPS(ITensor& A1, ITensor& A2, Direction dir, const Args& args)
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args)
     {
     ITensor& L = (dir == Fromleft ? A1 : A2);
     ITensor& R = (dir == Fromleft ? A2 : A1);
@@ -663,7 +716,14 @@ position(int i, Args args)
             // Store the original tags for link b so that it can
             // be put back onto the newly introduced link index
             auto original_link_tags = tags(linkIndex(*this,b));
-            orthMPS(ref(b),ref(b+1),Fromright,{args,"LeftTags=",original_link_tags});
+            args.add("LeftTags=",original_link_tags);
+            if(original_link_tags == TagSet("Link,V,0"))
+                {
+                // Using LeftTags=Link,V will conflict with
+                // default right tags of svd (within orthMPS)
+                args.add("LeftTags=","Link");
+                }
+            orthMPS(ref(b),ref(b+1),Fromright,args);
 
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;

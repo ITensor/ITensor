@@ -98,7 +98,7 @@ gemm_emulator(MatRefc<VA> A,
     auto Brd = SAFE_REINTERPRET(const Real,Bd);
     auto Crd = SAFE_REINTERPRET(Real,Cd);
 
-    auto d = std::vector<Real>(Abufsize+Bbufsize+Cbufsize);
+    auto d = vector_no_init<Real>(Abufsize+Bbufsize+Cbufsize);
     auto pd = MAKE_SAFE_PTR(d.data(),d.size());
     auto ab = pd;
     auto ae = ab+Abufsize;

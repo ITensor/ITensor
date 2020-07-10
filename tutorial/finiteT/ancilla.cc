@@ -1,6 +1,7 @@
 #include "itensor/all.h"
 #include "TStateObserver.h"
 #include "S2.h"
+#include "itensor/util/print_macro.h"
 
 using namespace std;
 using namespace itensor;
@@ -89,6 +90,7 @@ main(int argc, char* argv[])
     for(int tt = 1; tt <= nt; ++tt)
         {
         psi = applyMPO(expH,psi,args);
+        psi.noPrime();
 
         //Normalize wavefunction
         psi.ref(1) /= norm(psi(1));

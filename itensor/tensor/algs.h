@@ -17,6 +17,7 @@
 #define __ITENSOR_MATRIX_ALGS__H_
 
 #include "itensor/tensor/slicemat.h"
+#include "itensor/util/args.h"
 
 namespace itensor {
 
@@ -114,7 +115,25 @@ SVD(MatM && M,
     MatU && U, 
     VecD && D, 
     MatV && V,
-    Real thresh = SVD_THRESH);
+    const Args & args = Args::global() );
+
+  
+//
+// Compute QR decomposition of MxN A matrix such that 
+// norm(A-QR) < epsilon
+// where Q is MxM orthogonal (unitary) matrix
+// and R is MxN upper triangular.
+// If complete = false, instead compute "thin" QR: for M >= N
+//   Q is MxN matrix with orthonormal columns: Q^T Q = I
+//   R is NxN upper triangular
+template<class MatA, 
+         class MatQ,
+         class MatR>
+void
+QR(MatA && A,
+   MatQ && Q,
+   MatR && R,
+   const Args & args = Args::global());
 
 //
 // Hermitian Matrix exponentiate

@@ -383,9 +383,9 @@ blockDiagDense(QDiag<VD> const& D,
 
         auto do_contract =
             [&D,&Dis,&Tis,&Cis,&DL,&TL,&CL]
-            (DataRange<const VT> tblock, IntArray const& Tblockind,
-             DataRange<const VD> dblock, IntArray const& Dblockind,
-             DataRange<VC>       cblock, IntArray const& Cblockind)
+            (DataRange<const VT> tblock, Block const& Tblockind,
+             DataRange<const VD> dblock, Block const& Dblockind,
+             DataRange<VC>       cblock, Block const& Cblockind)
             {
             Range Trange,
                   Crange;
@@ -439,9 +439,9 @@ blockDiagDense(QDiag<VD> const& D,
 
         auto do_contract =
             [&D,&Dis,&Tis,&DL,&TL,&CL]
-            (DataRange<const VT> tblock, IntArray const& Tblockind,
-             DataRange<const VD> dblock, IntArray const& Dblockind,
-             DataRange<VC>       cblock, IntArray const& Cblockind)
+            (DataRange<const VT> tblock, Block const& Tblockind,
+             DataRange<const VD> dblock, Block const& Dblockind,
+             DataRange<VC>       cblock, Block const& Cblockind)
             {
             Range Trange;
             Trange.init(make_indexdim(Tis,Tblockind));

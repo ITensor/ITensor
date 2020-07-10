@@ -268,6 +268,12 @@ takeImag()
     return *this;
     }
 
+ITensor& ITensor::
+makeCplx()
+    {
+    doTask(MakeCplx{},store_);
+    return *this;
+    }
 
 ITensor& ITensor::
 randomize(Args const& args)
@@ -1162,6 +1168,7 @@ daxpy(ITensor & L,
       Real alpha)
     {
     if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
+    if(nnzblocks(R) == 0) return;
     detail::checkSameDiv(L,R);
 
     using permutation = typename PlusEQ::permutation;
