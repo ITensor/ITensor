@@ -70,6 +70,10 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #PLATFORM=mkl
 ## MKL example - you may need to change the names of the folders below
 #BLAS_LAPACK_LIBFLAGS=-L/opt/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
+## Example of using a sequential version of MKL. You may want to link to 
+## the sequential version of MKL if you are using ITensor's native multithreading, 
+## see section [4] for more details.
+#BLAS_LAPACK_LIBFLAGS=-L/opt/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_rt -lmkl_core -lpthread
 #BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/mkl/include
 
 ##
@@ -110,6 +114,11 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 #########
 ## [4]
 ##
+## ITensor provides some native OpenMP multithreading.
+## Currently, block sparse tensor contractions support
+## optional multithreading, so any ITensor code using QN
+## conservation may benefit.
+##
 ## If you want to enable OpenMP multithreading in ITensor,
 ## uncomment the line below. You must have OpenMP installed 
 ## on your system.
@@ -119,14 +128,26 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ## for example using the command:
 ## export OMP_NUM_THREADS=8
 ##
-## You may also want to set the MKL_NUM_THREADS to one if
-## you are compiling ITensor with MKL using the command:
+## We also recommend setting the number of BLAS/LAPACK threads
+## to 1, since BLAS/LAPACK multithreading may compete with ITensor's
+## native multithreading.
+##
+## If you are compiling ITensor with Intel MKL you can set the
+## environment variable:
+##
 ## export MKL_NUM_THREADS=1
+##
+## or directly link to MKL's sequential library (see section [2] above).
+##
+## If you are compiling ITensor with OpenBLAS, you can set the
+## environment variable:
+##
+## export OPENBLAS_NUM_THREADS=1
 ##
 ## For more help, visit: 
 ## http://itensor.org/docs.cgi?vers=cppv3&page=install
 ##
-#ITENSOR_USE_OMP = 1
+#ITENSOR_USE_OMP=1
 
 
 #########
