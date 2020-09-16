@@ -607,15 +607,15 @@ doTask(ToDense & R,
     auto diag_block = true;
     for(auto i : range(1,ninds))
       {
-      if(io.block[i] != io.block[0])
+      if(io.first[i] != io.first[0])
         diag_block = false;
       }
 
     if(diag_block)
       {
       // Make a TenRef of the current block we want to assign to
-      dense_range.init(make_indexdim(R.is,io.block));
-      auto aref = makeTenRef(nd->data(),io.offset,nd->size(),&dense_range);
+      dense_range.init(make_indexdim(R.is,io.first));
+      auto aref = makeTenRef(nd->data(),io.second,nd->size(),&dense_range);
 
       long tot_stride = 0; //total strides for this block
       for(auto i : range(ninds))
@@ -632,7 +632,7 @@ doTask(ToDense & R,
         {
         // Get the diagonal elements of the current
         // block
-        auto pD = getBlock(d,R.is,io.block);
+        auto pD = getBlock(d,R.is,io.first);
         // Make a VecRef of the diagonal elements of the block to assign
         // to the diagonal of the new QDense storage block
         auto Dref = makeVecRef(pD.data(),pD.size());

@@ -220,6 +220,25 @@ write(std::ostream& s, std::vector<T,A> const& v)
         }
     }
 
+template<typename K, typename V, typename H>
+void
+read(std::istream& s, std::unordered_map<K,V,H> & umap)
+    {
+    auto v = std::vector<std::pair<K,V>>();
+    itensor::read(s,v);
+    umap.clear();
+    umap.insert(v.begin(),v.end());
+    }
+
+template<typename K, typename V, typename H>
+void
+write(std::ostream& s, std::unordered_map<K,V,H> const& umap)
+    {
+    auto size = umap.size();
+    itensor::write(s,size);
+    for(auto& el : umap) itensor::write(s,el);
+    }
+
 template<typename T, size_t N>
 auto
 read(std::istream& s, std::array<T,N> & a)
@@ -309,15 +328,15 @@ write(std::ostream& s, const InfArray<T,N>& ia)
 void inline
 write(std::ostream & s, BlOf const& blof)
     {
-    itensor::write(s,blof.block);
-    itensor::write(s,blof.offset);
+    itensor::write(s,blof.first);
+    itensor::write(s,blof.second);
     }
 
 void inline
 read(std::istream & s, BlOf & blof)
     {
-    itensor::read(s,blof.block);
-    itensor::read(s,blof.offset);
+    itensor::read(s,blof.first);
+    itensor::read(s,blof.second);
     }
 
 //////////////////////////////////////////////
