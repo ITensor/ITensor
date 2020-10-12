@@ -231,7 +231,7 @@ LocalOp(const ITensor& Op1,
     R_(nullptr),
     size_(-1)
     {
-    nc_ = args.getInt("NumCenter",2);
+    nc_ = args.getInt("NumCenter",1);
     if(nc_ == 1)
       update(Op1,L,R);
     else
