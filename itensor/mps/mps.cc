@@ -1260,7 +1260,7 @@ template <typename MPSType>
 IndexSet
 linkInds(MPSType const& x, int i)
     {
-    if( i == 1 ) return IndexSet(rightLinkIndex(x,i));
+    if(i == 1) return IndexSet(rightLinkIndex(x,i));
     else if( i == length(x) ) return IndexSet(leftLinkIndex(x,i));
     return IndexSet(leftLinkIndex(x,i),rightLinkIndex(x,i));
     }
@@ -1276,6 +1276,7 @@ linkInds(MPSType const& x)
     for( auto n : range1(N-1) )
       {
       auto s = linkIndex(x,n);
+      if(!s) Error("MPS or MPO has missing/null link index");
       inds.nextIndex(std::move(s));
       }
     return inds.build();
