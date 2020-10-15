@@ -92,7 +92,7 @@ getBlock(BlockSparse & d,
 // result of contracting the tensors
 template<typename BlockSparseA,
          typename BlockSparseB>
-std::tuple<BlockOffsets,int,std::vector<std::tuple<Block,Block,Block>>>
+std::tuple<BlockOffsets,size_t,std::vector<std::tuple<Block,Block,Block>>>
 getContractedOffsets(BlockSparseA const& A,
                      IndexSet const& Ais,
                      BlockSparseB const& B,
@@ -228,7 +228,7 @@ getContractedOffsets(BlockSparseA const& A,
                                [](auto a, auto b) { return a.block == b.block; } );
     Cblocksizes.resize(std::distance(Cblocksizes.begin(),newCend));
 
-    auto current_offset = 0;
+    size_t current_offset = 0;
     for(auto i : range(Cblocksizes.size()))
         {
         auto current_size = Cblocksizes[i].offset;
@@ -236,7 +236,7 @@ getContractedOffsets(BlockSparseA const& A,
         current_offset += current_size;
         } 
     // Stores the total size that the storage of C should have
-    auto Csize = current_offset;
+    size_t Csize = current_offset;
     
     return std::make_tuple(Cblocksizes,Csize,blockContractions);
     }
