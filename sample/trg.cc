@@ -18,13 +18,11 @@ main()
   
   // Define the indices of the scale-0
   // Boltzmann weight tensor "A"
-  auto l = addTags(s, "left");
-  auto r = addTags(s, "right");
-  auto u = addTags(s, "up");
-  auto d = addTags(s, "down");
+  auto sh = addTags(s, "horiz");
+  auto sv = addTags(s, "vert");
   
-  auto A0 = ising(l, r, u, d, beta);
-  auto [A, z] = trg(A0, l, r, u, d, maxdim, topscale);
+  auto A0 = ising(sh, sv, beta);
+  auto [A, z] = trg(A0, maxdim, topscale);
   (void)A;
 
   printfln("beta = %.12f", beta);

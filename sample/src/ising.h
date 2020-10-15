@@ -3,25 +3,25 @@
 using namespace itensor;
 
 ITensor
-ising(Index const& l, Index const& r,
-      Index const& u, Index const& d,
+ising(Index const& sh, Index const& sv,
       Real beta)
   {
   int dim0 = 2;
-  auto A = ITensor(l, r, u, d);
-  auto T = 1/beta;
+  auto A = ITensor(sh, prime(sh), sv, prime(sv));
 
   // Fill the A tensor with correct Boltzmann weights:
-  auto Sig = [](int s) { return 1.-2.*(s-1); };
-  for(auto sl : range1(dim0))
-  for(auto sd : range1(dim0))
-  for(auto sr : range1(dim0))
-  for(auto su : range1(dim0))
+  auto Sig = [](int s) { return 1. - 2. * (s - 1); };
+  for(auto ssh  : range1(dim0))
+  for(auto ssvp : range1(dim0))
+  for(auto sshp : range1(dim0))
+  for(auto ssv  : range1(dim0))
     {
-    auto E = Sig(sl)*Sig(sd)+Sig(sd)*Sig(sr)
-            +Sig(sr)*Sig(su)+Sig(su)*Sig(sl);
-    auto P = exp(-E/T);
-    A.set(l(sl),r(sr),u(su),d(sd),P);
+    auto E = Sig(ssh)  * Sig(ssvp) +
+             Sig(ssvp) * Sig(sshp) +
+             Sig(sshp) * Sig(ssv)  +
+             Sig(ssv)  * Sig(ssh);
+    auto P = exp(-beta * E);
+    A.set(sh = ssh, prime(sh) = sshp, sv = ssv, prime(sv) = ssvp, P);
     }
   return A;
   }
