@@ -4,7 +4,8 @@ using namespace itensor;
 
 std::tuple<ITensor, Real>
 trg(ITensor const& A0,
-    int maxdim, int topscale)
+    int maxdim, int topscale,
+    Real cutoff = 0.0)
   {
   auto A = A0;
   auto is = findInds(A, "0");
@@ -23,6 +24,7 @@ trg(ITensor const& A0,
                             {"MaxDim = ", maxdim,
                              "Tags = ", "horiz",
                              "SVDMethod = ", "gesdd",
+                             "Cutoff = ", cutoff,
                              "ShowEigs = ", false});
 
     // Grab the new left Index
@@ -34,6 +36,7 @@ trg(ITensor const& A0,
                             {"MaxDim = ", maxdim,
                              "Tags = ", "vert",
                              "SVDMethod = ", "gesdd",
+                             "Cutoff = ", cutoff,
                              "ShowEigs = ", false});
 
     // Grab the new up Index

@@ -29,7 +29,7 @@ ctmrg(ITensor T,
     std::tie(Uv, Clu) = diagPosSemiDef(Clu_new,
                                        {"MaxDim = ", maxdim,
                                         "Tags = ", tags(lv),
-                                        "Cutoff = ", 0.0});
+                                        "Cutoff = ", cutoff});
 
     lv = commonIndex(Clu, Uv);
     lh = setTags(lv, tags(lh));
