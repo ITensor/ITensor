@@ -327,11 +327,11 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_REAL* eigs, //eigenvalues on return
               LAPACK_INT& info)  //error info
     {
-    static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
     LAPACK_INT lda = n;
 
 #ifdef PLATFORM_acml
+    static const LAPACK_INT one = 1;
     LAPACK_INT lwork = std::max(one,3*n-1);
     work.resize(lwork+2);
     F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
