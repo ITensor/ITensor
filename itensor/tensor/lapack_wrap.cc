@@ -331,7 +331,8 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
     LAPACK_INT lda = n;
 
 #ifdef PLATFORM_acml
-    LAPACK_INT lwork = std::max(1,3*n-1);
+    static const LAPACK_INT one = 1;
+    LAPACK_INT lwork = std::max(one,3*n-1);
     work.resize(lwork+2);
     F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
 #else
@@ -499,8 +500,9 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //length should be min(m,n)
                LAPACK_INT* info)  //error info
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
-    int lwork = std::max(1,4*std::max(*n,*m));
+    LAPACK_INT lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
     }
@@ -520,8 +522,9 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info)  //error info
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
-    auto lwork = std::max(1,4*std::max(*n,*m));
+    auto lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
     }
@@ -542,8 +545,9 @@ zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //length should be min(m,n)
                LAPACK_INT* info)  //error info
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_COMPLEX> work;
-    int lwork = std::max(1,4*std::max(*n,*m));
+    LAPACK_INT lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2);
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
@@ -565,8 +569,9 @@ zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_COMPLEX* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info)  //error info
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_COMPLEX> work;
-    auto lwork = std::max(1,4*std::max(*n,*m));
+    auto lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2);
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
@@ -675,13 +680,14 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
               Cplx          * A,  //matrix A, on return contains eigenvectors
               LAPACK_REAL   * d)  //eigenvalues on return
     {
+    static const LAPACK_INT one = 1;
     char jobz = 'V';
     char uplo = 'U';
 #ifdef PLATFORM_lapacke
     std::vector<LAPACK_REAL> work(N);
     LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
 #else
-    LAPACK_INT lwork = std::max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_INT lwork = std::max(one,3*N-1);//max(1, 1+6*N+2*N*N);
     std::vector<LAPACK_COMPLEX> work(lwork);
     std::vector<LAPACK_REAL> rwork(lwork);
     LAPACK_INT info = 0;
@@ -717,9 +723,10 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_REAL* d,       //eigenvalues on return
               LAPACK_INT* info)  //error info
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
-    int itype = 1;
-    LAPACK_INT lwork = std::max(1,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
+    LAPACK_INT itype = 1;
+    LAPACK_INT lwork = std::max(one,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
     work.resize(lwork);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
@@ -804,14 +811,15 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               Cplx * vl,   //left eigenvectors on return
               Cplx * vr)   //right eigenvectors on return
     {
+    static const LAPACK_INT one = 1;
     std::vector<LAPACK_COMPLEX> cpA;
     std::vector<LAPACK_COMPLEX> work;
     std::vector<LAPACK_REAL> rwork;
-    int nevecl = (jobvl == 'V' ? n : 1);
-    int nevecr = (jobvr == 'V' ? n : 1);
-    LAPACK_INT lwork = std::max(1,4*n);
+    LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
+    LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
+    LAPACK_INT lwork = std::max(one,4*n);
     work.resize(lwork);
-    LAPACK_INT lrwork = std::max(1,2*n);
+    LAPACK_INT lrwork = std::max(one,2*n);
     rwork.resize(lrwork);
 
     //Copy A data into cpA
