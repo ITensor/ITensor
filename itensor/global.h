@@ -21,7 +21,6 @@
 #include <cstring>
 #include <memory>
 #include <random>
-#include <unistd.h>
 #include <memory>
 #include "itensor/util/iterate.h"
 #include "itensor/util/error.h"
