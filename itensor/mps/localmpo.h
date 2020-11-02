@@ -107,6 +107,9 @@ class LocalMPO
              int RHlim,
              Args const& args = Args::global());
 
+    ~LocalMPO()
+        { cleanupWrite(); }
+
     //
     // Sparse Matrix Methods
     //
@@ -254,6 +257,9 @@ class LocalMPO
 
     void
     initWrite(Args const& args);
+
+    void
+    cleanupWrite();
 
     std::string
     PHFName(int j) const
@@ -678,6 +684,17 @@ initWrite(Args const& args)
     {
     auto basedir = args.getString("WriteDir","./");
     writedir_ = mkTempDir("PH",basedir);
+    }
+
+void inline LocalMPO::
+cleanupWrite()
+    {
+    if(do_write_)
+        {
+        const string cmdstr = "rm -fr " + writedir_;
+        system(cmdstr.c_str());
+        do_write_ = false;
+        }
     }
 
 } //namespace itensor
