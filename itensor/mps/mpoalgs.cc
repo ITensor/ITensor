@@ -227,24 +227,19 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     auto res = psi;
 
-    //Set up conjugate psi and K
-    auto psic = psi;
-    auto Kc = K;
-    //TODO: use sim(linkInds), sim(siteInds)
-    psic.dag().prime(rand_plev);
-    Kc.dag().prime(rand_plev);
-
-    // Make sure the original and conjugates match
-    for(auto j : range1(N-1)) 
-        Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
-
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
     auto E = std::vector<ITensor>(N+1);
-    E[1] = psi(1)*K(1)*Kc(1)*psic(1);
+    auto Kc = dag(prime(K(1),rand_plev));
+    auto psic = dag(prime(psi(1),rand_plev));
+    Kc.prime(-rand_plev,uniqueSiteIndex(K,psi,1).prime(rand_plev));
+    E[1] = psi(1)*K(1)*Kc*psic;
     for(int j = 2; j < N; ++j)
         {
-        E[j] = E[j-1]*psi(j)*K(j)*Kc(j)*psic(j);
+        Kc = dag(prime(K(j),rand_plev));
+        psic = dag(prime(psi(j),rand_plev));
+        Kc.prime(-rand_plev,uniqueSiteIndex(K,psi,j).prime(rand_plev));
+        E[j] = E[j-1]*psi(j)*K(j)*Kc*psic;
         }
     if(verbose) println("done");
 
