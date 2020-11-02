@@ -54,7 +54,7 @@ class RangeHelper
     bool
     operator!=(RangeHelper const& other) const
         {
-        return curr_ != other.curr_;
+        return curr_ < other.curr_;
         }
 
     RangeHelper 

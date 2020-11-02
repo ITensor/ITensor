@@ -34,45 +34,49 @@ namespace detail {
     int
     hermitianDiag(int N, Real *Udata, Real *ddata)
         {
+        LAPACK_INT _N = N;
         LAPACK_INT info = 0;
-        dsyev_wrapper('V','U',N,Udata,ddata,info);
+        dsyev_wrapper('V','U',_N,Udata,ddata,info);
         return info;
         }
     int
     hermitianDiag(int N, Cplx *Udata,Real *ddata)
         {
-        return zheev_wrapper(N,Udata,ddata);
+        LAPACK_INT _N = N;
+        return zheev_wrapper(_N,Udata,ddata);
         }
 
     int
     QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata)
         {
+        LAPACK_INT _M = M, _N = N, _Rrows = Rrows;
         LAPACK_INT info = 0;
-        std::vector<LAPACK_REAL> tau(N);
-        dgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
-        for(int i = 0; i < Rrows; i++)
-        for(int j = i; j < N; j++) 
+        std::vector<LAPACK_REAL> tau(_N);
+        dgeqrf_wrapper(&_M, &_N, Qdata, &_M, tau.data(), &info);
+        for(LAPACK_INT i = 0; i < _Rrows; i++)
+        for(LAPACK_INT j = i; j < _N; j++) 
             {
-            Rdata[i + j*Rrows] = Qdata[i+j*M];
+            Rdata[i + j*_Rrows] = Qdata[i+j*_M];
             }
-        int min = M < N ? M : N;
-        dorgqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
+        LAPACK_INT min = _M < _N ? _M : _N;
+        dorgqr_wrapper(&_M, &_Rrows, &min, Qdata, &_M, tau.data(), &info);
         return info;
         }
 
     int
     QR(int M, int N, int Rrows, Cplx *Qdata, Cplx *Rdata)
         {
+        LAPACK_INT _M = M, _N = N, _Rrows = Rrows;
         LAPACK_INT info = 0;
         std::vector<LAPACK_COMPLEX> tau(N);
-        zgeqrf_wrapper(&M, &N, Qdata, &M, tau.data(), &info);
-        for(int i = 0; i < Rrows; i++)
-        for(int j = i; j < N; j++) 
+        zgeqrf_wrapper(&_M, &_N, Qdata, &_M, tau.data(), &info);
+        for(LAPACK_INT i = 0; i < _Rrows; i++)
+        for(LAPACK_INT j = i; j < _N; j++) 
             {
-            Rdata[i + j*Rrows] = Qdata[i+j*M];
+            Rdata[i + j*_Rrows] = Qdata[i+j*_M];
             }
-        int min = M < N ? M : N;
-        zungqr_wrapper(&M, &Rrows, &min, Qdata, &M, tau.data(), &info);
+        LAPACK_INT min = _M < _N ? _M : _N;
+        zungqr_wrapper(&_M, &_Rrows, &min, Qdata, &_M, tau.data(), &info);
         return info;
         }
 
@@ -80,18 +84,20 @@ namespace detail {
   int
   SVD_gesdd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
     {
+    LAPACK_INT _M = M, _N = N;
     LAPACK_INT info = 0;
     char S = 'S';
-    zgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+    zgesdd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
     return info;
     }
 
     int
     SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
     {
+    LAPACK_INT _M = M, _N = N;
     LAPACK_INT info = 0;
     char S = 'S';
-    dgesdd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+    dgesdd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
     return info;
     }
 
@@ -99,18 +105,20 @@ namespace detail {
     int
     SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
         {
+        LAPACK_INT _M = M, _N = N;
         LAPACK_INT info = 0;
         char S = 'S';
-        zgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+        zgesvd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
         return info;
         }
 
     int
     SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
         {
+        LAPACK_INT _M = M, _N = N;
         LAPACK_INT info = 0;
         char S = 'S';
-        dgesvd_wrapper(&S, &M, &N, Adata, Ddata,  Udata, Vdata, &info);
+        dgesvd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
         return info;
         }
 

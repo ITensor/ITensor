@@ -43,3 +43,7 @@ mixedspin - demo code showing how to make and use
 trg - tensor renormalization group (TRG) algorithm
       for computing properties of large 2D classical
       stat mech systems
+
+ctmrg - corner transfer matrix renormalization group (CTMRG) algorithm
+        for computing properties of large 2D classical
+        stat mech systems
