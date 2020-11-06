@@ -468,6 +468,26 @@ SECTION("Electron, Complex Hopping")
         }
     }
 
+SECTION("Electron with no QNs")
+    {
+    int N = 2;
+    auto t0 = 5.0;
+
+    auto sites = Fermion(N, {"ConserveQNs=",false});
+    Print(sites(1));
+
+    auto ampo = AutoMPO(sites);
+
+    ampo += -t0,"Cdag",1,"C",2;
+    ampo += -t0,"Cdag",2,"C",1;
+
+    auto H = toMPO(ampo);
+
+    auto HT = H(1)*H(2);
+    auto HTc = dag(swapPrime(HT,0,1));
+    CHECK(norm(HT-HTc) < 1E-10);
+    }
+
 SECTION("Ladder with Complex Hopping")
     {
     auto N = 8;
