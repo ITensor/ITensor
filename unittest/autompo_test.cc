@@ -474,7 +474,6 @@ SECTION("Electron with no QNs")
     auto t0 = 5.0;
 
     auto sites = Fermion(N, {"ConserveQNs=",false});
-    Print(sites(1));
 
     auto ampo = AutoMPO(sites);
 
@@ -630,6 +629,30 @@ SECTION("Fermion")
         CHECK_CLOSE(inner(lpsi2,Hx,lpsi1),-t);
         CHECK_CLOSE(inner(lpsi2,Ha,lpsi1),-t);
         }
+    }
+
+SECTION("Mixed Fermion and Non-Fermion Sites")
+    {
+    // This test checks whether fermionic and non-fermionic
+    // sites can be successfully mixed together and used
+    // in the AutoMPO system. One possible issue is whether
+    // the Jordan-Wigner "F" operator is defined for
+    // non-fermionic sites
+    using FSpin = MixedSiteSet<FermionSite,SpinHalfSite>;
+    int N = 6;
+    auto t = 1.0;
+
+    auto sites = FSpin(N);
+
+    auto ampo = AutoMPO(sites);
+    for(int j = 1; j < N-1; j += 2)
+        {
+        ampo += -t,"Cdag",j,"C",j+2;
+        ampo += -t,"Cdag",j+2,"C",j;
+        }
+
+    MPO H;
+    CHECK_NOTHROW(H = toMPO(ampo));
     }
 
 }
