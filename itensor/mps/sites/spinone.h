@@ -86,7 +86,7 @@ class SpinOneSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -223,7 +223,7 @@ class SpinOneSite
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;
@@ -251,7 +251,7 @@ SpinOne(std::vector<Index> const& inds)
         if(dim(Ii) != 3)
             {
             printfln("Index at entry %d = %s",i,Ii);
-            Error("Only S=1 IQIndices allowed in SpinOne(vector<Index>) constructor");
+            throw ITError("Only S=1 IQIndices allowed in SpinOne(vector<Index>) constructor");
             }
         sites.set(j,SpinOneSite(Ii));
         }
@@ -306,7 +306,7 @@ read(std::istream& s)
             I.read(s);
             if(dim(I) == 3) store.set(j,SpinOneSite(I));
             else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
-            else Error(format("SpinOne cannot read index of size %d",dim(I)));
+            else throw ITError(format("SpinOne cannot read index of size %d",dim(I)));
             }
         init(std::move(store));
         }

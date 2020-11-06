@@ -380,6 +380,22 @@ op(String const& opname,
         return setElt(dag(v),prime(v));
         }
     else
+    if(opname == "F")
+        {
+        try {
+            return sites_->op(i,opname,args);
+        } catch(...) {
+            //
+            // If no "F" operator defined by site set
+            // then return a 'trivial' F operator
+            // equal to the identity:
+            auto s = si(i);
+            auto trivF = ITensor(dag(s),prime(s));
+            for(auto j : range1(dim(s))) trivF.set(j,j,1.0);
+            return trivF;
+        }
+        }
+    else
         {
         auto op1 = [](std::string const& opname, size_t n)
             {
