@@ -61,7 +61,7 @@ class Z3Site
         if(state == "2") { return s(3); }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -131,7 +131,7 @@ class Z3Site
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;

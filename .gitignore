@@ -17,8 +17,12 @@ sample/exthubbard
 sample/exthubbard-g
 sample/hubbard_2d
 sample/hubbard_2d-g
+sample/hubbard_2d_conserve_momentum
+sample/hubbard_2d_conserve_momentum-g
 sample/trg
 sample/trg-g
+sample/ctmrg
+sample/ctmrg-g
 this_dir.mk
 options.mk
 .exrc

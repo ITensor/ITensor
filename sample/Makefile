@@ -19,11 +19,11 @@ LIBGFLAGS=-L'$(ITENSOR_LIBDIR)' $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d
+build: dmrg dmrg_table dmrgj1j2 exthubbard trg ctmrg mixedspin hubbard_2d hubbard_2d_conserve_momentum
 
-debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g trg-g mixedspin-g hubbard_2d-g
+debug: dmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g trg-g ctmrg-g mixedspin-g hubbard_2d-g hubbard_2d_conserve_momentum-g
 
-all: dmrg dmrg_table dmrgj1j2 exthubbard trg mixedspin hubbard_2d
+all: dmrg dmrg_table dmrgj1j2 exthubbard trg ctmrg mixedspin hubbard_2d hubbard_2d_conserve_momentum
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
@@ -61,11 +61,23 @@ trg: trg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 trg-g: mkdebugdir .debug_objs/trg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/trg.o -o trg-g $(LIBGFLAGS)
 
+ctmrg: ctmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) ctmrg.o -o ctmrg $(LIBFLAGS)
+
+ctmrg-g: mkdebugdir .debug_objs/trg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/ctmrg.o -o ctmrg-g $(LIBGFLAGS)
+
 hubbard_2d: hubbard_2d.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) hubbard_2d.o -o hubbard_2d $(LIBFLAGS)
 
 hubbard_2d-g: mkdebugdir .debug_objs/hubbard_2d.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/hubbard_2d.o -o hubbard_2d-g $(LIBGFLAGS)
+
+hubbard_2d_conserve_momentum: hubbard_2d_conserve_momentum.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) hubbard_2d_conserve_momentum.o -o hubbard_2d_conserve_momentum $(LIBFLAGS)
+
+hubbard_2d_conserve_momentum-g: mkdebugdir .debug_objs/hubbard_2d_conserve_momentum.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/hubbard_2d_conserve_momentum.o -o hubbard_2d_conserve_momentum-g $(LIBGFLAGS)
 
 mkdebugdir:
 	mkdir -p .debug_objs
@@ -73,4 +85,4 @@ mkdebugdir:
 clean:
 	@rm -fr *.o .debug_objs dmrg dmrg-g \
 	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
-    mixedspin mixedspin-g trg trg-g hubbard_2d hubbard_2d-g
+    mixedspin mixedspin-g trg trg-g ctmrg ctmrg-g hubbard_2d hubbard_2d-g hubbard_2d_conserve_momentum hubbard_2d_conserve_momentum-g

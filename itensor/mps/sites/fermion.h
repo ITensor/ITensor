@@ -88,7 +88,7 @@ class FermionSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -148,7 +148,7 @@ class FermionSite
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;

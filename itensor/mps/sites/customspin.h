@@ -68,7 +68,7 @@ class CustomSpinSite
             }
         else
             {
-            if(conserveSz) Error("ConserveSz cannot be true when ConserveQNs=false");
+            if(conserveSz) throw ITError("ConserveSz cannot be true when ConserveQNs=false");
             s = Index(DSmax+1,tags);
             }
         }
@@ -85,7 +85,7 @@ class CustomSpinSite
             {
             if(state == str(2*n-DSmax)) return s(1+n); //state name is "2Sz"
             }
-        Error("State " + state + " not recognized");
+        throw ITError("State " + state + " not recognized");
         return IndexVal{};
         }
 
@@ -153,7 +153,7 @@ class CustomSpinSite
             }
         else
             {
-            Error("Operator " + opname + " name not recognized");
+            throw ITError("Operator " + opname + " name not recognized");
             }
 
         return Op;

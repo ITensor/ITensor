@@ -77,7 +77,7 @@ class SpinHalfSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -110,7 +110,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -123,7 +123,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -136,7 +136,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -167,7 +167,7 @@ class SpinHalfSite
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;
