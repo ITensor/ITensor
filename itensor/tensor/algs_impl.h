@@ -363,7 +363,7 @@ SVDRefLAPACK(
     int Mr = nrows(M), 
          Mc = ncols(M);
 
-    auto svdMethod = args.getString("SVDMethod");
+    auto svdMethod = args.getString("SVDMethod", "gesdd");
 
     auto pA = M.data();
     std::vector<T> cpA;

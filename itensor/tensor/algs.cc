@@ -610,7 +610,7 @@ SVDRef(MatRefc<T> const& M,
             throw std::runtime_error("SVD (ref version), wrong size of D");
 #endif
 
-        auto svdMethod = args.getString("SVDMethod","ITensor");
+        auto svdMethod = args.getString("SVDMethod", "gesdd");
         if(svdMethod=="ITensor")
             {
             SVDRefImpl(M,U,D,V,args);
