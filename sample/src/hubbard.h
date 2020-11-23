@@ -42,15 +42,7 @@ hubbard_2d_ky(SiteSet const& sites, Args const& args)
             int s2 = x * Ny + (py - qy + Ny) % Ny + 1;
             int s3 = x * Ny + py + 1;
             int s4 = x * Ny + ky + 1;
-            //ampo += (U/Ny), "Cdagdn", s1, "Cdagup", s2, "Cup", s3, "Cdn", s4;
-            if(s1 == s4 && s2 == s3)
-              ampo += (U / Ny), "Ndn", s1, "Nup", s2;
-            else if(s1 == s4)
-              ampo += (U / Ny), "Ndn", s1, "Cdagup", s2, "Cup", s3;
-            else if(s2 == s3)
-              ampo += (U / Ny), "Cdagdn", s1, "Cdn", s4, "Nup", s2;
-            else
-              ampo += (U / Ny), "Cdagdn", s1, "Cdagup", s2, "Cup", s3, "Cdn", s4;
+            ampo += (U / Ny), "Cdagdn", s1, "Cdagup", s2, "Cup", s3, "Cdn", s4;
             }
     }
   return ampo;
