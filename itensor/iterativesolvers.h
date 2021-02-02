@@ -804,9 +804,9 @@ arnoldi(const BigMatrixT& A,
             // "Deflate" previous eigenpairs:
             for(size_t o = 0; o < w; ++o)
                 {
-                //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j+1]));
+                //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j]));
                 Complex overlap_;
-                gmres_details::dot(phi[o],V[j+1],overlap_);
+                gmres_details::dot(phi[o],V[j],overlap_);
                 V[j+1] += (-eigs.at(o)*phi[o]*overlap_);
                 }
 
