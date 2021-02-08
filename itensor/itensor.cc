@@ -1580,6 +1580,7 @@ randomITensor(QN q, IndexSet const& is)
     ITensor T;
     auto dat = QDenseReal{is,q};
     T = ITensor(std::move(is),std::move(dat));
+    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickran);
     return T;
     }
@@ -1594,6 +1595,7 @@ randomITensorC(QN q, IndexSet const& is)
     ITensor T;
     auto dat = QDenseCplx{is,q};
     T = ITensor(std::move(is),std::move(dat));
+    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickranCplx);
     return T;
     }
