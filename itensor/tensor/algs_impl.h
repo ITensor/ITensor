@@ -380,8 +380,13 @@ SVDRefLAPACK(
     }
 
     int info = -1;
-    if (svdMethod == "gesdd")
+    if (svdMethod == "gesdd"){
       info = detail::SVD_gesdd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+      // if gesdd failed, try gesvd
+      if(info != 0){
+        info = detail::SVD_gesvd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+      }
+    }
     else if (svdMethod == "gesvd")
       info = detail::SVD_gesvd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
 
