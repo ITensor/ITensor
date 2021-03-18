@@ -98,8 +98,8 @@ multReal(MatRef<V> const& M, Real fac)
     if(isContiguous(M))
         {
 #ifdef DEBUG
-        if(M.size() > std::numeric_limits<LAPACK_INT>::max()) 
-            throw std::runtime_error("MatrixRef overflow of size beyond LAPACK_INT range");
+        if(M.size() > std::numeric_limits<unsigned long>::max()) 
+            throw std::runtime_error("MatrixRef overflow of size beyond long unsigned int range");
 #endif
         auto d = realData(M);
         dscal_wrapper(d.size(),fac,d.data());
@@ -174,8 +174,8 @@ call_daxpy(MatT1& A, MatT2 const& B, Real alpha_)
 #ifdef DEBUG
     if(Ad.size() != Bd.size())
         throw std::runtime_error("mismatched sizes in MatrixRef/Matrix call_daxpy");
-    if(Ad.size() > std::numeric_limits<LAPACK_INT>::max()) 
-        throw std::runtime_error("overflow of size beyond LAPACK_INT range");
+    if(Ad.size() > std::numeric_limits<unsigned long>::max()) 
+        throw std::runtime_error("overflow of size beyond long unsigned int range");
 #endif
     daxpy_wrapper(Ad.size(),alpha,Bd.data(),inc,Ad.data(),inc);
     }
