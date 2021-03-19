@@ -1707,7 +1707,7 @@ SECTION("Orthogonalize")
 
 SECTION("Singular Value Decomp")
     {
-      std::vector<std::string> svdMethods = {"ITensor", "gesdd", "gesvd"};
+      std::vector<std::string> svdMethods = {"ITensor", "gesdd", "gesvd", "automatic"};
       for (auto const & method : svdMethods){
 	Args svdArgs = {"SVDMethod", method, "SVDThreshold", SVD_THRESH};
     SECTION("One Pass Case " + method)
