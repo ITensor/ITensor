@@ -69,7 +69,8 @@ read(std::istream& s, T & val)
 template<typename T>
 auto
 read(std::istream& s, T & val)
-    -> stdx::enable_if_t<std::is_pod<T>::value,void>
+    -> stdx::enable_if_t<std::is_standard_layout<T>::value &&
+                         std::is_trivial<T>::value,void>
     {
     s.read((char*) &val, sizeof(val));
     }
