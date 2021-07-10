@@ -88,13 +88,13 @@ class MPO : protected MPS
     MPO&
     swapSiteInds();
 
-    void 
+    Spectrum 
     svdBond(int b, 
             ITensor const& AA, 
             Direction dir, 
             Args const& args = Args::global())
         { 
-        Parent::svdBond(b,AA,dir,args + Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
+        return Parent::svdBond(b,AA,dir,args + Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
         }
 
     //Move the orthogonality center to site i 
