@@ -248,6 +248,16 @@ mod(QNName const& name) const
     return 0;
     }
 
+bool QN::
+hasName(QNName const& name) const
+    {
+    for(auto& v : qvs_)
+        {
+        if(v.name() == name) return true;
+        }
+    return false;
+    }
+
 void QN::
 modAssign(QN const& qo)
     {

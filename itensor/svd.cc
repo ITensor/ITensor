@@ -73,7 +73,6 @@ svdImpl(ITensor const& A,
       }
 
     auto do_truncate = args.getBool("Truncate");
-    auto thresh = args.getReal("SVDThreshold",1E-3);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxdim = args.getInt("MaxDim",MAX_DIM);
     auto mindim = args.getInt("MinDim",1);
@@ -94,7 +93,7 @@ svdImpl(ITensor const& A,
         Mat<T> UU,VV;
         Vector DD;
 
-        SVD(M,UU,DD,VV,thresh);
+        SVD(M,UU,DD,VV,args);
 
         //conjugate VV so later we can just do
         //U*D*V to reconstruct ITensor A:
@@ -139,18 +138,7 @@ svdImpl(ITensor const& A,
             }
         
         auto uL = Index(m,litagset);
-        auto vL = setTags(uL,ritagset);
-
-        if(uL == vL)
-            {
-            Print(uL);
-            Print(vL);
-            Print(litagset);
-            Print(primeLevel(litagset));
-            Print(ritagset);
-            Print(primeLevel(ritagset));
-            Error("Error: new inds uL, vL in svd identical with given tag sets");
-            }
+        auto vL = Index(m,ritagset);
 
         //Fix sign to make sure D has positive elements
         Real signfix = (A.scale().sign() == -1) ? -1 : +1;
@@ -215,7 +203,7 @@ svdImpl(ITensor const& A,
             auto& VV = Vmats.at(b);
             auto& d =  dvecs.at(b);
 
-            SVD(M,UU,d,VV,thresh);
+            SVD(M,UU,d,VV,args);
 
             //conjugate VV so later we can just do
             //U*D*V to reconstruct ITensor A:

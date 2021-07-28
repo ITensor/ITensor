@@ -46,6 +46,14 @@ class QCombiner
             s.read((char*)&start, sizeof(size_t));
             s.read((char*)&extent, sizeof(size_t));
             }
+
+        std::ostream&
+        print(std::ostream & s) const
+            {
+            s << "Block: " << block << ", Start: " << start << ", Extent: " << extent << "\n";
+            return s;
+            }
+
         };
     public:
     using storage_type = std::vector<BlockRange>;
@@ -112,6 +120,9 @@ read(std::istream& s, QCombiner & dat);
 
 void
 write(std::ostream& s, QCombiner const& dat);
+
+std::ostream&
+operator<<(std::ostream& s, QCombiner const& dat);
 
 Cplx
 doTask(GetElt const& g, QCombiner const& c);

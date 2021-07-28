@@ -272,7 +272,7 @@ operator<(Index const& i1, Index const& i2)
 std::ostream& 
 operator<<(std::ostream & s, Index const& I)
     {
-    s << "(";
+    s << "(dim=";
     s << dim(I);
     if(Global::showIDs()) 
         {
@@ -282,13 +282,14 @@ operator<<(std::ostream & s, Index const& I)
     auto ts = tags(I);
     if(size(ts) > 0)
       {
-      s << "|";
+      s << "|\"";
       auto ts = tags(I);
       for(auto i : range(size(ts)))
         {
         s << ts[i];
         if( i < (size(ts)-1) ) s << ",";
         }
+      s << "\"";
       }
     s << ")"; 
     if(primeLevel(I) > 0) 

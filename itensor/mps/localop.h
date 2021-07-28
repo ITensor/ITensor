@@ -161,10 +161,7 @@ class LocalOp
 
     explicit operator bool() const 
         {
-        if(nc_ == 0) return !LIsNull() || !RIsNull();
-        else if(nc_ == 1) return bool(*Op1_);
-        else if(nc_ < 0 || nc_ > 2) Error("Number of center sites besides 0, 1 and 2 currently not supported");
-        return *Op1_ && *Op2_;
+        return !LIsNull() || !RIsNull();
         }
 
     bool
@@ -234,7 +231,7 @@ LocalOp(const ITensor& Op1,
     R_(nullptr),
     size_(-1)
     {
-    nc_ = args.getInt("NumCenter",2);
+    nc_ = args.getInt("NumCenter",1);
     if(nc_ == 1)
       update(Op1,L,R);
     else

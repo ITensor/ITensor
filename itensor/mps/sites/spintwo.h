@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_SPINTWO_H
-#define __ITENSOR_SPINTWO_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/util/str.h"
@@ -94,7 +94,7 @@ class SpinTwoSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
 		}
@@ -240,7 +240,7 @@ class SpinTwoSite
             }
         else
             {
-            Error("Operator " + opname + " name not recognized");
+            throw ITError("Operator " + opname + " name not recognized");
             }
 
         return Op;
@@ -305,7 +305,7 @@ read(std::istream& s)
             I.read(s);
             if(dim(I) == 5) store.set(j,SpinTwoSite(I));
             else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
-            else Error(format("SpinTwo cannot read index of size %d",dim(I)));
+            else throw ITError(format("SpinTwo cannot read index of size %d",dim(I)));
             }
         init(std::move(store));
         }
@@ -313,4 +313,3 @@ read(std::istream& s)
 
 } //namespace itensor
 
-#endif

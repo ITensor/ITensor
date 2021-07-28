@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_FERMION_H
-#define __ITENSOR_FERMION_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/util/str.h"
 
@@ -88,7 +88,7 @@ class FermionSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -148,7 +148,7 @@ class FermionSite
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;
@@ -175,4 +175,3 @@ using Spinless = BasicSiteSet<SpinlessSite>;
 
 } //namespace itensor
 
-#endif

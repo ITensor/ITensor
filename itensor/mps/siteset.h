@@ -373,26 +373,27 @@ op(String const& opname,
         return id_;
         }
     else
-    if(opname == "F") //Jordan-Wigner string operator
-        {
-        auto s = si(i);
-        if(isFermionic(s))
-            {
-            return sites_->op(i,opname,args);
-            }
-        else
-            { //Just make F equal identity, since not fermionic
-            auto F = ITensor(dag(s),prime(s));
-            for(auto j : range1(dim(s))) F.set(j,j,1.0);
-            return F;
-            }
-        }
-    else
     if(opname == "Proj")
         {
         auto n = args.getInt("State");
         auto v = si(i)(n);
         return setElt(dag(v),prime(v));
+        }
+    else
+    if(opname == "F")
+        {
+        try {
+            return sites_->op(i,opname,args);
+        } catch(...) {
+            //
+            // If no "F" operator defined by site set
+            // then return a 'trivial' F operator
+            // equal to the identity:
+            auto s = si(i);
+            auto trivF = ITensor(dag(s),prime(s));
+            for(auto j : range1(dim(s))) trivF.set(j,j,1.0);
+            return trivF;
+        }
         }
     else
         {

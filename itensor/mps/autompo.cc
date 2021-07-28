@@ -1468,18 +1468,18 @@ svdMPO(AutoMPO const& am,
         H = constructMPOTensors<Cplx>(am.sites(),finalMPO,links,args);
         }
 
-#ifdef DEBUG
-    if(is_real)
-        {
-        for(auto n : range1(length(H)))
-            {
-            if(isComplex(H(n)))
-                {
-                Error("Complex tensor produced from real AutoMPO terms");
-                }
-            }
-        }
-#endif
+//#ifdef DEBUG
+//    if(is_real)
+//        {
+//        for(auto n : range1(length(H)))
+//            {
+//            if(isComplex(H(n)))
+//                {
+//                Error("Complex tensor produced from real AutoMPO terms");
+//                }
+//            }
+//        }
+//#endif
 
     return H;
     }

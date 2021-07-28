@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_Z3_H
-#define __ITENSOR_Z3_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/util/str.h"
 
@@ -61,7 +61,7 @@ class Z3Site
         if(state == "2") { return s(3); }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -131,7 +131,7 @@ class Z3Site
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;
@@ -150,4 +150,3 @@ class Z3Site
 
 } //namespace itensor
 
-#endif

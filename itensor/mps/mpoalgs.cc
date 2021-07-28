@@ -57,7 +57,7 @@ nmultMPO(MPO const& Aorig,
         }
 
     auto lA = linkInds(A);
-    auto lB = linkInds(A);
+    auto lB = linkInds(B);
     auto sA = uniqueSiteInds(A,B);
     auto sB = uniqueSiteInds(B,A);
 
@@ -86,7 +86,6 @@ nmultMPO(MPO const& Aorig,
         if(i == N-1) break;
 
         nfork = ITensor(lA(i),lB(i),linkIndex(res,i));
-
         denmatDecomp(clust,res.ref(i),nfork,Fromleft,{args,"Tags=",tags(lA(i))});
 
         auto mid = commonIndex(res(i),nfork);
@@ -335,6 +334,8 @@ oneSiteFitApply(vector<ITensor> & E,
                 Error("P does not have Index ci");
                 }
             auto [U,S,V] = svd(P,{ci},args);
+            (void)U;
+            (void)S;
             Kx.ref(s) = dag(V);
             }
         else

@@ -747,7 +747,7 @@ contract(CProps const& p,
     auto Bbufsize = isCplx(B) ? 2ul*Bpsize : Bpsize;
     auto Cbufsize = isCplx(C) ? 2ul*Cpsize : Cpsize;
 
-    auto d = std::vector<Real>(Abufsize+Bbufsize+Cbufsize);
+    auto d = vector_no_init<Real>(Abufsize+Bbufsize+Cbufsize);
     auto ab = MAKE_SAFE_PTR(d.data(),d.size());
     auto bb = ab+Abufsize;
     auto cb = bb+Bbufsize;

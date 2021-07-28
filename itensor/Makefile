@@ -184,7 +184,7 @@ svd.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/svd.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 hermitian.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/hermitian.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-GDEPHEADERS+= mps/mps.h
+GDEPHEADERS+= mps/mps.h mps/siteset.h
 mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 mps/mpsalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)

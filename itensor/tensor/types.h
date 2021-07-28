@@ -156,6 +156,18 @@ class DataRange
         }
     };
 
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream & s, DataRange<T> const& d)
+    {
+    s << "DataRange" << "\n";
+    s << "Size: " << d.size() << "\n";
+    for(auto i : range(d.size()))
+      s << i << " " << d[i] << "\n";
+    return s;
+    }
+
 template<typename T>
 DataRange<T>
 makeDataRange(T * p, size_t size)

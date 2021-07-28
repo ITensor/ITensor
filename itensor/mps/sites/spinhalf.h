@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef __ITENSOR_SPINHALF_H
-#define __ITENSOR_SPINHALF_H
+#pragma once
+
 #include "itensor/mps/siteset.h"
 #include "itensor/util/str.h"
 
@@ -77,7 +77,7 @@ class SpinHalfSite
             }
         else
             {
-            Error("State " + state + " not recognized");
+            throw ITError("State " + state + " not recognized");
             }
         return IndexVal{};
         }
@@ -110,7 +110,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -123,7 +123,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -136,7 +136,7 @@ class SpinHalfSite
             //    }
             //else
             //    {
-            //    Error("Operator " + opname + " does not have a well defined QN flux");
+            //    throw ITError("Operator " + opname + " does not have a well defined QN flux");
             //    }
             }
         else
@@ -167,7 +167,7 @@ class SpinHalfSite
             }
         else
             {
-            Error("Operator \"" + opname + "\" name not recognized");
+            throw ITError("Operator \"" + opname + "\" name not recognized");
             }
 
         return Op;
@@ -185,4 +185,3 @@ class SpinHalfSite
     };
 
 } //namespace itensor
-#endif

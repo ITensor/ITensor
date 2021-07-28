@@ -1423,7 +1423,7 @@ SECTION("diagHermitian")
 	auto Id = eye(N, N);
 
         Matrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*transpose(Q);
@@ -1445,7 +1445,7 @@ SECTION("diagHermitian")
 	auto Id = eye(P, P);
 
         Matrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*transpose(Q);
@@ -1461,13 +1461,38 @@ SECTION("diagHermitian")
 	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
         }
 
+
+     SECTION("Positive Real case rank deficient")
+        {
+	auto M = randomMat(P, N);
+	auto Id = eye(P, P);
+
+        Matrix Q, R;
+        QR(M,Q,R, {"Complete", true, "PositiveDiagonal", true});
+
+        auto T = Q*R;
+	auto QQ = Q*transpose(Q);
+
+        for(auto r : range(P))
+        for(auto c : range(N))
+            {
+            CHECK_CLOSE(T(r,c),M(r,c));
+	    if (r > c)
+	      CHECK(R(r,c) == 0); //Check R upper triangular
+	     if (r == c)
+	      CHECK(R(r,r) >= 0); //Check R upper triangular
+            }
+        CHECK(norm(T-M) < 1E-12*norm(M));
+	CHECK(norm(QQ-Id) <1E-12); //Check Q orthogonal
+        }
+
     SECTION("Real case thin")
         {
 	auto M = randomMat(N, P);
 	auto Id = eye(P, P);
 
         Matrix Q, R;
-        QR(M,Q,R, false);
+        QR(M,Q,R, {"Complete", false});
 
         auto T = Q*R;
 	auto QQ = transpose(Q)*Q;
@@ -1488,7 +1513,7 @@ SECTION("diagHermitian")
 	auto M = randomMatC(N, P);
 
         CMatrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1511,7 +1536,7 @@ SECTION("diagHermitian")
         {
         auto M = randomMatC(P, N);
         CMatrix Q, R;
-        QR(M,Q,R, true);
+        QR(M,Q,R, {"Complete", true});
 
         auto T = Q*R;
 	auto QQ = Q*conj(transpose(Q));
@@ -1534,7 +1559,7 @@ SECTION("diagHermitian")
 	auto M = randomMatC(N, P);
 
         CMatrix Q, R;
-        QR(M,Q,R, false);
+        QR(M,Q,R, {"Complete", false});
 
         auto T = Q*R;
 	auto QQ = conj(transpose(Q))*Q;
@@ -1682,8 +1707,11 @@ SECTION("Orthogonalize")
 
 SECTION("Singular Value Decomp")
     {
-    SECTION("One Pass Case")
-        {
+      std::vector<std::string> svdMethods = {"ITensor", "gesdd", "gesvd", "automatic"};
+      for (auto const & method : svdMethods){
+	Args svdArgs = {"SVDMethod", method, "SVDThreshold", SVD_THRESH};
+    SECTION("One Pass Case " + method)
+        {  
         Matrix U,V,D;
         Vector d;
 
@@ -1698,25 +1726,25 @@ SECTION("Singular Value Decomp")
         auto Nr = 10,
              Nc = 8;
         auto M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R = U*dMat(d)*transpose(V);
         CHECK((norm(R-M)/norm(M)) < 1E-14);
 
         Nr = 10;
         Nc = 10;
         M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R2 = U*dMat(d)*transpose(V);
         CHECK((norm(R2-M)/norm(M)) < 1E-12);
 
         Nr = 10;
         Nc = 20;
         M = randomMat(Nr,Nc);
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
         auto R3 = U*dMat(d)*transpose(V);
         CHECK((norm(R3-M)/norm(M)) < 1E-14);
         }
-    SECTION("Two Pass Case")
+    SECTION("Two Pass Case "  + method)
         {
         auto n = 5,
              m = 5;
@@ -1725,6 +1753,7 @@ SECTION("Singular Value Decomp")
 
         Matrix U,V;
         Vector d;
+	//Use the same method to set up test matrix
         SVD(M,U,d,V);
 
         //Make svals decay quickly
@@ -1739,14 +1768,16 @@ SECTION("Singular Value Decomp")
         auto DD = Matrix(ns,ns);
         diagonal(DD) &= d;
         M = U*DD*transpose(V);
-        SVD(M,U,d,V,1E-1);
+	svdArgs.add("SVDThreshold",1e-1);
+        SVD(M,U,d,V,svdArgs);
+	svdArgs.add("SVDThreshold",SVD_THRESH);
         diagonal(DD) &= d;
 
         //Print(norm(U*DD*transpose(V)-M));
         CHECK(norm(U*DD*transpose(V)-M) < 1E-12);
         }
 
-    SECTION("Accuracy Stress Test")
+    SECTION("Accuracy Stress Test "  + method)
         {
         auto n = 100,
              m = n;
@@ -1755,6 +1786,7 @@ SECTION("Singular Value Decomp")
 
         Matrix U,V;
         Vector d;
+	//Use the same method to set up test matrix
         SVD(M,U,d,V);
 
         //Change spectrum to be quickly decaying,
@@ -1769,8 +1801,9 @@ SECTION("Singular Value Decomp")
 
         M = U*DD*transpose(V);
 
-        auto thresh = 1E-3;
-        SVD(M,U,d,V,thresh);
+        svdArgs.add("SVDThreshold",1e-3);
+        SVD(M,U,d,V,svdArgs);
+	svdArgs.add("SVDThreshold",SVD_THRESH);
         diagonal(DD) &= d;
 
         //Print(norm(U*DD*transpose(V)-M));
@@ -1779,7 +1812,7 @@ SECTION("Singular Value Decomp")
         CHECK(relnrm < 1E-13);
         }
 
-    SECTION("Complex SVD")
+    SECTION("Complex SVD "  + method)
         {
         auto M = CMatrix(10,10);
         for(auto r : range(nrows(M)))
@@ -1790,13 +1823,14 @@ SECTION("Singular Value Decomp")
 
         CMatrix U,V;
         Vector d;
-        SVD(M,U,d,V);
+        SVD(M,U,d,V, svdArgs);
 
         auto D = Matrix(d.size(),d.size());
         diagonal(D) &= d;
 
         CHECK(norm(M-U*D*conj(transpose(V))) < 1E-12);
         }
+      }
     }
 
 //SECTION("Complex SVD")
@@ -1868,7 +1902,7 @@ SECTION("Singular Value Decomp")
 //        Mre = Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim);
 //        Mim = Uim*DD*transpose(Vre) - Ure*DD*transpose(Vim);
 //
-//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,1E-1);
+//        SVD(Mre,Mim,Ure,Uim,d,Vre,Vim,{"SVDThreshold", 1e-1});
 //        diagonal(DD) &= d;
 //
 //        auto nrmre = norm(Ure*DD*transpose(Vre) + Uim*DD*transpose(Vim)-Mre)/norm(Mre);

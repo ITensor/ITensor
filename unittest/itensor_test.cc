@@ -473,6 +473,28 @@ SECTION("Rank 1")
     CHECK_DIFF(norm(t1),1,1E-10);
     }
 
+SECTION("Value besides 1 (Real)")
+    {
+    auto t1 = setElt(2.,l1=2);
+    CHECK_EQUAL(t1.r(),1);
+    CHECK(hasIndex(t1,l1));
+    CHECK_DIFF(elt(t1,l1(1)),0,1E-10);
+    CHECK_DIFF(elt(t1,l1(2)),2,1E-10);
+    CHECK_DIFF(sumels(t1),2,1E-10);
+    CHECK_DIFF(norm(t1),2,1E-10);
+    }
+
+SECTION("Value besides 1 (Complex)")
+    {
+    auto t1 = setElt(2_i,l1=2);
+    CHECK_EQUAL(t1.r(),1);
+    CHECK(hasIndex(t1,l1));
+    CHECK_DIFF(eltC(t1,l1(1)),0,1E-10);
+    CHECK_DIFF(eltC(t1,l1(2)),2_i,1E-10);
+    CHECK_DIFF(sumelsC(t1),2_i,1E-10);
+    CHECK_DIFF(norm(t1),2,1E-10);
+    }
+
 SECTION("Rank 2")
     {
     auto t2 = setElt(l1(2),l2(1));
@@ -2822,6 +2844,44 @@ SECTION("SVD truncation behavior")
     CHECK(dim(u)==2);
     }
 
+  }
+
+SECTION("Test contraction with no output blocks")
+  {
+  auto s = Index(QN({"Sz",1}),1,QN({"Sz",-1}),1,"n=10,Site,S=1/2");
+  auto lA = Index(QN({"Sz",1}),1,"l=9,Link");
+  auto lB = Index(QN({"Sz",-1}),1,"l=9,Link");
+
+  auto A = randomITensor(QN({"Sz",0}),dag(lA),s);
+  auto B = randomITensor(QN({"Sz",0}),dag(lB),s);
+
+  A.set(lA=1,s=1,1.0);
+  B.set(lB=1,s=2,1.0);
+
+  auto C = A*dag(B);
+
+  CHECK(nnz(C) == 0);
+  CHECK(nnzblocks(C) == 0);
+  }
+  
+SECTION("Test setting elements of QN ITensor")
+  {
+  auto s = Index(QN(1),1,QN(-1),1);
+  auto l = Index(QN(-1),1);
+  auto A = ITensor(QN(0),dag(l),s);
+  CHECK(nnz(A)==1);
+  CHECK(nnzblocks(A)==1);
+  CHECK(elt(A,s=2,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=2) == 0.0);
+  CHECK(elt(A,s=1,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=1) == 0.0);
+  A.set(s=2,l=1,1.0);
+  CHECK(nnz(A)==1);
+  CHECK(nnzblocks(A)==1);
+  CHECK(elt(A,s=2,l=1) == 1.0);
+  CHECK(elt(A,l=1,s=2) == 1.0);
+  CHECK(elt(A,s=1,l=1) == 0.0);
+  CHECK(elt(A,l=1,s=1) == 0.0);
   }
 
 } //TEST_CASE("ITensor")

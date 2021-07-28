@@ -142,6 +142,9 @@ class QN
     qn_t //qn_t == int
     mod(QNName const& name) const;
 
+    bool
+    hasName(QNName const& name) const;
+
     //1-indexed
     QNum &
     num(size_t n);

@@ -27,9 +27,10 @@ collapse(MPS & psi,
             }
         else if(direction == "X")
             {
-            //
-            // TODO: define PUp matrix for X basis
-            //
+            PUp.set(1,1,0.5);
+            PUp.set(1,2,0.5);
+            PUp.set(2,1,0.5);
+            PUp.set(2,2,0.5);
             }
         else Error("Direction '" + direction + "' not recognized");
 
@@ -49,10 +50,11 @@ collapse(MPS & psi,
             }
         else if(direction == "X")
             {
-            //
-            // TODO: define upState and 
-            //       downState tensors for X basis
-            //
+            upState.set(1,1.0/sqrt(2.0));
+            upState.set(2,1.0/sqrt(2.0));
+
+            downState.set(1,1.0/sqrt(2.0));
+            downState.set(2,-1.0/sqrt(2.0));
             }
 
             
@@ -198,12 +200,7 @@ main(int argc, char* argv[])
         // Collapse into product state
         //
 
-        //
-        // TODO: change 'dir' to switch from "Z" to "X
-        //       every other step (uncomment line below)
-        //
-        auto dir = "Z";
-        //auto dir = (step%2==1) ? "Z" : "X";
+        auto dir = (step%2==1) ? "Z" : "X";
 
         auto cps = collapse(psi,{"Direction=",dir});
 

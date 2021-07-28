@@ -248,6 +248,20 @@ dmrg(MPS& psi,
      Sweeps const& sweeps, 
      Args const& args = Args::global())
     {
+    if(hasQNs(psi))
+        {
+        auto psi_qn = totalQN(psi);
+        for(auto n : range(psis))
+            {
+            auto qn_n = totalQN(psis[n]);
+            if(qn_n != psi_qn)
+                {
+                printfln("totalQN of initial state:  %s",psi_qn);
+                printfln("totalQN of state n=%d (n is 0-indexed): %s",n,qn_n);
+                Error("Excited-state DMRG intended for states with same totalQN");
+                }
+            }
+        }
     LocalMPO_MPS PH(H,psis,args);
     Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;

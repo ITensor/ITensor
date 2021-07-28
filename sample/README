@@ -1,3 +1,27 @@
+Compiling the Sample Codes
+==============================================
+
+To compile all of the sample codes, first compile
+the ITensor library following the instructions on
+the itensor.org website. Then inside of this folder,
+issue the command
+
+    make
+
+to compile all of the sample codes.
+
+To compile just one of the sample codes, such as
+dmrg.cc, issue the command
+
+    make dmrg
+
+or more generally `make <codename>` to compile
+the file <codename>.cc
+
+
+Descriptions of the Codes
+==============================================
+
 dmrg - simple ground-state DMRG of spin chains
 
 dmrgj1j2 - DMRG for the J1-J2 spin chain
@@ -19,3 +43,7 @@ mixedspin - demo code showing how to make and use
 trg - tensor renormalization group (TRG) algorithm
       for computing properties of large 2D classical
       stat mech systems
+
+ctmrg - corner transfer matrix renormalization group (CTMRG) algorithm
+        for computing properties of large 2D classical
+        stat mech systems

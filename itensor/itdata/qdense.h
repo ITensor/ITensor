@@ -186,7 +186,6 @@ class QDense
 
     };
 
-template<typename T>
 std::ostream&
 operator<<(std::ostream & s, BlOf const& t);
 
