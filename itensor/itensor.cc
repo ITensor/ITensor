@@ -812,17 +812,15 @@ read(std::istream& s)
 
 #ifdef ITENSOR_USE_HDF5
 
-//void
-//h5_write(h5::group parent, std::string const& name, ITensor const& I)
-//    {
-//    auto g = parent.create_group(name);
-//    h5_write_attribute(g,"type","Index",true);
-//    h5_write_attribute(g,"version",long(1));
-//    h5_write(g,"id",static_cast<unsigned long>(I.id()));
-//    h5_write(g,"dim",long(I.dim()));
-//    h5_write(g,"dir",long(I.dir()));
-//    h5_write(g,"tags",I.tags());
-//    }
+void
+h5_write(h5::group parent, std::string const& name, ITensor const& T)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","ITensor",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"inds",T.inds());
+    doTask(H5Write(g,"storage"),T.store());
+    }
 
 void
 h5_read(h5::group parent, std::string const& name, ITensor & I)
@@ -833,7 +831,10 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
 
     auto is = h5_read<IndexSet>(g,"inds");
 
-    auto sg = g.open_group("store");
+    //TODO: check if this group is called "store"
+    //      instead, as in some older versions 
+    //      of ITensors.jl
+    auto sg = g.open_group("storage");
     auto s_type = h5_read_attribute<string>(sg,"type");
     auto s_eltype = h5_read_attribute<string>(sg,"eltype");
     ITensor::storage_ptr store;
