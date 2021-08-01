@@ -441,6 +441,24 @@ template void doTask(Order const&,Dense<Cplx> &);
 #ifdef ITENSOR_USE_HDF5
 
 void
+h5_write(h5::group parent, std::string const& name, DenseReal const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Dense{Float64}",true);
+    h5_write_attribute(g,"version",long(1));
+    auto data = std::vector<Real>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
+    }
+void
+h5_write(h5::group parent, std::string const& name, DenseCplx const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Dense{ComplexF64}",true);
+    h5_write_attribute(g,"version",long(1));
+    error("h5_write of complex dense storage not yet implemented");
+    }
+
+void
 h5_read(h5::group parent, std::string const& name, DenseReal & D)
     {
     auto g = parent.open_group(name);
