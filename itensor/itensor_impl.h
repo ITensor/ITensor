@@ -540,7 +540,7 @@ readType(std::istream& s, CtrArgs&&... args)
 
 template<typename T>
 ITensor::storage_ptr
-h5_readType(h5::group g, std::string const& name)
+h5_readStore(h5::group g, std::string const& name)
     {
     return newITData<T>(h5_read<T>(g,name));
     }
