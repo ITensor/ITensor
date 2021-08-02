@@ -831,25 +831,17 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
 
     auto is = h5_read<IndexSet>(g,"inds");
 
-    //TODO: check if this group is called "store"
-    //      instead, as in some older versions 
-    //      of ITensors.jl
-    auto store_name = "storage";
+    std::string store_name;
+    if(g.has_subgroup("storage"))    store_name = "storage";
+    else if(g.has_subgroup("store")) store_name = "store";
+    else error("Expected ITensor HDF5 data to have group named \"storage\" or \"store\"");
+
     auto sg = g.open_group(store_name);
     auto s_type = h5_read_attribute<string>(sg,"type");
     ITensor::storage_ptr store;
-    if(s_type == "Dense{Float64}")
-        { 
-        store = h5_readStore<DenseReal>(g,store_name); 
-        }
-    //else if(s_type == "Dense{ComplexF64}")
-    //    { 
-    //    store = h5_readType<DenseCplx>(g,store_name); 
-    //    }
-    else
-        {
-        error(format("Reading of ITensor storage type %s not yet supported",s_type));
-        }
+    if(s_type == "Dense{Float64}") store = h5_readStore<DenseReal>(g,store_name); 
+    //else if(s_type == "Dense{ComplexF64}") store = h5_readType<DenseCplx>(g,store_name); 
+    else error(format("Reading of ITensor storage type %s not yet supported",s_type));
 
     I = ITensor(is,std::move(store));
     }
