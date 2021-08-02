@@ -94,5 +94,21 @@ SECTION("QN")
 
     CHECK(q == read_q);
     }
+
+SECTION("QN Index")
+    {
+    auto N = 4;
+    auto sites = SpinHalf(N);
+    auto s1 = sites(1);
+    Print(s1);
+    auto fo = h5_open("test.h5",'w');
+    h5_write(fo,"qnindex_s1",s1);
+    close(fo);
+
+    auto fi = h5_open("test.h5",'r');
+    auto read_s1 = h5_read<Index>(fi,"qnindex_s1");
+    CHECK(s1 == read_s1);
+    }
+
 }
 
