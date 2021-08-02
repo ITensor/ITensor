@@ -2,6 +2,9 @@
 #include "itensor/util/readwrite.h"
 #include "itensor/util/print_macro.h"
 
+using std::string;
+using std::vector;
+
 namespace itensor {
 
 void QNum::
@@ -503,5 +506,45 @@ write(std::ostream & s, QN const& q)
     {
     for(auto& v : q.store()) itensor::write(s,v);
     }
+
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, string const& name, QN const& q)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","QN",true);
+    h5_write_attribute(g,"version",long(1));
+    auto names = vector<string>(QNSize());
+    auto vals = vector<long>(QNSize());
+    auto mods = vector<long>(QNSize());
+    for(auto n : range1(QNSize()))
+        {
+        names[n-1] = q.name(n);
+        vals[n-1] = q.val(n);
+        mods[n-1] = q.mod(n);
+        }
+    h5_write(g,"names",names);
+    h5_write(g,"vals",vals);
+    h5_write(g,"mods",mods);
+    }
+
+void
+h5_read(h5::group parent, string const& name, QN & q)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "QN") Error("Group does not contain ITensor data in HDF5 file");
+    auto names = h5_read<vector<string>>(g,"names");
+    auto vals = h5_read<vector<long>>(g,"vals");
+    auto mods = h5_read<vector<long>>(g,"mods");
+    q = QN();
+    for(auto n : range1(QNSize()))
+        {
+        q.addNum(QNum(names[n-1],vals[n-1],mods[n-1]));
+        }
+    }
+
+#endif //ITENSOR_USE_HDF5
 
 } //namespace itensor

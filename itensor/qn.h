@@ -19,6 +19,7 @@
 #include "itensor/global.h"
 #include "itensor/arrow.h"
 #include "itensor/smallstring.h"
+#include "itensor/util/h5/wrap_h5.hpp"
 
 namespace itensor {
 
@@ -312,6 +313,13 @@ num(size_t n) const
 //        }
 //    return q;
 //    }
+
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, QN const& q);
+void
+h5_read(h5::group parent, std::string const& name, QN & q);
+#endif //ITENSOR_USE_HDF5
 
 } //namespace itensor
 

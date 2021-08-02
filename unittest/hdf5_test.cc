@@ -82,5 +82,17 @@ SECTION("ITensor")
     CHECK(norm(R-read_R) < 1E-10);
     }
 
+SECTION("QN")
+    {
+    auto q = QN({"Sz",-1},{"Nf",1,-1});
+    auto fo = h5_open("test.h5",'w');
+    h5_write(fo,"qn_q",q);
+    close(fo);
+
+    auto fi = h5_open("test.h5",'r');
+    auto read_q = h5_read<QN>(fi,"qn_q");
+
+    CHECK(q == read_q);
+    }
 }
 
