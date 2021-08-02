@@ -23,6 +23,10 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/util/tensorstats.h"
 
+using std::move;
+using std::string;
+using std::vector;
+
 namespace itensor {
 
 const char*
@@ -433,5 +437,49 @@ doTask(Order const& O,
     }
 template void doTask(Order const&,Dense<Real> &);
 template void doTask(Order const&,Dense<Cplx> &); 
+
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, DenseReal const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Dense{Float64}",true);
+    h5_write_attribute(g,"version",long(1));
+    auto data = std::vector<Real>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
+    }
+void
+h5_write(h5::group parent, std::string const& name, DenseCplx const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","Dense{ComplexF64}",true);
+    h5_write_attribute(g,"version",long(1));
+    error("h5_write of complex dense storage not yet implemented");
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, DenseReal & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Dense{Float64}") Error("Group does not contain DenseReal data in HDF5 file");
+    auto data = h5_read<vector<Real>>(g,"data");
+    D = Dense<Real>(move(data));
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, DenseCplx & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "Dense") Error("Group does not contain Dense data in HDF5 file");
+    auto eltype = h5_read_attribute<string>(g,"eltype");
+    if(eltype != "Complex{Float64}") Error("Group does not contain Dense Complex{Float64} data in HDF5 file");
+    auto data = h5_read<vector<Cplx>>(g,"data");
+    D = Dense<Cplx>(move(data));
+    }
+
+#endif //ITENSOR_USE_HDF5
 
 } // namespace itensor

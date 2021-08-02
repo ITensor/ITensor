@@ -757,6 +757,7 @@ h5_write(h5::group parent, std::string const& name, Index const& I)
     h5_write(g,"id",static_cast<unsigned long>(I.id()));
     h5_write(g,"dim",long(I.dim()));
     h5_write(g,"dir",long(I.dir()));
+    h5_write(g,"plev",long(I.primeLevel()));
     h5_write(g,"tags",I.tags());
     }
 
@@ -771,6 +772,8 @@ h5_read(h5::group parent, std::string const& name, Index & I)
     auto dir = h5_read<long>(g,"dir");
     auto tags = h5_read<TagSet>(g,"tags");
     I = Index(id,dim,toArrow(dir),tags);
+    auto plev = h5_read<long>(g,"plev");
+    I.setPrime(plev);
     }
 
 #endif
