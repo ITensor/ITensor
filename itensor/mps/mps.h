@@ -82,11 +82,13 @@ class MPS
     leftLim() const { return l_orth_lim_; }
 
     // Read-only access to i'th MPS tensor
+    // Is 1-indexed
     ITensor const&
     operator()(int i) const;
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
+    //Is 1-indexed
     ITensor& 
     ref(int i);
 
