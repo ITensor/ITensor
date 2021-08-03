@@ -612,6 +612,13 @@ overlapC(MPS const& psi,
          MPO const& K,
          MPS const& phi);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, MPO const& M);
+void
+h5_read(h5::group parent, std::string const& name, MPO & M);
+#endif
+
 } //namespace itensor
 
 #endif

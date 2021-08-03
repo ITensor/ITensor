@@ -127,5 +127,16 @@ SECTION("QN ITensor")
     CHECK(norm(T - read_T) < 1E-10);
     }
 
+SECTION("MPS")
+    {
+    auto N = 4;
+    auto s = SpinHalf(N,{"ConserveQNs=",false});
+
+    auto M = randomMPS(s,4);
+    auto fo = h5_open("test.h5",'w');
+    h5_write(fo,"mps_M",M);
+    close(fo);
+    }
+
 }
 
