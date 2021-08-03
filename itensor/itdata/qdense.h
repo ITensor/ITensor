@@ -586,6 +586,16 @@ doTask(RemoveQNs & T,
        QDense<V> const& d,
        ManageStore & m);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, QDenseReal const& D);
+void
+h5_write(h5::group parent, std::string const& name, QDenseCplx const& D);
+void
+h5_read(h5::group parent, std::string const& name, QDenseReal & D);
+void
+h5_read(h5::group parent, std::string const& name, QDenseCplx & D);
+#endif
 
 } //namespace itensor
 
