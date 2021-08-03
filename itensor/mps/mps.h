@@ -903,6 +903,13 @@ overlap(MPSType const& psi,
 Spectrum
 orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args);
 
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, MPS const& M);
+void
+h5_read(h5::group parent, std::string const& name, MPS & M);
+#endif
+
 } //namespace itensor
 
 #include "mps_impl.h"

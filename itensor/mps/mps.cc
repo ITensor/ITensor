@@ -1593,4 +1593,35 @@ overlap(MPSType const& psi, MPSType const& phi) //Re[<psi|phi>]
 template Real overlap<MPS>(MPS const& psi, MPS const& phi);
 template Real overlap<MPO>(MPO const& psi, MPO const& phi);
 
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, string const& name, MPS const& M)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","MPS",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"length",long(M.length()));
+    h5_write(g,"rlim",long(M.rightLim()));
+    h5_write(g,"llim",long(M.leftLim()));
+    for(auto n : range1(M.length()))
+        {
+        h5_write(g,format("MPS[%d]",n),M(n));
+        }
+    }
+
+void
+h5_read(h5::group parent, string const& name, MPS & M)
+    {
+    error("Reading of MPS from HDF5 not yet supported");
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "MPS") Error("Group does not contain MPS data in HDF5 file");
+    //auto length = h5_read<long>(g,"length");
+    //auto rlim = h5_read<long>(g,"rlim");
+    //auto llim = h5_read<long>(g,"llim");
+    }
+
+#endif //ITENSOR_USE_HDF5
+
 } //namespace itensor
