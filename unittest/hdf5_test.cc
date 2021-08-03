@@ -58,7 +58,7 @@ SECTION("IndexSet")
         }
     }
 
-SECTION("ITensor")
+SECTION("Dense ITensor")
     {
     auto i2 = Index(2,"n=2,Blue");
     auto i3 = Index(3,"n=2,Red");
@@ -100,7 +100,6 @@ SECTION("QN Index")
     auto N = 4;
     auto sites = SpinHalf(N);
     auto s1 = sites(1);
-    Print(s1);
     auto fo = h5_open("test.h5",'w');
     h5_write(fo,"qnindex_s1",s1);
     close(fo);
@@ -108,6 +107,24 @@ SECTION("QN Index")
     auto fi = h5_open("test.h5",'r');
     auto read_s1 = h5_read<Index>(fi,"qnindex_s1");
     CHECK(s1 == read_s1);
+    }
+
+SECTION("QN ITensor")
+    {
+    auto N = 4;
+    auto s = SpinHalf(N);
+
+    auto T = randomITensor(QN({"Sz",0}),prime(s(1)),prime(s(2)),dag(s(1)),dag(s(2)));
+    //PrintData(T);
+
+    auto fo = h5_open("test.h5",'w');
+    h5_write(fo,"qnitensor_T",T);
+    close(fo);
+
+    auto fi = h5_open("test.h5",'r');
+    auto read_T = h5_read<ITensor>(fi,"qnitensor_T");
+    //PrintData(read_T);
+    CHECK(norm(T - read_T) < 1E-10);
     }
 
 }

@@ -25,6 +25,7 @@
 #include "itensor/util/print_macro.h"
 
 using std::vector;
+using std::string;
 using std::move;
 
 namespace itensor {
@@ -989,6 +990,103 @@ operator<<(std::ostream & s, QDense<T> const& t)
     }
 template std::ostream& operator<<(std::ostream & s, QDense<Real> const& t);
 template std::ostream& operator<<(std::ostream & s, QDense<Cplx> const& t);
+
+#ifdef ITENSOR_USE_HDF5
+
+vector<long>
+offsets_to_array(BlockOffsets const& boff, int N)
+    {
+    auto nblocks = boff.size();
+    auto asize = (N+1)*nblocks;
+    auto n = 0;
+    auto a = vector<long>(asize);
+    for(auto& bo : boff)
+        {
+        for(auto j : range(N))
+            {
+            a[n] = bo.block[j]+1;
+            n += 1;
+            }
+        a[n] = bo.offset;
+        n += 1;
+        }
+    return a;
+    }
+
+BlockOffsets
+array_to_offsets(vector<long> const& a, long N)
+    {
+    auto asize = a.size();
+    auto nblocks = ldiv(asize, N+1).quot;
+    auto boff = BlockOffsets(nblocks);
+    long j = 0;
+    for(auto n : range(nblocks))
+        {
+        auto block = Block(N);
+        for(auto m : range(N)) block[m] = a[j+m]-1;
+        long offset = a[j+N];
+        boff[n] = BlOf{block,offset};
+        j += (N + 1);
+        }
+    return boff;
+    }
+
+void
+h5_write(h5::group parent, std::string const& name, QDenseReal const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","BlockSparse{Float64}",true);
+    h5_write_attribute(g,"version",long(1));
+    long N = 0;
+    if(!D.offsets.empty()) N = D.offsets.front().block.size();
+    h5_write(g,"ndims",N);
+    auto off_array = offsets_to_array(D.offsets,N);
+    h5_write(g,"offsets",off_array);
+    auto data = std::vector<Real>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
+    }
+
+void
+h5_write(h5::group parent, std::string const& name, QDenseCplx const& D)
+    {
+    error("Writing of QDenseCplx to HDF5 not yet implemented");
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","BlockSparse{ComplexF64}",true);
+    h5_write_attribute(g,"version",long(1));
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, QDenseReal & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "BlockSparse{Float64}") 
+        Error("Group does not contain QDenseReal or BlockSparse{Float64} data in HDF5 file");
+    auto N = h5_read<long>(g,"ndims");
+    auto off_array = offsets_to_array(D.offsets,N);
+    auto offsets = h5_read<vector<long>>(g,"offsets");
+    auto boff = array_to_offsets(offsets,N);
+    auto data = h5_read<vector<Real>>(g,"data");
+    D = QDense(boff,data);
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, QDenseCplx & D)
+    {
+    error("Reading of QDenseCplx from HDF5 not yet implemented");
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "BlockSparse{ComplexF64}") 
+        Error("Group does not contain QDenseCplx or BlockSparse{ComplexF64} data in HDF5 file");
+    auto N = h5_read<long>(g,"ndims");
+    auto off_array = offsets_to_array(D.offsets,N);
+    auto offsets = h5_read<vector<long>>(g,"offsets");
+    auto boff = array_to_offsets(offsets,N);
+    //auto data = h5_read<vector<Cplx>>(g,"data");
+    //D = QDense(boff,data);
+    }
+
+#endif //ITENSOR_USE_HDF5
 
 } //namespace itensor
 
