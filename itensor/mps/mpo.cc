@@ -983,13 +983,19 @@ h5_write(h5::group parent, string const& name, MPO const& M)
 void
 h5_read(h5::group parent, string const& name, MPO & M)
     {
-    error("Reading of MPO from HDF5 not yet supported");
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
     if(type != "MPO") Error("Group does not contain MPO data in HDF5 file");
-    //auto length = h5_read<long>(g,"length");
-    //auto rlim = h5_read<long>(g,"rlim");
-    //auto llim = h5_read<long>(g,"llim");
+    auto N = h5_read<long>(g,"length");
+    auto rlim = h5_read<long>(g,"rlim");
+    auto llim = h5_read<long>(g,"llim");
+    M = MPO(N);
+    for(auto n : range1(N))
+        {
+        M.ref(n) = h5_read<ITensor>(g,format("MPO[%d]",n));
+        }
+    M.leftLim(llim);
+    M.rightLim(rlim);
     }
 
 #endif //ITENSOR_USE_HDF5

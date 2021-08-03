@@ -133,9 +133,30 @@ SECTION("MPS")
     auto s = SpinHalf(N,{"ConserveQNs=",false});
 
     auto M = randomMPS(s,4);
+
+    auto ampo = AutoMPO(s);
+    for(auto j = 1; j < N; ++j)
+        {
+        ampo += "Sx",j,"Sx",j+1;
+        }
+    for(auto j = 1; j <= N; ++j)
+        {
+        ampo += 1.0,"Sz",j;
+        }
+    auto H = toMPO(ampo);
+
     auto fo = h5_open("test.h5",'w');
     h5_write(fo,"mps_M",M);
+    h5_write(fo,"mpo_H",H);
     close(fo);
+
+    auto fi = h5_open("test.h5",'r');
+    auto read_M = h5_read<MPS>(fi,"mps_M");
+    auto read_H = h5_read<MPO>(fi,"mpo_H");
+
+    CHECK(abs(inner(M,read_M)-1.0) < 1E-8);
+
+    CHECK(abs(inner(M,H,M)-inner(M,read_H,M)) < 1E-8);
     }
 
 }
