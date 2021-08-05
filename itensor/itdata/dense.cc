@@ -455,7 +455,8 @@ h5_write(h5::group parent, std::string const& name, DenseCplx const& D)
     auto g = parent.create_group(name);
     h5_write_attribute(g,"type","Dense{ComplexF64}",true);
     h5_write_attribute(g,"version",long(1));
-    error("h5_write of complex dense storage not yet implemented");
+    auto data = std::vector<Cplx>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
     }
 
 void
@@ -473,9 +474,7 @@ h5_read(h5::group parent, std::string const& name, DenseCplx & D)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "Dense") Error("Group does not contain Dense data in HDF5 file");
-    auto eltype = h5_read_attribute<string>(g,"eltype");
-    if(eltype != "Complex{Float64}") Error("Group does not contain Dense Complex{Float64} data in HDF5 file");
+    if(type != "Dense{ComplexF64}") Error("Group does not contain DenseCplx data in HDF5 file");
     auto data = h5_read<vector<Cplx>>(g,"data");
     D = Dense<Cplx>(move(data));
     }

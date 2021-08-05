@@ -72,14 +72,32 @@ SECTION("Dense ITensor")
         n += 1;
         }
 
+    auto C = ITensor(i2,i3);
+    n = 1;
+    for(auto n2 : range1(i2.dim()))
+    for(auto n3 : range1(i3.dim()))
+        {
+        C.set(i2=n2,i3=n3,n-n*Cplx_i);
+        n += 1;
+        }
+
     auto fo = h5_open("test.h5",'w');
     h5_write(fo,"itensor_R",R);
+    h5_write(fo,"itensor_C",C);
     close(fo);
+
+    //TODO Just a Julia test here
+    auto fo2 = h5_open("itensor_data.h5",'w');
+    h5_write(fo2,"itensor_R",R);
+    h5_write(fo2,"itensor_C",C);
+    close(fo2);
 
     auto fi = h5_open("test.h5",'r');
     auto read_R = h5_read<ITensor>(fi,"itensor_R");
+    auto read_C = h5_read<ITensor>(fi,"itensor_C");
 
     CHECK(norm(R-read_R) < 1E-10);
+    CHECK(norm(C-read_C) < 1E-10);
     }
 
 SECTION("QN")
