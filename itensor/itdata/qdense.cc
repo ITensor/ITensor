@@ -1049,10 +1049,16 @@ h5_write(h5::group parent, std::string const& name, QDenseReal const& D)
 void
 h5_write(h5::group parent, std::string const& name, QDenseCplx const& D)
     {
-    error("Writing of QDenseCplx to HDF5 not yet implemented");
     auto g = parent.create_group(name);
     h5_write_attribute(g,"type","BlockSparse{ComplexF64}",true);
     h5_write_attribute(g,"version",long(1));
+    long N = 0;
+    if(!D.offsets.empty()) N = D.offsets.front().block.size();
+    h5_write(g,"ndims",N);
+    auto off_array = offsets_to_array(D.offsets,N);
+    h5_write(g,"offsets",off_array);
+    auto data = std::vector<Cplx>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
     }
 
 void
@@ -1073,7 +1079,6 @@ h5_read(h5::group parent, std::string const& name, QDenseReal & D)
 void
 h5_read(h5::group parent, std::string const& name, QDenseCplx & D)
     {
-    error("Reading of QDenseCplx from HDF5 not yet implemented");
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
     if(type != "BlockSparse{ComplexF64}") 
@@ -1082,8 +1087,8 @@ h5_read(h5::group parent, std::string const& name, QDenseCplx & D)
     auto off_array = offsets_to_array(D.offsets,N);
     auto offsets = h5_read<vector<long>>(g,"offsets");
     auto boff = array_to_offsets(offsets,N);
-    //auto data = h5_read<vector<Cplx>>(g,"data");
-    //D = QDense(boff,data);
+    auto data = h5_read<vector<Cplx>>(g,"data");
+    D = QDense(boff,data);
     }
 
 #endif //ITENSOR_USE_HDF5

@@ -132,17 +132,27 @@ SECTION("QN ITensor")
     auto N = 4;
     auto s = SpinHalf(N);
 
-    auto T = randomITensor(QN({"Sz",0}),prime(s(1)),prime(s(2)),dag(s(1)),dag(s(2)));
-    //PrintData(T);
+    auto R = randomITensor(QN({"Sz",0}),prime(s(1)),prime(s(2)),dag(s(1)),dag(s(2)));
+
+    auto I = randomITensor(QN({"Sz",0}),prime(s(1)),prime(s(2)),dag(s(1)),dag(s(2)));
+    auto C = R + Cplx_i*I;
 
     auto fo = h5_open("test.h5",'w');
-    h5_write(fo,"qnitensor_T",T);
+    h5_write(fo,"qnitensor_R",R);
+    h5_write(fo,"qnitensor_C",C);
     close(fo);
 
     auto fi = h5_open("test.h5",'r');
-    auto read_T = h5_read<ITensor>(fi,"qnitensor_T");
-    //PrintData(read_T);
-    CHECK(norm(T - read_T) < 1E-10);
+    auto read_R = h5_read<ITensor>(fi,"qnitensor_R");
+    auto read_C = h5_read<ITensor>(fi,"qnitensor_C");
+    CHECK(norm(R - read_R) < 1E-10);
+    CHECK(norm(C - read_C) < 1E-10);
+
+    auto jfo = h5_open("julia_test.h5",'w');
+    h5_write(jfo,"qnitensor_R",R);
+    h5_write(jfo,"qnitensor_C",C);
+    close(jfo);
+
     }
 
 SECTION("MPS")
