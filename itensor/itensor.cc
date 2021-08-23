@@ -840,9 +840,9 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
     auto s_type = h5_read_attribute<string>(sg,"type");
     ITensor::storage_ptr store;
     if(s_type == "Dense{Float64}") store = h5_readStore<DenseReal>(g,store_name); 
-    //else if(s_type == "Dense{ComplexF64}") store = h5_readType<DenseCplx>(g,store_name); 
+    else if(s_type == "Dense{ComplexF64}") store = h5_readStore<DenseCplx>(g,store_name); 
     else if(s_type == "BlockSparse{Float64}") store = h5_readStore<QDenseReal>(g,store_name); 
-    //else if(s_type == "BlockSparse{ComplexF64}") store = h5_readStore<QDenseCplx>(g,store_name); 
+    else if(s_type == "BlockSparse{ComplexF64}") store = h5_readStore<QDenseCplx>(g,store_name); 
     else error(format("Reading of ITensor storage type %s not yet supported",s_type));
 
     I = ITensor(is,std::move(store));
