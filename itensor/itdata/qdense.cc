@@ -1031,65 +1031,49 @@ array_to_offsets(vector<long> const& a, long N)
     return boff;
     }
 
+const char*
+juliaTypeNameOf(QDenseReal const& d) { return "BlockSparse{Float64}"; }
+const char*
+juliaTypeNameOf(QDenseCplx const& d) { return "BlockSparse{ComplexF64}"; }
+
+template<typename V>
 void
-h5_write(h5::group parent, std::string const& name, QDenseReal const& D)
+h5_write(h5::group parent, std::string const& name, QDense<V> const& D)
     {
     auto g = parent.create_group(name);
-    h5_write_attribute(g,"type","BlockSparse{Float64}",true);
+    h5_write_attribute(g,"type",juliaTypeNameOf(D),true);
     h5_write_attribute(g,"version",long(1));
     long N = 0;
     if(!D.offsets.empty()) N = D.offsets.front().block.size();
     h5_write(g,"ndims",N);
     auto off_array = offsets_to_array(D.offsets,N);
     h5_write(g,"offsets",off_array);
-    auto data = std::vector<Real>(D.store.begin(),D.store.end());
+    auto data = std::vector<V>(D.store.begin(),D.store.end());
     h5_write(g,"data",data);
     }
+template void h5_write(h5::group, std::string const&, QDense<Real> const& D);
+template void h5_write(h5::group, std::string const&, QDense<Cplx> const& D);
 
+template<typename V>
 void
-h5_write(h5::group parent, std::string const& name, QDenseCplx const& D)
-    {
-    auto g = parent.create_group(name);
-    h5_write_attribute(g,"type","BlockSparse{ComplexF64}",true);
-    h5_write_attribute(g,"version",long(1));
-    long N = 0;
-    if(!D.offsets.empty()) N = D.offsets.front().block.size();
-    h5_write(g,"ndims",N);
-    auto off_array = offsets_to_array(D.offsets,N);
-    h5_write(g,"offsets",off_array);
-    auto data = std::vector<Cplx>(D.store.begin(),D.store.end());
-    h5_write(g,"data",data);
-    }
-
-void
-h5_read(h5::group parent, std::string const& name, QDenseReal & D)
+h5_read(h5::group parent, std::string const& name, QDense<V> & D)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "BlockSparse{Float64}") 
-        Error("Group does not contain QDenseReal or BlockSparse{Float64} data in HDF5 file");
+    if(type != juliaTypeNameOf(D)) 
+        {
+        Error(format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
+        }
     auto N = h5_read<long>(g,"ndims");
     auto off_array = offsets_to_array(D.offsets,N);
     auto offsets = h5_read<vector<long>>(g,"offsets");
     auto boff = array_to_offsets(offsets,N);
-    auto data = h5_read<vector<Real>>(g,"data");
+    auto data = h5_read<vector<V>>(g,"data");
     D = QDense(boff,data);
     }
+template void h5_read(h5::group, std::string const&, QDense<Real> & D);
+template void h5_read(h5::group, std::string const&, QDense<Cplx> & D);
 
-void
-h5_read(h5::group parent, std::string const& name, QDenseCplx & D)
-    {
-    auto g = parent.open_group(name);
-    auto type = h5_read_attribute<string>(g,"type");
-    if(type != "BlockSparse{ComplexF64}") 
-        Error("Group does not contain QDenseCplx or BlockSparse{ComplexF64} data in HDF5 file");
-    auto N = h5_read<long>(g,"ndims");
-    auto off_array = offsets_to_array(D.offsets,N);
-    auto offsets = h5_read<vector<long>>(g,"offsets");
-    auto boff = array_to_offsets(offsets,N);
-    auto data = h5_read<vector<Cplx>>(g,"data");
-    D = QDense(boff,data);
-    }
 
 #endif //ITENSOR_USE_HDF5
 
