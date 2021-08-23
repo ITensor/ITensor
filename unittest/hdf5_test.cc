@@ -86,12 +86,6 @@ SECTION("Dense ITensor")
     h5_write(fo,"itensor_C",C);
     close(fo);
 
-    //TODO Just a Julia test here
-    auto fo2 = h5_open("itensor_data.h5",'w');
-    h5_write(fo2,"itensor_R",R);
-    h5_write(fo2,"itensor_C",C);
-    close(fo2);
-
     auto fi = h5_open("test.h5",'r');
     auto read_R = h5_read<ITensor>(fi,"itensor_R");
     auto read_C = h5_read<ITensor>(fi,"itensor_C");
@@ -147,12 +141,6 @@ SECTION("QN ITensor")
     auto read_C = h5_read<ITensor>(fi,"qnitensor_C");
     CHECK(norm(R - read_R) < 1E-10);
     CHECK(norm(C - read_C) < 1E-10);
-
-    auto jfo = h5_open("julia_test.h5",'w');
-    h5_write(jfo,"qnitensor_R",R);
-    h5_write(jfo,"qnitensor_C",C);
-    close(jfo);
-
     }
 
 SECTION("MPS")
