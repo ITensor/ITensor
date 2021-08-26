@@ -45,8 +45,8 @@ namespace h5 {
     // copy to the buffer
     std::vector<char> buf;
     buf.resize(v.size() * lv * s, 0x00);
-    for (int i = 0, k = 0; i < v.size(); i++)
-      for (int j = 0; j < lv; j++, k++) {
+    for (unsigned i = 0, k = 0; i < v.size(); i++)
+      for (unsigned j = 0; j < lv; j++, k++) {
         if (j < v[i].size()) strcpy(&buf[k * s], v[i][j].c_str());
       }
 
@@ -78,7 +78,7 @@ namespace h5 {
 
     long k = 0;
     for (auto &v_inner : v) {
-      for (int j = 0; j < inner_vec_size; ++j, ++k) {
+      for (unsigned j = 0; j < inner_vec_size; ++j, ++k) {
         std::string s = "";
         s.append(&cb.buffer[k * len_string]);
         if (!s.empty()) v_inner.push_back(s);
