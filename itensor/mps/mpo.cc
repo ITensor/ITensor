@@ -963,4 +963,41 @@ overlapC(MPS const& psi,
     return Cplx(re,im);
     }
 
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, string const& name, MPO const& M)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","MPO",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"length",long(M.length()));
+    h5_write(g,"rlim",long(M.rightLim()));
+    h5_write(g,"llim",long(M.leftLim()));
+    for(auto n : range1(M.length()))
+        {
+        h5_write(g,format("MPO[%d]",n),M(n));
+        }
+    }
+
+void
+h5_read(h5::group parent, string const& name, MPO & M)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "MPO") Error("Group does not contain MPO data in HDF5 file");
+    auto N = h5_read<long>(g,"length");
+    auto rlim = h5_read<long>(g,"rlim");
+    auto llim = h5_read<long>(g,"llim");
+    M = MPO(N);
+    for(auto n : range1(N))
+        {
+        M.ref(n) = h5_read<ITensor>(g,format("MPO[%d]",n));
+        }
+    M.leftLim(llim);
+    M.rightLim(rlim);
+    }
+
+#endif //ITENSOR_USE_HDF5
+
 } //namespace itensor

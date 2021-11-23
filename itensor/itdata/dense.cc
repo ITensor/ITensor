@@ -23,6 +23,10 @@
 #include "itensor/tensor/lapack_wrap.h"
 #include "itensor/util/tensorstats.h"
 
+using std::move;
+using std::string;
+using std::vector;
+
 namespace itensor {
 
 const char*
@@ -433,5 +437,41 @@ doTask(Order const& O,
     }
 template void doTask(Order const&,Dense<Real> &);
 template void doTask(Order const&,Dense<Cplx> &); 
+
+#ifdef ITENSOR_USE_HDF5
+
+const char*
+juliaTypeNameOf(DenseReal const& d) { return "Dense{Float64}"; }
+const char*
+juliaTypeNameOf(DenseCplx const& d) { return "Dense{ComplexF64}"; }
+
+template<typename V>
+void
+h5_write(h5::group parent, std::string const& name, Dense<V> const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type",juliaTypeNameOf(D),true);
+    h5_write_attribute(g,"version",long(1));
+    auto data = std::vector<V>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
+    }
+template void h5_write(h5::group, std::string const&, Dense<Real> const& D);
+template void h5_write(h5::group, std::string const&, Dense<Cplx> const& D);
+
+template<typename V>
+void
+h5_read(h5::group parent, std::string const& name, Dense<V> & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != juliaTypeNameOf(D)) Error(format("Group does not contain %s data in HDF5 file",typeNameOf(D)));
+    auto data = h5_read<vector<V>>(g,"data");
+    D = Dense<V>(move(data));
+    }
+template void h5_read(h5::group parent, std::string const& name, Dense<Real> & D);
+template void h5_read(h5::group parent, std::string const& name, Dense<Cplx> & D);
+
+
+#endif //ITENSOR_USE_HDF5
 
 } // namespace itensor

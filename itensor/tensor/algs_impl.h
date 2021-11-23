@@ -363,7 +363,7 @@ SVDRefLAPACK(
     int Mr = nrows(M), 
          Mc = ncols(M);
 
-    auto svdMethod = args.getString("SVDMethod");
+    auto svdMethod = args.getString("SVDMethod", "automatic");
 
     auto pA = M.data();
     std::vector<T> cpA;
@@ -380,11 +380,27 @@ SVDRefLAPACK(
     }
 
     int info = -1;
-    if (svdMethod == "gesdd")
+    if (svdMethod == "automatic")
+      {
       info = detail::SVD_gesdd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+
+      // if gesdd failed, try gesvd; need to restore cpA data since gesdd destroyed it
+      if(info != 0)
+        {
+          if(isTransposed(M)) {
+              for (unsigned int i=0; i<cpA.size(); i++, pA++) cpA[(i%Mc)*Mr + i/Mc] = *pA;
+          } else {
+              std::copy(pA,pA+Mr*Mc,cpA.data());
+          }
+          info = detail::SVD_gesvd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+        }
+      }
+    else if (svdMethod == "gesdd")
+      info = detail::SVD_gesdd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
+
     else if (svdMethod == "gesvd")
       info = detail::SVD_gesvd(Mr, Mc, cpA.data(), U.data(), D.data(), V.data());
-
+    
     if(info != 0) 
       {
         throw std::runtime_error("Error condition in LAPACK SVD");

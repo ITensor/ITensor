@@ -82,11 +82,13 @@ class MPS
     leftLim() const { return l_orth_lim_; }
 
     // Read-only access to i'th MPS tensor
+    // Is 1-indexed
     ITensor const&
     operator()(int i) const;
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
+    //Is 1-indexed
     ITensor& 
     ref(int i);
 
@@ -902,6 +904,13 @@ overlap(MPSType const& psi,
 
 Spectrum
 orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args);
+
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, MPS const& M);
+void
+h5_read(h5::group parent, std::string const& name, MPS & M);
+#endif
 
 } //namespace itensor
 

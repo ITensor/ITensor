@@ -17,10 +17,11 @@
 #include "itensor/util/readwrite.h"
 #include "itensor/util/print_macro.h"
 
-namespace itensor {
-
 using std::string;
 using std::stringstream;
+using std::vector;
+
+namespace itensor {
 
 
 string 
@@ -81,6 +82,21 @@ Index(id_type id,
     dir_(dir),
     tags_(ts)
     { 
+    if(primeLevel() < 0) setPrime(0);
+    } 
+
+Index::
+Index(id_type id,
+      long dim, 
+      Arrow dir, 
+      TagSet const& ts,
+      qnstorage&& qns)
+  : id_(id),
+    dim_(dim),
+    dir_(dir),
+    tags_(ts)
+    { 
+    makeStorage(std::move(qns));
     if(primeLevel() < 0) setPrime(0);
     } 
 
@@ -757,7 +773,30 @@ h5_write(h5::group parent, std::string const& name, Index const& I)
     h5_write(g,"id",static_cast<unsigned long>(I.id()));
     h5_write(g,"dim",long(I.dim()));
     h5_write(g,"dir",long(I.dir()));
+    h5_write(g,"plev",long(I.primeLevel()));
     h5_write(g,"tags",I.tags());
+    if(hasQNs(I))
+        {
+        h5_write_attribute(g,"space_type","QNBlocks");
+        //Write "QNBlocks" data of this QN Index
+            {
+            auto qg = g.create_group("space");
+            h5_write_attribute(qg,"type","QNBlocks",true);
+            h5_write_attribute(qg,"version",long(1));
+            h5_write(qg,"length",I.nblock());
+            auto dims = std::vector<long>(I.nblock());
+            for(auto n : range1(I.nblock()))
+                {
+                dims[n-1] = I.blocksize(n);
+                h5_write(qg,format("QN[%d]",n),I.qn(n));
+                }
+            h5_write(qg,"dims",dims);
+            }
+        }
+    else
+        {
+        h5_write_attribute(g,"space_type","Int");
+        }
     }
 
 void
@@ -770,7 +809,26 @@ h5_read(h5::group parent, std::string const& name, Index & I)
     auto dim = h5_read<long>(g,"dim");
     auto dir = h5_read<long>(g,"dir");
     auto tags = h5_read<TagSet>(g,"tags");
-    I = Index(id,dim,toArrow(dir),tags);
+    auto space_type = h5_read_attribute<string>(g,"space_type");
+    if(space_type == "QNBlocks") // is a QN Index
+        {
+        auto qg = g.open_group("space");
+        auto nblocks = h5_read<long>(qg,"length");
+        auto dims = h5_read<vector<long>>(qg,"dims");
+        auto qns = vector<QNInt>(nblocks);
+        for(auto n : range1(nblocks))
+            {
+            auto qn = h5_read<QN>(qg,format("QN[%d]",n));
+            qns[n-1] = std::make_pair(qn,dims[n-1]);
+            }
+        I = Index(id,dim,toArrow(dir),tags,std::move(qns));
+        }
+    else
+        {
+        I = Index(id,dim,toArrow(dir),tags);
+        }
+    auto plev = h5_read<long>(g,"plev");
+    I.setPrime(plev);
     }
 
 #endif

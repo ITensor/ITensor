@@ -69,7 +69,8 @@ read(std::istream& s, T & val)
 template<typename T>
 auto
 read(std::istream& s, T & val)
-    -> stdx::enable_if_t<std::is_pod<T>::value,void>
+    -> stdx::enable_if_t<std::is_standard_layout<T>::value &&
+                         std::is_trivial<T>::value,void>
     {
     s.read((char*) &val, sizeof(val));
     }
@@ -88,7 +89,8 @@ read(std::istream& s, CtrArgs&&... args)
 //    template<typename T>
 //    auto
 //    writeImpl(stdx::choice<1>, std::ostream& s, T const& t)
-//        -> stdx::enable_if_t<std::is_pod<T>::value,void>
+//        -> stdx::enable_if_t<std::is_standard_layout<T>::value &&
+//                             std::is_trivial<T>::value,void>
 //        {
 //        s.write((char*) &t, sizeof(t));
 //        }
@@ -125,7 +127,8 @@ write(std::ostream& s, T const& val)
 template<typename T>
 auto
 write(std::ostream& s, T const& val)
-    -> stdx::enable_if_t<std::is_pod<T>::value,void>
+    -> stdx::enable_if_t<std::is_standard_layout<T>::value &&
+                         std::is_trivial<T>::value,void>
     {
     s.write((char*) &val, sizeof(val));
     }
@@ -192,7 +195,8 @@ read(std::istream& s, std::vector<T,A> & v)
     auto size = v.size();
     itensor::read(s,size);
     v.resize(size);
-    if(std::is_pod<T>::value)
+    if(std::is_standard_layout<T>::value &&
+       std::is_trivial<T>::value)
         {
         s.read((char*)v.data(), sizeof(T)*size);
         }
@@ -210,7 +214,8 @@ write(std::ostream& s, std::vector<T,A> const& v)
     {
     auto size = v.size();
     itensor::write(s,size);
-    if(std::is_pod<T>::value)
+    if(std::is_standard_layout<T>::value &&
+       std::is_trivial<T>::value)
         {
         s.write((char*)v.data(), sizeof(T)*size);
         }
@@ -225,7 +230,8 @@ auto
 read(std::istream& s, std::array<T,N> & a)
     -> stdx::if_compiles_return<void,decltype(itensor::read(s,a[0]))>
     {
-    if(std::is_pod<T>::value)
+    if(std::is_standard_layout<T>::value &&
+       std::is_trivial<T>::value)
         {
         s.read((char*)a.data(), sizeof(T)*N);
         }
@@ -240,7 +246,8 @@ auto
 write(std::ostream& s, std::array<T,N> const& a)
     -> stdx::if_compiles_return<void,decltype(itensor::write(s,a[0]))>
     {
-    if(std::is_pod<T>::value)
+    if(std::is_standard_layout<T>::value &&
+       std::is_trivial<T>::value)
         {
         s.write((char*)a.data(), sizeof(T)*N);
         }
@@ -255,7 +262,8 @@ write(std::ostream& s, std::array<T,N> const& a)
 //////////////////////////////////////////////
 //////////////////////////////////////////////
 
-template<typename T, size_t N, bool isPod = std::is_pod<T>::value>
+template<typename T, size_t N, bool isPod = std::is_standard_layout<T>::value &&
+                                            std::is_trivial<T>::value>
 struct ReadIAData
     {
     ReadIAData(size_t size, std::istream& s, InfArray<T,N>& ia)
@@ -281,7 +289,8 @@ read(std::istream& s, InfArray<T,N>& ia)
     ReadIAData<T,N>(size,s,ia);
     }
 
-template<typename T, size_t N, bool isPod = std::is_pod<T>::value>
+template<typename T, size_t N, bool isPod = std::is_standard_layout<T>::value &&
+                                            std::is_trivial<T>::value>
 struct WriteIAData
     {
     WriteIAData(size_t size, std::ostream& s, const InfArray<T,N>& ia)

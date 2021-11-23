@@ -24,6 +24,7 @@ using std::array;
 using std::ostream;
 using std::vector;
 using std::move;
+using std::string;
 
 namespace itensor {
 
@@ -809,6 +810,47 @@ read(std::istream& s)
         }
     }
 
+#ifdef ITENSOR_USE_HDF5
+
+void
+h5_write(h5::group parent, std::string const& name, ITensor const& T)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type","ITensor",true);
+    h5_write_attribute(g,"version",long(1));
+    h5_write(g,"inds",T.inds());
+    doTask(H5Write(g,"storage"),T.store());
+    }
+
+void
+h5_read(h5::group parent, std::string const& name, ITensor & I)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != "ITensor") Error("Group does not contain ITensor data in HDF5 file");
+
+    auto is = h5_read<IndexSet>(g,"inds");
+
+    std::string store_name;
+    if(g.has_subgroup("storage"))    store_name = "storage";
+    else if(g.has_subgroup("store")) store_name = "store";
+    else error("Expected ITensor HDF5 data to have group named \"storage\" or \"store\"");
+
+    auto sg = g.open_group(store_name);
+    auto s_type = h5_read_attribute<string>(sg,"type");
+    ITensor::storage_ptr store;
+    if(s_type == "Dense{Float64}") store = h5_readStore<DenseReal>(g,store_name); 
+    else if(s_type == "Dense{ComplexF64}") store = h5_readStore<DenseCplx>(g,store_name); 
+    else if(s_type == "BlockSparse{Float64}") store = h5_readStore<QDenseReal>(g,store_name); 
+    else if(s_type == "BlockSparse{ComplexF64}") store = h5_readStore<QDenseCplx>(g,store_name); 
+    else error(format("Reading of ITensor storage type %s not yet supported",s_type));
+
+    I = ITensor(is,std::move(store));
+    }
+
+#endif //ITENSOR_USE_HDF5
+
+
 namespace detail {
 
 void
@@ -1580,6 +1622,7 @@ randomITensor(QN q, IndexSet const& is)
     ITensor T;
     auto dat = QDenseReal{is,q};
     T = ITensor(std::move(is),std::move(dat));
+    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickran);
     return T;
     }
@@ -1594,6 +1637,7 @@ randomITensorC(QN q, IndexSet const& is)
     ITensor T;
     auto dat = QDenseCplx{is,q};
     T = ITensor(std::move(is),std::move(dat));
+    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickranCplx);
     return T;
     }

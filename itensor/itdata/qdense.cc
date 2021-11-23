@@ -25,6 +25,7 @@
 #include "itensor/util/print_macro.h"
 
 using std::vector;
+using std::string;
 using std::move;
 
 namespace itensor {
@@ -989,6 +990,92 @@ operator<<(std::ostream & s, QDense<T> const& t)
     }
 template std::ostream& operator<<(std::ostream & s, QDense<Real> const& t);
 template std::ostream& operator<<(std::ostream & s, QDense<Cplx> const& t);
+
+#ifdef ITENSOR_USE_HDF5
+
+vector<long>
+offsets_to_array(BlockOffsets const& boff, int N)
+    {
+    auto nblocks = boff.size();
+    auto asize = (N+1)*nblocks;
+    auto n = 0;
+    auto a = vector<long>(asize);
+    for(auto& bo : boff)
+        {
+        for(auto j : range(N))
+            {
+            a[n] = bo.block[j]+1;
+            n += 1;
+            }
+        a[n] = bo.offset;
+        n += 1;
+        }
+    return a;
+    }
+
+BlockOffsets
+array_to_offsets(vector<long> const& a, long N)
+    {
+    auto asize = a.size();
+    auto nblocks = ldiv(asize, N+1).quot;
+    auto boff = BlockOffsets(nblocks);
+    long j = 0;
+    for(auto n : range(nblocks))
+        {
+        auto block = Block(N);
+        for(auto m : range(N)) block[m] = a[j+m]-1;
+        long offset = a[j+N];
+        boff[n] = BlOf{block,offset};
+        j += (N + 1);
+        }
+    return boff;
+    }
+
+const char*
+juliaTypeNameOf(QDenseReal const& d) { return "BlockSparse{Float64}"; }
+const char*
+juliaTypeNameOf(QDenseCplx const& d) { return "BlockSparse{ComplexF64}"; }
+
+template<typename V>
+void
+h5_write(h5::group parent, std::string const& name, QDense<V> const& D)
+    {
+    auto g = parent.create_group(name);
+    h5_write_attribute(g,"type",juliaTypeNameOf(D),true);
+    h5_write_attribute(g,"version",long(1));
+    long N = 0;
+    if(!D.offsets.empty()) N = D.offsets.front().block.size();
+    h5_write(g,"ndims",N);
+    auto off_array = offsets_to_array(D.offsets,N);
+    h5_write(g,"offsets",off_array);
+    auto data = std::vector<V>(D.store.begin(),D.store.end());
+    h5_write(g,"data",data);
+    }
+template void h5_write(h5::group, std::string const&, QDense<Real> const& D);
+template void h5_write(h5::group, std::string const&, QDense<Cplx> const& D);
+
+template<typename V>
+void
+h5_read(h5::group parent, std::string const& name, QDense<V> & D)
+    {
+    auto g = parent.open_group(name);
+    auto type = h5_read_attribute<string>(g,"type");
+    if(type != juliaTypeNameOf(D)) 
+        {
+        Error(format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
+        }
+    auto N = h5_read<long>(g,"ndims");
+    auto off_array = offsets_to_array(D.offsets,N);
+    auto offsets = h5_read<vector<long>>(g,"offsets");
+    auto boff = array_to_offsets(offsets,N);
+    auto data = h5_read<vector<V>>(g,"data");
+    D = QDense(boff,data);
+    }
+template void h5_read(h5::group, std::string const&, QDense<Real> & D);
+template void h5_read(h5::group, std::string const&, QDense<Cplx> & D);
+
+
+#endif //ITENSOR_USE_HDF5
 
 } //namespace itensor
 

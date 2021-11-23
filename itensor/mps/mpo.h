@@ -88,13 +88,13 @@ class MPO : protected MPS
     MPO&
     swapSiteInds();
 
-    void 
+    Spectrum 
     svdBond(int b, 
             ITensor const& AA, 
             Direction dir, 
             Args const& args = Args::global())
         { 
-        Parent::svdBond(b,AA,dir,args + Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
+        return Parent::svdBond(b,AA,dir,args + Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
         }
 
     //Move the orthogonality center to site i 
@@ -611,6 +611,13 @@ overlapC(MPS const& psi,
          MPO const& H, 
          MPO const& K,
          MPS const& phi);
+
+#ifdef ITENSOR_USE_HDF5
+void
+h5_write(h5::group parent, std::string const& name, MPO const& M);
+void
+h5_read(h5::group parent, std::string const& name, MPO & M);
+#endif
 
 } //namespace itensor
 

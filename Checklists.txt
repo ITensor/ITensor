@@ -1,0 +1,8 @@
+Checklist for Tagging a New Release
+----------------------------------------------------------
+- In Github https://github.com/ITensor/ITensor
+  click on Releses then Draft a New Release
+- Set the Tag Version field to be of the form v3.x.y
+- For the title, use "Version 3.x.y"
+- The description should consist of the major changes and links to PRs
+- Update version on itensor.org website

@@ -536,6 +536,16 @@ readType(std::istream& s, CtrArgs&&... args)
     return newITData<T>(std::move(t));
     }
 
+#ifdef ITENSOR_USE_HDF5
+
+template<typename T>
+ITensor::storage_ptr
+h5_readStore(h5::group g, std::string const& name)
+    {
+    return newITData<T>(h5_read<T>(g,name));
+    }
+
+#endif
 
 struct Write
     {
@@ -553,6 +563,28 @@ doTask(Write & W, D const& d)
     {
     write(W.s,d);
     }
+
+#ifdef ITENSOR_USE_HDF5
+
+struct H5Write
+    {
+    h5::group& parent;
+    std::string name;
+
+    H5Write(h5::group& parent_,std::string const& name_) : parent(parent_), name(name_) { }
+    };
+inline const char*
+typeNameOf(H5Write const&) { return "H5Write"; }
+
+template<typename D>
+auto
+doTask(H5Write & W, D const& d)
+    -> stdx::if_compiles_return<void,decltype(itensor::h5_write(W.parent,W.name,d))>
+    {
+    h5_write(W.parent,W.name,d);
+    }
+
+#endif 
 
 template<typename Container, class>
 ITensor
