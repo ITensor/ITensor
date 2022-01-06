@@ -64,7 +64,7 @@ trg-g: mkdebugdir .debug_objs/trg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 ctmrg: ctmrg.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) ctmrg.o -o ctmrg $(LIBFLAGS)
 
-ctmrg-g: mkdebugdir .debug_objs/trg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
+ctmrg-g: mkdebugdir .debug_objs/ctmrg.o $(ITENSOR_GLIBS) $(TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/ctmrg.o -o ctmrg-g $(LIBGFLAGS)
 
 hubbard_2d: hubbard_2d.o $(ITENSOR_LIBS) $(TENSOR_HEADERS)
