@@ -47,6 +47,17 @@ using conditional_t = typename std::conditional<B,T1,T2>::type;
 template<bool B, typename T1, typename T2>
 using conditional_t = typename std::conditional<B,T1,T2>::type;
 
+#if defined(__cpp_lib_is_invocable) && __cpp_lib_is_invocable >= 201703
+    // std::result_of is deprecated in C++17 and removed in C++20. Hence, it is
+    // replaced with std::invoke_result here. Also *_t format is preferred over
+    // typename *::type format.
+    template<class F, class... TN>
+    using invoke_result_t = typename std::invoke_result<F, TN...>::type;
+#else
+    template<class F, class... TN>
+    using invoke_result_t = typename std::result_of<F(TN...)>::type;
+#endif
+
 template<class T>
 using result_of_t = typename std::result_of<T>::type;
 

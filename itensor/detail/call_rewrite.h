@@ -55,7 +55,7 @@ call_impl(T&& obj, V&& v, long)
     return Ret();
     }
 template <typename Ret, class T, typename V>
-stdx::enable_if_t<std::is_same<typename std::result_of<T(V)>::type,void>::value,Ret>
+stdx::enable_if_t<std::is_same<stdx::invoke_result_t<T,V>,void>::value,Ret>
 fixret(T&& obj, V&& v, int)
     {
     call_impl<void,T,V>(std::forward<T>(obj),std::forward<V>(v),0);
@@ -140,7 +140,7 @@ call_impl(FType&& func, T1&& a1, T2&& a2, long)
     return Ret();
     }
 template <typename Ret, class FType, typename T1, typename T2>
-stdx::enable_if_t<std::is_same<typename std::result_of<FType(T1,T2)>::type,void>::value,Ret>
+stdx::enable_if_t<std::is_same<stdx::invoke_result_t<FType,T1,T2>,void>::value,Ret>
 fixret(FType&& func, T1&& a1, T2&& a2, int)
     {
     call_impl<void,FType,T1,T2>(std::forward<FType>(func),

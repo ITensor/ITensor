@@ -26,6 +26,23 @@
 
 namespace triqs::utility {
 
+  /********************* Custom Trait Types ********************/
+
+  namespace stdx {
+
+  #if defined(__cpp_lib_is_invocable) && __cpp_lib_is_invocable >= 201703
+    // std::result_of is deprecated in C++17 and removed in C++20. Hence, it is
+    // replaced with std::invoke_result here. Also *_t format is preferred over
+    // typename *::type format.
+    template<class F, class... TN>
+    using invoke_result_t = typename std::invoke_result<F, TN...>::type;
+  #else
+    template<class F, class... TN>
+    using invoke_result_t = typename std::result_of<F(TN...)>::type;
+  #endif
+
+  }
+
   template <class Iter, class Value, class Tag = std::forward_iterator_tag, class Reference = Value &, class Difference = std::ptrdiff_t>
   struct iterator_facade;
 
@@ -92,7 +109,7 @@ namespace triqs::utility {
 
   /********************* Transform Iterator ********************/
 
-  template <typename Iter, typename L, typename Value = std::result_of<L(typename std::iterator_traits<Iter>::value_type)>>
+  template <typename Iter, typename L, typename Value = stdx::invoke_result_t<L,typename std::iterator_traits<Iter>::value_type>>
   struct transform_iter : iterator_facade<transform_iter<Iter, L>, Value> {
 
     Iter it;
