@@ -239,7 +239,7 @@ using ApplyIT_result_of = decltype(resultTypeHelper<T>(std::declval<ApplyIT<F>>(
 ///////////////////
 
 
-template<typename F, typename T = typename stdx::invoke_result_t<F>>
+template<typename F, typename T = typename std::invoke_result_t<F>>
 struct GenerateIT
     {
     F& f;

@@ -312,23 +312,23 @@ struct HasDTHelper
 template<typename Task, typename Storage>
 struct HasConstDoTask
     {
-    using ResultType = stdx::invoke_result_t<HasDTHelper<Task,const Storage>>;
+    using ResultType = std::invoke_result_t<HasDTHelper<Task,const Storage>>;
     bool constexpr static
     result() { return ResultType{}; }
     };
 template<typename Task, typename Storage>
 struct HasNonConstDoTask
     {
-    using ResultType = stdx::invoke_result_t<HasDTHelper<Task,stdx::remove_const_t<Storage>>>;
-    using CResultType = stdx::invoke_result_t<HasDTHelper<Task,const Storage>>;
+    using ResultType = std::invoke_result_t<HasDTHelper<Task,stdx::remove_const_t<Storage>>>;
+    using CResultType = std::invoke_result_t<HasDTHelper<Task,const Storage>>;
     bool constexpr static
     result() { return ResultType{} && (not CResultType{}); }
     };
 template<typename Task, typename Storage>
 struct HasDoTask
     {
-    using CResultType = stdx::invoke_result_t<HasDTHelper<Task,const Storage>>;
-    using NCResultType = stdx::invoke_result_t<HasDTHelper<Task,stdx::remove_const_t<Storage>>>;
+    using CResultType = std::invoke_result_t<HasDTHelper<Task,const Storage>>;
+    using NCResultType = std::invoke_result_t<HasDTHelper<Task,stdx::remove_const_t<Storage>>>;
     using ResultType = stdx::conditional_t<CResultType::value,
                                           CResultType,
                                           NCResultType>;
@@ -372,23 +372,23 @@ struct HasDTHelper2Arg
 template<typename Task, typename D1, typename D2>
 struct HasConstDoTask2Arg
     {
-    using ResultType = stdx::invoke_result_t<HasDTHelper2Arg<Task,const D1, const D2>>;
+    using ResultType = std::invoke_result_t<HasDTHelper2Arg<Task,const D1, const D2>>;
     bool constexpr static
     result() { return ResultType{}; }
     };
 template<typename Task, typename D1, typename D2>
 struct HasNonConstDoTask2Arg
     {
-    using ResultType = stdx::invoke_result_t<HasDTHelper2Arg<Task,stdx::remove_const_t<D1>,D2>>;
-    using CResultType = stdx::invoke_result_t<HasDTHelper2Arg<Task,const D1,D2>>;
+    using ResultType = std::invoke_result_t<HasDTHelper2Arg<Task,stdx::remove_const_t<D1>,D2>>;
+    using CResultType = std::invoke_result_t<HasDTHelper2Arg<Task,const D1,D2>>;
     bool constexpr static
     result() { return ResultType{} && (not CResultType{}); }
     };
 template<typename Task, typename D1, typename D2>
 struct HasDoTask2Arg
     {
-    using CResultType = stdx::invoke_result_t<HasDTHelper2Arg<Task,const D1,D2>>;
-    using NCResultType = stdx::invoke_result_t<HasDTHelper2Arg<Task,stdx::remove_const_t<D1>,D2>>;
+    using CResultType = std::invoke_result_t<HasDTHelper2Arg<Task,const D1,D2>>;
+    using NCResultType = std::invoke_result_t<HasDTHelper2Arg<Task,stdx::remove_const_t<D1>,D2>>;
     using ResultType = stdx::conditional_t<CResultType::value,
                                           CResultType,
                                           NCResultType>;
@@ -422,7 +422,7 @@ struct HasEvaluate
             { return testEvalImpl(stdx::select_overload{},*s); }
         };
     bool constexpr static
-    result() { return stdx::invoke_result_t<Test>{}; }
+    result() { return std::invoke_result_t<Test>{}; }
     };
 
 /////////////

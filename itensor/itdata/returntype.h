@@ -82,7 +82,7 @@ struct TestRet
 template<typename Task, typename TList>
 struct GetRType : GetRType<Task,popFront<TList>>
     {
-    using Test = stdx::invoke_result_t<TestRet<Task,frontType<TList>>>;
+    using Test = std::invoke_result_t<TestRet<Task,frontType<TList>>>;
     using Parent = GetRType<Task,popFront<TList>>;
     using RType = stdx::conditional_t<not std::is_same<Test,NoneType>::value,
                                      Test,
