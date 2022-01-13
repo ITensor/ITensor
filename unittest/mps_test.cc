@@ -1,13 +1,36 @@
 #include "test.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/sites/electron.h"
 #include "itensor/mps/sites/fermion.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
+#include "itensor/util/iterate.h"
 #include "mps_mpo_test_helper.h"
+#include <iomanip>
 
 using namespace itensor;
 using std::vector;
+
+//
+//  os << Matrix1 is currently not supported in mat.h so we make a
+//  temporary function to dump a Matrix1 object for viewing the output of the expect function.
+//
+std::ostream& operator<< (std::ostream& s, const Matrix1& M)
+{
+    for(auto r : range1(nrows(M)))
+        {
+        s << "|";
+        for(auto c : range1(ncols(M)))
+            {
+            s << formatVal(M(r,c));
+            s << (c == ncols(M) ? "|" : " ");
+            }
+        if(r < nrows(M)) s << "\n";
+        }
+        return s;
+}
+
 
 TEST_CASE("MPSTest")
 {
@@ -374,5 +397,127 @@ SECTION("prime")
     CHECK( prime(linkIndex(psi,3)) == linkIndex(psi4,3) );
 
     }
+
+//-----------------------------------------------------------------------------------
+//
+//  Begin testing for the expect(psi,ops) function.
+//
+SECTION("expect S1/2 No QNs ferro")
+{
+    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+    // Test with the site range option
+    int site_start=2,site_end=4;
+    Matrix1 ex=expect(psi, {site_start,site_end},"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn") ;
+
+//    std::cout << "expect table" << std::endl;
+//    std::cout << "   Sz        ISy       Sx        S+        S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
+//    std::cout << ex << std::endl;
+
+    for (int j=1; j<=site_end-site_start+1; j++) //site loop
+    {
+        double Sz=ex(j,1),ISy=ex(j,2),Sx=ex(j,3),Sp=ex(j,4),Sm=ex(j,5),S2=ex(j,6);
+        CHECK_CLOSE(sqrt(Sz*Sz+ISy*ISy+Sx*Sx),0.5);
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+        CHECK_CLOSE(ISy,0.5*(Sp-Sm));
+    }
+}
+
+SECTION("expect S1/2 With QNs ferro")
+{
+    SiteSet   sites = SpinHalf(N);
+    MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+    // Only ops that commute with Sz are allowed here.
+    Matrix1 ex=expect(psi,"Sz","S+","S-","S2","Sz*Sz","projUp","projDn") ;
+
+//    std::cout << "expect table" << std::endl;
+//    std::cout << "  Sz        S+        S-        S2        Sz*Sz     projUp    projDn" << std::endl;
+//    std::cout << ex << std::endl;
+
+    for (int j=1; j<=psi.length(); j++) //site loop
+    {
+        double Sz=ex(j,1),Sp=ex(j,2),Sm=ex(j,3),S2=ex(j,4),SzSz=ex(j,5),projUp=ex(j,6),projDn=ex(j,7);
+        CHECK_CLOSE(Sz,0.5);
+        CHECK_CLOSE(SzSz,0.25);
+        CHECK_CLOSE(Sp,0.0);
+        CHECK_CLOSE(Sm,0.0);
+        CHECK_CLOSE(projUp,1.0);
+        CHECK_CLOSE(projDn,0.0);
+        CHECK_CLOSE(S2,0.75);
+    }
+}
+
+SECTION("expect Electron With QNs ")
+{
+    SiteSet   sites = Electron(N);
+    MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+    Matrix1 ex=expect(psi,"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot") ;
+
+//    std::cout << "expect table" << std::endl;
+//    std::cout << "  Sz        S+        S-        S2        Nup       Ndn       NupDn     Ntot" << std::endl;
+//    std::cout << ex << std::endl;
+
+    for (int j=1; j<=psi.length(); j++) //site loop
+    {
+        double Sz=ex(j,1),Sp=ex(j,2),Sm=ex(j,3),S2=ex(j,4),Nup=ex(j,5),Ndn=ex(j,6),Nupdn=ex(j,7),Ntot=ex(j,8);
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Nup,1.0);
+        CHECK_CLOSE(Ndn,0.0);
+        CHECK_CLOSE(Nupdn,0.0);
+        CHECK_CLOSE(Ntot,1.0);
+    }
+}
+
+
+SECTION("expect Fermion No QNs ")
+{
+    SiteSet   sites = Fermion(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(sites);
+
+    Matrix1 ex=expect(psi,"N","Cdag*C","Adag*A","F","projEmp","projOcc") ;
+
+//    std::cout << "expect table" << std::endl;
+//    std::cout << "    N        Cdag*C      Adag*A     F     projEmp   projOcc" << std::endl;
+//    std::cout << ex << std::endl;
+
+    for (int j=1; j<=psi.length(); j++) //site loop
+    {
+        double NN=ex(j,1),CdagC=ex(j,2),AdagA=ex(j,3),F=ex(j,4),projEmp=ex(j,5),projOcc=ex(j,6);
+        CHECK_CLOSE(F,1-2*NN);
+        CHECK_CLOSE(CdagC,NN);
+        CHECK_CLOSE(AdagA,NN);
+        CHECK_CLOSE(projOcc,NN);
+        CHECK_CLOSE(projOcc+projEmp,1.0);
+    }
+}
+
+SECTION("expect Fermion With QNs ")
+{
+    SiteSet   sites = Fermion(N, {"ConserveQNs=",true});
+    MPS       psi   = randomMPS(InitState(sites,"1"));
+
+    Matrix1 ex=expect(psi,"N","Cdag*C","Adag*A","F","projEmp","projOcc") ;
+
+//    std::cout << "expect table" << std::endl;
+//    std::cout << "    N       Cdag*C      Adag*A     F      projEmp   projOcc" << std::endl;
+//    std::cout << ex << std::endl;
+
+    for (int j=1; j<=psi.length(); j++) //site loop
+    {
+        double NN=ex(j,1),CdagC=ex(j,2),AdagA=ex(j,3),F=ex(j,4),projEmp=ex(j,5),projOcc=ex(j,6);
+        CHECK_CLOSE(NN,1.0);
+        CHECK_CLOSE(F,1.0-2*NN);
+        CHECK_CLOSE(CdagC,NN);
+        CHECK_CLOSE(AdagA,NN);
+        CHECK_CLOSE(projOcc,NN);
+        CHECK_CLOSE(projOcc+projEmp,1.0);
+    }
+}
 
 }

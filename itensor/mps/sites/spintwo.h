@@ -38,7 +38,7 @@ class SpinTwo : public SiteSet
     };
 
 
-class SpinTwoSite
+class SpinTwoSite : public virtual SiteBase
 	{
   Index s;
 	public:

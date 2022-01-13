@@ -35,6 +35,8 @@ class MPS
     int atb_;
     std::string writedir_;
     bool do_write_;
+    SiteSet::SitePtrs pm_sites_; //Polymorphic array of sites;
+
     public:
 
     //
@@ -483,6 +485,10 @@ class MPS
     ITensor& 
     Aref(int i);
 
+    // JRTODO we can remove these after refactoring SiteSet
+    friend ITensor op(MPS const& ,std::string const&, int, Args const&);
+    friend MPS     randomCircuitMPS(SiteSet const& s, int m, Args const& args);
+
     }; //class MPS
 
 template <typename MPSType>
@@ -866,6 +872,74 @@ template <class MPSType>
 MPSType
 sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
+
+ITensor inline
+op(MPS const& mps,
+   std::string const& opname,
+   int i,
+   Args const& args = Args::global())
+{
+    assert(mps.pm_sites_.size()>0);
+    SiteSet::SitePtr s=mps.pm_sites_[i];
+    assert(s);
+    //If opname of the form "Name1*Name2",
+    //return product of Name1 operator times Name2 operator
+    // JRTODO: This cloned from siteset.h line 450.  Need to refactor to get this logic in ONE place.
+    //         Save for SiteStore refactoring
+    auto found = opname.find_first_of('*');
+    if(found != std::string::npos)
+    {
+        auto op1 = [](std::string const& opname, size_t n)
+            {
+            return opname.substr(0,n);
+            };
+        auto op2 = [](std::string const& opname, size_t n)
+            {
+            return opname.substr(n+1);
+            };
+        return multSiteOps(s->op(op1(opname,found),args),
+                           s->op(op2(opname,found),args));
+    }
+    return s->op(opname,args);
+}
+
+typedef std::pair<int,int> ipair; //Use ipair for defining a site range.
+
+template <typename... opArgs> 
+Matrix1 expect(const MPS& _psi,const ipair& site_range, opArgs... str_ops)
+{
+    MPS psi=_psi; //Work with copy because we need to move the orth-center
+    if (!isOrtho(psi)) psi.orthogonalize();
+    psi.normalize();
+    auto sites = siteInds(psi); //required for dag operator.
+    std::vector<string> vops={str_ops...};
+
+    Matrix1 ex(site_range.second-site_range.first+1,vops.size());
+    for (auto i:range1(site_range.first,site_range.second))
+    {
+        psi.position(i); //Set the ortho centre.
+        int op_index=1;
+        for (auto str_op:vops)
+        {
+            auto e=psi(i) * op(psi,str_op,i) * dag(prime(psi(i), sites(i)));
+            ex(i-site_range.first+1,op_index++)=e.elt();
+        }
+    }
+
+    return ex;
+}
+
+//
+//  C++ is not as easy going as Julia for combining varargs and default parameters.
+//  So we function forward to get the same effect.
+//
+template <typename... opArgs> inline
+Matrix1 expect(const MPS& _psi,opArgs... str_ops)
+{
+    return expect(_psi,{1,_psi.length()},str_ops...);
+}
+
+
 
 std::ostream& 
 operator<<(std::ostream& s, MPS const& M);

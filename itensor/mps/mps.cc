@@ -97,7 +97,8 @@ MPS(IndexSet const& sites,
     r_orth_lim_(sites.length()+1),
     atb_(1),
     writedir_("./"),
-    do_write_(false)
+    do_write_(false),
+    pm_sites_(0) //JRTODO Perhaps it is better to make a vector of GenericSites?
     {
     new_tensors(A_,sites,m);
     }
@@ -111,8 +112,9 @@ MPS(InitState const& initState)
     r_orth_lim_(2),
     atb_(1),
     writedir_("./"),
-    do_write_(false)
-    { 
+    do_write_(false),
+    pm_sites_(initState.sites().getPMSites())
+    {
     init_tensors(A_,initState);
     }
 
@@ -125,8 +127,9 @@ MPS(MPS const& other)
     r_orth_lim_(other.r_orth_lim_),
     atb_(other.atb_),
     writedir_(other.writedir_),
-    do_write_(other.do_write_)
-    { 
+    do_write_(other.do_write_),
+    pm_sites_(other.pm_sites_)
+    {
     copyWriteDir();
     }
 
@@ -140,6 +143,7 @@ operator=(MPS const& other)
     atb_ = other.atb_;
     writedir_ = other.writedir_;
     do_write_ = other.do_write_;
+    pm_sites_=other.pm_sites_;
 
     copyWriteDir();
     return *this;
@@ -254,6 +258,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
 
     M.leftLim(0);
     M.rightLim(2);
+    M.pm_sites_=s.getPMSites();
     return M;
     }
 

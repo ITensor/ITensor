@@ -12,7 +12,7 @@ class CustomSpinSite;
 
 using CustomSpin = BasicSiteSet<CustomSpinSite>;
 
-class CustomSpinSite
+class CustomSpinSite  : public virtual SiteBase
     {
     Index s;
     public:
