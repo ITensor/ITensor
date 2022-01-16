@@ -35,7 +35,6 @@ class MPS
     int atb_;
     std::string writedir_;
     bool do_write_;
-    SiteSet::SitePtrs pm_sites_; //Polymorphic array of sites;
 
     public:
 
@@ -485,10 +484,6 @@ class MPS
     ITensor& 
     Aref(int i);
 
-    // JRTODO we can remove these after refactoring SiteSet
-    friend ITensor op(MPS const& ,std::string const&, int, Args const&);
-    friend MPS     randomCircuitMPS(SiteSet const& s, int m, Args const& args);
-
     }; //class MPS
 
 template <typename MPSType>
@@ -873,73 +868,105 @@ MPSType
 sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
 
-ITensor inline
-op(MPS const& mps,
-   std::string const& opname,
-   int i,
-   Args const& args = Args::global())
+//
+//  Template implementation of expect function for Real and Complex types and fixed site list.
+//
+template <class T> std::vector<std::vector<T>> 
+expectT(const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
 {
-    assert(mps.pm_sites_.size()>0);
-    SiteSet::SitePtr s=mps.pm_sites_[i];
-    assert(s);
-    //If opname of the form "Name1*Name2",
-    //return product of Name1 operator times Name2 operator
-    // JRTODO: This cloned from siteset.h line 450.  Need to refactor to get this logic in ONE place.
-    //         Save for SiteStore refactoring
-    auto found = opname.find_first_of('*');
-    if(found != std::string::npos)
-    {
-        auto op1 = [](std::string const& opname, size_t n)
-            {
-            return opname.substr(0,n);
-            };
-        auto op2 = [](std::string const& opname, size_t n)
-            {
-            return opname.substr(n+1);
-            };
-        return multSiteOps(s->op(op1(opname,found),args),
-                           s->op(op2(opname,found),args));
-    }
-    return s->op(opname,args);
-}
-
-typedef std::pair<int,int> ipair; //Use ipair for defining a site range.
-
-template <typename... opArgs> 
-Matrix1 expect(const MPS& _psi,const ipair& site_range, opArgs... str_ops)
-{
-    MPS psi=_psi; //Work with copy because we need to move the orth-center
+//
+//  First make sure the SiteSet and MPS are mutually consistent.
+//    
+    assert(sites.length()==_psi.length()); //Is assert good enough here?
+    for (int j=1;j<=sites.length();j++)
+        assert(sites(j).dim()==siteIndex(_psi,j).dim());
+//
+// Work with copy because we need to move the orth-center
+//        
+    MPS psi=_psi; 
     if (!isOrtho(psi)) psi.orthogonalize();
-    psi.normalize();
-    auto sites = siteInds(psi); //required for dag operator.
-    std::vector<string> vops={str_ops...};
+    psi.normalize(); //Is this expensive if we are already orthogonalized?
 
-    Matrix1 ex(site_range.second-site_range.first+1,vops.size());
-    for (auto i:range1(site_range.first,site_range.second))
+    std::vector<std::vector<T>> ex;
+    for (auto i:site_list)
     {
         psi.position(i); //Set the ortho centre.
-        int op_index=1;
+        std::vector<T> exi; //row of data for site i
         for (auto str_op:vops)
         {
-            auto e=psi(i) * op(psi,str_op,i) * dag(prime(psi(i), sites(i)));
-            ex(i-site_range.first+1,op_index++)=e.elt();
+            auto e=psi(i) * sites.op(str_op,i) * dag(prime(psi(i), sites(i)));
+            exi.push_back(eltT<T>(e));
         }
+        ex.push_back(exi); //push row into the table.
     }
 
     return ex;
 }
 
 //
-//  C++ is not as easy going as Julia for combining varargs and default parameters.
-//  So we function forward to get the same effect.
+//  Convert range to explicit list in one place
 //
-template <typename... opArgs> inline
-Matrix1 expect(const MPS& _psi,opArgs... str_ops)
+template <class T> std::vector<std::vector<T>> 
+expectT(const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
 {
-    return expect(_psi,{1,_psi.length()},str_ops...);
+    if (*site_range==*site_range.end()) site_range=range1(_psi.length());
+    std::vector<int> site_list;
+    for (auto i:site_range) site_list.push_back(i);
+    return expectT<T>(sites,_psi,vops,site_list);
 }
 
+//2D container for returning tables of numbers from expect and correlation functions
+typedef std::vector<std::vector<Real   >> VecVecR;  
+typedef std::vector<std::vector<Complex>> VecVecC;  
 
+//
+//  User versions of expect (Real) and expectC(Complex).  These just function forward to the template than does the work.
+//  We need hand code all 4 combinations of {Real,Complex}(X){range,list}
+//
+inline VecVecR 
+expect (const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Real>(sites,_psi,vops,site_range);
+}
+inline VecVecC 
+expectC(const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Complex>(sites,_psi,vops,site_range);
+}
+inline VecVecR 
+expect (const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Real>(sites,_psi,vops,site_list);
+}
+inline VecVecC 
+expectC(const SiteSet& sites,
+        const MPS& _psi, 
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Complex>(sites,_psi,vops,site_list);
+}
 
 std::ostream& 
 operator<<(std::ostream& s, MPS const& M);

@@ -20,8 +20,6 @@
 
 namespace itensor {
 
-class SiteBase;
-
 //
 // Classes derived from SiteSet 
 // represent the Hilbert space of a 
@@ -42,17 +40,7 @@ struct SiteStore;
 
 class SiteSet
     {
-
-    public: //mps will use these typedefs
-//    typedef std::shared_ptr<SiteBase> SitePtr; //use shared pointer to get copy on write semantics.
-    typedef SiteBase*                 SitePtr; //use raw pointer for now and let SiteStore do the mem management
-    typedef std::vector    <SitePtr>  SitePtrs; //Should be safe to copy.
-
-    private:
-    // Can we replace the sites_ object with an array of site pointers?.
-    SitePtrs                   pm_sites_; //Polymorphic array of sites;
     std::shared_ptr<SiteStore> sites_;
-
     public:
 
     using String = std::string;
@@ -84,9 +72,6 @@ class SiteSet
     //Return an IndexSet of the indices of the SiteSet
     IndexSet
     inds() const;
-
-    // Share out the polymorphic vector of site base pointers.
-    const SitePtrs getPMSites() const {return pm_sites_;}
 
     //Index at site i set to a certain state
     //indicated by the string "state"
@@ -139,21 +124,15 @@ class SiteSet
     void
     init(SiteStore && sites);
 
-    void
-    insert(int j, SiteBase*);
-
     template<typename SiteType>
     void
     readType(std::istream & s);
 
-    }; //class SiteSet
+    };
 
-//----------------------------------------------------------------------
 //
-//  Abstract SiteBase is a virtual base class for concrete site types.
-//  This allows us to store a polymorphic array similar to std::vector<SiteBase*>
+// "Base" type for virtual mechanism
 //
-
 class SiteBase 
     { 
     public:
@@ -206,7 +185,7 @@ class SiteHolder : public SiteBase
         }
     };
 
-class GenericSite : public virtual SiteBase
+class GenericSite
     { 
     Index i;
     public:
@@ -265,13 +244,6 @@ struct SiteStore
         return this->length();
         }
 
-    SiteBase*
-    operator()(int j) const
-        {
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
-        return sites_.at(j).get();
-        }
-
     Index
     si(int j) const 
         { 
@@ -295,46 +267,34 @@ struct SiteStore
         if(not sites_.at(j)) Error("Unassigned site in SiteStore");
         return sites_[j]->op(opname,args);
         }
-    }; //struct SiteStore
+    };
 
 
-//---------------------------------------------------------------------------
-//
-//  SiteSet inline implementations.
-//
 inline SiteSet::
 SiteSet(int N, int d)
-    : pm_sites_(N+1) // 1 based vector with unused [0] element
     {
     auto sites = SiteStore(N);
     for(int j = 1; j <= N; ++j)
         {
         auto I = Index(d,"Site,n="+str(j));
         sites.set(j,GenericSite(I));
-        insert(j,sites(j));
         }
     SiteSet::init(std::move(sites));
     }
 
 inline SiteSet::
 SiteSet(int N)
-    : pm_sites_(N+1) // 1 based vector with unused [0] element
     {
     SiteSet::init(SiteStore(N));
-    // We don;t know d here so we can't create any sites.
     }
 
 inline SiteSet::
 SiteSet(IndexSet const& is)
-    : pm_sites_(is.length()+1) // 1 based vector with unused [0] element
     {
     auto N = is.length();
     auto sites = SiteStore(N);
     for(auto j : range1(N))
-    {
         sites.set(j,GenericSite(is(j)));
-        insert(j,sites(j));
-    }
     SiteSet::init(std::move(sites));
     }
 
@@ -458,25 +418,21 @@ op(String const& opname,
         }
     }
 
-
-
+ITensor inline
+op(SiteSet const& sites,
+   std::string const& opname,
+   int i,
+   Args const& args = Args::global())
+    {
+    return sites.op(opname,i,args);
+    }
 
 void inline SiteSet::
 init(SiteStore && store)
     { 
     sites_ = std::make_shared<SiteStore>(std::move(store));
     }
-    
-void inline SiteSet::
-insert(int j, SiteBase* s)
-{
-    assert(s);
-    assert(j>0);
-    assert(static_cast<SitePtrs::size_type>(j)<=pm_sites_.size());
-    pm_sites_[j]=SitePtr(s);
-}
-    
-    
+
 template<typename SiteType>
 void SiteSet::
 readType(std::istream & s)
@@ -490,12 +446,10 @@ readType(std::istream & s)
             auto I = Index{};
             I.read(s);
             store.set(j,SiteType(I));
-            insert(j,store(j)); //JRTODO support factory for unpickling polymorphic sites.
             }
         init(std::move(store));
         }
     }
-
 
 void inline SiteSet::
 write(std::ostream & s) const
@@ -510,19 +464,6 @@ write(std::ostream & s) const
         }
     }
 
-//---------------------------------------------------------------------------
-//
-//  SiteSet inline friend functions.
-//
-ITensor inline
-op(SiteSet const& sites,
-   std::string const& opname,
-   int i,
-   Args const& args = Args::global())
-    {
-    return sites.op(opname,i,args);
-    }
-
 inline std::ostream& 
 operator<<(std::ostream& s, SiteSet const& sites)
     {
@@ -534,10 +475,6 @@ operator<<(std::ostream& s, SiteSet const& sites)
     return s;
     }
 
-//---------------------------------------------------------------------------
-//
-//  Templated base class for concrete SiteSet classes.
-//
 template<typename SiteType>
 class BasicSiteSet : public SiteSet
     {
@@ -547,27 +484,21 @@ class BasicSiteSet : public SiteSet
 
     BasicSiteSet(int N, 
                  Args const& args = Args::global())
-         : SiteSet(N)
         {
         auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
             sites.set(j,SiteType({args,"SiteNumber=",j}));
-            insert (j,sites(j)); //Allow SiteStore to handle memory management for now.
             }
         SiteSet::init(std::move(sites));
         }
 
     BasicSiteSet(IndexSet const& is)
-         : SiteSet(is.length())
         {
         int N = is.length();
         auto sites = SiteStore(N);
         for(auto j : range1(N))
-        {
             sites.set(j,SiteType(is(j)));
-            insert (j,new SiteType(is(j)));
-        }
         SiteSet::init(std::move(sites));
         }
 
@@ -588,20 +519,17 @@ class MixedSiteSet : public SiteSet
 
     MixedSiteSet(int N, 
                  Args const& args = Args::global())
-        : SiteSet(N)
         {
         auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
             if(j%2 == 1) sites.set(j,ASiteType({args,"SiteNumber=",j}));
             else         sites.set(j,BSiteType({args,"SiteNumber=",j}));
-            insert (j,sites(j));
             }
         SiteSet::init(std::move(sites));
         }
 
     MixedSiteSet(IndexSet const& is)
-        : SiteSet(is.length())
         {
         int N = is.length();
         auto sites = SiteStore(N);
@@ -609,7 +537,6 @@ class MixedSiteSet : public SiteSet
             {
             if(j%2 == 1) sites.set(j,ASiteType(is(j)));
             else         sites.set(j,BSiteType(is(j)));
-            insert (j,sites(j));
             }
         SiteSet::init(std::move(sites));
         }
@@ -627,8 +554,6 @@ class MixedSiteSet : public SiteSet
                 I.read(s);
                 if(j%2==1) store.set(j,ASiteType(I));
                 else       store.set(j,BSiteType(I));
-
-                insert (j,store(j));
                 }
             init(std::move(store));
             }

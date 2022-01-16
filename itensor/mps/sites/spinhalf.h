@@ -24,7 +24,7 @@ class SpinHalfSite;
 
 using SpinHalf = BasicSiteSet<SpinHalfSite>;
 
-class SpinHalfSite : public virtual SiteBase
+class SpinHalfSite
     {
     Index s;
     public:

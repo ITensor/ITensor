@@ -24,7 +24,7 @@ class Z3Site;
 
 using Z3 = BasicSiteSet<Z3Site>;
 
-class Z3Site : public virtual SiteBase
+class Z3Site
     {
     Index s;
     public:

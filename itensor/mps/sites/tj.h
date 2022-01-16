@@ -24,7 +24,7 @@ class tJSite;
 
 using tJ  = BasicSiteSet<tJSite>;
 
-class tJSite : public virtual SiteBase
+class tJSite
     {
     Index s;
     public:
