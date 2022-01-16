@@ -35,7 +35,6 @@ class MPS
     int atb_;
     std::string writedir_;
     bool do_write_;
-
     public:
 
     //
