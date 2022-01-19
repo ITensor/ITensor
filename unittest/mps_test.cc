@@ -415,7 +415,7 @@ SECTION("expect Real Psi, Real Ops, S1/2 No QNs, range")
     MPS       psi   = randomMPS(InitState(sites,"Up")); 
 
     // Test with the site range option
-    auto ex=expect(sites,psi,{"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+    auto ex=expect(psi,sites,{"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "   Sz        ISy       Sx        S+        S-        S2        Sz*Sz    ISy*ISy    Sx*Sx     projUp    projDn" << std::endl;
@@ -431,6 +431,12 @@ SECTION("expect Real Psi, Real Ops, S1/2 No QNs, range")
         CHECK_CLOSE(Sx,0.5*(Sp+Sm));
         CHECK_CLOSE(ISy,0.5*(Sp-Sm));
     }
+    
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+    
 }
 
 SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
@@ -439,7 +445,7 @@ SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
     MPS       psi   = randomMPS(InitState(sites,"Up")); 
 
     // Test with the site range option
-    auto ex=expectC(sites,psi,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
     // ex should be of type: VecVecC
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
@@ -456,6 +462,10 @@ SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
         CHECK_CLOSE(Sx,0.5*(Sp+Sm));
         CHECK_CLOSE(Sy,0.5*(Sp-Sm));
     }
+    // Test single operator version
+    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
 }
 
 SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
@@ -464,7 +474,7 @@ SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
     MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
 
     // Test with the site range option
-    auto ex=expectC(sites,psi,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "      Sz        Sy       Sx             S+                 S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
@@ -480,6 +490,10 @@ SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
         CHECK_CLOSE(Sx,0.5*(Sp+Sm));
         CHECK_CLOSE(Sy,Complex(0,-0.5)*(Sp-Sm));
     }
+    // Test single operator version
+    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
 }
 
 
@@ -489,7 +503,7 @@ SECTION("expect Real S1/2 With QNs ferro, site list")
     MPS       psi   = randomMPS(InitState(sites,"Up"));
 
     // Only ops that commute with Sz are allowed here.
-    auto ex=expect(sites,psi,{"Sz","S+","S-","S2","Sz*Sz","projUp","projDn"},{1,3,5,7,9}) ;
+    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Sz*Sz","projUp","projDn"},{1,3,5,7,9}) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "  Sz        S+        S-        S2        Sz*Sz     projUp    projDn" << std::endl;
@@ -507,6 +521,10 @@ SECTION("expect Real S1/2 With QNs ferro, site list")
         CHECK_CLOSE(projDn,0.0);
         CHECK_CLOSE(S2,0.75);
     }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz",{1,3,5,7,9}) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
 }
 
 
@@ -515,7 +533,7 @@ SECTION("expect Electron With QNs, no range, no site list ")
     SiteSet   sites = Electron(N);
     MPS       psi   = randomMPS(InitState(sites,"Up"));
 
-    auto ex=expect(sites,psi,{"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot"}) ;
+    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot"}) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "  Sz        S+        S-        S2        Nup       Ndn       NupDn     Ntot" << std::endl;
@@ -532,6 +550,10 @@ SECTION("expect Electron With QNs, no range, no site list ")
         CHECK_CLOSE(Nupdn,0.0);
         CHECK_CLOSE(Ntot,1.0);
     }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
 }
 
 
@@ -540,7 +562,7 @@ SECTION("expect Fermion No QNs ")
     SiteSet   sites = Fermion(N, {"ConserveQNs=",false});
     MPS       psi   = randomMPS(sites);
 
-    auto ex=expect(sites,psi,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "    N        Cdag*C      Adag*A     F     projEmp   projOcc" << std::endl;
@@ -556,6 +578,10 @@ SECTION("expect Fermion No QNs ")
         CHECK_CLOSE(projOcc,NN);
         CHECK_CLOSE(projOcc+projEmp,1.0);
     }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Cdag*C") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][1]);
 }
 
 
@@ -564,7 +590,7 @@ SECTION("expect Fermion With QNs ")
     SiteSet   sites = Fermion(N, {"ConserveQNs=",true});
     MPS       psi   = randomMPS(InitState(sites,"1"));
 
-    auto ex=expect(sites,psi,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
 #ifdef EXPECT_VERBOSE
     std::cout << "expect table" << std::endl;
     std::cout << "    N       Cdag*C      Adag*A     F      projEmp   projOcc" << std::endl;
@@ -581,6 +607,10 @@ SECTION("expect Fermion With QNs ")
         CHECK_CLOSE(projOcc,NN);
         CHECK_CLOSE(projOcc+projEmp,1.0);
     }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Cdag*C") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][1]);
 }
 
 
