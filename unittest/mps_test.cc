@@ -169,6 +169,20 @@ SECTION("Random constructors, QN conserved (dim==1)")
     CHECK(checkTags(psi));
     }
 
+SECTION("Random with prescribed bond dimensions")
+    {
+    auto psi = randomMPS(shsites,1);
+    for(auto n : range1(N-1))
+      {
+      CHECK_EQUAL(1,dim(linkIndex(psi,n)));
+      }
+    psi = randomMPS(shsites,2);
+    for(auto n : range1(N-1))
+      {
+      CHECK_EQUAL(2,dim(linkIndex(psi,n)));
+      }
+    }
+
 SECTION("MPSAddition 1")
     {
     auto sites = Fermion(10);
