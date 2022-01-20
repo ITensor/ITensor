@@ -867,6 +867,166 @@ MPSType
 sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
 
+//
+//  Template implementation of expect function for Real and Complex types and fixed site list.
+//
+template <class T> std::vector<std::vector<T>> 
+expectT(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+//
+//  First make sure the SiteSet and MPS are mutually consistent.
+//    
+    assert(sites.length()==_psi.length()); //Is assert good enough here?
+    for (int j=1;j<=sites.length();j++)
+        assert(sites(j).dim()==siteIndex(_psi,j).dim());
+//
+// Work with copy because we need to move the orth-center
+//        
+    MPS psi=_psi; 
+    if (!isOrtho(psi)) psi.orthogonalize();
+    psi.normalize(); //Is this expensive if we are already orthogonalized?
+
+    std::vector<std::vector<T>> ex;
+    for (auto i:site_list)
+    {
+        psi.position(i); //Set the ortho centre.
+        std::vector<T> exi; //row of data for site i
+        for (auto str_op:vops)
+        {
+            auto e=psi(i) * sites.op(str_op,i) * dag(prime(psi(i), sites(i)));
+            exi.push_back(eltT<T>(e));
+        }
+        ex.push_back(exi); //push row into the table.
+    }
+
+    return ex;
+}
+
+//
+//  Convert range to explicit list in one place
+//
+template <class T> std::vector<std::vector<T>> 
+expectT(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    if (*site_range==*site_range.end()) site_range=range1(_psi.length());
+    std::vector<int> site_list;
+    for (auto i:site_range) site_list.push_back(i);
+    return expectT<T>(_psi,sites,vops,site_list);
+}
+
+//  1D containers for returning arrays of numbers from expect().
+typedef std::vector<Real   > VecR;  
+typedef std::vector<Complex> VecC;  
+//  2D containers for returning tables of numbers from expect() and correlation functions
+typedef std::vector<VecR> VecVecR;  
+typedef std::vector<VecC> VecVecC;  
+
+//
+//  User versions of expect (Real) and expectC(Complex).  These just function forward to the template than does the work.
+//  We need hand code all 4 combinations of {Real,Complex}(X){range,list}
+//
+inline VecVecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Real>(_psi,sites,vops,site_range);
+}
+
+
+inline VecVecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Complex>(_psi,sites,vops,site_range);
+}
+
+inline VecVecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Real>(_psi,sites,vops,site_list);
+}
+
+inline VecVecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Complex>(_psi,sites,vops,site_list);
+}
+
+//
+//  Single operator versions
+//
+
+inline VecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return expectT<Real>(_psi,sites,vops,site_range)[0];
+}
+
+inline VecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return expectT<Complex>(_psi,sites,vops,site_range)[0];
+}
+
+inline VecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        std::vector<int> site_list 
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return expectT<Real>(_psi,sites,vops,site_list)[0];
+}
+
+inline VecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        std::vector<int> site_list 
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return expectT<Complex>(_psi,sites,vops,site_list)[0];
+}
+
+
 std::ostream& 
 operator<<(std::ostream& s, MPS const& M);
 

@@ -1,13 +1,40 @@
 #include "test.h"
 #include "itensor/mps/mps.h"
 #include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/sites/electron.h"
 #include "itensor/mps/sites/fermion.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
+#include "itensor/util/iterate.h"
 #include "mps_mpo_test_helper.h"
+#include <iomanip>
 
 using namespace itensor;
 using std::vector;
+
+//
+//  os << VecVecT for viewing the output of the expect function.
+//
+template <typename T>
+std::ostream& operator<< (std::ostream& s, const std::vector<std::vector<T>>& m)
+{
+    for(auto& r : m)
+        {
+        s << "|";
+        for(auto& c : r)
+            {
+            if (std::fabs(std::imag(c))<1e-15)
+                s << formatVal(std::real(c));
+            else
+                s << formatVal(c);
+                
+            s << (&c == &r.back() ? "|" : " ");
+            }
+        if(&r != &m.back()) s << "\n";
+        }
+        return s;
+}
+
 
 TEST_CASE("MPSTest")
 {
@@ -374,5 +401,217 @@ SECTION("prime")
     CHECK( prime(linkIndex(psi,3)) == linkIndex(psi4,3) );
 
     }
+
+//-----------------------------------------------------------------------------------
+//
+//  Begin testing for the expect(psi,ops) function.
+//
+//  un-comment this define if you want to see output of tables from the expect tests
+//#define EXPECT_VERBOSE
+
+SECTION("expect Real Psi, Real Ops, S1/2 No QNs, range")
+{
+    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(InitState(sites,"Up")); 
+
+    // Test with the site range option
+    auto ex=expect(psi,sites,{"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "   Sz        ISy       Sx        S+        S-        S2        Sz*Sz    ISy*ISy    Sx*Sx     projUp    projDn" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin(); //FYI type of i should be: VecVecR::value_type::const_iterator
+        Real Sz=*i++,ISy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+        CHECK_CLOSE(sqrt(Sz*Sz+ISy*ISy+Sx*Sx),0.5);
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+        CHECK_CLOSE(ISy,0.5*(Sp-Sm));
+    }
+    
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+    
+}
+
+SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
+{
+    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(InitState(sites,"Up")); 
+
+    // Test with the site range option
+    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+    // ex should be of type: VecVecC
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "   Sz        Sy       Sx        S+        S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+        CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+        CHECK_CLOSE(Sy,0.5*(Sp-Sm));
+    }
+    // Test single operator version
+    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+}
+
+SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
+{
+    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+
+    // Test with the site range option
+    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "      Sz        Sy       Sx             S+                 S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+        CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+        CHECK_CLOSE(Sy,Complex(0,-0.5)*(Sp-Sm));
+    }
+    // Test single operator version
+    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+}
+
+
+SECTION("expect Real S1/2 With QNs ferro, site list")
+{
+    SiteSet   sites = SpinHalf(N);
+    MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+    // Only ops that commute with Sz are allowed here.
+    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Sz*Sz","projUp","projDn"},{1,3,5,7,9}) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "  Sz        S+        S-        S2        Sz*Sz     projUp    projDn" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,SzSz=*i++,projUp=*i++,projDn=*i++;
+        CHECK_CLOSE(Sz,0.5);
+        CHECK_CLOSE(SzSz,0.25);
+        CHECK_CLOSE(Sp,0.0);
+        CHECK_CLOSE(Sm,0.0);
+        CHECK_CLOSE(projUp,1.0);
+        CHECK_CLOSE(projDn,0.0);
+        CHECK_CLOSE(S2,0.75);
+    }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz",{1,3,5,7,9}) ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+}
+
+
+SECTION("expect Electron With QNs, no range, no site list ")
+{
+    SiteSet   sites = Electron(N);
+    MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot"}) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "  Sz        S+        S-        S2        Nup       Ndn       NupDn     Ntot" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,Nup=*i++,Ndn=*i++,Nupdn=*i++,Ntot=*i++;
+        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+        CHECK_CLOSE(S2,0.75);
+        CHECK_CLOSE(Nup,1.0);
+        CHECK_CLOSE(Ndn,0.0);
+        CHECK_CLOSE(Nupdn,0.0);
+        CHECK_CLOSE(Ntot,1.0);
+    }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Sz") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][0]);
+}
+
+
+SECTION("expect Fermion No QNs ")
+{
+    SiteSet   sites = Fermion(N, {"ConserveQNs=",false});
+    MPS       psi   = randomMPS(sites);
+
+    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "    N        Cdag*C      Adag*A     F     projEmp   projOcc" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
+        CHECK_CLOSE(F,1-2*NN);
+        CHECK_CLOSE(CdagC,NN);
+        CHECK_CLOSE(AdagA,NN);
+        CHECK_CLOSE(projOcc,NN);
+        CHECK_CLOSE(projOcc+projEmp,1.0);
+    }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Cdag*C") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][1]);
+}
+
+
+SECTION("expect Fermion With QNs ")
+{
+    SiteSet   sites = Fermion(N, {"ConserveQNs=",true});
+    MPS       psi   = randomMPS(InitState(sites,"1"));
+
+    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+#ifdef EXPECT_VERBOSE
+    std::cout << "expect table" << std::endl;
+    std::cout << "    N       Cdag*C      Adag*A     F      projEmp   projOcc" << std::endl;
+    std::cout << ex << std::endl;
+#endif
+    for (auto& j:ex) //site loop
+    {
+        auto i=j.begin();
+        double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
+        CHECK_CLOSE(NN,1.0);
+        CHECK_CLOSE(F,1.0-2*NN);
+        CHECK_CLOSE(CdagC,NN);
+        CHECK_CLOSE(AdagA,NN);
+        CHECK_CLOSE(projOcc,NN);
+        CHECK_CLOSE(projOcc+projEmp,1.0);
+    }
+    // Test single operator version
+    auto ex1=expect(psi,sites,"Cdag*C") ;
+    for (VecR::size_type i=0;i<ex1.size();i++)
+        CHECK(ex1[i]==ex[i][1]);
+}
+
 
 }
