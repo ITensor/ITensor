@@ -227,6 +227,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
 
     //Make N'th MPS tensor
     int chi = dim(s(N));
+    chi = std::min(m,chi);
     l[N-1] = Index(chi,format("Link,l=%d",N-1));
     auto O = randomOrthog(chi,dim(s(N)));
     M.ref(N) = matrixITensor(O,l[N-1],s(N));
