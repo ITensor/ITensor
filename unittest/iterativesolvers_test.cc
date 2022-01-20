@@ -373,6 +373,70 @@ SECTION("Arnoldi (QN)")
 
     }
 
+SECTION("arnoldi (multiple eigenvectors)")
+    {
+    auto i = Index(10,"i");
+    auto A = randomITensor(prime(i), i);
+
+    auto v1r = randomITensor(i);
+    auto lambda1r = arnoldi(ITensorMap(A),v1r,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
+
+    auto v1l = randomITensor(i);
+    auto lambda1l = arnoldi(ITensorMap(swapPrime(A,0,1)),v1l,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
+
+    auto v2r = randomITensor(i);
+    auto lambda2r = arnoldi(ITensorMap(A-lambda1r*prime(v1r)*v1l),v2r,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
+
+    auto v2l = randomITensor(i);
+    auto lambda2l = arnoldi(ITensorMap(swapPrime(A,0,1)-lambda1l*prime(v1l)*v1r),v2r,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
+
+    CHECK_CLOSE(real(lambda1l), real(lambda1r));
+    CHECK_CLOSE(imag(lambda1l), imag(lambda1r));
+    CHECK_CLOSE(real(lambda2l), real(lambda2r));
+
+    // XXX: BROKEN
+    //CHECK_CLOSE(imag(lambda2l), imag(lambda2r));
+
+    CHECK_CLOSE(norm(noPrime(A*v1r) - lambda1r*v1r), 0.0);
+
+    // XXX: BROKEN
+    //CHECK_CLOSE(norm(noPrime(A*v2r) - lambda2r*v2r), 0.0);
+
+    auto x = randomITensor(i);
+    auto y = randomITensor(i);
+    auto vec = std::vector<ITensor>({x,y});
+
+    auto lambda = arnoldi(ITensorMap(A),vec,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
+
+    CHECK_CLOSE(real(lambda[0]), real(lambda1r));
+    CHECK_CLOSE(imag(lambda[0]), imag(lambda1r));
+    CHECK_CLOSE(real(lambda[1]), real(lambda2r));
+
+    // XXX: BROKEN
+    //CHECK_CLOSE(imag(lambda[1]), imag(lambda2r));
+
+    CHECK_CLOSE(norm(noPrime(A*vec[0]) - lambda[0]*vec[0]), 0.0);
+
+    // XXX: BROKEN
+    //CHECK_CLOSE(norm(noPrime(A*vec[1]) - lambda[1]*vec[1]), 0.0);
+
+    // Compare to ED
+    auto [U,D] = eigen(A);
+
+    auto l = commonIndex(U, D);
+
+    CHECK_CLOSE(real(D.eltC(1,1)), real(lambda[0]));
+    CHECK_CLOSE(imag(D.eltC(2,2)), imag(lambda[1]));
+
+    // These should compare up to a phase
+    //PrintData(vec[0]);
+    //PrintData(U*setElt(l=1));
+
+    // XXX: BROKEN
+    //PrintData(vec[1]);
+    //PrintData(U*setElt(l=2));
+    }
+
 SECTION("applyExp (QNs)")
     {
     auto i = Index(QN(-1),10,QN(1),10,"i");
