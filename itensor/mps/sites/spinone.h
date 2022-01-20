@@ -21,8 +21,13 @@
 
 namespace itensor {
 
-class SpinOne : public SiteSet
+class SpinOneSite;
+
+//using SpinOne = BasicSiteSet<SpinOneSite>;
+
+class SpinOne : public BasicSiteSet<SpinOneSite>
     {
+    typedef BasicSiteSet<SpinOneSite> Base;
     public:
 
     SpinOne() { }
@@ -38,7 +43,7 @@ class SpinOne : public SiteSet
     };
 
 
-class SpinOneSite
+class SpinOneSite : public virtual SiteBase
     {
     Index s;
     public:
@@ -242,9 +247,9 @@ class SpinOneSite
 
 inline SpinOne::
 SpinOne(std::vector<Index> const& inds)
+    : Base(inds.size())
     {
     int N = inds.size();
-    auto sites = SiteStore(N);
     for(int j = 1, i = 0; j <= N; ++j, ++i)
         {
         auto& Ii = inds.at(i);
@@ -253,62 +258,58 @@ SpinOne(std::vector<Index> const& inds)
             printfln("Index at entry %d = %s",i,Ii);
             throw ITError("Only S=1 IQIndices allowed in SpinOne(vector<Index>) constructor");
             }
-        sites.set(j,SpinOneSite(Ii));
+        insert(j,new SpinOneSite(Ii));
         }
-    SiteSet::init(std::move(sites));
     }
 
 inline SpinOne::
 SpinOne(int N, 
         Args const& args)
+    : Base(N)
     {
     auto shedge = args.getBool("SHalfEdge",false);
     auto Lshedge = args.getBool("SHalfLeftEdge",false);
-
-    auto sites = SiteStore(N);
 
     auto start = 1;
     if(shedge || Lshedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
-        sites.set(1,SpinHalfSite(1,args));
+        insert(1,new SpinHalfSite(1,args));
         start = 2;
         }
 
     for(int j = start; j < N; ++j)
         {
-        sites.set(j,SpinOneSite(j,args));
+        insert(j,new SpinOneSite(j,args));
         }
 
     if(shedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
-        sites.set(N,SpinHalfSite(N,args));
+        insert(N,new SpinHalfSite(N,args));
         }
     else
         {
-        sites.set(N,SpinOneSite(N,args));
+        insert(N,new SpinOneSite(N,args));
         }
 
-    SiteSet::init(std::move(sites));
     }
 
 void inline SpinOne::
 read(std::istream& s)
     {
     int N = itensor::read<int>(s);
+    allocate(N);
     if(N > 0)
         {
-        auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
             auto I = Index{};
             I.read(s);
-            if(dim(I) == 3) store.set(j,SpinOneSite(I));
-            else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
+            if(dim(I) == 3) insert(j,new SpinOneSite(I));
+            else if(dim(I) == 2) insert(j,new SpinHalfSite(I));
             else throw ITError(format("SpinOne cannot read index of size %d",dim(I)));
             }
-        init(std::move(store));
         }
     }
 

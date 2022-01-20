@@ -35,12 +35,17 @@ namespace itensor {
 // of our MPS)
 //
 
+class SiteBase;
 class GenericSite;
-struct SiteStore;
 
 class SiteSet
     {
-    std::shared_ptr<SiteStore> sites_;
+ 
+    private:
+    typedef std::shared_ptr<SiteBase> SitePtr; //use shared pointer to get copy on write semantics.
+    typedef std::vector    <SitePtr>  SitePtrs; //Should be safe to copy.
+    SitePtrs pm_sites_; //Polymorphic array of sites;
+
     public:
 
     using String = std::string;
@@ -56,7 +61,7 @@ class SiteSet
     //Create SiteSet of length N (can be set using .set method)
     SiteSet(int N);
 
-    explicit operator bool() const { return bool(sites_); }
+    explicit operator bool() const { return pm_sites_.size()>1; } //compensate for dummy elements at index 0.
 
     int 
     length() const;
@@ -121,18 +126,24 @@ class SiteSet
 
     protected:
 
+    void 
+    allocate(int N);
+    
     void
-    init(SiteStore && sites);
+    insert(int j, SiteBase*);
 
     template<typename SiteType>
     void
     readType(std::istream & s);
 
-    };
+    }; //class SiteSet
 
+//----------------------------------------------------------------------
 //
-// "Base" type for virtual mechanism
+//  Abstract SiteBase is a virtual base class for concrete site types.
+//  This allows us to store a polymorphic array similar to std::vector<SiteBase*>
 //
+
 class SiteBase 
     { 
     public:
@@ -152,40 +163,7 @@ class SiteBase
     state(std::string const& state) = 0;
     };
 
-//
-// Derived "box" type with virtual methods
-// Wraps any object implementing the "SiteType" interface
-//
-template<typename SiteType>
-class SiteHolder : public SiteBase
-    { 
-    SiteType s;
-    public:
-
-    SiteHolder() { }
-
-    SiteHolder(SiteType && s_) : s(std::move(s_)) { }
-
-    virtual ~SiteHolder() { }
-
-    Index virtual
-    index() const { return s.index(); }
-
-    ITensor virtual
-    op(std::string const& opname,
-       Args const& args) const
-        {
-        return s.op(opname,args);
-        }
-
-    IndexVal virtual
-    state(std::string const& state)
-        {
-        return s.state(state);
-        }
-    };
-
-class GenericSite
+class GenericSite : public virtual SiteBase
     { 
     Index i;
     public:
@@ -213,94 +191,40 @@ class GenericSite
         }
     };
 
-
-struct SiteStore
-    {
-    using sptr = std::unique_ptr<SiteBase>;
-    using storage = std::vector<sptr>;
-    private:
-    storage sites_;
-    public:
-
-    SiteStore() { }
-
-    SiteStore(int N) : sites_(1+N) { }
-
-    template<typename SiteType>
-    void
-    set(int i, SiteType && s) 
-        {
-        sites_.at(i) = sptr(new SiteHolder<SiteType>(std::move(s)));
-        }
-
-    int
-    length() const { return sites_.empty() ? 0 : sites_.size()-1ul; }
-
-		// Deprecated in favor of .length()
-    int
-    N() const 
-        {
-				Global::warnDeprecated(".N() is deprecated in favor of length(SiteStore)");
-        return this->length();
-        }
-
-    Index
-    si(int j) const 
-        { 
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
-        return sites_[j]->index();
-        }
-
-    IndexVal
-    state(int j,
-          std::string const& state)
-        {
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
-        return sites_[j]->state(state);
-        }
-
-    ITensor
-    op(int j,
-       std::string const& opname,
-       Args const& args) const
-        {
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
-        return sites_[j]->op(opname,args);
-        }
-    };
-
-
+//---------------------------------------------------------------------------
+//
+//  SiteSet inline implementations.
+//
 inline SiteSet::
 SiteSet(int N, int d)
+    : pm_sites_(N+1) // 1 based vector with unused [0] element
     {
-    auto sites = SiteStore(N);
     for(int j = 1; j <= N; ++j)
         {
         auto I = Index(d,"Site,n="+str(j));
-        sites.set(j,GenericSite(I));
+        insert(j,new GenericSite(I));
         }
-    SiteSet::init(std::move(sites));
     }
 
 inline SiteSet::
 SiteSet(int N)
+    : pm_sites_(N+1) // 1 based vector with unused [0] element
     {
-    SiteSet::init(SiteStore(N));
+    // We don;t know d here so we can't create any sites.
     }
 
 inline SiteSet::
 SiteSet(IndexSet const& is)
+    : pm_sites_(is.length()+1) // 1 based vector with unused [0] element
     {
     auto N = is.length();
-    auto sites = SiteStore(N);
     for(auto j : range1(N))
-        sites.set(j,GenericSite(is(j)));
-    SiteSet::init(std::move(sites));
+        insert(j,new GenericSite(is(j)));
     }
 
 
 int inline SiteSet::
-length() const { return sites_ ? sites_->length() : 0; }
+length() const { return operator bool() ? pm_sites_.size()-1 : 0; } //1 based vector with dummy element at index 0
 
 int inline
 length(SiteSet const& sites) { return sites.length(); }
@@ -320,7 +244,7 @@ Index inline SiteSet::
 operator()(int i) const
     {
     if(not *this) Error("Cannot retrieve site from default-initialized SiteSet");
-    return sites_->si(i);
+    return pm_sites_[i]->index();
     }
 
 IndexSet inline SiteSet::
@@ -331,7 +255,7 @@ inds() const
     auto is = IndexSetBuilder(N);
     for( auto n : range1(N) )
         {
-        auto I = sites_->si(n);
+        auto I = (*this)(n); //Reuse op() function
         is.nextIndex(std::move(I));
         }
     return is.build();
@@ -341,14 +265,7 @@ IndexVal inline SiteSet::
 operator()(int i, String const& state) const
     {
     if(not *this) Error("Cannot retrieve state from default-initialized SiteSet");
-    return sites_->state(i,state);
-    }
-
-template<typename SiteType>
-void SiteSet::
-set(int i, SiteType && s) 
-    {
-    sites_->set(i,std::move(s));
+    return pm_sites_[i]->state(state);
     }
 
 bool inline
@@ -383,7 +300,7 @@ op(String const& opname,
     if(opname == "F")
         {
         try {
-            return sites_->op(i,opname,args);
+            return pm_sites_[i]->op(opname,args);
         } catch(...) {
             //
             // If no "F" operator defined by site set
@@ -414,10 +331,60 @@ op(String const& opname,
             return multSiteOps(op(op1(opname,found),i,args),
                                op(op2(opname,found),i,args));
             }
-        return sites_->op(i,opname,args);
+        return pm_sites_[i]->op(opname,args);
         }
     }
 
+// Toss out any old sites and replace with an array of N empty SitePtr .
+void inline SiteSet::allocate(int N)
+{
+    assert(N>1);
+    pm_sites_=SitePtrs(N+1); //Fake one based indexing.
+}
+        
+void inline SiteSet::
+insert(int j, SiteBase* s)
+{
+    assert(s);
+    assert(j>0);
+    assert(static_cast<SitePtrs::size_type>(j)<=pm_sites_.size());
+    pm_sites_[j]=SitePtr(s);
+}
+    
+    
+template<typename SiteType>
+void SiteSet::
+readType(std::istream & s)
+    {
+    int N = itensor::read<int>(s);
+    allocate(N); //Allocate array of site pointers
+    if(N > 0)
+        {
+        for(int j = 1; j <= N; ++j) 
+            {
+            auto I = Index{};
+            I.read(s);
+            insert(j,new SiteType(I)); //JRTODO support factory for unpickling polymorphic sites.
+            }
+        }
+    }
+
+
+void inline SiteSet::
+write(std::ostream & s) const
+    {
+    itensor::write(s,length());
+    if(pm_sites_.size())
+        {
+        for(int j = 1; j <= length(); ++j) 
+            (*this)(j).write(s);
+        }
+    }
+
+//---------------------------------------------------------------------------
+//
+//  SiteSet inline friend functions.
+//
 ITensor inline
 op(SiteSet const& sites,
    std::string const& opname,
@@ -425,43 +392,6 @@ op(SiteSet const& sites,
    Args const& args = Args::global())
     {
     return sites.op(opname,i,args);
-    }
-
-void inline SiteSet::
-init(SiteStore && store)
-    { 
-    sites_ = std::make_shared<SiteStore>(std::move(store));
-    }
-
-template<typename SiteType>
-void SiteSet::
-readType(std::istream & s)
-    {
-    int N = itensor::read<int>(s);
-    if(N > 0)
-        {
-        auto store = SiteStore(N);
-        for(int j = 1; j <= N; ++j) 
-            {
-            auto I = Index{};
-            I.read(s);
-            store.set(j,SiteType(I));
-            }
-        init(std::move(store));
-        }
-    }
-
-void inline SiteSet::
-write(std::ostream & s) const
-    {
-    itensor::write(s,length());
-    if(sites_)
-        {
-        for(int j = 1; j <= length(); ++j) 
-            {
-            sites_->si(j).write(s);
-            }
-        }
     }
 
 inline std::ostream& 
@@ -475,6 +405,10 @@ operator<<(std::ostream& s, SiteSet const& sites)
     return s;
     }
 
+//---------------------------------------------------------------------------
+//
+//  Templated base class for concrete SiteSet classes.
+//
 template<typename SiteType>
 class BasicSiteSet : public SiteSet
     {
@@ -484,22 +418,18 @@ class BasicSiteSet : public SiteSet
 
     BasicSiteSet(int N, 
                  Args const& args = Args::global())
+         : SiteSet(N)
         {
-        auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
-            {
-            sites.set(j,SiteType({args,"SiteNumber=",j}));
-            }
-        SiteSet::init(std::move(sites));
+            insert (j,new SiteType({args,"SiteNumber=",j})); 
         }
 
     BasicSiteSet(IndexSet const& is)
+         : SiteSet(is.length())
         {
         int N = is.length();
-        auto sites = SiteStore(N);
         for(auto j : range1(N))
-            sites.set(j,SiteType(is(j)));
-        SiteSet::init(std::move(sites));
+            insert (j,new SiteType(is(j)));
         }
 
     void
@@ -519,43 +449,40 @@ class MixedSiteSet : public SiteSet
 
     MixedSiteSet(int N, 
                  Args const& args = Args::global())
+        : SiteSet(N)
         {
-        auto sites = SiteStore(N);
         for(int j = 1; j <= N; ++j)
             {
-            if(j%2 == 1) sites.set(j,ASiteType({args,"SiteNumber=",j}));
-            else         sites.set(j,BSiteType({args,"SiteNumber=",j}));
+            if(j%2 == 1) insert(j,new ASiteType({args,"SiteNumber=",j}));
+            else         insert(j,new BSiteType({args,"SiteNumber=",j}));
             }
-        SiteSet::init(std::move(sites));
         }
 
     MixedSiteSet(IndexSet const& is)
+        : SiteSet(is.length())
         {
         int N = is.length();
-        auto sites = SiteStore(N);
         for(auto j : range1(N))
             {
-            if(j%2 == 1) sites.set(j,ASiteType(is(j)));
-            else         sites.set(j,BSiteType(is(j)));
+            if(j%2 == 1) insert(j,new ASiteType(is(j)));
+            else         insert(j,new BSiteType(is(j)));
             }
-        SiteSet::init(std::move(sites));
         }
 
     void
     read(std::istream& s)
         {
         int N = itensor::read<int>(s);
+        allocate(N); //Allocate array of site pointers
         if(N > 0)
             {
-            auto store = SiteStore(N);
             for(int j = 1; j <= N; ++j) 
                 {
                 auto I = Index{};
                 I.read(s);
-                if(j%2==1) store.set(j,ASiteType(I));
-                else       store.set(j,BSiteType(I));
+                if(j%2==1) insert(j,new ASiteType(I));
+                else       insert(j,new BSiteType(I));
                 }
-            init(std::move(store));
             }
         }
     };
@@ -630,6 +557,7 @@ op(SiteType const& s,
     {
     return s.op(opname,args);
     }
+
 
 } //namespace itensor
 

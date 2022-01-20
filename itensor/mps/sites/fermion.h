@@ -24,7 +24,7 @@ class FermionSite;
 
 using Fermion = BasicSiteSet<FermionSite>;
 
-class FermionSite
+class FermionSite : public virtual SiteBase
     {
     Index s;
     public:
