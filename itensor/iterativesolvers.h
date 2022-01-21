@@ -750,7 +750,7 @@ arnoldi(const BigMatrixT& A,
 
     if(maxsize == 1)
         {
-        if(norm(phi.front()) == 0) randomize(phi.front());
+        if(norm(phi.front()) == 0) phi.front().randomize();
         phi.front() /= norm(phi.front());
         ITensor Aphi(phi.front());
         A.product(phi.front(),Aphi);
@@ -804,9 +804,9 @@ arnoldi(const BigMatrixT& A,
             // "Deflate" previous eigenpairs:
             for(size_t o = 0; o < w; ++o)
                 {
-                //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j+1]));
+                //V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j]));
                 Complex overlap_;
-                gmres_details::dot(phi[o],V[j+1],overlap_);
+                gmres_details::dot(phi[o],V[j],overlap_);
                 V[j+1] += (-eigs.at(o)*phi[o]*overlap_);
                 }
 
@@ -831,7 +831,7 @@ arnoldi(const BigMatrixT& A,
                 if(pass == 1) nh = nrm;
 
                 if(nrm != 0) V.at(j+1) /= nrm;
-                else         randomize(V.at(j+1));
+                else         V.at(j+1).randomize();
                 }
 
             //for(int i1 = 0; i1 <= j+1; ++i1)
@@ -928,7 +928,7 @@ arnoldi(const BigMatrixT& A,
         if(nrm != 0)
             phi.at(w) /= nrm;
         else
-            randomize(phi.at(w));
+            phi.at(w).randomize();
 
         if(err < errgoal_) break;
 
