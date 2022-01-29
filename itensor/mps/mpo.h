@@ -426,6 +426,32 @@ innerC(MPS const& x,
        MPO const& A, 
        MPS const& y);
 
+// Generic calculate <x|A|y> 
+template <typename T> 
+T 
+innerT(MPS const& x,
+       MPO const& A, 
+       MPS const& y);
+
+template <> inline
+Real
+innerT<Real>(MPS const& x,
+             MPO const& A, 
+             MPS const& y)
+{
+    return inner(x,A,y);
+}
+
+template <> inline
+Complex
+innerT<Complex>(MPS const& x,
+                MPO const& A, 
+                MPS const& y)
+{
+    return innerC(x,A,y);
+}
+
+      
 // Calculate <Ax|By>
 void
 inner(MPO const& A, 
