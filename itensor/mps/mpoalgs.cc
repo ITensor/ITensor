@@ -193,7 +193,7 @@ MPS
 densityMatrixApplyMPOImpl(MPO const& K,
                           MPS const& psi,
                           Args args)
-    {
+    {       
     if( args.defined("Maxm") )
       {
       if( args.defined("MaxDim") )
@@ -214,6 +214,9 @@ densityMatrixApplyMPOImpl(MPO const& K,
     dargs.add("RespectDegenerate",args.getBool("RespectDegenerate",true));
     auto verbose = args.getBool("Verbose",false);
     auto normalize = args.getBool("Normalize",false);
+    auto dowrite = args.defined("WriteDim") && (maxLinkDim(psi) >= args.getInt("WriteDim"));
+    std::string writedir_ = "./";
+    if(dowrite) writedir_ = mkTempDir("E","./");
 
     auto N = length(psi);
 
@@ -225,26 +228,31 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     auto rand_plev = 14741;
 
-    auto res = psi;
+    auto res = MPS(N);
 
     //Set up conjugate psi and K
-    auto psic = psi;
-    auto Kc = K;
+    //auto psic = psi;
+    //auto Kc = K;
     //TODO: use sim(linkInds), sim(siteInds)
-    psic.dag().prime(rand_plev);
-    Kc.dag().prime(rand_plev);
+    //psic.dag().prime(rand_plev);
+    //Kc.dag().prime(rand_plev);
 
     // Make sure the original and conjugates match
-    for(auto j : range1(N-1)) 
-        Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
+    //for(auto j : range1(N-1)) 
+    //    Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
     auto E = std::vector<ITensor>(N+1);
-    E[1] = psi(1)*K(1)*Kc(1)*psic(1);
+    E[1] = psi(1)*K(1)*dag(K(1)).prime(rand_plev).prime(-rand_plev,uniqueSiteIndex(K,psi,1).prime(rand_plev))*dag(psi(1)).prime(rand_plev);
     for(int j = 2; j < N; ++j)
         {
-        E[j] = E[j-1]*psi(j)*K(j)*Kc(j)*psic(j);
+        E[j] = E[j-1]*psi(j)*K(j)*dag(K(j)).prime(rand_plev).prime(-rand_plev,uniqueSiteIndex(K,psi,j).prime(rand_plev))*dag(psi(j)).prime(rand_plev);
+        if(dowrite)
+            {
+            writeToFile(format("%s/E_%03d",writedir_,j-1),E[j-1]);
+            E[j-1] = ITensor();
+            }
         }
     if(verbose) println("done");
 
@@ -252,6 +260,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     auto O = psi(N)*K(N);
 
     auto rho = E[N-1] * O * dag(prime(O,rand_plev));
+    E[N-1] = ITensor();
 
     ITensor U,D;
     auto ts = tags(linkIndex(psi,N-1));
@@ -264,6 +273,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     for(int j = N-1; j > 1; --j)
         {
+        if(dowrite) readFromFile(format("%s/E_%03d",writedir_,j-1),E[j-1]);
         if(not maxdim_set)
             {
             //Infer maxdim from bond dim of original MPS
@@ -276,6 +286,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
             dargs.add("MaxDim",maxdim);
             }
         rho = E[j-1] * O * dag(prime(O,rand_plev));
+        E[j-1] = ITensor();
         ts = tags(linkIndex(psi,j-1));
         auto spec = diagPosSemiDef(rho,U,D,{dargs,"Tags=",ts});
         O = O*U*psi(j-1)*K(j-1);
@@ -288,6 +299,11 @@ densityMatrixApplyMPOImpl(MPO const& K,
     res.leftLim(0);
     res.rightLim(2);
 
+    if(dowrite)
+        {
+        const string cmdstr = "rm -fr " + writedir_;
+        system(cmdstr.c_str());
+        }
     return res;
     }
 
