@@ -228,26 +228,26 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     auto rand_plev = 14741;
 
-    auto res = MPS(N);
+    auto res = psi;
 
     //Set up conjugate psi and K
-    //auto psic = psi;
-    //auto Kc = K;
+    auto psic = psi;
+    auto Kc = K;
     //TODO: use sim(linkInds), sim(siteInds)
-    //psic.dag().prime(rand_plev);
-    //Kc.dag().prime(rand_plev);
+    psic.prime(rand_plev);
+    Kc.prime(rand_plev);
 
     // Make sure the original and conjugates match
-    //for(auto j : range1(N-1)) 
-    //    Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
+    for(auto j : range1(N-1)) 
+        Kc.ref(j).prime(-rand_plev,uniqueSiteIndex(Kc,psic,j));
 
     //Build environment tensors from the left
     if(verbose) print("Building environment tensors...");
     auto E = std::vector<ITensor>(N+1);
-    E[1] = psi(1)*K(1)*dag(K(1)).prime(rand_plev).prime(-rand_plev,uniqueSiteIndex(K,psi,1).prime(rand_plev))*dag(psi(1)).prime(rand_plev);
+    E[1] = psi(1)*K(1)*dag(Kc(1))*dag(psic(1));
     for(int j = 2; j < N; ++j)
         {
-        E[j] = E[j-1]*psi(j)*K(j)*dag(K(j)).prime(rand_plev).prime(-rand_plev,uniqueSiteIndex(K,psi,j).prime(rand_plev))*dag(psi(j)).prime(rand_plev);
+        E[j] = E[j-1]*psi(j)*K(j)*dag(Kc(j))*dag(psic(j));
         if(dowrite)
             {
             writeToFile(format("%s/E_%03d",writedir_,j-1),E[j-1]);
