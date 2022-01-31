@@ -1565,7 +1565,18 @@ correlationMatrixT(const MPS& _psi,
                   )
 {
     assert(checkConsistent(_psi,sites));
-    bool isHermitian= args.getBool("isHermitian",true);
+    
+    // Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
+    bool isHermitian=false; // Assume non-hermitian
+    if (args.defined("isHermitian")) // Did the user explicitly request something?
+        isHermitian= args.getBool("isHermitian"); // Honour users request
+    else
+    {
+        // In principle we could ask the SiteSet to interpret the operators and make decisions 
+        // based on symmetries.  For example <S+S-> happens to be symmetric for spins. 
+        // But for now we just keep it simple
+        if (_op1==_op2) isHermitian=true;
+    }
 
 //
 // Fix up the site range from default.
