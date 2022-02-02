@@ -3,6 +3,7 @@
 #include "itensor/mps/sites/spinhalf.h"
 #include "itensor/mps/sites/electron.h"
 #include "itensor/mps/sites/fermion.h"
+#include "itensor/mps/autompo.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
 #include "itensor/util/iterate.h"
@@ -11,30 +12,6 @@
 
 using namespace itensor;
 using std::vector;
-
-//
-//  os << VecVecT for viewing the output of the expect function.
-//
-template <typename T>
-std::ostream& operator<< (std::ostream& s, const std::vector<std::vector<T>>& m)
-{
-    for(auto& r : m)
-        {
-        s << "|";
-        for(auto& c : r)
-            {
-            if (std::fabs(std::imag(c))<1e-15)
-                s << formatVal(std::real(c));
-            else
-                s << formatVal(c);
-                
-            s << (&c == &r.back() ? "|" : " ");
-            }
-        if(&r != &m.back()) s << "\n";
-        }
-        return s;
-}
-
 
 TEST_CASE("MPSTest")
 {
@@ -415,6 +392,7 @@ SECTION("prime")
     CHECK( prime(linkIndex(psi,3)) == linkIndex(psi4,3) );
 
     }
+} //TEST_CASE("MPSTest")
 
 //-----------------------------------------------------------------------------------
 //
@@ -423,209 +401,560 @@ SECTION("prime")
 //  un-comment this define if you want to see output of tables from the expect tests
 //#define EXPECT_VERBOSE
 
-SECTION("expect Real Psi, Real Ops, S1/2 No QNs, range")
-{
-    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
-    MPS       psi   = randomMPS(InitState(sites,"Up")); 
+//
+//  Helper functions
+//    os << VecT and os << VecVecT for viewing the output of the expect 
+//    and correlationMatrix functions.
+//
 
-    // Test with the site range option
-    auto ex=expect(psi,sites,{"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "   Sz        ISy       Sx        S+        S-        S2        Sz*Sz    ISy*ISy    Sx*Sx     projUp    projDn" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
+template <typename T>
+std::ostream& operator<< (std::ostream& s, const vector<T>& v)
+{
+    s << "|";
+    for(auto& c : v)
+        {
+        if (std::fabs(std::imag(c))<1e-15)
+            s << formatVal(std::real(c));
+        else
+            s << formatVal(c);
+            
+        s << (&c == &v.back() ? "|" : " ");
+        }
+    s << "\n";
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<< (std::ostream& s, const vector<vector<T>>& m)
+{
+    for(auto& r : m)
+        s << r;
+    return s;
+}
+
+TEST_CASE("expect function")
+{
+    int N=10;
+
+    SECTION("expect Real Psi, Real Ops, S1/2 No QNs, range")
     {
-        auto i=j.begin(); //FYI type of i should be: VecVecR::value_type::const_iterator
-        Real Sz=*i++,ISy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
-        CHECK_CLOSE(sqrt(Sz*Sz+ISy*ISy+Sx*Sx),0.5);
-        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
-        CHECK_CLOSE(S2,0.75);
-        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
-        CHECK_CLOSE(ISy,0.5*(Sp-Sm));
+        SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up")); 
+
+        // Test with the site range option
+        auto ex=expect(psi,sites,{"Sz","ISy","Sx","S+","S-","S2","Sz*Sz","ISy*ISy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "   Sz        ISy       Sx        S+        S-        S2        Sz*Sz    ISy*ISy    Sx*Sx     projUp    projDn" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin(); //FYI type of i should be: VecVecR::value_type::const_iterator
+            Real Sz=*i++,ISy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+            CHECK_CLOSE(sqrt(Sz*Sz+ISy*ISy+Sx*Sx),0.5);
+            CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+            CHECK_CLOSE(S2,0.75);
+            CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+            CHECK_CLOSE(ISy,0.5*(Sp-Sm));
+        }
+        
+        // Test single operator version
+        auto ex1=expect(psi,sites,"Sz",range1(2,5)) ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][0]);
+        
+    }
+
+    SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
+    {
+        SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up")); 
+
+        // Test with the site range option
+        auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+        // ex should be of type: VecVecC
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "   Sz        Sy       Sx        S+        S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+            CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
+            CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+            CHECK_CLOSE(S2,0.75);
+            CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+            CHECK_CLOSE(Sy,0.5*(Sp-Sm));
+        }
+        // Test single operator version
+        auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][0]);
+    }
+
+    SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
+    {
+        SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+
+        // Test with the site range option
+        auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "      Sz        Sy       Sx             S+                 S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
+            CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
+            CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+            CHECK_CLOSE(S2,0.75);
+            CHECK_CLOSE(Sx,0.5*(Sp+Sm));
+            CHECK_CLOSE(Sy,Complex(0,-0.5)*(Sp-Sm));
+        }
+        // Test single operator version
+        auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][0]);
+    }
+
+
+    SECTION("expect Real S1/2 With QNs ferro, site list")
+    {
+        SiteSet   sites = SpinHalf(N);
+        MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+        // Only ops that commute with Sz are allowed here.
+        auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Sz*Sz","projUp","projDn"},{1,3,5,7,9}) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "  Sz        S+        S-        S2        Sz*Sz     projUp    projDn" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,SzSz=*i++,projUp=*i++,projDn=*i++;
+            CHECK_CLOSE(Sz,0.5);
+            CHECK_CLOSE(SzSz,0.25);
+            CHECK_CLOSE(Sp,0.0);
+            CHECK_CLOSE(Sm,0.0);
+            CHECK_CLOSE(projUp,1.0);
+            CHECK_CLOSE(projDn,0.0);
+            CHECK_CLOSE(S2,0.75);
+        }
+        // Test single operator version
+        auto ex1=expect(psi,sites,"Sz",{1,3,5,7,9}) ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][0]);
+    }
+
+
+    SECTION("expect Electron With QNs, no range, no site list ")
+    {
+        SiteSet   sites = Electron(N);
+        MPS       psi   = randomMPS(InitState(sites,"Up"));
+
+        auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot"}) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "  Sz        S+        S-        S2        Nup       Ndn       NupDn     Ntot" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,Nup=*i++,Ndn=*i++,Nupdn=*i++,Ntot=*i++;
+            CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
+            CHECK_CLOSE(S2,0.75);
+            CHECK_CLOSE(Nup,1.0);
+            CHECK_CLOSE(Ndn,0.0);
+            CHECK_CLOSE(Nupdn,0.0);
+            CHECK_CLOSE(Ntot,1.0);
+        }
+        // Test single operator version
+        auto ex1=expect(psi,sites,"Sz") ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][0]);
+    }
+
+
+    SECTION("expect Fermion No QNs ")
+    {
+        SiteSet   sites = Fermion(N, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(sites);
+
+        auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "    N        Cdag*C      Adag*A     F     projEmp   projOcc" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
+            CHECK_CLOSE(F,1-2*NN);
+            CHECK_CLOSE(CdagC,NN);
+            CHECK_CLOSE(AdagA,NN);
+            CHECK_CLOSE(projOcc,NN);
+            CHECK_CLOSE(projOcc+projEmp,1.0);
+        }
+        // Test single operator version
+        auto ex1=expect(psi,sites,"Cdag*C") ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][1]);
+    }
+
+
+    SECTION("expect Fermion With QNs ")
+    {
+        SiteSet   sites = Fermion(N, {"ConserveQNs=",true});
+        MPS       psi   = randomMPS(InitState(sites,"1"));
+
+        auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
+#ifdef EXPECT_VERBOSE
+        std::cout << "expect table" << std::endl;
+        std::cout << "    N       Cdag*C      Adag*A     F      projEmp   projOcc" << std::endl;
+        std::cout << ex << std::endl;
+#endif
+        for (auto& j:ex) //site loop
+        {
+            auto i=j.begin();
+            double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
+            CHECK_CLOSE(NN,1.0);
+            CHECK_CLOSE(F,1.0-2*NN);
+            CHECK_CLOSE(CdagC,NN);
+            CHECK_CLOSE(AdagA,NN);
+            CHECK_CLOSE(projOcc,NN);
+            CHECK_CLOSE(projOcc+projEmp,1.0);
+        }
+        // Test single operator version
+        auto ex1=expect(psi,sites,"Cdag*C") ;
+        for (VecR::size_type i=0;i<ex1.size();i++)
+            CHECK(ex1[i]==ex[i][1]);
+    }
+
+} //TEST_CASE("expect function")
+
+//-----------------------------------------------------------------------------------
+//
+//  Begin testing for the correlation_matrix(psi,sites,op1,op2,site_range) function.
+//
+
+
+//
+//  Helper functions
+//    Easy check: make sure the diagonal agree with expect.
+//
+template <typename T> 
+void checkDiagonalWithExpect(const MPS& psi,
+                   const SiteSet& sites,
+                   const std::pair<string,string>& op,
+                   const vector<vector<T>>& cm,
+                   detail::RangeHelper<int> site_range=range1(0))
+{
+    vector<string> op12;
+    op12.push_back(op.first+"*"+op.second);
+    vector<vector<T>> ex=expectT<T>(psi,sites,op12,site_range);
+    for (VecR::size_type i=0;i<cm.size();i++)
+        CHECK_CLOSE(cm[i][i],ex[i][0]);    
+}
+
+//
+//  Alternate version of the corr matrix calculated through autoMPO
+//
+template <typename T> 
+vector<vector<T>>
+AutoMPOCorrelationMatrix
+( MPS& psi,
+ const SiteSet& sites,
+ const std::pair<string,string>& op,
+ detail::RangeHelper<int> site_range=range1(0))
+{
+    fixRange(site_range,sites.length());
+    psi.orthogonalize();
+    psi.normalize();
+    vector<vector<T>> cm;
+    for (auto i:site_range)
+    {
+        vector<T> row;
+        for(auto j:site_range)
+        {
+          auto a = AutoMPO(sites);
+          a += op.first, i, op.second, j;
+          T cAutoMPO=innerT<T>(psi, toMPO(a), psi);
+          row.push_back(cAutoMPO);
+        }
+        cm.push_back(row);
+    }
+    return cm;   
+}
+//
+//  Check two matrices are equal within tolerance of CHECK_NEAR
+//
+template <typename T> 
+void checkMatrices
+   (const vector<vector<T>>& cm,
+    const vector<vector<T>>& cm_fromAutoMPO,
+    const std::pair<string,string>& op)
+{
+    bool pass=true;
+    CHECK_EQUAL(cm.size(),cm_fromAutoMPO.size());
+    typename vector<vector<T>>::const_iterator row_auto=cm_fromAutoMPO.begin();
+    for (auto row:cm)
+    {
+        CHECK_EQUAL(row.size(),row_auto->size());
+        typename vector<T>::const_iterator c_auto=row_auto->begin();
+        for(auto c:row)
+        {
+          CHECK_CLOSE(*c_auto,c);
+          pass = pass && (std::norm(*c_auto-c) < 1E-10);
+          c_auto++;
+        }
+        row_auto++;
+    }
+    if (!pass)
+    {
+        std::cout << "correlation matrix for <" << op.first << "_i*" << op.second << "_j>"  
+            << std::endl << cm << std::endl;
+        std::cout << "auto mpo    matrix for <" << op.first << "_i*" << op.second << "_j>"  
+            << std::endl << cm_fromAutoMPO << std::endl;            
+    }    
+}
+
+
+
+TEST_CASE("correlationMatrix function")
+{
+    int N=10,Nsmall=3; //Use small lattices since checks using autoMPO are CPU intensive. 
+
+    SECTION("correlationMatrix Real Psi, Real Ops, S1/2 No QNs, range")
+    {
+        SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up")); 
+        
+        // Test with the site range option
+        auto r=range1(2,7); //Don't use range here!!
+        auto Ns=last(r)-current(r); //Number of sites in the range
+        assert(Ns==6);
+        vector<std::pair<string,string>> ops({{"Sz","Sz"},{"S+","S-"},{"S-","S+"},{"ISy","ISy"}});
+
+        for (auto op:ops)
+        {
+            auto cm=correlationMatrix(psi,sites,op.first,op.second,r) ;
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op,r);
+            CHECK(cm.size()==Ns);
+            CHECK(cm[0].size()==Ns);
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm,r);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+        
+    }
+
+    // This type of cross correlation makes an non-symmetric correlation matrix.
+    SECTION("correlation_matrix Real Psi, Sz*Sx, S1/2 No QNs")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up")); 
+        
+        vector<std::pair<string,string>> ops({{"Sx","Sz"}});
+
+        for (auto op:ops)
+        {
+            string op12=op.first+"*"+op.second; //check accept "Sx*Sz" format
+            auto cm        =       correlationMatrix      (psi,sites,op.first,op.second,{"isHermitian",false}) ;
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op); 
+        } //ops loop
+        
+    }
+
+
+    SECTION("correlation_matrix Complex Psi, Complex Ops, S1/2 No QNs, range")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+        
+        vector<std::pair<string,string>> ops({{"Sz","Sz"},{"S+","S-"},{"S-","S+"},{"Sy","Sy"}});
+
+        for (auto op:ops)
+        {
+            auto cm=               correlationMatrixC        (psi,sites,op.first,op.second) ;
+            auto cm_autompo=AutoMPOCorrelationMatrix<Complex>(psi,sites,op);
+
+            checkDiagonalWithExpect<Complex>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+        
+    }
+
+    // This type of cross correlation makes a non-symmetric correlation matrix.
+    SECTION("correlation_matrix Complex Psi, Sz*Sx, S1/2 No QNs, isHermitian=false ")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+        
+        vector<std::pair<string,string>> ops({{"Sx","Sz"}});
+
+        for (auto op:ops)
+        {
+            auto cm=correlationMatrixC(psi,sites,op.first,op.second,{"isHermitian",false}) ;
+            auto cm_autompo=AutoMPOCorrelationMatrix<Complex>(psi,sites,op);
+
+            checkDiagonalWithExpect<Complex>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op); 
+        } //ops loop
+        
+    }
+    // This type of cross correlation makes a non-symmetric correlation matrix.
+    // Let the operator test decide that isHermitian should be false.
+    SECTION("correlation_matrix Complex Psi, Sz*Sx, S1/2 No QNs, isHermitian=undef ")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+        
+        vector<std::pair<string,string>> ops({{"Sx","Sz"}});
+
+        for (auto op:ops)
+        {
+            auto cm=correlationMatrixC(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Complex>(psi,sites,op);
+
+            checkDiagonalWithExpect<Complex>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op); 
+        } //ops loop
+        
     }
     
-    // Test single operator version
-    auto ex1=expect(psi,sites,"Sz",range1(2,5)) ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][0]);
+    SECTION("correlation_matrix Real Psi, Real Ops, S1/2 With QNs")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",true});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",false}); 
+        
+        vector<std::pair<string,string>> ops({{"Sz","Sz"},{"S+","S-"},{"S-","S+"}});
+
+        for (auto op:ops)
+        {
+            auto cm=correlationMatrix(psi,sites,op.first,op.second) ;
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+    }
+
+
+    SECTION("correlation_matrix Real Psi, Real Ops, Fermions No QNs")
+    {
+        SiteSet   sites = Fermion(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(sites);
+        
+        vector<std::pair<string,string>> ops({{"N","N"},{"Cdag","C"},{"Adag","A"},{"C","Cdag"},{"A","Adag"}});
+    //   vector<std::pair<string,string>> ops({{"A","Cdag"}}); //Known fail
+        for (auto op:ops)
+        {
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+      
+    }
+    SECTION("correlation_matrix Real Psi, Real Ops, Fermions with QNs")
+    {
+        SiteSet   sites = Fermion(Nsmall, {"ConserveQNs=",true});
+        MPS       psi   = randomMPS(InitState(sites,"1"));
+        
+        vector<std::pair<string,string>> ops({{"N","N"},{"Cdag","C"},{"Adag","A"},{"C","Cdag"},{"A","Adag"}});
+    //   vector<std::pair<string,string>> ops({{"A","Cdag"}}); //Known fail
+        for (auto op:ops)
+        {
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+      
+    }
+
+    SECTION("correlation_matrix Real Psi, Real symmetric Ops, Electrons No QNs")
+    {
+        SiteSet   sites = Electron(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(sites);
+        
+        vector<std::pair<string,string>> ops({{"Ntot","Ntot"},{"Nup","Nup"},{"Ndn","Ndn"},
+                                             {"Cdagup","Cup"},{"Adagup","Aup"},
+                                             {"Cdn","Cdagdn"},{"Adn","Adagdn"},
+                                             {"Sz","Sz"},{"S+","S-"}
+                                             });
+        for (auto op:ops)
+        {
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+      
+    }
+    SECTION("correlation_matrix Real Psi, Real non-symmetric Ops, Electrons No QNs")
+    {
+        SiteSet   sites = Electron(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(sites);
+        
+        vector<std::pair<string,string>> ops({{"Nup","Ndn"},{"Ntot","Nup"},
+                                             {"Sz","Ndn"},{"S+","Nup"}
+                                             });
+        for (auto op:ops)
+        {
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+      
+    }
     
-}
-
-SECTION("expect Real Psi, Complex Ops, S1/2 No QNs, range")
-{
-    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
-    MPS       psi   = randomMPS(InitState(sites,"Up")); 
-
-    // Test with the site range option
-    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
-    // ex should be of type: VecVecC
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "   Sz        Sy       Sx        S+        S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
+    SECTION("correlation_matrix Real Psi, Real Ops, Electrons With QNs")
     {
-        auto i=j.begin();
-        Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
-        CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
-        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
-        CHECK_CLOSE(S2,0.75);
-        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
-        CHECK_CLOSE(Sy,0.5*(Sp-Sm));
+        SiteSet   sites = Electron(Nsmall, {"ConserveQNs=",true});
+        MPS       psi   = randomMPS(InitState(sites,"Up"));
+        
+        vector<std::pair<string,string>> ops({{"Ntot","Ntot"},{"Nup","Nup"},{"Ndn","Ndn"},
+                                             {"Cdagup","Cup"},{"Adagup","Aup"},
+                                             {"Cdn","Cdagdn"},{"Adn","Adagdn"},
+                                             {"Nup","Ndn"},{"Ntot","Nup"},
+                                             {"Sz","Sz"},{"S+","S-"},
+                                             });
+        for (auto op:ops)
+        {
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
+
+            checkDiagonalWithExpect<Real>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op);
+        } //ops loop
+      
     }
-    // Test single operator version
-    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][0]);
-}
-
-SECTION("expect Complex Psi, Complex Ops, S1/2 No QNs, range")
-{
-    SiteSet   sites = SpinHalf(N, {"ConserveQNs=",false});
-    MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
-
-    // Test with the site range option
-    auto ex=expectC(psi,sites,{"Sz","Sy","Sx","S+","S-","S2","Sz*Sz","Sy*Sy","Sx*Sx","projUp","projDn"},range1(2,5)) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "      Sz        Sy       Sx             S+                 S-        S2        Sz*Sz     Sy*Sy     Sx*Sx     projUp    projDn" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
+    SECTION("correlation_matrix expect fail with mixed boson*fermion operator")
     {
-        auto i=j.begin();
-        Complex Sz=*i++,Sy=*i++,Sx=*i++,Sp=*i++,Sm=*i++,S2=*i++;
-        CHECK_CLOSE(sqrt(Sz*Sz+Sy*Sy+Sx*Sx),0.5);
-        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
-        CHECK_CLOSE(S2,0.75);
-        CHECK_CLOSE(Sx,0.5*(Sp+Sm));
-        CHECK_CLOSE(Sy,Complex(0,-0.5)*(Sp-Sm));
+        SiteSet   sites = Electron(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(sites);
+        
+        REQUIRE_THROWS(correlationMatrix(psi,sites,"A","Cdag",{"isHermitian",false}));
+      
     }
-    // Test single operator version
-    auto ex1=expectC(psi,sites,"Sz",range1(2,5)) ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][0]);
-}
+    
 
-
-SECTION("expect Real S1/2 With QNs ferro, site list")
-{
-    SiteSet   sites = SpinHalf(N);
-    MPS       psi   = randomMPS(InitState(sites,"Up"));
-
-    // Only ops that commute with Sz are allowed here.
-    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Sz*Sz","projUp","projDn"},{1,3,5,7,9}) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "  Sz        S+        S-        S2        Sz*Sz     projUp    projDn" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
-    {
-        auto i=j.begin();
-        Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,SzSz=*i++,projUp=*i++,projDn=*i++;
-        CHECK_CLOSE(Sz,0.5);
-        CHECK_CLOSE(SzSz,0.25);
-        CHECK_CLOSE(Sp,0.0);
-        CHECK_CLOSE(Sm,0.0);
-        CHECK_CLOSE(projUp,1.0);
-        CHECK_CLOSE(projDn,0.0);
-        CHECK_CLOSE(S2,0.75);
-    }
-    // Test single operator version
-    auto ex1=expect(psi,sites,"Sz",{1,3,5,7,9}) ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][0]);
-}
-
-
-SECTION("expect Electron With QNs, no range, no site list ")
-{
-    SiteSet   sites = Electron(N);
-    MPS       psi   = randomMPS(InitState(sites,"Up"));
-
-    auto ex=expect(psi,sites,{"Sz","S+","S-","S2","Nup","Ndn","Nupdn","Ntot"}) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "  Sz        S+        S-        S2        Nup       Ndn       NupDn     Ntot" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
-    {
-        auto i=j.begin();
-        Real Sz=*i++,Sp=*i++,Sm=*i++,S2=*i++,Nup=*i++,Ndn=*i++,Nupdn=*i++,Ntot=*i++;
-        CHECK_CLOSE(sqrt(Sz*Sz+0.5*(Sm*Sp+Sp*Sm)),0.5);
-        CHECK_CLOSE(S2,0.75);
-        CHECK_CLOSE(Nup,1.0);
-        CHECK_CLOSE(Ndn,0.0);
-        CHECK_CLOSE(Nupdn,0.0);
-        CHECK_CLOSE(Ntot,1.0);
-    }
-    // Test single operator version
-    auto ex1=expect(psi,sites,"Sz") ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][0]);
-}
-
-
-SECTION("expect Fermion No QNs ")
-{
-    SiteSet   sites = Fermion(N, {"ConserveQNs=",false});
-    MPS       psi   = randomMPS(sites);
-
-    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "    N        Cdag*C      Adag*A     F     projEmp   projOcc" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
-    {
-        auto i=j.begin();
-        double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
-        CHECK_CLOSE(F,1-2*NN);
-        CHECK_CLOSE(CdagC,NN);
-        CHECK_CLOSE(AdagA,NN);
-        CHECK_CLOSE(projOcc,NN);
-        CHECK_CLOSE(projOcc+projEmp,1.0);
-    }
-    // Test single operator version
-    auto ex1=expect(psi,sites,"Cdag*C") ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][1]);
-}
-
-
-SECTION("expect Fermion With QNs ")
-{
-    SiteSet   sites = Fermion(N, {"ConserveQNs=",true});
-    MPS       psi   = randomMPS(InitState(sites,"1"));
-
-    auto ex=expect(psi,sites,{"N","Cdag*C","Adag*A","F","projEmp","projOcc"}) ;
-#ifdef EXPECT_VERBOSE
-    std::cout << "expect table" << std::endl;
-    std::cout << "    N       Cdag*C      Adag*A     F      projEmp   projOcc" << std::endl;
-    std::cout << ex << std::endl;
-#endif
-    for (auto& j:ex) //site loop
-    {
-        auto i=j.begin();
-        double NN=*i++,CdagC=*i++,AdagA=*i++,F=*i++,projEmp=*i++,projOcc=*i++;
-        CHECK_CLOSE(NN,1.0);
-        CHECK_CLOSE(F,1.0-2*NN);
-        CHECK_CLOSE(CdagC,NN);
-        CHECK_CLOSE(AdagA,NN);
-        CHECK_CLOSE(projOcc,NN);
-        CHECK_CLOSE(projOcc+projEmp,1.0);
-    }
-    // Test single operator version
-    auto ex1=expect(psi,sites,"Cdag*C") ;
-    for (VecR::size_type i=0;i<ex1.size();i++)
-        CHECK(ex1[i]==ex[i][1]);
-}
-
-
-}
+}//TEST_CASE("correlationMatrix")

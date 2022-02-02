@@ -15,6 +15,7 @@
 //
 #include "itensor/mps/mps.h"
 #include "itensor/mps/mpo.h"
+#include "itensor/mps/autompo.h" //need this for SiteTerm
 #include "itensor/mps/localop.h"
 #include "itensor/util/print_macro.h"
 #include "itensor/util/str.h"
@@ -1536,6 +1537,185 @@ inner(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
     inner(psi,phi,re,im);
     return re;
     }
+
+
+//----------------------------------------------------------------
+//
+//  CorrelationMatrix() implementation
+//
+
+// Convert a null range into a 1..N range.
+void fixRange(detail::RangeHelper<int>&r,int N)
+{
+    if (*r==*r.end()) 
+        r=range1(1,N);
+}
+
+//-------------------------------------------------------------------------------------------
+//
+//  Template implementation of correlationMatrix function for Real and Complex types,
+//    The implementation assumes that Hilbert space for each site on the lattice is
+//    consistent with op1 and op2.  This could get rather complicated for a heterogeneous lattice
+//    with for example alternating fermionic and bosonic Hilbert spaces.  In such cases users will to 
+//    create custom code for the calculating correlations
+//
+template <class T> std::vector<std::vector<T>>
+correlationMatrixT(const MPS& _psi,
+                   const SiteSet& sites,
+                   const string& _op1,
+                   const string& _op2,
+                   detail::RangeHelper<int> site_range,
+                   Args const& args
+                  )
+{
+    assert(checkConsistent(_psi,sites));
+    
+    // Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
+    bool isHermitian=false; // Assume non-hermitian
+    if (args.defined("isHermitian")) // Did the user explicitly request something?
+        isHermitian= args.getBool("isHermitian"); // Honour users request
+    else
+    {
+        ITensor O1=sites.op(_op1, 1); 
+        ITensor O2=sites.op(_op2, 1);
+        // We need to decide if O1==O2^dagger allowing for some round off errors.
+        double eps=norm(O1 / norm(O1) - dag(swapPrime(O2, 0, 1) / norm(O2)));
+        if (eps<1e-10 || _op1==_op2) isHermitian=true;
+        // ISy needs this ^^^^^^^^ but only for efficiency
+    }
+
+//
+// Fix up the site range from default.
+//
+    fixRange(site_range,_psi.length());
+    auto start_site = current(site_range);
+    auto end_site = last(site_range)-1;
+//
+// Copy _psi (because we need to move the ortho centre around), set the ortho centre
+// and calculate the norm constant.
+//
+    MPS psi = _psi; 
+    if (!isOrtho(psi)) psi.orthogonalize();
+    psi.position(start_site);
+    Real norm2_psi = norm(psi(start_site));
+    norm2_psi*=norm2_psi; 
+    //
+    //  Handle fermion operators.
+    //
+    string op1=_op1;
+    string op2=_op2;
+    string onsiteOp = op1+"*"+op2;
+    SiteTerm st1(op1,1); //Site number doesn't matter?
+    SiteTerm st2(op2,1); //Site number doesn't matter?
+    bool fermionic1=isFermionic(st1);
+    bool fermionic2=isFermionic(st2);
+    if (fermionic1!=fermionic2) //for example A_i*C_j
+    {
+        //println("Operators ",onsiteOp);
+        throw std::runtime_error("correlationMatrix: Mixed fermionic and bosonic operators are not supported yet.");      
+    }
+ 
+    // Create and initialize the correlation matrix.
+    auto Nb = length(site_range);
+    std::vector<std::vector<T>> C; //correlation matrix.
+    for (auto i:site_range) C.push_back(std::vector<T>(Nb)),(void)i;// (void)i eliminates an unused i warning
+    
+    ITensor L(1.0); //Accumulated contraction from the left.
+    if (start_site > 1)
+    {
+        Index lind = commonIndex(psi(start_site), psi(start_site - 1));
+        L = delta(dag(lind), prime(lind)); //DxD kroneker delta.
+    }   
+     
+    for(auto i:site_range)
+    {
+        auto ci = i - start_site;  //index into cm matrix.
+        ITensor Li = L * psi(i); //Update accumulated contraction from the left.
+ 
+        // Get j == i diagonal correlations
+
+        // We now need to prime all indices on psi(i) except the link to site i+1.
+        IndexSet linds = uniqueInds(psi(i), psi(i+1)); //indices in psi(i) that are not in psi(i+1), i.e. not the link
+        ITensor psi_i_dag = dag(prime(psi(i), linds));
+        ITensor c=Li * sites.op(onsiteOp,i) * psi_i_dag/ norm2_psi;
+
+        assert(order(c)==0); //If there is any screw up in the priming we get a higher order tensor out.
+        C[ci][ci] =eltT<T>(c);
+        
+        //  Get j > i correlations
+        if (fermionic2) op1 += "*F"; 
+        ITensor Li12 = (Li * sites.op(op1, i)) * dag(prime(psi(i)));
+        for (auto j=i + 1;j<=end_site;j++)
+        {
+          auto cj = j - start_site; //index into cm matrix.
+          Index lind = commonIndex(psi(j), Li12);
+          Li12 *= psi(j);
+
+          c = (Li12 * sites.op(op2,j)) * dag(prime(prime(psi(j), "Site"), lind));
+          C[ci][cj] = eltT<T>(c) / norm2_psi;
+          
+          if (isHermitian)
+            C[cj][ci] = conj(C[ci][cj]); // not always valid.
+
+          if (fermionic2)
+            Li12 *= sites.op("F",j) * dag(prime(psi(j)));              
+          else
+            Li12 *= dag(prime(psi(j), "Link")); //Prime *all* links                          
+            
+        } // for j
+        op1=_op1; // restore op1
+        
+        if (!isHermitian) //If isHermitian=false the we must calculate the below diag elements explicitly.
+        {
+            //  Get j < i correlations by swapping the operators
+            if (fermionic1) op2 += "*F"; 
+            ITensor Li21 = (Li * sites.op(op2, i)) * dag(prime(psi(i)));
+            if (fermionic1) Li21=-Li21; //Required because we swapped fermionic ops, instead of sweeping right to left.
+            for (auto j=i + 1;j<=end_site;j++)
+            {
+                auto cj = j - start_site; //index into cm matrix.
+                Index lind = commonIndex(psi(j), Li21);
+                Li21 *= psi(j);
+
+                c = (Li21 * sites.op(op1,j)) * dag(prime(prime(psi(j), "Site"), lind));
+                C[cj][ci] = eltT<T>(c) / norm2_psi;
+
+                if (fermionic1)
+                    Li21 *= sites.op("F",j) * dag(prime(psi(j)));              
+                else
+                    Li21 *= dag(prime(psi(j), "Link")); //Prime *all* links                          
+
+            } // for j
+            op2=_op2; //restore op2
+        } //if isHermitian
+        
+        
+        L = (L * psi(i)) * dag(prime(psi(i), "Link")); //Update accumulated contraction from the left.
+    } // for i
+        
+    return C;
+}
+
+//
+//  Make template instances.
+//
+template std::vector<std::vector<Real>>
+correlationMatrixT<Real>(const MPS& _psi,
+                   const SiteSet& sites,
+                   const string& op1,
+                   const string& op2,
+                   detail::RangeHelper<int> site_range,
+                   Args const& args
+                  );
+
+template std::vector<std::vector<Complex>>
+correlationMatrixT<Complex>(const MPS& _psi,
+                   const SiteSet& sites,
+                   const string& op1,
+                   const string& op2,
+                   detail::RangeHelper<int> site_range,
+                   Args const& args
+                  );
 
 //
 // Deprecated
