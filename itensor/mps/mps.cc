@@ -1554,6 +1554,10 @@ void fixRange(detail::RangeHelper<int>&r,int N)
 //-------------------------------------------------------------------------------------------
 //
 //  Template implementation of correlationMatrix function for Real and Complex types,
+//    The implementation assumes that Hilbert space for each site on the lattice is
+//    consistent with op1 and op2.  This could get rather complicated for a heterogeneous lattice
+//    with for example alternating fermionic and bosonic Hilbert spaces.  In such cases users will to 
+//    create custom code for the calculating correlations
 //
 template <class T> std::vector<std::vector<T>>
 correlationMatrixT(const MPS& _psi,
@@ -1572,10 +1576,12 @@ correlationMatrixT(const MPS& _psi,
         isHermitian= args.getBool("isHermitian"); // Honour users request
     else
     {
-        // In principle we could ask the SiteSet to interpret the operators and make decisions 
-        // based on symmetries.  For example <S+S-> happens to be symmetric for spins. 
-        // But for now we just keep it simple
-        if (_op1==_op2) isHermitian=true;
+        ITensor O1=sites.op(_op1, 1); 
+        ITensor O2=sites.op(_op2, 1);
+        // We need to decide if O1==O2^dagger allowing for some round off errors.
+        double eps=norm(O1 / norm(O1) - dag(swapPrime(O2, 0, 1) / norm(O2)));
+        if (eps<1e-10 || _op1==_op2) isHermitian=true;
+        // ISy needs this ^^^^^^^^ but only for efficiency
     }
 
 //
@@ -1605,9 +1611,7 @@ correlationMatrixT(const MPS& _psi,
     bool fermionic2=isFermionic(st2);
     if (fermionic1!=fermionic2) //for example A_i*C_j
     {
-        println("Operators ",onsiteOp);
-//  Catch2 does seem to support trapping and requiring and abort, so we throw and exception witch catch2 can trap.
-//        Error("correlationMatrix: Mixed fermionic and bosonic operators are not supported yet.");
+        //println("Operators ",onsiteOp);
         throw std::runtime_error("correlationMatrix: Mixed fermionic and bosonic operators are not supported yet.");      
     }
  
@@ -1619,32 +1623,35 @@ correlationMatrixT(const MPS& _psi,
     ITensor L(1.0); //Accumulated contraction from the left.
     if (start_site > 1)
     {
-        auto lind = commonIndex(psi(start_site), psi(start_site - 1));
+        Index lind = commonIndex(psi(start_site), psi(start_site - 1));
         L = delta(dag(lind), prime(lind)); //DxD kroneker delta.
     }   
      
     for(auto i:site_range)
     {
         auto ci = i - start_site;  //index into cm matrix.
-        auto Li = L * psi(i); //Update accumulated contraction from the left.
+        ITensor Li = L * psi(i); //Update accumulated contraction from the left.
  
         // Get j == i diagonal correlations
 
-        Index rind = commonIndex(psi(i), psi(i+1));
-        auto c=Li * sites.op(onsiteOp,i) * dag(noPrime(prime(psi(i)),prime(rind)) )/ norm2_psi;
+        // We now need to prime all indices on psi(i) except the link to site i+1.
+        IndexSet linds = uniqueInds(psi(i), psi(i+1)); //indices in psi(i) that are not in psi(i+1), i.e. not the link
+        ITensor psi_i_dag = dag(prime(psi(i), linds));
+        ITensor c=Li * sites.op(onsiteOp,i) * psi_i_dag/ norm2_psi;
+
         assert(order(c)==0); //If there is any screw up in the priming we get a higher order tensor out.
         C[ci][ci] =eltT<T>(c);
         
         //  Get j > i correlations
         if (fermionic2) op1 += "*F"; 
-        auto Li12 = (Li * sites.op(op1, i)) * dag(prime(psi(i)));
+        ITensor Li12 = (Li * sites.op(op1, i)) * dag(prime(psi(i)));
         for (auto j=i + 1;j<=end_site;j++)
         {
           auto cj = j - start_site; //index into cm matrix.
-          auto lind = commonIndex(psi(j), Li12);
+          Index lind = commonIndex(psi(j), Li12);
           Li12 *= psi(j);
 
-          auto c = (Li12 * sites.op(op2,j)) * dag(prime(prime(psi(j), "Site"), lind));
+          c = (Li12 * sites.op(op2,j)) * dag(prime(prime(psi(j), "Site"), lind));
           C[ci][cj] = eltT<T>(c) / norm2_psi;
           
           if (isHermitian)
@@ -1658,19 +1665,19 @@ correlationMatrixT(const MPS& _psi,
         } // for j
         op1=_op1; // restore op1
         
-        if (!isHermitian) //If the user requests isHermitian=false the we must calculate the below diag elements explicitly.
+        if (!isHermitian) //If isHermitian=false the we must calculate the below diag elements explicitly.
         {
             //  Get j < i correlations by swapping the operators
             if (fermionic1) op2 += "*F"; 
-            auto Li21 = (Li * sites.op(op2, i)) * dag(prime(psi(i)));
+            ITensor Li21 = (Li * sites.op(op2, i)) * dag(prime(psi(i)));
             if (fermionic1) Li21=-Li21; //Required because we swapped fermionic ops, instead of sweeping right to left.
             for (auto j=i + 1;j<=end_site;j++)
             {
                 auto cj = j - start_site; //index into cm matrix.
-                auto lind = commonIndex(psi(j), Li21);
+                Index lind = commonIndex(psi(j), Li21);
                 Li21 *= psi(j);
 
-                auto c = (Li21 * sites.op(op1,j)) * dag(prime(prime(psi(j), "Site"), lind));
+                c = (Li21 * sites.op(op1,j)) * dag(prime(prime(psi(j), "Site"), lind));
                 C[cj][ci] = eltT<T>(c) / norm2_psi;
 
                 if (fermionic1)

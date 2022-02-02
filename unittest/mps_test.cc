@@ -797,7 +797,7 @@ TEST_CASE("correlationMatrix function")
     }
 
     // This type of cross correlation makes a non-symmetric correlation matrix.
-    SECTION("correlation_matrix Complex Psi, Sz*Sx, S1/2 No QNs")
+    SECTION("correlation_matrix Complex Psi, Sz*Sx, S1/2 No QNs, isHermitian=false ")
     {
         SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
         MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
@@ -814,7 +814,26 @@ TEST_CASE("correlationMatrix function")
         } //ops loop
         
     }
+    // This type of cross correlation makes a non-symmetric correlation matrix.
+    // Let the operator test decide that isHermitian should be false.
+    SECTION("correlation_matrix Complex Psi, Sz*Sx, S1/2 No QNs, isHermitian=undef ")
+    {
+        SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",false});
+        MPS       psi   = randomMPS(InitState(sites,"Up"),{"Complex=",true}); 
+        
+        vector<std::pair<string,string>> ops({{"Sx","Sz"}});
 
+        for (auto op:ops)
+        {
+            auto cm=correlationMatrixC(psi,sites,op.first,op.second);
+            auto cm_autompo=AutoMPOCorrelationMatrix<Complex>(psi,sites,op);
+
+            checkDiagonalWithExpect<Complex>(psi,sites,op,cm);
+            checkMatrices(cm,cm_autompo,op); 
+        } //ops loop
+        
+    }
+    
     SECTION("correlation_matrix Real Psi, Real Ops, S1/2 With QNs")
     {
         SiteSet   sites = SpinHalf(Nsmall, {"ConserveQNs=",true});
@@ -898,7 +917,7 @@ TEST_CASE("correlationMatrix function")
                                              });
         for (auto op:ops)
         {
-            auto cm     =correlationMatrix(psi,sites,op.first,op.second,{"isHermitian",false});
+            auto cm     =correlationMatrix(psi,sites,op.first,op.second);
             auto cm_autompo=AutoMPOCorrelationMatrix<Real>(psi,sites,op);
 
             checkDiagonalWithExpect<Real>(psi,sites,op,cm);
