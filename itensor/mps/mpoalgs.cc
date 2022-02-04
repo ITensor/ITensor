@@ -216,7 +216,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     auto normalize = args.getBool("Normalize",false);
     auto dowrite = args.defined("WriteDim") && (maxLinkDim(psi) >= args.getInt("WriteDim"));
     std::string writedir_ = "./";
-    if(dowrite) writedir_ = mkTempDir("E","./");
+    if(dowrite) writedir_ = mkTempDir("E",args.getString("WriteDir","./"));
 
     auto N = length(psi);
 
