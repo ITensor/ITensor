@@ -206,6 +206,9 @@ randomVec(long size);
 CVector
 randomCVec(long size);
 
+CVector inline
+randomVecC(long size) { return randomCVec(size); }
+
 Real
 sumels(VectorRefc v);
 

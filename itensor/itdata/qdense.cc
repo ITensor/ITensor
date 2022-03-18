@@ -686,15 +686,12 @@ doTask(Contract& Con,
     const bool sortResult = false;
     contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,Cind,sortResult);
 
-TIMER_START(32);
     //Allocate storage for C
     auto [Coffsets,Csize,blockContractions] = getContractedOffsets(A,Con.Lis,B,Con.Ris,Con.Nis);
-TIMER_STOP(32);
-TIMER_START(33);
+
     // Create QDense storage with uninitialized memory, faster than
     // setting to zeros
     auto nd = m.makeNewData<QDense<VC>>(undef,Coffsets,Csize);
-TIMER_STOP(33);
     auto& C = *nd;
 
     //Determines if the contraction in the list overwrites or
@@ -734,13 +731,11 @@ TIMER_STOP(33);
         betas[Cblockloc] = 1.;
         };
 
-TIMER_START(34);
     loopContractedBlocks(A,Con.Lis,
                          B,Con.Ris,
                          C,Con.Nis,
                          blockContractions,
                          do_contract);
-TIMER_STOP(34);
 
 #ifdef USESCALE
     Con.scalefac = computeScalefac(C);

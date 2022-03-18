@@ -154,6 +154,15 @@ operator*(MatrixRefc const& A,
     return res;
     }
 
+CVector inline
+operator*(CMatrixRefc const& A,
+          CVectorRefc const& b)
+    {
+    CVector res(nrows(A));
+    mult(A,b,makeRef(res));
+    return res;
+    }
+
 Vector inline
 operator*(VectorRefc const& a,
           MatrixRefc const& B)
@@ -163,6 +172,17 @@ operator*(VectorRefc const& a,
     mult(B,a,makeRef(res),fromleft);
     return res;
     }
+
+CVector inline
+operator*(CVectorRefc const& a,
+          CMatrixRefc const& B)
+    {
+    CVector res(ncols(B));
+    bool fromleft = true;
+    mult(B,a,makeRef(res),fromleft);
+    return res;
+    }
+
 
 template<typename... CtrArgs>
 Matrix

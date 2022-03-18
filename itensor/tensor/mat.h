@@ -265,10 +265,16 @@ mult(MatA const& A,
 Vector
 operator*(MatrixRefc const& A,
           VectorRefc const& b);
+CVector
+operator*(CMatrixRefc const& A,
+          CVectorRefc const& b);
 
 Vector
 operator*(VectorRefc const& a,
           MatrixRefc const& B);
+CVector
+operator*(CVectorRefc const& a,
+          CMatrixRefc const& B);
 
 template<typename VA, typename VB>
 auto
