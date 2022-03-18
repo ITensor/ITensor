@@ -4,6 +4,7 @@
 #include "itensor/util/iterate.h"
 #include "itensor/tensor/algs.h"
 #include "itensor/global.h"
+#include "itensor/util/print_macro.h"
 
 using namespace itensor;
 using namespace std;
@@ -1177,6 +1178,33 @@ SECTION("Matrix-vector product")
             }
 
         } //Rectangular case
+
+    SECTION("Complex Matrix times Vector")
+        {
+        auto N = 10;
+
+        auto R = randomMat(N,N);
+        auto x = randomVec(N);
+        auto C = randomMatC(N,N);
+        auto z = randomVecC(N);
+
+        auto y = C*z;
+        for(auto r : range(N))
+            {
+            Cplx val = 0;
+            for(auto c : range(N)) val += C(r,c)*z(c);
+            CHECK_CLOSE(y(r),val);
+            }
+
+        auto v = z*C;
+        for(auto c : range(N))
+            {
+            Cplx val = 0;
+            for(auto r : range(N)) val += z(r)*C(r,c);
+            CHECK_CLOSE(v(c),val);
+            }
+
+        } // complex matrix times vector
     }
 
 SECTION("Test reduceColsTo")
