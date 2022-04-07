@@ -56,16 +56,16 @@ using LAPACK_INT = lapack_int;
 using LAPACK_REAL = double;
 using LAPACK_COMPLEX = lapack_complex_double;
 
-inline LAPACK_REAL& 
-realRef(LAPACK_COMPLEX & z) 
-    { 
+inline LAPACK_REAL&
+realRef(LAPACK_COMPLEX & z)
+    {
     auto* p = reinterpret_cast<double*>(&z);
     return p[0];
     }
 
-inline LAPACK_REAL& 
-imagRef(LAPACK_COMPLEX & z) 
-    { 
+inline LAPACK_REAL&
+imagRef(LAPACK_COMPLEX & z)
+    {
     auto* p = reinterpret_cast<double*>(&z);
     return p[1];
     }
@@ -87,10 +87,10 @@ imagRef(LAPACK_COMPLEX & z)
     using LAPACK_REAL = __CLPK_doublereal;
     using LAPACK_COMPLEX = __CLPK_doublecomplex;
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     realRef(LAPACK_COMPLEX & z) { return z.r; }
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     imagRef(LAPACK_COMPLEX & z) { return z.i; }
     }
 
@@ -111,10 +111,10 @@ imagRef(LAPACK_COMPLEX & z)
     using LAPACK_REAL = double;
     using LAPACK_COMPLEX = MKL_Complex16;
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     realRef(LAPACK_COMPLEX & z) { return z.real; }
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     imagRef(LAPACK_COMPLEX & z) { return z.imag; }
     }
 
@@ -135,12 +135,37 @@ imagRef(LAPACK_COMPLEX & z)
     LAPACK_REAL real, imag;
     } LAPACK_COMPLEX;
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     realRef(LAPACK_COMPLEX & z) { return z.real; }
 
-    inline LAPACK_REAL& 
+    inline LAPACK_REAL&
     imagRef(LAPACK_COMPLEX & z) { return z.imag; }
     }
+
+#elif defined PLATFORM_cuda
+
+#define ITENSOR_USE_CUDA
+
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <cusolverDn.h>
+#include <cuComplex.h>
+
+namespace itensor {
+cudaDataType_t typeComplexData = CUDA_C_64F;
+cudaDataType_t typeRealData = CUDA_R_64F;
+cublasComputeType_t typeCompute = CUBLAS_COMPUTE_64F;
+
+using LAPACK_INT = int;
+using LAPACK_REAL = double;
+using LAPACK_COMPLEX = cuDoubleComplex;
+
+inline LAPACK_REAL&
+realRef(LAPACK_COMPLEX & z) { return z.x; }
+
+inline LAPACK_REAL&
+imagRef(LAPACK_COMPLEX & z) { return z.y; }
+}
 
 #endif // different PLATFORM types
 
@@ -174,14 +199,14 @@ LAPACK_REAL F77NAME(dnrm2)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx);
 #ifdef ITENSOR_USE_CBLAS
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
 #else
-void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha, 
+void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
                     LAPACK_REAL* X, LAPACK_INT* incx,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
 //ddot declaration
 #ifdef ITENSOR_USE_CBLAS
-LAPACK_REAL 
+LAPACK_REAL
 cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, const LAPACK_REAL *Y, const LAPACK_INT incy);
 #else
 LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
@@ -189,7 +214,7 @@ LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPAC
 
 //zdotc declaration
 #ifdef ITENSOR_USE_CBLAS
-LAPACK_REAL 
+LAPACK_REAL
 cblas_zdotc_sub(const LAPACK_INT N, const void *X, const LAPACK_INT incx, const void *Y, const LAPACK_INT incy, void *res);
 #else
 LAPACK_COMPLEX F77NAME(zdotc)(LAPACK_INT* N, LAPACK_COMPLEX* X, LAPACK_INT* incx, LAPACK_COMPLEX* Y, LAPACK_INT* incy);
@@ -211,19 +236,19 @@ void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
 
 //zgemm declaration
 #ifdef PLATFORM_openblas
-void cblas_zgemm(OPENBLAS_CONST enum CBLAS_ORDER Order, 
-                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA, 
-                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB, 
-                 OPENBLAS_CONST blasint M, 
-                 OPENBLAS_CONST blasint N, 
+void cblas_zgemm(OPENBLAS_CONST enum CBLAS_ORDER Order,
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA,
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB,
+                 OPENBLAS_CONST blasint M,
+                 OPENBLAS_CONST blasint N,
                  OPENBLAS_CONST blasint K,
-                 OPENBLAS_CONST double *alpha, 
-                 OPENBLAS_CONST double *A, 
-                 OPENBLAS_CONST blasint lda, 
-                 OPENBLAS_CONST double *B, 
-                 OPENBLAS_CONST blasint ldb, 
-                 OPENBLAS_CONST double *beta, 
-                 double *C, 
+                 OPENBLAS_CONST double *alpha,
+                 OPENBLAS_CONST double *A,
+                 OPENBLAS_CONST blasint lda,
+                 OPENBLAS_CONST double *B,
+                 OPENBLAS_CONST blasint ldb,
+                 OPENBLAS_CONST double *beta,
+                 double *C,
                  OPENBLAS_CONST blasint ldc);
 #else //platform not openblas
 
@@ -257,22 +282,22 @@ void F77NAME(dgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_REAL* alpha,
 
 //zgemv declaration
 #ifdef PLATFORM_openblas
-void cblas_zgemv(OPENBLAS_CONST enum CBLAS_ORDER order,  
-                 OPENBLAS_CONST enum CBLAS_TRANSPOSE trans,  
-                 OPENBLAS_CONST blasint m, 
+void cblas_zgemv(OPENBLAS_CONST enum CBLAS_ORDER order,
+                 OPENBLAS_CONST enum CBLAS_TRANSPOSE trans,
+                 OPENBLAS_CONST blasint m,
                  OPENBLAS_CONST blasint n,
-                 OPENBLAS_CONST double *alpha, 
-                 OPENBLAS_CONST double  *a, 
-                 OPENBLAS_CONST blasint lda,  
-                 OPENBLAS_CONST double  *x, 
-                 OPENBLAS_CONST blasint incx,  
-                 OPENBLAS_CONST double *beta,  
-                 double  *y, 
+                 OPENBLAS_CONST double *alpha,
+                 OPENBLAS_CONST double  *a,
+                 OPENBLAS_CONST blasint lda,
+                 OPENBLAS_CONST double  *x,
+                 OPENBLAS_CONST blasint incx,
+                 OPENBLAS_CONST double *beta,
+                 double  *y,
                  OPENBLAS_CONST blasint incy);
 #else
 #ifdef ITENSOR_USE_CBLAS
-void cblas_zgemv(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE trans, const LAPACK_INT m, 
-                 const LAPACK_INT n, const void *alpha, const void *a, const LAPACK_INT lda, 
+void cblas_zgemv(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE trans, const LAPACK_INT m,
+                 const LAPACK_INT n, const void *alpha, const void *a, const LAPACK_INT lda,
                  const void *x, const LAPACK_INT incx, const void *beta, void *y, const LAPACK_INT incy);
 #else
 void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_COMPLEX* alpha, LAPACK_COMPLEX* A,
@@ -282,8 +307,8 @@ void F77NAME(zgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_COMPLEX* alp
 #endif //zgemv declaration
 
 #ifdef PLATFORM_acml
-void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
-                    double *w, double *work, int *lwork, int *info, 
+void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda,
+                    double *w, double *work, int *lwork, int *info,
                     int jobz_len, int uplo_len);
 #else
 void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, double* a,
@@ -299,66 +324,66 @@ void F77NAME(dscal)(LAPACK_INT* N, LAPACK_REAL* alpha, LAPACK_REAL* X,LAPACK_INT
 
 
 #ifdef PLATFORM_acml
-void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
-             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s,
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt,
              double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info, int jobz_len);
 #else
-void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
-             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+void F77NAME(dgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s,
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt,
              double *work, LAPACK_INT *lwork, LAPACK_INT *iwork, LAPACK_INT *info);
 #endif
 
 
 #ifdef PLATFORM_acml
-  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
-             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s,
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt,
              double *work, LAPACK_INT *lwork, LAPACK_INT *info, int jobz_len);
 #else
-  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s, 
-             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt, 
+  void F77NAME(dgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, double *s,
+             double *u, LAPACK_INT *ldu, double *vt, LAPACK_INT *ldvt,
              double *work, LAPACK_INT *lwork, LAPACK_INT *info);
 #endif
 
 
   #ifdef PLATFORM_acml
-  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s, 
-             LAPACK_COMPLEX *u, LAPACK_INT *ldu,  LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s,
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu,  LAPACK_COMPLEX *vt, LAPACK_INT *ldvt,
              LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_REAL * rwork, LAPACK_INT *info, int jobz_len);
 #else
-  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s, 
-             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+  void F77NAME(zgesvd)(char *jobz, char* jobv, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, LAPACK_REAL *s,
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt,
 		       LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_REAL * rwork, LAPACK_INT *info);
 #endif
 
 #ifdef PLATFORM_acml
-void F77NAME(zgesdd)(char *jobz, int *m, int *n, LAPACK_COMPLEX *a, int *lda, double *s, 
-             LAPACK_COMPLEX *u, int *ldu, LAPACK_COMPLEX *vt, int *ldvt, 
-             LAPACK_COMPLEX *work, int *lwork, double *rwork, int *iwork, int *info, 
+void F77NAME(zgesdd)(char *jobz, int *m, int *n, LAPACK_COMPLEX *a, int *lda, double *s,
+             LAPACK_COMPLEX *u, int *ldu, LAPACK_COMPLEX *vt, int *ldvt,
+             LAPACK_COMPLEX *work, int *lwork, double *rwork, int *iwork, int *info,
              int jobz_len);
 #else
-void F77NAME(zgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, double *s, 
-             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+void F77NAME(zgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, double *s,
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt,
              LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, LAPACK_INT *iwork, LAPACK_INT *info);
 #endif
 
-void F77NAME(dgeqrf)(LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, 
+void F77NAME(dgeqrf)(LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda,
                      double *tau, double *work, LAPACK_INT *lwork, LAPACK_INT *info);
 
-void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a, 
-                     LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
+void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a,
+                     LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork,
                      LAPACK_INT *info);
 
-  
-void F77NAME(zgeqrf)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
+
+void F77NAME(zgeqrf)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda,
                      LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, LAPACK_INT *info);
 
 #ifdef PLATFORM_lapacke
-void LAPACKE_zungqr(int matrix_layout, LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
-                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, 
+void LAPACKE_zungqr(int matrix_layout, LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a,
+                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork,
                      LAPACK_INT *info);
 #else
-void F77NAME(zungqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a, 
-                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork, 
+void F77NAME(zungqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, LAPACK_COMPLEX *a,
+                     LAPACK_INT *lda, LAPACK_COMPLEX *tau, LAPACK_COMPLEX *work, LAPACK_INT *lwork,
                      LAPACK_INT *info);
 #endif
 
@@ -388,51 +413,51 @@ LAPACK_REAL F77NAME(zlange)(char* norm, LAPACK_INT* m, LAPACK_INT* n, LAPACK_COM
 lapack_int LAPACKE_zheev(int matrix_order, char jobz, char uplo, lapack_int n,
                          lapack_complex_double* a, lapack_int lda, double* w);
 #elif defined PLATFORM_acml
-void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
-            double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda,
+            double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork,
             LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len);
 #else
-void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
-           double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda,
+           double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork,
            LAPACK_INT *info);
 #endif
 
 
 #ifdef PLATFORM_acml
-void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a, 
-            LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work, 
-            LAPACK_INT *lwork, LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len); 
+void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a,
+            LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work,
+            LAPACK_INT *lwork, LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len);
 #else
-void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a, 
-           LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work, 
+void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a,
+           LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work,
            LAPACK_INT *lwork, LAPACK_INT *info);
 #endif
 
 
 #ifdef PLATFORM_acml
-void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a, 
-                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl, 
-                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork, 
+void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a,
+                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl,
+                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork,
                     LAPACK_INT *info, LAPACK_INT jobvl_len, LAPACK_INT jobvr_len);
 #else
-void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a, 
-                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl, 
-                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork, 
+void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a,
+                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl,
+                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork,
                     LAPACK_INT *info);
 #endif
 
 
 #ifdef PLATFORM_acml
-void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a, 
-                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl, 
-                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr, 
-                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
+                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl,
+                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr,
+                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork,
                     LAPACK_INT *info, LAPACK_INT jobvl_len, LAPACK_INT jobvr_len);
 #else
-void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a, 
-                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl, 
-                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr, 
-                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
+                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl,
+                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr,
+                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork,
                     LAPACK_INT *info);
 #endif
 
@@ -483,7 +508,7 @@ zdotc_wrapper(LAPACK_INT N,
 // dgemm
 //
 void
-gemm_wrapper(bool transa, 
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -498,7 +523,7 @@ gemm_wrapper(bool transa,
 // zgemm
 //
 void
-gemm_wrapper(bool transa, 
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -513,7 +538,7 @@ gemm_wrapper(bool transa,
 // dgemv - matrix*vector multiply
 //
 void
-gemv_wrapper(bool trans, 
+gemv_wrapper(bool trans,
              LAPACK_REAL alpha,
              LAPACK_REAL beta,
              LAPACK_INT m,
@@ -528,7 +553,7 @@ gemv_wrapper(bool trans,
 // zgemv - matrix*vector multiply
 //
 void
-gemv_wrapper(bool trans, 
+gemv_wrapper(bool trans,
              Cplx alpha,
              Cplx beta,
              LAPACK_INT m,
@@ -694,7 +719,7 @@ zgesv_wrapper(LAPACK_INT n,
 //
 // dlange
 //
-// returns the value of the 1-norm, Frobenius norm, infinity-norm, 
+// returns the value of the 1-norm, Frobenius norm, infinity-norm,
 // or the largest absolute value of any element of a general rectangular matrix.
 //
 double
@@ -706,7 +731,7 @@ dlange_wrapper(char norm,
 //
 // zlange
 //
-// returns the value of the 1-norm, Frobenius norm, infinity-norm, 
+// returns the value of the 1-norm, Frobenius norm, infinity-norm,
 // or the largest absolute value of any element of a general rectangular matrix.
 //
 LAPACK_REAL
@@ -720,7 +745,7 @@ zlange_wrapper(char norm,
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
-LAPACK_INT 
+LAPACK_INT
 zheev_wrapper(LAPACK_INT    N,  //number of cols of A
               Cplx        * A,  //matrix A, on return contains eigenvectors
               LAPACK_REAL * d); //eigenvalues on return
