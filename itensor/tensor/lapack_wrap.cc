@@ -22,7 +22,7 @@ namespace itensor {
 // daxpy
 // Y += alpha*X
 //
-void 
+void
 daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
               LAPACK_REAL alpha,   //scale factor
               const LAPACK_REAL* X, //pointer to head of vector X
@@ -32,6 +32,19 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
     {
 #ifdef ITENSOR_USE_CBLAS
     cblas_daxpy(n,alpha,X,incx,Y,incy);
+#elif ITENSOR_USE_CUDA
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_X, *d_Y;
+    cudaMalloc(&d_X, n * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_Y, n * sizeof(LAPACK_REAL));
+    cublasSetVector(n, sizeof(LAPACK_REAL), X, incx, d_X, incx);
+    cublasSetVector(n, sizeof(LAPACK_REAL), Y, incy, d_Y, incy);
+    cublasDaxpy(handle, n, &alpha, d_X, incx, d_Y, incy);
+    cublasGetVector(n, sizeof(LAPACK_REAL), d_Y, incy, Y, incy);
+    cudaFree(d_X);
+    cudaFree(d_Y);
+    cublasDestroy(handle);
 #else
     auto Xnc = const_cast<LAPACK_REAL*>(X);
     F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
@@ -41,13 +54,24 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
 //
 // dnrm2
 //
-LAPACK_REAL 
+LAPACK_REAL
 dnrm2_wrapper(LAPACK_INT N,
               const LAPACK_REAL* X,
               LAPACK_INT incx)
     {
 #ifdef ITENSOR_USE_CBLAS
     return cblas_dnrm2(N,X,incx);
+#elif ITENSOR_USE_CUDA
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_X;
+    cudaMalloc(&d_X, N * sizeof(LAPACK_REAL));
+    cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
+    LAPACK_REAL result;
+    cublasDnrm2(handle, N, d_X, incx, &result);
+    cudaFree(d_X);
+    cublasDestroy(handle);
+    return result;
 #else
     auto *Xnc = const_cast<LAPACK_REAL*>(X);
     return F77NAME(dnrm2)(&N,Xnc,&incx);
@@ -58,7 +82,7 @@ dnrm2_wrapper(LAPACK_INT N,
 //
 // ddot
 //
-LAPACK_REAL 
+LAPACK_REAL
 ddot_wrapper(LAPACK_INT N,
              const LAPACK_REAL* X,
              LAPACK_INT incx,
@@ -67,6 +91,20 @@ ddot_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     return cblas_ddot(N,X,incx,Y,incy);
+#elif ITENSOR_USE_CUDA
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_X, *d_Y;
+    cudaMalloc(&d_X, N * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_Y, N * sizeof(LAPACK_REAL));
+    cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
+    cublasSetVector(N, sizeof(LAPACK_REAL), Y, incy, d_Y, incy);
+    LAPACK_REAL result;
+    cublasDdot (handle, N, d_X, incx, d_Y, incy, &result);
+    cudaFree(d_X);
+    cudaFree(d_Y);
+    cublasDestroy(handle);
+    return result;
 #else
     auto *Xnc = const_cast<LAPACK_REAL*>(X);
     auto *Ync = const_cast<LAPACK_REAL*>(Y);
@@ -98,6 +136,20 @@ zdotc_wrapper(LAPACK_INT N,
 #endif
     cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
     return res;
+#elif ITENSOR_USE_CUDA
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_COMPLEX res;
+    LAPACK_COMPLEX *d_X, *d_Y;
+    cudaMalloc(&d_X, N * sizeof(LAPACK_COMPLEX));
+    cudaMalloc(&d_Y, N * sizeof(LAPACK_COMPLEX));
+    cublasSetVector(N, sizeof(LAPACK_COMPLEX), X, incx, d_X, incx);
+    cublasSetVector(N, sizeof(LAPACK_COMPLEX), Y, incy, d_Y, incy);
+    cublasZdotc(handle, N, d_X, incx, d_Y, incy, &res);
+    cudaFree(d_X);
+    cudaFree(d_Y);
+    cublasDestroy(handle);
+    return res;
 #else
     auto ncX = const_cast<Cplx*>(X);
     auto ncY = const_cast<Cplx*>(Y);
@@ -113,8 +165,8 @@ zdotc_wrapper(LAPACK_INT N,
 //
 // dgemm
 //
-void 
-gemm_wrapper(bool transa, 
+void
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -141,6 +193,34 @@ gemm_wrapper(bool transa,
         ldb = n;
         }
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
+#elif ITENSOR_USE_CUDA
+    cublasOperation_t at = CUBLAS_OP_N;
+    cublasOperation_t bt = CUBLAS_OP_N;
+    if(transa)
+        {
+        at = CUBLAS_OP_T;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CUBLAS_OP_T;
+        ldb = n;
+        }
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_A, *d_B, *d_C;
+    cudaMalloc(&d_A, m * k * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_B, k * n * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_C, m * n * sizeof(LAPACK_REAL));
+    cublasSetMatrix(m, k, sizeof(LAPACK_REAL), A, lda, d_A, lda);
+    cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
+    cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
+    cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m)
+    cublasGetMatrix(m, n, sizeof(LAPACK_REAL), d_C, m, C, m);
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    cublasDestroy(handle);
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
@@ -163,8 +243,8 @@ gemm_wrapper(bool transa,
 //
 // zgemm
 //
-void 
-gemm_wrapper(bool transa, 
+void
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -204,6 +284,34 @@ gemm_wrapper(bool transa,
     auto* pB = reinterpret_cast<const double*>(B);
     auto* pC = reinterpret_cast<double*>(C);
 	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
+#elif ITENSOR_USE_CUDA
+    cublasOperation_t at = CUBLAS_OP_N;
+    cublasOperation_t bt = CUBLAS_OP_N;
+    if(transa)
+        {
+        at = CUBLAS_OP_T;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CUBLAS_OP_T;
+        ldb = n;
+        }
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_COMPLEX *d_A, *d_B, *d_C;
+    cudaMalloc(&d_A, m * k * sizeof(LAPACK_COMPLEX));
+    cudaMalloc(&d_B, k * n * sizeof(LAPACK_COMPLEX));
+    cudaMalloc(&d_C, m * n * sizeof(LAPACK_COMPLEX));
+    cublasSetMatrix(m, k, sizeof(LAPACK_COMPLEX), A, lda, d_A, lda);
+    cublasSetMatrix(k, n, sizeof(LAPACK_COMPLEX), B, ldb, d_B, ldb);
+    cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), C, m, d_C, m);
+    cublasZgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m)
+    cublasGetMatrix(m, n, sizeof(LAPACK_COMPLEX), d_C, m, C, m);
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    cublasDestroy(handle);
 #else //platform not openblas
 #ifdef ITENSOR_USE_CBLAS
     auto at = CblasNoTrans,
@@ -218,8 +326,8 @@ gemm_wrapper(bool transa,
         bt = CblasTrans;
         ldb = n;
         }
-    auto palpha = (void*)(&alpha); 
-    auto pbeta = (void*)(&beta); 
+    auto palpha = (void*)(&alpha);
+    auto pbeta = (void*)(&beta);
     cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
 #else //use Fortran zgemm
     auto *ncA = const_cast<Cplx*>(A);
@@ -246,8 +354,8 @@ gemm_wrapper(bool transa,
 #endif
     }
 
-void 
-gemv_wrapper(bool trans, 
+void
+gemv_wrapper(bool trans,
              LAPACK_REAL alpha,
              LAPACK_REAL beta,
              LAPACK_INT m,
@@ -261,6 +369,23 @@ gemv_wrapper(bool trans,
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
     cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
+#elif ITENSOR_USE_CUDA
+    cublasOperation_t tr = trans ? CUBLAS_OP_T : CUBLAS_OP_N;
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_A, *d_x, *d_y;
+    cudaMalloc(&d_A, m * n * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_x, m * sizeof(LAPACK_REAL));
+    cudaMalloc(&d_y, m * sizeof(LAPACK_REAL));
+    cublasSetMatrix(m, n, sizeof(LAPACK_REAL), A, m, d_A, m);
+    cublasSetVector(m, sizeof(LAPACK_REAL), x, incx, d_x, incx);
+    cublasSetVector(m, sizeof(LAPACK_REAL), y, incy, d_y, incy);
+    cublasDgemv(handle, tr, m, n, &alpha, d_A, m, d_x, incx, &beta, d_y, incy)
+    cublasGetVector(m, sizeof(LAPACK_REAL), d_y, incy, y, incy);
+    cudaFree(d_A);
+    cudaFree(d_x);
+    cudaFree(d_y);
+    cublasDestroy(handle);
 #else
     char Tr = trans ? 'T' : 'N';
     F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
@@ -268,7 +393,7 @@ gemv_wrapper(bool trans,
     }
 
 void
-gemv_wrapper(bool trans, 
+gemv_wrapper(bool trans,
              Cplx alpha,
              Cplx beta,
              LAPACK_INT m,
@@ -295,21 +420,38 @@ gemv_wrapper(bool trans,
 	auto* px = reinterpret_cast<const double*>(x);
 	auto* py = reinterpret_cast<double*>(y);
     cblas_zgemv(CblasColMajor,Tr,m,n,palpha,pA,m,px,incx,pbeta,py,incy);
+#elif ITENSOR_USE_CUDA
+    cublasOperation_t tr = trans ? CUBLAS_OP_T : CUBLAS_OP_N;
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_COMPLEX *d_A, *d_x, *d_y;
+    cudaMalloc(&d_A, m * n * sizeof(LAPACK_COMPLEX));
+    cudaMalloc(&d_x, m * sizeof(LAPACK_COMPLEX));
+    cudaMalloc(&d_y, m * sizeof(LAPACK_COMPLEX));
+    cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), A, m, d_A, m);
+    cublasSetVector(m, sizeof(LAPACK_COMPLEX), x, incx, d_x, incx);
+    cublasSetVector(m, sizeof(LAPACK_COMPLEX), y, incy, d_y, incy);
+    cublasZgemv(handle, tr, m, n, &alpha, d_A, m, d_x, incx, &beta, d_y, incy)
+    cublasGetVector(m, sizeof(LAPACK_COMPLEX), d_y, incy, y, incy);
+    cudaFree(d_A);
+    cudaFree(d_x);
+    cudaFree(d_y);
+    cublasDestroy(handle);
 #else //platform other than openblas
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
-    auto palpha = reinterpret_cast<void*>(&alpha); 
-    auto pbeta = reinterpret_cast<void*>(&beta); 
+    auto palpha = reinterpret_cast<void*>(&alpha);
+    auto pbeta = reinterpret_cast<void*>(&beta);
     cblas_zgemv(CblasColMajor,Tr,m,n,palpha,(void*)A,m,(void*)x,incx,pbeta,(void*)y,incy);
 #else
     char Tr = trans ? 'T' : 'N';
-    auto ncA = const_cast<Cplx*>(A); 
-    auto ncx = const_cast<Cplx*>(x); 
-    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA); 
-    auto px = reinterpret_cast<LAPACK_COMPLEX*>(ncx); 
-    auto py = reinterpret_cast<LAPACK_COMPLEX*>(y); 
-    auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha); 
-    auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta); 
+    auto ncA = const_cast<Cplx*>(A);
+    auto ncx = const_cast<Cplx*>(x);
+    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA);
+    auto px = reinterpret_cast<LAPACK_COMPLEX*>(ncx);
+    auto py = reinterpret_cast<LAPACK_COMPLEX*>(y);
+    auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
+    auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
     F77NAME(zgemv)(&Tr,&m,&n,palpha,pA,&m,px,&incx,pbeta,py,&incy);
 #endif
 #endif
@@ -319,7 +461,7 @@ gemv_wrapper(bool trans,
 //
 // dsyev
 //
-void 
+void
 dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               char uplo,        //if uplo=='U', read from upper triangle of A
               LAPACK_INT n,     //number of cols of A
@@ -349,7 +491,7 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
 //
 // dscal
 //
-void 
+void
 dscal_wrapper(LAPACK_INT N,
               LAPACK_REAL alpha,
               LAPACK_REAL* data,
@@ -357,12 +499,22 @@ dscal_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     cblas_dscal(N,alpha,data,inc);
+#elif ITENSOR_USE_CUDA
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    LAPACK_REAL *d_x;
+    cudaMalloc(&d_x, N * sizeof(LAPACK_REAL));
+    cublasSetVector(N, sizeof(LAPACK_REAL), data, inc, d_x, inc);
+    cublasDscal(handle, N, &alpha, d_x, inc)
+    cublasGetVector(N, sizeof(LAPACK_REAL), d_x, inc, data, inc);
+    cudaFree(d_x);
+    cublasDestroy(handle);
 #else
     F77NAME(dscal)(&N,&alpha,data,&inc);
 #endif
     }
 
-void 
+void
 zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -395,7 +547,7 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
 
 
 
-  void 
+  void
 dgesdd_wrapper(char* jobz,           //char* specifying how much of U, V to compute
                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -423,7 +575,7 @@ dgesdd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
 
 
 
-  void 
+  void
 zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -456,7 +608,7 @@ zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
 
 
 
-  void 
+  void
 dgesvd_wrapper(char* jobz,           //char* specifying how much of U, V to compute
                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -469,7 +621,7 @@ dgesvd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
     {
     std::vector<LAPACK_REAL> work;
     // std::vector<LAPACK_REAL> superb;
-    
+
     std::vector<LAPACK_INT> iwork;
     LAPACK_INT l = std::min(*m,*n),
                g = std::max(*m,*n);
@@ -490,7 +642,7 @@ dgesvd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
 //
 // QR factorization of a real matrix A
 //
-void 
+void
 dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_REAL* A,    //matrix A
@@ -503,7 +655,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
     LAPACK_INT lwork = std::max(one,4*std::max(*n,*m));
-    work.resize(lwork+2); 
+    work.resize(lwork+2);
     F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
     }
 
@@ -512,7 +664,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
 //
 // Generates Q from output of QR factorization routine dgeqrf (see above)
 //
-void 
+void
 dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
@@ -525,7 +677,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
     static const LAPACK_INT one = 1;
     std::vector<LAPACK_REAL> work;
     auto lwork = std::max(one,4*std::max(*n,*m));
-    work.resize(lwork+2); 
+    work.resize(lwork+2);
     F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
     }
 
@@ -535,7 +687,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
 //
 // QR factorization of a complex matrix A
 //
-void 
+void
 zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                Cplx* A,    //matrix A
@@ -559,7 +711,7 @@ zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
 //
 // Generates Q from output of QR factorization routine zgeqrf (see above)
 //
-void 
+void
 zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
@@ -675,7 +827,7 @@ zlange_wrapper(char norm,
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
-LAPACK_INT 
+LAPACK_INT
 zheev_wrapper(LAPACK_INT      N,  //number of cols of A
               Cplx          * A,  //matrix A, on return contains eigenvectors
               LAPACK_REAL   * d)  //eigenvalues on return
@@ -713,7 +865,7 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
 // A and B must be symmetric
 // B must be positive definite
 //
-void 
+void
 dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
                                     //if 'N', only eigenvalues
               char* uplo,           //if 'U', use upper triangle of A
@@ -743,7 +895,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 // Eigenvalues and eigenvectors of real, square matrix A
 // A can be a general real matrix, not assumed symmetric
 //
-LAPACK_INT 
+LAPACK_INT
 dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               char jobvr,          //if 'V', compute right eigenvectors, else 'N'
               LAPACK_INT n,        //number of rows/cols of A
@@ -758,7 +910,7 @@ dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
 
     cpA.resize(n*n);
     std::copy(A,A+n*n,cpA.data());
-    
+
     LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
     LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
     LAPACK_INT info = 0;
@@ -802,7 +954,7 @@ dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
 // Eigenvalues and eigenvectors of complex, square matrix A
 // A can be a general complex matrix, not assumed symmetric
 //
-LAPACK_INT 
+LAPACK_INT
 zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               char jobvr,          //if 'V', compute right eigenvectors, else 'N'
               LAPACK_INT n,        //number of rows/cols of A
@@ -841,4 +993,3 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     }
 
 } //namespace itensor
-
