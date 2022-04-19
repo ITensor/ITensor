@@ -145,6 +145,7 @@ imagRef(LAPACK_COMPLEX & z)
 #elif defined PLATFORM_cuda
 
 #define ITENSOR_USE_CUDA
+#define LAPACK_REQUIRE_EXTERN
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
