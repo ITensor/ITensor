@@ -149,7 +149,7 @@ zdotc_wrapper(LAPACK_INT N,
     cudaFree(d_X);
     cudaFree(d_Y);
     cublasDestroy(handle);
-    return res;
+    return (LAPACK_COMPLEX) res;
 #else
     auto ncX = const_cast<Cplx*>(X);
     auto ncY = const_cast<Cplx*>(Y);
@@ -306,7 +306,7 @@ gemm_wrapper(bool transa,
     cublasSetMatrix(m, k, sizeof(LAPACK_COMPLEX), A, lda, d_A, lda);
     cublasSetMatrix(k, n, sizeof(LAPACK_COMPLEX), B, ldb, d_B, ldb);
     cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), C, m, d_C, m);
-    cublasZgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
+    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, d_A, lda, d_B, ldb, (LAPACK_COMPLEX*) &beta, d_C, m);
     cublasGetMatrix(m, n, sizeof(LAPACK_COMPLEX), d_C, m, C, m);
     cudaFree(d_A);
     cudaFree(d_B);
@@ -380,7 +380,7 @@ gemv_wrapper(bool trans,
     cublasSetMatrix(m, n, sizeof(LAPACK_REAL), A, m, d_A, m);
     cublasSetVector(m, sizeof(LAPACK_REAL), x, incx, d_x, incx);
     cublasSetVector(m, sizeof(LAPACK_REAL), y, incy, d_y, incy);
-    cublasDgemv(handle, tr, m, n, &alpha, d_A, m, d_x, incx, &beta, d_y, incy)
+    cublasDgemv(handle, tr, m, n, &alpha, d_A, m, d_x, incx, &beta, d_y, incy);
     cublasGetVector(m, sizeof(LAPACK_REAL), d_y, incy, y, incy);
     cudaFree(d_A);
     cudaFree(d_x);
