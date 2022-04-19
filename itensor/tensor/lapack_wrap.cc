@@ -32,7 +32,7 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
     {
 #ifdef ITENSOR_USE_CBLAS
     cblas_daxpy(n,alpha,X,incx,Y,incy);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasHandle_t handle;
     cublasCreate(&handle);
     LAPACK_REAL *d_X, *d_Y;
@@ -61,7 +61,7 @@ dnrm2_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     return cblas_dnrm2(N,X,incx);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasHandle_t handle;
     cublasCreate(&handle);
     LAPACK_REAL *d_X;
@@ -91,7 +91,7 @@ ddot_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     return cblas_ddot(N,X,incx,Y,incy);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasHandle_t handle;
     cublasCreate(&handle);
     LAPACK_REAL *d_X, *d_Y;
@@ -136,7 +136,7 @@ zdotc_wrapper(LAPACK_INT N,
 #endif
     cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
     return res;
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasHandle_t handle;
     cublasCreate(&handle);
     LAPACK_COMPLEX res;
@@ -193,7 +193,7 @@ gemm_wrapper(bool transa,
         ldb = n;
         }
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasOperation_t at = CUBLAS_OP_N;
     cublasOperation_t bt = CUBLAS_OP_N;
     if(transa)
@@ -215,7 +215,7 @@ gemm_wrapper(bool transa,
     cublasSetMatrix(m, k, sizeof(LAPACK_REAL), A, lda, d_A, lda);
     cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
     cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
-    cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m)
+    cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
     cublasGetMatrix(m, n, sizeof(LAPACK_REAL), d_C, m, C, m);
     cudaFree(d_A);
     cudaFree(d_B);
@@ -284,7 +284,7 @@ gemm_wrapper(bool transa,
     auto* pB = reinterpret_cast<const double*>(B);
     auto* pC = reinterpret_cast<double*>(C);
 	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasOperation_t at = CUBLAS_OP_N;
     cublasOperation_t bt = CUBLAS_OP_N;
     if(transa)
@@ -306,7 +306,7 @@ gemm_wrapper(bool transa,
     cublasSetMatrix(m, k, sizeof(LAPACK_COMPLEX), A, lda, d_A, lda);
     cublasSetMatrix(k, n, sizeof(LAPACK_COMPLEX), B, ldb, d_B, ldb);
     cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), C, m, d_C, m);
-    cublasZgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m)
+    cublasZgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
     cublasGetMatrix(m, n, sizeof(LAPACK_COMPLEX), d_C, m, C, m);
     cudaFree(d_A);
     cudaFree(d_B);
@@ -369,7 +369,7 @@ gemv_wrapper(bool trans,
 #ifdef ITENSOR_USE_CBLAS
     auto Tr = trans ? CblasTrans : CblasNoTrans;
     cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasOperation_t tr = trans ? CUBLAS_OP_T : CUBLAS_OP_N;
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -420,7 +420,7 @@ gemv_wrapper(bool trans,
 	auto* px = reinterpret_cast<const double*>(x);
 	auto* py = reinterpret_cast<double*>(y);
     cblas_zgemv(CblasColMajor,Tr,m,n,palpha,pA,m,px,incx,pbeta,py,incy);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasOperation_t tr = trans ? CUBLAS_OP_T : CUBLAS_OP_N;
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -499,7 +499,7 @@ dscal_wrapper(LAPACK_INT N,
     {
 #ifdef ITENSOR_USE_CBLAS
     cblas_dscal(N,alpha,data,inc);
-#elif ITENSOR_USE_CUDA
+#elif defined ITENSOR_USE_CUDA
     cublasHandle_t handle;
     cublasCreate(&handle);
     LAPACK_REAL *d_x;

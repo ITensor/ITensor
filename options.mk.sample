@@ -10,7 +10,7 @@
 CCCOM=g++ -m64 -std=c++17 -fconcepts -fPIC
 
 ## CUDA compiler
-#CCCOM=nvcc -m64 -std=c++17 -fconcepts -fPIC
+#CCCOM=nvcc -m64 -std=c++17
 
 ## Clang compiler (good to use on macOS)
 ## Note: try this if you have trouble compiling
@@ -168,10 +168,10 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ## used to compile optimized and debug code, you can do so here.
 
 ## Flags to give the compiler for "release mode"
-OPTIMIZATIONS=-O2 -DNDEBUG -Wall -Wno-unknown-pragmas
+OPTIMIZATIONS=-O2 -DNDEBUG
 
 ## Flags to give the compiler for "debug mode"
-DEBUGFLAGS=-DDEBUG -g -Wall -Wno-unknown-pragmas -pedantic
+DEBUGFLAGS=-DDEBUG -g -pedantic
 #
 ## Set this to 1 if you want ITensor to also build dynamic libraries
 ## These can be faster to link and give smaller binary sizes
