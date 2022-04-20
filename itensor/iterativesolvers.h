@@ -1341,10 +1341,7 @@ void
 applyExp(BigMatrixT const& A, ITensor& phi,
          ElT t, Args const& args)
     {
-    auto eta = args.getReal("ErrGoal",1E-12);
-    size_t krylovdim = args.getInt("MaxIter",30);
     auto orthot_ = args.getBool("IsHermitian",false);//true: using Lanczos; false: using Arnoldi
-    auto debug_level = args.getInt("DebugLevel",-1);
 
     Real nrm = norm(phi);
     ITensor residual;
