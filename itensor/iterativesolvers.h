@@ -1029,7 +1029,8 @@ applyExpReal(BigMatrixT const& A,
             auto H = subMatrix(HH,0,K,0,K);
 	   auto exptH = expMatrix(H, sgn*(tau-tau0));
             totalerr += normres;
-            auto linear_comb = column(exptH, 0);
+            auto linear_comb = Vec<Real>(K);
+            linear_comb = column(exptH, 0);
             assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
 	   if(debug_level >= 0)
                 printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
@@ -1122,7 +1123,8 @@ applyExpReal(BigMatrixT const& A,
 		  }
 		
                 totalerr += epsilon;
-                auto linear_comb = column(exptH, 0);
+		auto linear_comb = Vec<Real>(K+2);
+                linear_comb = column(exptH, 0);
                 linear_comb = subVector(linear_comb, 0, K+1);
                 assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
                 tau0 += dtau;
@@ -1235,7 +1237,8 @@ applyExpCplx(BigMatrixT const& A,
             auto H = subMatrix(HH,0,K,0,K);
 	   auto exptH = expMatrix(H, sgn*(tau-tau0));
             totalerr += normres;
-            auto linear_comb = column(exptH, 0);
+            auto linear_comb = Vec<Real>(K);
+            linear_comb = column(exptH, 0);
             assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
 	   if(debug_level >= 0)
                 printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
@@ -1312,7 +1315,8 @@ applyExpCplx(BigMatrixT const& A,
 		  }
 		
                 totalerr += epsilon;
-                auto linear_comb = column(exptH, 0);
+		auto linear_comb = Vec<Real>(K+2);
+                linear_comb = column(exptH, 0);
                 linear_comb = subVector(linear_comb, 0, K+1);
                 assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
                 tau0 += dtau;
