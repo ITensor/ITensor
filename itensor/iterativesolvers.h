@@ -969,10 +969,10 @@ template<typename BigMatrixT, typename ElT>
 void
 applyExpReal(BigMatrixT const& A, 
              ElT t, 
-             ITensor & w0, 
-             ITensor & residual,
-             Real & nrm,
-             Args const& args)
+	     ITensor & w0, 
+	     ITensor & residual,
+	     Real & nrm,
+	     Args const& args)
     {
     auto eta = args.getReal("ErrGoal",1E-12);
     auto beta_tol = args.getReal("NormCutoff",1E-7);
@@ -1003,107 +1003,70 @@ applyExpReal(BigMatrixT const& A,
     std::fill(HH.begin(), HH.begin()+HH.size(), 0.0);
     std::vector<ITensor> krylov_vectors({w0});
     Real normres = 0.0;
-    if(orthot_)
-        {
-        //initialize lanczos
-	HH(0,0) = real(eltC(dag(w0)*residual));
-	residual -= HH(0,0)*w0;
-	normres = norm(residual);
-	HH(1,0) = normres;
-        }
-    else
-        {
-        //initialize arnoldi
-	HH(0,0) = real(eltC(dag(w0)*residual));
-        residual -= HH(0,0)*w0;
-        normres = norm(residual);
-        HH(1,0) = normres;
-        }
+    //initialize lanczos or arnoldi
+    HH(0,0) = real(eltC(dag(w0)*residual));
+    residual -= HH(0,0)*w0;
+    normres = norm(residual);
 
     int numiter = 1;
     while(true)
         {
-        auto K = size(krylov_vectors);
+	auto K = size(krylov_vectors);
         if(normres < beta_tol)
             {
             auto H = subMatrix(HH,0,K,0,K);
-	   auto exptH = expMatrix(H, sgn*(tau-tau0));
+	    auto exptH = expMatrix(H, sgn*(tau-tau0));
             totalerr += normres;
-            auto linear_comb = Vec<Real>(K);
-            linear_comb = column(exptH, 0);
+            auto linear_comb = column(exptH, 0);
             assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
-	   if(debug_level >= 0)
+	    if(debug_level >= 0)
                 printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
             break;
             }
 	else
-	   {
-            if(orthot_)
-                {
-                //one lanczos step: TODO: changed to modified gram schmidt to improve accuracy
-                krylov_vectors.push_back(residual/normres);
-                A.product(krylov_vectors[K],residual);
-                avnorm = norm(residual);
-                HH(K-1,K) = normres;
-                residual -= HH(K-1,K)*krylov_vectors[K-1];
-                HH(K,K) = real(eltC(dag(krylov_vectors[K])*residual));
-                residual -= HH(K,K)*krylov_vectors[K];
-                normres = norm(residual);
-                HH(K+1,K) = normres;
-                }
-            else
-                {
-                //one arnoldi step: modified Gram-Schmidt
-                krylov_vectors.push_back(residual/normres);
-                A.product(krylov_vectors[K],residual);
-                avnorm = norm(residual);
-                for(size_t i = 0 ; i <= K; ++i)
-                    {
-                    HH(i,K) = real(eltC(dag(krylov_vectors[i])*residual));
-                    residual -= HH(i,K)*krylov_vectors[i];
-                    }
-                normres = norm(residual);
-                HH(K+1,K) = normres;
-                }
+	    {
+	    HH(K,K-1) = normres;
+	    krylov_vectors.push_back(residual/normres);
+            A.product(krylov_vectors[K],residual);
+            avnorm = norm(residual);
             ++numops;
 
             dtau = std::min(dtau,tau-tau0);
         
-	   K = size(krylov_vectors);
             auto H = subMatrix(HH,0,K+2,0,K+2);
             H(K+1,K) = 1.0;
             auto exptH = expMatrix(H, sgn*dtau);
 
-	   auto p1 = std::abs(nrm*exptH(K,0));
-	   auto p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
-	   Real epsilon = 0.0;
-	   Real xm;
-	   if(p1 > 10*p2)
-	       {
-	       epsilon = p2;
+	    auto p1 = std::abs(nrm*exptH(K,0));
+	    auto p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
+	    Real epsilon = 0.0;
+	    Real xm;
+	    if(p1 > 10*p2)
+	        {
+	        epsilon = p2;
                 xm = 1.0/K;
-	       }
-	   else if(p1 > p2)
-	       {
-	       epsilon = (p1*p2)/(p1-p2);
-	       xm = 1.0/K;
-	       }
-	   else
-	       {
-	       epsilon = p1;
-	       xm = 1.0/(K-1);
-	       }
+	        }
+	    else if(p1 > p2)
+	        {
+	        epsilon = (p1*p2)/(p1-p2);
+	        xm = 1.0/K;
+	        }
+	    else
+	        {
+	        epsilon = p1;
+	        xm = 1.0/(K-1);//TODO: xm==inf if K==1
+	        }
 	    
-	   if(K == krylovdim || epsilon <= dtau*eta)
-	       {
-                while(epsilon > dtau*eta)
-                    {
-		  dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
-		  Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
-		  dtau = std::ceil(dtau/s)*s;
+	    if(K == krylovdim || epsilon <= dtau*eta)
+	        {
+		while(epsilon > dtau*eta)
+		    {
+		    dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
+		    Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
+		    dtau = std::ceil(dtau/s)*s;
                     exptH = expMatrix(H, sgn*dtau);
 		    
-		  p1 = std::abs(nrm*exptH(K,0));
+		    p1 = std::abs(nrm*exptH(K,0));
                     p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
                     if(p1 > 10*p2)
                         {
@@ -1120,20 +1083,19 @@ applyExpReal(BigMatrixT const& A,
                         epsilon = p1;
                         xm = 1.0/(K-1);
                         }
-		  }
+		    }
 		
-                totalerr += epsilon;
-		auto linear_comb = Vec<Real>(K+2);
-                linear_comb = column(exptH, 0);
-                linear_comb = subVector(linear_comb, 0, K+1);
-                assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
-                tau0 += dtau;
+		totalerr += epsilon;
+                auto linear_comb = column(exptH, 0);
+		linear_comb = subVector(linear_comb, 0, K+1);
+		assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
+		tau0 += dtau;
                 if(tau0 >= tau)
-                    {
-		  if(debug_level >= 0)
+		    {
+		    if(debug_level >= 0)
                         printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
-		  break;
-		  }
+		    break;
+		    }
                 else if(numiter == maxrestart)
                     {
                     printf("warning: applyExp finished without convergence after %d restarting iterations and %d linear map applications, total error = %.4e, residual time %.2e\n", numiter,numops,totalerr,tau-tau0);
@@ -1142,12 +1104,12 @@ applyExpReal(BigMatrixT const& A,
                 else
                     {
                     // Adjust the time step for the next restarting iteration
-		  dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
-		  Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
+		    dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
+		    Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
                     dtau = std::ceil(dtau/s)*s;
 
                     // Reinitialize the Krylov subspace
-		  nrm = norm(w0);
+		    nrm = norm(w0);
                     A.product(w0,residual);
                     ++numops;
                     avnorm = norm(residual);
@@ -1157,31 +1119,41 @@ applyExpReal(BigMatrixT const& A,
                             printf("applyExp finished after %d iterations and %d linear map applications with error %.4e\n",numiter,numops,avnorm);
                         break;
                         }
-		  w0 /= nrm;
-		  residual /= nrm;
+		    w0 /= nrm;
+		    residual /= nrm;
                 
                     std::fill(HH.begin(), HH.begin()+HH.size(), 0.0);
                     krylov_vectors = std::vector<ITensor>({w0});
-                    if(orthot_)
-                        {
-                        //initialize lanczos
-                        HH(0,0) = real(eltC(dag(w0)*residual));
-                        residual -= HH(0,0)*w0;
-                        normres = norm(residual);
-                        HH(1,0) = normres; 
-                        }
-                    else
-                        {
-                        //initialize arnoldi
-                        HH(0,0) = real(eltC(dag(w0)*residual));
-                        residual -= HH(0,0)*w0;
-                        normres = norm(residual);
-                        HH(1,0) = normres;
-                        }
-		  ++numiter;
+                    //initialize lanczos or arnoldi
+                    HH(0,0) = real(eltC(dag(w0)*residual));
+                    residual -= HH(0,0)*w0;
+                    normres = norm(residual);
+		    ++numiter;
                     }
-                }
-            }
+		}
+	    else
+		{// K < krylovdim && epsilon > dtau*eta
+                if(orthot_)
+                    {
+                    //one lanczos step: TODO: changed to modified gram schmidt to improve accuracy
+                    HH(K-1,K) = normres;
+                    residual -= HH(K-1,K)*krylov_vectors[K-1];
+                    HH(K,K) = real(eltC(dag(krylov_vectors[K])*residual));
+                    residual -= HH(K,K)*krylov_vectors[K];
+                    normres = norm(residual);
+    		    }
+                else
+                    {
+                    //one arnoldi step: modified Gram-Schmidt
+                    for(size_t i = 0 ; i <= K; ++i)
+                        {
+                        HH(i,K) = real(eltC(dag(krylov_vectors[i])*residual));
+                        residual -= HH(i,K)*krylov_vectors[i];
+                        }
+                    normres = norm(residual);
+                    }
+	        }
+	    }
         }
     }
 
@@ -1226,76 +1198,66 @@ applyExpCplx(BigMatrixT const& A,
     HH(0,0) = eltC(dag(w0)*residual);
     residual -= HH(0,0)*w0;
     normres = norm(residual);
-    HH(1,0) = normres;
 
     int numiter = 1;
     while(true)
         {
-        auto K = size(krylov_vectors);
+	auto K = size(krylov_vectors);
         if(normres < beta_tol)
             {
             auto H = subMatrix(HH,0,K,0,K);
-	   auto exptH = expMatrix(H, sgn*(tau-tau0));
+	    auto exptH = expMatrix(H, sgn*(tau-tau0));
             totalerr += normres;
-            auto linear_comb = Vec<Cplx>(K);
-            linear_comb = column(exptH, 0);
+            auto linear_comb = column(exptH, 0);
             assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
-	   if(debug_level >= 0)
+	    if(debug_level >= 0)
                 printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
             break;
             }
 	else
-	   {
-            //one arnoldi step: modified Gram-Schmidt
+	    {
+	    HH(K,K-1) = normres;
             krylov_vectors.push_back(residual/normres);
             A.product(krylov_vectors[K],residual);
-	   avnorm = norm(residual);
-            for(size_t i = 0 ; i <= K; ++i)
-                {
-                HH(i,K) = eltC(dag(krylov_vectors[i])*residual);
-                residual -= HH(i,K)*krylov_vectors[i];
-                }
-            normres = norm(residual);
-	   HH(K+1,K) = normres;
+	    avnorm = norm(residual);
             ++numops;
 
             dtau = std::min(dtau,tau-tau0);
         
-	   K = size(krylov_vectors);
             auto H = subMatrix(HH,0,K+2,0,K+2);
             H(K+1,K) = 1.0;
             auto exptH = expMatrix(H, sgn*dtau);
 
-	   auto p1 = std::abs(nrm*exptH(K,0));
-	   auto p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
-	   Real epsilon = 0.0;
-	   Real xm;
-	   if(p1 > 10*p2)
-	       {
-	       epsilon = p2;
+	    auto p1 = std::abs(nrm*exptH(K,0));
+	    auto p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
+	    Real epsilon = 0.0;
+	    Real xm;
+	    if(p1 > 10*p2)
+	        {
+	        epsilon = p2;
                 xm = 1.0/K;
-	       }
-	   else if(p1 > p2)
-	       {
-	       epsilon = (p1*p2)/(p1-p2);
-	       xm = 1.0/K;
-	       }
-	   else
-	       {
-	       epsilon = p1;
-	       xm = 1.0/(K-1);
-	       }
+	        }
+	    else if(p1 > p2)
+	        {
+	        epsilon = (p1*p2)/(p1-p2);
+	        xm = 1.0/K;
+	        }
+	    else
+	        {
+	        epsilon = p1;
+	        xm = 1.0/(K-1);//TODO: xm==inf if K==1
+	        }
 	    
-	   if(K == krylovdim || epsilon <= dtau*eta)
-	       {
-                while(epsilon > dtau*eta)
-                    {
-		  dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
-		  Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
-		  dtau = std::ceil(dtau/s)*s;
+	    if(K == krylovdim || epsilon <= dtau*eta)
+	        {
+		while(epsilon > dtau*eta)
+		    {
+		    dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
+		    Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
+		    dtau = std::ceil(dtau/s)*s;
                     exptH = expMatrix(H, sgn*dtau);
 		    
-		  p1 = std::abs(nrm*exptH(K,0));
+		    p1 = std::abs(nrm*exptH(K,0));
                     p2 = std::abs(nrm*exptH(K+1,0)*avnorm);
                     if(p1 > 10*p2)
                         {
@@ -1312,20 +1274,19 @@ applyExpCplx(BigMatrixT const& A,
                         epsilon = p1;
                         xm = 1.0/(K-1);
                         }
-		  }
+		    }
 		
-                totalerr += epsilon;
-		auto linear_comb = Vec<Cplx>(K+2);
-                linear_comb = column(exptH, 0);
-                linear_comb = subVector(linear_comb, 0, K+1);
-                assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
-                tau0 += dtau;
+		totalerr += epsilon;
+                auto linear_comb = column(exptH, 0);
+		linear_comb = subVector(linear_comb, 0, K+1);
+		assembleLanczosVectors(krylov_vectors, linear_comb, nrm, w0);
+		tau0 += dtau;
                 if(tau0 >= tau)
-		  {
-		  if(debug_level >= 0)
+		    {
+		    if(debug_level >= 0)
                         printf("applyExp finished after %d restarting iterations and %d linear map applications with total error = %.4e\n",numiter,numops,totalerr);
-		  break;
-		  }
+		    break;
+		    }
                 else if(numiter == maxrestart)
                     {
                     printf("warning: applyExp finished without convergence after %d restarting iterations and %d linear map applications, total error = %.4e, residual time %.2e\n", numiter,numops,totalerr,tau-tau0);
@@ -1334,12 +1295,12 @@ applyExpCplx(BigMatrixT const& A,
                 else
                     {
                     // Adjust the time step for the next restarting iteration
-		  dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
-		  Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
+		    dtau = gamma*dtau*std::pow(dtau*eta/epsilon,xm);
+		    Real s = std::pow(10.,std::floor(std::log10(dtau))-1);
                     dtau = std::ceil(dtau/s)*s;
 
                     // Reinitialize the Krylov subspace
-		  nrm = norm(w0);
+		    nrm = norm(w0);
                     A.product(w0,residual);
                     ++numops;
                     avnorm = norm(residual);
@@ -1349,8 +1310,8 @@ applyExpCplx(BigMatrixT const& A,
                             printf("applyExp finished after %d iterations and %d linear map applications with error %.4e\n",numiter,numops,avnorm);
                         break;
                         }
-		  w0 /= nrm;
-		  residual /= nrm;
+		    w0 /= nrm;
+		    residual /= nrm;
                 
                     std::fill(HH.begin(), HH.begin()+HH.size(), 0.0);
                     krylov_vectors = std::vector<ITensor>({w0});
@@ -1358,11 +1319,20 @@ applyExpCplx(BigMatrixT const& A,
                     HH(0,0) = eltC(dag(w0)*residual);
                     residual -= HH(0,0)*w0;
                     normres = norm(residual);
-                    HH(1,0) = normres;
-		  ++numiter;
+		    ++numiter;
                     }
-                }
-	   }
+		}
+	    else
+		{//K < krylovdim && epsilon > dtau*eta
+                //one arnoldi step: modified Gram-Schmidt
+		for(size_t i = 0 ; i <= K; ++i)
+                    {
+                    HH(i,K) = eltC(dag(krylov_vectors[i])*residual);
+                    residual -= HH(i,K)*krylov_vectors[i];
+                    }
+                normres = norm(residual);
+	        }
+	    }
         }
     }
 
