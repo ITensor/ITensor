@@ -145,7 +145,7 @@ imagRef(LAPACK_COMPLEX & z)
 #elif defined PLATFORM_cuda
 
 #define ITENSOR_USE_CUDA
-#define LAPACK_REQUIRE_EXTERN
+//#define LAPACK_REQUIRE_EXTERN
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
@@ -153,9 +153,9 @@ imagRef(LAPACK_COMPLEX & z)
 #include <cuComplex.h>
 
 namespace itensor {
-cudaDataType_t typeComplexData = CUDA_C_64F;
-cudaDataType_t typeRealData = CUDA_R_64F;
-cublasComputeType_t typeCompute = CUBLAS_COMPUTE_64F;
+//cudaDataType_t typeComplexData = CUDA_C_64F;
+//cudaDataType_t typeRealData = CUDA_R_64F;
+//cublasComputeType_t typeCompute = CUBLAS_COMPUTE_64F;
 
 using LAPACK_INT = int;
 using LAPACK_REAL = double;
