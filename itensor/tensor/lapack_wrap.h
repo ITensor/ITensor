@@ -151,6 +151,8 @@ imagRef(LAPACK_COMPLEX & z)
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 #include <cuComplex.h>
+#include "lapacke.h"
+#undef I //lapacke.h includes complex.h which defined an `I` macro
 
 namespace itensor {
 //cudaDataType_t typeComplexData = CUDA_C_64F;
