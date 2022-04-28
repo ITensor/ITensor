@@ -7,10 +7,10 @@
 ##
 ## Set which compiler to use by defining CCCOM:
 ## GNU GCC compiler
-CCCOM=g++ -m64 -std=c++17 -fconcepts -fPIC
+#CCCOM=g++ -m64 -std=c++17 -fconcepts -fPIC
 
 ## CUDA compiler
-#CCCOM=nvcc -m64 -std=c++17
+CCCOM=nvcc -m64 -std=c++17
 
 ## Clang compiler (good to use on macOS)
 ## Note: try this if you have trouble compiling
@@ -54,8 +54,8 @@ CCCOM=g++ -m64 -std=c++17 -fconcepts -fPIC
 ## Mac OSX system
 ##
 
-PLATFORM=macos
-BLAS_LAPACK_LIBFLAGS=-framework Accelerate
+#PLATFORM=macos
+#BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 ##
 ## Example using a C interface to LAPACK on GNU/LINUX systems
@@ -70,8 +70,8 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 ## (Path to lib/ folder may differ on your system)
 ##
 
-#PLATFORM=cuda
-#BLAS_LAPACK_LIBFLAGS=-lpthread -L/usr/lib -lblas -llapack -lcublas
+PLATFORM=cuda
+BLAS_LAPACK_LIBFLAGS=-lpthread -L/usr/lib -lblas -llapack -lcublas
 
 ##
 ## Example using the Intel MKL library
@@ -171,7 +171,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 OPTIMIZATIONS=-O2 -DNDEBUG
 
 ## Flags to give the compiler for "debug mode"
-DEBUGFLAGS=-DDEBUG -g -pedantic
+DEBUGFLAGS=-DDEBUG -g
 #
 ## Set this to 1 if you want ITensor to also build dynamic libraries
 ## These can be faster to link and give smaller binary sizes
@@ -217,7 +217,7 @@ ITENSOR_LIBFLAGS += -fopenmp
 ITENSOR_LIBGFLAGS += -fopenmp
 endif
 
-CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
+CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS)
 CCGFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L'$(ITENSOR_LIBDIR)' $(ITENSOR_LIBFLAGS)
 LIBGFLAGS=-L'$(ITENSOR_LIBDIR)' $(ITENSOR_LIBGFLAGS)
