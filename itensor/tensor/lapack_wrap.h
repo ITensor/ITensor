@@ -145,14 +145,12 @@ imagRef(LAPACK_COMPLEX & z)
 #elif defined PLATFORM_cuda
 
 #define ITENSOR_USE_CUDA
-//#define LAPACK_REQUIRE_EXTERN
+#define LAPACK_REQUIRE_EXTERN
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 #include <cuComplex.h>
-#include "lapacke.h"
-#undef I //lapacke.h includes complex.h which defined an `I` macro
 
 namespace itensor {
 //cudaDataType_t typeComplexData = CUDA_C_64F;
