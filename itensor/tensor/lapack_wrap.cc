@@ -248,6 +248,7 @@ gemm_wrapper(bool transa,
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
+    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
