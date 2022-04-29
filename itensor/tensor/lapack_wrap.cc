@@ -252,20 +252,6 @@ gemm_wrapper(bool transa,
     // I just want to try to not use gpu multiplication
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
-    char at = 'N';
-    char bt = 'N';
-    if(transa)
-        {
-        at = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = 'T';
-        ldb = n;
-        }
-    auto *pA = const_cast<double*>(A);
-    auto *pB = const_cast<double*>(B);
     char at2 = 'N';
     char bt2 = 'N';
     if(transa)
