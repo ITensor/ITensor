@@ -227,6 +227,27 @@ gemm_wrapper(bool transa,
     cudaFree(d_B);
     cudaFree(d_C);
     cublasDestroy(handle);
+    std::cout << "Matrix A:" << std::endl;
+    for(int i=0; i<m*k; ++i)
+    {
+        std::cout << A[i] << " ";
+        if(!((i+1)%m)) std::cout << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << "Matrix B:" << std::endl;
+    for(int i=0; i<k*n; ++i)
+    {
+        std::cout << B[i] << " ";
+        if(!((i+1)%k)) std::cout << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << "Matrix C:" << std::endl;
+    for(int i=0; i<m*n; ++i)
+    {
+        std::cout << C[i] << " ";
+        if(!((i+1)%m)) std::cout << std::endl;
+    }
+    std::cout << std::endl;
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
