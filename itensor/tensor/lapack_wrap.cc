@@ -248,7 +248,37 @@ gemm_wrapper(bool transa,
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
-    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
+
+    // I just want to try to not use gpu multiplication
+    auto *pA = const_cast<double*>(A);
+    auto *pB = const_cast<double*>(B);
+    char at = 'N';
+    char bt = 'N';
+    if(transa)
+        {
+        at = 'T';
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = 'T';
+        ldb = n;
+        }
+    auto *pA = const_cast<double*>(A);
+    auto *pB = const_cast<double*>(B);
+    char at2 = 'N';
+    char bt2 = 'N';
+    if(transa)
+        {
+        at2 = 'T';
+        lda = k;
+        }
+    if(transb)
+        {
+        bt2 = 'T';
+        ldb = n;
+        }
+    F77NAME(dgemm)(&at2,&bt2,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
