@@ -70,9 +70,9 @@ dnrm2_wrapper(LAPACK_INT N,
     LAPACK_REAL result;
     cublasDnrm2(handle, N, d_X, incx, &result);
     std::cout << result << " is the norm of:" << std::endl;
-    for(auto v : X)
+    for(int i=0; i<N; ++i)
     {
-        std::cout << v << " ";
+        std::cout << X[i] << " ";
     }
     std::cout << std::endl << std::endl;
     cudaFree(d_X);
