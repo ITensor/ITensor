@@ -462,6 +462,25 @@ gemv_wrapper(bool trans,
     cudaFree(d_A);
     cudaFree(d_x);
     cudaFree(d_y);
+    std::cout << "Matrix A:" << std::endl;
+    for(int i=0; i<m*n; ++i)
+    {
+        std::cout << A[i] << " ";
+        if(!((i+1)%m)) std::cout << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << "Vector x:" << std::endl;
+    for(int i=0; i<m; ++i)
+    {
+        std::cout << x[i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "Vector y:" << std::endl;
+    for(int i=0; i<m; ++i)
+    {
+        std::cout << y[i] << " ";
+    }
+    std::cout << std::endl;
     cublasDestroy(handle);
 #else //platform other than openblas
 #ifdef ITENSOR_USE_CBLAS
