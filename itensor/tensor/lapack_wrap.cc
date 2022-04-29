@@ -200,6 +200,7 @@ gemm_wrapper(bool transa,
         }
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
 #elif defined ITENSOR_USE_CUDA
+/*
     cublasOperation_t at = CUBLAS_OP_N;
     cublasOperation_t bt = CUBLAS_OP_N;
     if(transa)
@@ -248,6 +249,7 @@ gemm_wrapper(bool transa,
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
+*/
 
     // I just want to try to not use gpu multiplication
     auto *pA = const_cast<double*>(A);
