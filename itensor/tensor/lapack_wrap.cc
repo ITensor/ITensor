@@ -69,7 +69,7 @@ dnrm2_wrapper(LAPACK_INT N,
     cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
     LAPACK_REAL result;
     cublasDnrm2(handle, N, d_X, incx, &result);
-    std::cout << result << " is the norm of:" << std:endl;
+    std::cout << result << " is the norm of:" << std::endl;
     for(auto v : X)
     {
         std::cout << v << " ";
