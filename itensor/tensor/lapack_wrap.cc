@@ -219,14 +219,17 @@ gemm_wrapper(bool transa,
     cudaMalloc(&d_A, m * k * sizeof(LAPACK_REAL));
     cudaMalloc(&d_B, k * n * sizeof(LAPACK_REAL));
     cudaMalloc(&d_C, m * n * sizeof(LAPACK_REAL));
-    cublasSetMatrix(m, k, sizeof(LAPACK_REAL), A, lda, d_A, lda);
-    cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
-    cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
+    //cublasSetMatrix(m, k, sizeof(LAPACK_REAL), A, lda, d_A, lda);
+    cudaMemcpy(d_A, A, m * k * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    //cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
+    cudaMemcpy(d_B, B, k * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    //cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
+    cudaMemcpy(d_C, C, m * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
     double* A_copy;
     A_copy = (LAPACK_REAL*)malloc(m * k * sizeof(LAPACK_REAL));
     //cublasGetMatrix(m, k, sizeof(LAPACK_REAL), d_A, m, A_copy, m);
-    cudaMemcpy( A_copy, d_A, m * k * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
+    cudaMemcpy(A_copy, d_A, m * k * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     std::cout << "difference" << std::endl;
     for(int i=0; i<m*k; ++i)
         std::cout << A[i]-A_copy[i] << " ";
