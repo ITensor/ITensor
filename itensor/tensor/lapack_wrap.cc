@@ -224,7 +224,7 @@ gemm_wrapper(bool transa,
     cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
     cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
     double* A_copy;
-    malloc(A_copy, m * k * sizeof(double));
+    A_copy = malloc(m * k * sizeof(double));
     cublasGetMatrix(m, k, sizeof(LAPACK_REAL), d_A, m, A_copy, m);
     std::cout << "difference" << std::endl;
     for(int i=0; i<m*k; ++i)
