@@ -223,19 +223,27 @@ gemm_wrapper(bool transa,
     cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
     cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
     cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
+    double* A_copy;
+    malloc(A_copy, m * k * sizeof(double));
+    cublasGetMatrix(m, k, sizeof(LAPACK_REAL), d_A, m, A_copy, m);
+    std::cout << "difference" << std::endl;
+    for(int i=0; i<m*k; ++i)
+        std::cout << A[i]-A_copy[i] << " ";
+    std::cout << std::endl << std::endl;
+    free(A_copy);
     cublasGetMatrix(m, n, sizeof(LAPACK_REAL), d_C, m, C, m);
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
     cublasDestroy(handle);
-    std::cout << "Matrix A:" << std::endl;
+    std::cout << "Matrix A: " << transa << std::endl;
     for(int i=0; i<m*k; ++i)
     {
         std::cout << A[i] << " ";
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
-    std::cout << "Matrix B:" << std::endl;
+    std::cout << "Matrix B: " << transb << std::endl;
     for(int i=0; i<k*n; ++i)
     {
         std::cout << B[i] << " ";
