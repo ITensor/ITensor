@@ -226,21 +226,13 @@ gemm_wrapper(bool transa,
     //cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
     cudaMemcpy(d_C, C, m * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
-    double* A_copy;
-    A_copy = (LAPACK_REAL*)malloc(m * k * sizeof(LAPACK_REAL));
-    //cublasGetMatrix(m, k, sizeof(LAPACK_REAL), d_A, m, A_copy, m);
-    cudaMemcpy(A_copy, d_A, m * k * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
-    std::cout << "difference" << std::endl;
-    for(int i=0; i<m*k; ++i)
-        std::cout << A[i]-A_copy[i] << " ";
-    std::cout << std::endl << std::endl;
-    free(A_copy);
     //cublasGetMatrix(m, n, sizeof(LAPACK_REAL), d_C, m, C, m);
     cudaMemcpy(C, d_C, m * n * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
     cublasDestroy(handle);
+    /*
     std::cout << "Matrix A: " << transa << std::endl;
     for(int i=0; i<m*k; ++i)
     {
@@ -262,6 +254,7 @@ gemm_wrapper(bool transa,
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
+    */
 /**/
 /*
     // I just want to try to not use gpu multiplication
