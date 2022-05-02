@@ -69,12 +69,12 @@ dnrm2_wrapper(LAPACK_INT N,
     cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
     LAPACK_REAL result;
     cublasDnrm2(handle, N, d_X, incx, &result);
-    std::cout << result << " is the norm of:" << std::endl;
-    for(int i=0; i<N; ++i)
-    {
-        std::cout << X[i] << " ";
-    }
-    std::cout << std::endl << std::endl;
+    //std::cout << result << " is the norm of:" << std::endl;
+    //for(int i=0; i<N; ++i)
+    //{
+        //std::cout << X[i] << " ";
+    //}
+    //std::cout << std::endl << std::endl;
     cudaFree(d_X);
     cublasDestroy(handle);
     return result;
@@ -200,7 +200,7 @@ gemm_wrapper(bool transa,
         }
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
 #elif defined ITENSOR_USE_CUDA
-/*
+/**/
     cublasOperation_t at = CUBLAS_OP_N;
     cublasOperation_t bt = CUBLAS_OP_N;
     if(transa)
@@ -249,8 +249,8 @@ gemm_wrapper(bool transa,
         if(!((i+1)%m)) std::cout << std::endl;
     }
     std::cout << std::endl;
-*/
-
+/**/
+/*
     // I just want to try to not use gpu multiplication
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
@@ -267,6 +267,7 @@ gemm_wrapper(bool transa,
         ldb = n;
         }
     F77NAME(dgemm)(&at2,&bt2,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
+*/
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
