@@ -38,10 +38,10 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
     LAPACK_REAL *d_X, *d_Y;
     cudaMalloc(&d_X, n * sizeof(LAPACK_REAL));
     cudaMalloc(&d_Y, n * sizeof(LAPACK_REAL));
-    cublasSetVector(n, sizeof(LAPACK_REAL), X, incx, d_X, incx);
-    cublasSetVector(n, sizeof(LAPACK_REAL), Y, incy, d_Y, incy);
+    cudaMemcpy(d_X, X, n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Y, Y, n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDaxpy(handle, n, &alpha, d_X, incx, d_Y, incy);
-    cublasGetVector(n, sizeof(LAPACK_REAL), d_Y, incy, Y, incy);
+    cudaMemcpy(Y, d_Y, n * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     cudaFree(d_X);
     cudaFree(d_Y);
     cublasDestroy(handle);
@@ -66,15 +66,9 @@ dnrm2_wrapper(LAPACK_INT N,
     cublasCreate(&handle);
     LAPACK_REAL *d_X;
     cudaMalloc(&d_X, N * sizeof(LAPACK_REAL));
-    cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
+    cudaMemcpy(d_X, X, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     LAPACK_REAL result;
     cublasDnrm2(handle, N, d_X, incx, &result);
-    //std::cout << result << " is the norm of:" << std::endl;
-    //for(int i=0; i<N; ++i)
-    //{
-        //std::cout << X[i] << " ";
-    //}
-    //std::cout << std::endl << std::endl;
     cudaFree(d_X);
     cublasDestroy(handle);
     return result;
@@ -103,8 +97,8 @@ ddot_wrapper(LAPACK_INT N,
     LAPACK_REAL *d_X, *d_Y;
     cudaMalloc(&d_X, N * sizeof(LAPACK_REAL));
     cudaMalloc(&d_Y, N * sizeof(LAPACK_REAL));
-    cublasSetVector(N, sizeof(LAPACK_REAL), X, incx, d_X, incx);
-    cublasSetVector(N, sizeof(LAPACK_REAL), Y, incy, d_Y, incy);
+    cudaMemcpy(d_X, X, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Y, Y, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     LAPACK_REAL result;
     cublasDdot (handle, N, d_X, incx, d_Y, incy, &result);
     cudaFree(d_X);
@@ -149,8 +143,8 @@ zdotc_wrapper(LAPACK_INT N,
     LAPACK_COMPLEX *d_X, *d_Y;
     cudaMalloc(&d_X, N * sizeof(LAPACK_COMPLEX));
     cudaMalloc(&d_Y, N * sizeof(LAPACK_COMPLEX));
-    cublasSetVector(N, sizeof(LAPACK_COMPLEX), X, incx, d_X, incx);
-    cublasSetVector(N, sizeof(LAPACK_COMPLEX), Y, incy, d_Y, incy);
+    cudaMemcpy(d_X, X, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Y, Y, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasZdotc(handle, N, d_X, incx, d_Y, incy, &res);
     cudaFree(d_X);
     cudaFree(d_Y);
@@ -200,7 +194,6 @@ gemm_wrapper(bool transa,
         }
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
 #elif defined ITENSOR_USE_CUDA
-/**/
     cublasOperation_t at = CUBLAS_OP_N;
     cublasOperation_t bt = CUBLAS_OP_N;
     if(transa)
@@ -219,61 +212,15 @@ gemm_wrapper(bool transa,
     cudaMalloc(&d_A, m * k * sizeof(LAPACK_REAL));
     cudaMalloc(&d_B, k * n * sizeof(LAPACK_REAL));
     cudaMalloc(&d_C, m * n * sizeof(LAPACK_REAL));
-    //cublasSetMatrix(m, k, sizeof(LAPACK_REAL), A, lda, d_A, lda);
     cudaMemcpy(d_A, A, m * k * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
-    //cublasSetMatrix(k, n, sizeof(LAPACK_REAL), B, ldb, d_B, ldb);
     cudaMemcpy(d_B, B, k * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
-    //cublasSetMatrix(m, n, sizeof(LAPACK_REAL), C, m, d_C, m);
     cudaMemcpy(d_C, C, m * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDgemm(handle, at, bt, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, m);
-    //cublasGetMatrix(m, n, sizeof(LAPACK_REAL), d_C, m, C, m);
     cudaMemcpy(C, d_C, m * n * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
     cublasDestroy(handle);
-    /*
-    std::cout << "Matrix A: " << transa << std::endl;
-    for(int i=0; i<m*k; ++i)
-    {
-        std::cout << A[i] << " ";
-        if(!((i+1)%m)) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << "Matrix B: " << transb << std::endl;
-    for(int i=0; i<k*n; ++i)
-    {
-        std::cout << B[i] << " ";
-        if(!((i+1)%k)) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << "Matrix C:" << std::endl;
-    for(int i=0; i<m*n; ++i)
-    {
-        std::cout << C[i] << " ";
-        if(!((i+1)%m)) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    */
-/**/
-/*
-    // I just want to try to not use gpu multiplication
-    auto *pA = const_cast<double*>(A);
-    auto *pB = const_cast<double*>(B);
-    char at2 = 'N';
-    char bt2 = 'N';
-    if(transa)
-        {
-        at2 = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt2 = 'T';
-        ldb = n;
-        }
-    F77NAME(dgemm)(&at2,&bt2,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
-*/
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
@@ -356,11 +303,11 @@ gemm_wrapper(bool transa,
     cudaMalloc(&d_A, m * k * sizeof(LAPACK_COMPLEX));
     cudaMalloc(&d_B, k * n * sizeof(LAPACK_COMPLEX));
     cudaMalloc(&d_C, m * n * sizeof(LAPACK_COMPLEX));
-    cublasSetMatrix(m, k, sizeof(LAPACK_COMPLEX), A, lda, d_A, lda);
-    cublasSetMatrix(k, n, sizeof(LAPACK_COMPLEX), B, ldb, d_B, ldb);
-    cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), C, m, d_C, m);
+    cudaMemcpy(d_A, A, m * k * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, k * n * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_C, C, m * n * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
     cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, d_A, lda, d_B, ldb, (LAPACK_COMPLEX*) &beta, d_C, m);
-    cublasGetMatrix(m, n, sizeof(LAPACK_COMPLEX), d_C, m, C, m);
+    cudaMemcpy(C, d_C, m * n * sizeof(LAPACK_COMPLEX), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
@@ -430,34 +377,14 @@ gemv_wrapper(bool trans,
     cudaMalloc(&d_A, m * n * sizeof(LAPACK_REAL));
     cudaMalloc(&d_x, m * sizeof(LAPACK_REAL));
     cudaMalloc(&d_y, m * sizeof(LAPACK_REAL));
-    cublasSetMatrix(m, n, sizeof(LAPACK_REAL), A, m, d_A, m);
-    cublasSetVector(m, sizeof(LAPACK_REAL), x, incx, d_x, incx);
-    cublasSetVector(m, sizeof(LAPACK_REAL), y, incy, d_y, incy);
+    cudaMemcpy(d_A, A, m * n * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_x, x, m * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_y, y, m * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDgemv(handle, tr, m, n, &alpha, d_A, m, d_x, incx, &beta, d_y, incy);
-    cublasGetVector(m, sizeof(LAPACK_REAL), d_y, incy, y, incy);
+    cudaMemcpy(y, d_y, m * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_x);
     cudaFree(d_y);
-    std::cout << "Matrix A:" << std::endl;
-    for(int i=0; i<m*n; ++i)
-    {
-        std::cout << A[i] << " ";
-        if(!((i+1)%m)) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << "Vector x:" << std::endl;
-    for(int i=0; i<m; ++i)
-    {
-        std::cout << x[i] << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Vector y:" << std::endl;
-    for(int i=0; i<m; ++i)
-    {
-        std::cout << y[i] << " ";
-    }
-    std::cout << std::endl;
-
     cublasDestroy(handle);
 #else
     char Tr = trans ? 'T' : 'N';
@@ -501,33 +428,14 @@ gemv_wrapper(bool trans,
     cudaMalloc(&d_A, m * n * sizeof(LAPACK_COMPLEX));
     cudaMalloc(&d_x, m * sizeof(LAPACK_COMPLEX));
     cudaMalloc(&d_y, m * sizeof(LAPACK_COMPLEX));
-    cublasSetMatrix(m, n, sizeof(LAPACK_COMPLEX), A, m, d_A, m);
-    cublasSetVector(m, sizeof(LAPACK_COMPLEX), x, incx, d_x, incx);
-    cublasSetVector(m, sizeof(LAPACK_COMPLEX), y, incy, d_y, incy);
+    cudaMemcpy(d_A, A, m * n * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_x, x, m * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_y, y, m * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
     cublasZgemv(handle, tr, m, n, (LAPACK_COMPLEX*) &alpha, d_A, m, d_x, incx, (LAPACK_COMPLEX*) &beta, d_y, incy);
-    cublasGetVector(m, sizeof(LAPACK_COMPLEX), d_y, incy, y, incy);
+    cudaMemcpy(y, d_y, m * sizeof(LAPACK_COMPLEX), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_x);
     cudaFree(d_y);
-    std::cout << "Matrix A:" << std::endl;
-    for(int i=0; i<m*n; ++i)
-    {
-        std::cout << A[i] << " ";
-        if(!((i+1)%m)) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << "Vector x:" << std::endl;
-    for(int i=0; i<m; ++i)
-    {
-        std::cout << x[i] << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Vector y:" << std::endl;
-    for(int i=0; i<m; ++i)
-    {
-        std::cout << y[i] << " ";
-    }
-    std::cout << std::endl;
     cublasDestroy(handle);
 #else //platform other than openblas
 #ifdef ITENSOR_USE_CBLAS
@@ -596,9 +504,9 @@ dscal_wrapper(LAPACK_INT N,
     cublasCreate(&handle);
     LAPACK_REAL *d_x;
     cudaMalloc(&d_x, N * sizeof(LAPACK_REAL));
-    cublasSetVector(N, sizeof(LAPACK_REAL), data, inc, d_x, inc);
+    cudaMemcpy(d_x, data, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     cublasDscal(handle, N, &alpha, d_x, inc);
-    cublasGetVector(N, sizeof(LAPACK_REAL), d_x, inc, data, inc);
+    cudaMemcpy(data, d_x, N * sizeof(LAPACK_REAL), cudaMemcpyDeviceToHost);
     cudaFree(d_x);
     cublasDestroy(handle);
 #else
