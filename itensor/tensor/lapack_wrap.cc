@@ -62,15 +62,15 @@ dnrm2_wrapper(LAPACK_INT N,
 #ifdef ITENSOR_USE_CBLAS
     return cblas_dnrm2(N,X,incx);
 #elif defined ITENSOR_USE_CUDA
-    cublasHandle_t handle;
-    cublasCreate(&handle);
+    static cublasHandle_t handle;
+    //cublasCreate(&handle);
     LAPACK_REAL *d_X;
     cudaMalloc(&d_X, N * sizeof(LAPACK_REAL));
     cudaMemcpy(d_X, X, N * sizeof(LAPACK_REAL), cudaMemcpyHostToDevice);
     LAPACK_REAL result;
     cublasDnrm2(handle, N, d_X, incx, &result);
     cudaFree(d_X);
-    cublasDestroy(handle);
+    //cublasDestroy(handle);
     return result;
 #else
     auto *Xnc = const_cast<LAPACK_REAL*>(X);
@@ -206,8 +206,8 @@ gemm_wrapper(bool transa,
         bt = CUBLAS_OP_T;
         ldb = n;
         }
-    cublasHandle_t handle;
-    cublasCreate(&handle);
+    static cublasHandle_t handle;
+    //cublasCreate(&handle);
     LAPACK_REAL *d_A, *d_B, *d_C;
     cudaMalloc(&d_A, m * k * sizeof(LAPACK_REAL));
     cudaMalloc(&d_B, k * n * sizeof(LAPACK_REAL));
@@ -220,7 +220,7 @@ gemm_wrapper(bool transa,
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
-    cublasDestroy(handle);
+    //cublasDestroy(handle);
 #else
     auto *pA = const_cast<double*>(A);
     auto *pB = const_cast<double*>(B);
