@@ -10,7 +10,6 @@
 #CCCOM=g++ -m64 -std=c++17 -fconcepts -fPIC
 
 ## CUDA compiler
-## comment line 
 CCCOM=nvcc -m64 -std=c++17
 
 ## Clang compiler (good to use on macOS)
