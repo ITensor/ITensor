@@ -67,7 +67,12 @@ class uninitialized_allocator
   };
 
 template<typename T>
-using vector_no_init = std::vector<T,uninitialized_allocator<T>>;
+//#ifdef PLATFORM_cuda
+    //using vector_no_init = thrust::vector<T,uninitialized_allocator<T>>;
+//#else
+    using vector_no_init = std::vector<T,uninitialized_allocator<T>>;
+//#endif
+
 
 } //namespace itensor
 
