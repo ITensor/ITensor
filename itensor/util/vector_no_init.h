@@ -17,6 +17,7 @@
 #define __ITENSOR_VECTOR_NO_INIT_H
 
 #include <vector>
+#include <thrust/device_vector.h>
 
 namespace itensor {
 
@@ -64,14 +65,16 @@ class uninitialized_allocator
   bool
   operator!=(uninitialized_allocator<T> const&) { return false; }
 
+  //where is destroy?
+
   };
 
 template<typename T>
-//#ifdef PLATFORM_cuda
-    //using vector_no_init = thrust::vector<T,uninitialized_allocator<T>>;
-//#else
+#ifdef PLATFORM_cuda
+    using vector_no_init = thrust::device_vector<T>;
+#else
     using vector_no_init = std::vector<T,uninitialized_allocator<T>>;
-//#endif
+#endif
 
 
 } //namespace itensor
