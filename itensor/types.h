@@ -29,18 +29,22 @@ namespace itensor {
 
 using Real = double;
 #ifdef PLATFORM_cuda
-    #include <thrust/complex.h>
-    using Cplx = thrust::complex<double>;
-    using Complex = thrust::complex<double>;
+    #include <cuComplex.h>
+    using Cplx = cuDoubleComplex;
+    using Complex = cuDoubleComplex;
+    const Cplx Complex_1 = make_cuDoubleComplex(1,0);
+    const Cplx Complex_i = make_cuDoubleComplex(0,1);
+    const Cplx Cplx_1 = make_cuDoubleComplex(1,0);
+    const Cplx Cplx_i = make_cuDoubleComplex(0,1);
 #else
     using Cplx = std::complex<double>;
     using Complex = std::complex<double>;
+    const Cplx Complex_1 = Cplx(1,0);
+    const Cplx Complex_i = Cplx(0,1);
+    const Cplx Cplx_1 = Cplx(1,0);
+    const Cplx Cplx_i = Cplx(0,1);
 #endif
 
-const Cplx Complex_1 = Cplx(1,0);
-const Cplx Complex_i = Cplx(0,1);
-const Cplx Cplx_1 = Cplx(1,0);
-const Cplx Cplx_i = Cplx(0,1);
 
 inline Real&
 realRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[0]; }
