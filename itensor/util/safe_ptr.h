@@ -275,7 +275,7 @@ reinterpret(SafePtr<OldType> const& p)
         #define MAKE_SAFE_PTR(P,SZ) (P)
         #define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) ((P)+(OFF))
         #define SAFE_PTR_GET(P,SZ) P
-        #define SAFE_REINTERPRET(NT,SP) reinterpret_cast<thrust::device_ptr<T>>(SP)
+        #define SAFE_REINTERPRET(NT,SP) reinterpret_cast<thrust::device_ptr<NT>>(SP)
         #define SAFE_PTR_OF(T) thrust::device_ptr<T>
     #else
         //bare pointer versions of macros
