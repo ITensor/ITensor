@@ -28,18 +28,24 @@
 namespace itensor {
 
 using Real = double;
-using Cplx = std::complex<double>;
-using Complex = std::complex<double>;
+#ifdef PLATFORM_cuda
+    #include <cuComplex.h>
+    using Cplx = cuDoubleComplex;
+    using Complex = cuDoubleComplex;
+#else
+    using Cplx = std::complex<double>;
+    using Complex = std::complex<double>;
+#endif
 
 const Cplx Complex_1 = Cplx(1,0);
 const Cplx Complex_i = Cplx(0,1);
 const Cplx Cplx_1 = Cplx(1,0);
 const Cplx Cplx_i = Cplx(0,1);
 
-inline Real& 
+inline Real&
 realRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[0]; }
 
-inline Real& 
+inline Real&
 imagRef(Cplx & z) { return reinterpret_cast<Real*>(&z)[1]; }
 
 void inline
@@ -78,11 +84,11 @@ formatVal(Cplx const& val)
     }
 
 template<typename T, class=stdx::require<std::is_same<T,Real>>>
-constexpr const char* 
+constexpr const char*
 typeName(int=0) { return "Real"; }
 
 template<typename T, class=stdx::require<std::is_same<T,Cplx>>>
-constexpr const char* 
+constexpr const char*
 typeName(long=0) { return "Cplx"; }
 
 }
