@@ -18,6 +18,7 @@
 
 #include "itensor/util/print.h"
 #include "itensor/util/stdx.h"
+#include <thrust/device_vector.h>
 
 namespace itensor {
 
@@ -44,19 +45,19 @@ class SafePtr
 
     SafePtr(T* pt, size_t offset_end)
         : p_(pt), offset_(0), offset_end_(offset_end)
-        { 
+        {
         //if(!p_) throw std::runtime_error("SafePtr: pointer is null");
         }
 
     SafePtr(T* pt, size_t offset, size_t offset_end)
         : p_(pt), offset_(offset), offset_end_(offset_end)
-        { 
+        {
         if(!p_) throw std::runtime_error("SafePtr: pointer is null");
         }
 
     //Allow automatic conversion SafePtr<T> -> SafePtr<const T>
     SafePtr(SafePtr<value_type> const& P)
-        { 
+        {
         operator=(P);
         }
     SafePtr&
@@ -75,29 +76,29 @@ class SafePtr
     bool
     validOffset() const { return (offset_ < offset_end_); }
     size_t
-    range() const 
-        { 
+    range() const
+        {
         if(validOffset()) return (offset_end_-offset_);
         return 0ul;
         }
 
     pointer
-    get() const 
-        { 
+    get() const
+        {
         if(!p_) return nullptr;
-        return (p_+offset_); 
+        return (p_+offset_);
         }
 
     pointer
     safeGet(size_t expected_range)
         {
-        if(!p_) 
+        if(!p_)
             {
             throw std::runtime_error("SafePtr: dereferencing null pointer");
             }
         if(!validOffset())
             {
-            auto error_msg = 
+            auto error_msg =
             format("SafePtr: offset >= offset_end (%d >= %d)",
                    offset_,offset_end_);
             throw std::runtime_error(error_msg);
@@ -105,7 +106,7 @@ class SafePtr
         auto actual_range = offsetEnd()-offset();
         if(expected_range > actual_range)
             {
-            auto error_msg = 
+            auto error_msg =
             format("SafePtr: expected_range > actual_range (%d > %d)",
                     expected_range,actual_range);
             throw std::runtime_error(error_msg);
@@ -118,7 +119,7 @@ class SafePtr
     SafePtr&
     operator+=(size_t shift)
         {
-        //if(!p_) 
+        //if(!p_)
         //    {
         //    throw std::runtime_error("SafePtr: incrementing (+=) null pointer");
         //    }
@@ -186,8 +187,8 @@ class SafePtr
         }
 
     bool
-    operator!=(SafePtr const& other) const 
-        { 
+    operator!=(SafePtr const& other) const
+        {
         if(p_ != other.p_)
             throw std::runtime_error("SafePtr: error, comparing two different starting pointers");
         return (offset_ != other.offset_);
@@ -198,20 +199,20 @@ class SafePtr
 
 
     pointer
-    getStart() const 
-        { 
+    getStart() const
+        {
         return p_;
         }
 
     private:
 
     pointer
-    safeFront() const 
+    safeFront() const
         {
         if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
         if(!validOffset())
             {
-            auto error_msg = 
+            auto error_msg =
             format("SafePtr: offset >= offset_end (%d >= %d)",
                    offset_,offset_end_);
             throw std::runtime_error(error_msg);
@@ -269,12 +270,21 @@ reinterpret(SafePtr<OldType> const& p)
 
 #else
 
-//bare pointer versions of macros
-#define MAKE_SAFE_PTR(P,SZ) (P)
-#define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) ((P)+(OFF))
-#define SAFE_PTR_GET(P,SZ) P
-#define SAFE_REINTERPRET(NT,SP) reinterpret_cast<NT*>(SP)
-#define SAFE_PTR_OF(T) T*
+    #ifdef PLATFORM_cuda
+        //bare pointer versions of macros
+        #define MAKE_SAFE_PTR(P,SZ) (P)
+        #define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) ((P)+(OFF))
+        #define SAFE_PTR_GET(P,SZ) P
+        #define SAFE_REINTERPRET(NT,SP) reinterpret_cast<NT*>(SP)
+        #define SAFE_PTR_OF(T) thrust::device_ptr<T>
+    #else
+        //bare pointer versions of macros
+        #define MAKE_SAFE_PTR(P,SZ) (P)
+        #define MAKE_SAFE_PTR_OFFSET(P,OFF,SZ) ((P)+(OFF))
+        #define SAFE_PTR_GET(P,SZ) P
+        #define SAFE_REINTERPRET(NT,SP) reinterpret_cast<NT*>(SP)
+        #define SAFE_PTR_OF(T) T*
+    #endif
 
 #endif
 
