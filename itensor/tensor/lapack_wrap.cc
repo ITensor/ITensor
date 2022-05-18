@@ -249,10 +249,10 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              Cplx alpha,
-             const thrust::device_ptr<complex> A,
-             const thrust::device_ptr<complex> B,
+             const thrust::device_ptr<LAPACK_COMPLEX> A,
+             const thrust::device_ptr<LAPACK_COMPLEX> B,
              Cplx beta,
-             thrust::device_ptr<complex> C)
+             thrust::device_ptr<LAPACK_COMPLEX> C)
     {
     LAPACK_INT lda = m,
                ldb = k;
