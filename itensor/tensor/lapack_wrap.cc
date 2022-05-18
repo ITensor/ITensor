@@ -299,18 +299,7 @@ gemm_wrapper(bool transa,
         }
     cublasHandle_t handle;
     cublasCreate(&handle);
-    LAPACK_COMPLEX *d_A, *d_B, *d_C;
-    cudaMalloc(&d_A, m * k * sizeof(LAPACK_COMPLEX));
-    cudaMalloc(&d_B, k * n * sizeof(LAPACK_COMPLEX));
-    cudaMalloc(&d_C, m * n * sizeof(LAPACK_COMPLEX));
-    cudaMemcpy(d_A, A, m * k * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, B, k * n * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_C, C, m * n * sizeof(LAPACK_COMPLEX), cudaMemcpyHostToDevice);
-    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, d_A, lda, d_B, ldb, (LAPACK_COMPLEX*) &beta, d_C, m);
-    cudaMemcpy(C, d_C, m * n * sizeof(LAPACK_COMPLEX), cudaMemcpyDeviceToHost);
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
+    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A, lda, B, ldb, (LAPACK_COMPLEX*) &beta, C, m);
     cublasDestroy(handle);
 #else //platform not openblas
 #ifdef ITENSOR_USE_CBLAS
