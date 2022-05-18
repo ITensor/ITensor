@@ -270,7 +270,7 @@ gemm_wrapper(bool transa,
         }
     cublasHandle_t handle;
     cublasCreate(&handle);
-    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A, lda, B, ldb, (LAPACK_COMPLEX*) &beta, C, m);
+    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A.get(), lda, B.get(), ldb, (LAPACK_COMPLEX*) &beta, C.get(), m);
     cublasDestroy(handle);
 }
 
