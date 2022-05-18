@@ -243,6 +243,7 @@ gemm_wrapper(bool transa,
 //
 // zgemm
 //
+void 
 gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
