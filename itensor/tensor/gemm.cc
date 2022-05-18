@@ -176,10 +176,11 @@ gemm_impl(MatRefc<Cplx> A,
                  ncols(B),
                  ncols(A),
                  alpha,
-                 A.data(),
-                 B.data(),
+                 (A.data()).get(), // .get() returns the raw pointer from thrust::device_ptr
+                 (B.data()).get(),
                  beta,
-                 C.data());
+                 (C.data()).get());
+
 #elif defined ITENSOR_USE_ZGEMM
     gemm_wrapper(isTransposed(A),
                  isTransposed(B),

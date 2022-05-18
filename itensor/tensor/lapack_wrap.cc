@@ -249,10 +249,10 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              Cplx alpha,
-             const thrust::device_ptr<LAPACK_COMPLEX> A,
-             const thrust::device_ptr<LAPACK_COMPLEX> B,
+             const LAPACK_COMPLEX* A,
+             const LAPACK_COMPLEX* B,
              Cplx beta,
-             thrust::device_ptr<LAPACK_COMPLEX> C)
+             LAPACK_COMPLEX* C)
     {
     LAPACK_INT lda = m,
                ldb = k;
@@ -270,7 +270,7 @@ gemm_wrapper(bool transa,
         }
     cublasHandle_t handle;
     cublasCreate(&handle);
-    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A.get(), lda, B.get(), ldb, (LAPACK_COMPLEX*) &beta, C.get(), m);
+    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A, lda, B, ldb, (LAPACK_COMPLEX*) &beta, C, m);
     cublasDestroy(handle);
 }
 

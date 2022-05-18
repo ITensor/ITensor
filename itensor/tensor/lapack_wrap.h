@@ -531,6 +531,18 @@ gemm_wrapper(bool transa,
              LAPACK_INT n,
              LAPACK_INT k,
              Cplx alpha,
+             LAPACK_COMPLEX const* A,
+             LAPACK_COMPLEX const* B,
+             Cplx beta,
+             LAPACK_COMPLEX * C);
+
+void
+gemm_wrapper(bool transa,
+             bool transb,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             LAPACK_INT k,
+             Cplx alpha,
              Cplx const* A,
              Cplx const* B,
              Cplx beta,
