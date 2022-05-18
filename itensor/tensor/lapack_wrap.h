@@ -151,6 +151,7 @@ imagRef(LAPACK_COMPLEX & z)
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 #include <cuComplex.h>
+#include <thrust/device_vector.h>
 
 namespace itensor {
 //cudaDataType_t typeComplexData = CUDA_C_64F;
