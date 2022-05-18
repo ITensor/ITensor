@@ -32,8 +32,10 @@ using Real = double;
 #ifdef PLATFORM_cuda
     //#include <cuComplex.h>
     #include <thrust/complex.h>
-    using Cplx = thrust::complex<double>;
-    using Complex = thrust::complex<double>;
+    using Cplx2 = thrust::complex<double>;
+    using Complex2 = thrust::complex<double>;
+    using Cplx = std::complex<double>;
+    using Complex = std::complex<double>;
 #else
 /**/
     using Cplx = std::complex<double>;
