@@ -29,18 +29,18 @@ namespace itensor {
 
 using Real = double;
 /**/
-#ifdef PLATFORM_cuda
+//#ifdef PLATFORM_cuda
     //#include <cuComplex.h>
     //#include <thrust/complex.h>
     //using Cplx2 = thrust::complex<double>;
     //using Complex2 = thrust::complex<double>;
-    using Cplx = std::complex<double>;
-    using Complex = std::complex<double>;
-#else
+    //using Cplx = std::complex<double>;
+    //using Complex = std::complex<double>;
+//#else
 /**/
     using Cplx = std::complex<double>;
     using Complex = std::complex<double>;
-#endif
+//#endif
 const Cplx Complex_1 = Cplx(1,0);
 const Cplx Complex_i = Cplx(0,1);
 const Cplx Cplx_1 = Cplx(1,0);
