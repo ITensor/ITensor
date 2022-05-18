@@ -243,6 +243,37 @@ gemm_wrapper(bool transa,
 //
 // zgemm
 //
+gemm_wrapper(bool transa,
+             bool transb,
+             LAPACK_INT m,
+             LAPACK_INT n,
+             LAPACK_INT k,
+             Cplx alpha,
+             const thrust::device_ptr<complex> A,
+             const thrust::device_ptr<complex> B,
+             Cplx beta,
+             thrust::device_ptr<complex> C)
+    {
+    LAPACK_INT lda = m,
+               ldb = k;
+    cublasOperation_t at = CUBLAS_OP_N;
+    cublasOperation_t bt = CUBLAS_OP_N;
+    if(transa)
+        {
+        at = CUBLAS_OP_T;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CUBLAS_OP_T;
+        ldb = n;
+        }
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A, lda, B, ldb, (LAPACK_COMPLEX*) &beta, C, m);
+    cublasDestroy(handle);
+}
+
 void
 gemm_wrapper(bool transa,
              bool transb,
