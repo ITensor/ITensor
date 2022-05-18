@@ -315,23 +315,6 @@ gemm_wrapper(bool transa,
     auto* pB = reinterpret_cast<const double*>(B);
     auto* pC = reinterpret_cast<double*>(C);
 	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
-#elif defined ITENSOR_USE_CUDA
-    cublasOperation_t at = CUBLAS_OP_N;
-    cublasOperation_t bt = CUBLAS_OP_N;
-    if(transa)
-        {
-        at = CUBLAS_OP_T;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CUBLAS_OP_T;
-        ldb = n;
-        }
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    cublasZgemm(handle, at, bt, m, n, k, (LAPACK_COMPLEX*) &alpha, A, lda, B, ldb, (LAPACK_COMPLEX*) &beta, C, m);
-    cublasDestroy(handle);
 #else //platform not openblas
 #ifdef ITENSOR_USE_CBLAS
     auto at = CblasNoTrans,
