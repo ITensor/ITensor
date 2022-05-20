@@ -50,6 +50,19 @@ struct dgemmTask
        : copyToC(true),Cpart(Cp)
         { }
     };
+#ifdef ITENSOR_USE_CUDA
+    gemm_wrapper(isTransposed(A),
+                 isTransposed(B),
+                 nrows(A),
+                 ncols(B),
+                 ncols(A),
+                 alpha,
+                 A.data(),
+                 B.data(),
+                 beta,
+                 C.data());
+#else
+
 
 void
 cplxToRealBuf(SAFE_PTR_OF(const Real) C,
@@ -169,19 +182,7 @@ gemm_impl(MatRefc<Cplx> A,
           Real alpha,
           Real beta)
     {
-#ifdef ITENSOR_USE_CUDA
-    gemm_wrapper(isTransposed(A),
-                 isTransposed(B),
-                 nrows(A),
-                 ncols(B),
-                 ncols(A),
-                 alpha,
-                 A.data(),
-                 B.data(),
-                 beta,
-                 C.data());
-
-#elif defined ITENSOR_USE_ZGEMM
+#if defined ITENSOR_USE_ZGEMM
     gemm_wrapper(isTransposed(A),
                  isTransposed(B),
                  nrows(A),
@@ -203,7 +204,7 @@ gemm_impl(MatRefc<Cplx> A,
           dgemmTask(1)
           }};
     gemm_emulator(A,B,C,alpha,beta,tasks);
-#endif
+#endif //ITENSOR_USE_ZGEMM
     }
 
 
@@ -302,6 +303,8 @@ template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
 template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
 template void gemm(MatRefc<Cplx>, MatRefc<Real>, MatRef<Cplx>,Real,Real);
 template void gemm(MatRefc<Cplx>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
+
+#endif //ITENSOR_USE_CUDA
 
 
 } //namespace itensor
