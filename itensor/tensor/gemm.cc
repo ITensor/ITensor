@@ -176,8 +176,8 @@ gemm_impl(MatRefc<Cplx> A,
                  ncols(B),
                  ncols(A),
                  alpha,
-                 (A.data()).get(), // .get() returns the raw pointer from thrust::device_ptr
-                 (B.data()).get(),
+                 A.data(), 
+                 B.data(),
                  beta,
                  (C.data()).get());
 
