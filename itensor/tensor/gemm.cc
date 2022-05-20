@@ -92,7 +92,7 @@ gemm(MatRefc<VA> A,
             gemm_impl(A,B,C,alpha,beta);
             }
     }
-//template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
+template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
 //template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
 //template void gemm(MatRefc<Cplx>, MatRefc<Real>, MatRef<Cplx>,Real,Real);
 template void gemm(MatRefc<Cplx>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
