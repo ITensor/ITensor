@@ -50,7 +50,15 @@ struct dgemmTask
        : copyToC(true),Cpart(Cp)
         { }
     };
+
 #ifdef ITENSOR_USE_CUDA
+void
+gemm_impl(MatRefc<Cplx> A,
+          MatRefc<Cplx> B,
+          MatRef<Cplx>  C,
+          Real alpha,
+          Real beta)
+    {
     gemm_wrapper(isTransposed(A),
                  isTransposed(B),
                  nrows(A),
@@ -61,6 +69,7 @@ struct dgemmTask
                  B.data(),
                  beta,
                  C.data());
+    }
 #else
 
 
