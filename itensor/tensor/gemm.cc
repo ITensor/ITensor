@@ -70,6 +70,32 @@ gemm_impl(MatRefc<Cplx> A,
                  beta,
                  C.data());
     }
+
+// C = alpha*A*B + beta*C
+template<typename VA, typename VB>
+void
+gemm(MatRefc<VA> A,
+     MatRefc<VB> B,
+     MatRef<common_type<VA,VB>>  C,
+     Real alpha,
+     Real beta)
+    {
+        if(isTransposed(C))
+            {
+            //Do C = Bt*At instead of Ct=A*B
+            //Recall that C.data() points to elements of C, not C.t()
+            //regardless of whether C.transpose()==true or false
+            gemm_impl(transpose(B),transpose(A),transpose(C),alpha,beta);
+            }
+        else
+            {
+            gemm_impl(A,B,C,alpha,beta);
+            }
+    }
+template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
+template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
+template void gemm(MatRefc<Cplx>, MatRefc<Real>, MatRef<Cplx>,Real,Real);
+template void gemm(MatRefc<Cplx>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
 #else
 
 
