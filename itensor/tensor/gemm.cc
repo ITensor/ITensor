@@ -176,10 +176,10 @@ gemm_impl(MatRefc<Cplx> A,
                  ncols(B),
                  ncols(A),
                  alpha,
-                 A.data(), 
+                 A.data(),
                  B.data(),
                  beta,
-                 (C.data()).get());
+                 C.data());
 
 #elif defined ITENSOR_USE_ZGEMM
     gemm_wrapper(isTransposed(A),
