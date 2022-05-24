@@ -149,7 +149,11 @@ imagRef(LAPACK_COMPLEX & z)
 #ifdef FORTRAN_NO_TRAILING_UNDERSCORE
 #define F77NAME(x) x
 #else
+#if defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
+#define F77NAME(x) LAPACK_##x
+#else
 #define F77NAME(x) x##_
+#endif
 #endif
 
 namespace itensor {
