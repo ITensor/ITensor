@@ -517,6 +517,23 @@ eltC(ITensor A,
     return A.eltC(std::forward<VarArgs>(vargs)...);
     }
 
+//
+//  I was unable to get these to instance with a varargs parameter pack.
+//
+template <> inline
+Real
+eltT(ITensor A)
+    {
+        return A.elt();
+    }   
+
+template <> inline
+Complex
+eltT(ITensor A)
+    {
+        return A.eltC();
+    }   
+    
 //Apply x = f(x) for each element x of T
 //and return the resulting tensor
 template<typename F>

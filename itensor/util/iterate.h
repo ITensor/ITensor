@@ -66,6 +66,28 @@ class RangeHelper
 
 } //namespace detail
 
+//
+//  No way to get the first index, so we can only support current.
+//
+template <typename T> inline
+T
+current(const detail::RangeHelper<T>& rh)
+{
+    return *rh;
+}
+template <typename T> inline
+T
+last(const detail::RangeHelper<T>& rh)
+{
+    return *rh.end();
+}
+template <typename T> inline
+T
+length(const detail::RangeHelper<T>& rh)
+{
+    return last(rh)-current(rh);
+}
+
 template <typename T,
           class=typename std::enable_if<std::is_integral<T>::value>::type>
 auto constexpr

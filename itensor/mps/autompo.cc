@@ -972,8 +972,6 @@ template<typename T,
 T
 forceType(Cplx z) { return z.real(); }
 
-Real
-conj(Real x) { return x; }
 
 //
 // Construct left & right partials and the 

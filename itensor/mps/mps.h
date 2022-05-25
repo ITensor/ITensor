@@ -867,6 +867,254 @@ MPSType
 sum(std::vector<MPSType> const& terms, 
     Args const& args = Args::global());
 
+    
+//
+//  Try and verify the SiteSet and MPS are mutually consistent.
+//     We say "try" because even if d matches they could still correspond to different
+//     Hilbert spaces or different basis sets (less likely).
+//  
+bool inline
+checkConsistent(const MPS& psi, 
+                const SiteSet& sites
+                )
+{
+    bool consistent=sites.length()==psi.length();
+    for (int j=1;j<=sites.length();j++)
+       consistent = consistent && sites(j).dim()==siteIndex(psi,j).dim();
+    return consistent;
+}
+//-------------------------------------------------------------------------------------------
+//
+//  Template implementation of expect function for Real and Complex types and fixed site list.
+//
+template <class T> std::vector<std::vector<T>> 
+expectT(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    assert(checkConsistent(_psi,sites));
+//
+// Work with copy because we need to move the orth-center
+//        
+    MPS psi=_psi; 
+    if (!isOrtho(psi)) psi.orthogonalize();
+    psi.normalize(); //Is this expensive if we are already orthogonalized?
+
+    std::vector<std::vector<T>> ex;
+    for (auto i:site_list)
+    {
+        psi.position(i); //Set the ortho centre.
+        std::vector<T> exi; //row of data for site i
+        for (auto str_op:vops)
+        {
+            auto e=psi(i) * sites.op(str_op,i) * dag(prime(psi(i), sites(i)));
+            exi.push_back(eltT<T>(e));
+        }
+        ex.push_back(exi); //push row into the table.
+    }
+
+    return ex;
+}
+
+void fixRange(detail::RangeHelper<int>&r,int N);
+//
+//  Convert range to explicit list in one place
+//
+template <class T> std::vector<std::vector<T>> 
+expectT(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    fixRange(site_range,_psi.length());
+    std::vector<int> site_list;
+    for (auto i:site_range) site_list.push_back(i);
+    return expectT<T>(_psi,sites,vops,site_list);
+}
+
+//  1D containers for returning arrays of numbers from expect().
+typedef std::vector<Real   > VecR;  
+typedef std::vector<Complex> VecC;  
+//  2D containers for returning tables of numbers from expect() and correlation functions
+typedef std::vector<VecR> VecVecR;  
+typedef std::vector<VecC> VecVecC;  
+
+//
+//  User versions of expect (Real) and expectC(Complex).  These just function forward to the template than does the work.
+//  We need hand code all 4 combinations of {Real,Complex}(X){range,list}
+//
+inline VecVecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Real>(_psi,sites,vops,site_range);
+}
+
+
+inline VecVecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    return expectT<Complex>(_psi,sites,vops,site_range);
+}
+
+inline VecVecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Real>(_psi,sites,vops,site_list);
+}
+
+inline VecVecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::vector<string>& vops,
+        std::vector<int> site_list 
+        )
+{
+    return expectT<Complex>(_psi,sites,vops,site_list);
+}
+
+//
+//  Single operator versions
+//
+template <typename T> 
+std::vector<T> 
+getFirstColumn(const std::vector<std::vector<T>>& m)
+{
+   std::vector<T> col0;
+   for (auto r:m)
+        col0.push_back(r[0]);
+   return col0;
+}
+
+inline VecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return getFirstColumn(expectT<Real>(_psi,sites,vops,site_range));
+}
+
+inline VecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        detail::RangeHelper<int> site_range=range1(0) //fake default because we don't have access to sites.length in the function signature.
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return getFirstColumn(expectT<Complex>(_psi,sites,vops,site_range));
+}
+
+inline VecR 
+expect (const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        std::vector<int> site_list 
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return getFirstColumn(expectT<Real>(_psi,sites,vops,site_list));
+}
+
+inline VecC 
+expectC(const MPS& _psi, 
+        const SiteSet& sites,
+        const std::string& vop,
+        std::vector<int> site_list 
+        )
+{
+    std::vector<string> vops;
+    vops.push_back(vop);
+    return getFirstColumn(expectT<Complex>(_psi,sites,vops,site_list));
+}
+
+
+//-------------------------------------------------------------------------------------------
+//
+//  Template implementation of correlationMatrix function for Real and Complex types.
+//
+using std::conj;
+inline Real conj(Real r) {return r;} //dummy conj so we can compile generic function
+
+//  Template function that does all the work.  See mps.cc for implementation.
+template <class T> std::vector<std::vector<T>>
+correlationMatrixT(const MPS& _psi,
+                   const SiteSet& sites,
+                   const string& op1,
+                   const string& op2,
+                   detail::RangeHelper<int> site_range, //No defaults
+                   Args const& args //No defaults
+                   );
+//
+//  Real and Complex wrappers for various combinations of default args.
+//
+inline VecVecR
+correlationMatrix(const MPS& psi,
+                  const SiteSet& sites,
+                  const string& op1,
+                  const string& op2,
+                  detail::RangeHelper<int> site_range,
+                  Args const& args = Args::global()
+                 )
+{
+    return correlationMatrixT<Real>(psi,sites,op1,op2,site_range,args);
+}
+
+
+inline VecVecR
+correlationMatrix(const MPS& psi,
+                  const SiteSet& sites,
+                  const string& op1,
+                  const string& op2,
+                  Args const& args = Args::global()
+                 )
+{
+    return correlationMatrixT<Real>(psi,sites,op1,op2,range1(0),args);
+}
+
+inline VecVecC
+correlationMatrixC(const MPS& psi,
+                   const SiteSet& sites,
+                   const string& op1,
+                   const string& op2,
+                   detail::RangeHelper<int> site_range,
+                  Args const& args = Args::global()
+                  )
+{
+    return correlationMatrixT<Complex>(psi,sites,op1,op2,site_range,args);
+}
+inline VecVecC
+correlationMatrixC(const MPS& psi,
+                   const SiteSet& sites,
+                   const string& op1,
+                   const string& op2,
+                   Args const& args = Args::global()
+                  )
+{
+    return correlationMatrixT<Complex>(psi,sites,op1,op2,range1(0),args);
+}
+
+
 std::ostream& 
 operator<<(std::ostream& s, MPS const& M);
 

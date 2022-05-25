@@ -47,9 +47,6 @@ using conditional_t = typename std::conditional<B,T1,T2>::type;
 template<bool B, typename T1, typename T2>
 using conditional_t = typename std::conditional<B,T1,T2>::type;
 
-template<class T>
-using result_of_t = typename std::result_of<T>::type;
-
 template<typename... Conds>
 struct all
     {

@@ -496,6 +496,16 @@ Cplx
 eltC(ITensor A,
      VarArgs&&... vargs);
 
+//
+//  Templated version that we can call from template code. Simply forwards to elt or eltc based on T.
+//  Real and Complex specializations are in itensor_impl.h
+//
+template <typename T>
+T
+eltT(ITensor A);     
+
+
+
 // Get IndexSet
 IndexSet const& 
 inds(ITensor const& A);

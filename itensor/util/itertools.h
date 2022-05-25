@@ -92,7 +92,7 @@ namespace triqs::utility {
 
   /********************* Transform Iterator ********************/
 
-  template <typename Iter, typename L, typename Value = std::result_of<L(typename std::iterator_traits<Iter>::value_type)>>
+  template <typename Iter, typename L, typename Value = std::invoke_result_t<L,typename std::iterator_traits<Iter>::value_type>>
   struct transform_iter : iterator_facade<transform_iter<Iter, L>, Value> {
 
     Iter it;
