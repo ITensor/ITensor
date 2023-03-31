@@ -34,49 +34,49 @@ namespace detail {
     int
     hermitianDiag(int N, Real *Udata, Real *ddata)
         {
-        LAPACK_INT _N = N;
+        LAPACK_INT N_ = N;
         LAPACK_INT info = 0;
-        dsyev_wrapper('V','U',_N,Udata,ddata,info);
+        dsyev_wrapper('V','U',N_,Udata,ddata,info);
         return info;
         }
     int
     hermitianDiag(int N, Cplx *Udata,Real *ddata)
         {
-        LAPACK_INT _N = N;
-        return zheev_wrapper(_N,Udata,ddata);
+        LAPACK_INT N_ = N;
+        return zheev_wrapper(N_,Udata,ddata);
         }
 
     int
     QR(int M, int N, int Rrows, Real *Qdata, Real *Rdata)
         {
-        LAPACK_INT _M = M, _N = N, _Rrows = Rrows;
+        LAPACK_INT M_ = M, N_ = N, Rrows_ = Rrows;
         LAPACK_INT info = 0;
-        std::vector<LAPACK_REAL> tau(_N);
-        dgeqrf_wrapper(&_M, &_N, Qdata, &_M, tau.data(), &info);
-        for(LAPACK_INT i = 0; i < _Rrows; i++)
-        for(LAPACK_INT j = i; j < _N; j++) 
+        std::vector<LAPACK_REAL> tau(N_);
+        dgeqrf_wrapper(&M_, &N_, Qdata, &M_, tau.data(), &info);
+        for(LAPACK_INT i = 0; i < Rrows_; i++)
+        for(LAPACK_INT j = i; j < N_; j++) 
             {
-            Rdata[i + j*_Rrows] = Qdata[i+j*_M];
+            Rdata[i + j*Rrows_] = Qdata[i+j*M_];
             }
-        LAPACK_INT min = _M < _N ? _M : _N;
-        dorgqr_wrapper(&_M, &_Rrows, &min, Qdata, &_M, tau.data(), &info);
+        LAPACK_INT min = M_ < N_ ? M_ : N_;
+        dorgqr_wrapper(&M_, &Rrows_, &min, Qdata, &M_, tau.data(), &info);
         return info;
         }
 
     int
     QR(int M, int N, int Rrows, Cplx *Qdata, Cplx *Rdata)
         {
-        LAPACK_INT _M = M, _N = N, _Rrows = Rrows;
+        LAPACK_INT M_ = M, N_ = N, Rrows_ = Rrows;
         LAPACK_INT info = 0;
         std::vector<LAPACK_COMPLEX> tau(N);
-        zgeqrf_wrapper(&_M, &_N, Qdata, &_M, tau.data(), &info);
-        for(LAPACK_INT i = 0; i < _Rrows; i++)
-        for(LAPACK_INT j = i; j < _N; j++) 
+        zgeqrf_wrapper(&M_, &N_, Qdata, &M_, tau.data(), &info);
+        for(LAPACK_INT i = 0; i < Rrows_; i++)
+        for(LAPACK_INT j = i; j < N_; j++) 
             {
-            Rdata[i + j*_Rrows] = Qdata[i+j*_M];
+            Rdata[i + j*Rrows_] = Qdata[i+j*M_];
             }
-        LAPACK_INT min = _M < _N ? _M : _N;
-        zungqr_wrapper(&_M, &_Rrows, &min, Qdata, &_M, tau.data(), &info);
+        LAPACK_INT min = M_ < N_ ? M_ : N_;
+        zungqr_wrapper(&M_, &Rrows_, &min, Qdata, &M_, tau.data(), &info);
         return info;
         }
 
@@ -84,20 +84,20 @@ namespace detail {
   int
   SVD_gesdd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
     {
-    LAPACK_INT _M = M, _N = N;
+    LAPACK_INT M_ = M, N_ = N;
     LAPACK_INT info = 0;
     char S = 'S';
-    zgesdd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
+    zgesdd_wrapper(&S, &M_, &N_, Adata, Ddata,  Udata, Vdata, &info);
     return info;
     }
 
     int
     SVD_gesdd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
     {
-    LAPACK_INT _M = M, _N = N;
+    LAPACK_INT M_ = M, N_ = N;
     LAPACK_INT info = 0;
     char S = 'S';
-    dgesdd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
+    dgesdd_wrapper(&S, &M_, &N_, Adata, Ddata,  Udata, Vdata, &info);
     return info;
     }
 
@@ -105,20 +105,20 @@ namespace detail {
     int
     SVD_gesvd(int M, int N, Cplx * Adata, Cplx * Udata, Real * Ddata, Cplx * Vdata)
         {
-        LAPACK_INT _M = M, _N = N;
+        LAPACK_INT M_ = M, N_ = N;
         LAPACK_INT info = 0;
         char S = 'S';
-        zgesvd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
+        zgesvd_wrapper(&S, &M_, &N_, Adata, Ddata,  Udata, Vdata, &info);
         return info;
         }
 
     int
     SVD_gesvd(int M, int N, Real * Adata, Real * Udata, Real * Ddata, Real * Vdata)
         {
-        LAPACK_INT _M = M, _N = N;
+        LAPACK_INT M_ = M, N_ = N;
         LAPACK_INT info = 0;
         char S = 'S';
-        dgesvd_wrapper(&S, &_M, &_N, Adata, Ddata,  Udata, Vdata, &info);
+        dgesvd_wrapper(&S, &M_, &N_, Adata, Ddata,  Udata, Vdata, &info);
         return info;
         }
 
