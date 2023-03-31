@@ -46,7 +46,7 @@ printv(const vector<T>& t,
        const F& f)
     {
     print("{ ");
-    for(const auto& i : t) 
+    for(const auto& i : t)
         {
         f(i);
         print(" ");
@@ -76,8 +76,8 @@ printv(const autovector<T>& t)
 #define PRIL(a,l) print(#a,": "); printv(a,l);
 
 //template<typename T>
-//long 
-//find_index(vector<T> const& v, 
+//long
+//find_index(vector<T> const& v,
 //           T const& t)
 //    {
 //    using size_type = typename vector<T>::size_type;
@@ -87,8 +87,8 @@ printv(const autovector<T>& t)
 //    }
 //
 //template<typename T, size_t MaxSize>
-//long 
-//find_index(const VarArray<T,MaxSize>& v, 
+//long
+//find_index(const VarArray<T,MaxSize>& v,
 //           const T& t)
 //    {
 //    using size_type = typename VarArray<T,MaxSize>::size_type;
@@ -98,8 +98,8 @@ printv(const autovector<T>& t)
 //    }
 //
 //template<typename T, size_t MaxSize>
-//long 
-//find_index(const InfArray<T,MaxSize>& v, 
+//long
+//find_index(const InfArray<T,MaxSize>& v,
 //           const T& t)
 //    {
 //    using size_type = typename InfArray<T,MaxSize>::size_type;
@@ -120,7 +120,7 @@ class small_map
     std::array<std::pair<A,B>,N> d;
     int nd{0};
 
-    B& 
+    B&
     operator[](const A& a)
         {
         for(int i = 0; i < nd; ++i)
@@ -136,15 +136,15 @@ class small_map
 // struct analyzing index pattern for C = A * B
 struct CProps
     {
-    Labels ai, 
-          bi, 
+    Labels ai,
+          bi,
           ci;
-    int nactiveA = 0, 
-        nactiveB = 0, 
+    int nactiveA = 0,
+        nactiveB = 0,
         nactiveC = 0;
     private:
-    Labels AtoB_, 
-          AtoC_, 
+    Labels AtoB_,
+          AtoC_,
           BtoC_;
     bool permuteA_ = false,
          permuteB_ = false,
@@ -166,11 +166,11 @@ struct CProps
     Range newArange,
           newBrange,
           newCrange;
-    
-    CProps(Labels const& ai_, 
-           Labels const& bi_, 
-           Labels const& ci_) 
-        : 
+
+    CProps(Labels const& ai_,
+           Labels const& bi_,
+           Labels const& ci_)
+        :
         ai(ai_),bi(bi_),ci(ci_),
         Acstart(ai_.size()),
         Bcstart(bi_.size()),
@@ -212,7 +212,7 @@ struct CProps
         if(size_t(Austart) >= ai.size()) return true;
         auto aCind = AtoC(Austart);
         using size_type = decltype(ai.size());
-        for(size_type i = 0; i < ai.size(); ++i) 
+        for(size_type i = 0; i < ai.size(); ++i)
             if(!contractedA(i))
                 {
                 if(AtoC(i) != aCind) return false;
@@ -227,7 +227,7 @@ struct CProps
         if(size_t(Bustart) >= bi.size()) return true;
         auto bCind = BtoC(Bustart);
         using size_type = decltype(bi.size());
-        for(size_type i = 0; i < bi.size(); ++i) 
+        for(size_type i = 0; i < bi.size(); ++i)
             if(!contractedB(i))
                 {
                 if(BtoC(i) != bCind) return false;
@@ -256,7 +256,7 @@ struct CProps
         //
 
         computePerms();
-        
+
         //Use PC.size() as a check to see if we've already run this
         if(PC.size() != 0) return;
 
@@ -282,19 +282,19 @@ struct CProps
                 dmid *= A.extent(i);
                 }
         for(int j = 0; j < rb; ++j)
-            if(!contractedB(j)) 
+            if(!contractedB(j))
                 {
                 dright *= B.extent(j);
                 PC.setFromTo(c,BtoC(j));
                 ++c;
                 }
 
-        if(!isTrivial(PC)) 
+        if(!isTrivial(PC))
             {
             permuteC_ = true;
             if(checkBCsameord() && checkACsameord())
                 {
-                //Can avoid permuting C by 
+                //Can avoid permuting C by
                 //computing Bt*At = Ct
                 ctrans = true;
                 permuteC_ = false;
@@ -305,15 +305,15 @@ struct CProps
         permuteA_ = false;
         if(!(contractedA(0) || contractedA(ra-1)))
             {
-            //If contracted indices are not all at front or back, 
-            //will have to permute A 
+            //If contracted indices are not all at front or back,
+            //will have to permute A
             permuteA_ = true;
             }
         else
             {
             //Contracted ind start at front or back, check if contiguous
             for(int i = 0; i < ncont; ++i)
-                if(!contractedA(Acstart+i)) 
+                if(!contractedA(Acstart+i))
                     {
                     //Contracted indices not contiguous, must permute
                     permuteA_ = true;
@@ -325,7 +325,7 @@ struct CProps
         permuteB_ = false;
         if(!(contractedB(0) || contractedB(rb-1)))
             {
-            //If contracted indices are not all at front or back, 
+            //If contracted indices are not all at front or back,
             //will have to permute B
             permuteB_ = true;
             }
@@ -344,9 +344,9 @@ struct CProps
             {
             //Check if contracted inds. in same order
             for(int i = 0; i < ncont; ++i)
-                if(AtoB(Acstart+i) != (Bcstart+i)) 
+                if(AtoB(Acstart+i) != (Bcstart+i))
                     {
-                    //If not in same order, 
+                    //If not in same order,
                     //must permute one of A or B
                     //so permute the smaller one
                     if(dleft < dright) permuteA_ = true;
@@ -487,7 +487,7 @@ struct CProps
                     ++c;
                     }
             for(int j = 0; j < rb; ++j)
-                if(!contractedB(j)) 
+                if(!contractedB(j))
                     {
                     PC.setFromTo(c,BtoC_[j]);
                     ++c;
@@ -502,9 +502,9 @@ struct CProps
                 permuteC_ = true;
                 //Here we already know since pc_triv = false that
                 //at best indices from B precede those from A (on result C)
-                //so if both sets remain in same order on C 
+                //so if both sets remain in same order on C
                 //just need to transpose C, not permute it
-                if(checkBCsameord() && checkACsameord()) 
+                if(checkBCsameord() && checkACsameord())
                     {
                     ctrans = true;
                     permuteC_ = false;
@@ -534,27 +534,27 @@ struct CProps
             if(!permuteB_)
                 {
                 for(decltype(rb) j = 0; j < rb; ++j)
-                    if(!contractedB(j)) 
+                    if(!contractedB(j))
                         Rb.nextIndex(B.extent(j));
                 }
             else
                 {
                 for(decltype(rb) j = 0; j < rb; ++j)
-                    if(!contractedB(j)) 
+                    if(!contractedB(j))
                         Rb.nextIndex(newBrange.extent(j));
                 }
             newCrange = Rb.build();
             }
         }
 
-    void 
+    void
     computePerms()
         {
         //Use !AtoB.empty() as a check to see if we've already run this
         if(!AtoB_.empty()) return;
 
-        int na = ai.size(), 
-            nb = bi.size(), 
+        int na = ai.size(),
+            nb = bi.size(),
             nc = ci.size();
 
         AtoB_ = Labels(na,-1);
@@ -563,7 +563,7 @@ struct CProps
         for(int i = 0; i < na; ++i)
             {
             for(int j = 0; j < nb; ++j)
-                if(ai[i] == bi[j]) 
+                if(ai[i] == bi[j])
                     {
                     ++ncont;
                     if(i < Acstart) Acstart = i;
@@ -576,7 +576,7 @@ struct CProps
         for(int i = 0; i < na; ++i)
             {
             for(int k = 0; k < nc; ++k)
-                if(ai[i] == ci[k]) 
+                if(ai[i] == ci[k])
                     {
                     if(i < Austart) Austart = i;
                     AtoC_[i] = k;
@@ -587,7 +587,7 @@ struct CProps
         for(int j = 0; j < nb; ++j)
             {
             for(int k = 0; k < nc; ++k)
-                if(bi[j] == ci[k]) 
+                if(bi[j] == ci[k])
                     {
                     if(j < Bustart) Bustart = j;
                     BtoC_[j] = k;
@@ -603,7 +603,7 @@ struct CProps
     computeNactive()
         {
         // Out of A, B and C  (C = A*B), each index appears in two tensors.
-        // An active index appears as one of the first two indices in each of the two 
+        // An active index appears as one of the first two indices in each of the two
         // tensor in which it appears.  More specifically:
         // the first index of a tensor is active if its pair is also a first index, or if its
         // pair is a second index and that tensor's first index is active.
@@ -620,9 +620,9 @@ struct CProps
         small_map<int,int> indval;
         for(int i = 0; i <= 1; ++i)
             {
-            ++indval[ai[i]]; 
-            ++indval[bi[i]]; 
-            ++indval[ci[i]]; 
+            ++indval[ai[i]];
+            ++indval[bi[i]];
+            ++indval[ci[i]];
             }
 
         for(int elim = 1; elim <= 3; ++elim) // bad guys at position 0 kill the index at 1
@@ -640,20 +640,20 @@ struct CProps
 
 struct ABoffC
     {
-    MatrixRefc mA, 
+    MatrixRefc mA,
             mB;
     MatrixRef  mC;
     int offC;
 
-    ABoffC(MatrixRefc& mA_, 
-           MatrixRefc& mB_, 
-           MatrixRef& mC_, 
+    ABoffC(MatrixRefc& mA_,
+           MatrixRefc& mB_,
+           MatrixRef& mC_,
            int offC_)
-        : 
-        mA(mA_), 
-        mB(mB_), 
-        mC(mC_), 
-        offC(offC_) 
+        :
+        mA(mA_),
+        mB(mB_),
+        mC(mC_),
+        offC(offC_)
         { }
 
     void
@@ -667,16 +667,16 @@ class CABqueue
 
     CABqueue() { }
 
-    void 
-    addtask(MatrixRefc& mA, 
-            MatrixRefc& mB, 
-            MatrixRef& mC, 
+    void
+    addtask(MatrixRefc& mA,
+            MatrixRefc& mB,
+            MatrixRef& mC,
             int offC)
         {
         subtask[offC].emplace_back(mA,mB,mC,offC);
         }
 
-    void 
+    void
     run(int numthread)
         {
 
@@ -693,8 +693,8 @@ class CABqueue
         //////////
 
         //Loop over threads in a round-robin fashion.
-        //Assign all tasks with the same memory 
-        //destination (offC) to the same thread. 
+        //Assign all tasks with the same memory
+        //destination (offC) to the same thread.
         vector<vector<ABoffC>> threadtask(numthread);
         int ss = 0;
         for(auto& t : subtask)
@@ -715,14 +715,14 @@ class CABqueue
             //printfln("task size for thread %d is %d",i,tt.size());
             futs[i] = std::async(std::launch::async,
                       [&tt]()
-                          { 
+                          {
                           for(const auto& task : tt)
                             task.execute();
                           }
                       );
             }
         //Wait for futures to complete
-        for(auto& ft : futs) 
+        for(auto& ft : futs)
             {
             ft.wait();
             }
@@ -731,7 +731,7 @@ class CABqueue
 
 
 template<typename range_t, typename VA, typename VB>
-void 
+void
 contract(CProps const& p,
          TenRefc<range_t,VA> A,
          TenRefc<range_t,VB> B,
@@ -802,7 +802,7 @@ contract(CProps const& p,
         }
     else
         {
-        if(p.Ctrans()) 
+        if(p.Ctrans())
             {
             cref = transpose(makeMatRef(C.store(),ncols(bref),nrows(aref)));
             }
@@ -824,9 +824,9 @@ contract(CProps const& p,
     }
 
 template<typename R, typename T1, typename T2>
-void 
-contractScalar(T1 a, 
-               TenRefc<R,T2> B, Labels const& bi, 
+void
+contractScalar(T1 a,
+               TenRefc<R,T2> B, Labels const& bi,
                TenRef<R,common_type<T1,T2>>  C, Labels const& ci,
                Real alpha,
                Real beta)
@@ -841,19 +841,19 @@ contractScalar(T1 a,
     }
 
 template<typename RangeT, typename VA, typename VB>
-void 
-contract(TenRefc<RangeT,VA> A, Labels const& ai, 
-         TenRefc<RangeT,VB> B, Labels const& bi, 
-         TenRef<RangeT,common_type<VA,VB>>  C, 
+void
+contract(TenRefc<RangeT,VA> A, Labels const& ai,
+         TenRefc<RangeT,VB> B, Labels const& bi,
+         TenRef<RangeT,common_type<VA,VB>>  C,
          Labels const& ci,
          Real alpha,
          Real beta)
     {
-    if(ai.empty()) 
+    if(ai.empty())
         {
         contractScalar(*A.data(),B,bi,C,ci,alpha,beta);
         }
-    else if(bi.empty()) 
+    else if(bi.empty())
         {
         contractScalar(*B.data(),A,ai,C,ci,alpha,beta);
         }
@@ -866,44 +866,48 @@ contract(TenRefc<RangeT,VA> A, Labels const& ai,
     }
 
 //Explicit template instantiations:
-template void 
-contract(TenRefc<Range,Real>, Labels const&, 
-         TenRefc<Range,Real>, Labels const&, 
+/*
+template void
+contract(TenRefc<Range,Real>, Labels const&,
+         TenRefc<Range,Real>, Labels const&,
          TenRef<Range,Real> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<Range,Cplx>, Labels const&, 
-         TenRefc<Range,Real>, Labels const&, 
+template void
+contract(TenRefc<Range,Cplx>, Labels const&,
+         TenRefc<Range,Real>, Labels const&,
          TenRef<Range,Cplx> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<Range,Real>, Labels const&, 
-         TenRefc<Range,Cplx>, Labels const&, 
+template void
+contract(TenRefc<Range,Real>, Labels const&,
+         TenRefc<Range,Cplx>, Labels const&,
          TenRef<Range,Cplx> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<Range,Cplx>, Labels const&, 
-         TenRefc<Range,Cplx>, Labels const&, 
+*/
+template void
+contract(TenRefc<Range,Cplx>, Labels const&,
+         TenRefc<Range,Cplx>, Labels const&,
          TenRef<Range,Cplx> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<IndexSet,Real>, Labels const&, 
-         TenRefc<IndexSet,Real>, Labels const&, 
+/*
+template void
+contract(TenRefc<IndexSet,Real>, Labels const&,
+         TenRefc<IndexSet,Real>, Labels const&,
          TenRef<IndexSet,Real> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<IndexSet,Cplx>, Labels const&, 
-         TenRefc<IndexSet,Real>, Labels const&, 
+template void
+contract(TenRefc<IndexSet,Cplx>, Labels const&,
+         TenRefc<IndexSet,Real>, Labels const&,
          TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<IndexSet,Real>, Labels const&, 
-         TenRefc<IndexSet,Cplx>, Labels const&, 
+template void
+contract(TenRefc<IndexSet,Real>, Labels const&,
+         TenRefc<IndexSet,Cplx>, Labels const&,
          TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
-template void 
-contract(TenRefc<IndexSet,Cplx>, Labels const&, 
-         TenRefc<IndexSet,Cplx>, Labels const&, 
+*/
+template void
+contract(TenRefc<IndexSet,Cplx>, Labels const&,
+         TenRefc<IndexSet,Cplx>, Labels const&,
          TenRef<IndexSet,Cplx> , Labels const&,
          Real,Real);
 
@@ -913,12 +917,12 @@ struct MultInfo
     bool tA = false,
          tB = false,
          Bfirst = false;
-    MultInfo() {} 
+    MultInfo() {}
     };
 
 MultInfo static
 computeMultInfo(Labels const& ai,
-                Labels const& bi, 
+                Labels const& bi,
                 Labels const& ci)
     {
     MultInfo I;
@@ -982,9 +986,9 @@ computeMultInfo(Labels const& ai,
     }
 
 template<typename RangeT>
-void 
-contractloop(TenRefc<RangeT> A, Labels const& ai, 
-             TenRefc<RangeT> B, Labels const& bi, 
+void
+contractloop(TenRefc<RangeT> A, Labels const& ai,
+             TenRefc<RangeT> B, Labels const& bi,
              TenRef<RangeT>  C, Labels const& ci,
              Args const& args)
     {
@@ -1013,14 +1017,14 @@ contractloop(TenRefc<RangeT> A, Labels const& ai,
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
-    auto Arow = A.extent(0); 
+    auto Arow = A.extent(0);
     auto Acol = A.extent(1);
-    auto Brow = B.extent(0); 
+    auto Brow = B.extent(0);
     auto Bcol = B.extent(1);
-    auto Crow = C.extent(0); 
+    auto Crow = C.extent(0);
     auto Ccol = C.extent(1);
 
-    detail::GCounter couA(ra), 
+    detail::GCounter couA(ra),
                      couB(rb);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setRange(0,0,0);
@@ -1035,8 +1039,8 @@ contractloop(TenRefc<RangeT> A, Labels const& ai,
     for(int j = 2; j < rb; ++j)
         couB.setRange(j,0,B.extent(j)-1);
 
-    Labels aind(ra,0), 
-          bind(rb,0), 
+    Labels aind(ra,0),
+          bind(rb,0),
           cind(rc,0);
 
     CABqueue cabq;
@@ -1067,13 +1071,13 @@ contractloop(TenRefc<RangeT> A, Labels const& ai,
                 cind[p.AtoC(ia)] = ival;
                 }
             }
-        
+
         for(;couB.notDone(); ++couB)
             {
             for(int ib = 2; ib < rb; ++ib)
                 {
                 bind[ib] = couB[ib];
-                if(p.BtoC(ib) != -1) 
+                if(p.BtoC(ib) != -1)
                 if(!p.contractedB(ib))
                     cind[p.BtoC(ib)] = couB[ib];
                 }
@@ -1100,15 +1104,15 @@ contractloop(TenRefc<RangeT> A, Labels const& ai,
     cabq.run(nthread);
     }
 template
-void 
-contractloop(TenRefc<Range> A, Labels const& ai, 
-             TenRefc<Range> B, Labels const& bi, 
+void
+contractloop(TenRefc<Range> A, Labels const& ai,
+             TenRefc<Range> B, Labels const& bi,
              TenRef<Range>  C, Labels const& ci,
              Args const& args);
 template
-void 
-contractloop(TenRefc<IndexSet> A, Labels const& ai, 
-             TenRefc<IndexSet> B, Labels const& bi, 
+void
+contractloop(TenRefc<IndexSet> A, Labels const& ai,
+             TenRefc<IndexSet> B, Labels const& bi,
              TenRef<IndexSet>  C, Labels const& ci,
              Args const& args);
 
@@ -1118,29 +1122,29 @@ contractloop(TenRefc<IndexSet> A, Labels const& ai,
 //All indices of B contracted
 //(A can have some uncontracted indices)
 template<typename RangeT>
-void 
-contractDiagFull(VectorRefc A,         Labels const& ai, 
-                 TenRefc<RangeT> B, Labels const& bi, 
+void
+contractDiagFull(VectorRefc A,         Labels const& ai,
+                 TenRefc<RangeT> B, Labels const& bi,
                  VectorRef          C, Labels const& ci)
     {
     Error("contractDiagFull not yet implemented");
     }
 template
-void 
-contractDiagFull(VectorRefc     A, Labels const& ai, 
-                 TenRefc<Range> B, Labels const& bi, 
+void
+contractDiagFull(VectorRefc     A, Labels const& ai,
+                 TenRefc<Range> B, Labels const& bi,
                  VectorRef      C, Labels const& ci);
 template
-void 
-contractDiagFull(VectorRefc        A, Labels const& ai, 
-                 TenRefc<IndexSet> B, Labels const& bi, 
+void
+contractDiagFull(VectorRefc        A, Labels const& ai,
+                 TenRefc<IndexSet> B, Labels const& bi,
                  VectorRef         C, Labels const& ci);
 
 ////////////////////////////////////////////
 
 //
 // Non-Contracting Product Optimization Ideas
-// 
+//
 // o Identify common index to A,B,C with largest
 //   extent and make this the innermost loop
 //   (similar to big index in transform method in ten_impl.h)

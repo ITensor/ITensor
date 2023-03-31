@@ -35,7 +35,7 @@ struct dgemmTask
               Real a,
               Real b)
       : Apart(Ap),Bpart(Bp),Cpart(Cp),alpha(a),beta(b)
-        { 
+        {
         if(b != 0.0) copyFromC = true;
         }
 
@@ -50,6 +50,54 @@ struct dgemmTask
        : copyToC(true),Cpart(Cp)
         { }
     };
+
+#ifdef ITENSOR_USE_CUDA
+void
+gemm_impl(MatRefc<Cplx> A,
+          MatRefc<Cplx> B,
+          MatRef<Cplx>  C,
+          Real alpha,
+          Real beta)
+    {
+    gemm_wrapper(isTransposed(A),
+                 isTransposed(B),
+                 nrows(A),
+                 ncols(B),
+                 ncols(A),
+                 alpha,
+                 A.data(),
+                 B.data(),
+                 beta,
+                 C.data());
+    }
+
+// C = alpha*A*B + beta*C
+template<typename VA, typename VB>
+void
+gemm(MatRefc<VA> A,
+     MatRefc<VB> B,
+     MatRef<common_type<VA,VB>>  C,
+     Real alpha,
+     Real beta)
+    {
+        if(isTransposed(C))
+            {
+            //Do C = Bt*At instead of Ct=A*B
+            //Recall that C.data() points to elements of C, not C.t()
+            //regardless of whether C.transpose()==true or false
+            gemm_impl(transpose(B),transpose(A),transpose(C),alpha,beta);
+            }
+        else
+            {
+            gemm_impl(A,B,C,alpha,beta);
+            }
+    }
+//template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
+//template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
+//template void gemm(MatRefc<Cplx>, MatRefc<Real>, MatRef<Cplx>,Real,Real);
+template void gemm(MatRefc<Cplx>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
+#else
+
 
 void
 cplxToRealBuf(SAFE_PTR_OF(const Real) C,
@@ -169,7 +217,7 @@ gemm_impl(MatRefc<Cplx> A,
           Real alpha,
           Real beta)
     {
-#ifdef ITENSOR_USE_ZGEMM
+#if defined ITENSOR_USE_ZGEMM
     gemm_wrapper(isTransposed(A),
                  isTransposed(B),
                  nrows(A),
@@ -181,8 +229,8 @@ gemm_impl(MatRefc<Cplx> A,
                  beta,
                  C.data());
 #else //emulate zgemm by calling dgemm four times
-    std::array<const dgemmTask,6> 
-    tasks = 
+    std::array<const dgemmTask,6>
+    tasks =
         {{dgemmTask(0,0,0,+alpha,beta),
           dgemmTask(1,1,0,-alpha),
           dgemmTask(0),
@@ -191,7 +239,7 @@ gemm_impl(MatRefc<Cplx> A,
           dgemmTask(1)
           }};
     gemm_emulator(A,B,C,alpha,beta,tasks);
-#endif
+#endif //ITENSOR_USE_ZGEMM
     }
 
 
@@ -202,8 +250,8 @@ gemm_impl(MatRefc<Real> A,
           Real alpha,
           Real beta)
     {
-    std::array<const dgemmTask,4> 
-    tasks = 
+    std::array<const dgemmTask,4>
+    tasks =
         {{dgemmTask(0,0,0,+alpha,beta),
           dgemmTask(0),
           dgemmTask(0,1,1,+alpha,beta),
@@ -219,8 +267,8 @@ gemm_impl(MatRefc<Cplx> A,
           Real alpha,
           Real beta)
     {
-    std::array<const dgemmTask,4> 
-    tasks = 
+    std::array<const dgemmTask,4>
+    tasks =
         {{dgemmTask(0,0,0,+alpha,beta),
           dgemmTask(0),
           dgemmTask(1,0,1,+alpha,beta),
@@ -252,14 +300,14 @@ gemm_impl(MatRefc<Real> A,
 // C = alpha*A*B + beta*C
 template<typename VA, typename VB>
 void
-gemm(MatRefc<VA> A, 
-     MatRefc<VB> B, 
+gemm(MatRefc<VA> A,
+     MatRefc<VB> B,
      MatRef<common_type<VA,VB>>  C,
      Real alpha,
      Real beta)
     {
 #ifdef DEBUG
-    if(!(isContiguous(A) && isContiguous(B) && isContiguous(C))) 
+    if(!(isContiguous(A) && isContiguous(B) && isContiguous(C)))
         throw std::runtime_error("multiplication of non-contiguous MatrixRefs not currently supported");
 #endif
 
@@ -290,6 +338,8 @@ template void gemm(MatRefc<Real>, MatRefc<Real>, MatRef<Real>,Real,Real);
 template void gemm(MatRefc<Real>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
 template void gemm(MatRefc<Cplx>, MatRefc<Real>, MatRef<Cplx>,Real,Real);
 template void gemm(MatRefc<Cplx>, MatRefc<Cplx>, MatRef<Cplx>,Real,Real);
+
+#endif //ITENSOR_USE_CUDA
 
 
 } //namespace itensor
