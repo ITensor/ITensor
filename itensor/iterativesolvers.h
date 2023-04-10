@@ -964,7 +964,20 @@ assembleLanczosVectors(std::vector<ITensor> const& lanczos_vectors,
     for(int i=1; i<(int)lanczos_vectors.size(); ++i)
         phi += norm*linear_comb(i)*lanczos_vectors[i];
     }
-
+         
+// function to reorthogonalize and add new Lanczos vector, modified Gram-Schmidt
+inline double
+reorthAddLanczosVector(std::vector<ITensor>& lanczos_vectors,
+                       ITensor w)
+    {
+    for (const auto& v :lanczos_vectors )
+        w -= eltC(dag(v) * w) * v;
+   
+    double beta = norm(w);
+    lanczos_vectors.emplace_back(w / beta);
+    return beta;
+    }
+         
 template<typename BigMatrixT, typename ElT>
 void
 applyExp(BigMatrixT const& H, ITensor& phi,
@@ -974,7 +987,8 @@ applyExp(BigMatrixT const& H, ITensor& phi,
     auto max_iter = args.getInt("MaxIter",30);
     auto debug_level = args.getInt("DebugLevel",-1);
     auto beta_tol = args.getReal("NormCutoff",1e-7);
-
+    auto doReorth = args.getBool("DoReorthogonalization",true); // default true
+    
     // Initialize Lanczos vectors
     ITensor v1 = phi;
     ITensor v0;
@@ -997,13 +1011,15 @@ applyExp(BigMatrixT const& H, ITensor& phi,
         H.product(v1, w);
 
         double avnorm = norm(w);
+        if (iter > 0)  // Modified Gram-Schmidt
+          w -= beta * v0;
         double alpha = real(eltC(dag(w) * v1));
         bigTmat(iter, iter) = alpha;
         w -= alpha * v1;
-        if (iter > 0)
-            w -= beta * v0;
+        //if (iter > 0)  // Classical Gram-Schmidt
+        //w -= beta * v0;
         v0 = v1;
-        beta = norm(w);
+        //beta = norm(w); // will calculate later
 
         // check for Lanczos sequence exhaustion
         if (std::abs(beta) < beta_tol)
@@ -1017,9 +1033,17 @@ applyExp(BigMatrixT const& H, ITensor& phi,
             }
 
         // update next lanczos vector
-        v1 = w;
-        v1 /= beta;
-        lanczos_vectors.push_back(v1);
+        if (doReorth)
+            {
+            beta = reorthAddLanczosVector(lanczos_vectors, w);
+            v1 = lanczos_vectors.back();
+            }
+        else
+            {
+            beta = norm(w);
+            v1 = w/beta;
+            lanczos_vectors.push_back(v1);
+            }
         bigTmat(iter+1, iter) = beta;
         bigTmat(iter, iter+1) = beta;
 
