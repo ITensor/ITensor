@@ -57,7 +57,7 @@ SECTION("Add MPOs")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,l=%d",name,n);
+            auto ts = tfm::format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf=",0,-1}),2,
@@ -447,7 +447,7 @@ SECTION("Remove QNs from MPO")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,l=%d",name,n);
+            auto ts = tfm::format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf",0,-1}),2,
