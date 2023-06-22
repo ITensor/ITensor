@@ -25,7 +25,7 @@ SECTION("Orthogonalize")
     //Make a random MPO of bond dim. m
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
-        links[n] = Index(d,format("MyLink,l=%d",n));
+        links[n] = Index(d,tfm::format("MyLink,l=%d",n));
     W.ref(1) = randomITensorC(links[1],sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
         W.ref(n) = randomITensorC(links[n-1],sites(n),prime(sites(n)),links[n]);
