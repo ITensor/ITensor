@@ -98,7 +98,7 @@ class SafePtr
         if(!validOffset())
             {
             auto error_msg = 
-            format("SafePtr: offset >= offset_end (%d >= %d)",
+            tfm::format("SafePtr: offset >= offset_end (%d >= %d)",
                    offset_,offset_end_);
             throw std::runtime_error(error_msg);
             }
@@ -106,7 +106,7 @@ class SafePtr
         if(expected_range > actual_range)
             {
             auto error_msg = 
-            format("SafePtr: expected_range > actual_range (%d > %d)",
+            tfm::format("SafePtr: expected_range > actual_range (%d > %d)",
                     expected_range,actual_range);
             throw std::runtime_error(error_msg);
             }
@@ -179,7 +179,7 @@ class SafePtr
         auto os = offset_+ind;
         if(os >= offset_end_)
             {
-            auto error_msg = format("SafePtr operator[](ind=%d): (offset+ind) >= offset_end (%d >= %d)",ind,os,offset_end_);
+            auto error_msg = tfm::format("SafePtr operator[](ind=%d): (offset+ind) >= offset_end (%d >= %d)",ind,os,offset_end_);
             throw std::runtime_error(error_msg);
             }
         return *(p_+os);
@@ -212,7 +212,7 @@ class SafePtr
         if(!validOffset())
             {
             auto error_msg = 
-            format("SafePtr: offset >= offset_end (%d >= %d)",
+            tfm::format("SafePtr: offset >= offset_end (%d >= %d)",
                    offset_,offset_end_);
             throw std::runtime_error(error_msg);
             }
