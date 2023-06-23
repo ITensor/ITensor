@@ -24,7 +24,7 @@ class BosonSite;
 
 using Boson = BasicSiteSet<BosonSite>;
 
-class BosonSite
+class BosonSite : public virtual SiteBase
     {
     Index s;
     public:

@@ -24,7 +24,7 @@ class ElectronSite;
 
 using Electron = BasicSiteSet<ElectronSite>;
 
-class ElectronSite
+class ElectronSite : public virtual SiteBase
     {
     Index s;
     public:

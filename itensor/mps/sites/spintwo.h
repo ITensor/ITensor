@@ -23,8 +23,13 @@
 
 namespace itensor {
 
-class SpinTwo : public SiteSet
+class SpinTwoSite;
+
+//using SpinTwo = BasicSiteSet<SpinTwoSite>;
+
+class SpinTwo : public BasicSiteSet<SpinTwoSite>
     {
+    typedef BasicSiteSet<SpinTwoSite> Base;
     public:
 
     SpinTwo() { }
@@ -38,7 +43,7 @@ class SpinTwo : public SiteSet
     };
 
 
-class SpinTwoSite
+class SpinTwoSite : public virtual SiteBase
 	{
   Index s;
 	public:
@@ -260,54 +265,51 @@ class SpinTwoSite
 inline SpinTwo::
 SpinTwo(int N, 
         Args const& args)
+    : Base(N)
 	{
     auto shedge = args.getBool("SHalfEdge",false);
     auto Lshedge = args.getBool("SHalfLeftEdge",false);
-
-    auto sites = SiteStore(N);
 
     auto start = 1;
     if(shedge || Lshedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site 1");
-        sites.set(1,SpinHalfSite({args,"SiteNumber=",1}));
+        insert(1,new SpinHalfSite({args,"SiteNumber=",1}));
         start = 2;
         }
 
     for(int j = start; j < N; ++j)
         {
-        sites.set(j,SpinTwoSite({args,"SiteNumber=",j}));
+        insert(j,new SpinTwoSite({args,"SiteNumber=",j}));
         }
 
     if(shedge)
         {
         if(args.getBool("Verbose",false)) println("Placing a S=1/2 at site N=",N);
-        sites.set(N,SpinHalfSite({args,"SiteNumber=",N}));
+        insert(N,new SpinHalfSite({args,"SiteNumber=",N}));
         }
     else
         {
-        sites.set(N,SpinTwoSite({args,"SiteNumber=",N}));
+        insert(N,new SpinTwoSite({args,"SiteNumber=",N}));
         }
 
-    SiteSet::init(std::move(sites));
 	}
 
 void inline SpinTwo::
 read(std::istream& s)
 	{
     int N = itensor::read<int>(s);
+    allocate(N); //Allocate array of site pointers
     if(N > 0)
         {
-        auto store = SiteStore(N);
         for(int j = 1; j <= N; ++j) 
             {
             auto I = Index{};
             I.read(s);
-            if(dim(I) == 5) store.set(j,SpinTwoSite(I));
-            else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
+            if(dim(I) == 5) insert(j,new SpinTwoSite(I));
+            else if(dim(I) == 2) insert(j,new SpinHalfSite(I));
             else throw ITError(format("SpinTwo cannot read index of size %d",dim(I)));
             }
-        init(std::move(store));
         }
 	}
 
