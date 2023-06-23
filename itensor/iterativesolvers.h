@@ -988,15 +988,14 @@ applyExp(BigMatrixT const& H, ITensor& phi,
     auto nmatvec = 0;
 
     double beta = 0;
+    // Matrix-vector multiplication
+    if(debug_level >= 0)
+        nmatvec++;
+    H.product(v1, w);
     for (int iter=0; iter < max_iter; ++iter)
         {
         int tmat_size=iter+1;
-        // Matrix-vector multiplication
-        if(debug_level >= 0)
-            nmatvec++;
-        H.product(v1, w);
-
-        double avnorm = norm(w);
+ 
         double alpha = real(eltC(dag(w) * v1));
         bigTmat(iter, iter) = alpha;
         w -= alpha * v1;
@@ -1022,6 +1021,11 @@ applyExp(BigMatrixT const& H, ITensor& phi,
         lanczos_vectors.push_back(v1);
         bigTmat(iter+1, iter) = beta;
         bigTmat(iter, iter+1) = beta;
+        
+        if(debug_level >= 0)
+            nmatvec++;
+        H.product(v1, w);
+        double avnorm = norm(w);
 
         // Convergence check
         if (iter > 0)
@@ -1081,4 +1085,3 @@ applyExp(BigMatrixT const& H, ITensor& phi,
 } //namespace itensor
 
 #endif
-
