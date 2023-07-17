@@ -21,8 +21,6 @@
 
 namespace itensor {
 
-namespace tfm = tinyformat;
-
 template <typename... VArgs>
 void
 printf(const char* fmt_string, VArgs&&... vargs)
@@ -89,7 +87,7 @@ template <typename... VArgs>
 void
 printf(std::ostream & os, const char* fmt_string, VArgs&&... vargs)
     {
-    tfm::format(os,fmt_string,std::forward<VArgs>(vargs)...);
+    tinyformat::format(os,fmt_string,std::forward<VArgs>(vargs)...);
     std::cout.flush();
     }
 
@@ -97,7 +95,7 @@ template <typename... VArgs>
 void
 printfln(std::ostream & os, const char* fmt_string, VArgs&&... vargs)
     {
-    tfm::format(os,fmt_string,std::forward<VArgs>(vargs)...);
+    tinyformat::format(os,fmt_string,std::forward<VArgs>(vargs)...);
     os << std::endl;
     }
 
@@ -147,8 +145,8 @@ void
 PrintNice(const char* tok,
           T const& X)
     {
-    auto pre = tfm::format("%s = ",tok);
-    auto str = tfm::format("%s",X);
+    auto pre = tinyformat::format("%s = ",tok);
+    auto str = tinyformat::format("%s",X);
 
     //Put a newline after '=' if
     //output is large or output contains

@@ -55,15 +55,15 @@
 // The strange types here emphasize the type safety of the interface; it is
 // possible to print a std::string using the "%s" conversion, and a
 // size_t using the "%d" conversion.  A similar result could be achieved
-// using either of the tfm::format() functions.  One prints on a user provided
+// using either of the tinyformat::format() functions.  One prints on a user provided
 // stream:
 //
-//   tfm::format(std::cerr, "%s, %s %d, %.2d:%.2d\n",
+//   tinyformat::format(std::cerr, "%s, %s %d, %.2d:%.2d\n",
 //               weekday, month, day, hour, min);
 //
 // The other returns a std::string:
 //
-//   std::string date = tfm::format("%s, %s %d, %.2d:%.2d\n",
+//   std::string date = tinyformat::format("%s, %s %d, %.2d:%.2d\n",
 //                                  weekday, month, day, hour, min);
 //   std::cout << date;
 //
