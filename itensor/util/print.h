@@ -21,8 +21,6 @@
 
 namespace itensor {
 
-using tinyformat::format;
-
 template <typename... VArgs>
 void
 printf(const char* fmt_string, VArgs&&... vargs)
@@ -147,8 +145,8 @@ void
 PrintNice(const char* tok,
           T const& X)
     {
-    auto pre = format("%s = ",tok);
-    auto str = format("%s",X);
+    auto pre = tinyformat::format("%s = ",tok);
+    auto str = tinyformat::format("%s",X);
 
     //Put a newline after '=' if
     //output is large or output contains

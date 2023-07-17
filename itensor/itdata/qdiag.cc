@@ -280,7 +280,7 @@ template<typename T>
 void
 doTask(PrintIT& P, QDiag<T> const& d)
     {
-    P.s << format("QDiag%s%s\n",typeName<T>(),d.allSame()?" (all same)":"");
+    P.s << tinyformat::format("QDiag%s%s\n",typeName<T>(),d.allSame()?" (all same)":"");
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";

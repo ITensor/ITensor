@@ -976,7 +976,7 @@ h5_write(h5::group parent, string const& name, MPO const& M)
     h5_write(g,"llim",long(M.leftLim()));
     for(auto n : range1(M.length()))
         {
-        h5_write(g,format("MPO[%d]",n),M(n));
+        h5_write(g,tinyformat::format("MPO[%d]",n),M(n));
         }
     }
 
@@ -992,7 +992,7 @@ h5_read(h5::group parent, string const& name, MPO & M)
     M = MPO(N);
     for(auto n : range1(N))
         {
-        M.ref(n) = h5_read<ITensor>(g,format("MPO[%d]",n));
+        M.ref(n) = h5_read<ITensor>(g,tinyformat::format("MPO[%d]",n));
         }
     M.leftLim(llim);
     M.rightLim(rlim);

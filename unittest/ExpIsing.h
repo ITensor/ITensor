@@ -54,7 +54,7 @@ init_()
     auto links = std::vector<Index>(N_+1);
     for(int l = 0; l <= N_; ++l) 
         {
-        links.at(l) = Index(2,format("Link,l=%d",l));
+        links.at(l) = Index(2,tinyformat::format("Link,l=%d",l));
         }
 
     for(int n = 1; n <= N_; ++n)

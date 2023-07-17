@@ -258,7 +258,7 @@ class LocalMPO
     std::string
     PHFName(int j) const
         {
-        return format("%s/PH_%03d",writedir_,j);
+        return tinyformat::format("%s/PH_%03d",writedir_,j);
         }
 
     };

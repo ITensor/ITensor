@@ -224,7 +224,7 @@ resize(VecRefc<T> const& v, size_t newsize)
     {
     if(v.size() != newsize)
         {
-        auto msg = format("Vector ref has wrong size, expected=%d, actual=%d",newsize,v.size());
+        auto msg = tinyformat::format("Vector ref has wrong size, expected=%d, actual=%d",newsize,v.size());
         throw std::runtime_error(msg);
         }
     }

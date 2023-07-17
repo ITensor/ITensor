@@ -212,7 +212,7 @@ operator<<(std::ostream& s, Timers<NTimer> const& T)
     {
     auto tot = T.total();
     s << "-----------------------------------------------------\n";
-    s << format("Timers:                  Total Time = %.4f  %% Total",tot);
+    s << tinyformat::format("Timers:                  Total Time = %.4f  %% Total",tot);
     for(decltype(T.size()) n = 0; n < T.size(); ++n)
         {
         if(T.count(n) == 0) continue;
@@ -220,7 +220,7 @@ operator<<(std::ostream& s, Timers<NTimer> const& T)
         auto err = T.err(n);
         auto time = T.time(n);
         auto pct = 100*(time/tot);
-        s << format("\nSection %2d, Average = %.6f+-%.6f (%d), Total = %.4f [%5.1f%%]",n,avg,2.*err,T.count(n),time,pct);
+        s << tinyformat::format("\nSection %2d, Average = %.6f+-%.6f (%d), Total = %.4f [%5.1f%%]",n,avg,2.*err,T.count(n),time,pct);
         }
     s << "\n-----------------------------------------------------";
     return s;

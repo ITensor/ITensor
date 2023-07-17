@@ -41,9 +41,9 @@ class CustomSpinSite
             error("Must pass named args \"2S\" (integer) or \"S\" (real number) to CustomSpin");
             }
 
-        if(DSmax < 1) error(format("Invalid spin value %d/2 in CustomSpin",DSmax));
+        if(DSmax < 1) error(tinyformat::format("Invalid spin value %d/2 in CustomSpin",DSmax));
 
-        auto tags = TagSet(format("Site,S=%d/2",DSmax));
+        auto tags = TagSet(tinyformat::format("Site,S=%d/2",DSmax));
         if(args.defined("SiteNumber") )
             {
             auto n = args.getInt("SiteNumber");

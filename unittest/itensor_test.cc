@@ -362,7 +362,7 @@ SECTION("QDense Real Storage")
     CHECK(typeOf(nT) == Type::QDenseReal);
     CHECK(norm(T-nT) < 1E-12);
     }
-std::system(format("rm -f %s",fname).c_str());
+std::system(tinyformat::format("rm -f %s",fname).c_str());
 }
 
 SECTION("Set and Get Elements")

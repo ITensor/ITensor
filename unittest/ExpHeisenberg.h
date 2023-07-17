@@ -52,7 +52,7 @@ init_()
     auto links = std::vector<Index>(N_+1);
     for(int l = 0; l <= N_; ++l) 
         {
-        auto ts = format("Link,l=%d",l);
+        auto ts = tinyformat::format("Link,l=%d",l);
         links.at(l) = Index(QN({"Sz",0}),2,
                             QN({"Sz",-2}),1,
                             QN({"Sz",+2}),1,

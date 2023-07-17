@@ -420,14 +420,14 @@ template<typename T>
 void
 doTask(PrintIT& P, QDense<T> const& d)
     {
-    auto name = format("QDense %s",typeName<T>());
+    auto name = tinyformat::format("QDense %s",typeName<T>());
     if(not P.print_data)
         {
         P.printInfo(d,name,doTask(NormNoScale{},d));
         return;
         }
 
-    P.s << format("QDense %s {%d blocks; data size %d}\n",
+    P.s << tinyformat::format("QDense %s {%d blocks; data size %d}\n",
                   typeName<T>(),d.offsets.size(),d.size());
     //Real scalefac = 1.0;
     //if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
@@ -1057,7 +1057,7 @@ h5_read(h5::group parent, std::string const& name, QDense<V> & D)
     auto type = h5_read_attribute<string>(g,"type");
     if(type != juliaTypeNameOf(D)) 
         {
-        Error(format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
+        Error(tinyformat::format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
         }
     auto N = h5_read<long>(g,"ndims");
     auto off_array = offsets_to_array(D.offsets,N);

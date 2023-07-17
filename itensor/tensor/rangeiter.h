@@ -144,7 +144,7 @@ operator<<(std::ostream & s,
            RangeIter<R> const& it)
     {
     auto r = it.range().order();
-    s << format("%*d",3,it.offset()) << " (";
+    s << tinyformat::format("%*d",3,it.offset()) << " (";
     for(decltype(r) j = 0; j < r; ++j)
         {
         s << it[j];

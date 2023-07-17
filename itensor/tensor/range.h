@@ -483,7 +483,7 @@ offset(Range_ const& r, size_t i1, Inds... inds)
     {
 #ifdef DEBUG
     if(1+sizeof...(inds) != order(r)) 
-        throw std::runtime_error(format("Wrong number of indices passed to TenRef (expected %d got %d)",order(r),1+sizeof...(inds)));
+        throw std::runtime_error(tinyformat::format("Wrong number of indices passed to TenRef (expected %d got %d)",order(r),1+sizeof...(inds)));
 #endif
     auto ia = stdx::make_array(i1,inds...);
     return detail::offsetImpl(stdx::select_overload{},r,ia);

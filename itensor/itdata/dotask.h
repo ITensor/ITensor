@@ -254,7 +254,7 @@ callDoTask_Impl(stdx::choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m, 
     auto tname = typeNameOf(t);
     auto d1name = typeNameOf(d1);
     auto d2name = typeNameOf(d2);
-    throw ITError(format("2 parameter doTask not defined for task %s and storage types %s %s",tname,d1name,d2name));
+    throw ITError(tinyformat::format("2 parameter doTask not defined for task %s and storage types %s %s",tname,d1name,d2name));
     //throw ITError("2 parameter doTask not defined for specified task or data type [2]");
     }
 template <typename Ret, typename Task, typename D1, typename D2>
@@ -533,7 +533,7 @@ call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret)
         {
         auto tname = typeNameOf(t);
         auto dname = typeNameOf(d);
-        throw ITError(format("doTask not defined for task %s and storage type %s",tname,dname));
+        throw ITError(tinyformat::format("doTask not defined for task %s and storage type %s",tname,dname));
         }
     }
 
@@ -621,7 +621,7 @@ applyToImpl(D2& d2)
         auto tname = typeNameOf(t_);
         auto d1name = typeNameOf(d1_);
         auto d2name = typeNameOf(d2);
-        throw ITError(format("doTask not defined for task %s and storage types %s %s",tname,d1name,d2name));
+        throw ITError(tinyformat::format("doTask not defined for task %s and storage types %s %s",tname,d1name,d2name));
         }
     }
 

@@ -250,7 +250,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
         E[j] = E[j-1]*psi(j)*K(j)*dag(Kc(j))*dag(psic(j));
         if(dowrite)
             {
-            writeToFile(format("%s/E_%03d",writedir_,j-1),E[j-1]);
+            writeToFile(tinyformat::format("%s/E_%03d",writedir_,j-1),E[j-1]);
             E[j-1] = ITensor();
             }
         }
@@ -273,7 +273,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
 
     for(int j = N-1; j > 1; --j)
         {
-        if(dowrite) readFromFile(format("%s/E_%03d",writedir_,j-1),E[j-1]);
+        if(dowrite) readFromFile(tinyformat::format("%s/E_%03d",writedir_,j-1),E[j-1]);
         if(not maxdim_set)
             {
             //Infer maxdim from bond dim of original MPS
@@ -455,7 +455,7 @@ fitApplyMPOImpl(Real fac,
             }
         else
             {
-            Error(format("NCenterSites = %d not supported",NCenterSites));
+            Error(tinyformat::format("NCenterSites = %d not supported",NCenterSites));
             }
         }
     Kx.dag();

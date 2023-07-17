@@ -102,14 +102,14 @@ struct PrintIT
               Real nrm_no_scale = -1)
         {
 #ifndef USESCALE
-        s << format("{norm=%.2f (%s)}\n",std::fabs(scalefac)*nrm_no_scale,type_name);
+        s << tinyformat::format("{norm=%.2f (%s)}\n",std::fabs(scalefac)*nrm_no_scale,type_name);
 #else
-        s << "{log(scale)=" << format("%.2f",x.logNum());
+        s << "{log(scale)=" << tinyformat::format("%.2f",x.logNum());
         if(nrm_no_scale > 0)
             {
             if(!x.isTooBigForReal()) s << ", norm=";
             else  s << ", norm(omitting large scale)=";
-            s << format("%.2f",std::fabs(scalefac)*nrm_no_scale);
+            s << tinyformat::format("%.2f",std::fabs(scalefac)*nrm_no_scale);
             }
         s << " (" << type_name << ")}\n";
 #endif
@@ -166,7 +166,7 @@ struct ApplyIT
     void
     applyITImpl(stdx::choice<2>,T1, T2 &)
         {
-        auto msg = format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>());
+        auto msg = tinyformat::format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>());
         Error(msg);
         }
     template<typename T1, typename T2>
@@ -507,7 +507,7 @@ checkEltInd(IndexSet const& is,
             print("inds = ");
             for(auto j : inds) print(1+j," ");
             println();
-            Error(format("Out of range: IndexVal at position %d has val %d > %s",1+k,1+i,Index(is[k])));
+            Error(tinyformat::format("Out of range: IndexVal at position %d has val %d > %s",1+k,1+i,Index(is[k])));
             }
         }
     }
