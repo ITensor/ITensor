@@ -16,9 +16,9 @@
 #include <cerrno>
 #include <algorithm>
 #include <iostream>
-#include "itensor/util/args.h"
-#include "itensor/util/error.h"
-#include "itensor/util/readwrite.h"
+#include "util/args.h"
+#include "util/error.h"
+#include "util/readwrite.h"
 
 namespace itensor {
 

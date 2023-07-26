@@ -15,9 +15,9 @@
 //
 #ifndef __ITENSOR_ITERATIVESOLVERS_H
 #define __ITENSOR_ITERATIVESOLVERS_H
-#include "itensor/util/iterate.h"
-#include "itensor/itensor.h"
-#include "itensor/tensor/algs.h"
+#include "util/iterate.h"
+#include "itensor.h"
+#include "tensor/algs.h"
 
 
 namespace itensor {

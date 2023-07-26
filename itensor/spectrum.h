@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_SPECTRUM_H
 #define __ITENSOR_SPECTRUM_H
 
-#include "itensor/tensor/vec.h"
-#include "itensor/qn.h"
+#include "tensor/vec.h"
+#include "qn.h"
 
 namespace itensor {
 

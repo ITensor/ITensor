@@ -28,6 +28,6 @@
 //         the key features)
 //
 
-#include "itensor/all_mps.h"
+#include "all_mps.h"
 
 #endif

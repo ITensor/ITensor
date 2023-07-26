@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/mps/mps.h"
-#include "itensor/mps/mpo.h"
-#include "itensor/mps/localop.h"
-#include "itensor/util/print_macro.h"
-#include "itensor/tensor/slicemat.h"
+#include "mps/mps.h"
+#include "mps/mpo.h"
+#include "mps/localop.h"
+#include "util/print_macro.h"
+#include "tensor/slicemat.h"
 
 namespace itensor {
 
@@ -195,7 +195,7 @@ checkQNs(MPS const& psi)
             {
             cout << "At i = " << i << "\n";
             Print(psi(i));
-            cout << "ITensor other than the ortho center had non-zero divergence\n";
+            cout << " other than the ortho center had non-zero divergence\n";
             return false;
             }
         }

@@ -16,12 +16,12 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
-#include "itensor/util/safe_ptr.h"
-#include "itensor/index.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/tensor/range.h"
-#include "itensor/tensor/types.h"
-#include "itensor/tensor/permutation.h"
+#include "util/safe_ptr.h"
+#include "index.h"
+#include "tensor/contract.h"
+#include "tensor/range.h"
+#include "tensor/types.h"
+#include "tensor/permutation.h"
 
 namespace itensor {
 
@@ -1022,6 +1022,6 @@ h5_read(h5::group parent, std::string const& name, IndexSet & is);
 
 } //namespace itensor
 
-#include "itensor/indexset_impl.h"
+#include "indexset_impl.h"
 
 #endif

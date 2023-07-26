@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_PERMUTATION_H
 #define __ITENSOR_PERMUTATION_H
 
-#include "itensor/util/infarray.h"
+#include "util/infarray.h"
 
 namespace itensor {
 

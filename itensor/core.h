@@ -28,9 +28,9 @@
 //          the key features)
 //
 
-#include "itensor/decomp.h"
-#include "itensor/iterativesolvers.h"
-#include "itensor/util/autovector.h"
-#include "itensor/util/readwrite.h"
+#include "decomp.h"
+#include "iterativesolvers.h"
+#include "util/autovector.h"
+#include "util/readwrite.h"
 
 #endif

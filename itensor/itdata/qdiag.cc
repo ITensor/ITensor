@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/itdata/diag.h"
-#include "itensor/itdata/qdiag.h"
-#include "itensor/detail/gcounter.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/itdata/qutil.h"
-#include "itensor/util/iterate.h"
+#include "itdata/diag.h"
+#include "itdata/qdiag.h"
+#include "detail/gcounter.h"
+#include "tensor/contract.h"
+#include "itdata/qutil.h"
+#include "util/iterate.h"
 
 using std::vector;
 using std::move;

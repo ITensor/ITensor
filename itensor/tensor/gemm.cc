@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/slicemat.h"
-#include "itensor/util/safe_ptr.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/slicemat.h"
+#include "util/safe_ptr.h"
 
 namespace itensor {
 

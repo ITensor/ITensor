@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_MATRIX_ALGS__H_
 #define __ITENSOR_MATRIX_ALGS__H_
 
-#include "itensor/tensor/slicemat.h"
-#include "itensor/util/args.h"
+#include "tensor/slicemat.h"
+#include "util/args.h"
 
 namespace itensor {
 
@@ -178,6 +178,6 @@ expMatrix(MatM && M) { return expMatrix(M,1.); }
 
 } //namespace itensor
 
-#include "itensor/tensor/algs_impl.h"
+#include "tensor/algs_impl.h"
 
 #endif

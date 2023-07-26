@@ -15,12 +15,12 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "itensor/detail/algs.h"
-#include "itensor/itdata/applyfunc.h"
-#include "itensor/indexset.h"
+#include "detail/algs.h"
+#include "itdata/applyfunc.h"
+#include "indexset.h"
 #define REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/storage_types.h"
-#include "itensor/tensor/mat.h"
+#include "itdata/storage_types.h"
+#include "tensor/mat.h"
 
 namespace itensor {
 

@@ -13,13 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/mps/mps.h"
-#include "itensor/mps/mpo.h"
-#include "itensor/mps/autompo.h" //need this for SiteTerm
-#include "itensor/mps/localop.h"
-#include "itensor/util/print_macro.h"
-#include "itensor/util/str.h"
-#include "itensor/tensor/algs.h"
+#include "mps/mps.h"
+#include "mps/mpo.h"
+#include "mps/autompo.h" //need this for SiteTerm
+#include "mps/localop.h"
+#include "util/print_macro.h"
+#include "util/str.h"
+#include "tensor/algs.h"
 
 namespace itensor {
 
@@ -385,7 +385,7 @@ read(std::string const& dirname)
 
     //std::string dname_ = dirname;
     //if(dname_[dname_.length()-1] != '/')
-    //    dname_ += "/";
+    //    dname_ += "";
 
     for(auto j : range(A_.size()))
         {
@@ -468,7 +468,7 @@ setBond(int b) const
 
     //if(b == 1)
         //{
-        //writeToFile(writedir_+"/sites",*sites_);
+        //writeToFile(writedir_+"sites",*sites_);
         //std::ofstream inf((tinyformat::format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
@@ -941,7 +941,7 @@ copyWriteDir()
         string global_write_dir = Args::global().getString("WriteDir","./");
         writedir_ = mkTempDir("psi",global_write_dir);
 
-        string cmdstr = "cp -r " + old_writedir + "/* " + writedir_;
+        string cmdstr = "cp -r " + old_writedir + "* " + writedir_;
         println("Copying MPS with doWrite()==true. Issuing command: ",cmdstr);
         system(cmdstr.c_str());
         }

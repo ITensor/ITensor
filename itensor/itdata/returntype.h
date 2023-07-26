@@ -16,9 +16,9 @@
 #ifndef __ITENSOR_RETURNTYPE_H
 #define __ITENSOR_RETURNTYPE_H
 
-#include "itensor/util/stdx.h"
-#include "itensor/util/typelist.h"
-#include "itensor/itdata/itdata.h"
+#include "util/stdx.h"
+#include "util/typelist.h"
+#include "itdata/itdata.h"
 
 namespace itensor {
 

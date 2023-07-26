@@ -17,144 +17,146 @@
 #define __ITENSOR_LAPACK_WRAP_h
 
 #include <vector>
-#include "itensor/config.h"
-#include "itensor/types.h"
-#include "itensor/util/timers.h"
+//#include "config.h"
+#include "types.h"
+#include "util/timers.h"
 
+#include <blas.hh>   // BLASPP
+#include <lapack.hh> // LAPACKPP
 //
 // Headers and typedefs
 //
 
+////
+////
+//// Generic Linux LAPACK
+////
+////
+//#ifdef PLATFORM_lapack
 //
+//#define LAPACK_REQUIRE_EXTERN
 //
-// Generic Linux LAPACK
+//namespace itensor {
+//    using LAPACK_INT = int;
+//    using LAPACK_REAL = double;
+//    typedef struct
+//    {
+//    LAPACK_REAL real, imag;
+//    } LAPACK_COMPLEX;
+//}
+//#elif defined PLATFORM_openblas
 //
+//#define ITENSOR_USE_CBLAS
 //
-#ifdef PLATFORM_lapack
-
-#define LAPACK_REQUIRE_EXTERN
-
-namespace itensor {
-    using LAPACK_INT = int;
-    using LAPACK_REAL = double;
-    typedef struct
-    {
-    LAPACK_REAL real, imag;
-    } LAPACK_COMPLEX;
-}
-#elif defined PLATFORM_openblas
-
-#define ITENSOR_USE_CBLAS
-
-#include "cblas.h"
-#include "lapacke.h"
-#undef I //lapacke.h includes complex.h which defined an `I` macro
-         //that can cause problems, so best to undefine it
-
-namespace itensor {
-using LAPACK_INT = lapack_int;
-using LAPACK_REAL = double;
-using LAPACK_COMPLEX = lapack_complex_double;
-
-inline LAPACK_REAL& 
-realRef(LAPACK_COMPLEX & z) 
-    { 
-    auto* p = reinterpret_cast<double*>(&z);
-    return p[0];
-    }
-
-inline LAPACK_REAL& 
-imagRef(LAPACK_COMPLEX & z) 
-    { 
-    auto* p = reinterpret_cast<double*>(&z);
-    return p[1];
-    }
-}
-
+//#include "cblas.h"
+//#include "lapacke.h"
+//#undef I //lapacke.h includes complex.h which defined an `I` macro
+//         //that can cause problems, so best to undefine it
 //
+//namespace itensor {
+//using LAPACK_INT = lapack_int;
+//using LAPACK_REAL = double;
+//using LAPACK_COMPLEX = lapack_complex_double;
 //
-// Apple Accelerate/vecLib
+//inline LAPACK_REAL&
+//realRef(LAPACK_COMPLEX & z)
+//    {
+//    auto* p = reinterpret_cast<double*>(&z);
+//    return p[0];
+//    }
 //
+//inline LAPACK_REAL&
+//imagRef(LAPACK_COMPLEX & z)
+//    {
+//    auto* p = reinterpret_cast<double*>(&z);
+//    return p[1];
+//    }
+//}
 //
-#elif defined PLATFORM_macos
-
-#define ITENSOR_USE_CBLAS
+////
+////
+//// Apple Accelerate/vecLib
+////
+////
+//#elif defined PLATFORM_macos
+//
+//#define ITENSOR_USE_CBLAS
+////#define ITENSOR_USE_ZGEMM
+//
+//#include <Accelerate/Accelerate.h>
+//    namespace itensor {
+//    using LAPACK_INT = __CLPK_integer;
+//    using LAPACK_REAL = __CLPK_doublereal;
+//    using LAPACK_COMPLEX = __CLPK_doublecomplex;
+//
+//    inline LAPACK_REAL&
+//    realRef(LAPACK_COMPLEX & z) { return z.r; }
+//
+//    inline LAPACK_REAL&
+//    imagRef(LAPACK_COMPLEX & z) { return z.i; }
+//    }
+//
+////
+////
+//// Intel MKL
+////
+////
+//#elif defined PLATFORM_mkl
+//
+//#define ITENSOR_USE_CBLAS
 //#define ITENSOR_USE_ZGEMM
-
-#include <Accelerate/Accelerate.h>
-    namespace itensor {
-    using LAPACK_INT = __CLPK_integer;
-    using LAPACK_REAL = __CLPK_doublereal;
-    using LAPACK_COMPLEX = __CLPK_doublecomplex;
-
-    inline LAPACK_REAL& 
-    realRef(LAPACK_COMPLEX & z) { return z.r; }
-
-    inline LAPACK_REAL& 
-    imagRef(LAPACK_COMPLEX & z) { return z.i; }
-    }
-
+//
+//#include "mkl_cblas.h"
+//#include "mkl_lapack.h"
+//    namespace itensor {
+//    using LAPACK_INT = MKL_INT;
+//    using LAPACK_REAL = double;
+//    using LAPACK_COMPLEX = MKL_Complex16;
+//
+//    inline LAPACK_REAL&
+//    realRef(LAPACK_COMPLEX & z) { return z.real; }
+//
+//    inline LAPACK_REAL&
+//    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+//    }
+//
+////
+////
+//// AMD ACML
+////
+////
+//#elif defined PLATFORM_acml
+//
+//#define LAPACK_REQUIRE_EXTERN
+////#include "acml.h"
+//    namespace itensor {
+//    using LAPACK_INT = int;
+//    using LAPACK_REAL = double;
+//    typedef struct
+//    {
+//    LAPACK_REAL real, imag;
+//    } LAPACK_COMPLEX;
+//
+//    inline LAPACK_REAL&
+//    realRef(LAPACK_COMPLEX & z) { return z.real; }
+//
+//    inline LAPACK_REAL&
+//    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+//    }
+//
+//#endif // different PLATFORM types
 //
 //
-// Intel MKL
 //
-//
-#elif defined PLATFORM_mkl
-
-#define ITENSOR_USE_CBLAS
-#define ITENSOR_USE_ZGEMM
-
-#include "mkl_cblas.h"
-#include "mkl_lapack.h"
-    namespace itensor {
-    using LAPACK_INT = MKL_INT;
-    using LAPACK_REAL = double;
-    using LAPACK_COMPLEX = MKL_Complex16;
-
-    inline LAPACK_REAL& 
-    realRef(LAPACK_COMPLEX & z) { return z.real; }
-
-    inline LAPACK_REAL& 
-    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
-    }
-
-//
-//
-// AMD ACML
-//
-//
-#elif defined PLATFORM_acml
-
-#define LAPACK_REQUIRE_EXTERN
-//#include "acml.h"
-    namespace itensor {
-    using LAPACK_INT = int;
-    using LAPACK_REAL = double;
-    typedef struct
-    {
-    LAPACK_REAL real, imag;
-    } LAPACK_COMPLEX;
-
-    inline LAPACK_REAL& 
-    realRef(LAPACK_COMPLEX & z) { return z.real; }
-
-    inline LAPACK_REAL& 
-    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
-    }
-
-#endif // different PLATFORM types
-
-
-
-#ifdef FORTRAN_NO_TRAILING_UNDERSCORE
-#define F77NAME(x) x
-#else
-#if defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
-#define F77NAME(x) LAPACK_##x
-#else
-#define F77NAME(x) x##_
-#endif
-#endif
+//#ifdef FORTRAN_NO_TRAILING_UNDERSCORE
+//#define F77NAME(x) x
+//#else
+//#if defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
+//#define F77NAME(x) LAPACK_##x
+//#else
+//#define F77NAME(x) x##_
+//#endif
+//#endif
 
 namespace itensor {
 

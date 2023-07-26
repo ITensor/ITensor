@@ -23,12 +23,12 @@
 #include <random>
 #include <unistd.h>
 #include <memory>
-#include "itensor/util/iterate.h"
-#include "itensor/util/error.h"
-#include "itensor/util/args.h"
-#include "itensor/real.h"
-#include "itensor/util/timers.h"
-#include "itensor/detail/algs.h"
+#include "util/iterate.h"
+#include "util/error.h"
+#include "util/args.h"
+#include "real.h"
+#include "util/timers.h"
+#include "detail/algs.h"
 
 namespace itensor {
 

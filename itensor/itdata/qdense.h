@@ -17,11 +17,11 @@
 #define __ITENSOR_QDENSE_H
 
 #include <vector>
-#include "itensor/itdata/task_types.h"
-#include "itensor/itdata/itdata.h"
-#include "itensor/tensor/types.h"
-#include "itensor/detail/gcounter.h"
-#include "itensor/detail/call_rewrite.h"
+#include "itdata/task_types.h"
+#include "itdata/itdata.h"
+#include "tensor/types.h"
+#include "detail/gcounter.h"
+#include "detail/call_rewrite.h"
 
 namespace itensor {
 

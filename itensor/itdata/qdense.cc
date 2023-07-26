@@ -13,16 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//#include "itensor/util/iterate.h"
-#include "itensor/detail/gcounter.h"
-#include "itensor/detail/algs.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/sliceten.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/itdata/dense.h"
-#include "itensor/itdata/qdense.h"
-#include "itensor/itdata/qutil.h"
-#include "itensor/util/print_macro.h"
+//#include "util/iterate.h"
+#include "detail/gcounter.h"
+#include "detail/algs.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/sliceten.h"
+#include "tensor/contract.h"
+#include "itdata/dense.h"
+#include "itdata/qdense.h"
+#include "itdata/qutil.h"
+#include "util/print_macro.h"
 
 using std::vector;
 using std::string;

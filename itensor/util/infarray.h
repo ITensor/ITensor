@@ -19,8 +19,8 @@
 #include <array>
 #include <vector>
 #include <iterator> 
-#include "itensor/util/error.h"
-#include "itensor/util/safe_ptr.h"
+#include "util/error.h"
+#include "util/safe_ptr.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);

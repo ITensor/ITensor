@@ -17,9 +17,9 @@
 #define __ITENSOR_MATRIX_VECRANGE_H_
 
 #include <iterator> 
-#include "itensor/util/print.h"
-#include "itensor/util/error.h"
-#include "itensor/tensor/range.h"
+#include "util/print.h"
+#include "util/error.h"
+#include "tensor/range.h"
 
 namespace itensor {
 

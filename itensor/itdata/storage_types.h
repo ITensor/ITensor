@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/types.h"
-#include "itensor/util/typelist.h"
+#include "types.h"
+#include "util/typelist.h"
 
 namespace itensor 
 {
@@ -77,11 +77,11 @@ Scalar<Cplx>
 
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/dense.h"
-#include "itensor/itdata/combiner.h"
-#include "itensor/itdata/diag.h"
-#include "itensor/itdata/qdense.h"
-#include "itensor/itdata/qcombiner.h"
-#include "itensor/itdata/qdiag.h"
-#include "itensor/itdata/scalar.h"
+#include "itdata/dense.h"
+#include "itdata/combiner.h"
+#include "itdata/diag.h"
+#include "itdata/qdense.h"
+#include "itdata/qcombiner.h"
+#include "itdata/qdiag.h"
+#include "itdata/scalar.h"
 #endif

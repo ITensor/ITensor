@@ -14,7 +14,7 @@ namespace h5 {
   //static_assert(std::is_same<::hid_t, hid_t>::value, "Internal error");
 
   group::group(h5::file f) : h5_object(), parent_file(f) {
-    id = H5Gopen2(f, "/", H5P_DEFAULT);
+    id = H5Gopen2(f, "", H5P_DEFAULT);
     if (id < 0) throw std::runtime_error("Cannot open the root group / in the file " + f.name());
   }
 

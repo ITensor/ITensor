@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/util/print_macro.h"
-//#include "itensor/util/iterate.h"
-#include "itensor/util/safe_ptr.h"
-#include "itensor/itensor.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/contract.h"
+#include "util/print_macro.h"
+//#include "util/iterate.h"
+#include "util/safe_ptr.h"
+#include "itensor.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/contract.h"
 
 using std::array;
 using std::ostream;
@@ -816,7 +816,7 @@ void
 h5_write(h5::group parent, std::string const& name, ITensor const& T)
     {
     auto g = parent.create_group(name);
-    h5_write_attribute(g,"type","ITensor",true);
+    h5_write_attribute(g,"type","",true);
     h5_write_attribute(g,"version",long(1));
     h5_write(g,"inds",T.inds());
     doTask(H5Write(g,"storage"),T.store());
@@ -827,7 +827,7 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "ITensor") Error("Group does not contain ITensor data in HDF5 file");
+    if(type != "") Error("Group does not contain ITensor data in HDF5 file");
 
     auto is = h5_read<IndexSet>(g,"inds");
 
@@ -1209,7 +1209,7 @@ daxpy(ITensor & L,
       ITensor const& R,
       Real alpha)
     {
-    if(L.order() != R.order()) Error("ITensor::operator+=: different number of indices");
+    if(L.order() != R.order()) Error("::operator+=: different number of indices");
     if(nnzblocks(R) == 0) return;
     detail::checkSameDiv(L,R);
 
@@ -1338,7 +1338,7 @@ Real
 sumels(ITensor const& t)
     {
     auto z = sumelsC(t);
-    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
+    if(z.imag() != 0) Error(" has non-zero imaginary part, use sumelsC");
     return z.real();
     }
 
@@ -1356,7 +1356,7 @@ sumelsC(ITensor const& t)
 ostream& 
 operator<<(ostream & s, ITensor const& t)
     {
-    s << "ITensor ord=" << order(t) << ": "; 
+    s << " ord=" << order(t) << ": ";
     if(hasQNs(t)) 
         {
         if(t.order() > 0) s << "\n";

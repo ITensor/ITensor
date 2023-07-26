@@ -15,8 +15,8 @@
 //
 #ifndef __ITENSOR_LOCAL_OP
 #define __ITENSOR_LOCAL_OP
-#include "itensor/itensor.h"
-//#include "itensor/util/print_macro.h"
+#include "itensor.h"
+//#include "util/print_macro.h"
 
 namespace itensor {
 

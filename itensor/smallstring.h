@@ -20,8 +20,8 @@
 #include <cstring>
 #include <cctype>
 #include <iostream>
-#include "itensor/util/error.h"
-#include "itensor/util/print.h"
+#include "util/error.h"
+#include "util/print.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);

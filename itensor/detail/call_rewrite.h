@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <utility>
 #include <stdexcept>
-#include "itensor/util/stdx.h"
+#include "util/stdx.h"
 
 namespace itensor {
 namespace detail {

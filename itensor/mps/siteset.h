@@ -15,8 +15,8 @@
 //
 #ifndef __ITENSOR_SITESET_H
 #define __ITENSOR_SITESET_H
-#include "itensor/itensor.h"
-#include "itensor/util/str.h"
+#include "itensor.h"
+#include "util/str.h"
 
 namespace itensor {
 

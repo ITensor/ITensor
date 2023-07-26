@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_QCOMBINER_H
 #define __ITENSOR_QCOMBINER_H
 
-#include "itensor/itdata/qdense.h"
+#include "itdata/qdense.h"
 #include <tuple>
 
 namespace itensor {

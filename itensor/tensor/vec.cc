@@ -14,9 +14,9 @@
 // limitations under the License.
 //
 #include <limits>
-#include "itensor/detail/algs.h"
-#include "itensor/tensor/vec.h"
-#include "itensor/tensor/lapack_wrap.h"
+#include "detail/algs.h"
+#include "tensor/vec.h"
+#include "tensor/lapack_wrap.h"
 
 namespace itensor {
 

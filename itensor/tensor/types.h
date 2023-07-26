@@ -18,11 +18,11 @@
 
 #include <stdexcept>
 #include <iostream>
-#include "itensor/util/infarray.h"
-#include "itensor/util/vararray.h"
-#include "itensor/util/vector_no_init.h"
-#include "itensor/util/timers.h"
-#include "itensor/types.h"
+#include "util/infarray.h"
+#include "util/vararray.h"
+#include "util/vector_no_init.h"
+#include "util/timers.h"
+#include "types.h"
 
 namespace itensor {
 

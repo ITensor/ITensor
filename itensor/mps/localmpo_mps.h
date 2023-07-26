@@ -15,7 +15,7 @@
 //
 #ifndef __ITENSOR_LOCALMPO_MPS
 #define __ITENSOR_LOCALMPO_MPS
-#include "itensor/mps/localmpo.h"
+#include "mps/localmpo.h"
 
 namespace itensor {
 

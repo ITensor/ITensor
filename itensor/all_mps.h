@@ -30,25 +30,25 @@
 //          the key features)
 //
 
-#include "itensor/all_basic.h"
+#include "all_basic.h"
 
-#include "itensor/util/stats.h"
+#include "util/stats.h"
 
-#include "itensor/mps/dmrg.h"
-#include "itensor/mps/tevol.h"
-#include "itensor/mps/autompo.h"
+#include "mps/dmrg.h"
+#include "mps/tevol.h"
+#include "mps/autompo.h"
 
-#include "itensor/mps/lattice/square.h"
-#include "itensor/mps/lattice/triangular.h"
+#include "mps/lattice/square.h"
+#include "mps/lattice/triangular.h"
 
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/sites/spintwo.h"
-#include "itensor/mps/sites/customspin.h"
-#include "itensor/mps/sites/boson.h"
-#include "itensor/mps/sites/electron.h"
-#include "itensor/mps/sites/fermion.h"
-#include "itensor/mps/sites/tj.h"
-#include "itensor/mps/sites/Z3.h"
+#include "mps/sites/spinhalf.h"
+#include "mps/sites/spinone.h"
+#include "mps/sites/spintwo.h"
+#include "mps/sites/customspin.h"
+#include "mps/sites/boson.h"
+#include "mps/sites/electron.h"
+#include "mps/sites/fermion.h"
+#include "mps/sites/tj.h"
+#include "mps/sites/Z3.h"
 
 #endif

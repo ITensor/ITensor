@@ -15,10 +15,10 @@
 //
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
-#include "itensor/global.h"
-#include "itensor/tagset.h"
-#include "itensor/arrow.h"
-#include "itensor/qn.h"
+#include "global.h"
+#include "tagset.h"
+#include "arrow.h"
+#include "qn.h"
 #include <thread>
 
 namespace itensor {
@@ -549,6 +549,6 @@ h5_read(h5::group parent, std::string const& name, Index & I);
 
 } //namespace itensor
 
-#include "itensor/index_impl.h"
+#include "index_impl.h"
 
 #endif

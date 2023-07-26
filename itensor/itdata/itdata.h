@@ -17,10 +17,10 @@
 #define __ITENSOR_ITDATA_H
 
 #include <memory>
-#include "itensor/types.h"
-#include "itensor/util/error.h"
-#include "itensor/util/timers.h"
-#include "itensor/itdata/storage_types.h"
+#include "types.h"
+#include "util/error.h"
+#include "util/timers.h"
+#include "itdata/storage_types.h"
 
 namespace itensor {
 

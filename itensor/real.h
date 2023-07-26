@@ -17,9 +17,9 @@
 #define __ITENSOR_REAL_H
 #include <cmath>
 #include "math.h"
-#include "itensor/types.h"
-#include "itensor/util/print.h"
-#include "itensor/util/error.h"
+#include "types.h"
+#include "util/print.h"
+#include "util/error.h"
 
 namespace itensor {
 

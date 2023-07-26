@@ -22,7 +22,7 @@
 #include <ctime>
 #include <stdexcept>
 #include <random>
-#include "itensor/types.h"
+#include "types.h"
 
 namespace itensor {
 namespace detail {

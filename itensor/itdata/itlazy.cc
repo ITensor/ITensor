@@ -1,8 +1,8 @@
-#include "itensor/itdata/itlazy.h"
-#include "itensor/itdata/dotask.h"
+#include "itdata/itlazy.h"
+#include "itdata/dotask.h"
 #define REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/storage_types.h"
-#include "itensor/tensor/contract.h"
+#include "itdata/storage_types.h"
+#include "tensor/contract.h"
 
 namespace itensor {
 

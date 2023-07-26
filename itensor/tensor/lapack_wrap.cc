@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/tensor/lapack_wrap.h"
-//#include "itensor/tensor/permutecplx.h"
+#include "tensor/lapack_wrap.h"
+//#include "tensor/permutecplx.h"
 
 namespace itensor {
 

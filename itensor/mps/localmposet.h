@@ -15,7 +15,7 @@
 //
 #ifndef __ITENSOR_LOCALMPOSET
 #define __ITENSOR_LOCALMPOSET
-#include "itensor/mps/localmpo.h"
+#include "mps/localmpo.h"
 
 namespace itensor {
 

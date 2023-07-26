@@ -24,7 +24,7 @@
 
 #ifdef ITENSOR_USE_HDF5
 
-#include "itensor/util/h5/h5.hpp"
+#include "util/h5/h5.hpp"
 
 namespace itensor {
 

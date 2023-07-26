@@ -14,8 +14,8 @@
 // limitations under the License.
 //
 #include <algorithm>
-#include "itensor/util/input.h"
-#include "itensor/util/print.h"
+#include "util/input.h"
+#include "util/print.h"
 
 using std::ostream;
 using std::istream;

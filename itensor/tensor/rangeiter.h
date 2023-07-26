@@ -17,7 +17,7 @@
 #define __ITENSOR_RANGEITER_H_
 
 #include <iterator> 
-#include "itensor/tensor/types.h"
+#include "tensor/types.h"
 
 namespace itensor {
 

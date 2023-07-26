@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_TENITER_H_
 #define __ITENSOR_TENITER_H_
 
-#include "itensor/tensor/rangeiter.h"
+#include "tensor/rangeiter.h"
 
 namespace itensor {
 

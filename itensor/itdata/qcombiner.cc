@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/util/iterate.h"
-#include "itensor/tensor/sliceten.h"
-#include "itensor/itdata/qcombiner.h"
-#include "itensor/itdata/itdata.h"
-#include "itensor/itdata/qutil.h"
+#include "util/iterate.h"
+#include "tensor/sliceten.h"
+#include "itdata/qcombiner.h"
+#include "itdata/itdata.h"
+#include "itdata/qutil.h"
 
 using std::vector;
 using std::tie;

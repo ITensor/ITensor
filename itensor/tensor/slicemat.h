@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_SLICEMAT_H_
 #define __ITENSOR_SLICEMAT_H_
 
-#include "itensor/tensor/mat.h"
+#include "tensor/mat.h"
 
 namespace itensor {
 

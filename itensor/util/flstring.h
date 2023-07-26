@@ -16,8 +16,8 @@
 #ifndef _ITENSOR_STRING_H_
 #define _ITENSOR_STRING_H_
 #include <string>
-#include "itensor/tensor/types.h"
-#include "itensor/util/error.h"
+#include "tensor/types.h"
+#include "util/error.h"
 
 namespace itensor {
 

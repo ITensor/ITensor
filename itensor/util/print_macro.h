@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_PRINT_MACRO_H
 #define __ITENSOR_PRINT_MACRO_H
 
-#include "itensor/util/print.h"
+#include "util/print.h"
 
 #define Print(X)  itensor::PrintNice(#X,X)
 

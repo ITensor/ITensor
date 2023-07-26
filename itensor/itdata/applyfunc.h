@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_APPLYFUNC_H
 #define __ITENSOR_APPLYFUNC_H
 
-#include "itensor/itdata/dotask.h"
+#include "itdata/dotask.h"
 
 namespace itensor {
 

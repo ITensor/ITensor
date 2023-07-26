@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <vector>
-#include "itensor/global.h"
+#include "global.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);

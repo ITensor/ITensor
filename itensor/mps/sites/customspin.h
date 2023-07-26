@@ -4,7 +4,7 @@
 //
 #pragma once
 
-#include "itensor/mps/siteset.h"
+#include "mps/siteset.h"
 
 namespace itensor {
 

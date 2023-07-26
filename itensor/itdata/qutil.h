@@ -20,7 +20,7 @@
 #include <omp.h>
 #endif
 
-#include "itensor/indexset.h"
+#include "indexset.h"
 
 namespace itensor {
 

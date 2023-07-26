@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_SAFE_PTR_H
 #define __ITENSOR_SAFE_PTR_H
 
-#include "itensor/util/print.h"
-#include "itensor/util/stdx.h"
+#include "util/print.h"
+#include "util/stdx.h"
 
 namespace itensor {
 

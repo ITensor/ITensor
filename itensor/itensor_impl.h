@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_ITENSOR_INTERFACE_IMPL_H_
 #define __ITENSOR_ITENSOR_INTERFACE_IMPL_H_
 
-#include "itensor/itdata/task_types.h"
-#include "itensor/tensor/contract.h"
+#include "itdata/task_types.h"
+#include "tensor/contract.h"
 
 //
 // Template Method Implementations
@@ -323,7 +323,7 @@ checkEltFluxInts(ITensor const& A, Ints const& ints)
           for(auto i : range1(order(A)))
             println("Index: ", indsA(i), ", Val: ",ints[i-1]+1);
           println("Element flux is: ",elt_flux);
-          println("ITensor flux is: ",flux(A));
+          println(" flux is: ",flux(A));
           Error("In .set, cannot set element with flux different from ITensor flux");
           }
       }

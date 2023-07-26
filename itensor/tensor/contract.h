@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_CONTRACT_H
 #define __ITENSOR_CONTRACT_H
 
-#include "itensor/tensor/vec.h"
-#include "itensor/util/args.h"
-#include "itensor/util/iterate.h"
-#include "itensor/detail/gcounter.h"
+#include "tensor/vec.h"
+#include "util/args.h"
+#include "util/iterate.h"
+#include "detail/gcounter.h"
 
 namespace itensor {
 
@@ -347,6 +347,6 @@ contractDiagFull(DiagElsA           const& A, Labels const& al,
 
 } //namespace itensor
 
-#include "itensor/tensor/contract_impl.h"
+#include "tensor/contract_impl.h"
 
 #endif

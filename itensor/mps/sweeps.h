@@ -16,9 +16,9 @@
 #ifndef __ITENSOR_SWEEPS_HEADER_H
 #define __ITENSOR_SWEEPS_HEADER_H
 #include <functional>
-#include "itensor/util/input.h"
-#include "itensor/global.h"
-#include "itensor/util/readwrite.h"
+#include "util/input.h"
+#include "global.h"
+#include "util/readwrite.h"
 
 namespace itensor {
 

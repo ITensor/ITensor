@@ -20,10 +20,10 @@
 #include <memory>
 #include <vector>
 #include "string.h"
-#include "itensor/types.h"
-#include "itensor/tensor/types.h"
-#include "itensor/util/error.h"
-#include "itensor/util/infarray.h"
+#include "types.h"
+#include "tensor/types.h"
+#include "util/error.h"
+#include "util/infarray.h"
 
 #if defined(_WIN32)
 #include <process.h>
@@ -370,7 +370,7 @@ writeToFile(const std::string& fname, const T& t)
     }
 
 //Given a prefix (e.g. pfix == "mydir")
-//and an optional location (e.g. locn == "/var/tmp/")
+//and an optional location (e.g. locn == "var/tmp/")
 //creates a temporary directory and returns its name
 //without a trailing slash
 //(e.g. /var/tmp/mydir_SfqPyR)

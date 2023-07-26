@@ -14,7 +14,7 @@ namespace h5 {
     h5::file parent_file;
 
     public:
-    /// Takes the "/" group at the top of the file
+    /// Takes the "" group at the top of the file
     group(h5::file f);
 
     ///

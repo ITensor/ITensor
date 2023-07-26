@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_SCALAR_H
 #define __ITENSOR_SCALAR_H
 
-#include "itensor/itdata/task_types.h"
-//#include "itensor/itdata/itdata.h"
-#include "itensor/itdata/dotask.h"
-#include "itensor/detail/call_rewrite.h"
+#include "itdata/task_types.h"
+//#include "itdata/itdata.h"
+#include "itdata/dotask.h"
+#include "detail/call_rewrite.h"
 
 namespace itensor {
 

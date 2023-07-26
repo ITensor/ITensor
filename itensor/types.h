@@ -17,9 +17,9 @@
 #define __ITENSOR_TYPES_H_
 
 #include <limits>
-#include "itensor/util/stdx.h"
-#include "itensor/util/cplx_literal.h"
-#include "itensor/util/print.h"
+#include "util/stdx.h"
+#include "util/cplx_literal.h"
+#include "util/print.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())

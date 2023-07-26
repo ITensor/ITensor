@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_BONDGATE_H
 #define __ITENSOR_BONDGATE_H
 
-#include "itensor/itensor.h"
-#include "itensor/mps/siteset.h"
+#include "itensor.h"
+#include "mps/siteset.h"
 
 namespace itensor {
 

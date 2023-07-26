@@ -1,0 +1,120 @@
+#
+#  This file is part of the ITensor library
+#
+# Copyright 2018 The Simons Foundation, Inc. - All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#ITensor headers
+set(ITENSOR_HEADER_FILES
+    all.h
+    all_basic.h
+    all_mps.h
+    arrow.h
+    core.h
+    decomp.h
+    decomp_impl.h
+    detail/algs.h
+    detail/call_rewrite.h
+    detail/gcounter.h
+    detail/skip_iterator.h
+    global.h
+    index.h
+    index_impl.h
+    indexset.h
+    indexset_impl.h
+    itdata/applyfunc.h
+    itdata/combiner.h
+    itdata/dense.h
+    itdata/diag.h
+    itdata/dotask.h
+    itdata/itdata.h
+    itdata/itlazy.h
+    itdata/qcombiner.h
+    itdata/qdense.h
+    itensor.h
+    itensor_impl.h
+    iterativesolvers.h
+    qn.h
+    real.h
+    smallstring.h
+    spectrum.h
+    tagset.h
+    types.h
+    )
+
+set(ITENSOR_SOURCE_FILES
+    decomp.cc
+    global.cc
+    hermitian.cc
+    index.cc
+    indexset.cc
+    itdata/combiner.cc
+    itdata/dense.cc
+    itdata/diag.cc
+    itdata/itlazy.cc
+    itdata/qcombiner.cc
+    itdata/qdense.cc
+    itdata/qdiag.cc
+    itdata/scalar.cc
+    itensor.cc
+    qn.cc
+    spectrum.cc
+    svd.cc
+    tagset.cc)
+
+set(_ITENSOR_DEPENDENCIES "${LAPACK_LIBRARIES}")
+
+set(ITENSOR_LINK_LIBRARIES ${_ITENSOR_DEPENDENCIES} CACHE STRING "List of librareis which ITensor is dependent on")
+
+# Create the ITensor library
+add_library(itensor ${ITENSOR_SOURCE_FILES} ${ITENSOR_HEADER_FILES})
+
+set(targetname itensor)
+
+target_include_directories(${targetname} INTERFACE
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+                           $<INSTALL_INTERFACE:${TILEDARRAY_INSTALL_INCLUDEDIR}>
+                           )
+
+target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES})
+
+# append current CMAKE_CXX_FLAGS
+string(REPLACE " " ";" CMAKE_CXX_FLAG_LIST "${CMAKE_CXX_FLAGS}")
+target_compile_options(${targetname} PUBLIC ${CMAKE_CXX_FLAG_LIST})
+target_compile_features(${targetname} PUBLIC "cxx_std_${CMAKE_CXX_STANDARD}")
+
+if (LAPACK_INCLUDE_DIRS)
+  target_include_directories(${targetname} PUBLIC ${LAPACK_INCLUDE_DIRS})
+endif (LAPACK_INCLUDE_DIRS)
+if (LAPACK_COMPILE_OPTIONS)
+  target_compile_options(${targetname} PUBLIC ${LAPACK_COMPILE_OPTIONS})
+endif (LAPACK_COMPILE_OPTIONS)
+if (LAPACK_COMPILE_DEFINITIONS)
+  target_compile_definitions(${targetname} PUBLIC ${LAPACK_COMPILE_DEFINITIONS})
+endif (LAPACK_COMPILE_DEFINITIONS)
+
+# Add library to the list of installed components
+install(TARGETS itensor EXPORT itensor COMPONENT itensor
+        LIBRARY DESTINATION "${ITENSOR_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${ITENSOR_INSTALL_LIBDIR}")
+# Install header files
+install(
+    DIRECTORY
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "CMakeFiles" EXCLUDE
+)

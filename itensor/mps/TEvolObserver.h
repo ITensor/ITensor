@@ -15,8 +15,8 @@
 //
 #ifndef __ITENSOR_TEVOLOBSERVER_H
 #define __ITENSOR_TEVOLOBSERVER_H
-#include "itensor/util/readwrite.h"
-#include "itensor/mps/observer.h"
+#include "util/readwrite.h"
+#include "mps/observer.h"
 
 namespace itensor {
 

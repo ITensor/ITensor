@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_SLICERANGE_H_
 #define __ITENSOR_SLICERANGE_H_
 
-#include "itensor/tensor/range.h"
+#include "tensor/range.h"
 
 namespace itensor {
 

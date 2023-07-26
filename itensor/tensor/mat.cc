@@ -14,12 +14,12 @@
 // limitations under the License.
 //
 #include <limits>
-#include "itensor/util/iterate.h"
-#include "itensor/util/timers.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/mat.h"
-#include "itensor/tensor/slicemat.h"
-#include "itensor/detail/algs.h"
+#include "util/iterate.h"
+#include "util/timers.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/mat.h"
+#include "tensor/slicemat.h"
+#include "detail/algs.h"
 
 namespace itensor {
 

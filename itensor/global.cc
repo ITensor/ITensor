@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/global.h"
+#include "global.h"
 
 namespace itensor {
 

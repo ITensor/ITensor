@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_SLICETEN_H_
 #define __ITENSOR_SLICETEN_H_
 
-#include "itensor/util/iterate.h"
-#include "itensor/tensor/ten.h"
-#include "itensor/tensor/slicemat.h"
-#include "itensor/tensor/slicerange.h"
+#include "util/iterate.h"
+#include "tensor/ten.h"
+#include "tensor/slicemat.h"
+#include "tensor/slicerange.h"
 
 namespace itensor {
 

@@ -1,7 +1,7 @@
 #ifndef __ITENSOR_STATIC_COUNT_H__
 #define __ITENSOR_STATIC_COUNT_H__
 
-#include "itensor/util/print.h"
+#include "util/print.h"
 
 namespace itensor {
 

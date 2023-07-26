@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_ITLAZY_H
 #define __ITENSOR_ITLAZY_H
 
-#include "itensor/itdata/task_types.h"
-#include "itensor/itdata/itdata.h"
+#include "itdata/task_types.h"
+#include "itdata/itdata.h"
 
 namespace itensor {
 

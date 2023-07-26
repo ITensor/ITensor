@@ -16,9 +16,9 @@
 #ifndef __ITENSOR_RANGE_H
 #define __ITENSOR_RANGE_H
 
-#include "itensor/util/stdx.h"
-#include "itensor/util/readwrite.h"
-#include "itensor/tensor/rangeiter.h"
+#include "util/stdx.h"
+#include "util/readwrite.h"
+#include "tensor/rangeiter.h"
 
 namespace itensor {
 

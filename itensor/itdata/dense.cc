@@ -13,15 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/itdata/dense.h"
-#include "itensor/itdata/itdata.h"
-//#include "itensor/itdata/itlazy.h"
-#include "itensor/indexset.h"
-#include "itensor/util/iterate.h"
-#include "itensor/tensor/sliceten.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/util/tensorstats.h"
+#include "itdata/dense.h"
+#include "itdata/itdata.h"
+//#include "itdata/itlazy.h"
+#include "indexset.h"
+#include "util/iterate.h"
+#include "tensor/sliceten.h"
+#include "tensor/contract.h"
+#include "tensor/lapack_wrap.h"
+#include "util/tensorstats.h"
 
 using std::move;
 using std::string;

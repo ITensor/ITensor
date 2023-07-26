@@ -17,16 +17,16 @@
 #include <unordered_map>
 #include <future>
 
-#include "itensor/util/multalloc.h"
-#include "itensor/util/cputime.h"
-#include "itensor/detail/algs.h"
-#include "itensor/detail/gcounter.h"
-#include "itensor/tensor/mat.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/tensor/slicemat.h"
-#include "itensor/tensor/sliceten.h"
-#include "itensor/indexset.h"
-#include "itensor/global.h"
+#include "util/multalloc.h"
+#include "util/cputime.h"
+#include "detail/algs.h"
+#include "detail/gcounter.h"
+#include "tensor/mat.h"
+#include "tensor/contract.h"
+#include "tensor/slicemat.h"
+#include "tensor/sliceten.h"
+#include "indexset.h"
+#include "global.h"
 
 using std::vector;
 

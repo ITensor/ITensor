@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/itdata/scalar.h"
-#include "itensor/util/readwrite.h"
+#include "itdata/scalar.h"
+#include "util/readwrite.h"
 
 namespace itensor {
 

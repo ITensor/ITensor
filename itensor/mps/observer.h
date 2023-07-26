@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_OBSERVER_H
 #define __ITENSOR_OBSERVER_H
 
-#include "itensor/global.h"
+#include "global.h"
 
 namespace itensor {
 

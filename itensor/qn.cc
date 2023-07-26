@@ -1,6 +1,6 @@
-#include "itensor/qn.h"
-#include "itensor/util/readwrite.h"
-#include "itensor/util/print_macro.h"
+#include "qn.h"
+#include "util/readwrite.h"
+#include "util/print_macro.h"
 
 using std::string;
 using std::vector;

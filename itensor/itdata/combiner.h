@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_ITCOMBINER_H
 #define __ITENSOR_ITCOMBINER_H
 
-#include "itensor/itdata/dense.h"
+#include "itdata/dense.h"
 
 namespace itensor {
 

@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_TASK_TYPES_H_
 #define __ITENSOR_TASK_TYPES_H_
 
-#include "itensor/util/infarray.h"
-#include "itensor/util/print.h"
-#include "itensor/real.h"
-#include "itensor/indexset.h"
+#include "util/infarray.h"
+#include "util/print.h"
+#include "real.h"
+#include "indexset.h"
 
 namespace itensor {
 

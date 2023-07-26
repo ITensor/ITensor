@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/util/iterate.h"
-#include "itensor/itdata/combiner.h"
-#include "itensor/itdata/itdata.h"
-//#include "itensor/itdata/itcplx.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/tensor/sliceten.h"
+#include "util/iterate.h"
+#include "itdata/combiner.h"
+#include "itdata/itdata.h"
+//#include "itdata/itcplx.h"
+#include "tensor/contract.h"
+#include "tensor/sliceten.h"
 
 using std::vector;
 

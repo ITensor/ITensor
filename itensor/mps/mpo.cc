@@ -13,10 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/util/print_macro.h"
-#include "itensor/util/str.h"
-#include "itensor/mps/mpo.h"
-#include "itensor/mps/localop.h"
+#include "util/print_macro.h"
+#include "util/str.h"
+#include "mps/mpo.h"
+#include "mps/localop.h"
 
 namespace itensor {
 

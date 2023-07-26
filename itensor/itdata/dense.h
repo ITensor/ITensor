@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_DENSE_H
 #define __ITENSOR_DENSE_H
 
-#include "itensor/itdata/task_types.h"
-#include "itensor/util/readwrite.h"
-#include "itensor/detail/call_rewrite.h"
-#include "itensor/itdata/itdata.h"
+#include "itdata/task_types.h"
+#include "util/readwrite.h"
+#include "detail/call_rewrite.h"
+#include "itdata/itdata.h"
 
 namespace itensor {
 

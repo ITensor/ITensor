@@ -15,7 +15,7 @@
 //
 #include <algorithm>
 #include <utility>
-#include "itensor/spectrum.h"
+#include "spectrum.h"
 
 using std::move;
 

@@ -15,8 +15,8 @@
 //
 #ifndef __ITENSOR_MPS_H
 #define __ITENSOR_MPS_H
-#include "itensor/decomp.h"
-#include "itensor/mps/siteset.h"
+#include "decomp.h"
+#include "mps/siteset.h"
 
 namespace itensor {
 

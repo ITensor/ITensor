@@ -15,9 +15,9 @@
 //
 #pragma once
 
-#include "itensor/mps/siteset.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/util/str.h"
+#include "mps/siteset.h"
+#include "mps/sites/spinhalf.h"
+#include "util/str.h"
 
 namespace itensor {
 

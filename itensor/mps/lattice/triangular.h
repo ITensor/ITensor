@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_LATTICE_TRIANGULAR_H_
 #define __ITENSOR_LATTICE_TRIANGULAR_H_
 
-#include "itensor/mps/lattice/latticebond.h"
+#include "mps/lattice/latticebond.h"
 
 namespace itensor {
 

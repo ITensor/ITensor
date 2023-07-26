@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "itensor/index.h"
-#include "itensor/util/readwrite.h"
-#include "itensor/util/print_macro.h"
+#include "index.h"
+#include "util/readwrite.h"
+#include "util/print_macro.h"
 
 using std::string;
 using std::stringstream;

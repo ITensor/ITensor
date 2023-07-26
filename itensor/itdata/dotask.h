@@ -17,9 +17,9 @@
 #define __ITENSOR_DOTASK_H
 
 #include <cassert>
-#include "itensor/itdata/itdata.h"
-#include "itensor/util/print.h"
-#include "itensor/itdata/returntype.h"
+#include "itdata/itdata.h"
+#include "util/print.h"
+#include "itdata/returntype.h"
 
 namespace itensor {
 

@@ -15,9 +15,9 @@
 //
 #include <algorithm>
 #include <map>
-#include "itensor/util/print_macro.h"
-#include "itensor/mps/autompo.h"
-#include "itensor/tensor/algs.h"
+#include "util/print_macro.h"
+#include "mps/autompo.h"
+#include "tensor/algs.h"
 
 using std::find;
 using std::cout;

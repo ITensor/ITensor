@@ -18,8 +18,8 @@
 
 #include <chrono>
 #include <cmath>
-#include "itensor/util/stdx.h"
-#include "itensor/util/print.h"
+#include "util/stdx.h"
+#include "util/print.h"
 
 //#define COLLECT_TIMES
 

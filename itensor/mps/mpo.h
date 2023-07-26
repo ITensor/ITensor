@@ -15,8 +15,8 @@
 //
 #ifndef __ITENSOR_MPO_H
 #define __ITENSOR_MPO_H
-#include "itensor/mps/mps.h"
-#include "itensor/mps/sweeps.h"
+#include "mps/mps.h"
+#include "mps/sweeps.h"
 
 
 namespace itensor {

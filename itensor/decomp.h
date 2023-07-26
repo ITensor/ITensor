@@ -15,9 +15,9 @@
 //
 #ifndef __ITENSOR_DECOMP_H
 #define __ITENSOR_DECOMP_H
-//#include "itensor/util/print_macro.h"
-#include "itensor/spectrum.h"
-#include "itensor/itensor.h"
+//#include "util/print_macro.h"
+#include "spectrum.h"
+#include "itensor.h"
 
 
 namespace itensor {
@@ -487,6 +487,6 @@ struct EigQN
 
 } //namespace itensor
 
-#include "itensor/decomp_impl.h"
+#include "decomp_impl.h"
 
 #endif

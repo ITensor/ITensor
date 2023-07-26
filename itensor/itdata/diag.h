@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_DIAG_H
 #define __ITENSOR_DIAG_H
 
-#include "itensor/itdata/dense.h"
+#include "itdata/dense.h"
 
 namespace itensor {
 

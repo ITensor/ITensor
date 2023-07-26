@@ -16,10 +16,10 @@
 #ifndef __ITENSOR_QN_H
 #define __ITENSOR_QN_H
 
-#include "itensor/global.h"
-#include "itensor/arrow.h"
-#include "itensor/smallstring.h"
-#include "itensor/util/h5/wrap_h5.hpp"
+#include "global.h"
+#include "arrow.h"
+#include "smallstring.h"
+#include "util/h5/wrap_h5.hpp"
 
 namespace itensor {
 

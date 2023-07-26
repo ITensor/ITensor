@@ -16,8 +16,8 @@
 #ifndef __ITENSOR_PRINT_H
 #define __ITENSOR_PRINT_H
 
-#include "itensor/util/tinyformat.h"
-#include "itensor/util/stdx.h"
+#include "util/tinyformat.h"
+#include "util/stdx.h"
 
 namespace itensor {
 

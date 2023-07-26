@@ -17,9 +17,9 @@
 #define __ITENSOR_TENSORSTATS_H
 
 #include <cmath>
-#include "itensor/util/stdx.h"
-#include "itensor/util/print.h"
-#include "itensor/itensor.h"
+#include "util/stdx.h"
+#include "util/print.h"
+#include "itensor.h"
 
 //#define COLLECT_TSTATS
 

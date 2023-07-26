@@ -19,8 +19,8 @@
 #include <sstream>
 #include <vector>
 #include <type_traits>
-#include "itensor/util/readwrite.h"
-#include "itensor/util/args.h"
+#include "util/readwrite.h"
+#include "util/args.h"
 
 #define DEFAULT_BUFSIZE 500000
 

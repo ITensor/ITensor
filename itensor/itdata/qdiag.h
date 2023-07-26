@@ -16,7 +16,7 @@
 #ifndef __ITENSOR_QDIAG_H
 #define __ITENSOR_QDIAG_H
 
-#include "itensor/itdata/qdense.h"
+#include "itdata/qdense.h"
 
 namespace itensor {
 

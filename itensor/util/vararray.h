@@ -17,7 +17,7 @@
 #define __ITENSOR_VARARRAY_H
 
 #include <array>
-#include "itensor/util/error.h"
+#include "util/error.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);

@@ -19,8 +19,8 @@
 #include <vector>
 #include <string>
 #include "math.h"
-#include "itensor/types.h"
-#include "itensor/util/infarray.h"
+#include "types.h"
+#include "util/infarray.h"
 
 namespace itensor {
 

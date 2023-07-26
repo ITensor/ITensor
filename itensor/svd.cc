@@ -14,11 +14,11 @@
 // limitations under the License.
 //
 #include <algorithm>
-#include "itensor/util/stdx.h"
-#include "itensor/tensor/algs.h"
-#include "itensor/decomp.h"
-#include "itensor/util/print_macro.h"
-#include "itensor/itdata/qutil.h"
+#include "util/stdx.h"
+#include "tensor/algs.h"
+#include "decomp.h"
+#include "util/print_macro.h"
+#include "itdata/qutil.h"
 
 namespace itensor {
 

@@ -17,7 +17,7 @@
 #define __ITENSOR_ITERATE_H_
 
 #include <type_traits>
-#include "itensor/util/itertools.h"
+#include "util/itertools.h"
 
 namespace itensor {
 

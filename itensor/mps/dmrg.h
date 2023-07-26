@@ -16,12 +16,12 @@
 #ifndef __ITENSOR_DMRG_H
 #define __ITENSOR_DMRG_H
 
-#include "itensor/iterativesolvers.h"
-#include "itensor/mps/localmposet.h"
-#include "itensor/mps/localmpo_mps.h"
-#include "itensor/mps/sweeps.h"
-#include "itensor/mps/DMRGObserver.h"
-#include "itensor/util/cputime.h"
+#include "iterativesolvers.h"
+#include "mps/localmposet.h"
+#include "mps/localmpo_mps.h"
+#include "mps/sweeps.h"
+#include "mps/DMRGObserver.h"
+#include "util/cputime.h"
 
 
 namespace itensor {

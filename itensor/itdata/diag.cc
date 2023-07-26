@@ -1,7 +1,7 @@
-#include "itensor/itdata/diag.h"
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/util/iterate.h"
+#include "itdata/diag.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/contract.h"
+#include "util/iterate.h"
 
 using std::vector;
 

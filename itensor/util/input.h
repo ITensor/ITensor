@@ -22,9 +22,9 @@
 #include <fstream>
 #include <string>
 #include <limits>
-#include "itensor/types.h"
-#include "itensor/util/error.h"
-#include "itensor/util/optional_ptr.h"
+#include "types.h"
+#include "util/error.h"
+#include "util/optional_ptr.h"
 
 namespace itensor {
 

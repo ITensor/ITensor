@@ -16,9 +16,9 @@
 #ifndef __ITENSOR_STATS_H
 #define __ITENSOR_STATS_H
 
-#include "itensor/real.h"
-#include "itensor/tensor/vec.h"
-#include "itensor/global.h"
+#include "real.h"
+#include "tensor/vec.h"
+#include "global.h"
 
 namespace itensor {
 

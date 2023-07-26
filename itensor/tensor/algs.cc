@@ -16,10 +16,10 @@
 #include <limits>
 #include <stdexcept>
 #include <tuple>
-#include "itensor/tensor/lapack_wrap.h"
-#include "itensor/tensor/algs.h"
-#include "itensor/util/iterate.h"
-#include "itensor/global.h"
+#include "tensor/lapack_wrap.h"
+#include "tensor/algs.h"
+#include "util/iterate.h"
+#include "global.h"
 
 using std::move;
 using std::sqrt;
@@ -611,7 +611,7 @@ SVDRef(MatRefc<T> const& M,
 #endif
 
         auto svdMethod = args.getString("SVDMethod", "automatic");
-        if(svdMethod=="ITensor")
+        if(svdMethod=="")
             {
             SVDRefImpl(M,U,D,V,args);
             }
