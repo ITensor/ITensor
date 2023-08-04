@@ -15,10 +15,10 @@ endif()
 enable_language(CUDA)
 
 set(CUDA_FOUND TRUE)
-set(TILEDARRAY_HAS_CUDA 1 CACHE BOOL "Whether TiledArray has CUDA support")
+set(ITENSORS_HAS_CUDA 1 CACHE BOOL "Whether ITensor has CUDA support")
 
 if(ENABLE_CUDA_ERROR_CHECK)
-  set (TILEDARRAY_CHECK_CUDA_ERROR 1)
+  set (ITENSORS_CHECK_CUDA_ERROR 1)
 endif(ENABLE_CUDA_ERROR_CHECK)
 
 # find CUDA toolkit
@@ -38,18 +38,8 @@ endif(NOT DEFINED CUDAToolkit_ROOT)
 # sanitize implicit dirs if CUDA host compiler != C++ compiler
 message(STATUS "CMAKE Implicit Include Directories: ${CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES}")
 message(STATUS "CMAKE Implicit Link Directories: ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES}")
-include(SanitizeCUDAImplicitDirectories)
+include(SanitizeCUDA)
 sanitize_cuda_implicit_directories()
 message(STATUS "CMAKE Implicit Include Directories: ${CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES}")
 message(STATUS "CMAKE Implicit Link Directories: ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES}")
-
-###
-### Umpire
-###
-#include(external/umpire.cmake)
-#
-###
-### LibreTT
-###
-#include(external/librett.cmake)
 
