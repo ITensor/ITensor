@@ -184,11 +184,7 @@ add_feature_info(OMP ENABLE_OMP "Message passing interface which supports unifie
 option(ENABLE_WFN91_LINALG_DISCOVERY_KIT "Use linear algebra discovery kit from github.com/wavefunction91 [recommended]" ON)
 add_feature_info(WFN91LinearAlgebraDiscoveryKit ENABLE_WFN91_LINALG_DISCOVERY_KIT "Linear algebra discovery kit from github.com/wavefunction91 supports many more corner cases than the default CMake modules and/or ICL's BLAS++/LAPACK++ modules")
 
-#if(ENABLE_CUDA)
-#    option(ENABLE_CUDA_ERROR_CHECK "ITensor will always check errors in CUDA calls" ON)
-#    add_feature_info(CUDA_ERROR_CHECK ENABLE_CUDA_ERROR_CHECK "Checks CUDA Error")
-#endif()
-
+set(TARGET_ARCH "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 ##########################
 # miscellaneous cmake platform-neutral and platform-specific configuration
 ##########################
@@ -224,6 +220,40 @@ endif(ENABLE_CUDA)
 ##########################
 
 include(external/linalgpp.cmake)
+if(ENABLE_OMP)
+  MESSAGE(STATUS "Looking for OMP")
+  FIND_PACKAGE(OpenMP REQUIRED)
+  IF(OPENMP_FOUND)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  endif(OPENMP_FOUND)
+  target_link_libraries(ITENSORS INTERFACE ${OpenMP_C_LIBRARIES})
+endif(ENABLE_OMP)
+
+if(ENABLE_MPI)
+  MESSAGE(STATUS "Looking for MPI")
+  FIND_PACKAGE(MPI REQUIRED)
+  IF(MPI_FOUND)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_FLAGS}")
+  endif(MPI_FOUND)
+
+  target_link_libraries(ITENSORS INTERFACE ${MPI_C_LIBRARIES})
+endif(ENABLE_MPI)
+
+# if(ENABLE_BLAS_LAPACK)
+#   find_package(BLAS)
+#   find_package(LAPACK)
+#   if(LAPACK_FOUND AND BLAS_FOUND)
+#     set(lapackblas_libraries ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+    
+#     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+#     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+#   endif()
+
+#   target_link_libraries(ITENSORS INTERFACE ${lapackblas_libraries})
+# endif(ENABLE_BLAS_LAPACK)
+
 
 ##########################
 # sources
@@ -248,11 +278,7 @@ endforeach()
 # Force cache refresh for compile flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "C compile flags" FORCE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "C++ compile flags" FORCE)
-
-#CONFIGURE_FILE(
-#    ${PROJECT_SOURCE_DIR}/cmake/config.h.in
-#    ${PROJECT_BINARY_DIR}/cmake/config.h
-#)
+set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS}" CACHE STRING "Compiler linker flags" FORCE) 
 
 CONFIGURE_FILE(
     ${PROJECT_SOURCE_DIR}/itensors.pc.in
@@ -262,11 +288,6 @@ CONFIGURE_FILE(
 # install config files
 install(FILES ${PROJECT_BINARY_DIR}/itensor.pc
         DESTINATION lib/pkgconfig)
-
-## include extra cmake files
-#install(FILES
-#        "${PROJECT_SOURCE_DIR}/cmake/modules/SanitizeCUDAImplicitDirectories.cmake"
-#        DESTINATION "${TILEDARRAY_INSTALL_CMAKEDIR}")
 
 # Create the version file
 write_basic_package_version_file(itensor-config-version.cmake
