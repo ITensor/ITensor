@@ -73,10 +73,6 @@ set(ITENSOR_SOURCE_FILES
     svd.cc
     tagset.cc)
 
-set(_ITENSOR_DEPENDENCIES "${LAPACK_LIBRARIES}")
-
-set(ITENSOR_LINK_LIBRARIES ${_ITENSOR_DEPENDENCIES} CACHE STRING "List of librareis which ITensor is dependent on")
-
 # Create the ITensor library
 add_library(itensor ${ITENSOR_SOURCE_FILES} ${ITENSOR_HEADER_FILES})
 
@@ -85,10 +81,12 @@ set(targetname itensor)
 target_include_directories(${targetname} INTERFACE
                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
                            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-                           $<INSTALL_INTERFACE:${TILEDARRAY_INSTALL_INCLUDEDIR}>
+                           $<INSTALL_INTERFACE:${ITENSORS_INSTALL_INCLUDEDIR}>
                            )
 
-target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES})
+set(ITENSORS_LINK_LIBRARIES ${CMAKE_CXX_FLAGS} blaspp lapackpp ${blaspp_headers} CACHE STRING "List of libraries which ITensor is dependent on")
+message(STATUS "ITENSORS_LINK_LIBRARIES:${ITENSORS_LINK_LIBRARIES}")
+target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES} blaspp lapackpp)
 
 # append current CMAKE_CXX_FLAGS
 string(REPLACE " " ";" CMAKE_CXX_FLAG_LIST "${CMAKE_CXX_FLAGS}")
