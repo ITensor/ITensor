@@ -105,7 +105,7 @@ read(std::istream& s, CtrArgs&&... args)
 //    void
 //    writeImpl(stdx::choice<3>, std::ostream& s, T const& t)
 //        {
-//        Error("Object does not define .write method");
+//        error("Object does not define .write method");
 //        }
 //}
 //

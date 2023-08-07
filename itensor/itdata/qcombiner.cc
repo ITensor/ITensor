@@ -58,7 +58,7 @@ operator<<(std::ostream & s, QCombiner const& dat)
 Cplx
 doTask(GetElt const& g, QCombiner const& c)
     {
-    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar QCombiner storage");
+    if(g.inds.size()!=0) error("GetElt not defined for non-scalar QCombiner storage");
     return Cplx(1.,0.);
     }
 

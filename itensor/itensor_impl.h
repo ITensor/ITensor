@@ -85,7 +85,7 @@ eltC(IV const& iv1, IVs&&... ivs) const
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -119,7 +119,7 @@ auto ITensor::
 eltC(std::vector<Int> const& ints) const
     -> stdx::enable_if_t<std::is_integral<Int>::value,Cplx>
     {
-    if(!store()) Error("tensor storage unallocated");
+    if(!store()) error("tensor storage unallocated");
 
     auto size = ints.size();
     if(size != size_t(inds().order()))
@@ -130,7 +130,7 @@ eltC(std::vector<Int> const& ints) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(tinyformat::format("Wrong number of ints passed to elt/eltC (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of ints passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -171,13 +171,13 @@ template <typename... IVals>
 Real ITensor::
 elt(IVals&&... ivs) const
     {
-    if(itensor::isComplex(*this)) Error("Cannot call .elt(...) on an ITensor with complex storage. Please use .eltC(...) instead");
+    if(itensor::isComplex(*this)) error("Cannot call .elt(...) on an ITensor with complex storage. Please use .eltC(...) instead");
     //TODO: make a specialized elt(...) version
     auto z = eltC(std::forward<IVals>(ivs)...);
     //if(fabs(z.imag()) > 1E-15 && fabs(z.imag()) > 1E-14*fabs(z.real()))
     //    {
     //    printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-    //    //Error("tensor is Complex valued, use .eltC(...) method");
+    //    //error("tensor is Complex valued, use .eltC(...) method");
     //    throw ITError("tensor is complex valued, use .eltC(...) method");
     //    }
     return z.real();
@@ -324,7 +324,7 @@ checkEltFluxInts(ITensor const& A, Ints const& ints)
             println("Index: ", indsA(i), ", Val: ",ints[i-1]+1);
           println("Element flux is: ",elt_flux);
           println(" flux is: ",flux(A));
-          Error("In .set, cannot set element with flux different from ITensor flux");
+          error("In .set, cannot set element with flux different from ITensor flux");
           }
       }
     return;
@@ -350,7 +350,7 @@ set(IV const& iv1, VArgs&&... vargs)
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -389,7 +389,7 @@ set(Int iv1, VArgs&&... vargs)
         for(auto& i : ints) print(" ",1+i);
         println();
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of ints passed to set (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of ints passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     //TODO: if !store_ and !is_real, call allocCplx instead
@@ -426,7 +426,7 @@ generate(Func&& f)
             }
         else
             {
-            Error("generate: generator function must return Real or Cplx scalar value");
+            error("generate: generator function must return Real or Cplx scalar value");
             }
         }
     fixBlockDeficient();
@@ -620,7 +620,7 @@ diagITensor(Container const& C,
           {
           println("mindim = ",mindim);
           println("C.size() = ",C.size());
-          Error("Wrong size of data in diagonal ITensor constructor");
+          error("Wrong size of data in diagonal ITensor constructor");
           }
 #endif
       using value_type = typename Container::value_type;
@@ -628,7 +628,7 @@ diagITensor(Container const& C,
       }
     else
       {
-      Error("diagITensor constructor not yet implemented for QNs");
+      error("diagITensor constructor not yet implemented for QNs");
       return ITensor();
       }
     }
@@ -638,7 +638,7 @@ TenRef<Range,V>
 getBlock(ITensor & T,
          Block block_ind)
     {
-    if(block_ind.size() != size_t(T.order())) Error("Mismatched number of indices and ITensor order");
+    if(block_ind.size() != size_t(T.order())) error("Mismatched number of indices and ITensor order");
     if(not T.store())
         {
         QN q;
@@ -705,7 +705,7 @@ reindex(ITensor const& cT,
         Index o1, Index n1, 
         Inds... indxs)
     {
-    Error("Error: reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
+    error("Error: reindex(ITensor,Index,Index,...) is deprecated in favor of replaceInds(ITensor,Index,Index,...)");
     return ITensor();
     }
 

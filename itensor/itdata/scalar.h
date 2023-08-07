@@ -62,7 +62,7 @@ assign(Cplx & l, Cplx r) { l = r; }
 void inline
 assign(Real & l, Real r) { l = r; }
 void inline
-assign(Real & l, Cplx r) { Error("Cannot assign Real = Cplx"); }
+assign(Real & l, Cplx r) { error("Cannot assign Real = Cplx"); }
 } //namespace detail
 
 const char*

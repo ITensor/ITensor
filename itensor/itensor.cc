@@ -86,7 +86,7 @@ eltC() const
     if(inds().order() != 0)
         {
         PrintData(inds());
-        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
+        error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -114,7 +114,7 @@ eltC() const
 Cplx ITensor::
 eltC(std::vector<IndexVal> const& ivs) const
     {
-    if(!store()) Error("tensor storage unallocated");
+    if(!store()) error("tensor storage unallocated");
 
     auto size = ivs.size();
     if(size != size_t(inds().order()))
@@ -125,7 +125,7 @@ eltC(std::vector<IndexVal> const& ivs) const
         println("Indices provided = ");
         for(auto& iv : ivs) println(iv.index);
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",inds().order(),size));
+        error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",inds().order(),size));
         }
 
     auto ints = IntArray(size);
@@ -167,7 +167,7 @@ set(std::vector<IndexVal> const& ivals,
         println("Indices provided = ");
         for(auto& iv : ivals) println(iv.index);
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -190,7 +190,7 @@ set(Cplx val)
     {
     if(0 != size_t(inds().order())) 
         {
-        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got 0)",
+        error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got 0)",
                      inds().order()));
         }
     auto inds = IntArray(0,1);
@@ -219,7 +219,7 @@ set(std::vector<int> const& ints,
         println("Indices provided = ");
         for(auto& iv : ints) println(iv);
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -281,7 +281,7 @@ randomize(Args const& args)
     {
     if(!this->store()) detail::allocReal(*this);
 #ifdef DEBUG
-    if(!(*this)) Error("default initialized tensor in randomize");
+    if(!(*this)) error("default initialized tensor in randomize");
 #endif
     auto cplx = args.getBool("Complex",false);
     if(cplx) this->generate(detail::quickranCplx);
@@ -334,7 +334,7 @@ fill(Cplx z)
     if(!store_) 
         {
         if(is_) detail::allocReal(*this);
-        else Error("Can't fill default-constructed tensor");
+        else error("Can't fill default-constructed tensor");
         }
     IF_USESCALE(scale_ = scale_type(1.);)
     if(itensor::hasQNs(*this))
@@ -368,7 +368,7 @@ void ITensor::
 scaleTo(scale_type const& newscale)
     {
     if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    if(newscale.sign() == 0) error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
     doTask(Mult<Real>{scale_.real0()},store_);
     scale_ = newscale;
@@ -640,7 +640,7 @@ permute(IndexSet const& iset)
         println("---------------------------------------------");
         println("Indices provided = \n",iset,"\n");
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
+        error(tinyformat::format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
         }
 
     // Get permutation
@@ -683,7 +683,7 @@ replaceInds(IndexSet const& is1,
             IndexSet const& is2)
     {
 #ifdef DEBUG
-    if( itensor::order(is1) != itensor::order(is2) ) Error("In replaceInds, must replace with equal number of Indices");
+    if( itensor::order(is1) != itensor::order(is2) ) error("In replaceInds, must replace with equal number of Indices");
 #endif
     auto& T = *this;
     // Add a random prime to account for possible
@@ -734,7 +734,7 @@ swapInds(IndexSet const& is1,
          IndexSet const& is2)
     {
 #ifdef DEBUG
-    if( itensor::order(is1) != itensor::order(is2) ) Error("In swapInds, must swap equal numbers of Indices");
+    if( itensor::order(is1) != itensor::order(is2) ) error("In swapInds, must swap equal numbers of Indices");
 #endif
     auto& T = *this;
     T.replaceInds({is1,is2},{is2,is1});
@@ -754,7 +754,7 @@ Real
 norm(ITensor const& T)
     {
 #ifdef DEBUG
-    if(!T) Error("Default initialized tensor in norm(ITensor)");
+    if(!T) error("Default initialized tensor in norm(ITensor)");
 #endif
 
 #ifndef USESCALE
@@ -806,7 +806,7 @@ read(std::istream& s)
     else if(type==StorageType::ScalarCplx) { store_ = readType<ScalarCplx>(s); }
     else
         {
-        Error("Unrecognized type when reading tensor from istream");
+        error("Unrecognized type when reading tensor from istream");
         }
     }
 
@@ -827,7 +827,7 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "") Error("Group does not contain ITensor data in HDF5 file");
+    if(type != "") error("Group does not contain ITensor data in HDF5 file");
 
     auto is = h5_read<IndexSet>(g,"inds");
 

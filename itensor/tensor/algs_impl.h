@@ -262,7 +262,7 @@ expMatrix(MatM && M,
           ScalarT t,
           int ideg)
     {
-    if(ideg <= 0) Error("PadeApproxDeg cannot be less than 1");
+    if(ideg <= 0) error("PadeApproxDeg cannot be less than 1");
     auto N = ncols(M);
     if(N < 1) throw std::runtime_error("exp: 0 dimensional matrix");
     if(N != nrows(M))

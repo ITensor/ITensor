@@ -91,7 +91,7 @@ isFermionic(SiteTerm const& st)
     if(c == '*')
         {
         Print(st.op);
-        Error("SiteTerm contains a '*' but isFermionic does not handle this case");
+        error("SiteTerm contains a '*' but isFermionic does not handle this case");
         }
 #endif
     if(!st.op.empty() && st.op.front() == 'C') return true;
@@ -148,7 +148,7 @@ rewriteFermionic(SiteTermProd & prod,
     for(auto& st : prod)
         if(st.i != i)
             {
-            Error("Multi-site product in rewriteFermionic is not expected.");    
+            error("Multi-site product in rewriteFermionic is not expected.");
             }
 
     // Rewrite a fermionic single site product using the Jordan-Wigner string            
@@ -174,7 +174,7 @@ computeProd(SiteSet const& sites,
     ITensor op = sites.op(p.front().op,i);
     for(auto it = p.begin()+1; it != p.end(); ++it)
         {
-        if(it->i != i) Error("Op on wrong site");
+        if(it->i != i) error("Op on wrong site");
         ITensor t = sites.op(it->op,i);
         op = multSiteOps(op,t);
         }
@@ -208,7 +208,7 @@ add(string const& op,
 HTerm& HTerm::
 operator*=(Real x)
     {
-    if(Nops() == 0) Error("No operators in HTerm");
+    if(Nops() == 0) error("No operators in HTerm");
     coef *= x;
     return *this;
     }
@@ -216,7 +216,7 @@ operator*=(Real x)
 HTerm& HTerm::
 operator*=(Complex x)
     {
-    if(Nops() == 0) Error("No operators in HTerm");
+    if(Nops() == 0) error("No operators in HTerm");
     coef *= x;
     return *this;
     }
@@ -304,7 +304,7 @@ Accumulator(AutoMPO* pa_,
 AutoMPO::Accumulator::
 ~Accumulator()
     {
-    if(state==Op) Error("Invalid input to AutoMPO (missing site number?)");
+    if(state==Op) error("Invalid input to AutoMPO (missing site number?)");
     term *= coef;
     pa->add(term);
     }
@@ -350,7 +350,7 @@ operator,(const char* op_)
         }
     else
         {
-        Error("Invalid input to AutoMPO (two strings in a row?)");
+        error("Invalid input to AutoMPO (two strings in a row?)");
         }
     return *this;
     }

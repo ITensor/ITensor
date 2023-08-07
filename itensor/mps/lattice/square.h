@@ -48,7 +48,7 @@ squareLattice(int Nx,
             if(yperiodic && y == 1) latt.emplace_back(n,n+Ny-1,x,y,x,y+Ny);
             }
         }
-    if(int(latt.size()) != Nbond) Error("Square latt wrong number of bonds");
+    if(int(latt.size()) != Nbond) error("Square latt wrong number of bonds");
     return latt;
     }
 

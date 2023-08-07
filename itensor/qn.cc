@@ -36,12 +36,12 @@ checkCompatible(QNum const& qva, QNum const& qvb)
     if(qva.name() != qvb.name())
         {
         printfln("qva.name()=%s, qvb.name()=%s",qva.name(),qvb.name());
-        Error("Mismatched QNum names");
+        error("Mismatched QNum names");
         }
     if(qva.mod() != qvb.mod())
         {
         printfln("qva.mod()=%d, qvb.mod()=%d",qva.mod(),qvb.mod());
-        Error("Mismatched mod factors");
+        error("Mismatched mod factors");
         }
 #endif
     }
@@ -200,7 +200,7 @@ QN(qn_t q0)
 void QN::
 addNum(QNum const& qv)
     {
-    if(isActive(qvs_.back())) Error("addNum: all QN slots are filled");
+    if(isActive(qvs_.back())) error("addNum: all QN slots are filled");
 
     auto n = QNSize()-1;
     while(n >= 1)
@@ -211,7 +211,7 @@ addNum(QNum const& qv)
                 {
                 Print(qvs_[n-1].name());
                 Print(qv.name());
-                Error("Duplicate name in QN");
+                error("Duplicate name in QN");
                 }
             else if(qvs_[n-1].name() < qv.name())
                 {
@@ -534,7 +534,7 @@ h5_read(h5::group parent, string const& name, QN & q)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "QN") Error("Group does not contain ITensor data in HDF5 file");
+    if(type != "QN") error("Group does not contain ITensor data in HDF5 file");
     auto names = h5_read<vector<string>>(g,"names");
     auto vals = h5_read<vector<long>>(g,"vals");
     auto mods = h5_read<vector<long>>(g,"mods");

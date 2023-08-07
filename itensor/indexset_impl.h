@@ -27,12 +27,12 @@ swapTags(TagSet const& ts1,
     TagSet tempTags;
     if(primeLevel(ts1) < 0)
       {
-      if(primeLevel(ts2) >= 0) Error("Error in swapTags: cannot swap integer tag with non-integer tag");
+      if(primeLevel(ts2) >= 0) error("Error in swapTags: cannot swap integer tag with non-integer tag");
       tempTags = TagSet("df4sd32");
       }
     else
       {
-      if(primeLevel(ts2) < 0) Error("Error in swapTags: cannot swap integer tag with non-integer tag");
+      if(primeLevel(ts2) < 0) error("Error in swapTags: cannot swap integer tag with non-integer tag");
       tempTags = TagSet("df4sd32,431543");
       }
 #ifdef DEBUG

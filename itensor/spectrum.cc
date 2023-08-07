@@ -66,7 +66,7 @@ qn(int n) const
 void Spectrum::
 read(std::istream& s)
     {
-    Error("Spectrum::read not currently implemented");
+    error("Spectrum::read not currently implemented");
     //s.read((char*)&truncerr_,sizeof(truncerr_));
     //eigs_.read(s);
     //size_t sz = 0;
@@ -81,7 +81,7 @@ read(std::istream& s)
 void Spectrum::
 write(std::ostream& s) const
     {
-    Error("Spectrum::read not currently implemented");
+    error("Spectrum::read not currently implemented");
     //s.write((char*)&truncerr_,sizeof(truncerr_));
     //eigs_.write(s);
     //size_t sz = qns_.size();

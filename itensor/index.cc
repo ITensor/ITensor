@@ -29,7 +29,7 @@ putprimes(string s, int plev)
     { 
     stringstream str;
     str << s;
-    if(plev < 0) Error("Negative prime level");
+    if(plev < 0) error("Negative prime level");
     if(plev > 3)
         {
         str << "'" << plev;
@@ -107,7 +107,7 @@ setPrime(int plev)
     tags_.setPrime(plev);
 #ifdef DEBUG
     if(this->primeLevel() < 0)
-        Error("Negative primeLevel");
+        error("Negative primeLevel");
 #endif
     return *this;
     }
@@ -128,7 +128,7 @@ prime(int inc)
 #ifdef DEBUG
     if(this->primeLevel() < 0)
         {
-        Error("Negative primeLevel");
+        error("Negative primeLevel");
         }
 #endif
     return *this;
@@ -350,13 +350,13 @@ IndexVal(Index const& index_,
     val(val_)
     { 
 #ifdef DEBUG
-    if(!index) Error("IndexVal initialized with default initialized Index");
+    if(!index) error("IndexVal initialized with default initialized Index");
     //Can also use IndexVal's to indicate prime increments:
     //if(val_ < 1 || val_ > dim(index))
     //    {
     //    println("val = ",val_);
     //    println("index = ",index);
-    //    Error("val out of range");
+    //    error("val out of range");
     //    }
 #endif
     }
@@ -407,7 +407,7 @@ TagSet
 getTagSet(Args       const& args, 
           Args::Name const& name)
     {
-    if(!args.defined(name)) Error(tinyformat::format("Name %s not found in Args",name));
+    if(!args.defined(name)) error(tinyformat::format("Name %s not found in Args",name));
     return TagSet(args.getString(name));
     }
 
@@ -533,7 +533,7 @@ directSum(Index const& i,
   else
     {
 #ifdef DEBUG
-    if( dir(i) != dir(j) ) Error("In directSum(Index, Index), input indices must have same arrow direction");
+    if( dir(i) != dir(j) ) error("In directSum(Index, Index), input indices must have same arrow direction");
 #endif
     auto nblock_i = nblock(i);
     auto nblock_j = nblock(j);
@@ -543,7 +543,7 @@ directSum(Index const& i,
     for(auto jqn : range1(nblock_j))
         siq.emplace_back(qn(j,jqn),blocksize(j,jqn));
 #ifdef DEBUG
-    if(siq.empty()) Error("siq is empty in plussers");
+    if(siq.empty()) error("siq is empty in plussers");
 #endif
     return Index(std::move(siq),dir(i),tags);
     }
@@ -693,10 +693,10 @@ QNblock(Index const& I,
         { 
         if(qn(I,n) == Q) return n;
         }
-    if(not hasQNs(I)) Error("Index does not contain any QN blocks");
+    if(not hasQNs(I)) error("Index does not contain any QN blocks");
     println("I = ",I);
     println("Q = ",Q);
-    Error("Index does not contain given QN block.");
+    error("Index does not contain given QN block.");
     return 0l;
     }
 
@@ -711,7 +711,7 @@ QNblockSize(Index const& I,
 void Index::
 write(std::ostream& s) const 
     { 
-    if(!bool(*this)) Error("Index::write: Index is default initialized");
+    if(!bool(*this)) error("Index::write: Index is default initialized");
     itensor::write(s,tags_);
     itensor::write(s,id_);
     itensor::write(s,dim_);

@@ -98,7 +98,7 @@ diagHImpl(ITensor H,
             {
             Print(order(H));
             Print(H);
-            Error("Tensor has more than 2 indices in diag_hermitian");
+            error("Tensor has more than 2 indices in diag_hermitian");
             }
 
         auto i1 = H.inds().front();
@@ -142,7 +142,7 @@ diagHImpl(ITensor H,
         if(m > maxdim)
             {
             printfln("m > maxdim; m = %d, maxdim = %d",m,maxdim);
-            Error("m > maxdim");
+            error("m > maxdim");
             }
         if(m > 50000)
             {
@@ -184,7 +184,7 @@ diagHImpl(ITensor H,
         if(H.order() != 2)
             {
             Print(H.inds());
-            Error("diag_hermitian requires order 2 input tensor");
+            error("diag_hermitian requires order 2 input tensor");
             }
         
         auto i1 = H.inds().front();
@@ -197,7 +197,7 @@ diagHImpl(ITensor H,
         if(div(H) != Zero)
             { 
             Print(H); 
-            Error("diagHermitian currently only defined for block-diagonal IQTensors");
+            error("diagHermitian currently only defined for block-diagonal IQTensors");
             }
 #endif
 
@@ -294,7 +294,7 @@ diagHImpl(ITensor H,
         if(m > maxdim)
             {
             printfln("m > maxdim; m = %d, maxdim = %d",m,maxdim);
-            Error("m > maxdim");
+            error("m > maxdim");
             }
         if(m > 20000)
             {
@@ -359,7 +359,7 @@ diagHImpl(ITensor H,
 
         if(iq.empty())
             {
-            if(blocks.empty()) Error("No blocks in IQTensor svd");
+            if(blocks.empty()) error("No blocks in IQTensor svd");
             auto& B = blocks.front();
             iq.emplace_back(qn(ai,1+B.i1),1l);
             }

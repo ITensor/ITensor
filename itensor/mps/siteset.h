@@ -201,14 +201,14 @@ class GenericSite
     op(std::string const& opname,
        Args const& args) const
         {
-        Error("\'op\' method not defined for generic site");
+        error("\'op\' method not defined for generic site");
         return ITensor{};
         }
 
     IndexVal
     state(std::string const& state)
         {
-        Error("\'state\' method not defined for generic site");
+        error("\'state\' method not defined for generic site");
         return IndexVal{};
         }
     };
@@ -247,7 +247,7 @@ struct SiteStore
     Index
     si(int j) const 
         { 
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        if(not sites_.at(j)) error("Unassigned site in SiteStore");
         return sites_[j]->index();
         }
 
@@ -255,7 +255,7 @@ struct SiteStore
     state(int j,
           std::string const& state)
         {
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        if(not sites_.at(j)) error("Unassigned site in SiteStore");
         return sites_[j]->state(state);
         }
 
@@ -264,7 +264,7 @@ struct SiteStore
        std::string const& opname,
        Args const& args) const
         {
-        if(not sites_.at(j)) Error("Unassigned site in SiteStore");
+        if(not sites_.at(j)) error("Unassigned site in SiteStore");
         return sites_[j]->op(opname,args);
         }
     };
@@ -319,14 +319,14 @@ N() const
 Index inline SiteSet::
 operator()(int i) const
     {
-    if(not *this) Error("Cannot retrieve site from default-initialized SiteSet");
+    if(not *this) error("Cannot retrieve site from default-initialized SiteSet");
     return sites_->si(i);
     }
 
 IndexSet inline SiteSet::
 inds() const
     {
-    if(not *this) Error("Cannot retrieve sites from default-initialized SiteSet");
+    if(not *this) error("Cannot retrieve sites from default-initialized SiteSet");
     auto N = length();
     auto is = IndexSetBuilder(N);
     for( auto n : range1(N) )
@@ -340,7 +340,7 @@ inds() const
 IndexVal inline SiteSet::
 operator()(int i, String const& state) const
     {
-    if(not *this) Error("Cannot retrieve state from default-initialized SiteSet");
+    if(not *this) error("Cannot retrieve state from default-initialized SiteSet");
     return sites_->state(i,state);
     }
 
@@ -364,7 +364,7 @@ op(String const& opname,
    int i, 
    Args const& args) const
     { 
-    if(not *this) Error("Cannot call .op(..) on default-initialized SiteSet");
+    if(not *this) error("Cannot call .op(..) on default-initialized SiteSet");
     if(opname == "Id")
         {
         auto s = si(i);

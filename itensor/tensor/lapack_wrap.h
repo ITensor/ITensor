@@ -106,20 +106,20 @@
 //#define ITENSOR_USE_CBLAS
 //#define ITENSOR_USE_ZGEMM
 //
-//#include "mkl_cblas.h"
-//#include "mkl_lapack.h"
-//    namespace itensor {
-//    using LAPACK_INT = MKL_INT;
-//    using LAPACK_REAL = double;
-//    using LAPACK_COMPLEX = MKL_Complex16;
-//
-//    inline LAPACK_REAL&
-//    realRef(LAPACK_COMPLEX & z) { return z.real; }
-//
-//    inline LAPACK_REAL&
-//    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
-//    }
-//
+#include "mkl_cblas.h"
+#include "mkl_lapack.h"
+    namespace itensor {
+    using LAPACK_INT = MKL_INT;
+    using LAPACK_REAL = double;
+    using LAPACK_COMPLEX = MKL_Complex16;
+
+    inline LAPACK_REAL&
+    realRef(LAPACK_COMPLEX & z) { return z.real; }
+
+    inline LAPACK_REAL&
+    imagRef(LAPACK_COMPLEX & z) { return z.imag; }
+    }
+
 ////
 ////
 //// AMD ACML

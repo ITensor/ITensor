@@ -184,7 +184,7 @@ set(const String& opname1, int j1,
     {
     if(initted_)
         {
-        Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
+        error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
     W_.ref(j1) = sites_->op(opname1,j1);
     if(j2 != 0)
@@ -205,7 +205,7 @@ set(const Tensor& op1, int j1,
     {
     if(initted_)
         {
-        Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
+        error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
     W_.ref(j1) = op1;
     if(j2 != 0)

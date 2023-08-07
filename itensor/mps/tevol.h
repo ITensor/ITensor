@@ -67,7 +67,7 @@ gateTEvol(Iterable const& gatelist,
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
         {
-        Error("Timestep not commensurate with total time");
+        error("Timestep not commensurate with total time");
         }
 
     if(verbose) 

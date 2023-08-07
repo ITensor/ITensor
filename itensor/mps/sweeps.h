@@ -198,7 +198,7 @@ class SweepSetter
         checkStarted();
         if(args.defined("Repeat"))
             {
-            if(j_ == 1) Error("No value to repeat");
+            if(j_ == 1) error("No value to repeat");
             for(int n = 1; n < args.getInt("Repeat"); ++n, ++j_)
                 {
                 if(j_ > nsweep_) return *this;
@@ -245,7 +245,7 @@ class SweepSetter
     void
     checkStarted() const
         {
-        if(!started_) Error("SweepSetter notation is setter() = #,#,...;");
+        if(!started_) error("SweepSetter notation is setter() = #,#,...;");
         }
     };
 
@@ -363,7 +363,7 @@ void inline Sweeps::
 nsweep(int val)
     { 
     if(val > nsweep_) 
-        Error("Can't use nsweep accessor to increase number of sweeps.");
+        error("Can't use nsweep accessor to increase number of sweeps.");
     nsweep_ = val; 
     }
 
@@ -415,7 +415,7 @@ tableInit(InputGroup& table)
     {
     if(!table.GotoGroup()) 
         {
-        Error("Couldn't find table " + table.name());
+        error("Couldn't find table " + table.name());
         }
 
     mindim_ = std::vector<int>(nsweep_+1,0);

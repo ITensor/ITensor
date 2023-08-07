@@ -470,7 +470,7 @@ class ITensor
     template<typename... VarArgs>
     ITensor& 
     noprime(VarArgs&&... vargs)
-        { Error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
+        { error(".noprime() is deprecated, use .noPrime() instead"); return *this; }
 
     }; // class ITensor
 

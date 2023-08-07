@@ -495,7 +495,7 @@ class IndexSet : public RangeT<Index>
     prime(Index const& imatch,
           int plinc)
         {
-        Error("Error: .prime(Index,int) is no longer supported, use .prime(int,Index) instead.");
+        error("Error: .prime(Index,int) is no longer supported, use .prime(int,Index) instead.");
         }
 
     };

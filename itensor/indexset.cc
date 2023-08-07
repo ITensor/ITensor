@@ -544,7 +544,7 @@ checkQNConsistent(IndexSet const& is)
             if(not hasQNs(is[n]))
                 {
                 println("Non-QN index = ",is[n]);
-                Error("IndexSet: cannot mix QN and non-QN Indices");
+                error("IndexSet: cannot mix QN and non-QN Indices");
                 }
             }
         }
@@ -565,7 +565,7 @@ findInds(IndexSet const& is,
 Index
 findIndex(IndexSet const& is)
     {
-    if( order(is) > 1 ) Error("In findIndex: more than one Index found, consider using findInds instead");
+    if( order(is) > 1 ) error("In findIndex: more than one Index found, consider using findInds instead");
     else if( order(is) == 1 ) return is(1);
     return Index();
     }
@@ -710,7 +710,7 @@ h5_read(h5::group parent, std::string const& name, IndexSet & is)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<std::string>(g,"type");
-    if(type != "IndexSet") Error("Group does not contain IndexSet data in HDF5 file");
+    if(type != "IndexSet") error("Group does not contain IndexSet data in HDF5 file");
     auto N = h5_read<long>(g,"length");
     auto iv = std::vector<Index>(N);
     auto inds = IndexSetBuilder(N);

@@ -224,7 +224,7 @@ add(PlusEQ const& P,
 #ifdef DEBUG
     if(D1.length != D2.length) Error("Mismatched lengths in plusEq");
 #endif
-    if(D1.allSame() || D2.allSame()) Error("Diag plusEq allSame case not implemented");
+    if(D1.allSame() || D2.allSame()) error("Diag plusEq allSame case not implemented");
 
     if(std::is_same<T1,T2>::value)
         {

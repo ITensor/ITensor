@@ -258,7 +258,7 @@ dmrg(MPS& psi,
                 {
                 printfln("totalQN of initial state:  %s",psi_qn);
                 printfln("totalQN of state n=%d (n is 0-indexed): %s",n,qn_n);
-                Error("Excited-state DMRG intended for states with same totalQN");
+                error("Excited-state DMRG intended for states with same totalQN");
                 }
             }
         }

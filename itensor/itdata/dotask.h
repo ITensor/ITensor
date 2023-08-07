@@ -476,12 +476,12 @@ checkHasResult(const D& d)
 void inline
 check(PData const& p)
     {
-    if(!p) Error("doTask called on unallocated store pointer");
+    if(!p) error("doTask called on unallocated store pointer");
     }
 void inline
 check(CPData const& p)
     {
-    if(!p) Error("doTask called on unallocated store pointer");
+    if(!p) error("doTask called on unallocated store pointer");
     }
 
 /////////////

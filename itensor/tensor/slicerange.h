@@ -65,7 +65,7 @@ groupIndsRange(Range const& R,
                size_t istart,
                size_t iend)
     {
-    if(not isContiguous(R)) Error("groupInds requires contiguous range");
+    if(not isContiguous(R)) error("groupInds requires contiguous range");
     auto ngroup = iend-istart;
     size_t nr = R.order()-ngroup+1;
     auto rb = RangeBuilder(nr);

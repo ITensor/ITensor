@@ -30,7 +30,7 @@ typeNameOf(Combiner const& d) { return "Combiner"; }
 Cplx
 doTask(GetElt const& g, Combiner const& c)
     {
-    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar Combiner storage");
+    if(g.inds.size()!=0) error("GetElt not defined for non-scalar Combiner storage");
     return Cplx(1.,0.);
     }
 
@@ -91,7 +91,7 @@ combine(Storage  const& d,
             {
             println("IndexSet of dense tensor = \n",dis);
             println("IndexSet of combiner/delta = \n",Cis);
-            Error("No contracted indices in combiner-tensor product");
+            error("No contracted indices in combiner-tensor product");
             }
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
         //and in same order as on combiner
@@ -134,7 +134,7 @@ combine(Storage  const& d,
                     println("IndexSet of dense tensor =\n  ",dis);
                     println("IndexSet of combiner/delta =\n  ",Cis);
                     println("Missing index: ",Cis[c]);
-                    Error("Combiner: missing index");
+                    error("Combiner: missing index");
                     }
                 P.setFromTo(j,ni++);
                 }

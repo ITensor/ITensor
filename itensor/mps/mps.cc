@@ -156,7 +156,7 @@ MPS::
 MPS& MPS::
 randomize(Args const& args)
     {
-    if(maxLinkDim(*this)>1) Error(".randomize() not currently supported on MPS with bond dimension greater than 1."); 
+    if(maxLinkDim(*this)>1) error(".randomize() not currently supported on MPS with bond dimension greater than 1.");
     for(auto i : range1(N_)) ref(i).randomize(args);
     return *this;
     }
@@ -165,7 +165,7 @@ Real MPS::
 normalize()
     {
     auto nrm = norm(*this);
-    if(std::fabs(nrm) < 1E-20) Error("Zero norm");
+    if(std::fabs(nrm) < 1E-20) error("Zero norm");
     *this /= nrm;
     return nrm;
     }
@@ -264,7 +264,7 @@ randomMPS(SiteSet const& sites, int m, Args const& args)
     {
     if(hasQNs(sites))
     {
-    Error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
+    error("randomMPS(SiteSet) with QN conservation is ambiguous, use randomMPS(InitState) instead.");
     }
 
     return randomCircuitMPS(sites,m,args);
@@ -280,7 +280,7 @@ randomMPS(SiteSet const& sites, Args const& args)
 MPS
 randomMPS(InitState const& initstate, int m, Args const& args)
     {
-    if(m>1) Error("randomMPS(InitState,m>1) not currently supported.");
+    if(m>1) error("randomMPS(InitState,m>1) not currently supported.");
     auto psi = MPS(initstate);
     psi.randomize(args);
     return psi;
@@ -314,7 +314,7 @@ ITensor& MPS::
 uref(int i)
     {
     if(do_write_)
-        Error("replaceTags not supported if doWrite(true)");
+        error("replaceTags not supported if doWrite(true)");
     return A_.at(i);
     }
 

@@ -302,7 +302,7 @@ h5_read(h5::group parent, std::string const& name, TagSet & ts)
     auto g = parent.open_group(name);
 
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "TagSet") Error("Group does not contain TagSet data in HDF5 file");
+    if(type != "TagSet") error("Group does not contain TagSet data in HDF5 file");
 
     auto plev = h5_read<long>(g,"plev");
     auto tstr = h5_read<string>(g,"tags");

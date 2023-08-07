@@ -69,7 +69,7 @@ plusEq(MPO const& other_,
        Args const& args)
     {
     if(doWrite())
-        Error("operator+= not supported if doWrite(true)");
+        error("operator+= not supported if doWrite(true)");
 
     //cout << "calling new orthog in sum" << endl;
     if(!itensor::isOrtho(*this))
@@ -146,7 +146,7 @@ isOrtho(MPO const& W)
 int
 orthoCenter(MPO const& W)
     {
-    if(!isOrtho(W)) Error("orthogonality center not well defined.");
+    if(!isOrtho(W)) error("orthogonality center not well defined.");
     return (W.leftLim() + 1);
     }
 
@@ -154,7 +154,7 @@ bool
 hasSiteInds(MPO const& A, IndexSet const& sites)
     {
     auto N = length(A);
-    if( N!=length(sites) ) Error("In hasSiteInds(MPO,IndexSet), lengths of MPO and IndexSet of site indices don't match");
+    if( N!=length(sites) ) error("In hasSiteInds(MPO,IndexSet), lengths of MPO and IndexSet of site indices don't match");
     for( auto n : range1(N) )
       {
       if( !hasIndex(A(n),sites(n)) ) return false;
@@ -197,7 +197,7 @@ IndexSet
 uniqueSiteInds(MPO const& A, MPS const& x)
     {
     auto N = length(x);
-    if( N!=length(x) ) Error("In uniqueSiteInds(MPO,MPS), lengths of MPO and MPS do not match");
+    if( N!=length(x) ) error("In uniqueSiteInds(MPO,MPS), lengths of MPO and MPS do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
@@ -222,7 +222,7 @@ IndexSet
 uniqueSiteInds(MPO const& A, MPO const& B)
     {
     auto N = length(A);
-    if( N!=length(B) ) Error("In uniqueSiteInds(MPO,MPO), lengths of MPO and MPS do not match");
+    if( N!=length(B) ) error("In uniqueSiteInds(MPO,MPO), lengths of MPO and MPS do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
@@ -238,7 +238,7 @@ IndexSet
 uniqueSiteInds(MPO const& A, IndexSet const& sites)
     {
     auto N = length(A);
-    if( N!=length(sites) ) Error("In uniqueSiteInds(MPO,IndexSet), lengths of MPO and IndexSet do not match");
+    if( N!=length(sites) ) error("In uniqueSiteInds(MPO,IndexSet), lengths of MPO and IndexSet do not match");
     auto inds = IndexSetBuilder(N);
     for( auto n : range1(N) )
       {
@@ -253,7 +253,7 @@ replaceSiteInds(IndexSet const& sites_old, IndexSet const& sites_new)
     {
     auto& A = *this;
     auto N = itensor::length(A);
-    if( itensor::length(sites_new)!=N ) Error("In replaceSiteInds(MPO,IndexSet,IndexSet), number of new sites must be equal length of MPO");
+    if( itensor::length(sites_new)!=N ) error("In replaceSiteInds(MPO,IndexSet,IndexSet), number of new sites must be equal length of MPO");
     if( itensor::hasSiteInds(A,sites_new) ) return A;
     for( auto n : range1(N) )
         A_[n].replaceInds({sites_old(n)},{sites_new(n)});
@@ -293,7 +293,7 @@ findCenter(MPO const& psi)
     for(int j = 1; j <= length(psi); ++j) 
         {
         const auto& A = psi(j);
-        if(A.order() == 0) Error("Zero order tensor in MPO");
+        if(A.order() == 0) error("Zero order tensor in MPO");
         bool allOut = true;
         for(const auto& I : A.inds())
             {

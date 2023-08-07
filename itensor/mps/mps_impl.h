@@ -27,12 +27,12 @@ svdBond(int b, ITensor const& AA, Direction dir,
     if(dir == Fromleft && b-1 > leftLim())
         {
         printfln("b=%d, l_orth_lim_=%d",b,leftLim());
-        Error("b-1 > l_orth_lim_");
+        error("b-1 > l_orth_lim_");
         }
     if(dir == Fromright && b+2 < rightLim())
         {
         printfln("b=%d, r_orth_lim_=%d",b,rightLim());
-        Error("b+2 < r_orth_lim_");
+        error("b+2 < r_orth_lim_");
         }
 
     auto noise = args.getReal("Noise",0.);

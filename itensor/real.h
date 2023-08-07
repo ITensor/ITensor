@@ -113,7 +113,7 @@ class LogNum
         { 
 #ifdef DEBUG
         if(!(sign == -1 || sign == 0 || sign == 1))
-            Error("sign should be -1, 0, or 1");
+            error("sign should be -1, 0, or 1");
 #endif
         } 
 
@@ -195,7 +195,7 @@ class LogNum
             }
         catch(const ITError& e)
             {
-            Error("Could not convert to real in LogNum::operator+=");
+            error("Could not convert to real in LogNum::operator+=");
             }
         return *this;
         }
@@ -239,7 +239,7 @@ class LogNum
     operator/=(const LogNum& other)
         {
 #ifdef DEBUG
-        if(other.sign_ == 0) Error("divide by zero in LogNum");
+        if(other.sign_ == 0) error("divide by zero in LogNum");
 #endif
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
@@ -331,7 +331,7 @@ LogNum inline
 sqrt(LogNum L)
     {
     if(L.sign() < 0) 
-        Error("Negative LogNum in sqrt");
+        error("Negative LogNum in sqrt");
     return L.pow(0.5);
     }
 

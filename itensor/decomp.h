@@ -119,7 +119,7 @@ class NoOp
              ITensor const& combine,
              Direction dir) const 
         { 
-        Error("Non-zero noise not supported without providing a Hamiltonian");
+        error("Non-zero noise not supported without providing a Hamiltonian");
         return rho; 
         }
     };
@@ -153,7 +153,7 @@ denmatDecomp(ITensor const& T,
              Args args = Args::global())
     {
     if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
-            Error("In svd, A indices and B indices must match the indices of the input ITensor");
+            error("In svd, A indices and B indices must match the indices of the input ITensor");
     return denmatDecomp(T,Ais,dir,PH,args);
     }
 
@@ -445,7 +445,7 @@ struct GetBlocks
               Index const& i2_)
       : is(is_)
         { 
-        if(is.order() != 2) Error("GetBlocks only supports order 2 currently");
+        if(is.order() != 2) error("GetBlocks only supports order 2 currently");
         transpose = (i2_ == is.front());
         }
     };

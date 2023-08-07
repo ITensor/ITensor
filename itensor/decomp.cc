@@ -89,7 +89,7 @@ vector<Ord2Block<T>>
 doTask(GetBlocks<T> const& G, 
        QDense<T> const& d)
     {
-    if(G.is.order() != 2) Error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
+    if(G.is.order() != 2) error("doTask(GetBlocks,QDenseReal) only supports 2-index tensors");
     auto res = vector<Ord2Block<T>>{d.offsets.size()};
     size_t n = 0;
     for(auto const& dio : d.offsets)
@@ -166,14 +166,14 @@ svd(ITensor const& AA,
 
 #ifdef DEBUG
     if(!U && !V)
-        Error("U and V default-initialized in svd, must indicate at least one index on U or V");
+        error("U and V default-initialized in svd, must indicate at least one index on U or V");
 #endif
 
     auto noise = args.getReal("Noise",0);
     auto useOrigDim = args.getBool("UseOrigDim",false);
 
     if(noise > 0)
-        Error("Noise term not implemented for svd");
+        error("Noise term not implemented for svd");
 
     //if(isZero(AA,Args("Fast"))) 
     //    throw ResultIsZero("svd: AA is zero");
@@ -252,7 +252,7 @@ svd(ITensor const& AA, IndexSet const& Uis, IndexSet const& Vis,
     Args args)
     {
     if( !hasSameInds(inds(AA),IndexSet(Uis,Vis)) )
-      Error("In svd, U indices and V indices must match the indices of the input ITensor");
+      error("In svd, U indices and V indices must match the indices of the input ITensor");
     return svd(AA,Uis,args);
     }
 
@@ -290,8 +290,8 @@ polar(ITensor const& T,
     // above.
     auto plinc = args.getInt("Prime",1)-1;
 
-    if(primeLevel(ts) >= 0) Error("In polar, specify a prime level increment with the Prime argument");
-    if(ts=="" && plinc==-1) Error("In polar, must either increment prime level or add tags to new indices");
+    if(primeLevel(ts) >= 0) error("In polar, specify a prime level increment with the Prime argument");
+    if(ts=="" && plinc==-1) error("In polar, must either increment prime level or add tags to new indices");
 
     Q.addTags(ts,qis);
     P.addTags(ts,qis);
@@ -561,7 +561,7 @@ factor(ITensor const& T,
        Args const& args)
     {
     if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
-      Error("In factor, A indices and B indices must match the indices of the input ITensor");
+      error("In factor, A indices and B indices must match the indices of the input ITensor");
     return factor(T,Ais,args);
     }
 
@@ -594,7 +594,7 @@ eigDecompImpl(ITensor T,
             {
             Print(order(T));
             Print(T);
-            Error("eig_decomp requires 2-index tensor as input");
+            error("eig_decomp requires 2-index tensor as input");
             }
 
         auto lind = noPrime(T.inds().front());
@@ -626,7 +626,7 @@ eigDecompImpl(ITensor T,
             for(decltype(Rr.size()) n = 0; n < Rr.size(); ++ri, ++ii, ++n)
                 {
 #ifdef DEBUG
-                if(ri == Rr.end() || ii == Ri.end()) Error("out of range iterator");
+                if(ri == Rr.end() || ii == Ri.end()) error("out of range iterator");
 #endif
                 store[n] = Cplx(*ri,*ii);
                 }
@@ -671,7 +671,7 @@ eigDecompImpl(ITensor T,
                 for(decltype(Lr.size()) n = 0; n < Lr.size(); ++ri, ++ii, ++n)
                     {
 #ifdef DEBUG
-                    if(ri == Lr.end() || ii == Li.end()) Error("out of range iterator");
+                    if(ri == Lr.end() || ii == Li.end()) error("out of range iterator");
 #endif
                     store[n] = Cplx(*ri,*ii);
                     }
@@ -686,7 +686,7 @@ eigDecompImpl(ITensor T,
         }
     else
         {
-        Error("eigDecompImpl not implemented for QN ITensor");
+        error("eigDecompImpl not implemented for QN ITensor");
         }
     }
 
@@ -708,7 +708,7 @@ denmatDecomp(ITensor const& T,
              Args const& args)
     {
     if( !hasSameInds(inds(T),IndexSet(Ais,Bis)) )
-      Error("In svd, A indices and B indices must match the indices of the input ITensor");
+      error("In svd, A indices and B indices must match the indices of the input ITensor");
     return denmatDecomp(T,Ais,dir,args);
     }
 
@@ -740,7 +740,7 @@ diagPosSemiDef(ITensor const& M,
     for(auto& i : M.inds()) if( noPrime(i)==noPrime(k) ) kps.push_back(i.primeLevel());
     if(kps.size() <= 1ul || kps.size()%2 != 0ul)
         {
-        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
+        error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
     auto nk = kps.size();
     std::sort(kps.begin(),kps.end());
@@ -763,7 +763,7 @@ diagPosSemiDef(ITensor const& M,
         }
     if(inds.empty() || order(M)/2 != (long)inds.size())
         {
-        Error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
+        error("Input tensor to diagHermitian should have pairs of indices with equally spaced prime levels");
         }
 
     auto [comb,cind] = combiner(std::move(inds),args);
@@ -980,7 +980,7 @@ qr(ITensor const& AA, IndexSet const& Qis, IndexSet const& Ris,
     Args args)
     {
     if( !hasSameInds(inds(AA),IndexSet(Qis,Ris)) )
-      Error("In QR, Q indices and R indices must match the indices of the input ITensor");
+      error("In QR, Q indices and R indices must match the indices of the input ITensor");
     return qr(AA,Qis,args);
     }
 
@@ -1008,7 +1008,7 @@ qrImpl(ITensor const& A,
     auto uppertriangular = args.getBool("UpperTriangular",true);
     auto complete = args.getBool("Complete",false);
     if (not complete and not uppertriangular)
-      Error("Cannot construct thin QR without R being upper triangular.");
+      error("Cannot construct thin QR without R being upper triangular.");
     
     if(not hasQNs(A))
         {
@@ -1183,7 +1183,7 @@ qrOrd2(ITensor const& A,
     {
     if(A.order() != 2) 
         {
-        Error("A must be matrix-like (order 2)");
+        error("A must be matrix-like (order 2)");
         }
     if(isComplex(A))
         {

@@ -110,7 +110,7 @@ davidson(BigMatrixT const& A,
     Real Approx0 = 1E-12;
 
     auto nget = phi.size();
-    if(nget == 0) Error("No initial vectors passed to davidson.");
+    if(nget == 0) error("No initial vectors passed to davidson.");
     for(auto j : range(nget))
         {
         auto nrm = norm(phi[j]);
@@ -134,7 +134,7 @@ davidson(BigMatrixT const& A,
         {
         println("dim(inds(phi.front())) = ",dim(inds(phi.front())));
         println("A.size() = ",A.size());
-        Error("davidson: size of initial vector should match linear matrix size");
+        error("davidson: size of initial vector should match linear matrix size");
         }
 
     auto V = std::vector<ITensor>(actual_maxiter+2);
@@ -373,7 +373,7 @@ TIMER_STOP(31);
             if(std::fabs(norm(q)-1.0) > 1E-10)
                 {
                 println("norm(q) = ",norm(q));
-                Error("q not normalized after Gram Schmidt.");
+                error("q not normalized after Gram Schmidt.");
                 }
             }
 

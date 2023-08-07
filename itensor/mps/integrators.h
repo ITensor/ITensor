@@ -33,7 +33,7 @@ rungeKutta4(const Deriv& D, Real tstep, std::vector<Tensor>& v,
     int N = int(v.size())-1;
     while(!v.at(N) && N > 1) --N;
 
-    if(N <= 0) Error("Empty vector v (v should be 1-indexed)");
+    if(N <= 0) error("Empty vector v (v should be 1-indexed)");
 
     std::vector<Tensor> k1,k2,k3,k4;
 
@@ -78,7 +78,7 @@ midpointMethod(const Deriv& D, Real tstep, std::vector<Tensor>& v,
     int N = int(v.size())-1;
     while(!v.at(N) && N > 1) --N;
 
-    if(N <= 0) Error("Empty vector v (v should be 1-indexed)");
+    if(N <= 0) error("Empty vector v (v should be 1-indexed)");
 
     std::vector<Tensor> k1,k2,k3,k4;
 

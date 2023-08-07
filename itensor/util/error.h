@@ -23,7 +23,7 @@
 namespace itensor{
 void error(const std::string& s);
 void error(const std::string& s, int line,const char* file);
-#define Error(exp)  error(exp, __LINE__, __FILE__)
+//#define Error(exp)  error(exp, __LINE__, __FILE__)
 
 struct ITError : std::runtime_error
     {

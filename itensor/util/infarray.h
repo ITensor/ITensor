@@ -411,7 +411,7 @@ class InfArray
     void
     check_empty() const
         {
-        if(size_==0) Error("InfArray is empty");
+        if(size_==0) error("InfArray is empty");
         }
 
     };

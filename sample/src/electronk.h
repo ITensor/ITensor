@@ -111,7 +111,7 @@ class ElectronKSite
       }
     else
       {
-      Error("State " + state + " not recognized");
+      error("State " + state + " not recognized");
       }
     return IndexVal{};
     }
@@ -253,7 +253,7 @@ class ElectronKSite
       }
     else
       {
-      Error("Operator \"" + opname + "\" name not recognized");
+      error("Operator \"" + opname + "\" name not recognized");
       }
 
     return Op;

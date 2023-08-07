@@ -167,7 +167,7 @@ struct ApplyIT
     applyITImpl(stdx::choice<2>,T1, T2 &)
         {
         auto msg = tinyformat::format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>());
-        Error(msg);
+        error(msg);
         }
     template<typename T1, typename T2>
     auto
@@ -500,14 +500,14 @@ checkEltInd(IndexSet const& is,
             print("inds = ");
             for(auto j : inds) print(1+j," ");
             println();
-            Error("Out of range: IndexVals are 1-indexed for getting tensor elements");
+            error("Out of range: IndexVals are 1-indexed for getting tensor elements");
             }
         if(i >= dim(is[k]))
             {
             print("inds = ");
             for(auto j : inds) print(1+j," ");
             println();
-            Error(tinyformat::format("Out of range: IndexVal at position %d has val %d > %s",1+k,1+i,Index(is[k])));
+            error(tinyformat::format("Out of range: IndexVal at position %d has val %d > %s",1+k,1+i,Index(is[k])));
             }
         }
     }

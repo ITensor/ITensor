@@ -115,7 +115,7 @@ BondGate(SiteSet const& sites,
 
     if(!(type_ == tReal || type_ ==tImag))
         {
-        Error("When providing bondH, type must be tReal or tImag");
+        error("When providing bondH, type must be tReal or tImag");
         }
     bondH *= -tau;
     ITensor unit = sites.op("Id",i1_)*sites.op("Id",i2_);

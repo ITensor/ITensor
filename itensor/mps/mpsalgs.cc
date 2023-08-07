@@ -65,7 +65,7 @@ plussers(Index const& l1,
             siq.emplace_back(qn(l2,n),blocksize(l2,n));
             }
 #ifdef DEBUG
-        if(siq.empty()) Error("siq is empty in plussers");
+        if(siq.empty()) error("siq is empty in plussers");
 #endif
         sumind = Index(std::move(siq),
                        dir(sumind),
@@ -103,7 +103,7 @@ addAssumeOrth(MPSType      & L,
               Args const& args)
     {
     auto N = length(L);
-    if(length(R) != N) Error("Mismatched MPS sizes");
+    if(length(R) != N) error("Mismatched MPS sizes");
 
     // Make sure there aren't link index clashes between L and R
     // by priming by a random amount
@@ -142,13 +142,13 @@ void
 fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     {
     if(!itensor::isOrtho(psi_basis)) 
-        Error("psi_basis must be orthogonolized.");
+        error("psi_basis must be orthogonolized.");
     if(orthoCenter(psi_basis) != 1) 
-        Error("psi_basis must be orthogonolized to site 1.");
+        error("psi_basis must be orthogonolized to site 1.");
 
     auto N = length(psi_basis);
     if(length(psi_to_fit) != N) 
-        Error("Wavefunctions must have same number of sites.");
+        error("Wavefunctions must have same number of sites.");
 
     auto A = psi_to_fit(N) * dag(prime(psi_basis(N),"Link"));
     for(int n = N-1; n > 1; --n)
@@ -160,7 +160,7 @@ fitWF(MPS const& psi_basis, MPS & psi_to_fit)
     A.noPrime();
 
     auto nrm = norm(A);
-    if(nrm == 0) Error("Zero inner of psi_to_fit and psi_basis");
+    if(nrm == 0) error("Zero inner of psi_to_fit and psi_basis");
     A /= nrm;
 
     psi_to_fit = psi_basis;

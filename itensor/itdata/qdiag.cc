@@ -124,7 +124,7 @@ computeLength(IndexSet const& is)
     for(auto& I : is)
         {
         if(length != dim(I))
-            Error("QDiag storage requires all IQIndices to be same size");
+            error("QDiag storage requires all IQIndices to be same size");
         }
     return length;
     }

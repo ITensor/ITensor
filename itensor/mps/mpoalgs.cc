@@ -39,7 +39,7 @@ nmultMPO(MPO const& Aorig,
     if(!args.defined("Cutoff")) args.add("Cutoff",1E-14);
     if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
 
-    if(length(Aorig) != length(Borig)) Error("nmultMPO(MPO): Mismatched MPO length");
+    if(length(Aorig) != length(Borig)) error("nmultMPO(MPO): Mismatched MPO length");
     const int N = length(Borig);
 
     auto A = Aorig;
@@ -129,8 +129,8 @@ applyMPO(MPO const& K,
          MPS const& x,
          Args args)
     {
-    if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
-    if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
+    if( !x ) error("Error in applyMPO, MPS is uninitialized.");
+    if( !K ) error("Error in applyMPO, MPO is uninitialized.");
 
     auto method = args.getString("Method","DensityMatrix");
     if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
@@ -153,7 +153,7 @@ applyMPO(MPO const& K,
         }
     else
         {
-        Error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
+        error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
         }
 
     return res;
@@ -166,20 +166,20 @@ applyMPO(MPO const& K,
          MPS const& x0,
          Args args)
     {
-    if( !x ) Error("Error in applyMPO, MPS is uninitialized.");
-    if( !K ) Error("Error in applyMPO, MPO is uninitialized.");
-    if( !x0 ) Error("Error in applyMPO, guess MPS is uninitialized.");
+    if( !x ) error("Error in applyMPO, MPS is uninitialized.");
+    if( !K ) error("Error in applyMPO, MPO is uninitialized.");
+    if( !x0 ) error("Error in applyMPO, guess MPS is uninitialized.");
 
     auto method = args.getString("Method","Fit");
     if(!args.defined("RespectDegenerate")) args.add("RespectDegenerate",true);
 
     MPS res = x0;
     if(method == "DensityMatrix")
-        Error("applyMPO method 'DensityMatrix' does not accept an input MPS");
+        error("applyMPO method 'DensityMatrix' does not accept an input MPS");
     else if(method == "Fit")
         fitApplyMPOImpl(x,K,res,args);
     else
-        Error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
+        error("applyMPO currently supports the following methods: 'DensityMatrix', 'Fit'");
 
     return res;
     }
@@ -223,7 +223,7 @@ densityMatrixApplyMPOImpl(MPO const& K,
     for( auto n : range1(N) )
       {
       if( commonIndex(psi(n),K(n)) != siteIndex(psi,n) )
-          Error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
+          error("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'");
       }
 
     auto rand_plev = 14741;

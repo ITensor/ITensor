@@ -119,8 +119,8 @@ LocalMPO_MPS(MPO const& Op,
     { 
     lmpo_ = LocalMPO(Op,LOp,ROp,args);
 #ifdef DEBUG
-    if(Lpsi.size() != psis.size()) Error("Lpsi must have same number of elements as psis");
-    if(Rpsi.size() != psis.size()) Error("Rpsi must have same number of elements as psis");
+    if(Lpsi.size() != psis.size()) error("Lpsi must have same number of elements as psis");
+    if(Rpsi.size() != psis.size()) error("Rpsi must have same number of elements as psis");
 #endif
 
     for(auto j : range(lmps_.size()))
