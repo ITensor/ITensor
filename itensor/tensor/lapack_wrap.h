@@ -18,14 +18,16 @@
 
 #include <vector>
 //#include "config.h"
-#include "types.h"
+#include <types.h>
 #include "util/timers.h"
 
 #include <blas.hh>   // BLASPP
 #include <lapack.hh> // LAPACKPP
 
-#define LAPACK_REAL lapack_float_return
+#define LAPACK_INT lapack_int
+#define LAPACK_REAL double
 #define LAPACK_COMPLEX lapack_complex_double
+#define BLAS_LAYOUT blas::Layout::ColMajor
 //
 // Headers and typedefs
 //
@@ -161,6 +163,7 @@
 //#endif
 //#endif
 
+/*
 namespace itensor {
 
 //
@@ -788,5 +791,6 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               Cplx * vr);  //right eigenvectors on return
 
 } //namespace itensor
+*/
 
 #endif
