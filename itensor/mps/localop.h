@@ -379,7 +379,7 @@ deltaRho(ITensor const& AA,
     {
     if(nc_ != 2)
         {
-        Error("LocalMPO: currently only support 2 center sites in deltaRho");
+        error("LocalMPO: currently only support 2 center sites in deltaRho");
         }
 
     auto drho = AA;
@@ -408,7 +408,7 @@ deltaRho(ITensor const& AA,
 ITensor inline LocalOp::
 diag() const
     {
-    if(!(*this)) Error("LocalOp is default constructed");
+    if(!(*this)) error("LocalOp is default constructed");
 
     //lambda helper function:
     auto findIndPair = [](ITensor const& T) {
@@ -488,7 +488,7 @@ diag() const
 size_t inline LocalOp::
 size() const
     {
-    if(!(*this)) Error("LocalOp is default constructed");
+    if(!(*this)) error("LocalOp is default constructed");
     if(size_ == size_t(-1))
         {
         //Calculate linear size of this 

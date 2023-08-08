@@ -323,7 +323,7 @@ checkQNs(MPO const& H)
     int center = findCenter(H);
     if(center == -1)
         {
-        Error("Did not find an ortho. center");
+        error("Did not find an ortho. center");
         }
 
     //Check that all ITensors have zero div
@@ -333,13 +333,13 @@ checkQNs(MPO const& H)
         if(!H(i))
             {
             println("A(",i,") null, QNs not well defined");
-            Error("QNs not well defined");
+            error("QNs not well defined");
             }
         if(div(H(i)) != Zero)
             {
             cout << "At i = " << i << endl;
             Print(H(i));
-            Error("Non-zero div ITensor in MPO");
+            error("Non-zero div ITensor in MPO");
             }
         }
 
@@ -349,14 +349,14 @@ checkQNs(MPO const& H)
         if(dir(linkIndex(H,i)) != In) 
             {
             println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
-            Error("Incorrect Arrow in MPO");
+            error("Incorrect Arrow in MPO");
             }
         if(i > 1)
             {
             if(dir(linkIndex(H,i-1)) != Out) 
                 {
                 println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
-                Error("Incorrect Arrow in MPO");
+                error("Incorrect Arrow in MPO");
                 }
             }
         }
@@ -368,12 +368,12 @@ checkQNs(MPO const& H)
         if(dir(linkIndex(H,i)) != Out) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
-            Error("Incorrect Arrow in MPO");
+            error("Incorrect Arrow in MPO");
             }
         if(dir(linkIndex(H,i-1)) != In) 
             {
             println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
-            Error("Incorrect Arrow in MPO");
+            error("Incorrect Arrow in MPO");
             }
         }
     }
@@ -568,7 +568,7 @@ traceC(MPO const& A,
        MPO const& B)
     {
     auto N = length(A);
-    if(N != length(B)) Error("traceC(MPO,MPO): mismatched N");
+    if(N != length(B)) error("traceC(MPO,MPO): mismatched N");
 
     // Make the site indices of the MPOs match
     // and the links not match
@@ -613,7 +613,7 @@ inner(MPS const& x,
       Real& im)
     {
     auto N = length(A);
-    if( length(y) != N || length(x) != N ) Error("inner: mismatched N");
+    if( length(y) != N || length(x) != N ) error("inner: mismatched N");
 
     // Make the indices of |x> and A|y> match
     auto sAy = uniqueSiteInds(A,y);
@@ -646,7 +646,7 @@ inner(MPS const& psi,
       MPO const& H, 
       MPS const& phi) //Re[<psi|H|phi>]
     {
-    if(isComplex(psi) || isComplex(H) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
+    if(isComplex(psi) || isComplex(H) || isComplex(phi)) error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re, im;
     inner(psi,H,phi,re,im);
     return re;
@@ -672,7 +672,7 @@ inner(MPO const& A,
       Real& re,
       Real& im)
   {
-  if(length(x) != length(y) || length(x) != length(A) || length(y) != length(B)) Error("Mismatched N in inner");
+  if(length(x) != length(y) || length(x) != length(A) || length(y) != length(B)) error("Mismatched N in inner");
   auto N = length(y);
 
   // Automatically match site indices
@@ -705,7 +705,7 @@ inner(MPO const& A,
       MPO const& B,
       MPS const& y)
     {
-    if(isComplex(A) || isComplex(x) || isComplex(B) || isComplex(y)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
+    if(isComplex(A) || isComplex(x) || isComplex(B) || isComplex(y)) error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re,im;
     inner(A,x,B,y,re,im);
     return re;
@@ -731,7 +731,7 @@ inner(MPS const& x,
       Real& re, 
       Real& im)
     {
-    if(length(x) != length(y) || length(x) != length(A) || length(x) != length(B)) Error("Mismatched N in inner");
+    if(length(x) != length(y) || length(x) != length(A) || length(x) != length(B)) error("Mismatched N in inner");
     auto N = length(x);
 
     // Assume order of operations A(B|y>), use replaceInds
@@ -764,7 +764,7 @@ inner(MPS const& psi,
       MPO const& K,
       MPS const& phi) //<psi|H K|phi>
     {
-    if(isComplex(psi) || isComplex(H) || isComplex(K) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
+    if(isComplex(psi) || isComplex(H) || isComplex(K) || isComplex(phi)) error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re,im;
     inner(psi,H,K,phi,re,im);
     return re;
@@ -810,7 +810,7 @@ overlap(MPS const& psi,
     {
     Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(H);
-    if(length(phi) != N || length(psi) != N) Error("psiHphi: mismatched N");
+    if(length(phi) != N || length(psi) != N) error("psiHphi: mismatched N");
 
     auto L = phi(1); 
     //Some Hamiltonians may store edge tensors in H(0) and H(N+1)
@@ -869,7 +869,7 @@ overlap(MPS const& psi,
     {
     Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(psi);
-    if(N != length(phi) || length(H) < N) Error("mismatched N in psiHphi");
+    if(N != length(phi) || length(H) < N) error("mismatched N in psiHphi");
 
     auto L = (LB ? LB*phi(1) : phi(1));
     L *= H(1); 
@@ -913,7 +913,7 @@ overlap(MPS const& psi,
     {
     Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     //println("Running psiHKphi");
-    if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) Error("Mismatched N in overlap");
+    if(length(psi) != length(phi) || length(psi) != length(H) || length(psi) != length(K)) error("Mismatched N in overlap");
     auto N = length(psi);
     auto psidag = psi;
     psidag.dag().prime(2);
@@ -947,7 +947,7 @@ overlap(MPS const& psi,
     Real re,im;
     overlap(psi,H,K,phi,re,im);
     if(std::fabs(im) > 1.0e-12 * std::fabs(re))
-        Error("Non-zero imaginary part in overlap, use overlapC instead.");
+        error("Non-zero imaginary part in overlap, use overlapC instead.");
     return re;
     }
 
@@ -985,7 +985,7 @@ h5_read(h5::group parent, string const& name, MPO & M)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "MPO") Error("Group does not contain MPO data in HDF5 file");
+    if(type != "MPO") error("Group does not contain MPO data in HDF5 file");
     auto N = h5_read<long>(g,"length");
     auto rlim = h5_read<long>(g,"rlim");
     auto llim = h5_read<long>(g,"llim");

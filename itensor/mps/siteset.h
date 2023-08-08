@@ -577,13 +577,13 @@ merge(SiteSetT const& sites1,
         {
         println("Start1=",start1);
         println("End1=",end1);
-        Error("end1 must be greater than start1");
+        error("end1 must be greater than start1");
         }
     if(end2 <= start2)
         {
         println("Start2=",start2);
         println("End2=",end2);
-        Error("end2 must be greater than start2");
+        error("end2 must be greater than start2");
         }
     auto nsize = (end1-start1+1)+(end2-start2+1);
     auto inds = std::vector<Index>(nsize);

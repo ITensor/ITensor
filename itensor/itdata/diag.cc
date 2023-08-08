@@ -222,7 +222,7 @@ add(PlusEQ const& P,
     Diag<T2>     const& D2)
     {
 #ifdef DEBUG
-    if(D1.length != D2.length) Error("Mismatched lengths in plusEq");
+    if(D1.length != D2.length) error("Mismatched lengths in plusEq");
 #endif
     if(D1.allSame() || D2.allSame()) error("Diag plusEq allSame case not implemented");
 

@@ -334,7 +334,7 @@ oneSiteFitApply(vector<ITensor> & E,
         if(order(P) > 3)
             {
             Print(P);
-            Error("order > 3 of P");
+            error("order > 3 of P");
             }
 
         P *= fac;
@@ -347,7 +347,7 @@ oneSiteFitApply(vector<ITensor> & E,
                 {
                 Print(ci);
                 Print(inds(P));
-                Error("P does not have Index ci");
+                error("P does not have Index ci");
                 }
             auto [U,S,V] = svd(P,{ci},args);
             (void)U;
@@ -455,7 +455,7 @@ fitApplyMPOImpl(Real fac,
             }
         else
             {
-            Error(tinyformat::format("NCenterSites = %d not supported",NCenterSites));
+            error(tinyformat::format("NCenterSites = %d not supported",NCenterSites));
             }
         }
     Kx.dag();
@@ -506,7 +506,7 @@ applyExpH(MPS const& psi,
           MPS& res, 
           Args const& args)
     {
-    if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
+    if(&psi == &res) error("Must pass distinct MPS arguments to applyExpH");
 
     const int order = args.getInt("Order",10);
 
@@ -630,17 +630,17 @@ applyExpH(MPS const& psi,
 //    bool allow_arb_position = args.getBool("AllowArbPosition",false);
 //
 //    if(&psi == &res)
-//        Error("psi and res must be different MPS instances");
+//        error("psi and res must be different MPS instances");
 //
 //    auto N = length(psi);
 //    if(length(K) != N) 
-//        Error("Mismatched N in ApplyMPO() ZipUp method");
+//        error("Mismatched N in ApplyMPO() ZipUp method");
 //
 //    if(!itensor::isOrtho(psi) || itensor::orthoCenter(psi) != 1)
-//        Error("Ortho center of psi must be site 1");
+//        error("Ortho center of psi must be site 1");
 //
 //    if(!allow_arb_position && (!itensor::isOrtho(K) || itensor::orthoCenter(K) != 1))
-//        Error("Ortho center of K must be site 1");
+//        error("Ortho center of K must be site 1");
 //
 //#ifdef DEBUG
 //    checkQNs(psi);
@@ -718,7 +718,7 @@ applyExpH(MPS const& psi,
 //    {
 //    if(&psiA == &res || &psiB == &res)
 //        {
-//        Error("fitApplyMPOImpl: Result MPS cannot be same as an input MPS");
+//        error("fitApplyMPOImpl: Result MPS cannot be same as an input MPS");
 //        }
 //    auto N = length(psiA);
 //    auto nsweep = args.getInt("Nsweep",1);

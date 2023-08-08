@@ -817,7 +817,7 @@ contract(CProps const& p,
     if(p.permuteC())
         {
 #ifdef DEBUG
-        if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
+        if(isTrivial(p.PC)) error("Calling permute in contract with a trivial permutation");
 #endif
         C &= permute(newC,p.PC);
         }
@@ -1123,7 +1123,7 @@ contractDiagFull(VectorRefc A,         Labels const& ai,
                  TenRefc<RangeT> B, Labels const& bi, 
                  VectorRef          C, Labels const& ci)
     {
-    Error("contractDiagFull not yet implemented");
+    error("contractDiagFull not yet implemented");
     }
 template
 void 

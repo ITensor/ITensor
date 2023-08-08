@@ -317,7 +317,7 @@ class MPS
     mapPrime(VarArgs&&... vargs)
         {
         if(do_write_)
-            Error("mapPrime not supported if doWrite(true)");
+            error("mapPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].mapPrime(std::forward<VarArgs>(vargs)...);
         return *this;
@@ -327,7 +327,7 @@ class MPS
     swapPrime(int plevold, int plevnew, IndexSet const& is)
         {
         if(do_write_)
-            Error("swapPrime not supported if doWrite(true)");
+            error("swapPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].swapPrime(plevold,plevnew,is);
         return *this;
@@ -338,7 +338,7 @@ class MPS
     swapPrime(VarArgs&&... vargs)
         {
         if(do_write_)
-            Error("swapPrime not supported if doWrite(true)");
+            error("swapPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].swapPrime(std::forward<VarArgs>(vargs)...);
         return *this;
@@ -348,7 +348,7 @@ class MPS
     noPrime(IndexSet const& is)
         {
         if(do_write_)
-            Error("noPrime not supported if doWrite(true)");
+            error("noPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].noPrime(is);
         return *this;
@@ -359,7 +359,7 @@ class MPS
     noPrime(VarArgs&&... vargs)
         {
         if(do_write_)
-            Error("noPrime not supported if doWrite(true)");
+            error("noPrime not supported if doWrite(true)");
         for(int i = 1; i <= N_; ++i)
             A_[i].noPrime(std::forward<VarArgs>(vargs)...);
         return *this;

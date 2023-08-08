@@ -422,7 +422,7 @@ namespace detail {
             {
 #ifdef DEBUG
             if(ri >= size_type(r.order()))
-                Error("Container-Range size mismatch in offset(...)");
+                error("Container-Range size mismatch in offset(...)");
 #endif
             I += r.stride(ri)*(ii-start);
             ++ri;
@@ -445,7 +445,7 @@ namespace detail {
             {
 #ifdef DEBUG
             if(static_cast<size_type>(n) >= r.order())
-                Error("Container-Range size mismatch in offset(...)");
+                error("Container-Range size mismatch in offset(...)");
 #endif
             I += r.stride(n)*(inds[n]-start);
             }

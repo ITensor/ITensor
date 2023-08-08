@@ -105,7 +105,7 @@ doTask(CalcDiv const& C, QDiag<T> const& D)
             {
             q += C.is[n].qn(1+block[n])*C.is[n].dir();
             }
-        if(q != d) Error("Diagonal elements of QDiag ITensor would have inconsistent divergence");
+        if(q != d) error("Diagonal elements of QDiag ITensor would have inconsistent divergence");
         };
     loopDiagBlocks(D,C.is,checkBlock);
 #endif
@@ -164,7 +164,7 @@ doTask(GetElt& G, QDiag<T> const& D)
     if(G.is.order() != decltype(r)(G.inds.size())) 
         {
         printfln("is.order() = %d, ind.size() = %d",G.is.order(),G.inds.size());
-        Error("Wrong number of indices passed to .real or .cplx");
+        error("Wrong number of indices passed to .real or .cplx");
         }
 #endif
     if(r == 0) return D.store.front();
@@ -178,7 +178,7 @@ doTask(GetElt& G, QDiag<T> const& D)
 
     auto n = G.inds[0];
 #ifdef DEBUG
-    if(n > (decltype(n))D.size()) Error("index out of range in getElt(QDiag..)");
+    if(n > (decltype(n))D.size()) error("index out of range in getElt(QDiag..)");
 #endif
     for(auto i : range(1,r))
         {
@@ -363,7 +363,7 @@ blockDiagDense(QDiag<VD> const& D,
     {
     using VC = common_type<VT,VD>;
 #ifdef DEBUG
-    if(Dis.order() == 0) Error("QDiag order 0 case not handled");
+    if(Dis.order() == 0) error("QDiag order 0 case not handled");
 #endif
 
     bool T_has_uncontracted = false;

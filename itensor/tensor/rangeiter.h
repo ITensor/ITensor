@@ -86,7 +86,7 @@ class RangeIter
         { 
 #ifdef DEBUG
         if(prange_ != o.prange_) 
-            Error("Can't compare RangeIter created from different range objects");
+            error("Can't compare RangeIter created from different range objects");
 #endif
         return off_==o.off_;
         }
@@ -107,7 +107,7 @@ class RangeIter
         {
         using rextent = decltype(range().extent(0));
 #ifdef DEBUG
-        if(range().order() == 0) Error("Can't increment RangeIter made from order 0 range");
+        if(range().order() == 0) error("Can't increment RangeIter made from order 0 range");
 #endif
         auto r = range().order();
         ind_[0] += 1;

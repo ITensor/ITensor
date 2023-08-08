@@ -30,12 +30,12 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
               LAPACK_REAL* Y,       //pointer to head of vector Y
               LAPACK_INT incy)     //increment with which to step through Y
     {
-#ifdef ITENSOR_USE_CBLAS
-    cblas_daxpy(n,alpha,X,incx,Y,incy);
-#else
-    auto Xnc = const_cast<LAPACK_REAL*>(X);
-    F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    cblas_daxpy(n,alpha,X,incx,Y,incy);
+//#else
+//    auto Xnc = const_cast<LAPACK_REAL*>(X);
+//    F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
+//#endif
     }
 
 //
@@ -46,12 +46,12 @@ dnrm2_wrapper(LAPACK_INT N,
               const LAPACK_REAL* X,
               LAPACK_INT incx)
     {
-#ifdef ITENSOR_USE_CBLAS
-    return cblas_dnrm2(N,X,incx);
-#else
-    auto *Xnc = const_cast<LAPACK_REAL*>(X);
-    return F77NAME(dnrm2)(&N,Xnc,&incx);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    return cblas_dnrm2(N,X,incx);
+//#else
+//    auto *Xnc = const_cast<LAPACK_REAL*>(X);
+//    return F77NAME(dnrm2)(&N,Xnc,&incx);
+//#endif
     return -1;
     }
 
@@ -65,13 +65,13 @@ ddot_wrapper(LAPACK_INT N,
              const LAPACK_REAL* Y,
              LAPACK_INT incy)
     {
-#ifdef ITENSOR_USE_CBLAS
-    return cblas_ddot(N,X,incx,Y,incy);
-#else
-    auto *Xnc = const_cast<LAPACK_REAL*>(X);
-    auto *Ync = const_cast<LAPACK_REAL*>(Y);
-    return F77NAME(ddot)(&N,Xnc,&incx,Ync,&incy);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    return cblas_ddot(N,X,incx,Y,incy);
+//#else
+//    auto *Xnc = const_cast<LAPACK_REAL*>(X);
+//    auto *Ync = const_cast<LAPACK_REAL*>(Y);
+//    return F77NAME(ddot)(&N,Xnc,&incx,Ync,&incy);
+//#endif
     return -1;
     }
 
@@ -85,28 +85,28 @@ zdotc_wrapper(LAPACK_INT N,
               Cplx const* Y,
               LAPACK_INT incy)
     {
-#ifdef ITENSOR_USE_CBLAS
-    Cplx res;
-#if defined PLATFORM_openblas
-    auto pX = reinterpret_cast<OPENBLAS_CONST double*>(X);
-    auto pY = reinterpret_cast<OPENBLAS_CONST double*>(Y);
-    auto pres = reinterpret_cast<openblas_complex_double*>(&res);
-#else
-    auto pX = reinterpret_cast<const void*>(X);
-    auto pY = reinterpret_cast<const void*>(Y);
-    auto pres = reinterpret_cast<void*>(&res);
-#endif
-    cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
-    return res;
-#else
-    auto ncX = const_cast<Cplx*>(X);
-    auto ncY = const_cast<Cplx*>(Y);
-    auto pX = reinterpret_cast<LAPACK_COMPLEX*>(ncX);
-    auto pY = reinterpret_cast<LAPACK_COMPLEX*>(ncY);
-    auto res = F77NAME(zdotc)(&N,pX,&incx,pY,&incy);
-    auto cplx_res = reinterpret_cast<Cplx*>(&res);
-    return *cplx_res;
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    Cplx res;
+//#if defined PLATFORM_openblas
+//    auto pX = reinterpret_cast<OPENBLAS_CONST double*>(X);
+//    auto pY = reinterpret_cast<OPENBLAS_CONST double*>(Y);
+//    auto pres = reinterpret_cast<openblas_complex_double*>(&res);
+//#else
+//    auto pX = reinterpret_cast<const void*>(X);
+//    auto pY = reinterpret_cast<const void*>(Y);
+//    auto pres = reinterpret_cast<void*>(&res);
+//#endif
+//    cblas_zdotc_sub(N,pX,incx,pY,incy,pres);
+//    return res;
+//#else
+//    auto ncX = const_cast<Cplx*>(X);
+//    auto ncY = const_cast<Cplx*>(Y);
+//    auto pX = reinterpret_cast<LAPACK_COMPLEX*>(ncX);
+//    auto pY = reinterpret_cast<LAPACK_COMPLEX*>(ncY);
+//    auto res = F77NAME(zdotc)(&N,pX,&incx,pY,&incy);
+//    auto cplx_res = reinterpret_cast<Cplx*>(&res);
+//    return *cplx_res;
+//#endif
     return Cplx{};
     }
 
@@ -127,37 +127,37 @@ gemm_wrapper(bool transa,
     {
     LAPACK_INT lda = m,
                ldb = k;
-#ifdef ITENSOR_USE_CBLAS
-    auto at = CblasNoTrans,
-         bt = CblasNoTrans;
-    if(transa)
-        {
-        at = CblasTrans;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CblasTrans;
-        ldb = n;
-        }
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
-#else
-    auto *pA = const_cast<double*>(A);
-    auto *pB = const_cast<double*>(B);
-    char at = 'N';
-    char bt = 'N';
-    if(transa)
-        {
-        at = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = 'T';
-        ldb = n;
-        }
-    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    auto at = CblasNoTrans,
+//         bt = CblasNoTrans;
+//    if(transa)
+//        {
+//        at = CblasTrans;
+//        lda = k;
+//        }
+//    if(transb)
+//        {
+//        bt = CblasTrans;
+//        ldb = n;
+//        }
+//    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
+//#else
+//    auto *pA = const_cast<double*>(A);
+//    auto *pB = const_cast<double*>(B);
+//    char at = 'N';
+//    char bt = 'N';
+//    if(transa)
+//        {
+//        at = 'T';
+//        lda = k;
+//        }
+//    if(transb)
+//        {
+//        bt = 'T';
+//        ldb = n;
+//        }
+//    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
+//#endif
     }
 
 //
@@ -177,73 +177,73 @@ gemm_wrapper(bool transa,
     {
     LAPACK_INT lda = m,
                ldb = k;
-#ifdef PLATFORM_openblas
-    auto at = CblasNoTrans,
-         bt = CblasNoTrans;
-    if(transa)
-        {
-        at = CblasTrans;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CblasTrans;
-        ldb = n;
-        }
-    //auto ralpha = realRef(alpha);
-    //auto ialpha = imagRef(alpha);
-    //auto rbeta = realRef(beta);
-    //auto ibeta = imagRef(beta);
-    //if(ialpha != 0.0 || ibeta != 0.0)
-    //    {
-    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
-    //    }
-    auto* palpha = reinterpret_cast<double*>(&alpha);
-    auto* pbeta = reinterpret_cast<double*>(&beta);
-    auto* pA = reinterpret_cast<const double*>(A);
-    auto* pB = reinterpret_cast<const double*>(B);
-    auto* pC = reinterpret_cast<double*>(C);
-	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
-#else //platform not openblas
-#ifdef ITENSOR_USE_CBLAS
-    auto at = CblasNoTrans,
-         bt = CblasNoTrans;
-    if(transa)
-        {
-        at = CblasTrans;
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = CblasTrans;
-        ldb = n;
-        }
-    auto palpha = (void*)(&alpha); 
-    auto pbeta = (void*)(&beta); 
-    cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
-#else //use Fortran zgemm
-    auto *ncA = const_cast<Cplx*>(A);
-    auto *ncB = const_cast<Cplx*>(B);
-    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA);
-    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(ncB);
-    auto *pC = reinterpret_cast<LAPACK_COMPLEX*>(C);
-    auto *palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
-    auto *pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
-    char at = 'N';
-    char bt = 'N';
-    if(transa)
-        {
-        at = 'T';
-        lda = k;
-        }
-    if(transb)
-        {
-        bt = 'T';
-        ldb = n;
-        }
-    F77NAME(zgemm)(&at,&bt,&m,&n,&k,palpha,pA,&lda,pB,&ldb,pbeta,pC,&m);
-#endif
-#endif
+//#ifdef PLATFORM_openblas
+//    auto at = CblasNoTrans,
+//         bt = CblasNoTrans;
+//    if(transa)
+//        {
+//        at = CblasTrans;
+//        lda = k;
+//        }
+//    if(transb)
+//        {
+//        bt = CblasTrans;
+//        ldb = n;
+//        }
+//    //auto ralpha = realRef(alpha);
+//    //auto ialpha = imagRef(alpha);
+//    //auto rbeta = realRef(beta);
+//    //auto ibeta = imagRef(beta);
+//    //if(ialpha != 0.0 || ibeta != 0.0)
+//    //    {
+//    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
+//    //    }
+//    auto* palpha = reinterpret_cast<double*>(&alpha);
+//    auto* pbeta = reinterpret_cast<double*>(&beta);
+//    auto* pA = reinterpret_cast<const double*>(A);
+//    auto* pB = reinterpret_cast<const double*>(B);
+//    auto* pC = reinterpret_cast<double*>(C);
+//	cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,pA,lda,pB,ldb,pbeta,pC,m);
+//#else //platform not openblas
+//#ifdef ITENSOR_USE_CBLAS
+//    auto at = CblasNoTrans,
+//         bt = CblasNoTrans;
+//    if(transa)
+//        {
+//        at = CblasTrans;
+//        lda = k;
+//        }
+//    if(transb)
+//        {
+//        bt = CblasTrans;
+//        ldb = n;
+//        }
+//    auto palpha = (void*)(&alpha);
+//    auto pbeta = (void*)(&beta);
+//    cblas_zgemm(CblasColMajor,at,bt,m,n,k,palpha,(void*)A,lda,(void*)B,ldb,pbeta,(void*)C,m);
+//#else //use Fortran zgemm
+//    auto *ncA = const_cast<Cplx*>(A);
+//    auto *ncB = const_cast<Cplx*>(B);
+//    auto *pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA);
+//    auto *pB = reinterpret_cast<LAPACK_COMPLEX*>(ncB);
+//    auto *pC = reinterpret_cast<LAPACK_COMPLEX*>(C);
+//    auto *palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
+//    auto *pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
+//    char at = 'N';
+//    char bt = 'N';
+//    if(transa)
+//        {
+//        at = 'T';
+//        lda = k;
+//        }
+//    if(transb)
+//        {
+//        bt = 'T';
+//        ldb = n;
+//        }
+//    F77NAME(zgemm)(&at,&bt,&m,&n,&k,palpha,pA,&lda,pB,&ldb,pbeta,pC,&m);
+//#endif
+//#endif
     }
 
 void 
@@ -258,13 +258,13 @@ gemv_wrapper(bool trans,
              LAPACK_REAL* y,
              LAPACK_INT incy)
     {
-#ifdef ITENSOR_USE_CBLAS
-    auto Tr = trans ? CblasTrans : CblasNoTrans;
-    cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
-#else
-    char Tr = trans ? 'T' : 'N';
-    F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    auto Tr = trans ? CblasTrans : CblasNoTrans;
+//    cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
+//#else
+//    char Tr = trans ? 'T' : 'N';
+//    F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
+//#endif
     }
 
 void
@@ -279,40 +279,40 @@ gemv_wrapper(bool trans,
              Cplx* y,
              LAPACK_INT incy)
     {
-#ifdef PLATFORM_openblas
-    auto Tr = trans ? CblasTrans : CblasNoTrans;
-    //auto ralpha = realRef(alpha);
-    //auto ialpha = imagRef(alpha);
-    //auto rbeta = realRef(beta);
-    //auto ibeta = imagRef(beta);
-    //if(ialpha != 0.0 || ibeta != 0.0)
-    //    {
-    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
-    //    }
-	auto* palpha = reinterpret_cast<double*>(&alpha);
-	auto* pbeta = reinterpret_cast<double*>(&beta);
-	auto* pA = reinterpret_cast<const double*>(A);
-	auto* px = reinterpret_cast<const double*>(x);
-	auto* py = reinterpret_cast<double*>(y);
-    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,pA,m,px,incx,pbeta,py,incy);
-#else //platform other than openblas
-#ifdef ITENSOR_USE_CBLAS
-    auto Tr = trans ? CblasTrans : CblasNoTrans;
-    auto palpha = reinterpret_cast<void*>(&alpha); 
-    auto pbeta = reinterpret_cast<void*>(&beta); 
-    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,(void*)A,m,(void*)x,incx,pbeta,(void*)y,incy);
-#else
-    char Tr = trans ? 'T' : 'N';
-    auto ncA = const_cast<Cplx*>(A); 
-    auto ncx = const_cast<Cplx*>(x); 
-    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA); 
-    auto px = reinterpret_cast<LAPACK_COMPLEX*>(ncx); 
-    auto py = reinterpret_cast<LAPACK_COMPLEX*>(y); 
-    auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha); 
-    auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta); 
-    F77NAME(zgemv)(&Tr,&m,&n,palpha,pA,&m,px,&incx,pbeta,py,&incy);
-#endif
-#endif
+//#ifdef PLATFORM_openblas
+//    auto Tr = trans ? CblasTrans : CblasNoTrans;
+//    //auto ralpha = realRef(alpha);
+//    //auto ialpha = imagRef(alpha);
+//    //auto rbeta = realRef(beta);
+//    //auto ibeta = imagRef(beta);
+//    //if(ialpha != 0.0 || ibeta != 0.0)
+//    //    {
+//    //    throw std::runtime_error("Complex alpha, beta not supported in zgemm for PLATFORM=openblas");
+//    //    }
+//	auto* palpha = reinterpret_cast<double*>(&alpha);
+//	auto* pbeta = reinterpret_cast<double*>(&beta);
+//	auto* pA = reinterpret_cast<const double*>(A);
+//	auto* px = reinterpret_cast<const double*>(x);
+//	auto* py = reinterpret_cast<double*>(y);
+//    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,pA,m,px,incx,pbeta,py,incy);
+//#else //platform other than openblas
+//#ifdef ITENSOR_USE_CBLAS
+//    auto Tr = trans ? CblasTrans : CblasNoTrans;
+//    auto palpha = reinterpret_cast<void*>(&alpha);
+//    auto pbeta = reinterpret_cast<void*>(&beta);
+//    cblas_zgemv(CblasColMajor,Tr,m,n,palpha,(void*)A,m,(void*)x,incx,pbeta,(void*)y,incy);
+//#else
+//    char Tr = trans ? 'T' : 'N';
+//    auto ncA = const_cast<Cplx*>(A);
+//    auto ncx = const_cast<Cplx*>(x);
+//    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(ncA);
+//    auto px = reinterpret_cast<LAPACK_COMPLEX*>(ncx);
+//    auto py = reinterpret_cast<LAPACK_COMPLEX*>(y);
+//    auto palpha = reinterpret_cast<LAPACK_COMPLEX*>(&alpha);
+//    auto pbeta = reinterpret_cast<LAPACK_COMPLEX*>(&beta);
+//    F77NAME(zgemv)(&Tr,&m,&n,palpha,pA,&m,px,&incx,pbeta,py,&incy);
+//#endif
+//#endif
     }
 
 
@@ -330,20 +330,20 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
     std::vector<LAPACK_REAL> work;
     LAPACK_INT lda = n;
 
-#ifdef PLATFORM_acml
-    static const LAPACK_INT one = 1;
-    LAPACK_INT lwork = std::max(one,3*n-1);
-    work.resize(lwork+2);
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
-#else
-    //Compute optimal workspace size (will be written to wkopt)
-    LAPACK_INT lwork = -1; //tell dsyev to compute optimal size
-    LAPACK_REAL wkopt = 0;
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,&wkopt,&lwork,&info);
-    lwork = LAPACK_INT(wkopt);
-    work.resize(lwork+2);
-    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info);
-#endif
+//#ifdef PLATFORM_acml
+//    static const LAPACK_INT one = 1;
+//    LAPACK_INT lwork = std::max(one,3*n-1);
+//    work.resize(lwork+2);
+//    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
+//#else
+//    //Compute optimal workspace size (will be written to wkopt)
+//    LAPACK_INT lwork = -1; //tell dsyev to compute optimal size
+//    LAPACK_REAL wkopt = 0;
+//    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,&wkopt,&lwork,&info);
+//    lwork = LAPACK_INT(wkopt);
+//    work.resize(lwork+2);
+//    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info);
+//#endif
     }
 
 //
@@ -355,11 +355,11 @@ dscal_wrapper(LAPACK_INT N,
               LAPACK_REAL* data,
               LAPACK_INT inc)
     {
-#ifdef ITENSOR_USE_CBLAS
-    cblas_dscal(N,alpha,data,inc);
-#else
-    F77NAME(dscal)(&N,&alpha,data,&inc);
-#endif
+//#ifdef ITENSOR_USE_CBLAS
+//    cblas_dscal(N,alpha,data,inc);
+//#else
+//    F77NAME(dscal)(&N,&alpha,data,&inc);
+//#endif
     }
 
 void 
@@ -385,12 +385,12 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     work.resize(lwork);
     rwork.resize(5*l*(1+l));
     iwork.resize(8*l);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
-#else
-    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info,jobz_len);
+//#else
+//    F77NAME(zgesdd)(jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),iwork.data(),info);
+//#endif
     }
 
 
@@ -413,12 +413,12 @@ dgesdd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
     LAPACK_INT lwork = l*(6 + 4*l) + g;
     work.resize(lwork);
     iwork.resize(8*l);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    F77NAME(dgesdd)(jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork,iwork.data(),info,jobz_len);
-#else
-    F77NAME(dgesdd)(jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork,iwork.data(),info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    F77NAME(dgesdd)(jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork,iwork.data(),info,jobz_len);
+//#else
+//    F77NAME(dgesdd)(jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork,iwork.data(),info);
+//#endif
     }
 
 
@@ -446,12 +446,12 @@ zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     work.resize(lwork);
     rwork.resize(5*l*(1+l));
     iwork.resize(8*l);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info,jobz_len);
-#else
-    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info,jobz_len);
+//#else
+//    F77NAME(zgesvd)(jobz,jobz,m,n,pA,m,s,pU,m,pVt,&l,work.data(),&lwork,rwork.data(),info);
+//#endif
     }
 
 
@@ -477,12 +477,12 @@ dgesvd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
     work.resize(lwork);
     iwork.resize(8*l);
     //superb.resize(l -1);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    F77NAME(dgesvd)(jobz,jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork, info, jobz_len);
-#else
-    F77NAME(dgesvd)(jobz,jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork, info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    F77NAME(dgesvd)(jobz,jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork, info, jobz_len);
+//#else
+//    F77NAME(dgesvd)(jobz,jobz,m,n,A,m,s,u,m,vt,&l,work.data(),&lwork, info);
+//#endif
     }
 
 //
@@ -504,7 +504,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     std::vector<LAPACK_REAL> work;
     LAPACK_INT lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2); 
-    F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
+//    F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
     }
 
 //
@@ -526,7 +526,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
     std::vector<LAPACK_REAL> work;
     auto lwork = std::max(one,4*std::max(*n,*m));
     work.resize(lwork+2); 
-    F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
+//    F77NAME(dorgqr)(m,n,k,A,lda,tau,work.data(),&lwork,info);
     }
 
 
@@ -551,7 +551,7 @@ zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     work.resize(lwork+2);
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
-    F77NAME(zgeqrf)(m,n,pA,lda,tau,work.data(),&lwork,info);
+//    F77NAME(zgeqrf)(m,n,pA,lda,tau,work.data(),&lwork,info);
     }
 
 //
@@ -575,11 +575,11 @@ zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
     work.resize(lwork+2);
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
-    #ifdef PLATFORM_lapacke
-    LAPACKE_zungqr(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
-    #else
-    F77NAME(zungqr)(m,n,k,pA,lda,tau,work.data(),&lwork,info);
-    #endif
+//    #ifdef PLATFORM_lapacke
+//    LAPACKE_zungqr(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+//    #else
+//    F77NAME(zungqr)(m,n,k,pA,lda,tau,work.data(),&lwork,info);
+//    #endif
     }
 
 //
@@ -595,7 +595,7 @@ dgesv_wrapper(LAPACK_INT n,
 	std::vector<LAPACK_INT> ipiv(n);
 	LAPACK_INT ldb = n;
 	LAPACK_INT info = 0;
-	F77NAME(dgesv)(&n,&nrhs,a,&lda,ipiv.data(),b,&ldb,&info);
+//	F77NAME(dgesv)(&n,&nrhs,a,&lda,ipiv.data(),b,&ldb,&info);
 	return info;
 	}
 
@@ -614,7 +614,7 @@ zgesv_wrapper(LAPACK_INT n,
 	std::vector<LAPACK_INT> ipiv(n);
 	LAPACK_INT ldb = n;
 	LAPACK_INT info = 0;
-	F77NAME(zgesv)(&n,&nrhs,pa,&lda,ipiv.data(),pb,&ldb,&info);
+//	F77NAME(zgesv)(&n,&nrhs,pa,&lda,ipiv.data(),pb,&ldb,&info);
 	return info;
 	}
 
@@ -628,18 +628,18 @@ dlange_wrapper(char norm,
                double* a)
 	{
 	double norma;
-#ifdef PLATFORM_lapacke
-	norma = LAPACKE_dlange(LAPACK_COL_MAJOR,norm,m,n,a,m);
-#else
-	std::vector<double> work;
-	if(norm == 'I' || norm == 'i') work.resize(m);
-#ifdef PLATFORM_acml
-	LAPACK_INT norm_len = 1;
-	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data(),norm_len);
-#else
-	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data());
-#endif
-#endif
+//#ifdef PLATFORM_lapacke
+//	norma = LAPACKE_dlange(LAPACK_COL_MAJOR,norm,m,n,a,m);
+//#else
+//	std::vector<double> work;
+//	if(norm == 'I' || norm == 'i') work.resize(m);
+//#ifdef PLATFORM_acml
+//	LAPACK_INT norm_len = 1;
+//	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data(),norm_len);
+//#else
+//	norma = F77NAME(dlange)(&norm,&m,&n,a,&m,work.data());
+//#endif
+//#endif
 	return norma;
 	}
 
@@ -653,20 +653,20 @@ zlange_wrapper(char norm,
                Cplx* a)
 	{
 	LAPACK_REAL norma;
-#ifdef PLATFORM_lapacke
-	auto pA = reinterpret_cast<lapack_complex_double*>(a);
-	norma = LAPACKE_zlange(LAPACK_COL_MAJOR,norm,m,n,pa,m);
-#else
-	std::vector<double> work;
-	if(norm == 'I' || norm == 'i') work.resize(m);
-	auto pA = reinterpret_cast<LAPACK_COMPLEX*>(a);
-#ifdef PLATFORM_acml
-	LAPACK_INT norm_len = 1;
-	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data(),norm_len);
-#else
-	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data());
-#endif
-#endif
+//#ifdef PLATFORM_lapacke
+//	auto pA = reinterpret_cast<lapack_complex_double*>(a);
+//	norma = LAPACKE_zlange(LAPACK_COL_MAJOR,norm,m,n,pa,m);
+//#else
+//	std::vector<double> work;
+//	if(norm == 'I' || norm == 'i') work.resize(m);
+//	auto pA = reinterpret_cast<LAPACK_COMPLEX*>(a);
+//#ifdef PLATFORM_acml
+//	LAPACK_INT norm_len = 1;
+//	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data(),norm_len);
+//#else
+//	norma = F77NAME(zlange)(&norm,&m,&n,pA,&m,work.data());
+//#endif
+//#endif
 	return norma;
 	}
 
@@ -683,25 +683,26 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
     static const LAPACK_INT one = 1;
     char jobz = 'V';
     char uplo = 'U';
-#ifdef PLATFORM_lapacke
-    std::vector<LAPACK_REAL> work(N);
-    LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
-#else
-    LAPACK_INT lwork = std::max(one,3*N-1);//max(1, 1+6*N+2*N*N);
-    std::vector<LAPACK_COMPLEX> work(lwork);
-    std::vector<LAPACK_REAL> rwork(lwork);
-    LAPACK_INT info = 0;
-    static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
-    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    LAPACK_INT uplo_len = 1;
-    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
-#else
-    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info);
-#endif
-
-#endif //PLATFORM_lapacke
+    lapack_int info = 0;
+//#ifdef PLATFORM_lapacke
+//    std::vector<LAPACK_REAL> work(N);
+//    LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo,N,A,N,w.data());
+//#else
+//    LAPACK_INT lwork = std::max(one,3*N-1);//max(1, 1+6*N+2*N*N);
+//    std::vector<LAPACK_COMPLEX> work(lwork);
+//    std::vector<LAPACK_REAL> rwork(lwork);
+//    LAPACK_INT info = 0;
+//    static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
+//    auto pA = reinterpret_cast<LAPACK_COMPLEX*>(A);
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    LAPACK_INT uplo_len = 1;
+//    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info,jobz_len,uplo_len);
+//#else
+//    F77NAME(zheev)(&jobz,&uplo,&N,pA,&N,d,work.data(),&lwork,rwork.data(),&info);
+//#endif
+//
+//#endif //PLATFORM_lapacke
     return info;
     }
 
@@ -728,13 +729,13 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
     LAPACK_INT itype = 1;
     LAPACK_INT lwork = std::max(one,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
     work.resize(lwork);
-#ifdef PLATFORM_acml
-    LAPACK_INT jobz_len = 1;
-    LAPACK_INT uplo_len = 1;
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info,jobz_len,uplo_len);
-#else
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT jobz_len = 1;
+//    LAPACK_INT uplo_len = 1;
+//    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info,jobz_len,uplo_len);
+//#else
+//    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work.data(),&lwork,info);
+//#endif
     }
 
 //
@@ -762,23 +763,23 @@ dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
     LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
     LAPACK_INT info = 0;
-#ifdef PLATFORM_acml
-    LAPACK_INT lwork = -1;
-    LAPACK_REAL wquery = 0;
-    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info,1,1);
-
-    lwork = static_cast<LAPACK_INT>(wquery);
-    work.resize(lwork);
-    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info,1,1);
-#else
-    LAPACK_INT lwork = -1;
-    LAPACK_REAL wquery = 0;
-    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info);
-
-    lwork = static_cast<LAPACK_INT>(wquery);
-    work.resize(lwork);
-    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info);
-#endif
+//#ifdef PLATFORM_acml
+//    LAPACK_INT lwork = -1;
+//    LAPACK_REAL wquery = 0;
+//    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info,1,1);
+//
+//    lwork = static_cast<LAPACK_INT>(wquery);
+//    work.resize(lwork);
+//    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info,1,1);
+//#else
+//    LAPACK_INT lwork = -1;
+//    LAPACK_REAL wquery = 0;
+//    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,&wquery,&lwork,&info);
+//
+//    lwork = static_cast<LAPACK_INT>(wquery);
+//    work.resize(lwork);
+//    F77NAME(dgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,dr,di,vl,&nevecl,vr,&nevecr,work.data(),&lwork,&info);
+//#endif
     //println("jobvl = ",jobvl);
     //println("nevecl = ",nevecl);
     //println("vl data = ");
@@ -832,11 +833,11 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     auto pvr = reinterpret_cast<LAPACK_COMPLEX*>(vr);
 
     LAPACK_INT info = 0;
-#ifdef PLATFORM_acml
-    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info,1,1);
-#else
-    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info);
-#endif
+//#ifdef PLATFORM_acml
+//    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info,1,1);
+//#else
+//    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info);
+//#endif
     return info;
     }
 

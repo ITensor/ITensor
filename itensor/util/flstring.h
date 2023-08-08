@@ -164,7 +164,7 @@ char FLString<Maxlen>::
 operator[](size_t n) const
     {
 #ifdef DEBUG
-    if(n >= Maxlen) Error("FLString index out of range");
+    if(n >= Maxlen) error("FLString index out of range");
 #endif
     return data_[n];
     }

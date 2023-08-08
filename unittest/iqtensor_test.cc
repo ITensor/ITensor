@@ -65,7 +65,7 @@ operator<<(std::ostream& s, QType t)
     else if(t == QType::QCombiner) s << "QCombiner";
     else if(t == QType::DiagReal) s << "DiagReal";
     else if(t == QType::DiagCplx) s << "DiagCplx";
-    else Error("Unrecognized QType value");
+    else error("Unrecognized QType value");
     return s;
     }
 

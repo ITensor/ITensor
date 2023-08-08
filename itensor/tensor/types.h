@@ -99,7 +99,7 @@ class DataRange
             std::cout << "offset = " << n << std::endl;
             if(size_ == 0) std::cout << "size_ = " << size_ << std::endl;
             else std::cout << "max offset (size-1) = " << (size_-1ul) << std::endl;
-            Error("tensor (or vector/matrix) out of bounds access");
+            error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
         return pdata_[n];
@@ -114,7 +114,7 @@ class DataRange
             std::cout << "offset = " << n << std::endl;
             if(size_ == 0) std::cout << "size_ = " << size_ << std::endl;
             else std::cout << "max offset (size-1) = " << (size_-1ul) << std::endl;
-            Error("tensor (or vector/matrix) out of bounds access");
+            error("tensor (or vector/matrix) out of bounds access");
             }
 #endif
         return pdata_[n];
@@ -135,7 +135,7 @@ class DataRange
 #ifdef DEBUG
         if(off > size_)
             {
-            Error("attempt to add offset to data greater than size");
+            error("attempt to add offset to data greater than size");
             }
 #endif
         res.size_ = size_-off;
@@ -202,13 +202,13 @@ sliceData(DataRange<T> d, size_t begin, size_t end)
     {
     auto size = end-begin;
 #ifdef DEBUG
-    if(begin > end) Error("begin > end in sliceData");
+    if(begin > end) error("begin > end in sliceData");
     if(begin+size > d.size()) 
         {
         println("d.size() = ",d.size());
         println("begin = ",begin);
         println("end = ",end);
-        Error("sliceData invalid begin or end");
+        error("sliceData invalid begin or end");
         }
 #endif
     auto pb = d.data()+begin;

@@ -729,15 +729,15 @@ arnoldi(const BigMatrixT& A,
     const int Npass = args.getInt("Npass",2); // number of Gram-Schmidt passes
 
     const size_t nget = phi.size();
-    if(nget == 0) Error("No initial vectors passed to arnoldi.");
+    if(nget == 0) error("No initial vectors passed to arnoldi.");
 
-    //if(nget > 1) Error("arnoldi currently only supports nget == 1");
+    //if(nget > 1) error("arnoldi currently only supports nget == 1");
 
     for(size_t j = 0; j < nget; ++j)
         {
         const Real nrm = norm(phi[j]);
         if(nrm == 0.0)
-            Error("norm of 0 in arnoldi");
+            error("norm of 0 in arnoldi");
         phi[j] *= 1.0/nrm;
         }
 
@@ -746,7 +746,7 @@ arnoldi(const BigMatrixT& A,
     const int maxsize = A.size();
 
     if(phi.size() > size_t(maxsize))
-        Error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
+        error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
 
     if(maxsize == 1)
         {
@@ -768,7 +768,7 @@ arnoldi(const BigMatrixT& A,
 
     if(dim(phi.front().inds()) != size_t(maxsize))
         {
-        Error("arnoldi: size of initial vector should match linear matrix size");
+        error("arnoldi: size of initial vector should match linear matrix size");
         }
 
     //Storage for Matrix that gets diagonalized 

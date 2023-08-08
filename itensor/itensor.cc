@@ -856,7 +856,7 @@ namespace detail {
 void
 allocReal(ITensor& T)
     {
-    if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
+    if(hasQNs(T)) error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseReal>(dim(inds(T)),0);
     }
 
@@ -882,7 +882,7 @@ allocReal(ITensor& T, IntArray const& ints)
 void
 allocCplx(ITensor& T)
     {
-    if(hasQNs(T)) Error("Can't allocate quantum ITensor with undefined divergence");
+    if(hasQNs(T)) error("Can't allocate quantum ITensor with undefined divergence");
     T.store() = newITData<DenseCplx>(dim(inds(T)),0);
     }
 
@@ -909,7 +909,7 @@ checkArrows(IndexSet const& is1,
                     println("----------------------------------------");
                     printfln("Mismatched QN Index from set 1 %s",I1);
                     printfln("Mismatched QN Index from set 2 %s",I2);
-                    Error("Mismatched QN Index arrows");
+                    error("Mismatched QN Index arrows");
                     }
                 }
             }
@@ -924,7 +924,7 @@ checkSameDiv(ITensor const& T1,
         {
         if(div(T1) != div(T2)) 
             {
-            Error(tinyformat::format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+            error(tinyformat::format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
             }
         }
     }
@@ -937,7 +937,7 @@ operator*=(ITensor const& R)
     {
     auto& L = *this;
 
-    if(!L || !R) Error("Default constructed ITensor in product");
+    if(!L || !R) error("Default constructed ITensor in product");
 
     if(L.order() == 0)
         {
@@ -1042,7 +1042,7 @@ operator/=(ITensor const& R)
     {
     auto& L = *this;
 
-    if(!L || !R) Error("Default constructed ITensor in product");
+    if(!L || !R) error("Default constructed ITensor in product");
 
     if(Global::checkArrows()) detail::checkArrows(L.inds(),R.inds(),true);
 
@@ -1172,7 +1172,7 @@ directSum(ITensor const& A, ITensor const& B,
           IndexSet const& I, IndexSet const& J,
           Args const& args)
   {
-  if( order(I) != order(J) ) Error("In directSum(ITensor, ITensor, ...), must sum equal number of indices");
+  if( order(I) != order(J) ) error("In directSum(ITensor, ITensor, ...), must sum equal number of indices");
   auto AD = A;
   auto BD = B;
   auto newinds = IndexSetBuilder(I.size());
@@ -1209,7 +1209,7 @@ daxpy(ITensor & L,
       ITensor const& R,
       Real alpha)
     {
-    if(L.order() != R.order()) Error("::operator+=: different number of indices");
+    if(L.order() != R.order()) error("::operator+=: different number of indices");
     if(nnzblocks(R) == 0) return;
     detail::checkSameDiv(L,R);
 
@@ -1224,7 +1224,7 @@ daxpy(ITensor & L,
         {
         println("L = ",L);
         println("R = ",R);
-        Error("ITensoITensor::operator+=: different index structure");
+        error("ITensoITensor::operator+=: different index structure");
         }
 
     if(Global::checkArrows()) 
@@ -1233,7 +1233,7 @@ daxpy(ITensor & L,
         detail::checkArrows(inds(L),inds(R),shouldMatch);
         }
 
-    if(!L.store()) Error("L not initialized in daxpy");
+    if(!L.store()) error("L not initialized in daxpy");
 
 #ifdef USESCALE
     if(L.scale().magnitudeLessThan(R.scale())) 
@@ -1255,7 +1255,7 @@ operator+=(ITensor const& R)
     {
     auto& L = *this;
     if(!L || !L.store()) { return (L=R); } //special case when this (L) is not initialized
-    if(!R) Error("Right-hand-side of ITensor += is default constructed");
+    if(!R) error("Right-hand-side of ITensor += is default constructed");
     if(&L == &R) return operator*=(2.);
 
     daxpy(L,R,1.);
@@ -1268,7 +1268,7 @@ operator-=(ITensor const& R)
     {
     auto& L = *this;
     if(!L || !L.store()) { return (L = -R); } //special case when this (L) is not initialized
-    if(!R) Error("Right-hand-side of ITensor -= is default constructed");
+    if(!R) error("Right-hand-side of ITensor -= is default constructed");
     if(&L == &R) 
         { 
         L *= 0.;
@@ -1338,7 +1338,7 @@ Real
 sumels(ITensor const& t)
     {
     auto z = sumelsC(t);
-    if(z.imag() != 0) Error(" has non-zero imaginary part, use sumelsC");
+    if(z.imag() != 0) error(" has non-zero imaginary part, use sumelsC");
     return z.real();
     }
 
@@ -1389,7 +1389,7 @@ matrixITensor(Matrix&& M,
     {
 #ifdef DEBUG
     if( order(is) != 2 )
-        Error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
+        error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
 #endif
     auto res = ITensor(is,DenseReal{std::move(M.storage())});
     M.clear();
@@ -1409,7 +1409,7 @@ matrixITensor(CMatrix&& M,
     {
 #ifdef DEBUG
     if( order(is) != 2 )
-        Error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
+        error("matrixITensor(Matrix,...) constructor only accepts 2 indices");
 #endif
     bool isReal = true;
     for(auto& el : M)
@@ -1472,7 +1472,7 @@ combiner(IndexSet const& inds, Args const& args)
 
     if(not hasQNs(inds))
         {
-        if(inds.empty()) Error("No indices passed to combiner");
+        if(inds.empty()) error("No indices passed to combiner");
         long rm = 1;
         for(const auto& i : inds) rm *= dim(i);
         //create combined index
@@ -1486,7 +1486,7 @@ combiner(IndexSet const& inds, Args const& args)
         }
     else if(hasQNs(inds))
         {
-        if(inds.empty()) Error("No indices passed to combiner");
+        if(inds.empty()) error("No indices passed to combiner");
 
         auto cdir = Out;
         if(args.defined("IndexDir"))
@@ -1617,12 +1617,12 @@ randomITensor(QN q, IndexSet const& is)
     {
 #ifdef DEBUG
     if(not hasQNs(is)) 
-        Error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
+        error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
 #endif
     ITensor T;
     auto dat = QDenseReal{is,q};
     T = ITensor(std::move(is),std::move(dat));
-    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
+    if(nnz(T) == 0) error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickran);
     return T;
     }
@@ -1632,12 +1632,12 @@ randomITensorC(QN q, IndexSet const& is)
     {
 #ifdef DEBUG
     if(not hasQNs(is)) 
-        Error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
+        error("Cannot use randomITensor(QN,...) to create non-QN-conserving ITensor");
 #endif
     ITensor T;
     auto dat = QDenseCplx{is,q};
     T = ITensor(std::move(is),std::move(dat));
-    if(nnz(T) == 0) Error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
+    if(nnz(T) == 0) error("Requested QN for random ITensor resulted in zero allowed blocks (QN not satisfiable by any settings of the indices)");
     T.generate(detail::quickranCplx);
     return T;
     }
@@ -1645,8 +1645,8 @@ randomITensorC(QN q, IndexSet const& is)
 QN
 div(ITensor const& T) 
     { 
-    if(not hasQNs(T)) Error("div(ITensor) not defined for non QN conserving ITensor");
-    if(!T) Error("div(ITensor) not defined for unallocated IQTensor");
+    if(not hasQNs(T)) error("div(ITensor) not defined for non QN conserving ITensor");
+    if(!T) error("div(ITensor) not defined for unallocated IQTensor");
     return doTask(CalcDiv{inds(T)},T.store());
     }
 
@@ -1670,7 +1670,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n",isf," '...'\n");
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
+        error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
         }
 
     auto iso = IndexSet(r);
@@ -1685,7 +1685,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n",isf," '...'\n");
             println("---------------------------------------------");
-            Error(tinyformat::format("Bad index passed to permute"));
+            error(tinyformat::format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1717,7 +1717,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n'...' ",isb,"\n");
         println("---------------------------------------------");
-        Error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
+        error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
         }
 
     auto iso = IndexSet(r);
@@ -1732,7 +1732,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n'...' ",isb,"\n");
             println("---------------------------------------------");
-            Error(tinyformat::format("Bad index passed to permute"));
+            error(tinyformat::format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1760,7 +1760,7 @@ void ITensor::
 scaleTo(scale_type const& newscale)
     {
     if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    if(newscale.sign() == 0) error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
     doTask(Mult<Real>{scale_.real0()},store_);
     scale_ = newscale;

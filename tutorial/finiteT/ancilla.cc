@@ -76,7 +76,7 @@ main(int argc, char* argv[])
     const int nt = int(ttotal/tau+(1e-9*(ttotal/tau)));
     if(fabs(nt*tau-ttotal) > 1E-9)
         {
-        Error("Timestep not commensurate with total time");
+        error("Timestep not commensurate with total time");
         }
     printfln("Doing %d steps of tau=%f",nt,tau);
 

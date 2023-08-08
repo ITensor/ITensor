@@ -70,7 +70,7 @@ permuteIQ(Permutation const& P,
           QDenseReal & dB)
     {
 #ifdef DEBUG
-    if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
+    if(isTrivial(P)) error("Calling permuteIQ for trivial Permutation");
 #endif
     auto r = Ais.order();
     auto bind = IndexSetBuilder(r);
@@ -139,7 +139,7 @@ combine(QDense<T> const& d,
             {
             printfln("Indices of tensor = \n%s\n------",dis);
             printfln("Extra index = \n%s",Cis[i]);
-            Error("Combiner has extra index not found on other tensor");
+            error("Combiner has extra index not found on other tensor");
             }
         }
 #endif

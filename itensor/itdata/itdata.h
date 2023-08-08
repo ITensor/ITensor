@@ -194,7 +194,7 @@ class ManageStore
     parg1() 
         { 
 #ifdef DEBUG
-        if(!pparg1_) Error("Attempt to dereference nullptr");
+        if(!pparg1_) error("Attempt to dereference nullptr");
 #endif
         return *pparg1_; 
         }
@@ -203,7 +203,7 @@ class ManageStore
     parg2() 
         { 
 #ifdef DEBUG
-        if(!pparg2_) Error("Attempt to dereference nullptr");
+        if(!pparg2_) error("Attempt to dereference nullptr");
 #endif
         return *pparg2_; 
         }
@@ -266,7 +266,7 @@ template <typename StorageT, typename... VArgs>
 StorageT* ManageStore::
 makeNewData(VArgs&&... vargs)
     {
-    //if(!pparg1_) Error("Can't call makeNewData with const-only access to first arg");
+    //if(!pparg1_) error("Can't call makeNewData with const-only access to first arg");
     action_ = AssignNewData;
     auto newdat = std::make_shared<ITWrap<StorageT>>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
@@ -277,7 +277,7 @@ makeNewData(VArgs&&... vargs)
 void inline ManageStore::
 assignPointerRtoL() 
     { 
-    //if(!pparg2_) Error("No second pointer provided for action AssignPointerRtoL");
+    //if(!pparg2_) error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
@@ -309,7 +309,7 @@ updateArg1()
 ManageStore::UniqueRef inline ManageStore::
 modifyData()
     {
-    //if(!pparg1_) Error("Can't modify const data");
+    //if(!pparg1_) error("Can't modify const data");
     return UniqueRef(pparg1_);
     }
 
@@ -317,7 +317,7 @@ template<typename T>
 T* ManageStore::
 modifyData(const T& d)
     {
-    //if(!pparg1_) Error("Can't modify const data");
+    //if(!pparg1_) error("Can't modify const data");
     if(!(pparg1_->unique())) 
         {
         auto* olda1 = static_cast<ITWrap<T>*>(pparg1_->get());

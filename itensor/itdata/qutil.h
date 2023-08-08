@@ -77,7 +77,7 @@ getBlock(BlockSparse & d,
     auto r = long(block_ind.size());
     if(r == 0) return makeDataRange(d.data(),d.size());
 #ifdef DEBUG
-    if(is.order() != r) Error("Mismatched size of IndexSet and block_ind in getBlock");
+    if(is.order() != r) error("Mismatched size of IndexSet and block_ind in getBlock");
 #endif
     //Do binary search to see if there
     //is a block with block index ii
@@ -320,11 +320,11 @@ _loopContractedBlocksOMP(QDense<TA> const& A,
       decltype(ncontractions) last_offset_i = offset[i]+nrepeat[i];
       for(decltype(ncontractions) j = offset[i]; j < last_offset_i; j++)
         {
-        if(j != n) Error("Wrong contraction plan in QDense contraction");
+        if(j != n) error("Wrong contraction plan in QDense contraction");
         n++;
         }
       }
-    if(ncontractions != n) Error("Wrong number of contractions in QDense contraction");
+    if(ncontractions != n) error("Wrong number of contractions in QDense contraction");
 #endif
 
     #pragma omp parallel for schedule(dynamic)

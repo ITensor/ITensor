@@ -266,6 +266,9 @@ endif(ENABLE_HDF5)
 
 add_subdirectory(itensor)
 
+if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+  target_compile_definitions(itensor PRIVATE DEBUG=1)
+endif(${CMAKE_BUILD_TYPE} MATCHES Debug)
 ##########################
 # pkg-config variables
 ##########################

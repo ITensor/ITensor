@@ -163,7 +163,7 @@
 //#endif
 //#endif
 
-/*
+
 namespace itensor {
 
 //
@@ -791,6 +791,5 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
               Cplx * vr);  //right eigenvectors on return
 
 } //namespace itensor
-*/
 
 #endif

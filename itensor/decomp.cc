@@ -933,7 +933,7 @@ qr(ITensor const& AA,
 
 #ifdef DEBUG
     if(!Q && !R)
-        Error("Q and R default-initialized in qr, must indicate at least one index on Q or R");
+        error("Q and R default-initialized in qr, must indicate at least one index on Q or R");
 #endif
     
     //Combiners which transform AA

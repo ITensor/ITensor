@@ -605,7 +605,7 @@ qn(long i) const
         {
         Print(nblock());
         Print(i);
-        Error("IQIndex::qn arg out of range");
+        error("IQIndex::qn arg out of range");
         }
 #endif
     return pd->qn(i);
@@ -623,7 +623,7 @@ blocksize(long i) const
         {
         Print(nblock());
         Print(i);
-        Error("Index::blocksize arg out of range");
+        error("Index::blocksize arg out of range");
         }
 #endif
     return pd->blocksize(i);
@@ -641,7 +641,7 @@ blocksize0(long i) const
         {
         Print(nblock());
         Print(i);
-        Error("Index::blocksize0 arg out of range");
+        error("Index::blocksize0 arg out of range");
         }
 #endif
     return pd->blocksize0(i);
@@ -743,7 +743,7 @@ read(std::istream& s)
         pd = std::make_shared<IQIndexDat>(std::move(dat.store()));
 
 #ifdef DEBUG
-    if(tags_.primeLevel() < 0) Error("Negative primeLevel");
+    if(tags_.primeLevel() < 0) error("Negative primeLevel");
 #endif
 
     return *this;
@@ -804,7 +804,7 @@ h5_read(h5::group parent, std::string const& name, Index & I)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "Index") Error("Group does not contain Index data in HDF5 file");
+    if(type != "Index") error("Group does not contain Index data in HDF5 file");
     auto id = h5_read<unsigned long>(g,"id");
     auto dim = h5_read<long>(g,"dim");
     auto dir = h5_read<long>(g,"dir");

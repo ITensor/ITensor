@@ -66,7 +66,7 @@ ITensor(IndexSet iset,
     {
     IF_USESCALE(scale_ = scale;)
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
-                  "Error: cannot pass lvalues to ITensor(...,DataType&& dat,...) constructor");
+                  "error: cannot pass lvalues to ITensor(...,DataType&& dat,...) constructor");
     }
 
 template<typename IV, typename... IVs>

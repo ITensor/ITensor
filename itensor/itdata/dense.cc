@@ -375,7 +375,7 @@ add(PlusEQ const& P,
     Dense<T2>     const& D2)
     {
 #ifdef DEBUG
-    if(D1.size() != D2.size()) Error("Mismatched sizes in plusEq");
+    if(D1.size() != D2.size()) error("Mismatched sizes in plusEq");
 #endif
     if(isTrivial(P.perm()) && std::is_same<T1,T2>::value)
         {
@@ -464,7 +464,7 @@ h5_read(h5::group parent, std::string const& name, Dense<V> & D)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != juliaTypeNameOf(D)) Error(tinyformat::format("Group does not contain %s data in HDF5 file",typeNameOf(D)));
+    if(type != juliaTypeNameOf(D)) error(tinyformat::format("Group does not contain %s data in HDF5 file",typeNameOf(D)));
     auto data = h5_read<vector<V>>(g,"data");
     D = Dense<V>(move(data));
     }

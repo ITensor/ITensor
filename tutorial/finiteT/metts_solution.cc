@@ -32,7 +32,7 @@ collapse(MPS & psi,
             PUp.set(2,1,0.5);
             PUp.set(2,2,0.5);
             }
-        else Error("Direction '" + direction + "' not recognized");
+        else error("Direction '" + direction + "' not recognized");
 
         Real prob_up = elt(dag(prime(psi(j),"Site"))*PUp*psi(j));
 
@@ -139,7 +139,7 @@ main(int argc, char* argv[])
     const int nt = int(ttotal/tau+(1e-9*(ttotal/tau)));
     if(fabs(nt*tau-ttotal) > 1E-9)
         {
-        Error("Timestep not commensurate with total time");
+        error("Timestep not commensurate with total time");
         }
 
     for(int step = 1; step <= (nwarm+nmetts); ++step)

@@ -70,7 +70,7 @@ operator<<(std::ostream& s, Type t)
     else if(t == Type::DiagCplxAllSame) s << "DiagCplxAllSame";
     else if(t == Type::Combiner) s << "Combiner";
     else if(t == Type::QDenseReal) s << "QDenseReal";
-    else Error("Unrecognized Type value");
+    else error("Unrecognized Type value");
     return s;
     }
 
@@ -2686,7 +2686,7 @@ SECTION("ITensor toDense function")
         {
         auto ind = IntArray(length(is),n);
         auto pD = getBlock(Dstore,is,ind);
-        if( d[n].size() != pD.size() ) Error("Block size and vector size must match");
+        if( d[n].size() != pD.size() ) error("Block size and vector size must match");
         auto Dref = makeVecRef(pD.data(),pD.size());
         Dref &= d[n];
         }

@@ -536,7 +536,7 @@ class Ten : public TensorType
         data_(std::move(store))
         { 
 #ifdef DEBUG
-        if(!isContiguous(range_)) Error("Tensor required to have contiguous range");
+        if(!isContiguous(range_)) error("Tensor required to have contiguous range");
 #endif
         }
 

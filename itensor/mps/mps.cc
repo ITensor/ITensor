@@ -366,7 +366,7 @@ void MPS::
 write(std::ostream& s) const
     {
     if(do_write_)
-        Error("MPS::write not yet supported if doWrite(true)");
+        error("MPS::write not yet supported if doWrite(true)");
 
     itensor::write(s,length());
     for(auto j : range(A_.size()))
@@ -516,7 +516,7 @@ new_tensors(std::vector<ITensor>& A,
     if(hasQNs(sites))
         {
         if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,tinyformat::format("Link,l=%d",i));
-        else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from a SiteSet");
+        else error("Cannot create QN conserving MPS with bond dimension greater than 1 from a SiteSet");
         }
     else
         {
@@ -540,7 +540,7 @@ new_tensors(std::vector<ITensor>& A,
     if(hasQNs(sites))
         {
         if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,tinyformat::format("Link,l=%d",i));
-        else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from an IndexSet");
+        else error("Cannot create QN conserving MPS with bond dimension greater than 1 from an IndexSet");
         }
     else
         {
@@ -668,7 +668,7 @@ orthMPS(ITensor& A1, ITensor& A2, Direction dir, Args const& args)
 MPS& MPS::
 position(int i, Args args)
     {
-    if(not *this) Error("position: MPS is default constructed");
+    if(not *this) error("position: MPS is default constructed");
 
     if(args.getBool("DoSVDBond",false))
         {
@@ -751,7 +751,7 @@ orthogonalize(Args args)
         }
       }
 
-    if(doWrite()) Error("Cannot call orthogonalize when doWrite()==true");
+    if(doWrite()) error("Cannot call orthogonalize when doWrite()==true");
 
     auto& psi = *this;
     auto N = N_;
@@ -962,7 +962,7 @@ void MPS::
 swap(MPS& other)
     {
     if(N_ != other.N_)
-        Error("Require same system size to swap MPS");
+        error("Require same system size to swap MPS");
     A_.swap(other.A_);
     std::swap(l_orth_lim_,other.l_orth_lim_);
     std::swap(r_orth_lim_,other.r_orth_lim_);
@@ -1029,7 +1029,7 @@ isOrtho(MPS const& psi)
 int
 orthoCenter(MPS const& psi)
     {
-    if(!isOrtho(psi)) Error("orthogonality center not well defined.");
+    if(!isOrtho(psi)) error("orthogonality center not well defined.");
     return (psi.leftLim() + 1);
     }
 
@@ -1048,7 +1048,7 @@ leftLim(MPS const& x)
 Real
 norm(MPS const& psi)
     {
-    if(not isOrtho(psi)) Error("\
+    if(not isOrtho(psi)) error("\
 MPS must have well-defined ortho center to compute norm; \
 call .position(j) or .orthogonalize() to set ortho center");
     return itensor::norm(psi(orthoCenter(psi)));
@@ -1202,7 +1202,7 @@ bool
 hasSiteInds(MPS const& x, IndexSet const& sites)
     {
     auto N = length(x);
-    if( N!=length(sites) ) Error("In hasSiteInds(MPS,IndexSet), lengths of MPS and IndexSet of site indices don't match");
+    if( N!=length(sites) ) error("In hasSiteInds(MPS,IndexSet), lengths of MPS and IndexSet of site indices don't match");
     for( auto n : range1(N) )
       {
       if( !hasIndex(x(n),sites(n)) ) return false;
@@ -1278,7 +1278,7 @@ linkInds(MPSType const& x)
     for( auto n : range1(N-1) )
       {
       auto s = linkIndex(x,n);
-      if(!s) Error("MPS or MPO has missing/null link index");
+      if(!s) error("MPS or MPO has missing/null link index");
       inds.nextIndex(std::move(s));
       }
     return inds.build();
@@ -1315,7 +1315,7 @@ replaceSiteInds(IndexSet const& sites)
     {
     auto& x = *this;
     auto N = itensor::length(x);
-    if( itensor::length(sites)!=N ) Error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
+    if( itensor::length(sites)!=N ) error("In replaceSiteInds(MPS,IndexSet), number of site indices not equal to number of MPS tensors");
     auto sx = itensor::siteInds(x);
     if( equals(sx,sites) ) return x;
     for( auto n : range1(N) )
@@ -1339,7 +1339,7 @@ replaceLinkInds(IndexSet const& links)
     auto& x = *this;
     auto N = itensor::length(x);
     if( N==1 ) return x;
-    if( itensor::length(links)!=(N-1) ) Error("In replaceLinkInds(MPS,IndexSet), number of link indices input is not equal to the number of links of the MPS");
+    if( itensor::length(links)!=(N-1) ) error("In replaceLinkInds(MPS,IndexSet), number of link indices input is not equal to the number of links of the MPS");
     auto lx = itensor::linkInds(x);
     if( equals(lx,links) ) return x;
     for( auto n : range1(N-1) )
@@ -1365,7 +1365,7 @@ checkRange(int i) const
         {
         println("i = ",i);
         println("Valid range is 1 to ",length(sites_));
-        Error("i out of range");
+        error("i out of range");
         }
     }
 
@@ -1395,7 +1395,7 @@ findCenter(MPS const& psi)
     for(int j = 1; j <= length(psi); ++j) 
         {
         auto& A = psi(j);
-        if(A.order() == 0) Error("Zero order tensor in MPS");
+        if(A.order() == 0) error("Zero order tensor in MPS");
         bool allSameDir = true;
         auto it = A.inds().begin();
         Arrow dir = (*it).dir();
@@ -1508,7 +1508,7 @@ innerC(MPS const& psi,
        MPS const& phi)
     {
     auto N = length(psi);
-    if(N != length(phi)) Error("inner: mismatched N");
+    if(N != length(phi)) error("inner: mismatched N");
 
     auto psidag = dag(psi);
     psidag.replaceSiteInds(siteInds(phi));
@@ -1532,7 +1532,7 @@ inner(MPS const& psi, MPS const& phi, Real& re, Real& im)
 Real
 inner(MPS const& psi, MPS const& phi) //Re[<psi|phi>]
     {
-    if(isComplex(psi) || isComplex(phi)) Error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
+    if(isComplex(psi) || isComplex(phi)) error("Cannot use inner(...) with complex MPS/MPO, use innerC(...) instead");
     Real re, im;
     inner(psi,phi,re,im);
     return re;
@@ -1729,7 +1729,7 @@ overlapC(MPSType const& psi,
     {
     Global::warnDeprecated("overlap is deprecated in favor of inner/trace");
     auto N = length(psi);
-    if(N != length(phi)) Error("overlap: mismatched N");
+    if(N != length(phi)) error("overlap: mismatched N");
 
     auto rand_plev = 4351345;
 
@@ -1796,7 +1796,7 @@ h5_read(h5::group parent, string const& name, MPS & M)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != "MPS") Error("Group does not contain MPS data in HDF5 file");
+    if(type != "MPS") error("Group does not contain MPS data in HDF5 file");
     auto N = h5_read<long>(g,"length");
     auto rlim = h5_read<long>(g,"rlim");
     auto llim = h5_read<long>(g,"llim");

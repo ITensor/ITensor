@@ -54,38 +54,51 @@ set(ITENSOR_HEADER_FILES
     )
 
 set(ITENSOR_SOURCE_FILES
-    decomp.cc
-    global.cc
-    hermitian.cc
-    index.cc
-    indexset.cc
-    itdata/combiner.cc
-    itdata/dense.cc
-    itdata/diag.cc
-    itdata/itlazy.cc
-    itdata/qcombiner.cc
-    itdata/qdense.cc
-    itdata/qdiag.cc
-    itdata/scalar.cc
-    itensor.cc
-    qn.cc
-    spectrum.cc
-    svd.cc
-    tagset.cc)
-
-# Create the ITensor library
-add_library(itensor ${ITENSOR_SOURCE_FILES} ${ITENSOR_HEADER_FILES})
+        util/args.cc
+        util/input.cc
+        util/cputime.cc
+        tensor/lapack_wrap.cc
+        tensor/vec.cc
+        tensor/mat.cc
+        tensor/gemm.cc
+        tensor/algs.cc
+        tensor/contract.cc
+        itdata/dense.cc
+        itdata/combiner.cc
+        itdata/diag.cc
+        itdata/qdense.cc
+        itdata/qcombiner.cc
+        itdata/qdiag.cc
+        itdata/scalar.cc
+        qn.cc
+        tagset.cc
+        index.cc
+        indexset.cc
+        itensor.cc
+        spectrum.cc
+        decomp.cc
+        hermitian.cc
+        svd.cc
+        global.cc
+        mps/mps.cc
+        mps/mpsalgs.cc
+        mps/mpo.cc
+        mps/mpoalgs.cc
+        mps/autompo.cc)
 
 if(ENABLE_HDF5)
   set(H5_SOURCE_FILES
-      util/h5/array_interface.cc
-      util/h5/file.cc
-      util/h5/group.cc
-      util/h5/h5object.cc
-      util/h5/stl/string.cc
-      util/h5/stl/vector.cc)
-  add_library(itensor ${H5_SOURCE_FILES})
+          util/h5/array_interface.cc
+          util/h5/file.cc
+          util/h5/group.cc
+          util/h5/h5object.cc
+          util/h5/stl/string.cc
+          util/h5/stl/vector.cc)
+  list(APPEND ${ITENSOR_SOURCE_FILES} ${H5_SOURCE_FILES})
 endif(ENABLE_HDF5)
+
+# Create the ITensor library
+add_library(itensor ${ITENSOR_SOURCE_FILES} ${ITENSOR_HEADER_FILES})
 
 set(targetname itensor)
 

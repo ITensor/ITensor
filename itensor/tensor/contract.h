@@ -272,13 +272,13 @@ contractDiagPartial(DiagElsA           const& A, Labels const& al,
         if(bl[ib] > 0) //uncontracted
             {
 #ifdef DEBUG
-            if(n >= nbu) Error("n out of range");
+            if(n >= nbu) error("n out of range");
 #endif
             GC.setRange(n,0,B.extent(ib)-1);
             bustride[n] = B.stride(ib);
             auto ic = find_index(cl,bl[ib]);
 #ifdef DEBUG
-            if(ic < 0) Error("Index not found");
+            if(ic < 0) error("Index not found");
 #endif
             custride[n] = C.stride(ic);
             ++n;

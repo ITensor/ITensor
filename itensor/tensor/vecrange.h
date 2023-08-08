@@ -73,7 +73,7 @@ class VecRangeT : public VecRangeType
     extent(size_type i) const 
         { 
 #ifdef DEBUG
-        if(i != 0) Error("i out of range in VecRangeT::extent(i)");
+        if(i != 0) error("i out of range in VecRangeT::extent(i)");
 #endif
         return ext_; 
         }
@@ -82,7 +82,7 @@ class VecRangeT : public VecRangeType
     stride(size_type i) const 
         {
 #ifdef DEBUG
-        if(i != 0) Error("i out of range in VecRangeT::stride(i)");
+        if(i != 0) error("i out of range in VecRangeT::stride(i)");
 #endif
         return stride_; 
         }

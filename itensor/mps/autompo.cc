@@ -142,7 +142,7 @@ void
 rewriteFermionic(SiteTermProd & prod, 
                  bool isleftFermionic)
     {
-    if(prod.empty()) Error("Empty product in rewriteFermionic is not expected.");    
+    if(prod.empty()) error("Empty product in rewriteFermionic is not expected.");
     
     int i = prod.front().i;
     for(auto& st : prod)
@@ -365,7 +365,7 @@ operator,(const string& op_)
         }
     else
         {
-        Error("Invalid input to AutoMPO (two strings in a row?)");
+        error("Invalid input to AutoMPO (two strings in a row?)");
         }
     return *this;
     }
@@ -559,7 +559,7 @@ toMPOImpl(AutoMPO const& am,
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
         {
-        Error("Only at most 2-operator terms allowed for exact AutoMPO conversion to MPO");
+        error("Only at most 2-operator terms allowed for exact AutoMPO conversion to MPO");
         }
 
     //Special SiteTerm objects indicating either
@@ -1198,7 +1198,7 @@ compressMPO(SiteSet const& sites,
         {
         //printfln("=== Making compressed MPO at site %d ===",n);
         //Put in factor of (-tau) if isExpH==true
-        if(isExpH) Error("Need to put in factor of (-tau)");
+        if(isExpH) error("Need to put in factor of (-tau)");
 
         auto V_npp = map<QN, Mat<T>>();
 
@@ -1473,7 +1473,7 @@ svdMPO(AutoMPO const& am,
 //            {
 //            if(isComplex(H(n)))
 //                {
-//                Error("Complex tensor produced from real AutoMPO terms");
+//                error("Complex tensor produced from real AutoMPO terms");
 //                }
 //            }
 //        }
@@ -1513,7 +1513,7 @@ toExpH_ZW1(AutoMPO const& am,
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
         {
-        Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
+        error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
         }
 
     //Special SiteTerm objects indicating either
@@ -1696,7 +1696,7 @@ toExpH(AutoMPO const& a,
         }
     else
         {
-        Error(tinyformat::format("Unknown approximation Approx=\"%s\"",approx));
+        error(tinyformat::format("Unknown approximation Approx=\"%s\"",approx));
         }
     return res;
     }

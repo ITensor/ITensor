@@ -335,14 +335,14 @@ diagGeneralRef(MatRefc<value_type> const& M,
         {
         auto Lref = isTransposed(M) ? transpose(L) : makeRef(L);
         Unpack::call(makeRef(di),makeRef(Lr),makeRef(Li),Lref);
-        Error("Inverse step not fully implemented");
+        error("Inverse step not fully implemented");
         //for(auto n : range(N))
         //    {
         //    auto facr = column(Lr,n)*column(Rr,n)+column(Li,n)*column(Ri,n);
         //    auto faci = column(Lr,n)*column(Ri,n)-column(Li,n)*column(Rr,n);
         //    auto z = Cplx(facr,faci);
         //    printfln("z %d = %.4E",n,z);
-        //    if(std::abs(z) <= 1E-16) Error("Ill conditioned or non-invertible matrix");
+        //    if(std::abs(z) <= 1E-16) error("Ill conditioned or non-invertible matrix");
         //    z = 1./z;
         //    column(Lr,n) &= column(Lr,n)*z.real()+column(Li,n)*z.imag();
         //    column(Li,n) &= column(Lr,n)*z.imag()-column(Li,n)*z.real();

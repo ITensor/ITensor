@@ -1057,7 +1057,7 @@ h5_read(h5::group parent, std::string const& name, QDense<V> & D)
     auto type = h5_read_attribute<string>(g,"type");
     if(type != juliaTypeNameOf(D)) 
         {
-        Error(tinyformat::format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
+        error(tinyformat::format("Group does not contain %s or %s data in HDF5 file",typeNameOf(D),juliaTypeNameOf(D)));
         }
     auto N = h5_read<long>(g,"ndims");
     auto off_array = offsets_to_array(D.offsets,N);

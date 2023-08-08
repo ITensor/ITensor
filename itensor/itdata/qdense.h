@@ -461,7 +461,7 @@ getEltBlockOffset(IndexSet const& is,
     if(is.order() != r) 
         {
         printfln("is.order() = %d, ind.size() = %d",is.order(),ind.size());
-        Error("Mismatched size of IndexSet and elt_ind in get_block");
+        error("Mismatched size of IndexSet and elt_ind in get_block");
         }
 #endif
     long eoff = 0, //element offset within block
@@ -487,7 +487,7 @@ getEltBlockOffset(IndexSet const& is,
     if(boff >= 0)
         {
 #ifdef DEBUG
-        if(size_t(boff+eoff) >= store.size()) Error("get_elt out of range");
+        if(size_t(boff+eoff) >= store.size()) error("get_elt out of range");
 #endif
         return std::make_tuple(store.data()+boff+eoff,block,eoff);
         }
