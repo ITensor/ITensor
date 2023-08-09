@@ -5,7 +5,7 @@
 #ifndef __EXP_ISING_H
 #define __EXP_ISING_H
 
-#include "itensor/mps/mpo.h"
+#include "mps/mpo.h"
 
 namespace itensor {
 

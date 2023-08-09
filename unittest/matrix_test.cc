@@ -1,10 +1,10 @@
 #include "test.h"
 
-#include "itensor/util/autovector.h"
-#include "itensor/util/iterate.h"
-#include "itensor/tensor/algs.h"
-#include "itensor/global.h"
-#include "itensor/util/print_macro.h"
+#include "util/autovector.h"
+#include "util/iterate.h"
+#include "tensor/algs.h"
+#include "global.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 using namespace std;

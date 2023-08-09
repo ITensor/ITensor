@@ -1,6 +1,6 @@
 #include "test.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/util/iterate.h"
+#include "tensor/contract.h"
+#include "util/iterate.h"
 
 using namespace itensor;
 

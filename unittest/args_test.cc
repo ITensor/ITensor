@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "itensor/global.h"
+#include "global.h"
 
 using namespace std;
 using namespace itensor;

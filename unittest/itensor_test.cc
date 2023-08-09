@@ -1,10 +1,10 @@
 #include "test.h"
-#include "itensor/itensor.h"
-#include "itensor/decomp.h"
-#include "itensor/util/cplx_literal.h"
-#include "itensor/util/iterate.h"
-#include "itensor/util/set_scoped.h"
-#include "itensor/util/print_macro.h"
+#include "itensor.h"
+#include "decomp.h"
+#include "util/cplx_literal.h"
+#include "util/iterate.h"
+#include "util/set_scoped.h"
+#include "util/print_macro.h"
 #include <cstdlib>
 
 using namespace std;

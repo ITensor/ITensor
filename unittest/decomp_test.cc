@@ -1,6 +1,6 @@
 #include "test.h"
-#include "itensor/decomp.h"
-#include "itensor/util/print_macro.h"
+#include "decomp.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 using namespace std;

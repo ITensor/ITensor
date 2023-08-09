@@ -1,6 +1,6 @@
 #include "test.h"
-#include "bondgate.h"
-#include "sites/spinhalf.h"
+#include "mps/bondgate.h"
+#include "mps/sites/spinhalf.h"
 
 using std::vector;
 using namespace itensor;

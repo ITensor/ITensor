@@ -1,5 +1,5 @@
 #include "test.h"
-#include "itensor/detail/algs.h"
+#include "detail/algs.h"
 
 using namespace itensor;
 using namespace std;

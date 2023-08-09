@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_HAMS_HEISENBERG_H
 #define __ITENSOR_HAMS_HEISENBERG_H
 
-#include "itensor/mps/mpo.h"
+#include "mps/mpo.h"
 
 namespace itensor {
 

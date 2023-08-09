@@ -1,9 +1,9 @@
 #include "test.h"
-#include "itensor/iterativesolvers.h"
-#include "sample/Heisenberg.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/localmpo.h"
-#include "itensor/mps/autompo.h"
+#include "iterativesolvers.h"
+#include "../sample/Heisenberg.h"
+#include "mps/sites/spinhalf.h"
+#include "mps/localmpo.h"
+#include "mps/autompo.h"
 
 using namespace itensor;
 using namespace std;

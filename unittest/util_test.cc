@@ -1,8 +1,8 @@
 #include "test.h"
 
-#include "itensor/global.h"
-#include "itensor/util/infarray.h"
-#include "itensor/util/stats.h"
+#include "global.h"
+#include "util/infarray.h"
+#include "util/stats.h"
 
 using namespace itensor;
 using namespace std;

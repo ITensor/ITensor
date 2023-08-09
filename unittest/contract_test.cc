@@ -1,10 +1,10 @@
 #include "test.h"
-#include "itensor/util/cputime.h"
-#include "itensor/util/iterate.h"
-#include "itensor/tensor/contract.h"
-#include "itensor/util/set_scoped.h"
-#include "itensor/util/args.h"
-#include "itensor/global.h"
+#include "util/cputime.h"
+#include "util/iterate.h"
+#include "tensor/contract.h"
+#include "util/set_scoped.h"
+#include "util/args.h"
+#include "global.h"
 
 using namespace itensor;
 

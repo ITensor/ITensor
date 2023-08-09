@@ -201,9 +201,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 endif()
 
 ##########################
-# Include source dirctories
+# Include source directories
 ##########################
 include_directories(${PROJECT_SOURCE_DIR}/itensor ${PROJECT_BINARY_DIR}/itensor)
+add_subdirectory(unittest)
 
 ##########################
 # external dependencies

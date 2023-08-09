@@ -1,10 +1,10 @@
 #include "test.h"
-#include "itensor/mps/localop.h"
-#include "itensor/mps/localmpo.h"
-#include "itensor/mps/localmposet.h"
-#include "itensor/mps/autompo.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/util/print_macro.h"
+#include "mps/localop.h"
+#include "mps/localmpo.h"
+#include "mps/localmposet.h"
+#include "mps/autompo.h"
+#include "mps/sites/spinhalf.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 

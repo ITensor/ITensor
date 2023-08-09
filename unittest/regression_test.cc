@@ -1,5 +1,5 @@
 #include "test.h"
-#include "itensor/decomp.h"
+#include "decomp.h"
 
 using namespace itensor;
 using namespace std;

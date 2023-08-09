@@ -1,6 +1,6 @@
 #include "test.h"
-#include "itensor/qn.h"
-#include "itensor/util/print_macro.h"
+#include "qn.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 using namespace std;

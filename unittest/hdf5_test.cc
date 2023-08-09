@@ -1,7 +1,7 @@
 #include "test.h"
 
-#include "itensor/all.h"
-#include "itensor/util/print_macro.h"
+#include "all.h"
+#include "util/print_macro.h"
 
 using namespace std;
 using namespace itensor;

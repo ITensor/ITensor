@@ -1,12 +1,12 @@
 #include "test.h"
-#include "itensor/mps/sites/spinhalf.h"
-#include "itensor/mps/sites/spinone.h"
-#include "itensor/mps/sites/spintwo.h"
-#include "itensor/mps/sites/electron.h"
-#include "itensor/mps/sites/fermion.h"
-#include "itensor/mps/sites/tj.h"
-#include "itensor/util/print_macro.h"
-#include "itensor/util/str.h"
+#include "mps/sites/spinhalf.h"
+#include "mps/sites/spinone.h"
+#include "mps/sites/spintwo.h"
+#include "mps/sites/electron.h"
+#include "mps/sites/fermion.h"
+#include "mps/sites/tj.h"
+#include "util/print_macro.h"
+#include "util/str.h"
 
 using namespace itensor;
 

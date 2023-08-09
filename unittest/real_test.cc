@@ -1,7 +1,7 @@
 #include "test.h"
 
-#include "itensor/global.h"
-#include "itensor/real.h"
+#include "global.h"
+#include "real.h"
 
 using namespace itensor;
 

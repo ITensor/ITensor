@@ -1,7 +1,7 @@
 #include "test.h"
-#include "itensor/indexset.h"
-#include "itensor/util/set_scoped.h"
-#include "itensor/util/print_macro.h"
+#include "indexset.h"
+#include "util/set_scoped.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 

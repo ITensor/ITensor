@@ -1,6 +1,6 @@
 #ifndef __ITENSOR_MPS_MPO_TEST_HELPER_H
 #define __ITENSOR_MPS_MPO_TEST_HELPER_H
-#include "itensor/mps/autompo.h"
+#include "mps/autompo.h"
 
 namespace itensor {
 

@@ -1,8 +1,8 @@
 #include "test.h"
 #include "itensor/iqtensor.h"
-#include "itensor/util/set_scoped.h"
-#include "itensor/util/range.h"
-#include "itensor/util/print_macro.h"
+#include "util/set_scoped.h"
+#include "util/range.h"
+#include "util/print_macro.h"
 
 using namespace itensor;
 using namespace std;

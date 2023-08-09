@@ -1,10 +1,10 @@
 #include "test.h"
-#include "itensor/util/print.h"
-#include "itensor/util/iterate.h"
-#include "itensor/detail/algs.h"
-#include "itensor/tensor/permutation.h"
-#include "itensor/tensor/sliceten.h"
-#include "itensor/indexset.h"
+#include "util/print.h"
+#include "util/iterate.h"
+#include "detail/algs.h"
+#include "tensor/permutation.h"
+#include "tensor/sliceten.h"
+#include "indexset.h"
 
 using namespace itensor;
 
