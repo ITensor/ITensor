@@ -448,12 +448,12 @@ dgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
     LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
     LAPACK_INT info = 0;
-    std::vector<Cplx> W;
+    std::vector<Cplx> W(n);
     info = lapack::geev(lapack::char2job(jobvl), lapack::char2job(jobvr), n, cpA.data(), n, W.data(), vl, nevecl, vr, nevecr);
-    auto v = 0;
-    for(auto & i : W){
-        *(dr + v) = std::real(i);
-        *(di + v) = std::imag(i);
+    auto ptr = W.data();
+    for(size_t i = 0; i < n; ++i){
+        *(dr + i) = std::real(*(ptr + i));
+        *(di + i) = std::imag(*(ptr + i));
     }
     return info;
     }
@@ -496,11 +496,7 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     LAPACK_INT info = 0;
     std::vector<Cplx> W;
     info = lapack::geev(lapack::char2job(jobvl), lapack::char2job(jobvr), n, cpA.data(), n, W.data(), vl, nevecl, vr, nevecr);
-//#ifdef PLATFORM_acml
-//    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info,1,1);
-//#else
-//    F77NAME(zgeev)(&jobvl,&jobvr,&n,cpA.data(),&n,pd,pvl,&nevecl,pvr,&nevecr,work.data(),&lwork,rwork.data(),&info);
-//#endif
+
     return info;
     }
 
