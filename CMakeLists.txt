@@ -203,7 +203,7 @@ endif()
 ##########################
 # Include source directories
 ##########################
-include_directories(${PROJECT_SOURCE_DIR}/itensor ${PROJECT_BINARY_DIR}/itensor)
+include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
 
 ##########################
 # external dependencies
