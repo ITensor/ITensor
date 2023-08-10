@@ -17,9 +17,7 @@
 #define __ITENSOR_LAPACK_WRAP_h
 
 #include <vector>
-#ifndef ITENSOR_USE_CMAKE
 #include "itensor/config.h"
-#endif // ITENSOR_USE_CMAKE
 #include "itensor/types.h"
 #include "itensor/util/timers.h"
 
