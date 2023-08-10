@@ -269,8 +269,10 @@ add_subdirectory(itensor)
 add_subdirectory(unittest)
 
 target_compile_definitions(itensor PRIVATE ITENSOR_USE_CMAKE=1)
+target_compile_definitions(itensor_check PRIVATE ITENSOR_USE_CMAKE=1)
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
   target_compile_definitions(itensor PRIVATE DEBUG=1)
+  target_compile_definitions(itensor_check PRIVATE DEBUG=1)
 endif(${CMAKE_BUILD_TYPE} MATCHES Debug)
 ##########################
 # pkg-config variables
