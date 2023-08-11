@@ -96,7 +96,7 @@ gemm_wrapper(bool transa,
         bt = blas::Op::Trans;
         ldb = n;
     }
-    blas::gemm(blas::Layout::ColMajor, at, bt, m, n, k, alpha, A, lda, B, ldb, beta, C, m);
+    blas::gemm(blas::Layout::ColMajor, at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
     }
 
 //
@@ -114,8 +114,8 @@ gemm_wrapper(bool transa,
              Cplx beta,
              Cplx* C)
     {
-    LAPACK_INT lda = m,
-               ldb = k;
+        LAPACK_INT lda = m,
+                ldb = k;
         auto at = blas::Op::NoTrans,
                 bt = blas::Op::NoTrans;
         if(transa) {
@@ -125,7 +125,7 @@ gemm_wrapper(bool transa,
             bt = blas::Op::Trans;
             ldb = n;
         }
-        blas::gemm(blas::Layout::ColMajor, at, bt, m, n, k, alpha, A, lda, B, ldb, beta, C, m);
+        blas::gemm(blas::Layout::ColMajor, at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
     }
 
 void 
@@ -173,7 +173,8 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_INT& info)  //error info
     {
     LAPACK_INT lda = n;
-    lapack::syev(lapack::char2job(jobz), blas::char2uplo(uplo), n, A, lda, eigs);
+    info = lapack::syev(lapack::char2job(jobz), blas::char2uplo(uplo), n, A, lda, eigs);
+    std::vector<LAPACK_REAL> eigs_up(n);
     }
 
 //
