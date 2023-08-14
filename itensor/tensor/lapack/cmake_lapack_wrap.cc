@@ -479,27 +479,17 @@ zgeev_wrapper(char jobvl,          //if 'V', compute left eigenvectors, else 'N'
     {
     static const LAPACK_INT one = 1;
     std::vector<Cplx> cpA;
-    std::vector<LAPACK_COMPLEX> work;
-    std::vector<LAPACK_REAL> rwork;
     LAPACK_INT nevecl = (jobvl == 'V' ? n : 1);
     LAPACK_INT nevecr = (jobvr == 'V' ? n : 1);
-    LAPACK_INT lwork = std::max(one,4*n);
-    work.resize(lwork);
-    LAPACK_INT lrwork = std::max(one,2*n);
-    rwork.resize(lrwork);
 
     //Copy A data into cpA
     cpA.resize(n*n);
     auto pA = reinterpret_cast<Cplx const*>(A);
     std::copy(pA,pA+n*n,cpA.data());
 
-    auto pd = reinterpret_cast<LAPACK_COMPLEX*>(d);
-    auto pvl = reinterpret_cast<LAPACK_COMPLEX*>(vl);
-    auto pvr = reinterpret_cast<LAPACK_COMPLEX*>(vr);
-
     LAPACK_INT info = 0;
-    std::vector<Cplx> W;
-    info = lapack::geev(lapack::char2job(jobvl), lapack::char2job(jobvr), n, cpA.data(), n, W.data(), vl, nevecl, vr, nevecr);
+    info = lapack::geev(lapack::char2job(jobvl), lapack::char2job(jobvr), n,
+                        cpA.data(), n, d, vl, nevecl, vr, nevecr);
 
     return info;
     }
