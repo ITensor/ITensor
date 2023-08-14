@@ -247,21 +247,10 @@ endif(ENABLE_MPI)
 
 if(ENABLE_HDF5)
   MESSAGE(STATUS "Looking for HDF5")
-  FIND_PACKAGE(HDF5 REQUIRED CXX)
-  target_link_libraries(ITENSORS INTERFACE ${HDF5_LIBRARIES})
+  FIND_PACKAGE(HDF5 REQUIRED)
+  include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
+  target_link_libraries(ITENSORS INTERFACE ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} HDF5::HDF5)
 endif(ENABLE_HDF5)
-# if(ENABLE_BLAS_LAPACK)
-#   find_package(BLAS)
-#   find_package(LAPACK)
-#   if(LAPACK_FOUND AND BLAS_FOUND)
-#     set(lapackblas_libraries ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-
-#     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-#     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-#   endif()
-
-#   target_link_libraries(ITENSORS INTERFACE ${lapackblas_libraries})
-# endif(ENABLE_BLAS_LAPACK)
 
 
 ##########################
@@ -353,6 +342,11 @@ ADD_CUSTOM_TARGET(debug
                   COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
                   )
 
+ADD_CUSTOM_TARGET(check
+                  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_CURRENT_SOURCE_DIR}
+                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target itensor_check
+                  COMMENT "Check ITensors, done in Debug mode"
+                  )
 ADD_CUSTOM_TARGET(release
                   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_CURRENT_SOURCE_DIR}
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target all
