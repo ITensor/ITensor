@@ -174,7 +174,6 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
     {
     LAPACK_INT lda = n;
     info = lapack::syev(lapack::char2job(jobz), blas::char2uplo(uplo), n, A, lda, eigs);
-    std::vector<LAPACK_REAL> eigs_up(n);
     }
 
 //
@@ -200,7 +199,8 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                Cplx *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-    lapack::gesdd(lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, *n);
+    LAPACK_INT l = std::min(*m,*n);
+    *info = lapack::gesdd(lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, l);
     }
 
 
@@ -216,7 +216,8 @@ dgesdd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
                LAPACK_REAL *vt,          //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-        lapack::gesdd(lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, *n);
+        LAPACK_INT l = std::min(*m,*n);
+        *info = lapack::gesdd(lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, l);
     }
 
 
@@ -232,7 +233,8 @@ zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                Cplx *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-    lapack::gesvd(lapack::char2job(*jobz), lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, *n);
+    LAPACK_INT l = std::min(*m,*n);
+    *info = lapack::gesvd(lapack::char2job(*jobz), lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, l);
     }
 
 
@@ -248,7 +250,8 @@ dgesvd_wrapper(char* jobz,           //char* specifying how much of U, V to comp
                LAPACK_REAL *vt,          //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-    lapack::gesvd(lapack::char2job(*jobz), lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, *n);
+        LAPACK_INT l = std::min(*m,*n);
+        *info = lapack::gesvd(lapack::char2job(*jobz), lapack::char2job(*jobz), *m, *n, A, *m, s, u, *m, vt, l);
     }
 
 //
@@ -266,7 +269,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //length should be min(m,n)
                LAPACK_INT* info)  //error info
     {
-    lapack::geqrf(*m, *n, A, *lda, tau);
+        *info = lapack::geqrf(*m, *n, A, *lda, tau);
     }
 
 //
@@ -284,7 +287,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info)  //error info
     {
-    lapack::orgqr(*m, *n, *k, A, *lda, tau);
+        *info = lapack::orgqr(*m, *n, *k, A, *lda, tau);
     }
 
 
@@ -305,7 +308,8 @@ zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     {
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto ptau = reinterpret_cast<Cplx*>(tau);
-    lapack::geqrf(*m, *n, A, *lda, ptau);
+    *info = lapack::geqrf(*m, *n, A, *lda, ptau);
+    tau = reinterpret_cast<LAPACK_COMPLEX*>(ptau);
     }
 
 //
@@ -325,7 +329,8 @@ zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
     {
     static_assert(sizeof(LAPACK_COMPLEX)==sizeof(Cplx),"LAPACK_COMPLEX and itensor::Cplx have different size");
     auto ptau = reinterpret_cast<Cplx *>(tau);
-    lapack::ungqr(*m, *n, *k, A, *lda, ptau);
+    *info = lapack::ungqr(*m, *n, *k, A, *lda, ptau);
+    tau = reinterpret_cast<LAPACK_COMPLEX*>(ptau);
     }
 
 //
@@ -340,8 +345,7 @@ dgesv_wrapper(LAPACK_INT n,
 	LAPACK_INT lda = n;
 	std::vector<int64_t> ipiv(n);
 	LAPACK_INT ldb = n;
-    auto info = lapack::gesv(n, nrhs, a, lda, ipiv.data(), b, ldb);
-	return info;
+    return lapack::gesv(n, nrhs, a, lda, ipiv.data(), b, ldb);
 	}
 
 //
@@ -394,7 +398,6 @@ zheev_wrapper(LAPACK_INT      N,  //number of cols of A
               Cplx          * A,  //matrix A, on return contains eigenvectors
               LAPACK_REAL   * d)  //eigenvalues on return
     {
-    static const LAPACK_INT one = 1;
     char jobz = 'V';
     char uplo = 'U';
     lapack_int info = lapack::heev(lapack::char2job(jobz), blas::char2uplo(uplo), N, A, N, d);
@@ -421,7 +424,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_INT* info)  //error info
     {
     LAPACK_INT itype = 1;
-    lapack::sygv(itype, lapack::char2job(*jobz), blas::char2uplo(*uplo), *n, A, *n, B, *n, d);
+    *info = lapack::sygv(itype, lapack::char2job(*jobz), blas::char2uplo(*uplo), *n, A, *n, B, *n, d);
     }
 
 //
