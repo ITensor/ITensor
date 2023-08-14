@@ -114,7 +114,7 @@ target_include_directories(${targetname} INTERFACE
 set(ITENSORS_LINK_LIBRARIES ${CMAKE_CXX_FLAGS} blaspp lapackpp ${blaspp_headers} CACHE STRING "List of libraries which ITensor is dependent on")
 target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES} blaspp lapackpp)
 if(ENABLE_HDF5)
-  target_link_libraries(${targetname} PUBLIC HDF5::HDF5)
+  target_link_libraries(${targetname} PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} hdf5 hdf5_hl)
 endif(ENABLE_HDF5)
 
 # append current CMAKE_CXX_FLAGS

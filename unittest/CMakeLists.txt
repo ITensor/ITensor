@@ -59,6 +59,9 @@ target_include_directories(${executable} PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
         )
 target_link_libraries(${executable} itensor)
+if(ENABLE_HDF5)
+    target_link_libraries(${executable} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} HDF5::HDF5)
+endif(ENABLE_HDF5)
 
 # Add test suite
 add_test(itensor/unit/build "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target ${executable})
