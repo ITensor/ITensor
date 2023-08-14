@@ -136,8 +136,12 @@ set(CMAKE_SKIP_RPATH FALSE)
 # We use C++17 features
 ##########################
 # but insist on strict standard
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ ISO Standard version")
-if (NOT(CMAKE_CXX_STANDARD EQUAL 17 OR CMAKE_CXX_STANDARD EQUAL 20))
+#if(ENABLE_HDF5)
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ ISO Standard version")
+#else()
+#  set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ ISO Standard version")
+#endif(ENABLE_HDF5)
+if (CMAKE_CXX_STANDARD VERSION_LESS 20)
   message(FATAL_ERROR "C++ 2017 ISO Standard or higher is required to compile ITENSORS")
 endif()
 # C++20 is only configurable via compile features with cmake 3.12 and older
@@ -274,6 +278,11 @@ if(${CMAKE_BUILD_TYPE} MATCHES Debug)
   target_compile_definitions(itensor PRIVATE DEBUG=1)
   target_compile_definitions(itensor_check PRIVATE DEBUG=1)
 endif(${CMAKE_BUILD_TYPE} MATCHES Debug)
+
+if(ENABLE_HDF5)
+  target_compile_definitions(itensor PRIVATE ITENSOR_USE_HDF5=1)
+  target_compile_definitions(itensor_check PRIVATE ITENSOR_USE_HDF5=1)
+endif(ENABLE_HDF5)
 ##########################
 # pkg-config variables
 ##########################

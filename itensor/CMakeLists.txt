@@ -94,7 +94,10 @@ if(ENABLE_HDF5)
           util/h5/h5object.cc
           util/h5/stl/string.cc
           util/h5/stl/vector.cc)
-  list(APPEND ${ITENSOR_SOURCE_FILES} ${H5_SOURCE_FILES})
+
+  set(ITENSOR_SOURCE_FILES
+          ${ITENSOR_SOURCE_FILES}
+          ${H5_SOURCE_FILES})
 endif(ENABLE_HDF5)
 
 # Create the ITensor library
@@ -109,6 +112,13 @@ target_include_directories(${targetname} INTERFACE
                            )
 
 set(ITENSORS_LINK_LIBRARIES ${CMAKE_CXX_FLAGS} blaspp lapackpp ${blaspp_headers} CACHE STRING "List of libraries which ITensor is dependent on")
+if(ENABLE_HDF5)
+  set(ITENSORS_LINK_LIBRARIES
+          ${ITENSORS_LINK_LIBRARIES}
+          HDF5::HDF5
+          ${HDF5_INCLUDE_DIRS})
+endif(ENABLE_HDF5)
+message(STATUS "ITENSORS_LINK_LIBRARIES: ${ITENSORS_LINK_LIBRARIES}")
 target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES} blaspp lapackpp)
 
 # append current CMAKE_CXX_FLAGS

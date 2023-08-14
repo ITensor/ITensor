@@ -43,11 +43,14 @@ set(itensor_test_src_files
         test.cc
         )
 
-if(ITENSOR_USE_HDF5)
+if(ENABLE_HDF5)
     set(h5_test_source_files
             hdf5_test.cc)
-    list(APPEND ${itensor_test_src_files} ${h5_test_source_files})
-endif(ITENSOR_USE_HDF5)
+    set(itensor_test_src_files
+            ${itensor_test_src_files}
+            ${h5_test_source_files}
+            )
+endif(ENABLE_HDF5)
 
 add_executable(${executable} EXCLUDE_FROM_ALL ${itensor_test_src_files})
 # Add include directories and compiler flags for ta_test
