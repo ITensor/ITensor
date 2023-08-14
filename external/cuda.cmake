@@ -1,7 +1,7 @@
 # cmake 3.17 decouples C++ and CUDA standards, see https://gitlab.kitware.com/cmake/cmake/issues/19123
 # cmake 3.18 knows that CUDA 11 provides cuda_std_17
 cmake_minimum_required(VERSION 3.18.0)
-set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_EXTENSIONS OFF)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
