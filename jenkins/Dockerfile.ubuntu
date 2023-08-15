@@ -7,7 +7,7 @@ RUN apt-get update && \
       liblapack-dev \
       liblapacke-dev \
       libopenblas-dev \
-      cmake \
+      cmake=3.17.0 \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
