@@ -7,6 +7,7 @@ RUN apt-get update && \
       liblapack-dev \
       liblapacke-dev \
       libopenblas-dev \
+      libssl-dev \
       wget \
       && \
     apt-get autoremove --purge -y && \
