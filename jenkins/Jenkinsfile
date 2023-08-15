@@ -25,8 +25,7 @@ pipeline {
             sh 'make -j2 -C sample'
             sh 'make -C unittest'
             sh '''
-                export source_dir=pwd;
-                cmake ${source_dir} \
+                cmake . \
                     -DCMAKE_INSTALL_PREFIX="." \
                     -DCMAKE_CXX_FLAGS="-std=c++20" \
                     -DENABLE_OMP=ON \
