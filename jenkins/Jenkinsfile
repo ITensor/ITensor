@@ -26,11 +26,8 @@ pipeline {
             sh 'make -C unittest'
             sh '''
                 export source_dir=pwd;
-                cd ../;
-                mkdir test_cmake;
-                cd test_cmake;
                 cmake ${source_dir} \
-                    -DCMAKE_INSTALL_PREFIX="../install" \
+                    -DCMAKE_INSTALL_PREFIX="." \
                     -DCMAKE_CXX_FLAGS="-std=c++20" \
                     -DENABLE_OMP=ON \
                     -DENABLE_MPI=ON;
