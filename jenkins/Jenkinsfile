@@ -20,12 +20,10 @@ pipeline {
             PLATFORM = 'lapack'
           }
           steps {
-            sh '''sed '/^PLATFORM=/,/^$/s/^/#/;/^#PLATFORM='$PLATFORM'$/,/^$/s/^#//' options.mk.sample > options.mk'''
             sh 'make -j2'
+            sh '''sed '/^PLATFORM=/,/^$/s/^/#/;/^#PLATFORM='$PLATFORM'$/,/^$/s/^#//' options.mk.sample > options.mk'''
             sh 'make -j2 -C sample'
             sh 'make -C unittest'
-          }
-          steps{
             sh 'export source_dir=pwd'
             sh 'cd ../'
             sh 'mkdir test_cmake'
