@@ -106,8 +106,8 @@ add_library(itensor ${ITENSOR_SOURCE_FILES} ${ITENSOR_HEADER_FILES})
 set(targetname itensor)
 
 target_include_directories(${targetname} INTERFACE
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+                           $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
                            $<INSTALL_INTERFACE:${ITENSOR_INSTALL_INCLUDEDIR}>
                            )
 
