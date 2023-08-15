@@ -15,7 +15,7 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.17.0) # decouples C++ and CUDA standards, see https://gitlab.kitware.com/cmake/cmake/issues/19123
-set(ITENSORS_REQUIRED_CMAKE_VERSION 3.17.0 CACHE INTERNAL "")
+set(ITENSOR_REQUIRED_CMAKE_VERSION 3.17.0 CACHE INTERNAL "")
 
 ###############################################################################
 # CMake defaults to address key pain points
@@ -50,23 +50,23 @@ list(APPEND CMAKE_MODULE_PATH "${vg_cmake_kit_SOURCE_DIR}/modules")
 # Announce ourselves
 ###############################################################################
 # see https://semver.org/
-set (ITENSORS_MAJOR_VERSION 4)
-set (ITENSORS_MINOR_VERSION 0)
-set (ITENSORS_PATCH_VERSION 0)
-set (ITENSORS_PRERELEASE_ID beta.1)
-set (ITENSORS_BUILD_ID )
+set (ITENSOR_MAJOR_VERSION 4)
+set (ITENSOR_MINOR_VERSION 0)
+set (ITENSOR_PATCH_VERSION 0)
+set (ITENSOR_PRERELEASE_ID beta.1)
+set (ITENSOR_BUILD_ID )
 
-set(ITENSORS_VERSION "${ITENSORS_MAJOR_VERSION}.${ITENSORS_MINOR_VERSION}.${ITENSORS_PATCH_VERSION}")
-if (ITENSORS_PRERELEASE_ID)
-  set(ITENSORS_EXT_VERSION "${ITENSORS_VERSION}-${ITENSORS_PRERELEASE_ID}")
-else(ITENSORS_PRERELEASE_ID)
-  set(ITENSORS_EXT_VERSION "${ITENSORS_VERSION}")
-endif(ITENSORS_PRERELEASE_ID)
-if (ITENSORS_BUILD_ID)
-  set(ITENSORS_EXT_VERSION "${ITENSORS_EXT_VERSION}+${ITENSORS_BUILD_ID}")
-endif(ITENSORS_BUILD_ID)
+set(ITENSOR_VERSION "${ITENSOR_MAJOR_VERSION}.${ITENSOR_MINOR_VERSION}.${ITENSOR_PATCH_VERSION}")
+if (ITENSOR_PRERELEASE_ID)
+  set(ITENSOR_EXT_VERSION "${ITENSOR_VERSION}-${ITENSOR_PRERELEASE_ID}")
+else(ITENSOR_PRERELEASE_ID)
+  set(ITENSOR_EXT_VERSION "${ITENSOR_VERSION}")
+endif(ITENSOR_PRERELEASE_ID)
+if (ITENSOR_BUILD_ID)
+  set(ITENSOR_EXT_VERSION "${ITENSOR_EXT_VERSION}+${ITENSOR_BUILD_ID}")
+endif(ITENSOR_BUILD_ID)
 
-# extra cmake files are shipped with ITENSORS
+# extra cmake files are shipped with ITENSOR
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
 include(AppendFlags)
@@ -77,15 +77,15 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
   execute_process(
       COMMAND ${GIT_EXECUTABLE} rev-parse -q HEAD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      OUTPUT_VARIABLE ITENSORS_REVISION )
+      OUTPUT_VARIABLE ITENSOR_REVISION )
   string(REGEX MATCH "[0-9a-f]*"
-         ITENSORS_REVISION "${ITENSORS_REVISION}")
+         ITENSOR_REVISION "${ITENSOR_REVISION}")
 else()
-  set(ITENSORS_REVISION "unknown")
+  set(ITENSOR_REVISION "unknown")
 endif()
 
-project(ITENSORS
-        VERSION ${ITENSORS_VERSION}
+project(ITENSOR
+        VERSION ${ITENSOR_VERSION}
         DESCRIPTION "ITensor: High-Performance Tensor Software Inspired By Tensor Diagrams"
         LANGUAGES CXX
         HOMEPAGE_URL "https://itensor.org/")
@@ -99,20 +99,20 @@ set(TARGET_ARCH "${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}")
 ##########################
 # Standard build variables
 ##########################
-set(ITENSORS_INSTALL_BINDIR "bin"
-    CACHE PATH "ITENSORS BIN install directory")
-set(ITENSORS_INSTALL_INCLUDEDIR "include"
-    CACHE PATH "ITENSORS INCLUDE install directory")
-set(ITENSORS_INSTALL_LIBDIR "lib"
-    CACHE PATH "ITENSORS LIB install directory")
-set(ITENSORS_INSTALL_SHAREDIR "share/ITENSORS/${ITENSORS_MAJOR_VERSION}.${ITENSORS_MINOR_VERSION}.${ITENSORS_MICRO_VERSION}"
-    CACHE PATH "ITENSORS SHARE install directory")
-set(ITENSORS_INSTALL_DATADIR "${ITENSORS_INSTALL_SHAREDIR}/data"
-    CACHE PATH "ITENSORS DATA install directory")
-set(ITENSORS_INSTALL_DOCDIR "${ITENSORS_INSTALL_SHAREDIR}/doc"
-    CACHE PATH "ITENSORS DOC install directory")
-set(ITENSORS_INSTALL_CMAKEDIR "lib/cmake/ITENSORS"
-    CACHE PATH "ITENSORS CMAKE install directory")
+set(ITENSOR_INSTALL_BINDIR "bin"
+    CACHE PATH "ITENSOR BIN install directory")
+set(ITENSOR_INSTALL_INCLUDEDIR "include"
+    CACHE PATH "ITENSOR INCLUDE install directory")
+set(ITENSOR_INSTALL_LIBDIR "lib"
+    CACHE PATH "ITENSOR LIB install directory")
+set(ITENSOR_INSTALL_SHAREDIR "share/ITENSOR/${ITENSOR_MAJOR_VERSION}.${ITENSOR_MINOR_VERSION}.${ITENSOR_MICRO_VERSION}"
+    CACHE PATH "ITENSOR SHARE install directory")
+set(ITENSOR_INSTALL_DATADIR "${ITENSOR_INSTALL_SHAREDIR}/data"
+    CACHE PATH "ITENSOR DATA install directory")
+set(ITENSOR_INSTALL_DOCDIR "${ITENSOR_INSTALL_SHAREDIR}/doc"
+    CACHE PATH "ITENSOR DOC install directory")
+set(ITENSOR_INSTALL_CMAKEDIR "lib/cmake/ITENSOR"
+    CACHE PATH "ITENSOR CMAKE install directory")
 
 # Get standard build variables from the environment if they have not already been set
 if(NOT CMAKE_C_FLAGS OR NOT DEFINED CMAKE_C_FLAGS)
@@ -142,7 +142,7 @@ set(CMAKE_SKIP_RPATH FALSE)
 #  set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ ISO Standard version")
 #endif(ENABLE_HDF5)
 if (CMAKE_CXX_STANDARD VERSION_LESS 20)
-  message(FATAL_ERROR "C++ 2017 ISO Standard or higher is required to compile ITENSORS")
+  message(FATAL_ERROR "C++ 2017 ISO Standard or higher is required to compile ITENSOR")
 endif()
 # C++20 is only configurable via compile features with cmake 3.12 and older
 if (CMAKE_CXX_STANDARD EQUAL 20 AND CMAKE_VERSION VERSION_LESS 3.12.0)
@@ -212,7 +212,7 @@ include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
 ##########################
 # external dependencies
 ##########################
-add_library(ITENSORS INTERFACE)
+add_library(ITENSOR INTERFACE)
 # required deps:
 # 1. CUDA first since others may depend on it
 if(ENABLE_CUDA)
@@ -231,7 +231,7 @@ if(ENABLE_OMP)
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif(OPENMP_FOUND)
-  target_link_libraries(ITENSORS INTERFACE ${OpenMP_C_LIBRARIES})
+  target_link_libraries(ITENSOR INTERFACE ${OpenMP_C_LIBRARIES})
 endif(ENABLE_OMP)
 
 if(ENABLE_MPI)
@@ -242,14 +242,14 @@ if(ENABLE_MPI)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_FLAGS}")
   endif(MPI_FOUND)
 
-  target_link_libraries(ITENSORS INTERFACE ${MPI_C_LIBRARIES})
+  target_link_libraries(ITENSOR INTERFACE ${MPI_C_LIBRARIES})
 endif(ENABLE_MPI)
 
 if(ENABLE_HDF5)
   MESSAGE(STATUS "Looking for HDF5")
   FIND_PACKAGE(HDF5 REQUIRED)
   include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
-  target_link_libraries(ITENSORS INTERFACE ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} hdf5 hdf5_hl)
+  target_link_libraries(ITENSOR INTERFACE ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} hdf5 hdf5_hl)
 endif(ENABLE_HDF5)
 
 
@@ -280,11 +280,11 @@ endif(ENABLE_HDF5)
 ##########################
 # pkg-config variables
 ##########################
-foreach(_inc ${ITENSORS_CONFIG_INCLUDE_DIRS})
-  append_flags(ITENSORS_PC_CFLAGS "-I${_inc}")
+foreach(_inc ${ITENSOR_CONFIG_INCLUDE_DIRS})
+  append_flags(ITENSOR_PC_CFLAGS "-I${_inc}")
 endforeach()
-foreach(_lib ${ITENSORS_CONFIG_LIBRARIES})
-  append_flags(ITENSORS_PC_LIBS "${_lib}")
+foreach(_lib ${ITENSOR_CONFIG_LIBRARIES})
+  append_flags(ITENSOR_PC_LIBS "${_lib}")
 endforeach()
 
 ##########################
@@ -307,7 +307,7 @@ install(FILES ${PROJECT_BINARY_DIR}/itensor.pc
 
 # Create the version file
 write_basic_package_version_file(itensor-config-version.cmake
-                                 VERSION ${ITENSORS_VERSION} COMPATIBILITY AnyNewerVersion)
+                                 VERSION ${ITENSOR_VERSION} COMPATIBILITY AnyNewerVersion)
 
 # Create the targets file
 export(EXPORT itensor
@@ -316,22 +316,22 @@ export(EXPORT itensor
 # Create the configure file
 configure_package_config_file(cmake/itensor-config.cmake.in
                               "${PROJECT_BINARY_DIR}/itensor-config.cmake"
-                              INSTALL_DESTINATION "${ITENSORS_INSTALL_CMAKEDIR}"
-                              PATH_VARS CMAKE_INSTALL_PREFIX ITENSORS_INSTALL_BINDIR
-                              ITENSORS_INSTALL_INCLUDEDIR ITENSORS_INSTALL_LIBDIR
-                              ITENSORS_INSTALL_DOCDIR ITENSORS_INSTALL_CMAKEDIR)
+                              INSTALL_DESTINATION "${ITENSOR_INSTALL_CMAKEDIR}"
+                              PATH_VARS CMAKE_INSTALL_PREFIX ITENSOR_INSTALL_BINDIR
+                              ITENSOR_INSTALL_INCLUDEDIR ITENSOR_INSTALL_LIBDIR
+                              ITENSOR_INSTALL_DOCDIR ITENSOR_INSTALL_CMAKEDIR)
 
 # Install config, version, and target files
 install(EXPORT itensor
         FILE "itensor-targets.cmake"
-        DESTINATION "${ITENSORS_INSTALL_CMAKEDIR}"
-        COMPONENT ITENSORS)
+        DESTINATION "${ITENSOR_INSTALL_CMAKEDIR}"
+        COMPONENT ITENSOR)
 
 install(FILES
         "${PROJECT_BINARY_DIR}/itensor-config.cmake"
         "${PROJECT_BINARY_DIR}/itensor-config-version.cmake"
-        DESTINATION "${ITENSORS_INSTALL_CMAKEDIR}"
-        COMPONENT ITENSORS)
+        DESTINATION "${ITENSOR_INSTALL_CMAKEDIR}"
+        COMPONENT ITENSOR)
 
 
 # Add target to allow on-the-fly switching of build type

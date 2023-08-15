@@ -15,10 +15,10 @@ endif()
 enable_language(CUDA)
 
 set(CUDA_FOUND TRUE)
-set(ITENSORS_HAS_CUDA 1 CACHE BOOL "Whether ITensor has CUDA support")
+set(ITENSOR_HAS_CUDA 1 CACHE BOOL "Whether ITensor has CUDA support")
 
 if(ENABLE_CUDA_ERROR_CHECK)
-  set (ITENSORS_CHECK_CUDA_ERROR 1)
+  set (ITENSOR_CHECK_CUDA_ERROR 1)
 endif(ENABLE_CUDA_ERROR_CHECK)
 
 # find CUDA toolkit

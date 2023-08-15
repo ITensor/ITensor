@@ -1,14 +1,14 @@
 # - CMAKE Config file for the ITensors package
 # The following variables are defined:
-#  ITENSORS_FOUND                - System has the ITensors package
-#  ITENSORS_INCLUDE_DIRS         - The ITensors include directory
-#  ITENSORS_LIBRARIES            - The ITensors libraries and their dependencies
-#  ITENSORS_VERSION              - The ITensors (core) version; see semver.org
-#  ITENSORS_EXT_VERSION          - The ITensors version, includes prerelease id; see semver.org
+#  ITENSOR_FOUND                - System has the ITensors package
+#  ITENSOR_INCLUDE_DIRS         - The ITensors include directory
+#  ITENSOR_LIBRARIES            - The ITensors libraries and their dependencies
+#  ITENSOR_VERSION              - The ITensors (core) version; see semver.org
+#  ITENSOR_EXT_VERSION          - The ITensors version, includes prerelease id; see semver.org
 
 # Set package version
-set(ITENSORS_VERSION "@ITENSORS_VERSION@")
-set(ITENSORS_EXT_VERSION "@ITENSORS_EXT_VERSION@")
+set(ITENSOR_VERSION "@ITENSOR_VERSION@")
+set(ITENSOR_EXT_VERSION "@ITENSOR_EXT_VERSION@")
 
 @PACKAGE_INIT@
 
@@ -18,23 +18,23 @@ if(NOT TARGET itensor)
 endif()
 
 # Set the itensor compiled library target
-set(ITENSORS_LIBRARIES itensor)
+set(ITENSOR_LIBRARIES itensor)
 
-set(ITENSORS_SOURCE_DIR "@ITENSORS_SOURCE_DIR@")
-set(ITENSORS_BINARY_DIR "@ITENSORS_BINARY_DIR@")
+set(ITENSOR_SOURCE_DIR "@ITENSOR_SOURCE_DIR@")
+set(ITENSOR_BINARY_DIR "@ITENSOR_BINARY_DIR@")
 
-set(ITENSORS_BUILD_INCLUDE_DIRS "${ITENSORS_SOURCE_DIR} "${ITENSORS_BINARY_DIR}")
-set(ITENSORS_INSTALL_INCLUDE_DIRS "@PACKAGE_ITENSORS_INSTALL_INCLUDEDIR@"
-      "@PACKAGE_ITENSORS_INSTALL_INCLUDEDIR@")
+set(ITENSOR_BUILD_INCLUDE_DIRS "${ITENSOR_SOURCE_DIR} "${ITENSOR_BINARY_DIR}")
+set(ITENSOR_INSTALL_INCLUDE_DIRS "@PACKAGE_ITENSOR_INSTALL_INCLUDEDIR@"
+      "@PACKAGE_ITENSOR_INSTALL_INCLUDEDIR@")
 
-# define ITENSORS_INCLUDE_DIRS according to where we are compiling: ITensor build tree or outside
-# external packages should use ITENSORS_BUILD_INCLUDE_DIRS and ITENSORS_INSTALL_INCLUDE_DIRS directly
-if(CMAKE_CURRENT_LIST_DIR EQUAL ITENSORS_BINARY_DIR)
-  set(ITENSORS_INCLUDE_DIRS "${ITENSORS_BUILD_INCLUDE_DIRS}")
+# define ITENSOR_INCLUDE_DIRS according to where we are compiling: ITensor build tree or outside
+# external packages should use ITENSOR_BUILD_INCLUDE_DIRS and ITENSOR_INSTALL_INCLUDE_DIRS directly
+if(CMAKE_CURRENT_LIST_DIR EQUAL ITENSOR_BINARY_DIR)
+  set(ITENSOR_INCLUDE_DIRS "${ITENSOR_BUILD_INCLUDE_DIRS}")
 else()
-  set(ITENSORS_INCLUDE_DIRS "${ITENSORS_INSTALL_INCLUDE_DIRS}")
+  set(ITENSOR_INCLUDE_DIRS "${ITENSOR_INSTALL_INCLUDE_DIRS}")
 endif()
 
-set(ITENSORS_CMAKE_TOOLCHAIN_FILE "@CMAKE_TOOLCHAIN_FILE@")
+set(ITENSOR_CMAKE_TOOLCHAIN_FILE "@CMAKE_TOOLCHAIN_FILE@")
 
-set(ITENSORS_FOUND TRUE)
+set(ITENSOR_FOUND TRUE)
