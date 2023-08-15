@@ -7,8 +7,14 @@ RUN apt-get update && \
       liblapack-dev \
       liblapacke-dev \
       libopenblas-dev \
-      cmake=3.17.0 \
+      wget \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
+    wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz && \
+    tar zxvf cmake-3.20.0.tar.gz && \
+    cd cmake-3.20.0.tar.gz && \
+    ./bootstrap && \
+    make && \
+    make install && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/*
