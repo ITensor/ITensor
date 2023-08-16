@@ -57,7 +57,7 @@ set(ITENSOR_SOURCE_FILES
         util/args.cc
         util/input.cc
         util/cputime.cc
-        tensor/lapack_wrap.cc
+        tensor/cmake_lapack_wrap.cc
         tensor/vec.cc
         tensor/mat.cc
         tensor/gemm.cc
@@ -112,7 +112,7 @@ target_include_directories(${targetname} INTERFACE
                            )
 
 set(ITENSOR_LINK_LIBRARIES blaspp lapackpp ${blaspp_headers} CACHE STRING "List of libraries which ITensor is dependent on")
-target_link_libraries(${targetname} PUBLIC ${ITENSOR_LINK_LIBRARIES} blaspp lapackpp)
+target_link_libraries(${targetname} LINK_PRIVATE ${ITENSOR_LINK_LIBRARIES} blaspp lapackpp)
 if(ENABLE_HDF5)
   target_link_libraries(${targetname} PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} hdf5 hdf5_hl)
 endif(ENABLE_HDF5)
