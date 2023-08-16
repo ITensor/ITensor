@@ -19,18 +19,18 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <iostream>
-#ifdef ITENSOR_USE_CMAKE
-#include <lapack.hh>
-#include <lapack/util.hh>
-#endif // ITENSOR_USE_CMAKE
+//#ifdef ITENSOR_USE_CMAKE
+//#include <lapack.hh>
+//#include <lapack/util.hh>
+//#endif // ITENSOR_USE_CMAKE
 namespace itensor{
 void error(const std::string& s);
 void error(const std::string& s, int line,const char* file);
-#ifndef ITENSOR_USE_CMAKE
-#define Error(exp)  error(exp, __LINE__, __FILE__)
-#else
-#define Error lapack::Error
-#endif // ITENSOR_USE_CMAKE
+//#ifndef ITENSOR_USE_CMAKE
+#define Error  error
+//#else
+//#define Error lapack::Error
+//#endif // ITENSOR_USE_CMAKE
 
 struct ITError : std::runtime_error
     {
