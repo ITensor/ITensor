@@ -157,16 +157,17 @@ imagRef(LAPACK_COMPLEX & z)
 #endif // different PLATFORM types
 
 
-
+#ifndef ITENSOR_USE_CMAKE
 #ifdef FORTRAN_NO_TRAILING_UNDERSCORE
 #define F77NAME(x) x
 #else
 #if defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
 #define F77NAME(x) LAPACK_##x
-#else
+#else // defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
 #define F77NAME(x) x##_
-#endif
-#endif
+#endif // defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
+#endif // FORTRAN_NO_TRAILING_UNDERSCORE
+#endif // ITENSOR_USE_CMAKE
 
 namespace itensor {
 
