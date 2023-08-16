@@ -166,7 +166,8 @@ struct ApplyIT
     void
     applyITImpl(stdx::choice<2>,T1, T2 &)
         {
-        Error( tinyformat::format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>()));
+        auto msg = tinyformat::format("Apply: function doesn't map %s->%s",typeName<T1>(),typeName<T2>());
+        Error(msg);
         }
     template<typename T1, typename T2>
     auto
