@@ -13,5 +13,5 @@ RUN apt-get update && \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
-    pip install cmake && \
+    pip3 install cmake && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/*
