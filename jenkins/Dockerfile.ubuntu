@@ -9,6 +9,7 @@ RUN apt-get update && \
       libopenblas-dev \
       python3-pip \
       wget \
+      git-all \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
