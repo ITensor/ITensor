@@ -7,11 +7,16 @@ RUN apt-get update && \
       liblapack-dev \
       liblapacke-dev \
       libopenblas-dev \
-      python3-pip \
+      libssl-dev \
       wget \
       git-all \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
-    pip3 install cmake && \
+    wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz && \
+    tar zxvf cmake-3.20.0.tar.gz && \
+    cd cmake-3.20.0 && \
+    ./bootstrap && \
+    make && \
+    make install && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/*
