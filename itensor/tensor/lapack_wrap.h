@@ -177,7 +177,7 @@ namespace itensor {
 //
 //
 #ifdef LAPACK_REQUIRE_EXTERN
-    extern "C" {
+extern "C" {
 
 //dnrm2 declaration
 #ifdef ITENSOR_USE_CBLAS
@@ -601,7 +601,7 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_INT *info);
 
 
-void
+  void
 dgesvd_wrapper(char * jobz,           //char* specifying how much of U, V to compute
                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT* m,       //number of rows of input matrix *A
@@ -655,7 +655,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* info);  //error info
 
 
-//
+  //
 // dgeqrf
 //
 // QR factorization of a complex matrix A
@@ -737,7 +737,7 @@ zlange_wrapper(char norm,
 //
 // Eigenvalues and eigenvectors of complex Hermitian matrix A
 //
-LAPACK_INT
+LAPACK_INT 
 zheev_wrapper(LAPACK_INT    N,  //number of cols of A
               Cplx        * A,  //matrix A, on return contains eigenvectors
               LAPACK_REAL * d); //eigenvalues on return
