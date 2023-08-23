@@ -334,7 +334,7 @@ install(FILES
 
 ADD_CUSTOM_TARGET(debug
                   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_CURRENT_SOURCE_DIR}
-                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target all
+                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target itensor
                   COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
                   )
 
@@ -345,7 +345,7 @@ ADD_CUSTOM_TARGET(check
                   )
 ADD_CUSTOM_TARGET(release
                   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_CURRENT_SOURCE_DIR}
-                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target all
+                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target itensor
                   COMMENT "Switch CMAKE_BUILD_TYPE to Release"
                   )
 
