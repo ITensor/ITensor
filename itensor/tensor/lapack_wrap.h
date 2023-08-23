@@ -580,7 +580,7 @@ dscal_wrapper(LAPACK_INT N,
 
 void
 dgesdd_wrapper(char * jobz,           //char* specifying how much of U, V to compute
-        //choosing *jobz=='S' computes min(m,n) cols of U, V
+                                    //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT* m,       //number of rows of input matrix *A
                LAPACK_INT* n,       //number of cols of input matrix *A
                LAPACK_REAL *A,       //contents of input matrix A
@@ -591,7 +591,7 @@ dgesdd_wrapper(char * jobz,           //char* specifying how much of U, V to com
 
 void
 zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
-        //choosing *jobz=='S' computes min(m,n) cols of U, V
+                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
                LAPACK_INT *n,        //number of cols of input matrix *A
                Cplx *A,    //contents of input matrix A
@@ -603,7 +603,7 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
 
 void
 dgesvd_wrapper(char * jobz,           //char* specifying how much of U, V to compute
-        //choosing *jobz=='S' computes min(m,n) cols of U, V
+                                    //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT* m,       //number of rows of input matrix *A
                LAPACK_INT* n,       //number of cols of input matrix *A
                LAPACK_REAL *A,       //contents of input matrix A
@@ -614,7 +614,7 @@ dgesvd_wrapper(char * jobz,           //char* specifying how much of U, V to com
 
 void
 zgesvd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
-        //choosing *jobz=='S' computes min(m,n) cols of U, V
+                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
                LAPACK_INT *n,        //number of cols of input matrix *A
                Cplx *A,    //contents of input matrix A
@@ -633,10 +633,10 @@ void
 dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_REAL* A,    //matrix A
-        //on return upper triangle contains R
+                                  //on return upper triangle contains R
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors of elementary reflectors
-        //length should be min(m,n)
+                                  //length should be min(m,n)
                LAPACK_INT* info);  //error info
 
 //
@@ -649,7 +649,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
                LAPACK_REAL* A,    //matrix A, as returned from "A" argument of dgeqrf
-        //on return contains Q
+                                  //on return contains Q
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info);  //error info
@@ -664,10 +664,10 @@ void
 zgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                Cplx* A,    //matrix A
-        //on return upper triangle contains R
+                                  //on return upper triangle contains R
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_COMPLEX* tau,  //scalar factors of elementary reflectors
-        //length should be min(m,n)
+                                  //length should be min(m,n)
                LAPACK_INT* info);  //error info
 
 //
@@ -680,7 +680,7 @@ zungqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* n,     //number of cols of A
                LAPACK_INT* k,     //number of elementary reflectors, typically min(m,n)
                Cplx* A,    //matrix A, as returned from "A" argument of dgeqrf
-        //on return contains Q
+                                  //on return contains Q
                LAPACK_INT* lda,   //size of A (usually same as n)
                LAPACK_COMPLEX* tau,  //scalar factors as returned by zgeqrf
                LAPACK_INT* info);  //error info
@@ -752,7 +752,7 @@ zheev_wrapper(LAPACK_INT    N,  //number of cols of A
 //
 void
 dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
-        //if 'N', only eigenvalues
+                                    //if 'N', only eigenvalues
               char* uplo,           //if 'U', use upper triangle of A
               LAPACK_INT* n,        //number of cols of A
               LAPACK_REAL* A,       //matrix A, on return contains eigenvectors
