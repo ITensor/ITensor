@@ -376,7 +376,7 @@ SECTION("Arnoldi (QN)")
 SECTION("arnoldi (multiple eigenvectors)")
     {
     auto i = Index(10,"i");
-    auto A = randomITensor(prime(i), i);
+    auto A = randomITensorC(prime(i), i);
 
     auto v1r = randomITensor(i);
     auto lambda1r = arnoldi(ITensorMap(A),v1r,{"ErrGoal=",1E-14,"MaxIter=",20,"MaxRestart=",5});
