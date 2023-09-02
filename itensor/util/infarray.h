@@ -53,7 +53,7 @@ class InfArray
     private:
     pointer data_ = nullptr;
     size_t size_ = 0;
-    array_type arr_;
+    array_type arr_{};
     std::vector<T> vec_;
     public:
 
