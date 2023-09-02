@@ -508,5 +508,79 @@ SECTION("applyExp (QNs)")
         }
 
     }
+    
+SECTION("applyExp non-Hermitian")
+    {
+    auto i = Index(20,"i");
+
+    auto M = randomMat(20,20);
+    auto A = matrixITensor(std::move(M),dag(i),prime(i));
+    auto x0 = randomITensor(i);
+
+    auto Mc = randomMatC(20,20);
+    auto Ac = matrixITensor(std::move(Mc),dag(i),prime(i));
+    auto x0c = randomITensorC(i);
+
+    SECTION("Real timestep")
+        {
+        auto t = 0.1;
+
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+
+        auto expM = expMatrix(-t*M);
+        auto exptA = matrixITensor(std::move(expM),dag(i),prime(i));
+        auto exptAx = noPrime(exptA*x0);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+    
+    SECTION("Complex timestep")
+        {
+        auto t = 0.1*1_i;
+        
+        auto x = x0;
+        applyExp(ITensorMap(A),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+        
+        auto expM = expMatrix(-t*M);
+        auto exptA = matrixITensor(std::move(expM),dag(i),prime(i));
+        auto exptAx = noPrime(exptA*x0);
+        
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors, Real timestep")
+        {
+        auto t = 0.1;
+
+        auto x = x0;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                      "MaxIter=",10});
+
+        auto expM = expMatrix(-t*Mc);
+        auto exptA = matrixITensor(std::move(expM),dag(i),prime(i));
+        auto exptAx = noPrime(exptA*x0);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    SECTION("Complex tensors Complex timestep")
+        {
+        auto t = 0.1*1_i;
+
+        auto x = x0c;
+        applyExp(ITensorMap(Ac),x,-t,{"ErrGoal=",1E-14,
+                                     "MaxIter=",10});
+
+        auto expM = expMatrix(-t*Mc);
+        auto exptA = matrixITensor(std::move(expM),dag(i),prime(i));
+        auto exptAx = noPrime(exptA*x0c);
+
+        CHECK_CLOSE(norm(exptAx - x), 0.);
+        }
+
+    }
 
 }
