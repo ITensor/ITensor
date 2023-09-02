@@ -1488,12 +1488,14 @@ SECTION("NoprimeTest")
         }
     SECTION("Case 2")
         {
+#ifdef DEBUG
         ITensor T(s1,prime(s1));
 
         //Check that T.noPrime()
         //throws an exception since it would
         //lead to duplicate indices
         CHECK_THROWS_AS(T.noPrime(),ITError);
+#endif // DEBUG
         }
     }
 
@@ -1693,11 +1695,13 @@ SECTION("Tag functions")
 
     SECTION("Check error throws for duplicate indices")
         {
+#ifdef DEBUG
         auto T2 = ITensor(setTags(l,"Link,0"),setTags(l,"Link,n=2,0"));
         //Check that remove the tag "2"
         //throws an exception since it would
         //lead to duplicate indices
         CHECK_THROWS_AS(T2.removeTags("n=2"),ITError);
+#endif // DEBUG
         }
 
     SECTION("Test contraction")

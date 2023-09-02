@@ -17,7 +17,19 @@
 #define __ITENSOR_LAPACK_WRAP_h
 
 #include <vector>
+#ifndef ITENSOR_USE_CMAKE
 #include "itensor/config.h"
+#else
+#ifndef LAPACK_INT
+    #ifdef LAPACK_ILP64
+        #define lapack_int int64_t
+    #else // LAPACK_ILP64
+        #define LAPACK_INT int
+    #endif // LAPACK_ILP64
+#endif // LAPACK_INT
+#define LAPACK_REAL double
+#define LAPACK_COMPLEX itensor::Cplx
+#endif //ITENSOR_USE_CMAKE
 #include "itensor/types.h"
 #include "itensor/util/timers.h"
 
@@ -145,16 +157,17 @@ imagRef(LAPACK_COMPLEX & z)
 #endif // different PLATFORM types
 
 
-
+#ifndef ITENSOR_USE_CMAKE
 #ifdef FORTRAN_NO_TRAILING_UNDERSCORE
 #define F77NAME(x) x
 #else
 #if defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
 #define F77NAME(x) LAPACK_##x
-#else
+#else // defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
 #define F77NAME(x) x##_
-#endif
-#endif
+#endif // defined(LAPACK_GLOBAL) || defined(LAPACK_NAME)
+#endif // FORTRAN_NO_TRAILING_UNDERSCORE
+#endif // ITENSOR_USE_CMAKE
 
 namespace itensor {
 
@@ -487,7 +500,7 @@ zdotc_wrapper(LAPACK_INT N,
 // dgemm
 //
 void
-gemm_wrapper(bool transa, 
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -502,7 +515,7 @@ gemm_wrapper(bool transa,
 // zgemm
 //
 void
-gemm_wrapper(bool transa, 
+gemm_wrapper(bool transa,
              bool transb,
              LAPACK_INT m,
              LAPACK_INT n,
@@ -517,7 +530,7 @@ gemm_wrapper(bool transa,
 // dgemv - matrix*vector multiply
 //
 void
-gemv_wrapper(bool trans, 
+gemv_wrapper(bool trans,
              LAPACK_REAL alpha,
              LAPACK_REAL beta,
              LAPACK_INT m,
@@ -532,7 +545,7 @@ gemv_wrapper(bool trans,
 // zgemv - matrix*vector multiply
 //
 void
-gemv_wrapper(bool trans, 
+gemv_wrapper(bool trans,
              Cplx alpha,
              Cplx beta,
              LAPACK_INT m,
