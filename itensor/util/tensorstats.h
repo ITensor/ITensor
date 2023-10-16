@@ -120,19 +120,19 @@ tstats(VArgs&&... vargs)
 inline std::ostream&
 operator<<(std::ostream& s, TStats const& T)
     {
-    s << format("A (%d) [ ",T.Ar);
+    s << tinyformat::format("A (%d) [ ",T.Ar);
     for(auto n : range(T.Ar)) s << T.Adims[n] << " ";
     s << "] { ";
     for(auto n : range(T.Ar)) s << T.Alabs[n] << " ";
     s << "}\n";
 
-    s << format("B (%d) [ ",T.Br);
+    s << tinyformat::format("B (%d) [ ",T.Br);
     for(auto n : range(T.Br)) s << T.Bdims[n] << " ";
     s << "] { ";
     for(auto n : range(T.Br)) s << T.Blabs[n] << " ";
     s << "}\n";
 
-    s << format("C (%d) [ ",T.Cr);
+    s << tinyformat::format("C (%d) [ ",T.Cr);
     for(auto n : range(T.Cr)) s << T.Cdims[n] << " ";
     s << "] { ";
     for(auto n : range(T.Cr)) s << T.Clabs[n] << " ";

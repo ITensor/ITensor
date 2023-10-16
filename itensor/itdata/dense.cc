@@ -464,7 +464,7 @@ h5_read(h5::group parent, std::string const& name, Dense<V> & D)
     {
     auto g = parent.open_group(name);
     auto type = h5_read_attribute<string>(g,"type");
-    if(type != juliaTypeNameOf(D)) Error(format("Group does not contain %s data in HDF5 file",typeNameOf(D)));
+    if(type != juliaTypeNameOf(D)) Error(tinyformat::format("Group does not contain %s data in HDF5 file",typeNameOf(D)));
     auto data = h5_read<vector<V>>(g,"data");
     D = Dense<V>(move(data));
     }

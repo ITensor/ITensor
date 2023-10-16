@@ -645,7 +645,7 @@ toMPOImpl(AutoMPO const& am,
             }
         inqn.emplace_back(currq,currm);
 
-        links.at(n) = Index(move(inqn),format("Link,l=%d",n));
+        links.at(n) = Index(move(inqn),tinyformat::format("Link,l=%d",n));
         //printfln("links[%d]=\n%s",n,links[n]);
 
         //if(n <= 2 or n == N)
@@ -735,7 +735,7 @@ toMPOImpl(AutoMPO const& am,
                             {
                             found += 1;
 #ifdef SHOW_AUTOMPO
-                            ws[r][c] = format("%.2f %s",st.coef,st.op);
+                            ws[r][c] = tinyformat::format("%.2f %s",st.coef,st.op);
 #endif
                             W += st.coef * op(sites,st.op,n) * rc;
                             }
@@ -777,11 +777,11 @@ toMPOImpl(AutoMPO const& am,
                     auto coef = ht.coef;
                     if(isApproxReal(coef))
                         {
-                        ws[r][c] = format("%.2f %s",coef.real(),op);
+                        ws[r][c] = tinyformat::format("%.2f %s",coef.real(),op);
                         }
                     else
                         {
-                        ws[r][c] = format("%.2f %s",coef,op);
+                        ws[r][c] = tinyformat::format("%.2f %s",coef,op);
                         }
 #endif
                     }
@@ -795,9 +795,9 @@ toMPOImpl(AutoMPO const& am,
                     {
 #ifdef SHOW_AUTOMPO
                     if(isApproxReal(ht.first().coef))
-                        ws[r][c] = format("%.2f %s",ht.coef.real(),ht.first().op);
+                        ws[r][c] = tinyformat::format("%.2f %s",ht.coef.real(),ht.first().op);
                     else
-                        ws[r][c] = format("%.2f %s",ht.coef,ht.first().op);
+                        ws[r][c] = tinyformat::format("%.2f %s",ht.coef,ht.first().op);
 #endif
                     W += ht.coef * convert_tensor(op(sites,ht.first().op,n)) * rc;
                     }
@@ -1190,8 +1190,8 @@ compressMPO(SiteSet const& sites,
     int d0 = isExpH ? 1 : 2;
     
     //TODO: check these are the correct tags
-    if(hasqn) links.at(0) = Index(ZeroQN,d0,format("Link,l=%d",0));
-    else      links.at(0) = Index(d0,format("Link,l=%d",0));
+    if(hasqn) links.at(0) = Index(ZeroQN,d0,tinyformat::format("Link,l=%d",0));
+    else      links.at(0) = Index(d0,tinyformat::format("Link,l=%d",0));
 
     auto max_d = dim(links.at(0));
     for(int n = 1; n <= N; ++n)
@@ -1239,7 +1239,7 @@ compressMPO(SiteSet const& sites,
                 int m = ncols(V_npp[q]);
                 inqn.emplace_back(q,m);
                 }
-            links.at(n) = Index(move(inqn),format("Link,l=%d",n));
+            links.at(n) = Index(move(inqn),tinyformat::format("Link,l=%d",n));
             }
         else
             {
@@ -1250,7 +1250,7 @@ compressMPO(SiteSet const& sites,
                 if(q == ZeroQN) continue; // was already taken care of
                 m += ncols(V_npp[q]);
                 }
-            links.at(n) = Index(m,format("Link,l=%d",n));
+            links.at(n) = Index(m,tinyformat::format("Link,l=%d",n));
             }
 
         //
@@ -1586,7 +1586,7 @@ toExpH_ZW1(AutoMPO const& am,
             }
         qnsize.emplace_back(currq,currm);
 
-        links.at(n) = Index(move(qnsize),format("Link,l=%d",n));
+        links.at(n) = Index(move(qnsize),tinyformat::format("Link,l=%d",n));
 
         //if(n <= 2 or n == N)
         //    {
@@ -1696,7 +1696,7 @@ toExpH(AutoMPO const& a,
         }
     else
         {
-        Error(format("Unknown approximation Approx=\"%s\"",approx));
+        Error(tinyformat::format("Unknown approximation Approx=\"%s\"",approx));
         }
     return res;
     }
@@ -1715,11 +1715,11 @@ operator<<(std::ostream& s, HTerm const& t)
     const char* pfix = "";
     if(abs(t.coef-1.0) > 1E-12) 
         {
-        s << (isReal(t.coef) ? format("%f ",t.coef.real()) : format("%f ",t.coef));
+        s << (isReal(t.coef) ? tinyformat::format("%f ",t.coef.real()) : tinyformat::format("%f ",t.coef));
         }
     for(auto& st : t.ops) 
         {
-        s << format("%s%s(%d)",pfix,st.op,st.i);
+        s << tinyformat::format("%s%s(%d)",pfix,st.op,st.i);
         pfix = " ";
         }
     return s;

@@ -373,7 +373,7 @@ void
 doTask(PrintIT& P, Diag<T> const& d)
     {
     auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
-    P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
+    P.printInfo(d,tinyformat::format("Diag %s%s",type,d.allSame()?", all same":""),
               doTask(NormNoScale{},d));
 
     auto r = P.is.order();

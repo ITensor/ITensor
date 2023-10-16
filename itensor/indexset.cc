@@ -700,7 +700,7 @@ h5_write(h5::group parent, std::string const& name, IndexSet const& is)
     h5_write(g,"length",N);
     for(auto n : range1(N))
         {
-        auto iname = format("index_%d",n);
+        auto iname = tinyformat::format("index_%d",n);
         h5_write(g,iname,is(n));
         }
     }
@@ -716,7 +716,7 @@ h5_read(h5::group parent, std::string const& name, IndexSet & is)
     auto inds = IndexSetBuilder(N);
     for(auto n : range1(N))
         {
-        auto iname = format("index_%d",n);
+        auto iname = tinyformat::format("index_%d",n);
         auto i = h5_read<Index>(g,iname);
         inds.nextIndex(i);
         }

@@ -229,7 +229,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
     //Make N'th MPS tensor
     int chi = dim(s(N));
     chi = std::min(m,chi);
-    l[N-1] = Index(chi,format("Link,l=%d",N-1));
+    l[N-1] = Index(chi,tinyformat::format("Link,l=%d",N-1));
     auto O = randomOrthog(chi,dim(s(N)));
     M.ref(N) = matrixITensor(O,l[N-1],s(N));
 
@@ -239,7 +239,7 @@ randomCircuitMPS(SiteSet const& s, int m, Args const& args)
         auto prev_chi = chi;
         chi *= dim(s(j));
         chi = std::min(m,chi);
-        l[j-1] = Index(chi,format("Link,l=%d",j-1));
+        l[j-1] = Index(chi,tinyformat::format("Link,l=%d",j-1));
         O = randomOrthog(chi,prev_chi*dim(s(j)));
         auto [C,c] = combiner(s(j),l[j]);
         M.ref(j) = matrixITensor(O,l[j-1],c);
@@ -399,11 +399,11 @@ AFName(int j, string const& dirname) const
     { 
     if(dirname == "")
         {
-        return format("%s/A_%03d",writedir_,j);
+        return tinyformat::format("%s/A_%03d",writedir_,j);
         }
     else
         {
-        return format("%s/A_%03d",dirname,j);
+        return tinyformat::format("%s/A_%03d",dirname,j);
         }
     }
 
@@ -469,7 +469,7 @@ setBond(int b) const
     //if(b == 1)
         //{
         //writeToFile(writedir_+"/sites",*sites_);
-        //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
+        //std::ofstream inf((tinyformat::format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
         //    svd_.write(inf);
@@ -515,12 +515,12 @@ new_tensors(std::vector<ITensor>& A,
     auto a = std::vector<Index>(N+1);
     if(hasQNs(sites))
         {
-        if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,format("Link,l=%d",i));
+        if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,tinyformat::format("Link,l=%d",i));
         else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from a SiteSet");
         }
     else
         {
-        for(auto i : range1(N)) a[i] = Index(m,format("Link,l=%d",i));
+        for(auto i : range1(N)) a[i] = Index(m,tinyformat::format("Link,l=%d",i));
         }
     A[1] = ITensor(sites(1),a[1]);
     for(int i = 2; i < N; i++)
@@ -539,12 +539,12 @@ new_tensors(std::vector<ITensor>& A,
     auto a = std::vector<Index>(N+1);
     if(hasQNs(sites))
         {
-        if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,format("Link,l=%d",i));
+        if(m==1) for(auto i : range1(N)) a[i] = Index(QN(),m,tinyformat::format("Link,l=%d",i));
         else Error("Cannot create QN conserving MPS with bond dimension greater than 1 from an IndexSet");
         }
     else
         {
-        for(auto i : range1(N)) a[i] = Index(m,format("Link,l=%d",i));
+        for(auto i : range1(N)) a[i] = Index(m,tinyformat::format("Link,l=%d",i));
         }
     A[1] = ITensor(sites(1),a[1]);
     for(int i = 2; i < N; i++)
@@ -569,11 +569,11 @@ init_tensors(std::vector<ITensor>& A_, InitState const& initState)
             //Taking the divergence to be zero,solve for qa[i]
             qa[i] = Out*(-qa[i-1]*In - qn(initState(i)));
             }
-        for(auto i : range1(N_)) a[i] = Index(qa[i],1,format("Link,l=%d",i));
+        for(auto i : range1(N_)) a[i] = Index(qa[i],1,tinyformat::format("Link,l=%d",i));
         }
     else
         {
-        for(auto i : range1(N_)) a[i] = Index(1,format("Link,l=%d",i));
+        for(auto i : range1(N_)) a[i] = Index(1,tinyformat::format("Link,l=%d",i));
         }
 
     A_[1] = setElt(initState(1),a[1](1));
@@ -1787,7 +1787,7 @@ h5_write(h5::group parent, string const& name, MPS const& M)
     h5_write(g,"llim",long(M.leftLim()));
     for(auto n : range1(M.length()))
         {
-        h5_write(g,format("MPS[%d]",n),M(n));
+        h5_write(g,tinyformat::format("MPS[%d]",n),M(n));
         }
     }
 
@@ -1803,7 +1803,7 @@ h5_read(h5::group parent, string const& name, MPS & M)
     M = MPS(N);
     for(auto n : range1(N))
         {
-        M.ref(n) = h5_read<ITensor>(g,format("MPS[%d]",n));
+        M.ref(n) = h5_read<ITensor>(g,tinyformat::format("MPS[%d]",n));
         }
     M.leftLim(llim);
     M.rightLim(rlim);

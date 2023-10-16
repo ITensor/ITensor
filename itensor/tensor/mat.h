@@ -200,7 +200,7 @@ resize(MatRefc<T> const& M, size_t nr, size_t nc)
     {
     if((nrows(M)!=nr) || (ncols(M)!=nc))
         {
-        auto msg = format("Matrix ref has wrong size, expected=%dx%d, actual=%dx%d",
+        auto msg = tinyformat::format("Matrix ref has wrong size, expected=%dx%d, actual=%dx%d",
                           nr,nc,nrows(M),ncols(M));
         throw std::runtime_error(msg);
         }

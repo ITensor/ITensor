@@ -85,7 +85,7 @@ eltC(IV const& iv1, IVs&&... ivs) const
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -130,7 +130,7 @@ eltC(std::vector<Int> const& ints) const
         print("Indices provided = ");
         for(auto i : ints) print(" ",i);
         println("\n---------------------------------------------");
-        Error(format("Wrong number of ints passed to elt/eltC (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of ints passed to elt/eltC (expected %d, got %d)",
                      inds().order(),size));
         }
 
@@ -350,7 +350,7 @@ set(IV const& iv1, VArgs&&... vargs)
         println("Indices provided = ");
         for(auto& iv : vals) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -389,7 +389,7 @@ set(Int iv1, VArgs&&... vargs)
         for(auto& i : ints) print(" ",1+i);
         println();
         println("---------------------------------------------");
-        Error(format("Wrong number of ints passed to set (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of ints passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     //TODO: if !store_ and !is_real, call allocCplx instead

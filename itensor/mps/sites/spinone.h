@@ -306,7 +306,7 @@ read(std::istream& s)
             I.read(s);
             if(dim(I) == 3) store.set(j,SpinOneSite(I));
             else if(dim(I) == 2) store.set(j,SpinHalfSite(I));
-            else throw ITError(format("SpinOne cannot read index of size %d",dim(I)));
+            else throw ITError(tinyformat::format("SpinOne cannot read index of size %d",dim(I)));
             }
         init(std::move(store));
         }

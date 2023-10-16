@@ -470,7 +470,7 @@ operator<<(std::ostream& s, SiteSet const& sites)
     s << "SiteSet:\n";
     for(int j = 1; j <= length(sites); ++j) 
         {
-        s << format("site %d = %s\n",j,sites(j));
+        s << tinyformat::format("site %d = %s\n",j,sites(j));
         }
     return s;
     }

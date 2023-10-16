@@ -53,13 +53,13 @@ formatVal(double val)
     {
     if(val == 0.0 || val >= 1E-7)
         {
-        return format("%.7f",val);
+        return tinyformat::format("%.7f",val);
         }
     else if(val <= -1E-7)
         {
-        return format("%.6f",val);
+        return tinyformat::format("%.6f",val);
         }
-    return format("%.8E",val);
+    return tinyformat::format("%.8E",val);
     }
 
 std::string inline
@@ -69,11 +69,11 @@ formatVal(Cplx const& val)
     auto nrm = std::norm(val);
     if(nrm == 0. || nrm > 1E-10)
         {
-        return format("%f%s%fi",val.real(),sgn,std::fabs(val.imag()));
+        return tinyformat::format("%f%s%fi",val.real(),sgn,std::fabs(val.imag()));
         }
     else
         {
-        return format("%.8E%s%.8Ei",val.real(),sgn,std::fabs(val.imag()));
+        return tinyformat::format("%.8E%s%.8Ei",val.real(),sgn,std::fabs(val.imag()));
         }
     }
 

@@ -386,7 +386,7 @@ operator==(IndexVal const& iv, Index const& I)
     }
 
 string
-showDim(Index const& I) { return format("dim=%d",dim(I)); }
+showDim(Index const& I) { return tinyformat::format("dim=%d",dim(I)); }
 
 std::ostream& 
 operator<<(std::ostream& s, IndexVal const& iv)
@@ -407,7 +407,7 @@ TagSet
 getTagSet(Args       const& args, 
           Args::Name const& name)
     {
-    if(!args.defined(name)) Error(format("Name %s not found in Args",name));
+    if(!args.defined(name)) Error(tinyformat::format("Name %s not found in Args",name));
     return TagSet(args.getString(name));
     }
 
@@ -788,7 +788,7 @@ h5_write(h5::group parent, std::string const& name, Index const& I)
             for(auto n : range1(I.nblock()))
                 {
                 dims[n-1] = I.blocksize(n);
-                h5_write(qg,format("QN[%d]",n),I.qn(n));
+                h5_write(qg,tinyformat::format("QN[%d]",n),I.qn(n));
                 }
             h5_write(qg,"dims",dims);
             }
@@ -818,7 +818,7 @@ h5_read(h5::group parent, std::string const& name, Index & I)
         auto qns = vector<QNInt>(nblocks);
         for(auto n : range1(nblocks))
             {
-            auto qn = h5_read<QN>(qg,format("QN[%d]",n));
+            auto qn = h5_read<QN>(qg,tinyformat::format("QN[%d]",n));
             qns[n-1] = std::make_pair(qn,dims[n-1]);
             }
         I = Index(id,dim,toArrow(dir),tags,std::move(qns));

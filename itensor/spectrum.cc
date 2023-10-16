@@ -121,9 +121,9 @@ operator<<(std::ostream & s, Spectrum const& spec)
         s << "  Eigs kept:";
         for(auto j : range(stop))
             {
-            s << format(eigs(j) > 1E-3 ? (" %.3f") : (" %.3E"), eigs(j));
+            s << tinyformat::format(eigs(j) > 1E-3 ? (" %.3f") : (" %.3E"), eigs(j));
             }
-        s << format("\n  Trunc. error = %.3E\n", spec.truncerr());
+        s << tinyformat::format("\n  Trunc. error = %.3E\n", spec.truncerr());
         }
     return s;
     }

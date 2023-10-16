@@ -25,7 +25,7 @@ SECTION("Orthogonalize")
     //Make a random MPO of bond dim. m
     auto links = vector<Index>(N+1);
     for(auto n : range1(N))
-        links[n] = Index(d,format("MyLink,l=%d",n));
+        links[n] = Index(d,tinyformat::format("MyLink,l=%d",n));
     W.ref(1) = randomITensorC(links[1],sites(1),prime(sites(1)));
     for(auto n : range1(2,N-1))
         W.ref(n) = randomITensorC(links[n-1],sites(n),prime(sites(n)),links[n]);
@@ -57,7 +57,7 @@ SECTION("Add MPOs")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,l=%d",name,n);
+            auto ts = tinyformat::format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf=",0,-1}),2,
@@ -447,7 +447,7 @@ SECTION("Remove QNs from MPO")
         auto ll = vector<Index>(N);
         for(auto n : range1(N-1))
             {
-            auto ts = format("%s,l=%d",name,n);
+            auto ts = tinyformat::format("%s,l=%d",name,n);
             ll.at(n) = Index(QN({"Sz",-1},{"Nf",-1,-1}),2,
                              QN({"Sz",-1},{"Nf",+1,-1}),2,
                              QN({"Sz",-1},{"Nf",0,-1}),2,

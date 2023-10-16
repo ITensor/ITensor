@@ -94,13 +94,13 @@ checkCompatible(TenRefc<R1,T1> const& A,
                 TenRefc<R2,T2> const& B,
                 std::string methodName = "")
     {
-    auto methodstr = (methodName != "" ? format("in %s",methodName) : "");
-    if(A.order() != B.order()) Error(format("Mismatched tensor orders %s",methodstr));
+    auto methodstr = (methodName != "" ? tinyformat::format("in %s",methodName) : "");
+    if(A.order() != B.order()) Error(tinyformat::format("Mismatched tensor orders %s",methodstr));
     for(decltype(A.order()) n = 0; n < A.order(); ++n)
         if(A.extent(n) != B.extent(n))
             {
             printfln("A.extent(%d)=%d  B.extent(%d)=%d",n,A.extent(n),n,B.extent(n));
-            Error(format("Mismatched tensor extent %s",methodstr));
+            Error(tinyformat::format("Mismatched tensor extent %s",methodstr));
             }
     }
 

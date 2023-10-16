@@ -86,7 +86,7 @@ eltC() const
     if(inds().order() != 0)
         {
         PrintData(inds());
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
+        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected 0, got %d)",inds().order()));
         }
     constexpr size_t size = 0;
     auto inds = IntArray(size);
@@ -125,7 +125,7 @@ eltC(std::vector<IndexVal> const& ivs) const
         println("Indices provided = ");
         for(auto& iv : ivs) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",inds().order(),size));
+        Error(tinyformat::format("Wrong number of IndexVals passed to elt/eltC (expected %d, got %d)",inds().order(),size));
         }
 
     auto ints = IntArray(size);
@@ -167,7 +167,7 @@ set(std::vector<IndexVal> const& ivals,
         println("Indices provided = ");
         for(auto& iv : ivals) println(iv.index);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -190,7 +190,7 @@ set(Cplx val)
     {
     if(0 != size_t(inds().order())) 
         {
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got 0)",
+        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got 0)",
                      inds().order()));
         }
     auto inds = IntArray(0,1);
@@ -219,7 +219,7 @@ set(std::vector<int> const& ints,
         println("Indices provided = ");
         for(auto& iv : ints) println(iv);
         println("---------------------------------------------");
-        Error(format("Wrong number of IndexVals passed to set (expected %d, got %d)",
+        Error(tinyformat::format("Wrong number of IndexVals passed to set (expected %d, got %d)",
                      inds().order(),size));
         }
     auto inds = IntArray(is_.order(),0);
@@ -640,7 +640,7 @@ permute(IndexSet const& iset)
         println("---------------------------------------------");
         println("Indices provided = \n",iset,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
+        Error(tinyformat::format("Wrong number of Indexes passed to permute (expected %d, got %d)",r,iset.order()));
         }
 
     // Get permutation
@@ -843,7 +843,7 @@ h5_read(h5::group parent, std::string const& name, ITensor & I)
     else if(s_type == "Dense{ComplexF64}") store = h5_readStore<DenseCplx>(g,store_name); 
     else if(s_type == "BlockSparse{Float64}") store = h5_readStore<QDenseReal>(g,store_name); 
     else if(s_type == "BlockSparse{ComplexF64}") store = h5_readStore<QDenseCplx>(g,store_name); 
-    else error(format("Reading of ITensor storage type %s not yet supported",s_type));
+    else error(tinyformat::format("Reading of ITensor storage type %s not yet supported",s_type));
 
     I = ITensor(is,std::move(store));
     }
@@ -924,7 +924,7 @@ checkSameDiv(ITensor const& T1,
         {
         if(div(T1) != div(T2)) 
             {
-            Error(format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
+            Error(tinyformat::format("div(T1)=%s must equal div(T2)=%s when adding T1+T2",div(T1),div(T2)));
             }
         }
     }
@@ -1670,7 +1670,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n",isf," '...'\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
+        Error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rf));
         }
 
     auto iso = IndexSet(r);
@@ -1685,7 +1685,7 @@ moveToFront(IndexSet const& isf, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n",isf," '...'\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to permute"));
+            Error(tinyformat::format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;
@@ -1717,7 +1717,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
         println("---------------------------------------------");
         println("Indices provided = \n'...' ",isb,"\n");
         println("---------------------------------------------");
-        Error(format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
+        Error(tinyformat::format("Wrong number of indices passed to permute (expected < %d, got %d)",r,rb));
         }
 
     auto iso = IndexSet(r);
@@ -1732,7 +1732,7 @@ moveToBack(IndexSet const& isb, IndexSet const& is)
             println("---------------------------------------------");
             println("Indices provided = \n'...' ",isb,"\n");
             println("---------------------------------------------");
-            Error(format("Bad index passed to permute"));
+            Error(tinyformat::format("Bad index passed to permute"));
             }
         iso[i] = I;
         i++;

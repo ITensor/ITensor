@@ -159,8 +159,8 @@ measure(Args const& args)
         if(b == 1 && ha == 2) 
             {
             if(!printeigs) println();
-            auto swstr = (nsweep>0) ? format("%d/%d",sw,nsweep) 
-                                    : format("%d",sw);
+            auto swstr = (nsweep>0) ? tinyformat::format("%d/%d",sw,nsweep) 
+                                    : tinyformat::format("%d",sw);
             println("    Largest link dim during sweep ",swstr," was ",(max_eigs > 1 ? max_eigs : 1));
             max_eigs = -1;
             println("    Largest truncation error: ",(max_te > 0 ? max_te : 0.));

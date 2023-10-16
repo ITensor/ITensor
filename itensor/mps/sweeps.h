@@ -479,7 +479,7 @@ operator<<(std::ostream& s, const Sweeps& swps)
     s << "Sweeps:\n";
     for(int sw = 1; sw <= swps.nsweep(); ++sw)
         {
-        s << format("%d  MaxDim=%d, MinDim=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n",
+        s << tinyformat::format("%d  MaxDim=%d, MinDim=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n",
               sw,swps.maxdim(sw),swps.mindim(sw),swps.cutoff(sw),swps.niter(sw),swps.noise(sw));
         }
     return s;

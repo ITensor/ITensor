@@ -76,16 +76,16 @@ struct LatticeBond
 inline std::ostream& 
 operator<<(std::ostream & s, LatticeBond const& b) 
     { 
-    //s << format("(%*d,%*d",3,b.s1,3,b.s2);
-    s << format("(%d,%d",b.s1,b.s2);
+    //s << tinyformat::format("(%*d,%*d",3,b.s1,3,b.s2);
+    s << tinyformat::format("(%d,%d",b.s1,b.s2);
     if(b.type.size()!=0) s << "," << b.type;
     s << ")";
     if(!std::isnan(b.x1) && !std::isnan(b.y1))
         {
-        s << format("[%s,%s",b.x1,b.y1);
+        s << tinyformat::format("[%s,%s",b.x1,b.y1);
         if(!std::isnan(b.x2) && !std::isnan(b.y2))
             {
-            s << format(";%s,%s]",b.x2,b.y2);
+            s << tinyformat::format(";%s,%s]",b.x2,b.y2);
             }
         else
             {
