@@ -201,6 +201,7 @@ void QN::
 addNum(QNum const& qv)
     {
     if(isActive(qvs_.back())) Error("addNum: all QN slots are filled");
+    if(qv.mod() == 0) return;
 
     auto n = QNSize()-1;
     while(n >= 1)
