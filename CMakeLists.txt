@@ -189,6 +189,7 @@ option(ENABLE_WFN91_LINALG_DISCOVERY_KIT "Use linear algebra discovery kit from 
 add_feature_info(WFN91LinearAlgebraDiscoveryKit ENABLE_WFN91_LINALG_DISCOVERY_KIT "Linear algebra discovery kit from github.com/wavefunction91 supports many more corner cases than the default CMake modules and/or ICL's BLAS++/LAPACK++ modules")
 
 set(TARGET_ARCH "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+set(gpu_device "")
 ##########################
 # miscellaneous cmake platform-neutral and platform-specific configuration
 ##########################
