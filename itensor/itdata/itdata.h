@@ -252,7 +252,7 @@ class ManageStore
         template<typename T>
         operator T&()
             {
-            if(!(pdata_->unique())) 
+            if(!(pdata_->use_count() == 1))
                 {
                 auto* olda1 = static_cast<T*>(pdata_->get());
                 *pdata_ = std::make_shared<ITWrap<T>>(*olda1);
@@ -318,7 +318,7 @@ T* ManageStore::
 modifyData(const T& d)
     {
     //if(!pparg1_) Error("Can't modify const data");
-    if(!(pparg1_->unique())) 
+    if(!(pparg1_->use_count() == 1))
         {
         auto* olda1 = static_cast<ITWrap<T>*>(pparg1_->get());
         *pparg1_ = std::make_shared<ITWrap<T>>(olda1->d);

@@ -1,0 +1,40 @@
+# - CMAKE Config file for the ITensors package
+# The following variables are defined:
+#  ITENSOR_FOUND                - System has the ITensors package
+#  ITENSOR_INCLUDE_DIRS         - The ITensors include directory
+#  ITENSOR_LIBRARIES            - The ITensors libraries and their dependencies
+#  ITENSOR_VERSION              - The ITensors (core) version; see semver.org
+#  ITENSOR_EXT_VERSION          - The ITensors version, includes prerelease id; see semver.org
+
+# Set package version
+set(ITENSOR_VERSION "@ITENSOR_VERSION@")
+set(ITENSOR_EXT_VERSION "@ITENSOR_EXT_VERSION@")
+
+@PACKAGE_INIT@
+
+# Include library IMPORT targets
+if(NOT TARGET itensor)
+  include("${CMAKE_CURRENT_LIST_DIR}/itensor-targets.cmake")
+endif()
+
+# Set the itensor compiled library target
+set(ITENSOR_LIBRARIES itensor)
+
+set(ITENSOR_SOURCE_DIR "@ITENSOR_SOURCE_DIR@")
+set(ITENSOR_BINARY_DIR "@ITENSOR_BINARY_DIR@")
+
+set(ITENSOR_BUILD_INCLUDE_DIRS "${ITENSOR_SOURCE_DIR} "${ITENSOR_BINARY_DIR}")
+set(ITENSOR_INSTALL_INCLUDE_DIRS "@PACKAGE_ITENSOR_INSTALL_INCLUDEDIR@"
+      "@PACKAGE_ITENSOR_INSTALL_INCLUDEDIR@")
+
+# define ITENSOR_INCLUDE_DIRS according to where we are compiling: ITensor build tree or outside
+# external packages should use ITENSOR_BUILD_INCLUDE_DIRS and ITENSOR_INSTALL_INCLUDE_DIRS directly
+if(CMAKE_CURRENT_LIST_DIR EQUAL ITENSOR_BINARY_DIR)
+  set(ITENSOR_INCLUDE_DIRS "${ITENSOR_BUILD_INCLUDE_DIRS}")
+else()
+  set(ITENSOR_INCLUDE_DIRS "${ITENSOR_INSTALL_INCLUDE_DIRS}")
+endif()
+
+set(ITENSOR_CMAKE_TOOLCHAIN_FILE "@CMAKE_TOOLCHAIN_FILE@")
+
+set(ITENSOR_FOUND TRUE)

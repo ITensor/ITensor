@@ -1,0 +1,6 @@
+Name: itensor
+Description: A high-performance tensor software inspired by tensor diagrams
+Version: @ITENSOR_VERSION@
+URL: https://itensor.org/
+Cflags: -I@CMAKE_INSTALL_PREFIX@/include @CMAKE_CXX_FLAGS@ @ITENSOR_PC_CFLAGS@
+Libs: -L@CMAKE_INSTALL_PREFIX@/lib @CMAKE_EXE_LINKER_FLAGS@ @ITENSOR_PC_LIBS@

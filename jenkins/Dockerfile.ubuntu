@@ -2,12 +2,22 @@ FROM ubuntu:bionic
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      build-essential \
       make \
       g++ \
       liblapack-dev \
       liblapacke-dev \
       libopenblas-dev \
+      libssl-dev \
+      wget \
+      git-all \
       && \
     apt-get autoremove --purge -y && \
     apt-get autoclean -y && \
+    wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz && \
+    tar zxvf cmake-3.20.0.tar.gz && \
+    cd cmake-3.20.0 && \
+    ./bootstrap && \
+    make && \
+    make install && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/*
